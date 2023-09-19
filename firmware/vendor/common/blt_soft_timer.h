@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     blt_soft_timer.h 
+ * @file	blt_soft_timer.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 public@telink-semi.com;
- * @date     Sep. 18, 2015
+ * @author	public@telink-semi.com;
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 /*
  * blt_soft_timer.h
@@ -61,9 +64,14 @@ static int inline blt_is_timer_expired(u32 t, u32 now) {
 
 
 
+#include "tl_common.h"
+#if LLSYNC_ENABLE
+#include "ble_qiot_utils_mesh.h"
 
+typedef void (*blt_timer_callback_t)(void *param);	//#define blt_timer_callback_t	ble_timer_cb
+#else
 typedef int (*blt_timer_callback_t)(void);
-
+#endif
 
 
 
@@ -99,6 +107,8 @@ int 	blt_soft_timer_delete_by_index(u8 index);
 
 
 int is_timer_expired(blt_timer_callback_t *e);
+int is_soft_timer_exist(blt_timer_callback_t func);
+u8 blt_soft_timer_cur_num();
 
 #endif
 #endif /* BLT_SOFT_TIMER_H_ */

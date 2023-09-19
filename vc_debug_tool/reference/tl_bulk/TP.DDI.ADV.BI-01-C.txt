@@ -1,0 +1,2 @@
+1 TP/DDI/ADV/BI-01-C__1  Scan Request Invalid CRC, step 1
+ <0>  TP/DDI/ADV/BI-01-C

@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file CompositionColorView.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.ui.widget;
 
 import android.content.Context;
@@ -10,12 +32,12 @@ import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.util.MeshLogger;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.ColorUtils;
+
+import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.util.MeshLogger;
 
 
 public class CompositionColorView extends FrameLayout {
@@ -96,8 +118,6 @@ public class CompositionColorView extends FrameLayout {
         sb_sat.setOnSeekBarChangeListener(onSeekBarChangeListener);
         sb_lit.setOnSeekBarChangeListener(onSeekBarChangeListener);
     }
-
-
 
 
     private ColorPanel.ColorChangeListener colorChangeListener = new ColorPanel.ColorChangeListener() {
@@ -199,6 +219,20 @@ public class CompositionColorView extends FrameLayout {
 
     };
 
+    public void updateLightness(int lightnessProgress) {
+        if (sb_lit != null) {
+            sb_lit.setProgress(lightnessProgress);
+
+            float hue = sb_hue.getProgress();
+            float sat100 = sb_sat.getProgress();
+            float lit100 = sb_lit.getProgress();
+            float[] hslVal = new float[]{hue, sat100 / 100, lit100 / 100};
+            int color = ColorUtils.HSLToColor(hslVal);
+            float[] hsv = new float[3];
+            Color.colorToHSV(color, hsv);
+            refreshDesc(hslVal, color, (int) (hsv[2] * 100));
+        }
+    }
 
     private void sendHslSetMessage(float[] hslValue) {
         if (messageDelegate != null) {
@@ -231,8 +265,6 @@ public class CompositionColorView extends FrameLayout {
                 "\n\tL -- " + (hslValue[2] + "(" + (byte) (hslValue[2] * 100) + ")"
         );
         tv_hsl.setText(hsl);
-
-
 
 
         int hue = (int) hslValue[0];

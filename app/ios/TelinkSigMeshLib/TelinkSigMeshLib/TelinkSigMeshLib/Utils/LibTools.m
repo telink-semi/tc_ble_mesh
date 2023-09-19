@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/12
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  LibTools.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2018/10/12.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "LibTools.h"
 #import <CommonCrypto/CommonCryptor.h>
@@ -139,13 +133,16 @@
 
 /// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssXXX"，eg: @"2018-12-23T11:45:22-08:00"
 /// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssZ"，eg: @"2018-12-23T11:45:22-0800"
+/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z". 如果要使用该特定格式，则必须将时区设置为UTC.当时北京时间为2021-10-08T16:33:16。
 + (NSString *)getNowTimeStringOfJson {
     NSDate *date = [NSDate date];
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
     formatter.dateFormat = @"YYYY-MM-dd";
     NSString *time1 = [formatter stringFromDate:date];
 //    formatter.dateFormat = @"hh:mm:ssZ";
-    formatter.dateFormat = @"hh:mm:ssXXX";
+//    formatter.dateFormat = @"hh:mm:ssXXX";
+    formatter.dateFormat = @"hh:mm:ssX";
     NSString *time2 = [formatter stringFromDate:date];
     return [NSString stringWithFormat:@"%@T%@",time1,time2];
 }
@@ -341,6 +338,14 @@
     return [self uint64FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
 
++ (UInt16)getVirtualAddressOfLabelUUID:(NSString *)string {
+    if (string == nil || string.length != 16) {
+        return 0;
+    }
+    SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithVirtualLabel:[CBUUID UUIDWithString:[LibTools UUIDToMeshUUID:string]]];
+    return meshAddress.address;
+}
+
 ///格式化整形字符串(去除前面的"0")
 + (NSString *)formatIntString:(NSString *)string{
     NSString *tem = string;
@@ -358,6 +363,17 @@
 ///D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
 + (NSString *)UUIDToMeshUUID:(NSString *)meshUUID{
     return [NSString stringWithFormat:@"%@-%@-%@-%@-%@",[meshUUID substringWithRange:NSMakeRange(0, 8)],[meshUUID substringWithRange:NSMakeRange(8, 4)],[meshUUID substringWithRange:NSMakeRange(12, 4)],[meshUUID substringWithRange:NSMakeRange(16, 4)],[meshUUID substringWithRange:NSMakeRange(20, 12)]];
+}
+
+/// xxxx -> 0000xxxx-0000-1000-8000-008505f9b34fb or xxxxxxxx -> xxxxxxxx-0000-1000-8000-008505f9b34fb
++ (NSString *)change16BitsUUIDTO128Bits:(NSString *)uuid {
+    if (uuid.length == 4) {
+        return [NSString stringWithFormat:@"0000%@-0000-1000-8000-008505f9b34fb",uuid].uppercaseString;
+    } else if (uuid.length == 8) {
+        return [NSString stringWithFormat:@"%@-0000-1000-8000-008505f9b34fb",uuid].uppercaseString;
+    } else {
+        return uuid;
+    }
 }
 
 + (NSString *)getSDKVersion{
@@ -453,6 +469,26 @@
     return (val + 32768);
 }
 
+///（四舍五入，保留两位小数）
++ (float)roundFloat:(float)price {
+    return roundf(price*100)/100;
+}
+
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
++ (SigStepResolution)getSigStepResolutionWithSigPeriodModel:(SigPeriodModel *)periodModel {
+    SigStepResolution r = SigStepResolution_seconds;
+    if (periodModel.resolution == 6000000) {
+        r = SigStepResolution_tensOfMinutes;
+    } else if (periodModel.resolution == 10000) {
+        r = SigStepResolution_tensOfSeconds;
+    } else if (periodModel.resolution == 1000) {
+        r = SigStepResolution_seconds;
+    } else if (periodModel.resolution == 100) {
+        r = SigStepResolution_hundredsOfMilliseconds;
+    }
+    return r;
+}
+
 #pragma mark - JSON相关
 
 /**
@@ -461,7 +497,7 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary {
++ (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONReadingMutableLeaves | NSJSONReadingAllowFragments
@@ -472,6 +508,7 @@
     }
     NSString *string = [[NSString alloc] initWithData:data
                                              encoding:NSUTF8StringEncoding];
+    string = [string stringByReplacingOccurrencesOfString:@"\\" withString:@""];
     return string;
 }
  
@@ -481,7 +518,7 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary {
++ (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONWritingPrettyPrinted
@@ -492,6 +529,7 @@
     }
     NSString *string = [[NSString alloc] initWithData:data
                                              encoding:NSUTF8StringEncoding];
+    string = [string stringByReplacingOccurrencesOfString:@"\\" withString:@""];
     return string;
 }
  
@@ -501,14 +539,19 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON数据
  */
-+ (NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary {
++ (nullable NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONWritingPrettyPrinted
+//                                                   options:0
                                                      error:&err];
     if (data == nil) {
         NSLog(@"字典转换json失败：%@",err);
+        return nil;
     }
+    NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    string = [string stringByReplacingOccurrencesOfString:@"\\" withString:@""];
+    data = [string dataUsingEncoding:NSUTF8StringEncoding];
     return data;
 }
 
@@ -531,7 +574,7 @@
 *  @param jsonString 待转换的JSON字符串
 *  @return 字典数据
 */
-+ (NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString {
++ (nullable NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString {
     if (jsonString == nil) {
         NSLog(@"json转换字典失败：json为空");
         return nil;
@@ -541,8 +584,7 @@
     NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
                                                         options:NSJSONReadingMutableContainers
                                                           error:&err];
-    if(err)
-    {
+    if(err) {
         NSLog(@"json转换字典失败：%@",err);
         return nil;
     }
@@ -612,251 +654,6 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     return (int)numBytesCrypted;
 }
 
-#pragma mark - base64加解密相关
-
-#define     LocalStr_None           @""
-static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-+ (NSString *)base64StringFromText:(NSString *)text
-{
-    if (text && ![text isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY  改动了此处
-        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
-        NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding];
-        //IOS 自带DES加密 Begin  改动了此处
-        data = [self DESEncrypt:data WithKey:key];
-        //IOS 自带DES加密 End
-        return [self base64EncodedStringFrom:data];
-    }
-    else {
-        return LocalStr_None;
-    }
-}
-
-+ (NSString *)textFromBase64String:(NSString *)base64
-{
-    if (base64 && ![base64 isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY   改动了此处
-        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
-        NSData *data = [self dataWithBase64EncodedString:base64];
-        //IOS 自带DES解密 Begin    改动了此处
-        data = [self DESDecrypt:data WithKey:key];
-        //IOS 自带DES加密 End
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }
-    else {
-        return LocalStr_None;
-    }
-}
-
-+ (NSString *)textFromBase64String:(NSString *)base64 password:(NSString *)password
-{
-    if (base64 && ![base64 isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY   改动了此处
-//        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
-        NSData *data = [self dataWithBase64EncodedString:base64];
-        //IOS 自带DES解密 Begin    改动了此处
-        data = [self DESDecrypt:data WithKey:password];
-        //IOS 自带DES加密 End
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }
-    else {
-        return LocalStr_None;
-    }
-}
-
-/******************************************************************************
- 函数名称 : + (NSData *)DESEncrypt:(NSData *)data WithKey:(NSString *)key
- 函数描述 : 文本数据进行DES加密
- 输入参数 : (NSData *)data
- (NSString *)key
- 输出参数 : N/A
- 返回参数 : (NSData *)
- 备注信息 : 此函数不可用于过长文本
- ******************************************************************************/
-+ (NSData *)DESEncrypt:(NSData *)data WithKey:(NSString *)key
-{
-    char keyPtr[kCCKeySizeAES256+1];
-    bzero(keyPtr, sizeof(keyPtr));
-    
-    [key getCString:keyPtr maxLength:sizeof(keyPtr) encoding:NSUTF8StringEncoding];
-    
-    NSUInteger dataLength = [data length];
-    
-    size_t bufferSize = dataLength + kCCBlockSizeAES128;
-    void *buffer = malloc(bufferSize);
-    
-    size_t numBytesEncrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmDES,
-                                          kCCOptionPKCS7Padding | kCCOptionECBMode,
-                                          keyPtr, kCCBlockSizeDES,
-                                          NULL,
-                                          [data bytes], dataLength,
-                                          buffer, bufferSize,
-                                          &numBytesEncrypted);
-    if (cryptStatus == kCCSuccess) {
-        return [NSData dataWithBytesNoCopy:buffer length:numBytesEncrypted];
-    }
-    
-    free(buffer);
-    return nil;
-}
-
-/******************************************************************************
- 函数名称 : + (NSData *)DESEncrypt:(NSData *)data WithKey:(NSString *)key
- 函数描述 : 文本数据进行DES解密
- 输入参数 : (NSData *)data
- (NSString *)key
- 输出参数 : N/A
- 返回参数 : (NSData *)
- 备注信息 : 此函数不可用于过长文本
- ******************************************************************************/
-+ (NSData *)DESDecrypt:(NSData *)data WithKey:(NSString *)key
-{
-    char keyPtr[kCCKeySizeAES256+1];
-    bzero(keyPtr, sizeof(keyPtr));
-    
-    [key getCString:keyPtr maxLength:sizeof(keyPtr) encoding:NSUTF8StringEncoding];
-    
-    NSUInteger dataLength = [data length];
-    
-    size_t bufferSize = dataLength + kCCBlockSizeAES128;
-    void *buffer = malloc(bufferSize);
-    
-    size_t numBytesDecrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmDES,
-                                          kCCOptionPKCS7Padding | kCCOptionECBMode,
-                                          keyPtr, kCCBlockSizeDES,
-                                          NULL,
-                                          [data bytes], dataLength,
-                                          buffer, bufferSize,
-                                          &numBytesDecrypted);
-    
-    if (cryptStatus == kCCSuccess) {
-        return [NSData dataWithBytesNoCopy:buffer length:numBytesDecrypted];
-    }
-    
-    free(buffer);
-    return nil;
-}
-
-/******************************************************************************
- 函数名称 : + (NSData *)dataWithBase64EncodedString:(NSString *)string
- 函数描述 : base64格式字符串转换为文本数据
- 输入参数 : (NSString *)string
- 输出参数 : N/A
- 返回参数 : (NSData *)
- 备注信息 :
- ******************************************************************************/
-+ (NSData *)dataWithBase64EncodedString:(NSString *)string
-{
-    if (string == nil)
-        [NSException raise:NSInvalidArgumentException format:@""];
-    if ([string length] == 0)
-        return [NSData data];
-    
-    static char *decodingTable = NULL;
-    if (decodingTable == NULL)
-    {
-        decodingTable = malloc(256);
-        if (decodingTable == NULL)
-            return nil;
-        memset(decodingTable, CHAR_MAX, 256);
-        NSUInteger i;
-        for (i = 0; i < 64; i++)
-            decodingTable[(short)encodingTable[i]] = i;
-    }
-    
-    const char *characters = [string cStringUsingEncoding:NSASCIIStringEncoding];
-    if (characters == NULL)     //  Not an ASCII string!
-        return nil;
-    char *bytes = malloc((([string length] + 3) / 4) * 3);
-    if (bytes == NULL)
-        return nil;
-    NSUInteger length = 0;
-    
-    NSUInteger i = 0;
-    while (YES)
-    {
-        char buffer[4];
-        short bufferLength;
-        for (bufferLength = 0; bufferLength < 4; i++)
-        {
-            if (characters[i] == '\0')
-                break;
-            if (isspace(characters[i]) || characters[i] == '=')
-                continue;
-            buffer[bufferLength] = decodingTable[(short)characters[i]];
-            if (buffer[bufferLength++] == CHAR_MAX)      //  Illegal character!
-            {
-                free(bytes);
-                return nil;
-            }
-        }
-        
-        if (bufferLength == 0)
-            break;
-        if (bufferLength == 1)      //  At least two characters are needed to produce one byte!
-        {
-            free(bytes);
-            return nil;
-        }
-        
-        //  Decode the characters in the buffer to bytes.
-        bytes[length++] = (buffer[0] << 2) | (buffer[1] >> 4);
-        if (bufferLength > 2)
-            bytes[length++] = (buffer[1] << 4) | (buffer[2] >> 2);
-        if (bufferLength > 3)
-            bytes[length++] = (buffer[2] << 6) | buffer[3];
-    }
-    
-    bytes = realloc(bytes, length);
-    return [NSData dataWithBytesNoCopy:bytes length:length];
-}
-
-/******************************************************************************
- 函数名称 : + (NSString *)base64EncodedStringFrom:(NSData *)data
- 函数描述 : 文本数据转换为base64格式字符串
- 输入参数 : (NSData *)data
- 输出参数 : N/A
- 返回参数 : (NSString *)
- 备注信息 :
- ******************************************************************************/
-+ (NSString *)base64EncodedStringFrom:(NSData *)data
-{
-    if ([data length] == 0)
-        return @"";
-    
-    char *characters = malloc((([data length] + 2) / 3) * 4);
-    if (characters == NULL)
-        return nil;
-    NSUInteger length = 0;
-    
-    NSUInteger i = 0;
-    while (i < [data length])
-    {
-        char buffer[3] = {0,0,0};
-        short bufferLength = 0;
-        while (bufferLength < 3 && i < [data length])
-            buffer[bufferLength++] = ((char *)[data bytes])[i++];
-        
-        //  Encode the bytes in the buffer to four characters, including padding "=" characters if necessary.
-        characters[length++] = encodingTable[(buffer[0] & 0xFC) >> 2];
-        characters[length++] = encodingTable[((buffer[0] & 0x03) << 4) | ((buffer[1] & 0xF0) >> 4)];
-        if (bufferLength > 1)
-            characters[length++] = encodingTable[((buffer[1] & 0x0F) << 2) | ((buffer[2] & 0xC0) >> 6)];
-        else characters[length++] = '=';
-        if (bufferLength > 2)
-            characters[length++] = encodingTable[buffer[2] & 0x3F];
-        else characters[length++] = '=';
-    }
-    
-    return [[NSString alloc] initWithBytesNoCopy:characters length:length encoding:NSASCIIStringEncoding freeWhenDone:YES];
-}
-
 #pragma mark - 正则表达式相关
 
 + (BOOL)validateUUID:(NSString *)uuidString {
@@ -869,6 +666,150 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     NSString *regex = @"^[0-9a-fA-F]{0,}$";
     NSPredicate *pred = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", regex];
     return [pred evaluateWithObject:uuidString];
+}
+
+#pragma mark - UTF-8相关
+//UTF8 用途:https://blog.csdn.net/yetaibing1990/article/details/84766661
+//UTF8 格式：https://blog.csdn.net/sandyen/article/details/1108168?utm_medium=distribute.wap_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.wap_blog_relevant_pic&dist_request_id=&depth_1-utm_source=distribute.wap_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.wap_blog_relevant_pic
+//UTF8 官方文档：http://www.unicode.org/versions/Unicode12.0.0/ch03.pdf
+
++ (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData {
+    NSMutableArray *mArray = [NSMutableArray array];
+    UInt8 tem8 = 0;
+    UInt32 tem32 = 0;
+    Byte *dataByte = (Byte *)UTF8EncodeData.bytes;
+    for (int i=0; i < UTF8EncodeData.length; i++) {
+        tem8 = 0;
+        tem32 = 0;
+        memcpy(&tem8, dataByte+i, 1);
+        if ((tem8 >> 7)&0x1) {
+            //2~6字节
+            UInt8 byteCount = 2;
+            while ((tem8 >> (8 - byteCount - 1))&0x1) {
+                byteCount++;
+            }
+            for (int j=0; j < byteCount; j++) {
+                if (j == 0) {
+                    UInt8 t = 1;
+                    for (int k=1; k <= 6-byteCount; k++) {
+                        UInt8 n = 1;
+                        t = t | (n<<k);
+                    }
+                    tem32 = tem32 | ((tem8 & t) << (6 * (byteCount - j - 1)));
+                } else {
+                    memcpy(&tem8, dataByte+i+j, 1);
+                    tem32 = tem32 | ((tem8 & 0B111111) << (6 * (byteCount - j - 1)));
+                }
+            }
+            [mArray addObject:@(tem32)];
+            i = i + byteCount - 1;
+        } else {
+            //1字节
+            tem32 = tem8 & 0B1111111;
+            [mArray addObject:@(tem32)];
+        }
+    }
+    return mArray;
+}
+
++ (NSData *)getUTF8EncodeDataFromNumberList:(NSArray <NSNumber *>*)numberList {
+    NSMutableData *mData = [NSMutableData data];
+    UInt64 tem64;
+    for (NSNumber *number in numberList) {
+        tem64 = 0;
+        if (number.intValue > 0x7FFFFFFF) {
+            NSLog(@"[error]:number.intValue > 0x7FFFFFFF,number is invalid！");
+            return nil;
+        } else if (number.intValue > 0x3FFFFFF) {
+            //6字节
+            UInt64 u64 = number.intValue;
+            tem64 = tem64 | 0B111111001000000010000000100000001000000010000000 | (u64 & 0x3F) | (((u64 >> 6) & 0x3F) << 8) | (((u64 >> 12) & 0x3F) << 16) | (((u64 >> 18) & 0x3F) << 24) | (((u64 >> 24) & 0x3F) << 32) | (((u64 >> 30) & 0x1) << 40);
+            NSData *data = [NSData dataWithBytes:&tem64 length:6];
+            data = [self turnOverData:data];
+            [mData appendData:data];
+        } else if (number.intValue > 0x7FFFFF) {
+            //5字节
+            UInt64 u64 = number.intValue;
+            tem64 = tem64 | 0B1111100010000000100000001000000010000000 | (u64 & 0x3F) | (((u64 >> 6) & 0x3F) << 8) | (((u64 >> 12) & 0x3F) << 16) | (((u64 >> 18) & 0x3F) << 24) | (((u64 >> 24) & 0x3) << 32);
+            NSData *data = [NSData dataWithBytes:&tem64 length:5];
+            data = [self turnOverData:data];
+            [mData appendData:data];
+        } else if (number.intValue > 0x3FFF) {
+            //4字节
+            UInt32 u32 = number.intValue;
+            tem64 = tem64 | 0B11110000100000001000000010000000 | (u32 & 0x3F) | (((u32 >> 6) & 0x3F) << 8) | (((u32 >> 12) & 0x3F) << 16) | (((u32 >> 18) & 0x7) << 24);
+            NSData *data = [NSData dataWithBytes:&tem64 length:4];
+            data = [self turnOverData:data];
+            [mData appendData:data];
+        } else if (number.intValue > 0x7FF) {
+            //3字节
+            UInt32 u32 = number.intValue;
+            tem64 = tem64 | 0B111000001000000010000000 | (u32 & 0x3F) | (((u32 >> 6) & 0x3F) << 8) | (((u32 >> 12) & 0xF) << 16);
+            NSData *data = [NSData dataWithBytes:&tem64 length:3];
+            data = [self turnOverData:data];
+            [mData appendData:data];
+        } else if (number.intValue > 0x7F) {
+            //2字节
+            UInt16 tem16 = number.intValue;
+            tem64 = tem64 | 0B1100000010000000 | (tem16 & 0x3F) | (((tem16 >> 6) & 0x1F) << 8);
+            NSData *data = [NSData dataWithBytes:&tem64 length:2];
+            data = [self turnOverData:data];
+            [mData appendData:data];
+        } else {
+            //1字节
+            UInt8 tem8 = number.intValue;
+            tem64 = tem64 | (tem8 & 0x7F);
+            NSData *data = [NSData dataWithBytes:&tem64 length:1];
+            [mData appendData:data];
+        }
+    }
+    return mData;
+}
+
+#pragma mark - 文件相关
+
++ (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType {
+    if (fileType == nil || fileType.length == 0) {
+        return @[];
+    }
+    NSMutableArray *fileSource = [NSMutableArray array];
+    
+    // 搜索bin文件的目录(工程内部添加的bin文件)
+    NSArray *paths = [[NSBundle mainBundle] pathsForResourcesOfType:fileType inDirectory:nil];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    for (NSString *filePath in paths) {
+        NSString *fileName = [fileManager displayNameAtPath:filePath];
+        [fileSource addObject:fileName];
+    }
+    //搜索Documents(通过iTunes File 加入的文件需要在此搜索)
+    NSFileManager *mang = [NSFileManager defaultManager];
+    NSError *error = nil;
+    NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    NSArray *fileNames = [mang contentsOfDirectoryAtPath:fileLocalPath error:&error];
+    for (NSString *path in fileNames) {
+        if ([path containsString:[NSString stringWithFormat:@".%@",fileType]]) {
+            [fileSource addObject:path];
+        }
+    }
+    return fileSource;
+}
+
++ (NSData *)getDataWithFileName:(NSString *)fileName fileType:(NSString * _Nullable )fileType {
+    NSData *data = [[NSFileHandle fileHandleForReadingAtPath:[[NSBundle mainBundle] pathForResource:fileName ofType:fileType]] readDataToEndOfFile];
+    if (!data) {
+        //通过iTunes File 加入的文件
+        NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+        if (fileName && fileName.length > 0) {
+            fileLocalPath = [NSString stringWithFormat:@"%@/%@",fileLocalPath,fileName];
+        }
+        if (fileType && fileType.length > 0) {
+            fileLocalPath = [NSString stringWithFormat:@"%@.%@",fileLocalPath,fileType];
+        }
+        NSError *err = nil;
+        NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL URLWithString:fileLocalPath] error:&err];
+        data = fileHandle.readDataToEndOfFile;
+    }
+    return data;
 }
 
 @end

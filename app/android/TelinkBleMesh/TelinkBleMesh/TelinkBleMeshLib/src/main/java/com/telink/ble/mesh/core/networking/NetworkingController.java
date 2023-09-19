@@ -4,33 +4,36 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.SparseArray;
-import android.util.SparseIntArray;
 import android.util.SparseLongArray;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.networking.beacon.MeshBeaconPDU;
+import com.telink.ble.mesh.core.networking.beacon.MeshPrivateBeacon;
 import com.telink.ble.mesh.core.networking.beacon.SecureNetworkBeacon;
 import com.telink.ble.mesh.core.networking.transport.lower.LowerTransportPDU;
 import com.telink.ble.mesh.core.networking.transport.lower.SegmentAcknowledgmentMessage;
@@ -71,7 +74,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NetworkingController {
 
-    private final String LOG_TAG = "Networking";
+    private static final String LOG_TAG = "Networking";
+
     // include mic(4)
     public static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
 
@@ -79,14 +83,14 @@ public class NetworkingController {
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 12;
 
-    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE = 225;
+    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG = 225;
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
 
-    private boolean dleEnabled = false;
+    private ExtendBearerMode extendBearerMode = ExtendBearerMode.NONE;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
-    public static int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE;
+//    public int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
 
 
     private static final int DEFAULT_SEQUENCE_NUMBER_UPDATE_STEP = 0x100;
@@ -99,9 +103,8 @@ public class NetworkingController {
      */
     private final static int THRESHOLD_SEQUENCE_NUMBER = 0xC00000;
 
+//    private final static int THRESHOLD_SEQUENCE_NUMBER = 0x88; // for test ivIndex Update
 
-    // for test
-//    private final static int THRESHOLD_SEQUENCE_NUMBER = 0x0100;
 
     /**
      * receive
@@ -114,6 +117,8 @@ public class NetworkingController {
     private final static int TRANSPORT_OUT = 0x01;
 
     private AtomicInteger mSequenceNumber = new AtomicInteger(0x0001);
+
+    private boolean privateBeaconReceived = false;
 
     private boolean isIvUpdating = false;
 
@@ -131,10 +136,13 @@ public class NetworkingController {
     private SparseArray<byte[]> deviceKeyMap;
 
     /**
-     * save device sequence number and compare with sequence number in received network pdu
+     * 0x1122334400AABBCC
+     * ivIndex: 0x11223344
+     * sequenceNumber: 0xAABBCC
+     * save device sequence number(lower 24 bits) and ivIndex(higher 32 bits), compare with sequence number in received network pdu
      * if sequence number in network pud is not larger than saved sequence number, drop this pdu
      */
-    private SparseIntArray deviceSequenceNumberMap = new SparseIntArray();
+    private SparseLongArray deviceSequenceNumberMap = new SparseLongArray();
 
     /**
      * appKey and appKeyIndex map
@@ -144,7 +152,8 @@ public class NetworkingController {
     /**
      * from mesh configuration
      */
-    private int initIvIndex = 0;
+    private long initIvIndex = 0;
+
 
     /**
      * unsigned 32-bit integer
@@ -237,9 +246,9 @@ public class NetworkingController {
     // reliable
     private final Object RELIABLE_SEGMENTED_LOCK = new Object();
 
-    private static final int RELIABLE_MESSAGE_TIMEOUT = 960; // 2 * 1000
-
     private Set<Integer> mResponseMessageBuffer = new LinkedHashSet<>();
+
+    private int[] whiteList;
 
     private int proxyFilterInitStep = 0;
 
@@ -250,15 +259,29 @@ public class NetworkingController {
     private static final int PROXY_FILTER_INIT_TIMEOUT = 5 * 1000;
 
     /**
-     * networking pud sending prepared queue
+     * networking pdu sending prepared queue
      */
     private final Queue<byte[]> mNetworkingQueue = new ConcurrentLinkedQueue<>();
 
-    public static final long NETWORKING_INTERVAL = 320; // 240 ms
+    /**
+     *
+     */
+    public static final long NETWORK_INTERVAL_FOR_FU = 180; // 240 ms // 320
+
+    public static final long NETWORK_INTERVAL_DEFAULT = 240; // 240 ms // 320
+
+//    public static final long NETWORK_INTERVAL_DEFAULT = 10; // for test
+
+    /**
+     * network packet sent to un-direct connected node should push to queue, and send periodically
+     */
+    public static long netPktSendInterval = NETWORK_INTERVAL_DEFAULT; // 240 ms // 320
 
     private final Object mNetworkBusyLock = new Object();
 
     private boolean networkingBusy = false;
+
+    private byte[] privateBeaconKey = null;
 
 
     public NetworkingController(HandlerThread handlerThread) {
@@ -273,8 +296,9 @@ public class NetworkingController {
 
     public void setup(MeshConfiguration configuration) {
         this.clear();
-        this.initIvIndex = configuration.ivIndex;
-        this.ivIndex = initIvIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
+        this.resetDirectAddress();
+        this.initIvIndex = configuration.ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
+        this.ivIndex = initIvIndex;
         int seqNo = configuration.sequenceNumber;
         this.mSequenceNumber.set(initSequenceNumber(seqNo));
         this.netKeyIndex = configuration.netKeyIndex;
@@ -282,11 +306,12 @@ public class NetworkingController {
         this.nid = (byte) (k2Output[0][15] & 0x7F);
         this.encryptionKey = k2Output[1];
         this.privacyKey = k2Output[2];
-
+        this.privateBeaconKey = Encipher.generatePrivateBeaconKey(configuration.networkKey);
         this.appKeyMap = configuration.appKeyMap;
         this.deviceKeyMap = configuration.deviceKeyMap;
 
         this.localAddress = configuration.localAddress;
+        this.whiteList = configuration.proxyFilterWhiteList;
     }
 
 
@@ -301,7 +326,6 @@ public class NetworkingController {
         this.mNetworkingQueue.clear();
         this.lastSeqAuth = 0;
         this.lastSegSrc = 0;
-        this.directAddress = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
         this.receivedSegmentedMessageBuffer.clear();
@@ -309,20 +333,42 @@ public class NetworkingController {
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
         this.lastSegComplete = true;
+        this.privateBeaconReceived = false;
+    }
+
+    public void resetDirectAddress() {
+        this.directAddress = 0;
     }
 
     public void addDeviceKey(int unicastAddress, byte[] deviceKey) {
         this.deviceKeyMap.put(unicastAddress, deviceKey);
     }
 
-    public void enableDLE(boolean enable) {
-        this.dleEnabled = enable;
-        unsegmentedAccessLength = enable ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
-        log("enableDLE: " + enable + " -- value : " + unsegmentedAccessLength);
+    public void setExtendBearerMode(ExtendBearerMode extendBearerMode) {
+        log("setExtendBearerMode: " + extendBearerMode);
+        this.extendBearerMode = extendBearerMode;
     }
 
-    public int getSegmentAccessLength() {
-        return unsegmentedAccessLength;
+    public ExtendBearerMode getExtendBearerMode() {
+        return extendBearerMode;
+    }
+
+    private int getSegmentAccessLength(int dstAddress, int opcode) {
+        if (GattConnection.mtu < UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG) {
+            return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+        }
+        if (dstAddress == directAddress && opcode == Opcode.BLOB_CHUNK_TRANSFER.value) {
+            return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        }
+        switch (extendBearerMode) {
+            case NONE:
+                return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+            case GATT:
+                return dstAddress == directAddress ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+            case GATT_ADV:
+                return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        }
+        return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
     }
 
     public void removeDeviceKey(int unicastAddress) {
@@ -358,18 +404,32 @@ public class NetworkingController {
      */
     public void checkSequenceNumber(byte[] networkId, byte[] beaconKey) {
         final boolean updatingNeeded = this.mSequenceNumber.get() >= THRESHOLD_SEQUENCE_NUMBER;
-        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.ivIndex, networkId, beaconKey, updatingNeeded);
-        this.isIvUpdating = updatingNeeded;
+
         if (isIvUpdating) {
-            this.ivIndex += 1;
+            log("beacon updating status changed by remote device ");
+        } else {
+            this.isIvUpdating = updatingNeeded;
+            if (isIvUpdating) {
+                this.ivIndex = initIvIndex + 1;
+            }
         }
-        log(networkBeacon.toString());
-        sendMeshBeaconPdu(networkBeacon);
+
+        if (privateBeaconReceived) {
+            MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon((int) this.initIvIndex, privateBeaconKey, isIvUpdating);
+            sendMeshBeaconPdu(beacon);
+        } else {
+            SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.initIvIndex, networkId, beaconKey, isIvUpdating);
+            log("send beacon: " + networkBeacon.toString());
+            sendMeshBeaconPdu(networkBeacon);
+        }
+
+
     }
 
     private void onIvUpdated(long newIvIndex) {
-        if (newIvIndex > initIvIndex) {
+        if (newIvIndex > initIvIndex || this.initIvIndex == MeshUtils.IV_MISSING) {
             log(String.format(" iv updated to %08X", newIvIndex));
+            this.initIvIndex = (int) newIvIndex;
             this.deviceSequenceNumberMap.clear();
             this.mSequenceNumber.set(0);
             if (mNetworkingBridge != null) {
@@ -386,6 +446,12 @@ public class NetworkingController {
                 updating,
                 this.ivIndex,
                 this.isIvUpdating));
+        if (this.ivIndex == MeshUtils.IV_MISSING) {
+            this.isIvUpdating = updating;
+            this.ivIndex = remoteIvIndex;
+            this.onIvUpdated(remoteIvIndex);
+            return;
+        }
         // d-value
         long dVal = remoteIvIndex - this.ivIndex;
 
@@ -460,6 +526,7 @@ public class NetworkingController {
         int dst = meshMessage.getDestinationAddress();
         int src = localAddress;
         int aszmic = meshMessage.getSzmic();
+        int opcode = meshMessage.getOpcode();
         byte akf = meshMessage.getAccessType().akf;
         byte aid;
         if (meshMessage.getAccessType() == AccessType.APPLICATION) {
@@ -481,7 +548,8 @@ public class NetworkingController {
         byte[] accessPduData = accessPDU.toByteArray();
 
 //        boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
-        boolean segmented = accessPduData.length > unsegmentedAccessLength;
+        final int segmentLen = getSegmentAccessLength(dst, opcode);
+        boolean segmented = accessPduData.length > segmentLen;
         meshMessage.setSegmented(segmented);
         if (segmented) {
             synchronized (RELIABLE_SEGMENTED_LOCK) {
@@ -546,7 +614,7 @@ public class NetworkingController {
                     mSendingReliableMessage = meshMessage;
 //                    restartReliableMessageTimeoutTask(); //
                 }
-                SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
+                SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber, segmentLen);
                 if (segmentedAccessMessages.size() == 0) return false;
 
                 log("send segmented access message");
@@ -699,7 +767,7 @@ public class NetworkingController {
             synchronized (mNetworkingQueue) {
                 queueSize = mNetworkingQueue.size();
             }
-            timeout = relayTimeout + segmentAckTimeout + queueSize * NETWORKING_INTERVAL;
+            timeout = relayTimeout + segmentAckTimeout + queueSize * netPktSendInterval;
         } else {
             // receive
             timeout = relayTimeout + segmentAckTimeout;
@@ -716,7 +784,17 @@ public class NetworkingController {
 
         // 960
 //        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
-        long timeout = (dleEnabled ? 2560 : 1280) + queueSize * NETWORKING_INTERVAL;
+
+        // for test
+//        long timeout = (dleEnabled ? 5120 : 2560) + queueSize * NETWORKING_INTERVAL;
+        long timeout = queueSize * netPktSendInterval;
+        final MeshMessage meshMessage = mSendingReliableMessage;
+        if (meshMessage != null) {
+            timeout += meshMessage.getRetryInterval();
+        } else {
+//            timeout = (dleEnabled ? 2560 : 1280) + ;
+            timeout += MeshMessage.DEFAULT_RETRY_INTERVAL;
+        }
         log("reliable message timeout:" + timeout);
         return timeout;
     }
@@ -753,7 +831,7 @@ public class NetworkingController {
     }
 
     private void onNetworkingPduPrepared(byte[] payload, int dstAddress) {
-        log("networking pud prepared: " + Arrays.bytesToHexString(payload, ":") + " busy?-" + networkingBusy);
+        log("networking pdu prepared: " + Arrays.bytesToHexString(payload, ":") + " busy?-" + networkingBusy);
 
         synchronized (mNetworkBusyLock) {
             if (!networkingBusy) {
@@ -786,17 +864,17 @@ public class NetworkingController {
             payload = mNetworkingQueue.poll();
         }
         if (payload == null) {
-            log("networking pud poll: null");
+            log("networking pdu poll: null");
             synchronized (mNetworkBusyLock) {
                 networkingBusy = false;
             }
         } else {
-            log("networking pud poll: " + Arrays.bytesToHexString(payload, ":"));
+            log("networking pdu poll: " + Arrays.bytesToHexString(payload, ":"));
             if (mNetworkingBridge != null) {
                 mNetworkingBridge.onCommandPrepared(ProxyPDU.TYPE_NETWORK_PDU, payload);
             }
             mDelayHandler.removeCallbacks(networkingSendingTask);
-            mDelayHandler.postDelayed(networkingSendingTask, NETWORKING_INTERVAL);
+            mDelayHandler.postDelayed(networkingSendingTask, netPktSendInterval);
         }
     }
 
@@ -822,21 +900,30 @@ public class NetworkingController {
     }
 
 
-    public void parseMeshBeacon(byte[] payload, byte[] networkId, byte[] networkBeaconKey) {
-        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload);
+    public void parseSecureBeacon(byte[] payload, byte[] networkBeaconKey) {
+        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload, networkBeaconKey);
         // validate beacon data
         if (networkBeacon != null) {
             log("SecureNetworkBeacon received: " + networkBeacon.toString());
-            if (networkBeacon.validateAuthValue(networkId, networkBeaconKey)) {
-                int ivIndex = networkBeacon.getIvIndex();
-                boolean isIvUpdating = networkBeacon.isIvUpdating();
-                onIvIndexReceived(ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX, isIvUpdating);
-            } else {
-                log("network beacon check err");
-            }
-
+            int ivIndex = networkBeacon.getIvIndex();
+            boolean isIvUpdating = networkBeacon.isIvUpdating();
+            onIvIndexReceived(ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX, isIvUpdating);
         } else {
             log("network beacon parse err");
+        }
+
+    }
+
+    public void parsePrivateBeacon(byte[] payload, byte[] privateBeaconKey) {
+        MeshPrivateBeacon privateBeacon = MeshPrivateBeacon.from(payload, privateBeaconKey);
+        if (privateBeacon != null) {
+            this.privateBeaconReceived = true;
+            log("MeshPrivateBeacon received: " + privateBeacon.toString());
+            int ivIndex = privateBeacon.getIvIndex();
+            boolean isIvUpdating = privateBeacon.isIvUpdating();
+            onIvIndexReceived(ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX, isIvUpdating);
+        } else {
+            log("private beacon parse error");
         }
     }
 
@@ -875,7 +962,8 @@ public class NetworkingController {
                 new NetworkLayerPDU.NetworkEncryptionSuite(ivIndex, this.encryptionKey, this.privacyKey, this.nid)
         );
         if (networkLayerPDU.parse(payload)) {
-            if (!validateSequenceNumber(networkLayerPDU)) {
+            log("network pdu: " + networkLayerPDU.toString());
+            if (!validateSequenceNumber(networkLayerPDU, ivIndex)) {
                 log("network pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
@@ -897,7 +985,8 @@ public class NetworkingController {
                 new NetworkLayerPDU.NetworkEncryptionSuite(ivIndex, this.encryptionKey, this.privacyKey, this.nid)
         );
         if (proxyNetworkPdu.parse(payload)) {
-            if (!validateSequenceNumber(proxyNetworkPdu)) {
+            log("proxy pdu: " + proxyNetworkPdu.toString());
+            if (!validateSequenceNumber(proxyNetworkPdu, ivIndex)) {
                 log("proxy config pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
@@ -919,10 +1008,15 @@ public class NetworkingController {
                     log("filter init action not started!", MeshLogger.LEVEL_WARN);
                     return;
                 }
+                log(String.format("reset direct address: %04X", src));
                 this.directAddress = src;
                 proxyFilterInitStep++;
                 if (proxyFilterInitStep == PROXY_FILTER_INIT_STEP_SET_TYPE) {
-                    addFilterAddress(new int[]{localAddress, 0xFFFF});
+                    if (this.whiteList == null || this.whiteList.length == 0) {
+                        addFilterAddress(new int[]{localAddress, MeshUtils.ADDRESS_BROADCAST});
+                    } else {
+                        addFilterAddress(this.whiteList);
+                    }
                 } else if (proxyFilterInitStep == PROXY_FILTER_SET_STEP_ADD_ADR) {
                     onProxyInitComplete(true);
                 }
@@ -949,22 +1043,53 @@ public class NetworkingController {
         }
     }
 
-    private boolean validateSequenceNumber(NetworkLayerPDU networkLayerPDU) {
+    private boolean validateSequenceNumber(NetworkLayerPDU networkLayerPDU, int pduIvIndex) {
         int src = networkLayerPDU.getSrc();
         int pduSequenceNumber = networkLayerPDU.getSeq();
-        int deviceSequenceNumber = this.deviceSequenceNumberMap.get(src, -1);
+        long valueInCache = this.deviceSequenceNumberMap.get(src, -1);
+        long deviceSequenceNumber = getSequenceNumberInCache(valueInCache);
         boolean pass = true;
-        if (deviceSequenceNumber == -1) {
-            this.deviceSequenceNumberMap.put(src, pduSequenceNumber);
+//        log(String.format("sequence in cache: src--%04X | value--%016X", src, valueInCache));
+        if (valueInCache == -1) {
+            log("put init sequence number");
+            saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
         } else {
-            if (pduSequenceNumber > deviceSequenceNumber) {
-                this.deviceSequenceNumberMap.put(src, pduSequenceNumber);
+            int deviceIvIndex = getIvIndexInCache(valueInCache);
+            if (pduIvIndex > deviceIvIndex) {
+                log("network pdu - larger ivIndex received, save the new ivIndex");
+                saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
+            } else if (pduIvIndex == deviceIvIndex) {
+                if (pduSequenceNumber > deviceSequenceNumber) {
+                    saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
+                } else {
+                    log(String.format("validate sequence number error  src: %04X -- pdu-sno: %06X -- dev-sno: %06X", src, pduSequenceNumber, deviceSequenceNumber));
+                    pass = false;
+                }
             } else {
-                log(String.format("validate sequence number error  src: %04X -- pdu-sno: %06X -- dev-sno: %06X", src, pduSequenceNumber, deviceSequenceNumber));
+                log("network pdu error: less ivIndex pdu received");
                 pass = false;
             }
+
         }
         return pass;
+    }
+
+    /**
+     * save sequence number and ivIndex misc value
+     */
+    private void saveSequenceCache(int src, int sequenceNumber, int ivIndex) {
+        long value = ((ivIndex & 0xFFFFFFFFL) << 32) | (sequenceNumber & 0x00FFFFFFL);
+//        log(String.format("save sequence in cache src: %04X -- value: %016X", src, value));
+//        log(String.format("save sequence detail src: %04X -- ivIndex: %08X -- ivIndex: %08X", src, ivIndex, sequenceNumber));
+        this.deviceSequenceNumberMap.put(src, value);
+    }
+
+    private long getSequenceNumberInCache(long valInCache) {
+        return valInCache & 0xFFFFFF;
+    }
+
+    private int getIvIndexInCache(long valInCache) {
+        return (int) ((valInCache >> 32) & 0xFFFFFFFFL);
     }
 
     private void parseControlMessage(NetworkLayerPDU networkLayerPDU) {
@@ -1129,10 +1254,15 @@ public class NetworkingController {
 
     private void updateReliableMessage(int src, AccessLayerPDU accessLayerPDU) {
         if (!reliableBusy) return;
-        if (mSendingReliableMessage != null && mSendingReliableMessage.getResponseOpcode() == accessLayerPDU.opcode) {
+        MeshMessage sendingMessage = mSendingReliableMessage;
+        if (sendingMessage != null && sendingMessage.getResponseOpcode() == accessLayerPDU.opcode) {
+            int sendingDst = sendingMessage.getDestinationAddress();
+            if (MeshUtils.validUnicastAddress(sendingDst) && sendingDst != src) {
+                log(String.format("not expected response : %04X - %04X", sendingDst, src));
+                return;
+            }
             mResponseMessageBuffer.add(src);
-            if (mResponseMessageBuffer.size() >= mSendingReliableMessage.getResponseMax()) {
-
+            if (mResponseMessageBuffer.size() >= sendingMessage.getResponseMax()) {
                 onReliableMessageComplete(true);
             }
         }
@@ -1144,6 +1274,15 @@ public class NetworkingController {
      * @param success if command response received
      */
     private void onReliableMessageComplete(boolean success) {
+
+        // clear networking packet sending queue
+        log("clear network buffer");
+        synchronized (mNetworkingQueue) {
+            mDelayHandler.removeCallbacks(networkingSendingTask);
+            networkingBusy = false;
+            mNetworkingQueue.clear();
+        }
+
         mDelayHandler.removeCallbacks(reliableMessageTimeoutTask);
         int opcode = mSendingReliableMessage.getOpcode();
         int rspMax = mSendingReliableMessage.getResponseMax();
@@ -1160,6 +1299,8 @@ public class NetworkingController {
                 }
             }
         }
+
+
         if (mNetworkingBridge != null) {
             mNetworkingBridge.onReliableMessageComplete(success, opcode, rspMax, rspCount);
         }
@@ -1530,9 +1671,9 @@ public class NetworkingController {
         return lowerTransportPduMap;
     }*/
 
-    private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber) {
+    private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber, int segmentLen) {
 
-        final int segmentedAccessLen = unsegmentedAccessLength + 1;
+        final int segmentedAccessLen = segmentLen + 1;
         byte[] seqNoBuffer = MeshUtils.integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
         // 13 lowest bits
         int seqZero = ((seqNoBuffer[1] & 0x1F) << 8) | (seqNoBuffer[2] & 0xFF);

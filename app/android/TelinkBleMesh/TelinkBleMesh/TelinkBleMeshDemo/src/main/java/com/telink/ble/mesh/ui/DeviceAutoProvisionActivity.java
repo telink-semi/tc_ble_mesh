@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file DeviceProvisionActivity.java
+ * @file DeviceAutoProvisionActivity.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -26,7 +27,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -52,24 +56,24 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
+import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 /**
- * auto provision
+ * auto provision device one by one
  * actions:
  * 1.scan -- success ->
  * 2.connect -- success ->
@@ -119,7 +123,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Auto)");
+        setTitle("Device Scan", "Auto");
 //        toolbar.setSubtitle("provision -> bind");
         refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
@@ -156,6 +160,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
 
 
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
+        final int oobInfo = MeshUtils.bytes2Integer(serviceData, 16, 2, ByteOrder.LITTLE_ENDIAN);
+
         NetworkingDevice localNode = getNodeByUUID(deviceUUID);
         if (localNode != null) {
             MeshLogger.d("device exists");
@@ -163,7 +169,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
         MeshService.getInstance().stopScan();
 
-        int address = mesh.provisionIndex;
+        int address = mesh.getProvisionIndex();
 
         MeshLogger.d("alloc address: " + address);
         if (address == -1) {
@@ -172,9 +178,12 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
+        if (AppSettings.DRAFT_FEATURES_ENABLE) {
+            provisioningDevice.setOobInfo(oobInfo);
+        }
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         } else {
@@ -186,6 +195,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
         });*/
+        provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
 
@@ -197,6 +207,9 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             NetworkingDevice device = new NetworkingDevice(nodeInfo);
             device.bluetoothDevice = advertisingDevice.device;
             device.state = NetworkingState.PROVISIONING;
+            if (AppSettings.DRAFT_FEATURES_ENABLE) {
+                device.oobInfo = oobInfo;
+            }
             devices.add(device);
             mListAdapter.notifyDataSetChanged();
         } else {
@@ -279,6 +292,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
 
         NetworkingDevice pvDevice = getProcessingNode();
         pvDevice.state = NetworkingState.PROVISION_FAIL;
+
         pvDevice.addLog("Provisioning", event.getDesc());
         mListAdapter.notifyDataSetChanged();
     }
@@ -290,13 +304,10 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         NetworkingDevice networkingDevice = getProcessingNode();
         NodeInfo nodeInfo = networkingDevice.nodeInfo;
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
+        nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.deviceKey = remote.getDeviceKey();
-        mesh.insertDevice(nodeInfo);
-        mesh.provisionIndex += elementCnt;
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
-
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(mesh.getDefaultNetKey().index));
+        mesh.insertDevice(nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -337,7 +348,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
         deviceInList.nodeInfo.bound = true;
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+        deviceInList.nodeInfo.save();
+//        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
 
         if (setTimePublish(deviceInList.nodeInfo)) {
             isPubSetting = true;
@@ -346,10 +358,6 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             startScan();
         }
     }
-
-    /*private boolean setTimePublish(NodeInfo nodeInfo){
-        return false;
-    }*/
 
     private boolean setTimePublish(NodeInfo nodeInfo) {
         int modelId = MeshSigModel.SIG_MD_TIME_S.modelId;
@@ -386,9 +394,10 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         if (deviceInList == null) return;
 
         deviceInList.state = success ? NetworkingState.TIME_PUB_SET_SUCCESS : NetworkingState.TIME_PUB_SET_FAIL;
+        deviceInList.nodeInfo.timePublishConfigured = true;
         deviceInList.addLog("Time Publish", "desc");
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+        deviceInList.nodeInfo.save();
         startScan();
     }
 
@@ -400,7 +409,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog("Binding", event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+//        mesh.saveOrUpdate();
     }
 
     private NetworkingDevice getProcessingNode() {

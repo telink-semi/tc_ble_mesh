@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     OpenSSLHelper.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  OpenSSLHelper.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/10/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     OpenSSLHelper.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/10/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -88,6 +82,12 @@
 /// @return Deobfuscated data of the same size as input data.
 - (NSData *)deobfuscate:(NSData *)data ivIndex:(UInt32)ivIndex privacyKey:(NSData *)privacyKey;
 
+- (NSData *)calculateAuthenticationTagWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+- (NSData *)calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+- (NSData *)calculatePrivateBeaconDataWithObfuscatedPrivateBeaconData:(NSData *)obfuscatedPrivateBeaconData randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+
+- (NSData *)calculatePrivateBeaconKeyWithNetKey:(NSData *)netKey;
+
 // MARK: - Helpers
 
 /// THe network key material derivation function k1 is used to generate instances of Identity Key and Beacon Key.
@@ -126,5 +126,20 @@
 /// @param key The 128-bit key.
 /// @return A byte array of encrypted data using the key. The size of the returned  array is equal to the size of input data.
 - (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key;
+
+- (NSData *)xor:(NSData *)someData withData:(NSData *)otherData;
+
+/// check version & time & Serial Number
+///
+/// "ecdsa-with-SHA256"
+/// check certificate data and return inner public key
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @param superCerData certificate data formatted by x509 IntermediateCertificate der.
+/// @return public key.
+- (NSData *)checkCertificate:(NSData *)cerData withSuperCertificate:(NSData *)superCerData;
+
+- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData;
+
+- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData;
 
 @end

@@ -1,27 +1,34 @@
 /********************************************************************************************************
- * @file     app_heartbeat.c 
+ * @file	app_heartbeat.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "app_heartbeat.h"
-
+#if DU_ENABLE
+#include "user_du.h"
 u8 heartbeat_en =1;
+#else
+u8 heartbeat_en =1;
+#endif
 u8 hb_sts_change = 0;
 u32 hb_pub_100ms =0;
 u32 hb_sub_100ms =0;
@@ -38,7 +45,7 @@ void mesh_cmd_sig_lowpower_heartbeat()
 int mesh_cmd_sig_heart_pub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	// reserve to diaptch the status 
-	int err = -1;
+	int err = 0;
 	if(cb_par->model){  // model may be Null for status message
     }
     return err;
@@ -80,7 +87,7 @@ int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 {
 	int err = -1;
 	mesh_heartbeat_pub_str *p_pub = &(model_sig_cfg_s.hb_pub);
-	mesh_cfg_model_heartbeat_pub_get_t *p_pub_get = (mesh_cfg_model_heartbeat_pub_get_t *)(par);
+	mesh_cfg_model_heartbeat_pub_set_t *p_pub_get = (mesh_cfg_model_heartbeat_pub_set_t *)(par);
 	p_pub->dst_adr = p_pub_get->dst;
 	p_pub->cnt_log = p_pub_get->count_log;
 	p_pub->cnt_val = get_cnt_log_to_val(p_pub_get->count_log);
@@ -90,13 +97,17 @@ int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	p_pub->netkeyidx = p_pub_get->netkeyindex;
 	// leave the key index settings .
 	//rsp the status 
-	mesh_cmd_sig_heartbeat_pub_get(par,par_len,cb_par);
+	err = mesh_cmd_sig_heartbeat_pub_get(par,par_len,cb_par);
 #if TESTCASE_FLAG_ENABLE
 	hb_pub_100ms = clock_time_100ms(); // test case required, because count in response of get command, should be same with set command.
 #else
 	hb_pub_100ms = clock_time_100ms()-BIT(31);  // Ali required, send once at once after received command.
 #endif
 	mesh_common_store(FLASH_ADR_MD_CFG_S);
+#if DU_ENABLE
+	du_bind_end_proc(cb_par->adr_src,4);
+#endif
+
 	return err;
 }
 
@@ -156,20 +167,20 @@ int mesh_cmd_sig_heartbeat_sub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	
 	// how to rsp 
 	mesh_common_store(FLASH_ADR_MD_CFG_S);
-	mesh_cmd_sig_heartbeat_sub_get(par,par_len,cb_par);
+	err = mesh_cmd_sig_heartbeat_sub_get(par,par_len,cb_par);
 	hb_sub_100ms = clock_time_100ms();
 	return err;
 }
 
 int mesh_cmd_sig_heartbeat_sub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err =-1;
+	int err = 0;
 	if(cb_par->model){  // model may be Null for status message
     }
 	return err;
 }
 
-void mesh_process_hb_sub(mesh_cmd_bear_unseg_t *p_bear)
+void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
 {
 	mesh_cmd_nw_t *p_nw = &(p_bear->nw);
 	mesh_heartbeat_sub_str *p_sub = &(model_sig_cfg_s.hb_sub);
@@ -203,45 +214,19 @@ void mesh_process_hb_sub(mesh_cmd_bear_unseg_t *p_bear)
 	p_sub->cnt_log = cal_heartbeat_count_log(p_sub->cnt_val);
 }
 
-u16 mesh_heartbeat_cal_feature_part(u16 fea)
-{
-	u16 ret =0;
-	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_RELAY_BIT)){
-		if(RELAY_SUPPORT_ENABLE == model_sig_cfg_s.relay){
-			ret |= BIT(MESH_HB_RELAY_BIT);
-		}
-	}
-	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_PROXY_BIT)){
-		if(GATT_PROXY_SUPPORT_ENABLE == model_sig_cfg_s.gatt_proxy){
-			ret |= BIT(MESH_HB_PROXY_BIT);
-		}
-	}
-	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_FRI_BIT)){
-		if(FRIEND_SUPPORT_ENABLE == model_sig_cfg_s.frid){
-			ret |= BIT(MESH_HB_FRI_BIT);
-		}
-	}
-	#if FEATURE_LOWPOWER_EN
-	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_LOWPOWER_BIT)){
-		if(mesh_lpn_par.link_ok){
-			ret |=  BIT(MESH_HB_LOWPOWER_BIT);
-		}else{
-			ret &= ~(BIT(MESH_HB_LOWPOWER_BIT));
-		}
-	}
-	#endif
-	return ret;
-}
-
-void heartbeat_cmd_send_conf(u8 ttl,u16 feature,u16 dst)
+void heartbeat_cmd_send_conf()
 {
     mesh_hb_msg_t hb_msg;
 	hb_msg.rfu = 0;
-	hb_msg.iniTTL = ttl;
-	hb_msg.fea = mesh_heartbeat_cal_feature_part(feature);
+	hb_msg.iniTTL = model_sig_cfg_s.hb_pub.ttl;
+	mesh_page_feature_t *p_feature = (mesh_page_feature_t *)&hb_msg.fea;
+	p_feature->relay = model_sig_cfg_s.relay;
+	p_feature->proxy = model_sig_cfg_s.gatt_proxy;
+	p_feature->frid = model_sig_cfg_s.frid;
+	p_feature->low_power = FEATURE_LOWPOWER_EN;
+	p_feature->rfu = 0;
 	
-	
-	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, dst,0);
+	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, model_sig_cfg_s.hb_pub.dst_adr,0);
 	LOG_MSG_INFO(TL_LOG_MESH, 0, 0,"send heartbeat ",0);
 	return ;
 }

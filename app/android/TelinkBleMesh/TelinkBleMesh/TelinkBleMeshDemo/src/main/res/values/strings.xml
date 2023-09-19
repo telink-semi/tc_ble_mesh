@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">TelinkBleMesh</string>
+    <!--    <string name="app_name">TelinkBleMesh</string>-->
+    <string name="app_name">TelinkSigMesh</string>
 
     <string name="app_copyright">©2020 Telink Semiconductor</string>
 
@@ -52,18 +53,28 @@
 
     <string name="auto_provision">Auto Provision</string>
 
-    <string name="private_mode">Private Mode(Default Bound)</string>
+    <string name="private_mode">Enable Private Mode(Default Bound)</string>
 
 
     <string name="enable_remote_provision">Remote Provision</string>
 
     <string name="enable_dle">Enable DLE Mode Extend Bearer</string>
 
+    <string name="extend_bearer_title">Extend Bearer Mode</string>
+
+    <string name="extend_bearer_no">No Extend</string>
+
+    <string name="extend_bearer_gatt">Extend GATT Only</string>
+
+    <string name="extend_bearer_gatt_adv">Extend GATT &amp; ADV</string>
+
     <string name="enable_fast_provision">Fast Provision</string>
 
     <string name="enable_no_oob">Use No-OOB automatically</string>
 
     <string name="oob_database">OOB Database</string>
+
+    <string name="root_cert">Root Cert</string>
 
     <string name="oob_info">UUID: %s\nOOB : %s\n(%s)</string>
 
@@ -116,9 +127,24 @@
         <item>4. Back to home page, and waiting for mesh reconnect </item>
     </string-array>
 
+    <string name="provision_mode_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
+    <string name="sub_level_service_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
     <string name="auto_provision_tip">
         Enabled for scanning , provisioning and key-binding one by one;
         Disabled for selectable networking.
+    </string>
+
+    <string name="log_tip">
+        TIP:
+        Enabled for default bound when key-binding;
     </string>
 
     <string name="private_mode_tip">
@@ -146,11 +172,24 @@
         Use No-OOB if device UUID not found when device is static-OOB supported
     </string>
 
+
+    <string name="online_status_tip">
+        Use No-OOB if device UUID not found when device is static-OOB supported
+    </string>
+
     <string name="dle_tip">
         DLE selected action will change mesh upper layer segmentation bound:
         \n\n\tDisabled ->  segment bound is 11;
         \n\n\tEnabled ->  segment bound is 225.
-        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE] in [NetworkingController].
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
+
+    </string>
+
+    <string name="extend_mode_tip">
+        DLE selected action will change mesh upper layer segmentation bound:
+        \n\n\tDisabled ->  segment bound is 11;
+        \n\n\tEnabled ->  segment bound is 225.
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
 
     </string>
 
@@ -162,4 +201,33 @@
     <string name="online_status_enabled">Online Status: ENABLED</string>
 
     <string name="online_status_disabled">Online Status: DISABLED</string>
+
+    <string name="export_tip">1.Select at least one network key \n2.Select destination\n3.Click EXPORT</string>
+
+    <string name="import_tip">1.Select source \n2.If the selected source is JSON file, select the target file \n3.Click IMPORT</string>
+
+
+    <string name="enable_subnet_bridge">Enable Subnet Bridge</string>
+
+    <string name="init_progress">Initiate progress(%d):</string>
+
+    <string name="dist_progress">Distribute progress(%d):</string>
+
+    <string name="df_origin_desc">0x%s</string>
+
+    <string name="df_route_node">Node-%s</string>
+
+    <string name="tip_share_import_cdtp">11</string>
+
+    <string name="tip_share_import_file">11</string>
+
+    <string name="tip_share_import_qrcode">11</string>
+
+    <string name="tip_share_export_cdtp_phone">11</string>
+
+    <string name="tip_share_export_cdtp_gateway">11</string>
+
+    <string name="tip_share_export_file">11</string>
+
+    <string name="tip_share_export_qrcode">11</string>
 </resources>

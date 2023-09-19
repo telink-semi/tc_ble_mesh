@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     QREncoder.java 
+ * @file QREncoder.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.qrcode;
 
@@ -29,6 +30,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -56,11 +59,29 @@ public final class QREncoder {
                 pixels[offset + x] = result.get(x, y) ? this.mBuilder.codeColor : this.mBuilder.background;
             }
         }
-
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 
+//        outputBits(height, width, result);
+
         return bitmap;
+    }
+
+    private void outputBits(int height, int width,BitMatrix result ){
+
+        StringBuilder sb = new StringBuilder("\n");
+        String fill = new String(new char[]{
+                0xe2, 0x96, 0x88, 0xe2, 0x96, 0x88
+        });
+        // "■"  "▉"
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                sb.append(result.get(x, y) ? "1" : "0");
+            }
+            sb.append("\n");
+        }
+        MeshLogger.d("bits1 - " + sb.toString());
+        FileSystem.writeString(FileSystem.getSettingPath(), "qr_export.txt", sb.toString());
     }
 
     public static class Builder {

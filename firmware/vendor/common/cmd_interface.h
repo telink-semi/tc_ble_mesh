@@ -1,29 +1,31 @@
 /********************************************************************************************************
- * @file     cmd_interface.h 
+ * @file	cmd_interface.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #if WIN32
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #endif
 
 
@@ -366,8 +368,27 @@ ret: 0  means OK
 ****************************************************************************/
 int cfg_cmd_cps_get(u16 node_adr, u8 page);
 
+/**************************cfg_cmd_large_cps_data_get**************************
+function :read a portion of a page of the composition Data
+para:
+	node_adr: the node's element addr . 
+	page: page number of the composition Data
+	offset:offset within the page
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_large_cps_data_get(u16 node_adr, u8 page, u16 offset);
 
-
+/**************************cfg_cmd_models_metadata_get**************************
+function :used to read a portion of a page of the models metadata state
+para:
+	node_adr: the node's element addr . 
+	page: page number of the composition Data
+	offset:offset within the page
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_models_metadata_get(u16 node_adr, u8 page, u16 offset);
 
 /**************************cfg_cmd_reset_node**************************
 function :used to reset a node (other than a Provisioner) and remove it from the network.
@@ -603,8 +624,188 @@ ret: 0  means OK
 ****************************************************************************/
 int mesh_proxy_filter_add_adr(u16 adr);
 
+/**************************cfg_cmd_subnet_bridge_get**************************
+function :send subnet bridge get message 
+para:
+	dst_addr: address of the destination  
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_subnet_bridge_get(u16 dst_addr);
 
+/**************************cfg_cmd_subnet_bridge_set**************************
+function :send subnet bridge set message 
+para:
+	dst_addr: address of the destination  
+	en:0 diasble, 1 enable
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_subnet_bridge_set(u16 dst_addr, u8 en);
 
+/**************************cfg_cmd_bridge_table_get**************************
+function :get bridge table 
+para:
+	dst_addr: address of the destination
+	key_idx1:netKey index of first subnet
+	key_idx2:netKey index of second subnet
+	start_idx:start offset to read bridging table
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_bridge_table_get(u16 dst_addr, u16 key_idx1, u16 key_idx2, u16 start_idx);
+
+/**************************cfg_cmd_bridge_table_add**************************
+function :add bridge table 
+para:
+	dst_addr: address of the destination
+	direction:allowed directions for the bridged traffic
+	key_idx1:netKey index of first subnet
+	key_idx2:netKey index of second subnet
+	addr1:address of the node in the first subnet
+	addr2:address of the node in the second subnet
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_bridge_table_add(u16 dst_addr, u8 direction, u16 key_idx1, u16 key_idx2, u16 addr1, u16 addr2);
+
+/**************************cfg_cmd_bridge_table_remove**************************
+function :remove bridge table 
+para:
+	dst_addr: address of the destination
+	key_idx1:netKey index of first subnet
+	key_idx2:netKey index of second subnet
+	addr1:address of the node in the first subnet
+	addr2:address of the node in the second subnet
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_bridge_table_remove(u16 dst_addr, u16 key_idx1, u16 key_idx2, u16 addr1, u16 addr2);
+
+/**************************cfg_cmd_bridge_subnet_get**************************
+function :bridge subnet get 
+para:
+	dst_addr: address of the destination
+	filter:filter to be applied when reporting the set of pairs of netKey indexes
+	netkey_idx:netKey index of second subnet
+	start_idx:start offset to read
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_bridge_subnet_get(u16 dst_addr, u8 filter, u16 netkey_idx, u16 start_idx);
+
+/**************************cfg_cmd_bridge_tbl_size_get**************************
+function :bridge table size get 
+para:
+	dst_addr: address of the destination
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_bridge_tbl_size_get(u16 dst_addr);
+
+/**************************cfg_cmd_on_demand_private_proxy_get**************************
+function :get the current on-demand private GATT proxy state 
+para:
+	dst_addr: address of the destination
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_on_demand_private_proxy_get(u16 dst_addr);
+
+/**************************cfg_cmd_on_demand_private_proxy_set**************************
+function :get the current on-demand private GATT proxy state 
+para:
+	dst_addr: address of the destination
+	en:1 for enable private proxy state
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_on_demand_private_proxy_set(u16 dst_addr, u8 en);
+
+/**************************cfg_cmd_sar_transmitter_get**************************
+function :get the current SAR transmitter state of a node
+para:
+	dst_addr: address of the destination
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_sar_transmitter_get(u16 dst_addr);
+
+/**************************cfg_cmd_sar_transmitter_set**************************
+function :set the SAR transmitter state
+para:
+	dst_addr: address of the destination
+	seg_invl_step:new SAR segment interval step state
+	unicast_retran_cnt:new SAR unicast Retransmissions count state
+	unicast_retran_cnt_noack:new SAR unicast retransmissions without progress count state
+	unicast_retran_invl_step:new SAR unicast retransmissions interval step state
+	unicast_retran_invl_inc:new SAR unicast retransmissions interval increment state
+	multicast_retran_cnt:new SAR multicast retransmissions count state
+	multicast_retran_invl:new SAR multicast retransmissions interval state
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_sar_transmitter_set(u16 dst_addr, u8 seg_invl_step, u8 unicast_retran_cnt, u8 unicast_retran_cnt_noack, u8 unicast_retran_invl_step, u8 unicast_retran_invl_inc, u8 multicast_retran_cnt, u8 multicast_retran_invl);
+
+/**************************cfg_cmd_sar_receiver_get**************************
+function :get the current SAR transmitter state of a node
+para:
+	dst_addr: address of the destination
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_sar_receiver_get(u16 dst_addr);
+
+/**************************cfg_cmd_sar_receiver_set**************************
+function :get the current SAR transmitter state of a node
+para:
+	dst_addr: address of the destination
+	seg_threshold:new SAR segments threshold state
+	ack_delay_inc:new SAR scknowledgment delay increment state
+	discard_timeout:new SAR discard timeout state
+	rcv_seg_invl_step:new SAR receiver segment interval step state
+	ack_retrans_cnt:new SAR acknowledgment retransmissions count state
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_sar_receiver_set(u16 dst_addr, u8 seg_threshold, u8 ack_delay_inc, u8 discard_timeout, u8 rcv_seg_invl_step, u8 ack_retrans_cnt);
+
+/**************************cfg_cmd_soli_pdu_rpl_clear**************************
+function :remove one or more items from the solicitation replay protection list of a node
+para:
+	dst_addr: address of the destination
+	start_addr:range start address or unicast address
+	range_len:address range length
+	ack:1 means SOLICITATION_PDU_RPL_ITEMS_CLEAR, 0 means SOLICITATION_PDU_RPL_ITEMS_CLEAR_UNACKNOWLEDGED
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_soli_pdu_rpl_clear(u16 dst_addr, u16 start_addr, u8 range_len, int ack);
+
+/**************************cfg_cmd_op_agg_sequence**************************
+function : encapsulate a sequence of access messages
+para:
+	dst_addr: address of the destination
+	para:element address and items
+	len:para len
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_op_agg_sequence(u16 dst_addr, u8 *para, int len);
+
+/**************************cfg_cmd_op_agg_sequence**************************
+function : set the current heartbeat publication state
+para:
+	dst_addr: address of the destination
+	count_log:number of heartbeat messages to be sent
+	period_log:period for sending heartbeat messages
+	ttl:TTL to be used when sending heartbeat messages
+	features:bit field indicating features that trigger heartbeat messages when changed
+	netkey_index:netKey index
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_heartbeat_pub_set(u16 dst_addr, u16 pub_addr, u8 count_log, u8 period_log, u8 ttl, u16 features, u16 netkey_index);
 
 /**************************mesh_proxy_filter_remove_adr**************************
 function :remove the adr into the filter 
@@ -620,7 +821,6 @@ int mesh_proxy_filter_remove_adr(u16 adr);
 int cfg_cmd_nk_set(u16 op, u16 node_adr, u16 nk_idx, u8 *key);
 int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8 * dat,u8 len );
 int mesh_proxy_set_filter_init(u16 self_adr);
-#if WIN32
 /**************************mesh_directed_proxy_control_set**************************
 function :set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified
 			range of unicast addresses 
@@ -633,6 +833,26 @@ ret: 0  means OK
 ****************************************************************************/
 int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len);
 
+/**************************mesh_send_proxy_solicitation_pdu**************************
+function :set the solicitation pdu message, it will be send in function set_adv_solicitation() called by gatt_adv_prepare_handler()
+para:
+	adr_dst: destination address  
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int mesh_send_proxy_solicitation_pdu(u16 adr_dst);
+
+/**************************cfg_cmd_send_path_solicitation**************************
+function :solicit the discovery of paths from other directed forwarding nodes
+para:
+	addr_list:list of destination addresses
+	num:number of destination addresses
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num);
+
+#if WIN32
 /*******************json_get_net_info****************************
 use to get the provision information form the stack ,it can call in the provision end callback fun
 p_netkey_val:network key 16 bytes 

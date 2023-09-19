@@ -1,37 +1,25 @@
 /********************************************************************************************************
-* @file     NetKeyListVC.m
-*
-* @brief    Show all NetKey of Mesh network.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  NetKeyListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     NetKeyListVC.m
+ *
+ * @brief    Show all NetKey of Mesh network.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "NetKeyListVC.h"
 #import "KeyCell.h"
@@ -151,29 +139,7 @@
     SigNetkeyModel *model = self.sourceArray[indexPath.row];
     [cell setNetKeyModel:model];
     __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {
-        BOOL hadBound = NO;
-        NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-        for (SigNodeModel *node in temNodes) {
-            if (node.netKeys && node.netKeys.count > 0) {
-                for (SigNodeKeyModel *nodeKey in node.netKeys) {
-                    if (nodeKey.index == model.index) {
-                        hadBound = YES;
-                        break;
-                    }
-                }
-                if (hadBound) {
-                    break;
-                }
-            }
-        }
-        TeLogDebug(@"%@",indexPath);
-        if (hadBound) {
-            [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this netkey, you can`t edit it!" sure:nil];
-            /*客户需要保证添加了该NetKey的设备都在线，并且给所有添加了该NetKey的设备发送SigConfigNetKeyUpdate指令且成功后，才可以修改mesh里面的NetKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个NetKey的功能：可以先从设备里面移除该NetKey，再在setting界面修改NetKey，再给设备重新添加NetKey。*/
-            return;
-        }
-        
+    [cell.editButton addAction:^(UIButton *button) {        
         NetKeyAddVC *vc = [[NetKeyAddVC alloc] init];
         vc.isAdd = NO;
         [vc setNetKeyModel:model];

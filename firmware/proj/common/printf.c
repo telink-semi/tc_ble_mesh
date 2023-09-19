@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     printf.c 
+ * @file	printf.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /*
  putchar is the only external dependency for this file,
  if you have a working putchar, leave it commented out.
@@ -34,20 +36,27 @@
 #include <stdarg.h>
 
 #include "types.h"
-#include "../../proj_lib/ble/hci/hci.h"
+#include "proj_lib/ble/hci/hci.h"
 #include "../mcu/putchar.h"
-#include "../../vendor/common/myprintf.h"
-#include "../../vendor/common/user_config.h"
+#include "vendor/common/myprintf.h"
+#include "vendor/common/user_config.h"
 
 
 #define MAX_PRINT_STRING_CNT 60
 
 _PRINT_FUN_RAMCODE_ static void printchar(char **str, int c) {
 	if (str) {
-		**str = c;
-		++(*str);
-	} else
-		(void) putchar(c);
+		if(PP_GET_PRINT_BUF_LEN_FALG != str){
+			**str = c;
+			++(*str);
+		}
+	} else {
+		#if (LLSYNC_ENABLE && LLSYNC_LOG_EN && HCI_LOG_FW_EN) // for printing log of llsync SDK
+		uart_simu_send_bytes((u8 *)&c, 1);
+		#else
+		//(void) putchar(c);	// NULL // modify by qifa to decrease code.
+		#endif
+	}
 }
 
 #define PAD_RIGHT 1
@@ -131,6 +140,222 @@ _PRINT_FUN_RAMCODE_ static int printi(char **out, int i, int b, int sg, int widt
 	return pc + prints(out, s, width, pad);
 }
 
+#define FLOAT_PRINT_EN		0
+
+#if FLOAT_PRINT_EN
+static inline void set_buff_with_check(char s[], int index, int len_max, char value)
+{
+	if(index < len_max){
+		s[index] = value;
+	}
+}
+
+#if 1
+void itoa_one_char(int n, char s[], int radix)
+{
+	if(n < 0){
+		n = -n;	// use abs value.
+	}
+
+	s[0] = n % radix + '0';
+}
+#else
+void itoa (int n, char s[], int radix)
+{
+	int i,j,sign;
+	sign = n;
+	if(sign < 0){
+		n = -n;	// use abs value.
+	}
+
+	i = 0;
+	do{
+		s[i++] = n%radix + '0';
+		n /= radix;
+	}while(n > 0);
+	
+	if(sign<0)
+		s[i++]='-';
+	
+	swapX( , , i);	// swap to big endianness
+}
+#endif
+
+//
+// Tim Hirzel
+// tim@growdown.com
+// March 2008
+// float to string
+// @param  places: Number of decimal points
+// @retval len of outsrt
+// If you don't save this as a .h, you will want to remove the default arguments
+//     uncomment this first line, and swap it for the next.  I don't think keyword arguments compile in .pde files
+//char * floatToString(char * outstr, float value, int places, int minwidth=0, bool rightjustify=false) {
+int floatToString_ll(char * outstr, int len_max, float value, int places, int minwidth, bool rightjustify) 
+{
+    // this is used to write a float value to string, outstr.  oustr is also the return value.
+    int digit;
+    float tens = (float)0.1;
+    int tenscount = 0;
+    int i;
+    float tempfloat = value;
+    int c = 0;
+    int charcount = 1;
+    int extra = 0;
+    // make sure we round properly. this could use pow from <math.h>, but doesn't seem worth the import
+    // if this rounding step isn't here, the value  54.321 prints as 54.3209
+
+    // calculate rounding term d:   0.5/pow(10,places)
+    float d = 0.5;
+    if (value < 0)
+        d *= -1.0;
+    // divide by ten for each decimal place
+    for (i = 0; i < places; i++)
+        d/= 10.0;
+    // this small addition, combined with truncation will round our values properly
+    tempfloat +=  d;
+
+    // first get value tens to be the large power of ten less than value
+    if (value < 0)
+        tempfloat *= -1.0;
+    while ((tens * 10.0) <= tempfloat) {
+        tens *= 10.0;
+        tenscount += 1;
+    }
+
+    if (tenscount > 0)
+        charcount += tenscount;
+    else
+        charcount += 1;
+
+    if (value < 0)
+        charcount += 1;
+    charcount += 1 + places;
+
+    minwidth += 1; // both count the null final character
+    if (minwidth > charcount){
+        extra = minwidth - charcount;
+        charcount = minwidth;
+    }
+
+    if (extra > 0 && rightjustify) {
+        for (int i = 0; i< extra; i++) {
+        	set_buff_with_check(outstr, c++, len_max, ' ');
+        }
+    }
+
+    // write out the negative if needed
+    if (value < 0){
+    	set_buff_with_check(outstr, c++, len_max, '-');
+    }
+
+    if (tenscount == 0){
+		set_buff_with_check(outstr, c++, len_max, '0');
+    }
+
+    for (i=0; i< tenscount; i++) {
+        digit = (int) (tempfloat/tens);
+        if(c < len_max){
+        	itoa_one_char(digit, &outstr[c++], 10);
+        }else{
+        	return c;
+        }
+        tempfloat = tempfloat - ((float)digit * tens);
+        tens /= 10.0;
+    }
+
+    // if no places after decimal, stop now and return
+
+    // otherwise, write the point and continue on
+    if (places > 0){
+    	set_buff_with_check(outstr, c++, len_max, '.');
+    }
+
+
+    // now write out each decimal place by shifting digits one by one into the ones place and writing the truncated value
+    for (i = 0; i < places; i++) {
+        tempfloat *= 10.0;
+        digit = (int) tempfloat;
+        if(c < len_max){
+        	itoa_one_char(digit, &outstr[c++], 10);
+        }else{
+        	return c;
+        }
+        // once written, subtract off that digit
+        tempfloat = tempfloat - (float) digit;
+    }
+    if (extra > 0 && !rightjustify) {
+        for (int i = 0; i< extra; i++) {
+			set_buff_with_check(outstr, c++, len_max, ' ');
+        }
+    }
+
+	set_buff_with_check(outstr, c++, len_max, '\0');
+    
+    return c;
+}
+
+// @param  places: Number of decimal points
+// @retval len of outsrt
+int floatToString(char * outstr, int len_max, float value) 
+{
+	#define DEFAULT_VALID_NUMBER	(0)
+	int places = DEFAULT_VALID_NUMBER;
+	float value_temp = value;
+	if(value_temp < 0){
+		value_temp = -value_temp;
+	}
+	
+	for(unsigned int i = 0; i < (45 - DEFAULT_VALID_NUMBER); ++i){	// max 45 valid number
+		if(value_temp > 1000000){ // only keep 7 valid number is enough
+			break;
+		}
+		value_temp *= 10;
+		places++;
+	}
+	
+	int count = floatToString_ll(outstr, len_max, value, places, 0, 0);	// 6.5 valid number.
+	if(count >= len_max){
+		if(len_max > 0){
+			outstr[len_max - 1] = '\0';
+			if(len_max > 1){
+				outstr[len_max - 2] = 'E';	// error flag
+			}
+		}
+	}
+	return count;
+}
+
+#if 0
+void float_test()
+{
+	char buff[1024] = {0};
+
+	foreach(i, 2){
+		float init_test = (float)9.876543210987654321;
+		if(1 == i){
+			init_test = -init_test;
+		}
+		
+		float value_test = init_test;
+		foreach(i, 38){
+			floatToString(buff, sizeof(buff), value_test);
+			LOG_MSG_ERR(TL_LOG_MESH, 0, 0 ,"float print test: %s",buff);
+			value_test *= 10;
+		}
+		
+		value_test = init_test;
+		foreach(i, 45){
+			floatToString(buff, sizeof(buff), value_test);
+			LOG_MSG_ERR(TL_LOG_MESH, 0, 0 ,"float print test: %s",buff);
+			value_test /= 10;
+		}
+	}
+}
+#endif
+#endif
+
+
 _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 	register int width, pad;
 	register int pc = 0;
@@ -168,6 +393,17 @@ _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 				pc += printi(out, va_arg( args, int ), 10, 1, width, pad, 'a');
 				continue;
 			}
+			
+			#if FLOAT_PRINT_EN
+			if (*format == 'f') {
+				char str[48];// = {0}; // max 45 valid number
+				floatToString(str, sizeof(str), va_arg( args, double ));
+				str[sizeof(str) - 1] = 0;	// make sure end of string
+				pc += prints(out, str, 0, 0); // max length of string is sizeof(str).
+				continue;
+			}
+			#endif
+			
 			if (*format == 'x') {
 				pc += printi(out, va_arg( args, int ), 16, 0, width, pad, 'a');
 				continue;
@@ -192,8 +428,13 @@ _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 			++pc;
 		}
 	}
-	if (out)
-		**out = '\0';
+	if (out){
+		if((PP_GET_PRINT_BUF_LEN_FALG == out)){
+			++pc;
+		}else{
+			**out = '\0';
+		}
+	}
 	va_end( args );
 	return pc;
 	
@@ -280,44 +521,25 @@ int my_printf_uart_hexdump(unsigned char *p_buf,int len )
 	#endif
 }
 
-int my_printf_uart(const char *format,...){
+int my_printf_uart(const char *format,va_list args)
+{
     #if HCI_LOG_FW_EN
         #if MI_API_ENABLE
 	if(mi_ota_is_busy()){
 		return 1;
 	}
 	    #endif
-	va_list args;
 	unsigned char **pp_buf;
 	unsigned char *p_buf;
 	unsigned int len =0;
 	p_buf = printf_uart;
 	pp_buf = &(p_buf);
-	va_start( args, format );
+	//va_start( args, format );
 	len = print((char **)pp_buf, format, args);
 	uart_simu_send_bytes(printf_uart,len);
 	#endif
 	return 1;
 	
-	#if 0
-	unsigned int idx =0;
-	u8 head[2] = {HCI_LOG};
-	while(len){
-		if(len>MAX_PRINT_STRING_CNT){
-			head[1]= MAX_PRINT_STRING_CNT+2;
-			my_fifo_push_hci_tx_fifo(buf+idx ,MAX_PRINT_STRING_CNT,head,2);
-			idx+=MAX_PRINT_STRING_CNT;
-			len-=MAX_PRINT_STRING_CNT;
-		}else{
-			head[1]= len+2;
-			my_fifo_push_hci_tx_fifo(buf+idx ,len,head,2);
-			len =0;
-			idx =0;
-		}
-	}
-	return	0;
-	#endif
-
 }
 
 int my_printf(const char *format, ...) {

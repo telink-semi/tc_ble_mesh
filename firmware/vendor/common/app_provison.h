@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_provison.h 
+ * @file	app_provison.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #ifndef __APP_PROVISON_H_CLIPSE
 #define __APP_PROVISON_H_CLIPSE
@@ -29,7 +32,24 @@
 
 extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
-#define PROVISION_CMD_TIMEOUT_MS	30*1000*1000
+#if PTS_TEST_EN
+#define PROVISION_NORMAL_TIMEOUT_MS		(60*1000)
+#define PROVISION_ADV_RETRY_MS			(500)
+#else
+#define PROVISION_NORMAL_TIMEOUT_MS		(30*1000)
+	#if EXTENDED_ADV_ENABLE
+#define PROVISION_ADV_RETRY_MS			(300)
+	#else
+#define PROVISION_ADV_RETRY_MS			(150)
+	#endif	
+#endif
+#define PROVISION_CERT_TIMEOUT_MS		(120*1000)
+#if CERTIFY_BASE_ENABLE
+#define PROV_ADV_TIMEOUT_MS	PROVISION_CERT_TIMEOUT_MS
+#else
+#define PROV_ADV_TIMEOUT_MS	PROVISION_NORMAL_TIMEOUT_MS
+#endif
+
 typedef enum{
 	L2CAP_PROVISON_TYPE =1,
 	L2CAP_PROXY_TYPE,	
@@ -133,6 +153,23 @@ typedef struct {
 	u8 service_data[16];
 	u8 oob_info[2];
 }PB_GATT_ADV_DAT;
+
+typedef struct {
+	u8 flag_len;
+	u8 flag_type;
+	u8 flag_content;
+	u8 name_len;
+	u8 name_type;
+	u8 par[1];
+}gatt_adv_private_mesh_t;
+
+typedef struct {
+	u8 manu_len;
+	u8 manu_type;
+	u16 cid;
+	u16 pid;
+	u8 mac[4]; // lower 4 bytes
+}private_mesh_manu_t;
 
 // provison pdu part 
 typedef enum{
@@ -276,12 +313,12 @@ typedef struct {
 
 typedef struct {
 	pro_trans_header header;
-	u8 comfirm[16];
+	u8 comfirm[32];
 }pro_trans_comfirm;
 
 typedef struct {
 	pro_trans_header header;
-	u8 random[16];
+	u8 random[32];
 }pro_trans_random;
 
 typedef struct {
@@ -326,6 +363,19 @@ typedef struct{
 	u16 prov_extension;
 	u16 rec_id[15];
 }pro_trans_record_list;
+
+#define REC_ID_MAX_NUM	3
+#define FRAG_MAX_SIZE   0x40
+typedef struct{
+	u16 rec_id;
+	u16 offset;
+	u16 frag_size;
+	u16 total_len;
+}mesh_rec_mag_rec_t;
+
+extern _align_4_ mesh_rec_mag_rec_t rec_mag[REC_ID_MAX_NUM];
+extern u8 rec_mag_cnt ;
+extern u8 rec_mag_idx ;
 
 typedef enum{
 	PRO_LINK_CLOSE_SUC =0,
@@ -442,6 +492,8 @@ typedef enum{
 	MESH_OUTPUT_OOB,
 	MESH_INPUT_OOB,
 }OOB_AUTH_KEYS_TYPES_STR;
+#define STATIC_OOB_TYPE_VAL			0
+#define ONLY_OOB_TYPE_VAL			1
 
 typedef struct {
 	pro_trans_capa 		capa;
@@ -453,7 +505,7 @@ typedef struct {
 	u8 oob_inAct;
 	u32 oob_out_tick;
 }mesh_prov_oob_str;
-extern mesh_prov_oob_str prov_oob;
+extern _align_4_ mesh_prov_oob_str prov_oob;
 
 #define EVENT_MESH_NODE_RC_LINK_CLOSE	0
 #define EVENT_MESH_NODE_RC_LINK_START	1
@@ -465,7 +517,6 @@ extern mesh_prov_oob_str prov_oob;
 #define EVENT_MESH_PRO_RC_LINK_TIMEOUT 		6
 #define EVENT_MESH_PRO_RC_LINK_SUC		7
 
-#define EVENT_MESH_NODE_RC_CONFIRM_FAILED   0x10
 #define EVENT_MESH_NODE_CONNECT             0x11
 #define EVENT_MESH_NODE_DISCONNECT          0x12
 typedef  enum{
@@ -492,7 +543,7 @@ typedef struct{
 		mesh_ctl_fri_update_flag_t prov_flags;
 		u8  flags;
 	};
-	u8  iv_index[4];
+	u8  iv_index[4]; // big endian
 	u16  unicast_address;
 }provison_net_info_str;
 
@@ -501,6 +552,11 @@ typedef struct{
 	u8 app_key[16];
 }provision_appkey_t;
 
+typedef struct{
+	provison_net_info_str provision_data;
+	provision_appkey_t appkey;
+	u16 alloc_adr;
+}provision_primary_mesh_info_t;
 
 typedef struct{
     u32 link_id;
@@ -519,26 +575,33 @@ typedef struct{
     u8 pro_bearerCode;
 	u8 pro_fail_code;
 	u8 attention_value;
+	u8 prov_err;
 	u32 cmd_send_tick;
 	u32 cmd_send_start_tick;
+	u32 rand_gen_s;
+	u32 priv_rand_gen_s;
 	u8  cmd_retry_flag;
 	u8  ack_retry_flag;
 	u8  link_close_flag;
 	u8  link_close_cnt;
 	u8  rsp_ack_transnum;
 	u8  random[8];
-	u32 rand_gen_s;
 	u8  oob_info[2];// the oob info is small endiness, in the unprovision beacon is bigendiness,in the prrovision adv is small endiness
 	u8  device_uuid[16];
 	u8 priv_random[13];
+	u8 priv_non_reslov[6];
 	u8 cert_base_en;
-	u8 rfu[2];
-	u32 priv_rand_gen_s;
+	u8 direct_invite;
+	u8 err_op_code;
+	u8 rfu1[1];
 	u8 ele_cnt;
 	u8 key_bind_lock;
 	u8 dkri;
+	u8 rec_list_len;
+	u8 rec_rsp_len;
+	u8 cert_ack_hold;
 }prov_para_proc_t;
-extern prov_para_proc_t prov_para;
+extern _align_4_ prov_para_proc_t prov_para;
 
 #if (DUAL_VENDOR_EN)
 enum{
@@ -558,10 +621,10 @@ typedef struct{
 	u16 unicast_adr_last;
 }pro_para_mag;
 extern u8 prov_link_cls_code;
-extern u8 dev_auth[16]/* = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}*/;
+extern u8 dev_auth[32];
 
 extern u8 prov_link_uuid[16];
-extern mesh_prov_oob_str prov_oob;
+extern _align_4_ mesh_prov_oob_str prov_oob;
 u8 mesh_node_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
 u8 set_pro_capa_cpy(mesh_pro_data_structer *p_str,mesh_prov_oob_str *p_prov_oob);
 
@@ -582,7 +645,9 @@ enum{
 #define MESH_KEYBIND_EVE_SUC   1
 #define MESH_KEYBIND_EVE_TIMEOUT 2
 
-#define FIPS_P256_Ellipti_CURVE 	1
+#define BTM_ECDH_P256_CMAC_AES128_AES_CCM	0
+#define BTM_ECDH_P256_HMAC_SHA256_AES_CCM	1
+
 #define MESH_KR_CFGCL_RETRY_TIMES_ERR	2
 #define MESH_APP_KEY_BIND_EVENT_SUC	1
 #define MESH_APP_KEY_BIND_EVENT_TIMEOUT 0
@@ -688,6 +753,11 @@ typedef struct{
 
 typedef struct{
 	u16 pid;
+	VC_node_info_t node_info;
+} fast_prov_node_info_t;
+
+typedef struct{
+	u16 pid;
 	u16 prov_addr;
 	u8 get_mac_en;
 	u8 not_need_prov;
@@ -700,14 +770,14 @@ typedef struct{
 	fast_prov_net_info_t net_info;
 } fast_prov_par_t;
 
-extern fast_prov_par_t fast_prov;
+extern _align_4_ fast_prov_par_t fast_prov;
 
 // DEFINATION OF THE PROVISON PART ///
 #define MESH_PRO_MAX_CNT 8
 #define MESH_PRO_MAX_LENG 31
 
 #define MAX_RETRY_INTERVAL	1000*1000
-extern VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
+extern _align_4_ VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
 
 #define PROV_VAR_UION_EN    (FEATURE_LOWPOWER_EN) // can't not change
 
@@ -732,10 +802,10 @@ typedef struct{
 #endif
 	    u8 ut_rx_seg[ACCESS_WITH_MIC_LEN_MAX];  // used when provisioned
 	    struct{
-			u8 u_dev_random[16];
-	        u8 u_pro_random[16];
-			u8 u_dev_confirm[16];
-	        u8 u_pro_confirm[16];
+			u8 u_dev_random[32];
+	        u8 u_pro_random[32];
+			u8 u_dev_confirm[32];
+	        u8 u_pro_confirm[32];
 			u8 u_ecdh_secret[32];
 	    }prov_ing;                              // used when provisioning
 #if PROV_VAR_UION_EN
@@ -743,8 +813,8 @@ typedef struct{
 #endif
 }mesh_cmd_ut_rx_seg_union_t;
 
-extern mesh_cmd_ut_tx_seg_union_t mesh_cmd_ut_tx_seg_union;
-extern mesh_cmd_ut_rx_seg_union_t mesh_cmd_ut_rx_seg_union;
+extern _align_4_ mesh_cmd_ut_tx_seg_union_t mesh_cmd_ut_tx_seg_union;
+extern _align_4_ mesh_cmd_ut_rx_seg_union_t mesh_cmd_ut_rx_seg_union;
 
 #define confirm_input				(mesh_cmd_ut_tx_seg_union.prov_ing.u_confirm_input)
 #define mesh_prov_seg				(mesh_cmd_ut_tx_seg_union.prov_ing.u_mesh_prov_seg)
@@ -770,12 +840,16 @@ extern u8 proxy_para_len;
 extern u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
 extern u8 para_len ;
 
-extern mesh_cmd_bear_unseg_t		pro_adv_pkt;
-extern mesh_pro_data_structer		pro_data_str;
-extern pro_para_mag  provision_mag;
+extern u8 pro_auth[32];
+extern u8 pro_dat[40];
 extern u8 prov_net_key[16];
 
+extern _align_4_ mesh_cmd_bear_t		pro_adv_pkt;
+extern _align_4_ mesh_pro_data_structer		pro_data_str;
+extern _align_4_ pro_para_mag  provision_mag;
+extern u8 prov_net_key[16];
 
+u8 mesh_provision_and_bind_self(provison_net_info_str *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
 u8 set_provision_networkkey_self(u8 *p_key,u8 len );
 void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
 u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, bool4 sig_model);
@@ -786,6 +860,7 @@ extern void set_pb_gatt_adv(u8 *p,u8 flags);
 extern void set_adv_provisioner(rf_packet_adv_t * p);
 extern void set_adv_provision(rf_packet_adv_t * p);
 extern u8 set_adv_proxy(rf_packet_adv_t * p);
+extern void set_private_mesh_adv(rf_packet_adv_t * p);
 
 
 void set_provision_stop_flag_act(u8 stop_flag);
@@ -804,14 +879,15 @@ extern u8 set_pro_start(mesh_pro_data_structer *p_str,u8 alogri,u8 pubkey,
 					u8 authmeth,u8 authact,u8 authsize );
 extern u8 set_pro_pub_key(mesh_pro_data_structer *p_str,u8 *p_pubkeyx,u8 *p_pubkeyy);
 extern u8 set_pro_input_complete(mesh_pro_data_structer *p_str);
-extern u8 set_pro_comfirm(mesh_pro_data_structer *p_str,u8 *p_comfirm);
-extern u8 set_pro_random(mesh_pro_data_structer *p_str,u8 *p_random);
+extern u8 set_pro_comfirm(mesh_pro_data_structer *p_str,u8 *p_comfirm,u8 len);
+
+extern u8 set_pro_random(mesh_pro_data_structer *p_str,u8 *p_random,u8 len);
 extern u8 set_pro_data(mesh_pro_data_structer *p_str, u8 *p_data,u8 *p_mic);
 extern u8 set_pro_complete(mesh_pro_data_structer *p_str);
 extern u8 set_pro_fail(mesh_pro_data_structer *p_str ,u8 fail_code);
 
 extern u8 set_pro_record_request(pro_trans_record_request *p_rec_req ,u16 rec_id,u16 frag_offset,u16 max_size);
-extern u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data);
+extern u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data,u16 data_len);
 extern u8 set_pro_record_get(pro_trans_record_get *p_rec_get);
 extern u8 set_pro_record_list(pro_trans_record_list *p_rec_list , u16 prov_exten, 
 											u16 *p_list,u32 cnt);
@@ -841,13 +917,13 @@ void get_public_key( u8 *p_public_key);
 #define get_private_key(a)		
 #define get_public_key(a)	
 #endif
-void cal_private_and_public_key();
+void cal_private_and_public_key(u8 force_en);
 extern u8 dispatch_start_cmd_reliable(mesh_pro_data_structer *p_rcv_str);
 
 
 extern void provision_timeout_cb();
 extern u8 set_pro_dat_part(u16 ele_adr);
-extern void provision_set_ivi_para(u8 *para);
+extern void provision_set_ivi_para(provison_net_info_str *p_prov_net_info);
 
 extern int mesh_prov_sec_msg_enc(unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, int mic_length);
 extern int	mesh_prov_sec_msg_dec (unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, int mic_length);
@@ -858,7 +934,7 @@ extern void set_pro_init_role(u8 role);
 
 extern void set_provisioner_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
 
-extern u8 mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
+extern int mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
 extern void check_oob_out_timeout();
 extern void send_comfirm_no_pubkey_cmd();
 extern u8 adv_provision_state_dispatch(pro_PB_ADV * p_adv);
@@ -892,9 +968,11 @@ void check_mesh_node_out_oob_pub_key_send_time();
 u8  mesh_loop_provision_end_process();
 void mesh_prov_link_close_terminate();
 void prov_set_link_close_code(u8 code);
+void mesh_terminate_provision_link_reset(u8 code,u8 ack);
 
 extern int App_key_bind_end_callback(u8 event);
 u8 mesh_cfg_keybind_end_event(u8 eve,u16 unicast);
+void mesh_kr_cfgcl_retry_init();
 
 void mesh_set_oob_type(u8 type, u8 *p_oob ,u8 len );
 void mesh_set_pro_auth(u8 *p_auth, u8 len);
@@ -946,7 +1024,6 @@ void mesh_adv_prov_data_ack(pro_PB_ADV *p_adv);
 void mesh_adv_prov_complete_rsp(pro_PB_ADV *p_adv);
 u8 get_mesh_pro_str_len(u8 type);
 void mesh_prov_end_set_tick();
-void mesh_rp_server_set_link_sts(u8 sts);
 void del_vc_node_info_by_unicast(u16 unicast);
 u8 win32_proved_state();
 void mesh_rp_adv_prov_complete_rsp(pro_PB_ADV *p_adv);
@@ -955,5 +1032,21 @@ u8* VC_master_get_other_node_dev_key_candi(u16 adr);
 int VC_node_dev_key_candi_enable(u16 adr);
 int VC_node_replace_devkey_candi_adr(u16 adr, u16 new_adr,u8 *dev_key_cadi);
 
+
+u8 prov_comfirm_check_right_or_not(u8 *p_comfirm1,u8 *p_comfirm2);
+int mesh_sec_prov_confirmation_sec (unsigned char *cfm, unsigned char *input, int n, unsigned char ecdh[32],
+									unsigned char random[16], unsigned char auth[16]);
+u8 prov_comfirm_check_same_or_not(u8 *rcv_comf,u8 *comf);
+u8 prov_oob_is_no_oob();
+void set_adv_uri_unprov_beacon(rf_packet_adv_t * p);
+u8 is_prov_oob_hmac_sha256();
+u8 get_prov_random_len();
+u8 get_prov_comfirm_len();
+u8 get_prov_comfirm_value_len();
+u8 get_prov_random_value_len();
+
+void mesh_provision_par_handle(provison_net_info_str *p_prov_data);
+int mesh_provision_par_set(provison_net_info_str *p_prov_data);
+int mesh_provision_par_set_dir(provison_net_info_str *p_prov_data);
 #endif 
 

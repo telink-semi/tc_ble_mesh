@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  OTAFileSource.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "OTAFileSource.h"
 
@@ -61,8 +55,12 @@
     NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
     NSArray *fileNames = [mang contentsOfDirectoryAtPath:fileLocalPath error:&error];
     for (NSString *path in fileNames) {
-        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件会读取失败。
-        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"] && ![path containsString:@" "]) {
+//        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件会读取失败。
+//        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"] && ![path containsString:@" "]) {
+//            [self addBinFileWithPath:path];
+//        }
+        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件可能会读取失败。
+        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"]) {
             [self addBinFileWithPath:path];
         }
     }
@@ -127,14 +125,18 @@
 - (UInt16)getPidWithOTAData:(NSData *)data {
     UInt16 pid = 0;
     Byte *tempBytes = (Byte *)[data bytes];
-    memcpy(&pid, tempBytes + 0x2, 2);
+    if (data && data.length >= 4) {
+        memcpy(&pid, tempBytes + 0x2, 2);
+    }
     return pid;
 }
 
 - (UInt16)getVidWithOTAData:(NSData *)data {
     UInt16 vid = 0;
     Byte *tempBytes = (Byte *)[data bytes];
-    memcpy(&vid, tempBytes + 0x4, 2);
+    if (data && data.length >= 6) {
+        memcpy(&vid, tempBytes + 0x4, 2);
+    }
     return vid;
 }
 

@@ -4,26 +4,31 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -50,22 +55,21 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * remote provision
@@ -135,7 +139,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Remote)");
+        setTitle("Device Scan", "Remote");
 
         MenuItem refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
@@ -190,7 +194,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
         MeshService.getInstance().stopScan();
 
-        int address = meshInfo.provisionIndex;
+        int address = meshInfo.getProvisionIndex();
 
         MeshLogger.d("alloc address: " + address);
         if (address == -1) {
@@ -201,14 +205,14 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         } else {
             final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
             provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
-
+        provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
             NodeInfo nodeInfo = new NodeInfo();
@@ -232,12 +236,10 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         NetworkingDevice networkingDevice = getProcessingNode();
 
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
-        meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.provisionIndex += elementCnt;
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        networkingDevice.nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(meshInfo.getDefaultNetKey().index));
+        meshInfo.insertDevice(networkingDevice.nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -283,7 +285,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
 
         mListAdapter.notifyDataSetChanged();
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        deviceInList.nodeInfo.save();
     }
 
     private void onKeyBindFail(BindingEvent event) {
@@ -292,7 +294,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog("Binding", event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        meshInfo.saveOrUpdate();
     }
 
 
@@ -301,7 +303,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
      ******************************************************************************/
     private void startRemoteScan() {
         // scan for max 2 devices
-        final byte SCAN_LIMIT = 1;
+        final byte SCAN_LIMIT = 2;
         // scan for 5 seconds
         final byte SCAN_TIMEOUT = 5;
 //        final int SERVER_ADDRESS = 0xFFFF;
@@ -326,7 +328,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             enableUI(true);
             return;
         }
-        if (remoteDevices.size() > 0) {
+        remoteDevices.clear();
+        startRemoteScan();
+        /*if (remoteDevices.size() > 0) {
             remoteDevices.remove(0);
         }
 
@@ -341,7 +345,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
                 }
             }, 500);
 
-        }
+        }*/
     }
 
 
@@ -387,6 +391,11 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             remoteDevices.add(remoteProvisioningDevice);
         }
 
+        Collections.sort(remoteDevices, (o1, o2) -> o2.getRssi() - o1.getRssi());
+        for (RemoteProvisioningDevice device :
+                remoteDevices) {
+            MeshLogger.log("sort remote device: " + " -- " + Arrays.bytesToHexString(device.getUuid()) + " -- rssi: " + device.getRssi());
+        }
     }
 
 
@@ -394,13 +403,14 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshLogger.log(String.format("provision next: server -- %04X uuid -- %s",
                 device.getServerAddress(),
                 Arrays.bytesToHexString(device.getUuid())));
-        int address = meshInfo.provisionIndex;
+        int address = meshInfo.getProvisionIndex();
         if (address > MeshUtils.UNICAST_ADDRESS_MAX) {
             enableUI(true);
             return;
         }
 
         device.setUnicastAddress(address);
+        MeshLogger.d("remote allocated adr: " + address);
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.deviceUUID = device.getUuid();
 
@@ -416,7 +426,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         mListAdapter.notifyDataSetChanged();
 
         // check if oob exists -- remote support
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(device.getUuid());
         if (oob != null) {
             device.setAuthValue(oob);
         } else {
@@ -427,14 +437,24 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshService.getInstance().startRemoteProvisioning(device);
     }
 
-    private Runnable remoteScanTimeoutTask = new Runnable() {
-        @Override
-        public void run() {
-            if (remoteDevices.size() == 0) {
-                MeshLogger.log("no device found by remote scan");
+    private Runnable remoteScanTimeoutTask = () -> {
+        if (remoteDevices.size() == 0) {
+            MeshLogger.log("no device found by remote scan");
+            enableUI(true);
+        } else {
+            MeshLogger.log("remote devices scanned: " + remoteDevices.size());
+            RemoteProvisioningDevice dev = remoteDevices.get(0);
+            if (dev.getRssi() < THRESHOLD_REMOTE_RSSI) {
+                StringBuilder sb = new StringBuilder("All devices are weak-signal : \n");
+                for (RemoteProvisioningDevice rpd : remoteDevices) {
+                    sb.append(" uuid-").append(Arrays.bytesToHexString(rpd.getUuid()))
+                            .append(" rssi-").append(rpd.getRssi())
+                            .append(" server-").append(Integer.toHexString(rpd.getServerAddress()))
+                            .append("\n");
+                }
+                showTipDialog(sb.toString());
                 enableUI(true);
             } else {
-                MeshLogger.log("remote devices scanned: " + remoteDevices.size());
                 provisionNextRemoteDevice(remoteDevices.get(0));
             }
         }
@@ -499,12 +519,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
         NetworkingDevice networkingDevice = getProcessingNode();
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
-        meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.provisionIndex += elementCnt;
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        meshInfo.insertDevice(networkingDevice.nodeInfo, true);
         networkingDevice.nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
@@ -547,7 +564,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private HashSet<Integer> getAvailableServerAddresses() {
         HashSet<Integer> serverAddresses = new HashSet<>();
         for (NodeInfo nodeInfo : meshInfo.nodes) {
-            if (nodeInfo.getOnOff() != NodeInfo.ON_OFF_STATE_OFFLINE) {
+            if (!nodeInfo.isOffline()) {
                 serverAddresses.add(nodeInfo.meshAddress);
             }
         }

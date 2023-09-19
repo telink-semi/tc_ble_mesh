@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/9/26
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SceneDetailViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/9/26.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SceneDetailViewController.h"
 #import "ActionViewController.h"
@@ -63,7 +57,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     //为了跟安卓同步，暂时屏蔽情景详情界面的实时修改设备状态功能
-    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storybroad:@"Setting"];
+    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storyboard:@"Setting"];
     //    vc.model = self.allActions[indexPath.row];
     //    __weak typeof(self) weakSelf = self;
     //    [vc setBackAction:^(ActionModel *action) {
@@ -186,8 +180,8 @@
     [ShowTipsHandle.share show:Tip_SaveScene];
 
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         while (saveArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = saveArray.firstObject;
@@ -195,7 +189,7 @@
                 TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil) {
-                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                         TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                         if (error == nil) {
@@ -211,7 +205,7 @@
         while (delArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = delArray.firstObject;
-            [DemoCommand delSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+            [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil) {

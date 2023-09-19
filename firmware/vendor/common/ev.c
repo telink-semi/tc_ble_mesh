@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     ev.c 
+ * @file	ev.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "ev.h"
 #if MI_API_ENABLE
 static ev_loop_ctrl_t ev_loop, *loop = &ev_loop;
@@ -74,7 +76,7 @@ void ev_emit_event(ev_event_e e, void *data){
 	STATIC_ASSERT(EV_FIRED_EVENT_MAX == EV_FIRED_EVENT_MAX_MASK + 1);
 	assert(!irq_is_in_handler());
 
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	
 	int c = (loop->fired_index + loop->fired_count) & EV_FIRED_EVENT_MAX_MASK;
 	loop->fired_queue[c].e = (int)e;
@@ -92,7 +94,7 @@ static inline void ev_call_callbacks(int e, void *data){
 	}
 }
 void ev_emit_event_syn(ev_event_e e, void *data){
-	//u8 r = irq_disable();
+	//u32 r = irq_disable();
 #if(__LOG_RT_ENABLE__)
 	if(e < TR_T_EVENT_E - TR_T_EVENT_0){
 		LOG_TICK(TR_T_EVENT_0 + e, ev_call_callbacks((int)e, data));
@@ -122,7 +124,7 @@ void ev_process_event(){
 #endif
 		ev_call_callbacks(fe->e, fe->data);
 	}
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	loop->fired_count -= fired_count;		// loop->fired_count may bring up race condition, if ev_emit_event is called in irq_handler 
 	irq_restore(r);
 	loop->fired_index = (loop->fired_index + fired_count) & EV_FIRED_EVENT_MAX_MASK;
@@ -198,7 +200,7 @@ void ev_start_timer(ev_time_event_t * e){
 	// Reserve  4 second margin in case some event run too long
 	// that is even a task run nearly 4 second, 
 	// the timers will be fired correctly after then.
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	
 	u32 now = clock_time();
 

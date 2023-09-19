@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/18
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  OTAManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2018/7/18.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "OTAManager.h"
 
@@ -141,7 +135,9 @@ typedef enum : NSUInteger {
     [_successModels removeAllObjects];
     [_failModels removeAllObjects];
     
-    self.oldBearerDataDelegate = _bearer.dataDelegate;
+    if (_bearer.dataDelegate) {
+        self.oldBearerDataDelegate = _bearer.dataDelegate;
+    }
     _bearer.dataDelegate = self;
     
     [self refreshCurrentModel];
@@ -158,7 +154,7 @@ typedef enum : NSUInteger {
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
     if (_OTAing) {
-        [SigBearer.share stopMeshConnectWithComplete:nil];
+        [SDKLibCommand stopMeshConnectWithComplete:nil];
     }
     [SDKLibCommand cancelReadOTACharachteristic];
     _singleSuccessCallBack = nil;
@@ -168,12 +164,14 @@ typedef enum : NSUInteger {
     _stopOTAFlag = YES;
     _OTAing = NO;
     _progress = SigGattOTAProgress_idle;
-    _bearer.dataDelegate = self.oldBearerDataDelegate;
+    if (self.oldBearerDataDelegate) {
+        _bearer.dataDelegate = self.oldBearerDataDelegate;
+    }
 }
 
 - (void)connectDevice{
     if (SigBearer.share.isOpen) {
-        if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+        if (SigMeshLib.share.dataSource.unicastAddressOfConnected == self.currentModel.address) {
             [self setFilter];
         } else {
             [self nodeIdentitySetBeforeGATTOTA];
@@ -188,14 +186,14 @@ typedef enum : NSUInteger {
     TeLogInfo(@"\n\n==========GATT OTA:step1\n\n");
     self.progress = SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
-    [SigBearer.share startMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand startMeshConnectWithComplete:^(BOOL successful) {
         if (weakSelf.progress == SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA) {
             if (successful) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
                 });
-                if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
-                    [self setFilter];
+                if (SigMeshLib.share.dataSource.unicastAddressOfConnected == self.currentModel.address) {
+                    [weakSelf setFilter];
                 } else {
                     [weakSelf nodeIdentitySetBeforeGATTOTA];
                 }
@@ -219,12 +217,12 @@ typedef enum : NSUInteger {
     TeLogInfo(@"\n\n==========GATT OTA:step2\n\n");
     self.progress = SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         __block BOOL hasSuccess = NO;        
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-        [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigMeshLib.share.dataSource.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (!error) {
@@ -234,7 +232,7 @@ typedef enum : NSUInteger {
             TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         }];
         dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             if (weakSelf.progress == SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA) {
                 if (hasSuccess) {
                     [weakSelf startScanNodeIdentityBeforeGATTOTA];
@@ -255,10 +253,10 @@ typedef enum : NSUInteger {
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if (!unprovisioned) {
-            SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-            if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
-                SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithAddress:weakSelf.currentModel.address];
-                if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
+            SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+            if (rspModel.getIdentificationType == SigIdentificationType_nodeIdentity || rspModel.getIdentificationType == SigIdentificationType_privateNodeIdentity) {
+                SigEncryptedModel *encryptedModel = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:weakSelf.currentModel.address];
+                if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
                     TeLogInfo(@"gatt ota start connect macAddress:%@",rspModel.macAddress);
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanNodeIdentityTimeoutBeforeGATTOTA) object:nil];
@@ -315,7 +313,7 @@ typedef enum : NSUInteger {
     TeLogInfo(@"\n\n==========GATT OTA:step5\n\n");
     self.progress = SigGattOTAProgress_step5_setFilter;
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+    [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
         TeLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -342,7 +340,7 @@ typedef enum : NSUInteger {
         //ios11.0及以上，6ms发送一个包，SendPacketsFinishCallback这个block返回则发送下一个包，不需要read。127KB耗时75秒
         [self sendPartDataAvailableIOS11];
     } else {
-        //ios11.0以下，6ms发送一个包，发送8个包read异常OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
+        //ios11.0以下，6ms发送一个包，发送8个包read一次OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
         [self sendPartData];
     }
 }
@@ -480,7 +478,7 @@ typedef enum : NSUInteger {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    [SigBearer.share stopMeshConnectWithComplete:nil];
+    [SDKLibCommand stopMeshConnectWithComplete:nil];
     if (self.singleFailCallBack) {
         self.singleFailCallBack(self.currentModel);
     }
@@ -493,13 +491,15 @@ typedef enum : NSUInteger {
 - (void)refreshCurrentModel{
     if (self.currentIndex < self.allModels.count) {
         self.currentModel = self.allModels[self.currentIndex];
-        if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+        if (SigMeshLib.share.dataSource.unicastAddressOfConnected == self.currentModel.address) {
             self.currentUUID = SigBearer.share.getCurrentPeripheral.identifier.UUIDString;
         } else {
-            self.currentUUID = [SigDataSource.share getNodeWithAddress:self.currentModel.address].peripheralUUID;
+            self.currentUUID = [SigMeshLib.share.dataSource getNodeWithAddress:self.currentModel.address].peripheralUUID;
         }
     }else{
-        _bearer.dataDelegate = self.oldBearerDataDelegate;
+        if (self.oldBearerDataDelegate) {
+            _bearer.dataDelegate = self.oldBearerDataDelegate;
+        }
     }
 }
 

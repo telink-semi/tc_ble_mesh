@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBg"
@@ -15,17 +14,55 @@
         android:textSize="16sp"
         android:textStyle="italic|bold" />
 
-    <ScrollView
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:text="@string/import_tip"
+        android:textSize="11sp" />
 
-        <TextView
-            android:id="@+id/tv_log"
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Select source"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
 
+    <RadioGroup
+        android:id="@+id/rg_import_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_cdtp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </ScrollView>
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:checked="true"
+            android:drawableRight="@drawable/ic_tip"
+            android:drawablePadding="12dp"
+            android:drawableTint="@color/colorPrimary"
+            android:text="Import from other phone(CDTP)" />
+
+        <RadioButton
+            android:id="@+id/rb_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="JSON File" />
+
+        <RadioButton
+            android:id="@+id/rb_qrcode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="QRCode" />
+
+    </RadioGroup>
+
 
     <TextView
         android:id="@+id/tv_file_select"
@@ -34,7 +71,18 @@
         android:drawableEnd="@drawable/icon_right"
         android:padding="10dp"
         android:text="Select File"
-        android:textSize="15sp" />
+        android:textSize="13sp"
+        android:textStyle="italic" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/tv_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/btn_import"

@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     generic_model.c 
+ * @file	generic_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -40,10 +43,13 @@
 #include "vendor/common/scheduler.h"
 #include "vendor/common/mesh_ota.h"
 #include "vendor/common/mesh_property.h"
+#include "vendor/common/vendor_model.h"
 #include "generic_model.h"
 #include "directed_forwarding.h"
 #include "app_privacy_beacon.h"
 #include "subnet_bridge.h"
+#include "op_agg_model.h"
+#include "solicitation_rpl_cfg_model.h"
 /** @addtogroup Mesh_Common
   * @{
   */
@@ -121,11 +127,7 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	memcpy(par, &rsp, sizeof(mesh_cmd_g_onoff_st_t));
 	memcpy(par+3, &mesh_rcv_cmd.send_tick, 4);
 	par[7] = mesh_rcv_cmd.send_index;
-	len = 8;
-	if(mesh_rcv_cmd.ack_pkt_num>1){
-		len = 12*mesh_rcv_cmd.ack_pkt_num-6;
-	}
-	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, len, ele_adr, dst_adr, uuid, pub_md);
+	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, mesh_rcv_cmd.ack_par_len, ele_adr, dst_adr, uuid, pub_md);
 #endif
     return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
@@ -229,16 +231,17 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	int err = 0;
     mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
 #if MESH_RX_TEST
+	mesh_rcv_cmd.ack_par_len = 9;
 	if(par_len>sizeof(mesh_cmd_g_onoff_set_t)){
 		memcpy(&mesh_rcv_cmd.send_tick, par+4, 4);
 		mesh_rcv_cmd.send_index= par[8];
 		mesh_rcv_cmd.rcv_cnt++;
-		mesh_rcv_cmd.ack_pkt_num = par[3];
+		mesh_rcv_cmd.ack_par_len = par[3];
 		mesh_rcv_cmd.rcv_time[par[8]%TEST_CNT] = (clock_time() - mesh_rcv_cmd.send_tick)/32/1000;
 	}
-	else{
-		mesh_rcv_cmd.ack_pkt_num = 1;
-	}
+#endif
+#if LPN_CONTROL_EN // just for test 
+	p_set->transit_t = 0;
 #endif
 
     st_pub_list_t pub_list = {{0}};
@@ -247,15 +250,6 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		return err;
 	}
 	
-#if MI_API_ENABLE
-	// have transmit and delay 
-	if(par_len == sizeof(mesh_cmd_g_onoff_set_t)){
-		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-	}else{
-		mi_pub_sigmodel_inter(0,0,0);
-	}
-#endif
-
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_g_onoff_st_rsp(cb_par);
 	}else{
@@ -844,496 +838,544 @@ int mesh_cmd_sig_vendor_model_sub_list(u8 *par, int par_len, mesh_cb_fun_par_t *
 
 const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	// OP_TYPE_SIG1
-    {APPKEY_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS},
-	{APPKEY_UPDATE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS},
-    {COMPOSITION_DATA_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_cps_status, STATUS_NONE},
-    {CFG_MODEL_PUB_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_set, CFG_MODEL_PUB_STATUS},
-	{HEALTH_CURRENT_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_health_cur_sts,STATUS_NONE},
-	{HEALTH_FAULT_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_health_fault_sts,STATUS_NONE},
-    {HEARTBEAT_PUB_STATUS,1,SIG_MD_CFG_SERVER,SIG_MD_CFG_CLIENT, mesh_cmd_sig_heart_pub_status ,STATUS_NONE },
+	CMD_NO_STR(APPKEY_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS),
+	CMD_NO_STR(APPKEY_UPDATE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS),
+    CMD_NO_STR(COMPOSITION_DATA_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_cps_status, STATUS_NONE),
+    CMD_NO_STR(CFG_MODEL_PUB_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_set, CFG_MODEL_PUB_STATUS),
+	CMD_NO_STR(HEALTH_CURRENT_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_health_cur_sts,STATUS_NONE),
+	CMD_NO_STR(HEALTH_FAULT_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_health_fault_sts,STATUS_NONE),
+    CMD_NO_STR(HEARTBEAT_PUB_STATUS,1,SIG_MD_CFG_SERVER,SIG_MD_CFG_CLIENT, mesh_cmd_sig_heart_pub_status ,STATUS_NONE ),
 
 	// OP_TYPE_SIG2
     // config
-    {APPKEY_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS},
-	{APPKEY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_get, APPKEY_LIST},
-	{APPKEY_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_appkey_list, STATUS_NONE},
-	{APPKEY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_appkey_status, STATUS_NONE},
-    {COMPOSITION_DATA_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_cps_get, COMPOSITION_DATA_STATUS},
-    {CFG_BEACON_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_sec_nw_bc_get, CFG_BEACON_STATUS},
-	{CFG_BEACON_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_sec_nw_bc_set, CFG_BEACON_STATUS},
-    {CFG_BEACON_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_sec_nw_bc_status, STATUS_NONE},
-    {CFG_DEFAULT_TTL_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_def_ttl_get, CFG_DEFAULT_TTL_STATUS},
-	{CFG_DEFAULT_TTL_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_def_ttl_set, CFG_DEFAULT_TTL_STATUS},
-    {CFG_DEFAULT_TTL_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_def_ttl_status, STATUS_NONE},
-	{CFG_FRIEND_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_friend_get, CFG_FRIEND_STATUS},
-	{CFG_FRIEND_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_friend_set, CFG_FRIEND_STATUS},
-	{CFG_FRIEND_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_friend_status, STATUS_NONE},
-	{CFG_GATT_PROXY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_gatt_proxy_get, CFG_GATT_PROXY_STATUS},
-	{CFG_GATT_PROXY_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_gatt_proxy_set, CFG_GATT_PROXY_STATUS},
-	{CFG_GATT_PROXY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_gatt_proxy_status, STATUS_NONE},
-	{CFG_KEY_REFRESH_PHASE_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_key_phase_get, CFG_KEY_REFRESH_PHASE_STATUS},
-	{CFG_KEY_REFRESH_PHASE_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_key_phase_set, CFG_KEY_REFRESH_PHASE_STATUS},
-	{CFG_KEY_REFRESH_PHASE_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_key_phase_status, STATUS_NONE},
-	{CFG_NW_TRANSMIT_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_nw_transmit_get, CFG_NW_TRANSMIT_STATUS},
-	{CFG_NW_TRANSMIT_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_nw_transmit_set, CFG_NW_TRANSMIT_STATUS},
-	{CFG_NW_TRANSMIT_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_nw_transmit_status, STATUS_NONE},
-    {CFG_RELAY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_relay_get, CFG_RELAY_STATUS},
-	{CFG_RELAY_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_relay_set, CFG_RELAY_STATUS},
-    {CFG_RELAY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_relay_status, STATUS_NONE},
-	{CFG_LPN_POLL_TIMEOUT_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_lpn_poll_timeout_get, CFG_LPN_POLL_TIMEOUT_STATUS},
-	{CFG_LPN_POLL_TIMEOUT_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_lpn_poll_timeout_status, STATUS_NONE},
-    {CFG_MODEL_PUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_get, CFG_MODEL_PUB_STATUS},
-    {CFG_MODEL_PUB_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_model_pub_status, STATUS_NONE},
-	{CFG_MODEL_PUB_VIRTUAL_ADR_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_set_vr, CFG_MODEL_PUB_STATUS},
-    {CFG_MODEL_SUB_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-    {CFG_MODEL_SUB_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-    {CFG_MODEL_SUB_OVER_WRITE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-    {CFG_MODEL_SUB_DEL_ALL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-    {CFG_MODEL_SUB_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_model_sub_status, STATUS_NONE},
-	{CFG_MODEL_SUB_VIRTUAL_ADR_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-	{CFG_MODEL_SUB_VIRTUAL_ADR_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-	{CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS},
-    {CFG_SIG_MODEL_SUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_sig_model_sub_get, CFG_SIG_MODEL_SUB_LIST},
-    {CFG_SIG_MODEL_SUB_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_sig_model_sub_list, STATUS_NONE},
-    {CFG_VENDOR_MODEL_SUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_vendor_model_sub_get, CFG_VENDOR_MODEL_SUB_LIST},
-    {CFG_VENDOR_MODEL_SUB_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_vendor_model_sub_list, STATUS_NONE},
+    CMD_NO_STR(APPKEY_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_set, APPKEY_STATUS),
+	CMD_NO_STR(APPKEY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_appkey_get, APPKEY_LIST),
+	CMD_NO_STR(APPKEY_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_appkey_list, STATUS_NONE),
+	CMD_NO_STR(APPKEY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_appkey_status, STATUS_NONE),
+    CMD_NO_STR(COMPOSITION_DATA_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_cps_get, COMPOSITION_DATA_STATUS),
+    CMD_NO_STR(CFG_BEACON_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_sec_nw_bc_get, CFG_BEACON_STATUS),
+	CMD_NO_STR(CFG_BEACON_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_sec_nw_bc_set, CFG_BEACON_STATUS),
+    CMD_NO_STR(CFG_BEACON_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_sec_nw_bc_status, STATUS_NONE),
+    CMD_NO_STR(CFG_DEFAULT_TTL_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_def_ttl_get, CFG_DEFAULT_TTL_STATUS),
+	CMD_NO_STR(CFG_DEFAULT_TTL_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_def_ttl_set, CFG_DEFAULT_TTL_STATUS),
+    CMD_NO_STR(CFG_DEFAULT_TTL_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_def_ttl_status, STATUS_NONE),
+	CMD_NO_STR(CFG_FRIEND_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_friend_get, CFG_FRIEND_STATUS),
+	CMD_NO_STR(CFG_FRIEND_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_friend_set, CFG_FRIEND_STATUS),
+	CMD_NO_STR(CFG_FRIEND_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_friend_status, STATUS_NONE),
+	CMD_NO_STR(CFG_GATT_PROXY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_gatt_proxy_get, CFG_GATT_PROXY_STATUS),
+	CMD_NO_STR(CFG_GATT_PROXY_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_gatt_proxy_set, CFG_GATT_PROXY_STATUS),
+	CMD_NO_STR(CFG_GATT_PROXY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_gatt_proxy_status, STATUS_NONE),
+	CMD_NO_STR(CFG_KEY_REFRESH_PHASE_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_key_phase_get, CFG_KEY_REFRESH_PHASE_STATUS),
+	CMD_NO_STR(CFG_KEY_REFRESH_PHASE_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_key_phase_set, CFG_KEY_REFRESH_PHASE_STATUS),
+	CMD_NO_STR(CFG_KEY_REFRESH_PHASE_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_key_phase_status, STATUS_NONE),
+	CMD_NO_STR(CFG_NW_TRANSMIT_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_nw_transmit_get, CFG_NW_TRANSMIT_STATUS),
+	CMD_NO_STR(CFG_NW_TRANSMIT_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_nw_transmit_set, CFG_NW_TRANSMIT_STATUS),
+	CMD_NO_STR(CFG_NW_TRANSMIT_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_nw_transmit_status, STATUS_NONE),
+    CMD_NO_STR(CFG_RELAY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_relay_get, CFG_RELAY_STATUS),
+	CMD_NO_STR(CFG_RELAY_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_relay_set, CFG_RELAY_STATUS),
+    CMD_NO_STR(CFG_RELAY_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_relay_status, STATUS_NONE),
+	CMD_NO_STR(CFG_LPN_POLL_TIMEOUT_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_lpn_poll_timeout_get, CFG_LPN_POLL_TIMEOUT_STATUS),
+	CMD_NO_STR(CFG_LPN_POLL_TIMEOUT_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_lpn_poll_timeout_status, STATUS_NONE),
+    CMD_NO_STR(CFG_MODEL_PUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_get, CFG_MODEL_PUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_PUB_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_model_pub_status, STATUS_NONE),
+	CMD_NO_STR(CFG_MODEL_PUB_VIRTUAL_ADR_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_pub_set_vr, CFG_MODEL_PUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_SUB_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_SUB_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_SUB_OVER_WRITE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_SUB_DEL_ALL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+    CMD_NO_STR(CFG_MODEL_SUB_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_model_sub_status, STATUS_NONE),
+	CMD_NO_STR(CFG_MODEL_SUB_VIRTUAL_ADR_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+	CMD_NO_STR(CFG_MODEL_SUB_VIRTUAL_ADR_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+	CMD_NO_STR(CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_sub_set, CFG_MODEL_SUB_STATUS),
+    CMD_NO_STR(CFG_SIG_MODEL_SUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_sig_model_sub_get, CFG_SIG_MODEL_SUB_LIST),
+    CMD_NO_STR(CFG_SIG_MODEL_SUB_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_sig_model_sub_list, STATUS_NONE),
+    CMD_NO_STR(CFG_VENDOR_MODEL_SUB_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_vendor_model_sub_get, CFG_VENDOR_MODEL_SUB_LIST),
+    CMD_NO_STR(CFG_VENDOR_MODEL_SUB_LIST, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_vendor_model_sub_list, STATUS_NONE),
     	// heart beat pub
-    {HEARTBEAT_PUB_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_pub_get,HEARTBEAT_PUB_STATUS},
-    {HEARTBEAT_PUB_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_pub_set,HEARTBEAT_PUB_STATUS},
+    CMD_NO_STR(HEARTBEAT_PUB_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_pub_get,HEARTBEAT_PUB_STATUS),
+    CMD_NO_STR(HEARTBEAT_PUB_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_pub_set,HEARTBEAT_PUB_STATUS),
     // heart beat sub HEARTBEAT_SUB_STATUS
-    {HEARTBEAT_SUB_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_sub_get,HEARTBEAT_SUB_STATUS},
-    {HEARTBEAT_SUB_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_sub_set,HEARTBEAT_SUB_STATUS},
-    {HEARTBEAT_SUB_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_heartbeat_sub_status,STATUS_NONE},
-	{MODE_APP_BIND, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_bind, MODE_APP_STATUS},
-	{MODE_APP_UNBIND, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_bind, MODE_APP_STATUS},
-	{MODE_APP_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_bind_status,STATUS_NONE},
-	{NETKEY_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS},
-	{NETKEY_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS},
-	{NETKEY_UPDATE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS},
-	{NETKEY_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_netkey_status,STATUS_NONE},
-	{NODE_ID_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_identity_get, NODE_ID_STATUS},
-	{NODE_ID_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_identity_set, NODE_ID_STATUS},
-	{NODE_ID_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_node_identity_status, STATUS_NONE},
-	{NETKEY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_get, NETKEY_LIST},
-	{NETKEY_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_netkey_list,STATUS_NONE},
-	{NODE_RESET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_reset, NODE_RESET_STATUS},
-	{NODE_RESET_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_node_reset_status, STATUS_NONE},
-	{SIG_MODEL_APP_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_app_get, SIG_MODEL_APP_LIST},
-	{SIG_MODEL_APP_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_sig_model_app_list,STATUS_NONE},
-	{VENDOR_MODEL_APP_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_app_get, VENDOR_MODEL_APP_LIST},
-	{VENDOR_MODEL_APP_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_vd_model_app_list,STATUS_NONE},
+    CMD_NO_STR(HEARTBEAT_SUB_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_sub_get,HEARTBEAT_SUB_STATUS),
+    CMD_NO_STR(HEARTBEAT_SUB_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_heartbeat_sub_set,HEARTBEAT_SUB_STATUS),
+    CMD_NO_STR(HEARTBEAT_SUB_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_heartbeat_sub_status,STATUS_NONE),
+	CMD_NO_STR(MODE_APP_BIND, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_bind, MODE_APP_STATUS),
+	CMD_NO_STR(MODE_APP_UNBIND, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_bind, MODE_APP_STATUS),
+	CMD_NO_STR(MODE_APP_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_bind_status,STATUS_NONE),
+	CMD_NO_STR(NETKEY_ADD, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS),
+	CMD_NO_STR(NETKEY_DEL, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS),
+	CMD_NO_STR(NETKEY_UPDATE, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_set, NETKEY_STATUS),
+	CMD_NO_STR(NETKEY_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_netkey_status,STATUS_NONE),
+	CMD_NO_STR(NODE_ID_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_identity_get, NODE_ID_STATUS),
+	CMD_NO_STR(NODE_ID_SET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_identity_set, NODE_ID_STATUS),
+	CMD_NO_STR(NODE_ID_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_node_identity_status, STATUS_NONE),
+	CMD_NO_STR(NETKEY_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_netkey_get, NETKEY_LIST),
+	CMD_NO_STR(NETKEY_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_netkey_list,STATUS_NONE),
+	CMD_NO_STR(NODE_RESET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_node_reset, NODE_RESET_STATUS),
+	CMD_NO_STR(NODE_RESET_STATUS, 1, SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT, mesh_cmd_sig_cfg_node_reset_status, STATUS_NONE),
+	CMD_NO_STR(SIG_MODEL_APP_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_app_get, SIG_MODEL_APP_LIST),
+	CMD_NO_STR(SIG_MODEL_APP_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_sig_model_app_list,STATUS_NONE),
+	CMD_NO_STR(VENDOR_MODEL_APP_GET, 0, SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER, mesh_cmd_sig_cfg_model_app_get, VENDOR_MODEL_APP_LIST),
+	CMD_NO_STR(VENDOR_MODEL_APP_LIST,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_vd_model_app_list,STATUS_NONE),
 	
 	// health fault part 
-	{HEALTH_FAULT_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_get,HEALTH_FAULT_STATUS},
-    {HEALTH_FAULT_CLEAR,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_clr,HEALTH_FAULT_STATUS},
-    {HEALTH_FAULT_CLEAR_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_clr_unrel,STATUS_NONE},
-    {HEALTH_FAULT_TEST,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_test,HEALTH_FAULT_STATUS},
-    {HEALTH_FAULT_TEST_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_test_unrel,STATUS_NONE},
+	CMD_NO_STR(HEALTH_FAULT_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_get,HEALTH_FAULT_STATUS),
+    CMD_NO_STR(HEALTH_FAULT_CLEAR,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_clr,HEALTH_FAULT_STATUS),
+    CMD_NO_STR(HEALTH_FAULT_CLEAR_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_clr_unrel,STATUS_NONE),
+    CMD_NO_STR(HEALTH_FAULT_TEST,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_test,HEALTH_FAULT_STATUS),
+    CMD_NO_STR(HEALTH_FAULT_TEST_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_fault_test_unrel,STATUS_NONE),
     // health period part 
-    {HEALTH_PERIOD_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_get,HEALTH_PERIOD_STATUS},
-    {HEALTH_PERIOD_SET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_set,HEALTH_PERIOD_STATUS},
-    {HEALTH_PERIOD_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_set_unrel,STATUS_NONE},
-    {HEALTH_PERIOD_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_period_status,STATUS_NONE},
+    CMD_NO_STR(HEALTH_PERIOD_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_get,HEALTH_PERIOD_STATUS),
+    CMD_NO_STR(HEALTH_PERIOD_SET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_set,HEALTH_PERIOD_STATUS),
+    CMD_NO_STR(HEALTH_PERIOD_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_period_set_unrel,STATUS_NONE),
+    CMD_NO_STR(HEALTH_PERIOD_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_period_status,STATUS_NONE),
     // attention timer 
-    {HEALTH_ATTENTION_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_get,HEALTH_ATTENTION_STATUS},
-    {HEALTH_ATTENTION_SET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set,HEALTH_ATTENTION_STATUS},
-    {HEALTH_ATTENTION_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set_unrel,STATUS_NONE},
-    {HEALTH_ATTENTION_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_attention_status,STATUS_NONE},
+    CMD_NO_STR(HEALTH_ATTENTION_GET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_get,HEALTH_ATTENTION_STATUS),
+    CMD_NO_STR(HEALTH_ATTENTION_SET,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set,HEALTH_ATTENTION_STATUS),
+    CMD_NO_STR(HEALTH_ATTENTION_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set,STATUS_NONE),
+    CMD_NO_STR(HEALTH_ATTENTION_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_attention_status,STATUS_NONE),
+#if MD_SAR_EN	
+	CMD_NO_STR(CFG_SAR_TRANSMITTER_GET,0,SIG_MD_SAR_CFG_C, SIG_MD_SAR_CFG_S,mesh_cmd_sig_cfg_sar_transmitter_get,CFG_SAR_TRANSMITTER_STATUS),
+	CMD_NO_STR(CFG_SAR_TRANSMITTER_SET,0,SIG_MD_SAR_CFG_C, SIG_MD_SAR_CFG_S,mesh_cmd_sig_cfg_sar_transmitter_set,CFG_SAR_TRANSMITTER_STATUS),
+    CMD_NO_STR(CFG_SAR_TRANSMITTER_STATUS,1,SIG_MD_SAR_CFG_S, SIG_MD_SAR_CFG_C,mesh_cmd_sig_cfg_sar_transmitter_status,STATUS_NONE),
+	CMD_NO_STR(CFG_SAR_RECEIVER_GET,0,SIG_MD_SAR_CFG_C, SIG_MD_SAR_CFG_S,mesh_cmd_sig_cfg_sar_receiver_get,CFG_SAR_RECEIVER_STATUS),
+	CMD_NO_STR(CFG_SAR_RECEIVER_SET,0,SIG_MD_SAR_CFG_C, SIG_MD_SAR_CFG_S,mesh_cmd_sig_cfg_sar_receiver_set,CFG_SAR_RECEIVER_STATUS),
+    CMD_NO_STR(CFG_SAR_RECEIVER_STATUS,1,SIG_MD_SAR_CFG_S, SIG_MD_SAR_CFG_C,mesh_cmd_sig_cfg_sar_receiver_status,STATUS_NONE),
+#endif
+#if MD_ON_DEMAND_PROXY_EN	
+	CMD_NO_STR(CFG_ON_DEMAND_PROXY_GET,0,SIG_MD_ON_DEMAND_PROXY_C, SIG_MD_ON_DEMAND_PROXY_S,mesh_cmd_sig_cfg_on_demand_proxy_get,CFG_ON_DEMAND_PROXY_STATUS),
+	CMD_NO_STR(CFG_ON_DEMAND_PROXY_SET,0,SIG_MD_ON_DEMAND_PROXY_C, SIG_MD_ON_DEMAND_PROXY_S,mesh_cmd_sig_cfg_on_demand_proxy_set,CFG_ON_DEMAND_PROXY_STATUS),
+    CMD_NO_STR(CFG_ON_DEMAND_PROXY_STATUS,1,SIG_MD_ON_DEMAND_PROXY_S, SIG_MD_ON_DEMAND_PROXY_C,mesh_cmd_sig_cfg_on_demand_proxy_status,STATUS_NONE),
+#endif
+#if MD_OP_AGG_EN	
+	CMD_NO_STR(CFG_OP_AGG_SEQ,0,SIG_MD_OP_AGG_C, SIG_MD_OP_AGG_S,mesh_cmd_sig_cfg_op_agg_seq,CFG_OP_AGG_STATUS),
+	CMD_NO_STR(CFG_OP_AGG_STATUS,1,SIG_MD_OP_AGG_S, SIG_MD_OP_AGG_C,mesh_cmd_sig_cfg_op_agg_status,STATUS_NONE),
+#endif
+#if MD_LARGE_CPS_EN	
+	CMD_NO_STR(LARGE_CPS_GET,0,SIG_MD_LARGE_CPS_C, SIG_MD_LARGE_CPS_S,mesh_cmd_sig_cfg_large_cps_get,LARGE_CPS_STATUS),
+    CMD_NO_STR(LARGE_CPS_STATUS,1,SIG_MD_LARGE_CPS_S, SIG_MD_LARGE_CPS_C,mesh_cmd_sig_cfg_large_cps_status,STATUS_NONE),
+	CMD_NO_STR(MODELS_METADATA_GET,0,SIG_MD_LARGE_CPS_C, SIG_MD_LARGE_CPS_S,mesh_cmd_sig_cfg_models_metadata_get,MODELS_METADATA_STATUS),
+    CMD_NO_STR(MODELS_METADATA_STATUS,1,SIG_MD_LARGE_CPS_S, SIG_MD_LARGE_CPS_C,mesh_cmd_sig_cfg_models_metadata_status,STATUS_NONE),
+#endif
+#if MD_SOLI_PDU_RPL_EN		
+	CMD_NO_STR(SOLI_PDU_RPL_ITEM_CLEAR,0,SIG_MD_SOLI_PDU_RPL_CFG_C,SIG_MD_SOLI_PDU_RPL_CFG_S,mesh_cmd_sig_cfg_soli_rpl_clear,SOLI_PDU_RPL_ITEM_STATUS),
+	CMD_NO_STR(SOLI_PDU_RPL_ITEM_CLEAR_NACK,0,SIG_MD_SOLI_PDU_RPL_CFG_C,SIG_MD_SOLI_PDU_RPL_CFG_S,mesh_cmd_sig_cfg_soli_rpl_clear,STATUS_NONE),
+    CMD_NO_STR(SOLI_PDU_RPL_ITEM_STATUS,1,SIG_MD_SOLI_PDU_RPL_CFG_S, SIG_MD_SOLI_PDU_RPL_CFG_C,mesh_cmd_sig_cfg_soli_rpl_status,STATUS_NONE),
+#endif
 
 #if MD_DF_EN
 	// directed forwarding
-	{DIRECTED_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS},
-	{DIRECTED_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS},
-    {DIRECTED_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_status,STATUS_NONE},
-    {PATH_METRIC_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_get,PATH_METRIC_STATUS},
-    {PATH_METRIC_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_set,PATH_METRIC_STATUS},
-    {PATH_METRIC_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_metric_status,STATUS_NONE},
-	{DISCOVERY_TABLE_CAPABILITIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_get,DISCOVERY_TABLE_CAPABILITIES_STATUS},
-	{DISCOVERY_TABLE_CAPABILITIES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_set,DISCOVERY_TABLE_CAPABILITIES_STATUS},
-    {DISCOVERY_TABLE_CAPABILITIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_dsc_tbl_capa_status,STATUS_NONE},
-    {FORWARDING_TABLE_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_add,FORWARDING_TABLE_STATUS},
-    {FORWARDING_TABLE_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_delete,FORWARDING_TABLE_STATUS},
-    {FORWARDING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_status,STATUS_NONE},    
-    {FORWARDING_TABLE_DEPENDENTS_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_add,FORWARDING_TABLE_DEPENDENTS_STATUS},
-    {FORWARDING_TABLE_DEPENDENTS_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete,FORWARDING_TABLE_DEPENDENTS_STATUS},
-    {FORWARDING_TABLE_DEPENDENTS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_status,STATUS_NONE},
-	{FORWARDING_TABLE_DEPENDENTS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get,FORWARDING_TABLE_DEPENDENTS_GET_STATUS},
-   	{FORWARDING_TABLE_DEPENDENTS_GET_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status,STATUS_NONE},   	
-	{FORWARDING_TABLE_ENTRIES_COUNT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get,FORWARDING_TABLE_ENTRIES_COUNT_STATUS},
-	{FORWARDING_TABLE_ENTRIES_COUNT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status,STATUS_NONE},
-	{FORWARDING_TABLE_ENTRIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_get,FORWARDING_TABLE_ENTRIES_STATUS},
-	{FORWARDING_TABLE_ENTRIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_status,STATUS_NONE},
-	{WANTED_LANES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_get,WANTED_LANES_STATUS},
-	{WANTED_LANES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_set,WANTED_LANES_STATUS},
-    {WANTED_LANES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_wanted_lanes_status,STATUS_NONE},
-    {TWO_WAY_PATH_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_get,TWO_WAY_PATH_STATUS},
-	{TWO_WAY_PATH_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_set,TWO_WAY_PATH_STATUS},
-    {TWO_WAY_PATH_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_two_way_path_status,STATUS_NONE},
-	{PATH_ECHO_INTERVAL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_get,PATH_ECHO_INTERVAL_STATUS},
-	{PATH_ECHO_INTERVAL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_set,PATH_ECHO_INTERVAL_STATUS},
-	{PATH_ECHO_INTERVAL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_echo_interval_status,STATUS_NONE},
-	{DIRECTED_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_get,DIRECTED_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_set,DIRECTED_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_network_transmit_status,STATUS_NONE},
-	{DIRECTED_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_get,DIRECTED_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_set,DIRECTED_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_relay_retransmit_status,STATUS_NONE},
-	{RSSI_THRESHOLD_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_get,RSSI_THRESHOLD_STATUS},
-	{RSSI_THRESHOLD_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_set,RSSI_THRESHOLD_STATUS},
-	{RSSI_THRESHOLD_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_rssi_threshold_status,STATUS_NONE}, 
-	{DIRECTED_PATHS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_paths_get,DIRECTED_PATHS_STATUS},
-    {DIRECTED_PATHS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_paths_status,STATUS_NONE},
-    {DIRECTED_PUBLISH_POLICY_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_get,DIRECTED_PUBLISH_POLICY_STATUS},
-    {DIRECTED_PUBLISH_POLICY_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_set,DIRECTED_PUBLISH_POLICY_STATUS},
-    {DIRECTED_PUBLISH_POLICY_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_publish_policy_status,STATUS_NONE},
-	{PATH_DISCOVERY_TIMING_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_get,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
-	{PATH_DISCOVERY_TIMING_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_set,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
-	{PATH_DISCOVERY_TIMING_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_discovery_timing_control_status,STATUS_NONE},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_get,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_set,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_network_transmit_status,STATUS_NONE},    
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_get,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_set,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE},      
+	CMD_NO_STR(DIRECTED_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS),
+	CMD_NO_STR(DIRECTED_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS),
+    CMD_NO_STR(DIRECTED_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_status,STATUS_NONE),
+    CMD_NO_STR(PATH_METRIC_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_get,PATH_METRIC_STATUS),
+    CMD_NO_STR(PATH_METRIC_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_set,PATH_METRIC_STATUS),
+    CMD_NO_STR(PATH_METRIC_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_metric_status,STATUS_NONE),
+	CMD_NO_STR(DISCOVERY_TABLE_CAPABILITIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_get,DISCOVERY_TABLE_CAPABILITIES_STATUS),
+	CMD_NO_STR(DISCOVERY_TABLE_CAPABILITIES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_set,DISCOVERY_TABLE_CAPABILITIES_STATUS),
+    CMD_NO_STR(DISCOVERY_TABLE_CAPABILITIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_dsc_tbl_capa_status,STATUS_NONE),
+    CMD_NO_STR(FORWARDING_TABLE_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_add,FORWARDING_TABLE_STATUS),
+    CMD_NO_STR(FORWARDING_TABLE_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_delete,FORWARDING_TABLE_STATUS),
+    CMD_NO_STR(FORWARDING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_status,STATUS_NONE),    
+    CMD_NO_STR(FORWARDING_TABLE_DEPENDENTS_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_add,FORWARDING_TABLE_DEPENDENTS_STATUS),
+    CMD_NO_STR(FORWARDING_TABLE_DEPENDENTS_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete,FORWARDING_TABLE_DEPENDENTS_STATUS),
+    CMD_NO_STR(FORWARDING_TABLE_DEPENDENTS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_status,STATUS_NONE),
+	CMD_NO_STR(FORWARDING_TABLE_DEPENDENTS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get,FORWARDING_TABLE_DEPENDENTS_GET_STATUS),
+   	CMD_NO_STR(FORWARDING_TABLE_DEPENDENTS_GET_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status,STATUS_NONE),   	
+	CMD_NO_STR(FORWARDING_TABLE_ENTRIES_COUNT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get,FORWARDING_TABLE_ENTRIES_COUNT_STATUS),
+	CMD_NO_STR(FORWARDING_TABLE_ENTRIES_COUNT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status,STATUS_NONE),
+	CMD_NO_STR(FORWARDING_TABLE_ENTRIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_get,FORWARDING_TABLE_ENTRIES_STATUS),
+	CMD_NO_STR(FORWARDING_TABLE_ENTRIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_status,STATUS_NONE),
+	CMD_NO_STR(WANTED_LANES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_get,WANTED_LANES_STATUS),
+	CMD_NO_STR(WANTED_LANES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_set,WANTED_LANES_STATUS),
+    CMD_NO_STR(WANTED_LANES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_wanted_lanes_status,STATUS_NONE),
+    CMD_NO_STR(TWO_WAY_PATH_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_get,TWO_WAY_PATH_STATUS),
+	CMD_NO_STR(TWO_WAY_PATH_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_set,TWO_WAY_PATH_STATUS),
+    CMD_NO_STR(TWO_WAY_PATH_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_two_way_path_status,STATUS_NONE),
+	CMD_NO_STR(PATH_ECHO_INTERVAL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_get,PATH_ECHO_INTERVAL_STATUS),
+	CMD_NO_STR(PATH_ECHO_INTERVAL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_set,PATH_ECHO_INTERVAL_STATUS),
+	CMD_NO_STR(PATH_ECHO_INTERVAL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_echo_interval_status,STATUS_NONE),
+	CMD_NO_STR(DIRECTED_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_get,DIRECTED_NETWORK_TRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_set,DIRECTED_NETWORK_TRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_network_transmit_status,STATUS_NONE),
+	CMD_NO_STR(DIRECTED_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_get,DIRECTED_RELAY_RETRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_set,DIRECTED_RELAY_RETRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_relay_retransmit_status,STATUS_NONE),
+	CMD_NO_STR(RSSI_THRESHOLD_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_get,RSSI_THRESHOLD_STATUS),
+	CMD_NO_STR(RSSI_THRESHOLD_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_set,RSSI_THRESHOLD_STATUS),
+	CMD_NO_STR(RSSI_THRESHOLD_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_rssi_threshold_status,STATUS_NONE), 
+	CMD_NO_STR(DIRECTED_PATHS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_paths_get,DIRECTED_PATHS_STATUS),
+    CMD_NO_STR(DIRECTED_PATHS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_paths_status,STATUS_NONE),
+    CMD_NO_STR(DIRECTED_PUBLISH_POLICY_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_get,DIRECTED_PUBLISH_POLICY_STATUS),
+    CMD_NO_STR(DIRECTED_PUBLISH_POLICY_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_set,DIRECTED_PUBLISH_POLICY_STATUS),
+    CMD_NO_STR(DIRECTED_PUBLISH_POLICY_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_publish_policy_status,STATUS_NONE),
+	CMD_NO_STR(PATH_DISCOVERY_TIMING_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_get,PATH_DISCOVERY_TIMING_CONTROL_STATUS),
+	CMD_NO_STR(PATH_DISCOVERY_TIMING_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_set,PATH_DISCOVERY_TIMING_CONTROL_STATUS),
+	CMD_NO_STR(PATH_DISCOVERY_TIMING_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_discovery_timing_control_status,STATUS_NONE),
+    CMD_NO_STR(DIRECTED_CONTROL_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_get,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_CONTROL_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_set,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_network_transmit_status,STATUS_NONE),    
+    CMD_NO_STR(DIRECTED_CONTROL_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_get,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_CONTROL_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_set,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS),
+    CMD_NO_STR(DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE),      
 #endif
 
 #if MD_SBR_EN
 	// subnet bridge
-	{SUBNET_BRIDGE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_get,SUBNET_BRIDGE_STATUS},
-	{SUBNET_BRIDGE_SET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_set,SUBNET_BRIDGE_STATUS},
-    {SUBNET_BRIDGE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_subnet_bridge_status,STATUS_NONE},    
-    {BRIDGING_TABLE_ADD,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_add,BRIDGING_TABLE_STATUS},
-	{BRIDGING_TABLE_REMOVE,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_remove,BRIDGING_TABLE_STATUS},
-    {BRIDGING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_status,STATUS_NONE},
-	{BRIDGED_SUBNETS_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridged_subnets_get,BRIDGED_SUBNETS_LIST},
-    {BRIDGED_SUBNETS_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE},	
-	{BRIDGING_TABLE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_get,BRIDGING_TABLE_LIST},
-    {BRIDGING_TABLE_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE},
+	CMD_NO_STR(SUBNET_BRIDGE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_get,SUBNET_BRIDGE_STATUS),
+	CMD_NO_STR(SUBNET_BRIDGE_SET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_set,SUBNET_BRIDGE_STATUS),
+    CMD_NO_STR(SUBNET_BRIDGE_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_subnet_bridge_status,STATUS_NONE),    
+    CMD_NO_STR(BRIDGING_TABLE_ADD,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_add,BRIDGING_TABLE_STATUS),
+	CMD_NO_STR(BRIDGING_TABLE_REMOVE,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_remove,BRIDGING_TABLE_STATUS),
+    CMD_NO_STR(BRIDGING_TABLE_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_status,STATUS_NONE),
+	CMD_NO_STR(BRIDGED_SUBNETS_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridged_subnets_get,BRIDGED_SUBNETS_LIST),
+    CMD_NO_STR(BRIDGED_SUBNETS_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE),	
+	CMD_NO_STR(BRIDGING_TABLE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_get,BRIDGING_TABLE_LIST),
+    CMD_NO_STR(BRIDGING_TABLE_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE),	
+	CMD_NO_STR(BRIDGE_CAPABILITY_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridge_capa_get,BRIDGE_CAPABILITY_STATUS),
+    CMD_NO_STR(BRIDGE_CAPABILITY_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE),
 #endif
 
 #if MD_REMOTE_PROV  
     // remote provision scan capability 
-    {REMOTE_PROV_SCAN_CAPA_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_capa,REMOTE_PROV_SCAN_CAPA_STS},
-    {REMOTE_PROV_SCAN_CAPA_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_capa_sts,STATUS_NONE},
+    CMD_NO_STR(REMOTE_PROV_SCAN_CAPA_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_capa,REMOTE_PROV_SCAN_CAPA_STS),
+    CMD_NO_STR(REMOTE_PROV_SCAN_CAPA_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_capa_sts,STATUS_NONE),
 
     // remote provision scan parameters 
-    {REMOTE_PROV_SCAN_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_get,REMOTE_PROV_SCAN_STS},
+    CMD_NO_STR(REMOTE_PROV_SCAN_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_get,REMOTE_PROV_SCAN_STS),
     #if WIN32
-	{REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE},
+	CMD_NO_STR(REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE),
 	#else
-    {REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,REMOTE_PROV_SCAN_STS},
+    CMD_NO_STR(REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE),
 	#endif
-	{REMOTE_PROV_SCAN_STOP,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_stop,REMOTE_PROV_SCAN_STS},
-    {REMOTE_PROV_SCAN_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_sts,STATUS_NONE},
-    {REMOTE_PROV_SCAN_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_report,STATUS_NONE},
+	CMD_NO_STR(REMOTE_PROV_SCAN_STOP,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_stop,REMOTE_PROV_SCAN_STS),
+    CMD_NO_STR(REMOTE_PROV_SCAN_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_sts,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_SCAN_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_report,STATUS_NONE),
     // remote provision extend scan part 
-    {REMOTE_PROV_EXTEND_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_extend_scan_start,STATUS_NONE},
-    {REMOTE_PROV_EXTEND_SCAN_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_extend_scan_report,STATUS_NONE},
+    CMD_NO_STR(REMOTE_PROV_EXTEND_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_extend_scan_start,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_EXTEND_SCAN_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_extend_scan_report,STATUS_NONE),
 
     // remote provision link parameters 
-    {REMOTE_PROV_LINK_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_get,REMOTE_PROV_LINK_STS},
+    CMD_NO_STR(REMOTE_PROV_LINK_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_get,REMOTE_PROV_LINK_STS),
 	#if WIN32
 	// binding the link report ,when send the link open cmd ,it should rsp the link report .
-	{REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_REPORT},
+	CMD_NO_STR(REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS),
 	#else
-	{REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS},
+	CMD_NO_STR(REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS),
 	#endif
-	{REMOTE_PROV_LINK_CLOSE,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_close,REMOTE_PROV_LINK_STS},
-    {REMOTE_PROV_LINK_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_sts,STATUS_NONE},
-    {REMOTE_PROV_LINK_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_report,STATUS_NONE},
-    {REMOTE_PROV_PDU_SEND,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_pdu_send,STATUS_NONE},
-    {REMOTE_PROV_PDU_OUTBOUND_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_outbound_report,STATUS_NONE},
-    {REMOTE_PROV_PDU_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_report,STATUS_NONE},
+	CMD_NO_STR(REMOTE_PROV_LINK_CLOSE,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_close,REMOTE_PROV_LINK_STS),
+    CMD_NO_STR(REMOTE_PROV_LINK_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_sts,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_LINK_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_report,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_PDU_SEND,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_pdu_send,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_PDU_OUTBOUND_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_outbound_report,STATUS_NONE),
+    CMD_NO_STR(REMOTE_PROV_PDU_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_report,STATUS_NONE),
 #endif
 
 #if MD_PRIVACY_BEA
-	{PRIVATE_BEACON_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_get,PRIVATE_BEACON_STATUS},
-	{PRIVATE_BEACON_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_set,PRIVATE_BEACON_STATUS},
-	{PRIVATE_BEACON_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_beacon_sts,STATUS_NONE},
+	CMD_NO_STR(PRIVATE_BEACON_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_get,PRIVATE_BEACON_STATUS),
+	CMD_NO_STR(PRIVATE_BEACON_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_set,PRIVATE_BEACON_STATUS),
+	CMD_NO_STR(PRIVATE_BEACON_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_beacon_sts,STATUS_NONE),
 
-	{PRIVATE_GATT_PROXY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_get,PRIVATE_GATT_PROXY_STATUS},
-	{PRIVATE_GATT_PROXY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_set,PRIVATE_GATT_PROXY_STATUS},
-	{PRIVATE_GATT_PROXY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_gatt_proxy_sts,STATUS_NONE},
+	CMD_NO_STR(PRIVATE_GATT_PROXY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_get,PRIVATE_GATT_PROXY_STATUS),
+	CMD_NO_STR(PRIVATE_GATT_PROXY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_set,PRIVATE_GATT_PROXY_STATUS),
+	CMD_NO_STR(PRIVATE_GATT_PROXY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_gatt_proxy_sts,STATUS_NONE),
 
-	{PRIVATE_NODE_IDENTITY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_get,PRIVATE_NODE_IDENTITY_STATUS},
-	{PRIVATE_NODE_IDENTITY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_set,PRIVATE_NODE_IDENTITY_STATUS},
-	{PRIVATE_NODE_IDENTITY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_private_node_identity_sts,STATUS_NONE},
+	CMD_NO_STR(PRIVATE_NODE_IDENTITY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_get,PRIVATE_NODE_IDENTITY_STATUS),
+	CMD_NO_STR(PRIVATE_NODE_IDENTITY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_set,PRIVATE_NODE_IDENTITY_STATUS),
+	CMD_NO_STR(PRIVATE_NODE_IDENTITY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_private_node_identity_sts,STATUS_NONE),
 #endif
 
     // generic
-    {G_ONOFF_GET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_get, G_ONOFF_STATUS},
-    {G_ONOFF_SET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_set, G_ONOFF_STATUS},
-    {G_ONOFF_SET_NOACK, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_set, STATUS_NONE},
-    {G_ONOFF_STATUS, 1, SIG_MD_G_ONOFF_S, SIG_MD_G_ONOFF_C, mesh_cmd_sig_g_onoff_status, STATUS_NONE},
+    CMD_YS_STR(G_ONOFF_GET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_get, G_ONOFF_STATUS),
+    CMD_YS_STR(G_ONOFF_SET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_set, G_ONOFF_STATUS),
+    CMD_YS_STR(G_ONOFF_SET_NOACK, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_set, STATUS_NONE),
+    CMD_YS_STR(G_ONOFF_STATUS, 1, SIG_MD_G_ONOFF_S, SIG_MD_G_ONOFF_C, mesh_cmd_sig_g_onoff_status, STATUS_NONE),
 
 	// battery server
 #if MD_BATTERY_EN
-	{G_BATTERY_GET, 0, SIG_MD_G_BAT_C, SIG_MD_G_BAT_S, mesh_cmd_sig_g_battery_get, G_BATTERY_STATUS},
-    {G_BATTERY_STATUS, 1, SIG_MD_G_BAT_S, SIG_MD_G_BAT_C, mesh_cmd_sig_g_battery_status, STATUS_NONE},
+	CMD_NO_STR(G_BATTERY_GET, 0, SIG_MD_G_BAT_C, SIG_MD_G_BAT_S, mesh_cmd_sig_g_battery_get, G_BATTERY_STATUS),
+    CMD_NO_STR(G_BATTERY_STATUS, 1, SIG_MD_G_BAT_S, SIG_MD_G_BAT_C, mesh_cmd_sig_g_battery_status, STATUS_NONE),
 #endif
 
 #if MD_LOCATION_EN
-	{G_LOCATION_GLOBAL_GET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_S, mesh_cmd_sig_g_location_global_get, G_LOCATION_GLOBAL_STATUS},
-	{G_LOCATION_GLOBAL_STATUS, 1, SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_C, mesh_cmd_sig_g_location_global_status, STATUS_NONE},	
-	{G_LOCATION_LOCAL_GET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_S, mesh_cmd_sig_g_location_local_get, G_LOCATION_LOCAL_STATUS},
-	{G_LOCATION_LOCAL_STATUS, 1, SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_C, mesh_cmd_sig_g_location_local_status, STATUS_NONE},	
-	{G_LOCATION_GLOBAL_SET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_location_global_set, G_LOCATION_GLOBAL_STATUS},
-	{G_LOCATION_GLOBAL_SET_NOACK, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_location_global_set, STATUS_NONE},
-	{G_LOCATION_LOCAL_SET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_global_local_set, G_LOCATION_LOCAL_STATUS},
-	{G_LOCATION_LOCAL_SET_NOACK, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_global_local_set, STATUS_NONE},
+	CMD_NO_STR(G_LOCATION_GLOBAL_GET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_S, mesh_cmd_sig_g_location_global_get, G_LOCATION_GLOBAL_STATUS),
+	CMD_NO_STR(G_LOCATION_GLOBAL_STATUS, 1, SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_C, mesh_cmd_sig_g_location_global_status, STATUS_NONE),	
+	CMD_NO_STR(G_LOCATION_LOCAL_GET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_S, mesh_cmd_sig_g_location_local_get, G_LOCATION_LOCAL_STATUS),
+	CMD_NO_STR(G_LOCATION_LOCAL_STATUS, 1, SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_C, mesh_cmd_sig_g_location_local_status, STATUS_NONE),	
+	CMD_NO_STR(G_LOCATION_GLOBAL_SET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_location_global_set, G_LOCATION_GLOBAL_STATUS),
+	CMD_NO_STR(G_LOCATION_GLOBAL_SET_NOACK, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_location_global_set, STATUS_NONE),
+	CMD_NO_STR(G_LOCATION_LOCAL_SET, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_global_local_set, G_LOCATION_LOCAL_STATUS),
+	CMD_NO_STR(G_LOCATION_LOCAL_SET_NOACK, 0, SIG_MD_G_LOCATION_C, SIG_MD_G_LOCATION_SETUP_S, mesh_cmd_sig_g_global_local_set, STATUS_NONE),
 #endif
 
 #if MD_LEVEL_EN    
-    {G_LEVEL_GET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_get, G_LEVEL_STATUS},
-    {G_LEVEL_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS},
-    {G_LEVEL_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE},
-	{G_DELTA_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS},
-	{G_DELTA_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE},
-	{G_MOVE_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS},
-	{G_MOVE_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE},
-    {G_LEVEL_STATUS, 1, SIG_MD_G_LEVEL_S, SIG_MD_G_LEVEL_C, mesh_cmd_sig_g_level_status, STATUS_NONE},
+    CMD_NO_STR(G_LEVEL_GET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_get, G_LEVEL_STATUS),
+    CMD_NO_STR(G_LEVEL_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS),
+    CMD_NO_STR(G_LEVEL_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE),
+	CMD_NO_STR(G_DELTA_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS),
+	CMD_NO_STR(G_DELTA_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE),
+	CMD_NO_STR(G_MOVE_SET, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, G_LEVEL_STATUS),
+	CMD_NO_STR(G_MOVE_SET_NOACK, 0, SIG_MD_G_LEVEL_C, SIG_MD_G_LEVEL_S, mesh_cmd_sig_g_level_set, STATUS_NONE),
+    CMD_NO_STR(G_LEVEL_STATUS, 1, SIG_MD_G_LEVEL_S, SIG_MD_G_LEVEL_C, mesh_cmd_sig_g_level_status, STATUS_NONE),
 #endif
 
 #if MD_DEF_TRANSIT_TIME_EN
-	{G_DEF_TRANS_TIME_GET, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_get, G_DEF_TRANS_TIME_STATUS},
-	{G_DEF_TRANS_TIME_SET, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_set, G_DEF_TRANS_TIME_STATUS},
-	{G_DEF_TRANS_TIME_SET_NOACK, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_set, STATUS_NONE},
-	{G_DEF_TRANS_TIME_STATUS, 1, SIG_MD_G_DEF_TRANSIT_TIME_S, SIG_MD_G_DEF_TRANSIT_TIME_C, mesh_cmd_sig_def_trans_time_status, STATUS_NONE},
+	CMD_NO_STR(G_DEF_TRANS_TIME_GET, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_get, G_DEF_TRANS_TIME_STATUS),
+	CMD_NO_STR(G_DEF_TRANS_TIME_SET, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_set, G_DEF_TRANS_TIME_STATUS),
+	CMD_NO_STR(G_DEF_TRANS_TIME_SET_NOACK, 0, SIG_MD_G_DEF_TRANSIT_TIME_C, SIG_MD_G_DEF_TRANSIT_TIME_S, mesh_cmd_sig_def_trans_time_set, STATUS_NONE),
+	CMD_NO_STR(G_DEF_TRANS_TIME_STATUS, 1, SIG_MD_G_DEF_TRANSIT_TIME_S, SIG_MD_G_DEF_TRANSIT_TIME_C, mesh_cmd_sig_def_trans_time_status, STATUS_NONE),
 #endif
 
 #if MD_POWER_ONOFF_EN
-	{G_ON_POWER_UP_GET, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_S, mesh_cmd_sig_g_on_powerup_get, G_ON_POWER_UP_STATUS},
-	{G_ON_POWER_UP_SET, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, mesh_cmd_sig_g_on_powerup_set, G_ON_POWER_UP_STATUS},
-	{G_ON_POWER_UP_SET_NOACK, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, mesh_cmd_sig_g_on_powerup_set, STATUS_NONE},
-	{G_ON_POWER_UP_STATUS, 1, SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_POWER_ONOFF_C, mesh_cmd_sig_g_on_powerup_status, STATUS_NONE},
+	CMD_NO_STR(G_ON_POWER_UP_GET, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_S, mesh_cmd_sig_g_on_powerup_get, G_ON_POWER_UP_STATUS),
+	CMD_NO_STR(G_ON_POWER_UP_SET, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, mesh_cmd_sig_g_on_powerup_set, G_ON_POWER_UP_STATUS),
+	CMD_NO_STR(G_ON_POWER_UP_SET_NOACK, 0, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, mesh_cmd_sig_g_on_powerup_set, STATUS_NONE),
+	CMD_NO_STR(G_ON_POWER_UP_STATUS, 1, SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_POWER_ONOFF_C, mesh_cmd_sig_g_on_powerup_status, STATUS_NONE),
 #endif
 
 #if MD_SCENE_EN
-	{SCENE_STORE, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, SCENE_REG_STATUS},
-	{SCENE_STORE_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, STATUS_NONE},
-	{SCENE_RECALL, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_recall, SCENE_STATUS},
-	{SCENE_RECALL_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_recall, STATUS_NONE},
-	{SCENE_GET, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_get, SCENE_STATUS},
-	{SCENE_STATUS, 1, SIG_MD_SCENE_S, SIG_MD_SCENE_C, mesh_cmd_sig_scene_status, STATUS_NONE},
-	{SCENE_REG_GET, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_reg_get, SCENE_REG_STATUS},
-	{SCENE_REG_STATUS, 1, SIG_MD_SCENE_S, SIG_MD_SCENE_C, mesh_cmd_sig_scene_reg_status, STATUS_NONE},
-	{SCENE_DEL, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, SCENE_REG_STATUS},
-	{SCENE_DEL_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, STATUS_NONE},
+	CMD_NO_STR(SCENE_STORE, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, SCENE_REG_STATUS),
+	CMD_NO_STR(SCENE_STORE_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, STATUS_NONE),
+	CMD_NO_STR(SCENE_RECALL, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_recall, SCENE_STATUS),
+	CMD_NO_STR(SCENE_RECALL_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_recall, STATUS_NONE),
+	CMD_NO_STR(SCENE_GET, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_get, SCENE_STATUS),
+	CMD_NO_STR(SCENE_STATUS, 1, SIG_MD_SCENE_S, SIG_MD_SCENE_C, mesh_cmd_sig_scene_status, STATUS_NONE),
+	CMD_NO_STR(SCENE_REG_GET, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_S, mesh_cmd_sig_scene_reg_get, SCENE_REG_STATUS),
+	CMD_NO_STR(SCENE_REG_STATUS, 1, SIG_MD_SCENE_S, SIG_MD_SCENE_C, mesh_cmd_sig_scene_reg_status, STATUS_NONE),
+	CMD_NO_STR(SCENE_DEL, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, SCENE_REG_STATUS),
+	CMD_NO_STR(SCENE_DEL_NOACK, 0, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, mesh_cmd_sig_scene_set, STATUS_NONE),
 #endif
 #if MD_TIME_EN
-	{TIME_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_get, TIME_STATUS},
-	{TIME_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_set, TIME_STATUS},
-	{TIME_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_status, STATUS_NONE},
-	{TIME_ZONE_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_zone_get, TIME_ZONE_STATUS},
-	{TIME_ZONE_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_zone_set, TIME_ZONE_STATUS},
-	{TIME_ZONE_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_zone_status, STATUS_NONE},
-	{TAI_UTC_DELTA_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_TAI_UTC_delta_get, TAI_UTC_DELTA_STATUS},
-	{TAI_UTC_DELTA_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_TAI_UTC_delta_set, TAI_UTC_DELTA_STATUS},
-	{TAI_UTC_DELTA_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_TAI_UTC_delta_status, STATUS_NONE},
-	{TIME_ROLE_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_role_get, TIME_ROLE_STATUS},
-	{TIME_ROLE_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_role_set, TIME_ROLE_STATUS},
-	{TIME_ROLE_STATUS, 1, SIG_MD_TIME_SETUP_S, SIG_MD_TIME_C, mesh_cmd_sig_time_role_status, STATUS_NONE},
+	CMD_NO_STR(TIME_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_get, TIME_STATUS),
+	CMD_NO_STR(TIME_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_set, TIME_STATUS),
+	CMD_NO_STR(TIME_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_status, STATUS_NONE),
+	CMD_NO_STR(TIME_ZONE_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_zone_get, TIME_ZONE_STATUS),
+	CMD_NO_STR(TIME_ZONE_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_zone_set, TIME_ZONE_STATUS),
+	CMD_NO_STR(TIME_ZONE_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_zone_status, STATUS_NONE),
+	CMD_NO_STR(TAI_UTC_DELTA_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_S, mesh_cmd_sig_time_TAI_UTC_delta_get, TAI_UTC_DELTA_STATUS),
+	CMD_NO_STR(TAI_UTC_DELTA_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_TAI_UTC_delta_set, TAI_UTC_DELTA_STATUS),
+	CMD_NO_STR(TAI_UTC_DELTA_STATUS, 1, SIG_MD_TIME_S, SIG_MD_TIME_C, mesh_cmd_sig_time_TAI_UTC_delta_status, STATUS_NONE),
+	CMD_NO_STR(TIME_ROLE_GET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_role_get, TIME_ROLE_STATUS),
+	CMD_NO_STR(TIME_ROLE_SET, 0, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, mesh_cmd_sig_time_role_set, TIME_ROLE_STATUS),
+	CMD_NO_STR(TIME_ROLE_STATUS, 1, SIG_MD_TIME_SETUP_S, SIG_MD_TIME_C, mesh_cmd_sig_time_role_status, STATUS_NONE),
 #endif
 #if MD_SCHEDULE_EN
-	{SCHD_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_scheduler_get, SCHD_STATUS},
-	{SCHD_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_scheduler_status, STATUS_NONE},
-	{SCHD_ACTION_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_get, SCHD_ACTION_STATUS},
-	{SCHD_ACTION_SET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_set, SCHD_ACTION_STATUS},
-	{SCHD_ACTION_SET_NOACK, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_schd_action_set, STATUS_NONE},
-	{SCHD_ACTION_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_schd_action_status, STATUS_NONE},
+	CMD_NO_STR(SCHD_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_scheduler_get, SCHD_STATUS),
+	CMD_NO_STR(SCHD_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_scheduler_status, STATUS_NONE),
+	CMD_NO_STR(SCHD_ACTION_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_schd_action_get, SCHD_ACTION_STATUS),
+	CMD_NO_STR(SCHD_ACTION_SET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_set, SCHD_ACTION_STATUS),
+	CMD_NO_STR(SCHD_ACTION_SET_NOACK, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_set, STATUS_NONE),
+	CMD_NO_STR(SCHD_ACTION_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_schd_action_status, STATUS_NONE),
 #endif
 #if MD_SENSOR_EN
-	{SENSOR_DESCRIP_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_descript_get, SENSOR_DESCRIP_STATUS},
-	{SENSOR_DESCRIP_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_descript_status, STATUS_NONE},
-	{SENSOR_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_get, SENSOR_STATUS},
-	{SENSOR_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_status, STATUS_NONE},
-	{SENSOR_COLUMN_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_column_get, SENSOR_COLUMN_STATUS},
-	{SENSOR_COLUMN_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_column_status, STATUS_NONE},
-	{SENSOR_SERIES_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_series_get, SENSOR_SERIES_STATUS},
-	{SENSOR_SERIES_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_series_status, STATUS_NONE},
-	{SENSOR_CANDECE_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_cadence_get, SENSOR_CANDECE_STATUS},
-	{SENSOR_CANDECE_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, SENSOR_CANDECE_STATUS},
-	{SENSOR_CANDECE_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, STATUS_NONE},
-	{SENSOR_CANDECE_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_cadence_status, STATUS_NONE},
-	{SENSOR_SETTINGS_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_settings_get, SENSOR_SETTINGS_STATUS},
-	{SENSOR_SETTINGS_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_settings_status, STATUS_NONE},
-	{SENSOR_SETTING_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_setting_get, SENSOR_SETTING_STATUS},
-	{SENSOR_SETTING_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, SENSOR_SETTING_STATUS},
-	{SENSOR_SETTING_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, STATUS_NONE},
-	{SENSOR_SETTING_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_setting_status, STATUS_NONE},
+	CMD_NO_STR(SENSOR_DESCRIP_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_descript_get, SENSOR_DESCRIP_STATUS),
+	CMD_NO_STR(SENSOR_DESCRIP_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_descript_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_get, SENSOR_STATUS),
+	CMD_NO_STR(SENSOR_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_COLUMN_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_column_get, SENSOR_COLUMN_STATUS),
+	CMD_NO_STR(SENSOR_COLUMN_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_column_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SERIES_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_series_get, SENSOR_SERIES_STATUS),
+	CMD_NO_STR(SENSOR_SERIES_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_series_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_CANDECE_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_get, SENSOR_CANDECE_STATUS),
+	CMD_NO_STR(SENSOR_CANDECE_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, SENSOR_CANDECE_STATUS),
+	CMD_NO_STR(SENSOR_CANDECE_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, STATUS_NONE),
+	CMD_NO_STR(SENSOR_CANDECE_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_cadence_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTINGS_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_settings_get, SENSOR_SETTINGS_STATUS),
+	CMD_NO_STR(SENSOR_SETTINGS_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_settings_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTING_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_get, SENSOR_SETTING_STATUS),
+	CMD_NO_STR(SENSOR_SETTING_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, SENSOR_SETTING_STATUS),
+	CMD_NO_STR(SENSOR_SETTING_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTING_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_setting_status, STATUS_NONE),
 #endif
     // ----- mesh ota
 #if MD_MESH_OTA_EN
-    {FW_UPDATE_INFO_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_info_get, FW_UPDATE_INFO_STATUS},
-    {FW_UPDATE_INFO_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_info_status, STATUS_NONE},
-    {FW_UPDATE_METADATA_CHECK, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_metadata_check, FW_UPDATE_METADATA_CHECK_STATUS},
-    {FW_UPDATE_METADATA_CHECK_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_metadata_check_status, STATUS_NONE},
-    {FW_UPDATE_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_get, FW_UPDATE_STATUS},
-    {FW_UPDATE_START, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_start, FW_UPDATE_STATUS},
-    {FW_UPDATE_CANCEL, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_cancel, FW_UPDATE_STATUS},
-    {FW_UPDATE_APPLY, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_apply, FW_UPDATE_STATUS},
-    {FW_UPDATE_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_status, STATUS_NONE},
-    #if __PROJECT_MESH_PRO__
-    {FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS},
-    {FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS},
-    {FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS},
-    {FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE},
-    {FW_DISTRIBUT_DETAIL_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_detail_get, FW_DISTRIBUT_DETAIL_LIST},
-    {FW_DISTRIBUT_DETAIL_LIST, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_detail_list, STATUS_NONE},
+    CMD_NO_STR(FW_UPDATE_INFO_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_info_get, FW_UPDATE_INFO_STATUS),
+    CMD_NO_STR(FW_UPDATE_INFO_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_info_status, STATUS_NONE),
+    CMD_NO_STR(FW_UPDATE_METADATA_CHECK, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_metadata_check, FW_UPDATE_METADATA_CHECK_STATUS),
+    CMD_NO_STR(FW_UPDATE_METADATA_CHECK_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_metadata_check_status, STATUS_NONE),
+    CMD_NO_STR(FW_UPDATE_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_get, FW_UPDATE_STATUS),
+    CMD_NO_STR(FW_UPDATE_START, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_start, FW_UPDATE_STATUS),
+    CMD_NO_STR(FW_UPDATE_CANCEL, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_cancel, FW_UPDATE_STATUS),
+    CMD_NO_STR(FW_UPDATE_APPLY, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_apply, FW_UPDATE_STATUS),
+    CMD_NO_STR(FW_UPDATE_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_status, STATUS_NONE),
+    #if (DISTRIBUTOR_UPDATE_CLIENT_EN || DISTRIBUTOR_UPDATE_SERVER_EN)
+    CMD_NO_STR(FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_SUSPEND, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_suspend, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_APPLY, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_apply, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE),
+    CMD_NO_STR(FW_DISTRIBUT_RECEIVERS_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_receiver_get, FW_DISTRIBUT_RECEIVERS_LIST),
+    CMD_NO_STR(FW_DISTRIBUT_RECEIVERS_LIST, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_receiver_list, STATUS_NONE),
+    CMD_NO_STR(FW_DISTRIBUT_CAPABILITIES_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_capabilities_get, FW_DISTRIBUT_CAPABILITIES_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_CAPABILITIES_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_capabilities_status, STATUS_NONE),
+    CMD_NO_STR(FW_DISTRIBUT_RECEIVERS_ADD, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_receivers_add, FW_DISTRIBUT_RECEIVERS_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_RECEIVERS_DELETE_ALL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_receivers_del_all, FW_DISTRIBUT_RECEIVERS_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_RECEIVERS_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_receivers_status, STATUS_NONE),
+    CMD_NO_STR(FW_DISTRIBUT_UPLOAD_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_upload_get, FW_DISTRIBUT_UPLOAD_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_UPLOAD_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_upload_start, FW_DISTRIBUT_UPLOAD_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_UPLOAD_OOB_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_upload_oob_start, FW_DISTRIBUT_UPLOAD_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_UPLOAD_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_upload_cancel, FW_DISTRIBUT_UPLOAD_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_UPLOAD_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_upload_status, STATUS_NONE),
+    CMD_NO_STR(FW_DISTRIBUT_FW_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_fw_get, FW_DISTRIBUT_FW_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_FW_GET_BY_INDEX, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_fw_get_by_idx, FW_DISTRIBUT_FW_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_FW_DELETE, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_fw_del, FW_DISTRIBUT_FW_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_FW_DELETE_ALL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_fw_del_all, FW_DISTRIBUT_FW_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_FW_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_fw_status, STATUS_NONE),
     #endif
-    {BLOB_TRANSFER_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_get, BLOB_TRANSFER_STATUS},
-    {BLOB_TRANSFER_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
-    {BLOB_TRANSFER_CANCEL, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
-    {BLOB_TRANSFER_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_transfer_status, STATUS_NONE},
-    {BLOB_BLOCK_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_start, BLOB_BLOCK_STATUS},
-    {BLOB_CHUNK_TRANSFER, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_chunk_transfer, STATUS_NONE},
-    {BLOB_BLOCK_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_get, BLOB_BLOCK_STATUS},
-    {BLOB_BLOCK_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_block_status, STATUS_NONE},
-    {BLOB_INFO_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_info_get, BLOB_INFO_STATUS},
-    {BLOB_INFO_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_info_status, STATUS_NONE},
+    CMD_NO_STR(BLOB_TRANSFER_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_get, BLOB_TRANSFER_STATUS),
+    CMD_NO_STR(BLOB_TRANSFER_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS),
+    CMD_NO_STR(BLOB_TRANSFER_CANCEL, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS),
+    CMD_NO_STR(BLOB_TRANSFER_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_transfer_status, STATUS_NONE),
+    CMD_NO_STR(BLOB_BLOCK_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_start, BLOB_BLOCK_STATUS),
+    CMD_NO_STR(BLOB_PARTIAL_BLOCK_REPORT, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_partial_block_report, STATUS_NONE),
+    CMD_NO_STR(BLOB_CHUNK_TRANSFER, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_chunk_transfer, STATUS_NONE),
+    CMD_NO_STR(BLOB_BLOCK_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_get, BLOB_BLOCK_STATUS),
+    CMD_NO_STR(BLOB_BLOCK_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_block_status, STATUS_NONE),
+    CMD_NO_STR(BLOB_INFO_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_info_get, BLOB_INFO_STATUS),
+    CMD_NO_STR(BLOB_INFO_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_info_status, STATUS_NONE),
 #endif
     
 	// lighting model
 #if ((MD_LIGHTNESS_EN) && (LIGHT_TYPE_SEL != LIGHT_TYPE_POWER))
-    {LIGHTNESS_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_get, LIGHTNESS_STATUS},
-    {LIGHTNESS_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, LIGHTNESS_STATUS},
-    {LIGHTNESS_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, STATUS_NONE},
-	{LIGHTNESS_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_status, STATUS_NONE},
+    CMD_YS_STR(LIGHTNESS_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_get, LIGHTNESS_STATUS),
+    CMD_YS_STR(LIGHTNESS_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, LIGHTNESS_STATUS),
+    CMD_YS_STR(LIGHTNESS_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, STATUS_NONE),
+	CMD_YS_STR(LIGHTNESS_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_status, STATUS_NONE),
 	#if CMD_LINEAR_EN
-	{LIGHTNESS_LINEAR_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_get, LIGHTNESS_LINEAR_STATUS},
-	{LIGHTNESS_LINEAR_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, LIGHTNESS_LINEAR_STATUS},
-	{LIGHTNESS_LINEAR_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, STATUS_NONE},
-	{LIGHTNESS_LINEAR_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_linear_status, STATUS_NONE},
+	CMD_NO_STR(LIGHTNESS_LINEAR_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_get, LIGHTNESS_LINEAR_STATUS),
+	CMD_NO_STR(LIGHTNESS_LINEAR_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, LIGHTNESS_LINEAR_STATUS),
+	CMD_NO_STR(LIGHTNESS_LINEAR_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_LINEAR_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_linear_status, STATUS_NONE),
 	#endif
-	{LIGHTNESS_LAST_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_last_get, LIGHTNESS_LAST_STATUS},
-	{LIGHTNESS_LAST_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_last_status, STATUS_NONE},
-	{LIGHTNESS_DEFULT_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_def_get, LIGHTNESS_DEFULT_STATUS},
-	{LIGHTNESS_DEFULT_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, LIGHTNESS_DEFULT_STATUS},
-	{LIGHTNESS_DEFULT_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, STATUS_NONE},
-	{LIGHTNESS_DEFULT_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_def_status, STATUS_NONE},
-	{LIGHTNESS_RANGE_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_range_get, LIGHTNESS_RANGE_STATUS},
-	{LIGHTNESS_RANGE_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, LIGHTNESS_RANGE_STATUS},
-	{LIGHTNESS_RANGE_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, STATUS_NONE},
-	{LIGHTNESS_RANGE_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_range_status, STATUS_NONE},
+	CMD_NO_STR(LIGHTNESS_LAST_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_last_get, LIGHTNESS_LAST_STATUS),
+	CMD_NO_STR(LIGHTNESS_LAST_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_last_status, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_DEFULT_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_def_get, LIGHTNESS_DEFULT_STATUS),
+	CMD_NO_STR(LIGHTNESS_DEFULT_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, LIGHTNESS_DEFULT_STATUS),
+	CMD_NO_STR(LIGHTNESS_DEFULT_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_DEFULT_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_RANGE_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_range_get, LIGHTNESS_RANGE_STATUS),
+	CMD_NO_STR(LIGHTNESS_RANGE_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, LIGHTNESS_RANGE_STATUS),
+	CMD_NO_STR(LIGHTNESS_RANGE_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_RANGE_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_range_status, STATUS_NONE),
 #endif
 	
 #if MD_LIGHT_CONTROL_EN
-    {LIGHT_LC_MODE_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_get, LIGHT_LC_MODE_STATUS},
-    {LIGHT_LC_MODE_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_set, LIGHT_LC_MODE_STATUS},
-    {LIGHT_LC_MODE_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_set, STATUS_NONE},
-	{LIGHT_LC_MODE_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_mode_status, STATUS_NONE},
-	{LIGHT_LC_OM_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_get, LIGHT_LC_OM_STATUS},
-	{LIGHT_LC_OM_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, LIGHT_LC_OM_STATUS},
-	{LIGHT_LC_OM_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, STATUS_NONE},
-	{LIGHT_LC_OM_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_om_status, STATUS_NONE},
-	{LIGHT_LC_ONOFF_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_get, LIGHT_LC_ONOFF_STATUS},
-	{LIGHT_LC_ONOFF_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, LIGHT_LC_ONOFF_STATUS},
-	{LIGHT_LC_ONOFF_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, STATUS_NONE},
-	{LIGHT_LC_ONOFF_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_onoff_status, STATUS_NONE},
-	{LIGHT_LC_PROPERTY_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_get, LIGHT_LC_PROPERTY_STATUS},
-	{LIGHT_LC_PROPERTY_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, LIGHT_LC_PROPERTY_STATUS},
-	{LIGHT_LC_PROPERTY_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, STATUS_NONE},
-	{LIGHT_LC_PROPERTY_STATUS, 1, SIG_MD_LIGHT_LC_SETUP_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_prop_status, STATUS_NONE},
+    CMD_NO_STR(LIGHT_LC_MODE_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_get, LIGHT_LC_MODE_STATUS),
+    CMD_NO_STR(LIGHT_LC_MODE_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_set, LIGHT_LC_MODE_STATUS),
+    CMD_NO_STR(LIGHT_LC_MODE_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_mode_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_MODE_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_mode_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_OM_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_get, LIGHT_LC_OM_STATUS),
+	CMD_NO_STR(LIGHT_LC_OM_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, LIGHT_LC_OM_STATUS),
+	CMD_NO_STR(LIGHT_LC_OM_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_OM_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_om_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_ONOFF_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_get, LIGHT_LC_ONOFF_STATUS),
+	CMD_NO_STR(LIGHT_LC_ONOFF_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, LIGHT_LC_ONOFF_STATUS),
+	CMD_NO_STR(LIGHT_LC_ONOFF_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_ONOFF_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_onoff_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_PROPERTY_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_get, LIGHT_LC_PROPERTY_STATUS),
+	CMD_NO_STR(LIGHT_LC_PROPERTY_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, LIGHT_LC_PROPERTY_STATUS),
+	CMD_NO_STR(LIGHT_LC_PROPERTY_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_LC_PROPERTY_STATUS, 1, SIG_MD_LIGHT_LC_SETUP_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_prop_status, STATUS_NONE),
 #endif
 
 #if (LIGHT_TYPE_CT_EN)
-    {LIGHT_CTL_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_get, LIGHT_CTL_STATUS},
-    {LIGHT_CTL_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, LIGHT_CTL_STATUS},
-    {LIGHT_CTL_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, STATUS_NONE},
-	{LIGHT_CTL_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_status, STATUS_NONE},
-	{LIGHT_CTL_DEFULT_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_def_get, LIGHT_CTL_DEFULT_STATUS},
-	{LIGHT_CTL_DEFULT_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, LIGHT_CTL_DEFULT_STATUS},
-	{LIGHT_CTL_DEFULT_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, STATUS_NONE},
-	{LIGHT_CTL_DEFULT_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_def_status, STATUS_NONE},
-	{LIGHT_CTL_TEMP_RANGE_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_temp_range_get, LIGHT_CTL_TEMP_RANGE_STATUS},
-	{LIGHT_CTL_TEMP_RANGE_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, LIGHT_CTL_TEMP_RANGE_STATUS},
-	{LIGHT_CTL_TEMP_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, STATUS_NONE},
-	{LIGHT_CTL_TEMP_RANGE_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_temp_range_status, STATUS_NONE},
-	{LIGHT_CTL_TEMP_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_get, LIGHT_CTL_TEMP_STATUS},
-	{LIGHT_CTL_TEMP_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_set, LIGHT_CTL_TEMP_STATUS},
-	{LIGHT_CTL_TEMP_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_set, STATUS_NONE},
-	{LIGHT_CTL_TEMP_STATUS, 1, SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_temp_status, STATUS_NONE},
+    CMD_YS_STR(LIGHT_CTL_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_get, LIGHT_CTL_STATUS),
+    CMD_YS_STR(LIGHT_CTL_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, LIGHT_CTL_STATUS),
+    CMD_YS_STR(LIGHT_CTL_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_CTL_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_DEFULT_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_def_get, LIGHT_CTL_DEFULT_STATUS),
+	CMD_NO_STR(LIGHT_CTL_DEFULT_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, LIGHT_CTL_DEFULT_STATUS),
+	CMD_NO_STR(LIGHT_CTL_DEFULT_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_DEFULT_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_temp_range_get, LIGHT_CTL_TEMP_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, LIGHT_CTL_TEMP_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_temp_range_status, STATUS_NONE),
+	CMD_YS_STR(LIGHT_CTL_TEMP_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_get, LIGHT_CTL_TEMP_STATUS),
+	CMD_YS_STR(LIGHT_CTL_TEMP_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_set, LIGHT_CTL_TEMP_STATUS),
+	CMD_YS_STR(LIGHT_CTL_TEMP_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_TEMP_S, mesh_cmd_sig_light_ctl_temp_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_CTL_TEMP_STATUS, 1, SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_temp_status, STATUS_NONE),
 #endif
 #if (LIGHT_TYPE_HSL_EN)
-    {LIGHT_HSL_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_get, LIGHT_HSL_STATUS},
-    {LIGHT_HSL_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_set, LIGHT_HSL_STATUS},
-    {LIGHT_HSL_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_set, STATUS_NONE},
-	{LIGHT_HSL_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_status, STATUS_NONE},
-	{LIGHT_HSL_TARGET_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_target_get, LIGHT_HSL_TARGET_STATUS},
-	{LIGHT_HSL_TARGET_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_target_status, STATUS_NONE},
-	{LIGHT_HSL_HUE_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_get, LIGHT_HSL_HUE_STATUS},
-	{LIGHT_HSL_HUE_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_set, LIGHT_HSL_HUE_STATUS},
-	{LIGHT_HSL_HUE_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_set, STATUS_NONE},
-	{LIGHT_HSL_HUE_STATUS, 1, SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hue_status, STATUS_NONE},
-	{LIGHT_HSL_SAT_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_get, LIGHT_HSL_SAT_STATUS},
-	{LIGHT_HSL_SAT_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_set, LIGHT_HSL_SAT_STATUS},
-	{LIGHT_HSL_SAT_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_set, STATUS_NONE},
-	{LIGHT_HSL_SAT_STATUS, 1, SIG_MD_LIGHT_HSL_SAT_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_sat_status, STATUS_NONE},
-	{LIGHT_HSL_DEF_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_def_get, LIGHT_HSL_DEF_STATUS},
-	{LIGHT_HSL_DEF_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_def_set, LIGHT_HSL_DEF_STATUS},
-	{LIGHT_HSL_DEF_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_def_set, STATUS_NONE},
-	{LIGHT_HSL_DEF_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_def_status, STATUS_NONE},
-	{LIGHT_HSL_RANGE_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_range_get, LIGHT_HSL_RANGE_STATUS},
-	{LIGHT_HSL_RANGE_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_range_set, LIGHT_HSL_RANGE_STATUS},
-	{LIGHT_HSL_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_range_set, STATUS_NONE},
-	{LIGHT_HSL_RANGE_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_range_status, STATUS_NONE},
+    CMD_YS_STR(LIGHT_HSL_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_get, LIGHT_HSL_STATUS),
+    CMD_YS_STR(LIGHT_HSL_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_set, LIGHT_HSL_STATUS),
+    CMD_YS_STR(LIGHT_HSL_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_HSL_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_HSL_TARGET_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_target_get, LIGHT_HSL_TARGET_STATUS),
+	CMD_NO_STR(LIGHT_HSL_TARGET_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_target_status, STATUS_NONE),
+	CMD_YS_STR(LIGHT_HSL_HUE_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_get, LIGHT_HSL_HUE_STATUS),
+	CMD_YS_STR(LIGHT_HSL_HUE_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_set, LIGHT_HSL_HUE_STATUS),
+	CMD_YS_STR(LIGHT_HSL_HUE_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_HUE_S, mesh_cmd_sig_light_hue_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_HSL_HUE_STATUS, 1, SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hue_status, STATUS_NONE),
+	CMD_YS_STR(LIGHT_HSL_SAT_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_get, LIGHT_HSL_SAT_STATUS),
+	CMD_YS_STR(LIGHT_HSL_SAT_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_set, LIGHT_HSL_SAT_STATUS),
+	CMD_YS_STR(LIGHT_HSL_SAT_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SAT_S, mesh_cmd_sig_light_sat_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_HSL_SAT_STATUS, 1, SIG_MD_LIGHT_HSL_SAT_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_sat_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_HSL_DEF_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_def_get, LIGHT_HSL_DEF_STATUS),
+	CMD_NO_STR(LIGHT_HSL_DEF_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_def_set, LIGHT_HSL_DEF_STATUS),
+	CMD_NO_STR(LIGHT_HSL_DEF_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_HSL_DEF_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_HSL_RANGE_GET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_S, mesh_cmd_sig_light_hsl_range_get, LIGHT_HSL_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_HSL_RANGE_SET, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_range_set, LIGHT_HSL_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_HSL_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_HSL_C, SIG_MD_LIGHT_HSL_SETUP_S, mesh_cmd_sig_light_hsl_range_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_HSL_RANGE_STATUS, 1, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_C, mesh_cmd_sig_light_hsl_range_status, STATUS_NONE),
 #endif
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-    {LIGHT_XYL_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_get, LIGHT_XYL_STATUS},
-    {LIGHT_XYL_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_set, LIGHT_XYL_STATUS},
-    {LIGHT_XYL_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_set, STATUS_NONE},
-	{LIGHT_XYL_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_status, STATUS_NONE},
-	{LIGHT_XYL_TARGET_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_target_get, LIGHT_XYL_TARGET_STATUS},
-	{LIGHT_XYL_TARGET_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_target_status, STATUS_NONE},
-	{LIGHT_XYL_DEF_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_def_get, LIGHT_XYL_DEF_STATUS},
-	{LIGHT_XYL_DEF_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_def_set, LIGHT_XYL_DEF_STATUS},
-	{LIGHT_XYL_DEF_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_def_set, STATUS_NONE},
-	{LIGHT_XYL_DEF_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_def_status, STATUS_NONE},
-	{LIGHT_XYL_RANGE_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_range_get, LIGHT_XYL_RANGE_STATUS},
-	{LIGHT_XYL_RANGE_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_range_set, LIGHT_XYL_RANGE_STATUS},
-	{LIGHT_XYL_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_range_set, STATUS_NONE},
-	{LIGHT_XYL_RANGE_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_range_status, STATUS_NONE},
+    CMD_YS_STR(LIGHT_XYL_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_get, LIGHT_XYL_STATUS),
+    CMD_YS_STR(LIGHT_XYL_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_set, LIGHT_XYL_STATUS),
+    CMD_YS_STR(LIGHT_XYL_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_set, STATUS_NONE),
+	CMD_YS_STR(LIGHT_XYL_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_XYL_TARGET_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_target_get, LIGHT_XYL_TARGET_STATUS),
+	CMD_NO_STR(LIGHT_XYL_TARGET_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_target_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_XYL_DEF_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_def_get, LIGHT_XYL_DEF_STATUS),
+	CMD_NO_STR(LIGHT_XYL_DEF_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_def_set, LIGHT_XYL_DEF_STATUS),
+	CMD_NO_STR(LIGHT_XYL_DEF_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_XYL_DEF_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_XYL_RANGE_GET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_S, mesh_cmd_sig_light_xyl_range_get, LIGHT_XYL_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_XYL_RANGE_SET, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_range_set, LIGHT_XYL_RANGE_STATUS),
+	CMD_NO_STR(LIGHT_XYL_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_XYL_C, SIG_MD_LIGHT_XYL_SETUP_S, mesh_cmd_sig_light_xyl_range_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_XYL_RANGE_STATUS, 1, SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_C, mesh_cmd_sig_light_xyl_range_status, STATUS_NONE),
 #endif
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-	{G_POWER_LEVEL_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_get, G_POWER_LEVEL_STATUS},
-	{G_POWER_LEVEL_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_set, G_POWER_LEVEL_STATUS},
-	{G_POWER_LEVEL_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_set, STATUS_NONE},
-	{G_POWER_LEVEL_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_status, STATUS_NONE},
-	{G_POWER_LEVEL_LAST_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_last_get, G_POWER_LEVEL_LAST_STATUS},
-	{G_POWER_LEVEL_LAST_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_last_status, STATUS_NONE},
+	CMD_YS_STR(G_POWER_LEVEL_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_get, G_POWER_LEVEL_STATUS),
+	CMD_YS_STR(G_POWER_LEVEL_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_set, G_POWER_LEVEL_STATUS),
+	CMD_YS_STR(G_POWER_LEVEL_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_set, STATUS_NONE),
+	CMD_YS_STR(G_POWER_LEVEL_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_status, STATUS_NONE),
+	CMD_NO_STR(G_POWER_LEVEL_LAST_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_last_get, G_POWER_LEVEL_LAST_STATUS),
+	CMD_NO_STR(G_POWER_LEVEL_LAST_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_last_status, STATUS_NONE),
 	
-	{G_POWER_DEF_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_def_get, G_POWER_DEF_STATUS},
-	{G_POWER_DEF_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_def_status, STATUS_NONE},
-	{G_POWER_LEVEL_RANGE_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_range_get, G_POWER_LEVEL_RANGE_STATUS},
-	{G_POWER_LEVEL_RANGE_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_range_status, STATUS_NONE},
+	CMD_NO_STR(G_POWER_DEF_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_def_get, G_POWER_DEF_STATUS),
+	CMD_NO_STR(G_POWER_DEF_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_def_status, STATUS_NONE),
+	CMD_NO_STR(G_POWER_LEVEL_RANGE_GET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_S, mesh_cmd_sig_g_power_range_get, G_POWER_LEVEL_RANGE_STATUS),
+	CMD_NO_STR(G_POWER_LEVEL_RANGE_STATUS, 1, SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, mesh_cmd_sig_g_power_range_status, STATUS_NONE),
 	
-	{G_POWER_DEF_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_def_set, G_POWER_DEF_STATUS},
-	{G_POWER_DEF_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_def_set, STATUS_NONE},
-	{G_POWER_LEVEL_RANGE_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_range_set, G_POWER_LEVEL_RANGE_STATUS},
-	{G_POWER_LEVEL_RANGE_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_range_set, STATUS_NONE},
+	CMD_NO_STR(G_POWER_DEF_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_def_set, G_POWER_DEF_STATUS),
+	CMD_NO_STR(G_POWER_DEF_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_def_set, STATUS_NONE),
+	CMD_NO_STR(G_POWER_LEVEL_RANGE_SET, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_range_set, G_POWER_LEVEL_RANGE_STATUS),
+	CMD_NO_STR(G_POWER_LEVEL_RANGE_SET_NOACK, 0, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, mesh_cmd_sig_g_power_range_set, STATUS_NONE),
 #endif
 
 #if (MD_PROPERTY_EN)
-    {G_USER_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_properties_get, G_USER_PROPERTIES_STATUS},
-    {G_USER_PROPERTIES_STATUS, 1, SIG_MD_G_USER_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE},
-    {G_ADMIN_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_properties_get, G_ADMIN_PROPERTIES_STATUS},
-    {G_ADMIN_PROPERTIES_STATUS, 1, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE},
-    {G_MFG_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_properties_get, G_MFG_PROPERTIES_STATUS},
-    {G_MFG_PROPERTIES_STATUS, 1, SIG_MD_G_MFG_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE},
-    {G_CLIENT_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_CLIENT_PROP_S, mesh_cmd_sig_properties_get, G_CLIENT_PROPERTIES_STATUS},
-    {G_CLIENT_PROPERTIES_STATUS, 1, SIG_MD_G_CLIENT_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE},
-    {G_USER_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_get, G_USER_PROPERTY_STATUS},
-    {G_USER_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_set, G_USER_PROPERTY_STATUS},
-    {G_USER_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE},
-    {G_USER_PROPERTY_STATUS, 1, SIG_MD_G_USER_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE},
-    {G_ADMIN_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_get, G_ADMIN_PROPERTY_STATUS},
-    {G_ADMIN_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_set, G_ADMIN_PROPERTY_STATUS},
-    {G_ADMIN_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE},
-    {G_ADMIN_PROPERTY_STATUS, 1, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE},
-    {G_MFG_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_get, G_MFG_PROPERTY_STATUS},
-    {G_MFG_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_set, G_MFG_PROPERTY_STATUS},
-    {G_MFG_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE},
-    {G_MFG_PROPERTY_STATUS, 1, SIG_MD_G_MFG_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE},
+    CMD_NO_STR(G_USER_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_properties_get, G_USER_PROPERTIES_STATUS),
+    CMD_NO_STR(G_USER_PROPERTIES_STATUS, 1, SIG_MD_G_USER_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE),
+    CMD_NO_STR(G_ADMIN_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_properties_get, G_ADMIN_PROPERTIES_STATUS),
+    CMD_NO_STR(G_ADMIN_PROPERTIES_STATUS, 1, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE),
+    CMD_NO_STR(G_MFG_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_properties_get, G_MFG_PROPERTIES_STATUS),
+    CMD_NO_STR(G_MFG_PROPERTIES_STATUS, 1, SIG_MD_G_MFG_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE),
+    CMD_NO_STR(G_CLIENT_PROPERTIES_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_CLIENT_PROP_S, mesh_cmd_sig_properties_get, G_CLIENT_PROPERTIES_STATUS),
+    CMD_NO_STR(G_CLIENT_PROPERTIES_STATUS, 1, SIG_MD_G_CLIENT_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_properties_status, STATUS_NONE),
+    CMD_NO_STR(G_USER_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_get, G_USER_PROPERTY_STATUS),
+    CMD_NO_STR(G_USER_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_set, G_USER_PROPERTY_STATUS),
+    CMD_NO_STR(G_USER_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_USER_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE),
+    CMD_NO_STR(G_USER_PROPERTY_STATUS, 1, SIG_MD_G_USER_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE),
+    CMD_NO_STR(G_ADMIN_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_get, G_ADMIN_PROPERTY_STATUS),
+    CMD_NO_STR(G_ADMIN_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_set, G_ADMIN_PROPERTY_STATUS),
+    CMD_NO_STR(G_ADMIN_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_ADMIN_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE),
+    CMD_NO_STR(G_ADMIN_PROPERTY_STATUS, 1, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE),
+    CMD_NO_STR(G_MFG_PROPERTY_GET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_get, G_MFG_PROPERTY_STATUS),
+    CMD_NO_STR(G_MFG_PROPERTY_SET, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_set, G_MFG_PROPERTY_STATUS),
+    CMD_NO_STR(G_MFG_PROPERTY_SET_NOACK, 0, SIG_MD_G_PROP_C, SIG_MD_G_MFG_PROP_S, mesh_cmd_sig_property_set, STATUS_NONE),
+    CMD_NO_STR(G_MFG_PROPERTY_STATUS, 1, SIG_MD_G_MFG_PROP_S, SIG_MD_G_PROP_C, mesh_cmd_sig_property_status, STATUS_NONE),
 #endif
 };
 
@@ -1353,6 +1395,9 @@ int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
                 op_res->op_rsp = mesh_cmd_sig_func[i].op_rsp;
                 op_res->sig = (OP_TYPE_VENDOR == op_type) ? 0 : 1;
                 op_res->status_cmd = mesh_cmd_sig_func[i].status_cmd ? 1 : 0;
+                #if LOG_OP_STRING_EN
+                op_res->op_string = mesh_cmd_sig_func[i].op_string;
+                #endif
                 if(tx_flag){
                     op_res->id = mesh_cmd_sig_func[i].model_id_tx;
                 }else{
@@ -1459,6 +1504,27 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
     return cmd_with_tid;
 }
 
+u32 get_op_rsp(u16 op)
+{
+    mesh_op_resource_t op_res;
+    if(0 == mesh_search_model_id_by_op(&op_res, op, 1)){
+        return op_res.op_rsp;
+    }
+    return STATUS_NONE;
+}
+
+int is_reliable_cmd(u16 op, u32 vd_op_rsp)
+{
+    #if VC_SUPPORT_ANY_VENDOR_CMD_EN
+    if(IS_VENDOR_OP(op)){
+        return ((vd_op_rsp & 0xff) != STATUS_NONE_VENDOR_OP_VC);
+    }
+    #endif
+    
+    return (STATUS_NONE != get_op_rsp(op));
+}
+
+
 // ----------
 #define GET_ARRAR_MODEL_AND_COUNT(model, cb_pub)    (u8 *)&model, cb_pub, sizeof(model[0]), ARRAY_SIZE(model), 1
 #define GET_SINGLE_MODEL_AND_COUNT(model, cb_pub)   (u8 *)&model, cb_pub, sizeof(model),    1,                 0
@@ -1468,30 +1534,72 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 #if MD_CFG_CLIENT_EN
     {SIG_MD_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
 #endif
+
+#if MD_SAR_EN
+	{SIG_MD_SAR_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
+#if MD_CFG_CLIENT_EN
+    {SIG_MD_SAR_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+#endif	
+#endif
+
+#if MD_LARGE_CPS_EN
+	{SIG_MD_LARGE_CPS_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
+#if MD_CFG_CLIENT_EN
+    {SIG_MD_LARGE_CPS_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+#endif	
+#endif
+
+#if MD_ON_DEMAND_PROXY_EN
+	{SIG_MD_ON_DEMAND_PROXY_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
+#if MD_CFG_CLIENT_EN
+	{SIG_MD_ON_DEMAND_PROXY_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+#endif	
+#endif
+
+#if MD_OP_AGG_EN
+    #if MD_SERVER_EN
+	{SIG_MD_OP_AGG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
+    #endif
+#if MD_CFG_CLIENT_EN
+	{SIG_MD_OP_AGG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+#endif	
+#endif
+
+#if MD_SOLI_PDU_RPL_EN
+    #if MD_SERVER_EN
+	{SIG_MD_SOLI_PDU_RPL_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.srv, 0)},
+    #endif
+#if MD_CFG_CLIENT_EN
+	{SIG_MD_SOLI_PDU_RPL_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.clnt, 0)},
+#endif	
+#endif
+
     {SIG_MD_HEALTH_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.srv, &mesh_health_cur_sts_publish)},  // change to multy element model later. 
     {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
 #if MD_DF_EN
     #if MD_SERVER_EN
-    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.srv, 0)},
+    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.clnt, 0)},
+    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
 #if MD_SBR_EN
     #if MD_SERVER_EN
-    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.srv, 0)},
+    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.clnt, 0)},
+    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
 #if MD_MESH_OTA_EN
     #if DISTRIBUTOR_UPDATE_CLIENT_EN
-    {SIG_MD_FW_DISTRIBUT_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_distr_srv, 0)},
     {SIG_MD_FW_DISTRIBUT_C, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_distr_clnt, 0)},
+    #endif
+    #if DISTRIBUTOR_UPDATE_SERVER_EN
+    {SIG_MD_FW_DISTRIBUT_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_distr_srv, 0)},
     {SIG_MD_FW_UPDATE_C,    GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_update_clnt, 0)},
     {SIG_MD_BLOB_TRANSFER_C, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.blob_trans_clnt, 0)},
     #endif
@@ -1503,19 +1611,19 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 
 #if MD_REMOTE_PROV
     #if MD_SERVER_EN
-    {SIG_MD_REMOTE_PROV_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.srv, &mesh_remote_prov_st_publish)},
+    {SIG_MD_REMOTE_PROV_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_REMOTE_PROV_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.client, 0)},
+    {SIG_MD_REMOTE_PROV_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
 #if MD_PRIVACY_BEA
     #if MD_SERVER_EN
-    {SIG_MD_PRIVATE_BEACON_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.srv, 0)},
+    {SIG_MD_PRIVATE_BEACON_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_PRIVATE_BEACON_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.client, 0)},
+    {SIG_MD_PRIVATE_BEACON_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
@@ -1878,7 +1986,7 @@ void mesh_model_cb_pub_st_register()
             // member of 'com' always at the first place of p_source->p_model.
             model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
             p_com->cb_pub_st = p_source->cb_pub_st;
-            p_com->cb_tick_ms = clock_time_ms();
+            p_com->cb_tick_ms = p_com->cb_pub_st ? clock_time_ms() : 0;
             p_com->pub_trans_flag = 0;
             p_com->pub_2nd_state = 0;
         }
@@ -1895,12 +2003,10 @@ void mesh_model_cb_pub_st_register()
     	#if LPN_VENDOR_SENSOR_EN
 	MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &cb_vd_lpn_sensor_st_publish);
     	#else
-    	    #if (VENDOR_MD_MI_EN)
-    MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_mi_proper_sts_publish);
-    	    #else // (VENDOR_MD_NORMAL_EN)
+			#if (VENDOR_MD_NORMAL_EN && (!LLSYNC_ENABLE))
     MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_light_onoff_st_publish);
-            #endif
-    	#endif
+			#endif
+		#endif
     	#if MD_VENDOR_2ND_EN
             #if (VENDOR_MD_MI_EN)
     MODEL_PUB_ST_CB_INIT(model_vd_light.srv2, &mi_vd_light_onoff_st_publish2);
@@ -1924,11 +2030,6 @@ void vendor_md_cb_pub_st_set2ali()
 void model_pub_check_set(int level_set_st, u8 *model, int priority)
 {
     model_common_t *p_model = (model_common_t *)model;
-#if MI_API_ENABLE
-	if(!priority){// in the mi mode ,only priority==1 can allow to send pub cmd
-		return ;
-	}
-#endif
     if(p_model->pub_adr){
         int pub_flag = 0;
         if(ST_G_LEVEL_SET_PUB_NOW == level_set_st){

@@ -1,26 +1,28 @@
 /********************************************************************************************************
- * @file     main.c
+ * @file	main.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj/mcu/watchdog_i.h"
 #include "vendor/common/user_config.h"
 #include "proj_lib/rf_drv.h"
@@ -124,6 +126,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
         {
             for (int i=0; i<fw_size; i+=256)
             {
+                #if (BATT_CHECK_ENABLE)
+                app_battery_power_check_and_sleep_handle(1);
+                #endif
                 if ((i & 0xfff) == 0)
                 {
                     flash_erase_sector (addr_load + i);
@@ -139,6 +144,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
     
         //erase the new firmware
         for (int i = 0; i < ((fw_size + 4095)/4096); i++) {
+            #if (BATT_CHECK_ENABLE)
+            app_battery_power_check_and_sleep_handle(1);
+            #endif
             flash_erase_sector(FLASH_ADR_UPDATE_NEW_FW + i*4096);
         }
     }
@@ -169,7 +177,7 @@ _attribute_ram_code_ int main(void)
 {
     T_DBG_CNT[0]++;
 
-    /* cup_clk_init */
+    /* cpu_clk_init */
     cpu_wakeup_init();
     clock_init(SYS_CLK_CRYSTAL);
 
@@ -179,6 +187,13 @@ _attribute_ram_code_ int main(void)
     gpio_set_input_en(DEBUG_PIN, 0);    //disable input
     gpio_write(DEBUG_PIN, 0);           //LED OFF
     //sha256_test_fun();
+
+	blc_app_loadCustomizedParameters();		// call to handle zbit flash
+
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+#endif
+
 
     //WaitMs(500);
     //gpio_write(DEBUG_PIN, 0); //LED Off

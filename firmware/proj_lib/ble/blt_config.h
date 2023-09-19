@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     blt_config.h 
+ * @file	blt_config.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -27,13 +30,13 @@
  */
 #if !WIN32
 #include "proj/mcu/config.h"
-#include "../../proj/mcu/analog.h"
+#include "proj/mcu/analog.h"
 #include "../rf_drv.h"
 
 #endif
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/common/dual_mode_adapt.h"
+#include "tl_common.h"
+#include "vendor/common/dual_mode_adapt.h"
 #include "../pm.h"
 
 #define PA_ENABLE	0
@@ -56,7 +59,11 @@
     #elif MI_API_ENABLE
 #define 	MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
     #else
-#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm
+	#if DU_ENABLE
+#define		MY_RF_POWER_INDEX		RF_POWER_P7p02dBm
+	#else
+#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm	
+	#endif
     #endif
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p50dBm
@@ -122,7 +129,7 @@ typedef struct {
 
 
 /* end of static sector information */
-#elif (MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE)
+#elif ((MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_SIG_PVT_DUAL_ENABLE))
 typedef struct {
 	u8 mesh_static_oob[16];
 	u8 zb_pre_install_code[17];
@@ -142,6 +149,8 @@ typedef struct {
 #define		CALIB_OFFSET_ADC_VREF								(0xC0)
 #define		CALIB_OFFSET_FIRMWARE_SIGNKEY						(0x180)
     #endif
+#define     CALIB_OFFSET_FLASH_VREF								0x1c0
+
 /** Calibration Information end ***/
 
 /**************************** 128 K Flash *****************************/
@@ -170,7 +179,7 @@ typedef struct {
 #define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_512K_FLASH
 #endif
 
-#if (DUAL_MESH_ZB_BL_EN||(MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)\
+#if (DUAL_MESH_ZB_BL_EN||DUAL_MESH_SIG_PVT_EN||(MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)\
    ||(MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE))
 #define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    (0) // must 0
 #else
@@ -207,21 +216,25 @@ typedef struct {
 #define			FLASH_ADR_MD_LIGHT_HSL		0x3b000 // cps before V23
 #define			FLASH_ADR_FRIEND_SHIP		0x3c000 // backup FLASH_ADR_MISC temporarily
 #define			FLASH_ADR_MISC				0x3d000
+	#if TLV_ENABLE
+#define			FLASH_ADR_RESET_CNT			0x35000
+	#else
 #define			FLASH_ADR_RESET_CNT			0x3e000
+	#endif
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
-#define			FLASH_ADR_MD_DF				0x41000 
+#define			FLASH_ADR_MD_DF_SBR			0x41000 
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
-#define			FLASH_ADR_MD_DF				0x3f000 // just test
+#define			FLASH_ADR_MD_DF_SBR			0x3f000 // just test
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 	#if WIN32
 #define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
 	#else
-		#if DEBUG_CFG_CMD_GROUP_AK_EN
-#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info
+		#if VC_NODE_INFO_MULTI_SECTOR_EN
+#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info, occupy sector num dependent on  MESH_NODE_MAX_NUM
 		#else
 #define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
 		#endif
@@ -237,8 +250,7 @@ typedef struct {
 
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x73000	// don't change, must same with telink mesh SDK
 #define			FLASH_ADR_MD_MESH_OTA		0x74000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x75000 // remote provision part 
-#define 		FLASH_ADR_MD_PRIVATE_BEACON	0x75000
+#define 		FLASH_ADR_MD_MISC_PAR		0x75000	// Note: before is remote provision. 
 #define			FLASH_ADR_AREA_2_END		0x76000
 
 
@@ -263,6 +275,12 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 
 //                      MI_BLE_MESH_CER_ADR	        0x7F000 // don't modify
 #elif(AIS_ENABLE)
+#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define DU_STORE_ADR		0x7e000
+#define DU_OTA_REBOOT_ADR	0x7f000
+
+#endif
+
 #define 		FLASH_ADR_THREE_PARA_ADR	0x78000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
     #if (ALI_MD_TIME_EN)
@@ -270,6 +288,8 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
     #endif
 #elif(DUAL_MODE_WITH_TLK_MESH_EN)
 #define			FLASH_ADR_DUAL_MODE_4K		0x78000 // backup dual mode 4K firmware
+#elif(LLSYNC_ENABLE)
+#define			FLASH_ADR_THREE_PARA_ADR	0x78000
 #endif
 
 #if MI_API_ENABLE
@@ -282,7 +302,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 
 
 #else // 1M flash
-#if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE))
+#if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_SIG_PVT_DUAL_ENABLE))
 #define			FLASH_ADR_RESET_CNT			0x23000
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x24000	// don't change, must same with zigbee mesh SDK
 #define         FLASH_ADR_EDCH_PARA_SECTOR	0x25000
@@ -307,7 +327,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0x36000
 #define			FLASH_ADR_MD_SCENE			0x37000
 #define			FLASH_ADR_MD_MESH_OTA		0x38000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x39000 // remote provision part 
+//#define                                   0x39000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0x3A000		//
 #define			FLASH_ADR_AREA_1_END		0x3B000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
@@ -349,13 +369,13 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_SCENE			0xC7000
 // 				                                            0xC8000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0xC9000
-#define         FLASH_ADR_MD_REMOTE_PROV    0xCA000 // remote provision part 
+//#define                                   0xCA000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0xCB000		//
 #define			FLASH_ADR_AREA_1_END		0xCC000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
 #define			FLASH_ADR_USER_MESH_START	0xD2000
-#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
+#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
 #define 		FLASH_ADR_MI_RECORD		    0xD2000
 #define 		FLASH_ADR_MI_RECORD_TMP	    0xD3000
 #define 		FLASH_ADR_MI_RECORD_MAX	    0xD4000
@@ -413,7 +433,13 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #if (MI_API_ENABLE)
 #define         MI_BLE_MESH_CER_ADR 	        0xFB000
 #endif
-    
+
+#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define DU_STORE_ADR	0xFC000
+#define DU_OTA_REBOOT_ADR	0xFD000
+
+#endif
+
 #if(AIS_ENABLE)
 #define 		FLASH_ADR_THREE_PARA_ADR		0xFC000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
@@ -448,7 +474,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_SCENE			0x52000
 // 				                                            0x53000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0x54000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x55000 // remote provision part 
+//#define                                   0x55000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0x56000		//
 #define			FLASH_ADR_AREA_1_END		0x57000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
@@ -466,12 +492,12 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif /*end of (1 == FLASH_1M_ENABLE)*/
 
 #if 1// common
-#if (FLASH_1M_ENABLE && (0 == DUAL_MESH_ZB_BL_EN))
+#if (FLASH_1M_ENABLE && (0 == DUAL_MESH_ZB_BL_EN) && (0 == DUAL_MESH_SIG_PVT_EN))
 #define			FLASH_ADR_MESH_TYPE_FLAG	0xFD000	// don't change, must same with telink mesh SDK
 #endif
 
 #define		CFG_ADR_MAC					flash_sector_mac_address
-#if (DUAL_MESH_ZB_BL_EN && (!__PROJECT_8267_MASTER_KMA_DONGLE__))
+#if ((DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN) && (!__PROJECT_8267_MASTER_KMA_DONGLE__))
 //#define		    CUST_CAP_INFO_ADDR			flash_sector_calibration // == (CFG_ADR_MAC + STATIC_ADDR_FREQ_OFFSET)
 #define         FLASH_ADR_STATIC_OOB	    (STATIC_ADDR_MESH_STATIC_OOB)
 #define         FLASH_ADR_EDCH_PARA		    (FLASH_ADR_EDCH_PARA_SECTOR) // size = 0x68 = sizeof(mesh_ecdh_key_str)
@@ -524,6 +550,20 @@ enum{
     HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND = 0x13,// HCI send back the static oob information 
     HCI_GATEWAY_CMD_MESH_COMMUNICATE_TEST = 0x14,// HCI send back the static oob information
     HCI_GATEWAY_CMD_MESH_RX_TEST        = 0x15,
+    HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION = 0x16,
+    HCI_GATEWAY_CMD_FAST_PROV_START		=0x17,
+
+	HCI_GATEWAY_CMD_RP_MODE_SET			  = 0x18,
+	HCI_GATEWAY_CMD_RP_SCAN_START_SET     = 0x19,
+	HCI_GATEWAY_CMD_RP_LINK_OPEN		  = 0x1a,
+	HCI_GATEWAY_CMD_RP_START			  = 0x1b,
+	HCI_GATEWAY_CMD_GET_USB_ID			  = 0x1c, // for B91
+
+	HCI_GATEWAY_CMD_PRIMARY_INFO_GET	  	  = 0x1c,
+	HCI_GATEWAY_CMD_PRIMARY_INFO_SET	  	  = 0x1d,
+	HCI_GATEWAY_CMD_PRIMARY_INFO_STATUS	  	  = 0x1e,
+	
+	HCI_GATEWAY_CMD_SEND_NET_KEY    = 0x20,
 	// rsp cmd part 
 	HCI_GATEWAY_RSP_UNICAST	=0x80,
 	HCI_GATEWAY_RSP_OP_CODE	=0X81,
@@ -537,10 +577,18 @@ enum{
 	HCI_GATEWAY_CMD_SEND_NODE_INFO = 0x8d,
 	//HCI_GATEWAY_CMD_SEND_CPS_INFO	= 0x8e,
 	HCI_GATEWAY_CMD_HEARTBEAT	= 0x8f,
+
+	HCI_GATEWAY_CMD_SECURE_IVI = 0x90,
+	HCI_GATEWAY_CMD_PRIVATE_BEACON = 0x91,
+	
 	HCI_GATEWAY_CMD_SEND_MESH_OTA_STS	= 0x98,
 	HCI_GATEWAY_CMD_SEND_UUID   = 0x99,
 	HCI_GATEWAY_CMD_SEND_IVI    = 0x9a,
+	HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION = 0x9b,
 	HCI_GATEWAY_CMD_SEND_SRC_CMD = 0x9c,
+	HCI_GATEWAY_CMD_ONLINE_ST	= 0x9d,
+	HCI_GATEWAY_CMD_RSP_USB_ID	= 0x9e,
+	
 	HCI_GATEWAY_CMD_SEND_SNO_RSP    = 0xa0,
 	HCI_GATEWAY_CMD_SEND       = 0xb1,
 	HCI_GATEWAY_DEV_RSP         = 0xb2,
@@ -549,6 +597,9 @@ enum{
 	HCI_GATEWAY_CMD_SEND_BACK_VC = 0xb5,
 	HCI_GATEWAY_CMD_LOG_STRING	= 0xb6,
 	HCI_GATEWAY_CMD_LOG_BUF		= 0xb7,
+	
+	HCI_GATEWAY_CMD_RP_SCAN_RSP = 0xC0,
+	HCI_GATEWAY_CMD_RP_SCAN_REPORT_RSP = 0xc1,
 	
 };
 //---------hci_cmd_from_usb
@@ -567,6 +618,8 @@ enum{
 	HCI_CMD_ADV_DEBUG_MESH_LED	= 0xFFA7,			// control LED
 	HCI_CMD_BULK_SET_PAR2USB	= 0xFFA8,
 	HCI_CMD_SET_VC_PAR			= 0xFFAA,
+	HCI_CMD_MESH_OTA_INITIATOR_START	= 0xFFAB,
+	HCI_CMD_MESH_PTS_TEST_CASE_CMD		= 0xFFAC,
 	//
 	HCI_CMD_KMA_DONGLE_SET_MAC  			= 0xFFE0,
 	HCI_CMD_KMA_DONGLE_SPP_TEST_DATA		= 0xFFE1,
@@ -577,6 +630,7 @@ enum{
 	HCI_CMD_GATEWAY_CTL			= 0xFFE9,
 	HCI_CMD_GATEWAY_OTA			= 0xFFEA,
 	HCI_CMD_MESH_OTA			= 0xFFEB,
+	HCI_CMD_GATEWAY_ONLINE_SET	= 0xFFEC,
 	//
 	HCI_CMD_PROVISION			= 0xFEA0,
 };
@@ -597,8 +651,11 @@ enum{
 };
 
 enum{
-    OTA_REBOOT_FLAG                   	= 0,
-};
+    FLD_OTA_REBOOT_FLAG                 = BIT(0),
+    FLD_LOW_BATT_FLG                   	= BIT(1),
+    FLD_LOW_BATT_LOOP_FLG             	= BIT(2),	// 0 means check by user_init, 1 means by main loop
+    FLD_MESH_OTA_100_FLAG               = BIT(3),
+};/*DEEP_ANA_REG0*/
 
 
 extern u32 flash_sector_mac_address;
@@ -782,8 +839,8 @@ static inline void blc_app_loadCustomizedParameters(void)
 #define BLE_LL_ADV_IN_MAINLOOP_ENABLE					1
 #endif
 
-#if DUAL_MESH_ZB_BL_EN
-#define FW_SIZE_MAX_K			    (192) // 192  //192K
+#if (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
+#define FW_SIZE_MAX_K			    (192) // 192  //192K // can set to 256k max for dual mode with 1M flash.
 #elif (MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE)
 #define FW_SIZE_MAX_K			    (184)
 #else

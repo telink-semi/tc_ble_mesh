@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigPublishManager.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigPublishManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/12/20.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigPublishManager.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/12/20
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigPublishManager.h"
 
@@ -56,7 +50,7 @@
     
     [self stopCheckOfflineTimerWithAddress:@(adr)];
     
-    SigNodeModel *device = [SigDataSource.share getNodeWithAddress:adr];
+    SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:adr];
     if (device) {
         if (device.hasPublishFunction && device.hasOpenPublish) {
             device.state = DeviceStateOutOfLine;
@@ -70,11 +64,11 @@
 }
 
 - (void)startCheckOfflineTimerWithAddress:(NSNumber *)address{
-    SigNodeModel *device = [SigDataSource.share getNodeWithAddress:address.intValue];
+    SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:address.intValue];
     if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod) {
         [self stopCheckOfflineTimerWithAddress:address];
         __weak typeof(self) weakSelf = self;
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:kOfflineInterval repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:[self getIntervalWithSigPeriodModel:[device getModelIDModelWithModelID:device.publishModelID].publish.period]*3+1 repeats:NO block:^(BackgroundTimer * _Nonnull t) {
             [weakSelf setDeviceOffline:address];
         }];
         _checkOfflineTimerDict[address] = timer;
@@ -89,6 +83,12 @@
     if (timer) {
         [timer invalidate];
     }
+}
+
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
+- (double)getIntervalWithSigPeriodModel:(SigPeriodModel *)periodModel {
+    double tem = periodModel.resolution * periodModel.numberOfSteps / 1000.0;
+    return tem;
 }
 
 @end

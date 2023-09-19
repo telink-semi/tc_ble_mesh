@@ -17,6 +17,13 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/item_network"
+        android:icon="@drawable/ic_network"
+        android:orderInCategory="100"
+        android:title="Network"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/item_setting"
         android:icon="@drawable/ic_setting"
         android:orderInCategory="100"

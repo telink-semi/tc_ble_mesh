@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/3/25
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  RemoteAddVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/3/25.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "RemoteAddVC.h"
 #import "AddDeviceItemCell.h"
@@ -71,7 +65,7 @@
 //    } else if (self.remoteSource.count > indexPath.row) {
 //        model = self.remoteSource[indexPath.item];
 //    }
-//    if (addModel.state == AddDeviceModelStateScaned || addModel.state == AddDeviceModelStateProvisionFail  || addModel.state == AddDeviceModelStateProvisioning) {
+//    if (addModel.state == AddDeviceModelStateScanned || addModel.state == AddDeviceModelStateProvisionFail  || addModel.state == AddDeviceModelStateProvisioning) {
 //        addModel.state = AddDeviceModelStateProvisioning;
 //        [collectionView reloadItemsAtIndexPaths:@[indexPath]];
 //        [self remoteProvisionNodeWithRemoteScanRspModel:model];
@@ -84,8 +78,19 @@
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     __weak typeof(self) weakSelf = self;
     UInt16 provisionAddress = [SigDataSource.share provisionAddress];
-    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:SigDataSource.share.curNetKey netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:NO provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+    NSData *key = [SigDataSource.share curNetKey];
+    if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
+        if (SigDataSource.share.curNetkeyModel.oldKey) {
+            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+        }
+    }
+
+    __block UInt16 currentProvisionAddress = provisionAddress;
+    __block NSString *currentAddUUID = nil;
+    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:NO provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
         if (identify && address != 0) {
+            currentAddUUID = identify;
+            currentProvisionAddress = address;
             SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:identify];
             NSString *mac = @"";
             if (scanRsp) {
@@ -106,23 +111,28 @@
         [weakSelf showRemoteProvisionError:error];
     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
         if (identify && address != 0) {
-            SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:identify];
+            currentProvisionAddress = address;
+            SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:currentAddUUID];
             NSString *mac = @"";
             if (scanRsp) {
                 mac = scanRsp.macAddress;
             }
-            [weakSelf updateWithPeripheralUUID:identify macAddress:mac address:provisionAddress keyBindResult:YES];
-            TeLogInfo(@"RP-GATT:keybind success, %@->0X%X",identify,address);
+            [weakSelf updateWithPeripheralUUID:currentAddUUID macAddress:mac address:currentProvisionAddress keyBindResult:YES];
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+            if (node && node.isRemote) {
+                [node addDefaultPublicAddressToRemote];
+                [SigDataSource.share saveLocationData];
+            }
+            TeLogInfo(@"RP-GATT:keybind success, %@->0X%X",currentAddUUID,currentProvisionAddress);
             [weakSelf startRemoteProvisionScan];
         }
     } keyBindFail:^(NSError * _Nonnull error) {
-        NSString *identify = SigBearer.share.getCurrentPeripheral.identifier.UUIDString;
-        SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:identify];
+        SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:currentAddUUID];
         NSString *mac = @"";
         if (scanRsp) {
             mac = scanRsp.macAddress;
         }
-        [weakSelf updateWithPeripheralUUID:identify macAddress:mac address:provisionAddress keyBindResult:NO];
+        [weakSelf updateWithPeripheralUUID:currentAddUUID macAddress:mac address:currentProvisionAddress keyBindResult:NO];
         TeLogInfo(@"RP-GATT:keybind fail, error:%@",error);
         [weakSelf showRemoteProvisionError:error];
     } finish:^{
@@ -143,6 +153,10 @@
         }
         [SigRemoteAddManager.share startRemoteProvisionScanWithReportCallback:^(SigRemoteScanRspModel * _Nonnull scanRemoteModel) {
             TeLogInfo(@"RP-Remote:reportNodeAddress=0x%x,uuid=%@,rssi=%d,oob=%d,mac=%@",scanRemoteModel.reportNodeAddress,scanRemoteModel.reportNodeUUID,scanRemoteModel.RSSI,scanRemoteModel.oob.value,scanRemoteModel.macAddress);
+//            if (scanRemoteModel.reportNodeAddress != 2) {
+//                TeLogInfo(@"=========return");
+//                return;
+//            }
             [weakSelf addAndShowSigRemoteScanRspModelToUI:scanRemoteModel];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -165,6 +179,7 @@
                         }
                         weakSelf.remoteSource = [NSMutableArray arrayWithArray:newSource];
                     }
+                    TeLogInfo(@"Reomte add list:%@", weakSelf.remoteSource);
                     [weakSelf addNodeByRemoteProvision];
                 } else {
                     //remote未扫描到设备
@@ -203,7 +218,7 @@
     #ifdef kExist
     __weak typeof(self) weakSelf = self;
     if (kExistRemoteProvision) {
-        [SigRemoteAddManager.share remoteProvisionWithNextProvisionAddress:provisionAddress reportNodeAddress:model.reportNodeAddress reportNodeUUID:model.reportNodeUUID networkKey:SigDataSource.share.curNetKey netkeyIndex:SigDataSource.share.curNetkeyModel.index provisionType:ProvisionTpye_NoOOB staticOOBData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        [SigRemoteAddManager.share remoteProvisionWithNextProvisionAddress:provisionAddress reportNodeAddress:model.reportNodeAddress reportNodeUUID:model.reportNodeUUID networkKey:SigDataSource.share.curNetKey netkeyIndex:SigDataSource.share.curNetkeyModel.index provisionType:ProvisionType_NoOOB staticOOBData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:YES];
                 TeLogInfo(@"RP-Remote:provision success, %@->0X%X",identify,address);
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:provisionAddress];
@@ -228,11 +243,11 @@
             }
         } fail:^(NSError * _Nonnull error) {
             TeLogDebug(@"RP-Remote:provision fail.");
-            if (![self.failSource containsObject:model]) {
-                [self.failSource addObject:model];
+            if (![weakSelf.failSource containsObject:model]) {
+                [weakSelf.failSource addObject:model];
             }
-            [self remoteAddSingleDeviceFinish];
-            [self updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
+            [weakSelf remoteAddSingleDeviceFinish];
+            [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
 
             if (SigBearer.share.isOpen) {
                 [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
@@ -245,7 +260,7 @@
                     [weakSelf addNodeByRemoteProvision];
                 }];
             } else {
-                [self addNodeByRemoteProvision];
+                [weakSelf addNodeByRemoteProvision];
             }
         }];
     }
@@ -264,15 +279,23 @@
         UInt16 productID = [LibTools uint16From16String:node.pid];
         DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
         NSData *cpsData = deviceType.defaultCompositionData.parameters;
-        if (keyBindType == KeyBindTpye_Fast) {
+        if (keyBindType == KeyBindType_Fast) {
             if (cpsData == nil || cpsData.length == 0) {
-                keyBindType = KeyBindTpye_Normal;
+                keyBindType = KeyBindType_Normal;
             }
+        }
+        if (cpsData && cpsData.length > 0) {
+            cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
         }
 
         [SDKLibCommand keyBind:node.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf remoteAddSingleDeviceFinish];
             [weakSelf updateWithPeripheralUUID:model.scanRspModel.uuid macAddress:model.scanRspModel.macAddress address:node.address keyBindResult:YES];
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+            if (node && node.isRemote) {
+                [node addDefaultPublicAddressToRemote];
+                [SigDataSource.share saveLocationData];
+            }
             TeLogInfo(@"RP-Remote:keybind success, %@->0X%X",model.scanRspModel.uuid,node.address);
             [weakSelf addNodeByRemoteProvision];
         } fail:^(NSError * _Nonnull error) {
@@ -301,9 +324,10 @@
         //remote add
         [self startRemoteProvisionScan];
     } else {
+        __weak typeof(self) weakSelf = self;
         //GATT add
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-            [self addOneNodeInGATT];
+        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
+            [weakSelf addOneNodeInGATT];
         }];
     }
 }
@@ -316,7 +340,7 @@
 
 - (void)addAndShowSigRemoteScanRspModelToUI:(SigRemoteScanRspModel *)scanRemoteModel {
     //=================test==================//
-//    if (![scanRemoteModel.macAddress isEqualToString:@"A4C1388595AC"]) {
+//    if (![scanRemoteModel.macAddress hasPrefix:@"66666666"]) {
 //        return;
 //    }
     //=================test==================//
@@ -345,7 +369,7 @@
 - (void)updateUIOfScanResponseWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {
     [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
     AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
-    model.state = AddDeviceModelStateScaned;
+    model.state = AddDeviceModelStateScanned;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
     });
@@ -385,7 +409,7 @@
 }
 
 - (void)addDeviceFinish{
-    [SigBearer.share startMeshConnectWithComplete:nil];
+    [SDKLibCommand startMeshConnectWithComplete:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         self.refreshItem.enabled = YES;
         self.goBackButton.enabled = YES;
@@ -461,7 +485,7 @@
         model.scanRspModel = scanModel;
         model.scanRspModel.address = address;
         model.scanRspModel.macAddress = macAddress;
-        model.state = AddDeviceModelStateScaned;
+        model.state = AddDeviceModelStateScanned;
         if (![self.source containsObject:model]) {
             [self.source addObject:model];
         }

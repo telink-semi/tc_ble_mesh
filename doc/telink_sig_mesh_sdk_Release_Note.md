@@ -1,3 +1,381 @@
+## V3.3.3.6
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* delete some unused APIs which name has typo.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### CodeSize
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* 删除一些未正确拼写名称且未使用的接口。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.3.5.1
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) update the "firmware" and "release_bin" folders only. The others remain the same as V3.3.3.5.
+* (Firmware) add support Tencent connectivity. set MESH_ USER_ DEFINE_ MODE to MESH_ LLSYNC_ ENABLE. for more details, refer to "doc/AN_2211xxxx_C1_Tencent Lianliant_elink Development Document_20221125. docx".
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh.bin:        Flash 118 KB, RAM (27.8 KB + 3K stack),
+  - 8258_mesh_llsync.bin: Flash 124 KB, RAM (28.6 KB + 3K stack),
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 仅更新 “firmware” 和 "release_bin" 文件夹，其它保持和 V3.3.3.5 一样。
+* (Firmware) 增加支持接入腾讯连连功能。MESH_USER_DEFINE_MODE 设置为 MESH_LLSYNC_ENABLE 即可。详情请参阅 “doc/AN_2211xxxx_C1_腾讯连连_telink开发文档_20221125.docx”。
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.3.5
+
+### Bug Fixes
+
+* (Firmware) fix bug of V3.3.4: if TIMER 0-TIMER 2 was set to be enabled (disable by default), TIMER 0-TIMER 2 will be disabled by mistake after the node is provisioned.
+
+### Features
+
+* (Firmware) add accepting OTA rules: upgrade is allowed only when the PID is the same, see OTA_ADOPT_RULE_CHECK_PID_EN, enabled by default; upgrade is allowed when the VID (Version ID) is increased, see OTA_ADOPT_RULE_CHECK_VID_EN, disabled by default. (This OTA rule has been added in V3.3.4)
+* (Firmware) replace Telink BSD license with Apache 2.0 License.
+* (Firmware) add customized low-power mesh products that can send and receive messages, see LPN_CONTROL_EN for details.
+* (Firmware) add customized protocol of Provision.
+* (Firmware) add support extend ADV mode for gateway.
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) modify Version ID format, from two-digit ASCII code to four-digit BCD code, such as 3 3 3 5, which still be two bytes, see FW_VERSION_TELINK_RELEASE for details.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Bug Fixes
+
+* (Firmware) 修复V3.3.4版本问题：如果客户使能了TIMER0-TIMER2(默认不使能)，节点被组网后，TIMER0-TIMER2会被错误关闭的问题。
+
+### Features
+
+* (Firmware) 增加是否接受升级的OTA规则：PID相同时才允许升级，详见OTA_ADOPT_RULE_CHECK_PID_EN，默认使能；VID(Version ID)增加时才允许升级，详见OTA_ADOPT_RULE_CHECK_VID_EN，默认不使能。(该OTA规则在V3.3.4中已添加)
+* (Firmware) 替换 Telink BSD license为 Apache 2.0 license。
+* (Firmware) 增加客户定制的能收发命令的低功耗mesh产品，详见 LPN_CONTROL_EN。
+* (Firmware) 增加客户定制的配网协议。
+* (Firmware) 增加gateway支持收发extend ADV的模式。
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) 修改两个byte的版本号格式，由原来的两个数字的ASCII码值改为4个数字的BCD码，如 3 3 3 5，仍然是占用两个byte，详见FW_VERSION_TELINK_RELEASE的定义。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.4
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) add customers's customization functions: low-power and non-low-power version of mesh, OTA function.
+* (Firmware) add the functions of retention sleep, soft timer function and iv update process for mesh_switch project. Set destination address of "group control" by configuring the publish address of client model.
+* (Firmware) add the function of private fast provision for gateway. set FAST_PROVISION_ENABLE to 1.
+* (Firmware) add sdk codes of sig_mesh_tool.exe for debugging or secondary development.
+* (Android/iOS) add the identification and configuration for mesh_switch device.
+* (Android/iOS) add the function of private fast provision for LPN nodes.
+* (Android/iOS) add configuration UI to configure device's TTL, etc.
+* (iOS) add FIFO for commands, allow the application layer to push several commands at the same time.
+
+### Performance Improvements
+
+* (Firmware) modify the maximum number of device's elements from 8 to 16.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 增加客户定制的低功耗和非低功耗版本的mesh，以及定制的OTA功能。
+* (Firmware) 增加支持mesh_switch 工程的 retention sleep模式，soft timer功能，iv update流程。可以通过配置client model的publish address 设置"组控按键"对应的目标地址。
+* (Firmware) 增加gateway支持私有的fast provision功能，设置FAST_PROVISION_ENABLE为1即可。
+* (Firmware) 增加sig_mesh_tool.exe工具对应的sdk代码，可用于debug或者二次开发的。
+* (Android/iOS) 增加mesh_switch设备的识别和配置。
+* (Android/iOS) 增加LPN节点支持私有的 fast provision入网。
+* (Android/iOS) 增加节点配置界面，用于配置节点的TTL等。
+* (iOS) 增加串行指令队列，允许应用层同时压入多条指令。
+
+### Performance Improvements
+
+* (Firmware) 更改一个节点最大支持的element 个数，由8个改为16个。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.3
+### Features
+* Support ZBit flash.
+* Improve the efficiency of ota when using ZBit flash. 
+* Calibrate the flash vref according to the reading value from flash. 
+* add low voltage detection function: if low voltage is detected, the chip will enter sleep state. for more details, please refer to the codes of 'BATT_CHECK_ENABLE'.
+
+### BUG FIXS
+  - N/A
+
+### BREAKING CHANGES
+* Flash: Modify some Flash API usage for compitible.
+* void flash_read_mid(unsigned char* mid) change to unsigned int flash_read_mid(void),the mid from 3byte change to 4byte.
+* The API of flash_read_status、flash_write_status not provide to external use,you need use the API in the directory of flash depend on mid(eg:flash_write_status_midxxxxxx).
+* The first argument of API int flash_read_mid_uid_with_check( unsigned int *flash_mid ,unsigned char *flash_uid),flash_mid need 4byte space.The second argument need 16byte,has two case,8byte or 16byte,if the flash only has 8byte uid,flash_uid[8:15] will be clear to zero.
+* The API of flash_lock,flash_unlock will be instead of flash_lock_midxxxxxx and flash_unlock_midxxxxxx.
+
+
+
+### Features
+* 支持ZBit flash。
+* 根据校准值校准Flash电压。
+* 当使用ZBit Flash时提升OTA效率。
+* 增加低电压检测功能：如果检测到低电压，芯片进入休眠状态。具体请参考BATT_CHECK_ENABLE对应的代码。
+
+### Bug fixs
+* N/A
+
+### BREAKING CHANGES
+* Flash:为兼容不同的Flash型号，Flash驱动结构做了调整，修改了部分Flash接口调用方式。
+* void flash_read_mid(unsigned char* mid) 改为 unsigned int flash_read_mid(void),mid由3byte改为4byte,最高byte用于区分mid相同但是功能存在差异的flash。
+* 为兼容不同型号的Flash,flash_read_status、flash_write_status不提供给外部使用，需要使用对应接口时，需要根据mid去选择flash目录下的接口(例如：flash_write_status_midxxxxxx)。
+* 接口int flash_read_mid_uid_with_check( unsigned int *flash_mid ,unsigned char *flash_uid)的第一个参数flash_mid需要4个字节空间，第二个参数需要16byte空间，
+现有flash的uid有两种情况，一种16byte，一种8byte，如果是8byte，flash_uid[8:15]会被清零。
+* 接口flash_lock、flash_unlock由flash_lock_midxxxxxx和flash_unlock_midxxxxxx替代。
+
+
+
+## V3.3.2
+### Bug Fixes
+
+* (iOS APP) fix bug: When the IVI of the app is different from that of device, decryption will fail because IVI of the device was not be used. all customers need to update to the iOS version.
+* (iOS APP) fix bug: fail to disable log_saving function.
+
+### Features	
+
+* (Firmware) update flash driver(synchronized with "825x_BLE_SDK_3_4_1 patch 001"). must be updated if the functions of getting flash UID or flah protection were used.
+* (Firmware) add extend_ADV mode for 8258 LPN. current SDK support extend_ADV mode for 8258 mesh, 8258 gateway and 8258 LPN.
+* (Android APP) support multiple network keys and application keys.
+* (iOS APP) add API of 'defaultPublishPeriodModel' to set default publish parameters.
+
+### Performance Improvements
+
+* (Android APP) change provisioner's unicast address range from 0x0100 to 0x0400.
+
+### BREAKING CHANGES
+
+* Flash(B85)
+  * Modify some Flash API usage for compitible:
+  * void flash_read_mid(unsigned char\* mid) change to unsigned int flash_read_mid(void),the mid from 3byte change to 4byte.
+  * The API of flash_read_status、flash_write_status not provide to external use,you need use the API in the directory of flash depend on mid(eg:flash_write_status_midxxxxxx).
+  * The first argument of API int flash_read_mid_uid_with_check( unsigned int \*flash_mid ,unsigned char \*flash_uid),flash_mid need 4byte space.The second argument need 16byte,has two case,8byte or 16byte,if the flash only has 8byte uid,flash_uid\[8:15\] will be clear to zero.
+  * The API of flash_lock,flash_unlock,flash_read_otp,flash_write_otp,flash_erase_otp,flash_lock_otp will be instead of flash_lock_midxxxxxx,flash_unlock_midxxxxxx,flash_read_otp_midxxxxxx,flash_write_otp_midxxxxxx,flash_erase_otp_midxxxxxx,flash_lock_otp_midxxxxxx.
+  * delete the useless API.
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* (iOS APP) fix bug: 修复bug：当app的ivi和节点的不一致时，SDK未根据设备端返回的ivi进行解密导致解密失败。所有客户都需要升级iOS版本。
+* (iOS APP) fix bug: SDK的日志保存功能无法关闭。
+
+### Features
+
+* (Firmware) 更新 flash driver 同步到825x_BLE_SDK_3_4_1 patch 001。如客户需要读取flash UID 或者 使用保护功能，请务必更新。
+* (Firmware) 增加支持 8258 LPN 的扩展广播包功能。当前SDK支持 8258 mesh，8258 gateway和8258 LPN的扩展广播包功能。
+* (Android APP) 增加支持多个network key 和 application key的应用。
+* (iOS APP) 增加用于配置 默认publish参数的API: defaultPublishPeriodModel。
+
+### Performance Improvements
+
+* (Android APP) 修改provisioner的每一个组网地址段的范围，从 0x0100 改为 0x0400。
+
+### BREAKING CHANGES
+
+* Flash(B85)
+  * 为兼容不同的Flash型号，Flash驱动结构做了调整，修改了部分Flash接口调用方式：
+  * void flash_read_mid(unsigned char\* mid) 改为 unsigned int flash_read_mid(void),mid由3byte改为4byte,最高byte用于区分mid相同但是功能存在差异的flash。
+  * 为兼容不同型号的Flash,flash_read_status、flash_write_status不提供给外部使用，需要使用对应接口时，需要根据mid去选择flash目录下的接口(例如：flash_write_status_midxxxxxx)。
+  * 接口int flash_read_mid_uid_with_check( unsigned int \*flash_mid ,unsigned char \*flash_uid)的第一个参数flash_mid需要4个字节空间，第二个参数需要16byte空间，现有flash的uid有两种情况，一种16byte，一种8byte，如果是8byte，flash_uid\[8:15\]会被清零。
+  * 接口flash_lock、flash_unlock、flash_read_otp、flash_write_otp、flash_erase_otp、flash_lock_otp由flash_lock_midxxxxxx、flash_unlock_midxxxxxx、flash_read_otp_midxxxxxx、flash_write_otp_midxxxxxx、flash_erase_otp_midxxxxxx、flash_lock_otp_midxxxxxx替代。
+  * 删除不使用的接口。
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+## V3.3.1
+### Bug Fixes
+
+* N/A
+
+### Features	
+
+* (Firmware) add the default device name in customized OTA mode. if it was used, the device name of new firmware will not be checked by the node when OTA.
+
+### Performance Improvements
+
+* (Firmware) improve the receiving success rate of extend adv mode. only "liblt_8258_mesh_extend_adv.a" need to be updated.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 增加客户定制OTA模式下的默认device name。当节点使用此name时，节点将不检查 new firmware 的device name。
+
+### Performance Improvements
+
+* (Firmware) 改善 extend ADV mode 的收包成功率。仅更新liblt_8258_mesh_extend_adv.a 即可。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
 ## V3.3.0
 ### Bug Fixes
 

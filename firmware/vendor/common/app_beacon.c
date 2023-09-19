@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_beacon.c 
+ * @file	app_beacon.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #if WIN32 
 #include "../../../reference/tl_bulk/lib_file/app_config.h"
@@ -29,22 +32,22 @@
 #include "vendor/common/app_provison.h"
 #include "proj/common/types.h"
 #include "app_privacy_beacon.h"
+#include "blt_soft_timer.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 
-u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
-u8  provision_Out_ccc[2]={0x00,0x00}; 
-#if !ATT_REPLACE_PROXY_SERVICE_EN
-extern u8 proxy_Out_ccc[2];
-extern u8 proxy_In_ccc[2];
-#endif
-void reset_all_ccc()
+
+int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val)
 {
-	// wait for the whole dispatch 
-	beacon_send.conn_beacon_flag =1;
-	memset(provision_Out_ccc,0,sizeof(provision_Out_ccc));
-	#ifndef WIN32 
-	memset(proxy_Out_ccc,0,sizeof(proxy_Out_ccc));
-	#endif 
-	return ;
+	#if FEATURE_RELAY_EN	// use relay buffer should be better
+	mesh_adv_fifo_relay.num = mesh_adv_fifo_relay.num;	// will be optimized, just for sure that relay buffer is existed.
+	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)bear;
+	p_bear->trans_par_val = trans_par_val;
+	int err = my_fifo_push_relay(p_bear, mesh_bear_len_get(p_bear), 0);
+	#else
+	int err = mesh_bear_tx2mesh(bear, trans_par_val);
+	#endif
+
+	return err;
 }
 
 int mesh_beacon_send_proc()
@@ -85,7 +88,8 @@ int mesh_beacon_send_proc()
 
 int check_pkt_is_unprovision_beacon(u8 *dat)
 {
-	beacon_str *p_beacon = (beacon_str *) (dat-1);
+	mesh_cmd_bear_t *p_bear = CONTAINER_OF((mesh_cmd_nw_t *)dat, mesh_cmd_bear_t, nw);;
+	beacon_str *p_beacon = (beacon_str *)p_bear;
 	if(	p_beacon->bea_data.header.type == MESH_ADV_TYPE_BEACON&&
 		p_beacon->bea_data.beacon_type == UNPROVISION_BEACON){
 		return 0;
@@ -94,8 +98,18 @@ int check_pkt_is_unprovision_beacon(u8 *dat)
 	}
 }
 
-u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
+u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
+{
+	#if LPN_CONTROL_EN
+	if(mi_mesh_get_state()){
+		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
+	}else{
+		// only send once 
+		p_str->trans_par_val = 0;
+	}
+	#else
 	p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;
+	#endif
 	p_str->bea_data.header.len = 20;
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
@@ -106,8 +120,18 @@ u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
 	return 1;
 }
 
-u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
+u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash)
+{
+	#if LPN_CONTROL_EN
+	if(mi_mesh_get_state()){
+		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
+	}else{
+		// only send once 
+		p_str->trans_par_val = 0;
+	}
+	#else
 	p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;
+	#endif
 	p_str->bea_data.header.len = 24;
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
@@ -121,7 +145,7 @@ u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
 
 u8 beacon_test_case(u8*p_tc,u8 len )
 {
-    beacon_str  beaconData = {0};
+    beacon_str  beaconData = {{0}};
 	beaconData.trans_par_val = TRANSMIT_DEF_PAR_BEACON;
 	beaconData.bea_testcase_id.header.len = 10;
 	beaconData.bea_testcase_id.header.type = MESH_ADV_TYPE_TESTCASE_ID;
@@ -132,14 +156,19 @@ u8 beacon_test_case(u8*p_tc,u8 len )
 }
 
 // mode =1; with uri , mode =0 means without uri 
-#define URI_DATA    {0x17,0x2f,0x2f,0x77,0x77,0x77,0x2e,0x65,\
-					 0x78,0x61,0x6d,0x70,0x6c,0x65,0x2e,0x63,\
-					 0x6f,0x6d,0x2f,0x6d,0x65,0x73,0x68,0x2f,\
-					 0x70,0x72,0x6f,0x64,0x75,0x63,0x74,0x73,\
-					 0x2f,0x6c,0x69,0x67,0x68,0x74,0x2d,0x73,\
-					 0x77,0x69,0x74,0x63,0x68,0x2d,0x76,0x33\
-					}
-// URI_HASH             {0xD9,0x74,0x78,0xb3};  // sample data for URI_DATA
+//#define URI_DATA    {0x17,0x2f,0x2f,0x50,0x54,0x53,0x2e,0x43,0x4f,0x4d}
+// URI_HASH             {72 26 a2 7f};  // sample data for URI_DATA
+
+
+u8  is_unprovision_beacon_with_uri(event_adv_report_t *report)
+{
+	if(report->len == 25){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
 
 int unprov_beacon_send(u8 mode ,u8 blt_sts)
 {
@@ -154,7 +183,7 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	URI Hash : d97478b3667f4839487469c72b8e5e9e
 	Beacon : 0070cf7c9732a345b691494810d2e9cbf44020d97478b3
 */
-    beacon_str  beaconData = {0};
+    beacon_str  beaconData = {{0}};
 
 	if(mode == MESH_UNPROVISION_BEACON_WITH_URI){
 		u8 hash_tmp[16];
@@ -183,9 +212,13 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 		p_netkey += 1;		// use new key
 	}
 
-    mesh_cmd_bear_unseg_t bc_bear;
+    mesh_cmd_bear_t bc_bear;
     memset(&bc_bear, 0, sizeof(bc_bear));
-    bc_bear.type = MESH_ADV_TYPE_BEACON;
+	#if (0) // keep sending 2.5s if need
+	bc_bear.tx_head.par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
+	bc_bear.tx_head.val[0] = 255;
+	#endif
+   	bc_bear.type = MESH_ADV_TYPE_BEACON;
     bc_bear.len = 23; // 1+1+sizeof(mesh_beacon_sec_nw_t)+8;
 	bc_bear.beacon.type = SECURE_BEACON;
     // beacon
@@ -201,23 +234,27 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	#endif
     mesh_sec_beacon_auth(p_netkey->bk, (u8 *)&p_bc_sec->flag, 0);
     if(blt_sts){
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"app tx beacon with GATT,IV index step%d: ",iv_idx_st.update_proc_flag);
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"secure NW beacon:",0);
-		#if WIN32
-		prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
+    	#if WIN32
+		err = prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
 		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
+		if(0 == err){	
+			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:",0);
+		}
 	}else{
 		// static u32 iv_idx_st_A1;iv_idx_st_A1++;
-    	err = mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
+    	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_DEF_PAR_BEACON);
 	}
     return err;
 }
 
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
-	int err = -1;
+	int err = 0;
+	if((0 == is_need_send_sec_nw_beacon()) && !blt_sts){// force notify security while gatt connecting
+		return err;
+	}
 	if(!is_provision_success()||MI_API_ENABLE){// in the mi mode will never send secure beacon .
 		return err;
 	}
@@ -226,7 +263,16 @@ int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 		if(!p_netkey_base->valid){
 			continue;
 		}
+		#if TESTCASE_FLAG_ENABLE
+		/* in the pts private beacon proxy bv-07c , it should not send 
+		two secure beacon on gatt connection , other wise the filter sts will fail*/
 		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
+		if(blt_sts && beacon_send.conn_beacon_flag ){
+			break;
+		}
+		#else
+		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
+		#endif
 	}
 	return err;
 }
@@ -242,3 +288,14 @@ int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 	return err;
 }
 
+int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx)
+{
+	#if __PROJECT_MESH_SWITCH__
+	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());
+	extern int soft_timer_rcv_beacon_timeout();
+	soft_timer_rcv_beacon_timeout();
+	blt_soft_timer_delete(&soft_timer_rcv_beacon_timeout);
+	switch_iv_update_time_refresh(); 
+	#endif
+	return 0;
+}

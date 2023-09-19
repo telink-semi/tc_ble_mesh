@@ -1,26 +1,28 @@
 /********************************************************************************************************
- * @file     ble_ll_ota.c 
+ * @file	ble_ll_ota.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ble_common.h"
 #include "proj_lib/ble/trace.h"
 #include "proj_lib/pm.h"
@@ -34,6 +36,9 @@
 #if AIS_ENABLE
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 #include "user_ali.h"
+#endif
+#if NMW_ENABLE
+#include "user_nmw.h"
 #endif
 
 _attribute_data_retention_ int ota_adr_index = -1;
@@ -165,14 +170,14 @@ _attribute_ram_code_ void start_reboot(void)
 }
 
 
-void ota_set_flag()
+int ota_set_flag()
 {
     u32 fw_flag_telink = START_UP_FLAG;
     u32 flag_new = 0;
 	flash_read_page(ota_program_offset + 8, sizeof(flag_new), (u8 *)&flag_new);
 	flag_new &= 0xffffff4b;
     if(flag_new != fw_flag_telink){
-        return ; // invalid flag
+        return -1; // invalid flag
     }
 
 #if(__TL_LIB_8267__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8267) || \
@@ -195,6 +200,8 @@ void ota_set_flag()
 	flash_write_page((ota_program_offset ? 0 : ota_program_bootAddr) + 8, 4, (u8 *)&flag);	//Invalid flag
 	#endif
 #endif
+
+	return 0;
 }
 u8 fw_ota_value =0;
 u8 get_fw_ota_value()
@@ -263,6 +270,9 @@ int otaWrite(void * p)
 		}
 		
 		//log_event(TR_T_ota_start);
+		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
+		check_and_set_1p95v_to_zbit_flash();
+		#endif
 	}
 	else if(ota_adr == CMD_OTA_END){
 		//log_event(TR_T_ota_end);
@@ -313,6 +323,10 @@ int otaWrite(void * p)
 
                     if(!is_valid_tlk_fw_buf(req->dat+10)){
                         err_flg = OTA_FW_CHECK_ERR;
+                    #if 1 // GATT policy, depend on user
+                    }else if(0 == ota_is_valid_pid_vid((fw_id_t *)(req->dat+4), 1)){
+                        err_flg = OTA_FW_CHECK_ERR;
+                    #endif
                     }else{
     				    #if ENCODE_OTA_BIN_EN
     				    if(need_check_type != FW_CHECK_AGTHM2){
@@ -389,9 +403,12 @@ int otaRead(void * p)
 	return 0;
 }
 
-
-void bls_ota_clearNewFwDataArea(void)
+/*
+ * @retval: 1: there is legacy ota data need to be clear
+*/
+int bls_ota_clearNewFwDataArea(int check_only)
 {
+		int legacy_flag = 0;
 #if 1
 		u32 tmp1 = 0;
 		u32 tmp2 = 0;
@@ -404,10 +421,17 @@ void bls_ota_clearNewFwDataArea(void)
 
 			if(tmp1 != ONES_32 || tmp2 != ONES_32)
 			{
+				legacy_flag = 1;
+				if(check_only){
+					break;
+				}
+				#if(MODULE_WATCHDOG_ENABLE)
+				wd_clear();	// prevent flash_erase_sector_ without clear.
+				#endif
 				flash_erase_sector(cur_flash_setor);
 			}
 		}
-
+		return legacy_flag;
 #else
 		u32 tmp1 = 0;
 		u32 tmp2 = 0;
@@ -428,10 +452,18 @@ void bls_ota_clearNewFwDataArea(void)
 
 				if(tmp1 != ONES_32 || tmp2 != ONES_32 || tmp3 != ONES_32)
 				{
+					legacy_flag = 1;
+					if(check_only){
+						break;
+					}
+					#if(MODULE_WATCHDOG_ENABLE)
+					wd_clear();	// prevent flash_erase_sector_ without clear.
+					#endif
 					flash_erase_sector(ota_program_offset+i*0x1000);
 				}
 			}
 		}
+		return legacy_flag;
 #endif
 }
 
@@ -443,6 +475,15 @@ void bls_ota_procTimeout(void)
 	if(blt_ota_start_tick && clock_time_exceed(blt_ota_start_tick , blt_ota_timeout_us)){  //OTA timeout
 		rf_link_slave_ota_finish_led_and_reboot(OTA_TIMEOUT);
 	}
+#if NMW_ENABLE
+	if(blt_ota_start_tick && nmw_ota_state.seg_timeout_tick && clock_time_exceed(nmw_ota_state.seg_timeout_tick, NMW_OTA_SEG_WAIT_MS*1000)){
+		nmw_ota_seg_report();
+	}
+	
+	if(nmw_ota_state.errno_pending){
+		nmw_ota_err_report(nmw_ota_state.errno);
+	}
+#endif
 }
 
 void blt_ota_finished_flag_set(u8 reset_flag)
@@ -470,9 +511,8 @@ void rf_link_slave_ota_finish_led_and_reboot(u8 st)
 		}
     }
 	
-#if KEEP_ONOFF_STATE_AFTER_OTA 
 	set_keep_onoff_state_after_ota();
-#endif
+
 	if(otaResIndicateCb){
 		otaResIndicateCb(st);   // should be better at last.
 	}
@@ -562,6 +602,9 @@ int ais_ota_req(u8 *p)
 	}
 	
 	if(ais_gatt_auth.auth_ok){	
+#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
+		check_and_set_1p95v_to_zbit_flash();
+#endif
 		ais_msg_rsp.enc_flag = 1;
 		AES128_pkcs7_padding(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), ais_msg_rsp.data);
 		aes_cbc_encrypt(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), &ctx, ais_gatt_auth.ble_key, iv);

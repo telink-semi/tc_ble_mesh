@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     QRCodeScanActivity.java 
+ * @file QRCodeScanActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.qrcode;
 
@@ -27,6 +28,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
 import com.google.zxing.Result;
@@ -41,9 +46,6 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.io.IOException;
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -177,56 +179,52 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     private void onDownloadSuccess(final String meshJson) {
         MeshLogger.d("device import json string: " + meshJson);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        final MeshInfo result;
+        if (MeshStorageService.getInstance().importExternal(meshJson, this)) {
+            MeshLogger.d("Mesh storage import success");
+        } else {
+            MeshLogger.d("Mesh storage import fail");
+        }
+        /*final MeshInfo result;
         try {
-            result = MeshStorageService.getInstance().importExternal(meshJson, meshInfo);
+            result = MeshStorageService.getInstance().importExternal(meshJson);
         } catch (Exception e) {
             e.printStackTrace();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    toastMsg("import failed");
-                }
-            });
+            runOnUiThread(() -> toastMsg("import failed"));
             return;
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                dismissWaitingDialog();
-                if (result == null) {
-                    showErrorDialog("mesh data error");
-                } else {
-                    if (syncDialogBuilder == null) {
-                        syncDialogBuilder = new AlertDialog.Builder(QRCodeScanActivity.this);
-                        syncDialogBuilder.setTitle("Tip").setCancelable(false);
-                        syncDialogBuilder.setMessage("Get mesh data success, click CONFIRM to cover local data")
-                                .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        syncData(result);
-                                    }
-                                })
-                                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        finish();
-                                    }
-                                });
-                    }
-                    syncDialogBuilder.show();
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            if (result == null) {
+                showErrorDialog("mesh data error");
+            } else {
+                if (syncDialogBuilder == null) {
+                    syncDialogBuilder = new AlertDialog.Builder(QRCodeScanActivity.this);
+                    syncDialogBuilder.setTitle("Tip").setCancelable(false);
+                    syncDialogBuilder.setMessage("Get mesh data success, click CONFIRM to cover local data")
+                            .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    syncData(result);
+                                }
+                            })
+                            .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            });
                 }
+                syncDialogBuilder.show();
             }
-        });
+        });*/
 
     }
 
     private void syncData(MeshInfo newMesh) {
         MeshLogger.d("sync mesh : " + newMesh.toString());
-        newMesh.saveOrUpdate(this);
+        newMesh.saveOrUpdate();
         MeshService.getInstance().idle(true);
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
-        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
         Toast.makeText(this, "import success", Toast.LENGTH_SHORT).show();
         finish();
     }

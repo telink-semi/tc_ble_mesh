@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     MeshSigModel.java 
+ * @file MeshSigModel.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
@@ -39,13 +40,13 @@ public enum MeshSigModel implements Serializable {
 
     SIG_MD_REMOTE_PROV_SERVER(0x0004, "rp", "", true),
     SIG_MD_REMOTE_PROV_CLIENT(0x0005, "rp", "", true),
-    SIG_MD_DF_CFG_S(0x0006, "", "cfg server", true),
-    SIG_MD_DF_CFG_C(0x0007, "", "cfg client", true),
-    SIG_MD_BRIDGE_CFG_SERVER(0x0008, "", "", true),
-    SIG_MD_BRIDGE_CFG_CLIENT(0x0009, "", "", true),
+    SIG_MD_DF_CFG_S(0xBF30, "", "df cfg server", true),
+    SIG_MD_DF_CFG_C(0xBF31, "", "df cfg client", true),
+    SIG_MD_BRIDGE_CFG_SERVER(0xBF32, "", "", true),
+    SIG_MD_BRIDGE_CFG_CLIENT(0xBF33, "", "", true),
 
-    SIG_MD_PRIVATE_BEACON_SERVER(0x000a, "", "", true),
-    SIG_MD_PRIVATE_BEACON_CLIENT(0x000b, "", "", true),
+    SIG_MD_PRIVATE_BEACON_SERVER(0xBF40, "", "", true),
+    SIG_MD_PRIVATE_BEACON_CLIENT(0xBF41, "", "", true),
 
 
     SIG_MD_G_ONOFF_S(0x1000, "Generic OnOff Server", "Generic"),
@@ -104,6 +105,13 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_LIGHT_LC_SETUP_S(0x1310, "Light LC Setup Server", "Lighting"),
     SIG_MD_LIGHT_LC_C(0x1311, "Light LC Client", "Lighting"),
 
+
+    SIG_MD_CFG_DF_S(0xBF30, "direct forwarding server", "", true),
+    SIG_MD_CFG_DF_C(0xBF31, "direct forwarding client", "", true),
+
+    SIG_MD_CFG_BRIDGE_S(0xBF32, "subnet bridge server", "", true),
+    SIG_MD_CFG_BRIDGE_C(0xBF33, "subnet bridge client", "", true),
+
     /**
      * firmware update model
      */
@@ -113,6 +121,22 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_FW_DISTRIBUT_C(0xFE03, "firmware distribute client", "OTA"),
     SIG_MD_OBJ_TRANSFER_S(0xFF00, "object transfer server", "OTA"),
     SIG_MD_OBJ_TRANSFER_C(0xFF01, "object transfer client", "OTA"),
+
+    // opcode aggregator
+    SIG_MD_CFG_OP_AGG_S(0xBF54, "opcode aggregator server", "aggregator", true),
+    SIG_MD_CFG_OP_AGG_C(0xBF55, "opcode aggregator client", "aggregator", true),
+
+
+    SIG_MD_LARGE_CPS_S(0xBF56, "large cps server", "", true),
+    SIG_MD_LARGE_CPS_C(0xBF57, "large cps client", "", true),
+
+    SIG_MD_SAR_CFG_S(0xBF52, "SAR config server", "", true),
+    SIG_MD_SAR_CFG_C(0xBF53, "SAR config client", "", true),
+
+    SIG_MD_ON_DEMAND_PROXY_S(0xBF50, "SAR config server", "", true),
+    SIG_MD_ON_DEMAND_PROXY_C(0xBF51, "SAR config client", "", true),
+
+
     ;
 
     /**
@@ -130,7 +154,12 @@ public enum MeshSigModel implements Serializable {
      * model group desc
      */
     public String group;
-    public boolean isConfigModel = false;
+
+    /**
+     * use device key for encryption
+     * otherwise use application key
+     */
+    public boolean deviceKeyEnc = false;
 
     public boolean selected;
 
@@ -138,22 +167,32 @@ public enum MeshSigModel implements Serializable {
         this(modelId, modelName, group, false);
     }
 
-    MeshSigModel(int modelId, String modelName, String group, boolean isConfigModel) {
+    MeshSigModel(int modelId, String modelName, String group, boolean deviceKeyEnc) {
         this.modelId = modelId;
         this.modelName = modelName;
         this.group = group;
-        this.isConfigModel = isConfigModel;
+        this.deviceKeyEnc = deviceKeyEnc;
     }
 
-    public static boolean isConfigurationModel(int modelId) {
+    public static boolean useDeviceKeyForEnc(int modelId) {
         MeshSigModel model = getById(modelId);
-        return model != null && model.isConfigModel;
+        return model != null && model.deviceKeyEnc;
+    }
+    public static boolean useDeviceKeyForEnc(String modelIdHex) {
+        int modelId = Integer.valueOf(modelIdHex, 16);
+        MeshSigModel model = getById(modelId);
+        return model != null && model.deviceKeyEnc;
     }
 
     // default sub list
     public static MeshSigModel[] getDefaultSubList() {
         return new MeshSigModel[]{SIG_MD_G_ONOFF_S, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_S,
                 SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_S};
+    }
+
+    public static MeshSigModel[] getLevelAssociatedList() {
+        return new MeshSigModel[]{SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_HUE_S,
+                SIG_MD_LIGHT_HSL_SAT_S};
 
     }
 
@@ -164,41 +203,6 @@ public enum MeshSigModel implements Serializable {
         }
         return null;
     }
-
-
-    /*public static MeshSigModel[] getConfigSimilarity() {
-        return new MeshSigModel[]{
-                SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,
-                SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT,
-                SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,
-                SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,
-                SIG_MD_PRIVATE_BEACON_SERVER, SIG_MD_PRIVATE_BEACON_CLIENT
-        };
-    }*/
-
-    /*
-    const u32 MODEL_ID_DEV_KEY[] = {
-    SIG_MD_CFG_SERVER,              SIG_MD_CFG_CLIENT,
-    SIG_MD_REMOTE_PROV_SERVER,      SIG_MD_REMOTE_PROV_CLIENT,
- SIG_MD_DF_CFG_S,                SIG_MD_DF_CFG_C,
- SIG_MD_BRIDGE_CFG_SERVER,       SIG_MD_BRIDGE_CFG_CLIENT,
- SIG_MD_PRIVATE_BEACON_SERVER,   SIG_MD_PRIVATE_BEACON_CLIENT
-};
-
-#define SIG_MD_CFG_SERVER               0x0000  // for test high byte
-#define SIG_MD_CFG_CLIENT               0x0001
-//#define SIG_MD_HEALTH_SERVER            0x0002
-//#define SIG_MD_HEALTH_CLIENT            0x0003
-#define SIG_MD_REMOTE_PROV_SERVER       0x0004
-#define SIG_MD_REMOTE_PROV_CLIENT       0x0005
-#define SIG_MD_DF_CFG_S     0x0006
-#define SIG_MD_DF_CFG_C     0x0007
-#define SIG_MD_BRIDGE_CFG_SERVER  0x0008
-#define SIG_MD_BRIDGE_CFG_CLIENT  0x0009
-#define SIG_MD_PRIVATE_BEACON_SERVER  0x000a
-#define SIG_MD_PRIVATE_BEACON_CLIENT 0x000b
-
-     */
 
 }
 

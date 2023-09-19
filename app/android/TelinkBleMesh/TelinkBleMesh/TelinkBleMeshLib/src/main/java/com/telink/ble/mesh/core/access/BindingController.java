@@ -1,41 +1,48 @@
 /********************************************************************************************************
- * @file     BindingController.java 
+ * @file BindingController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.Opcode;
+import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorSequenceMessage;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
 import com.telink.ble.mesh.core.message.config.AppKeyAddMessage;
 import com.telink.ble.mesh.core.message.config.AppKeyStatusMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataGetMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppBindMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
+import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.entity.BindingDevice;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
@@ -77,6 +84,11 @@ public class BindingController {
      */
     private static final int STEP_APP_KEY_BIND = 3;
 
+    /**
+     * send app key add and model bind by opcode-aggregator
+     */
+    private static final int STEP_SEND_OP_AGG = 4;
+
     private int step = STEP_INIT;
 
     private int netKeyIndex;
@@ -102,6 +114,13 @@ public class BindingController {
     private AccessBridge accessBridge;
 
     private Handler delayHandler;
+
+    /**
+     * check is the cps contains Opcode Aggregator server model
+     *
+     * @see MeshSigModel#SIG_MD_CFG_OP_AGG_S
+     */
+    private boolean isAggSupported = false;
 
     private static final long BINDING_TIMEOUT_GATT = 30 * 1000;
 
@@ -134,7 +153,12 @@ public class BindingController {
         if (bindingDevice.isDefaultBound()) {
             addAppKey();
         } else {
-            this.getCompositionData();
+            if (bindingDevice.getCompositionData() == null) {
+                this.getCompositionData();
+            } else {
+                onCompositionDataReceived(bindingDevice.getCompositionData());
+            }
+
         }
     }
 
@@ -198,12 +222,11 @@ public class BindingController {
     }
 
     private void updateStep(int step) {
-        log("upate step: " + step);
+        log("update bind step: " + step);
         this.step = step;
     }
 
     private void onCompositionDataReceived(CompositionData compositionData) {
-        // for test , false
         List<BindingModel> modelsInCps = getAllModels(compositionData);
         if (modelsInCps == null || modelsInCps.size() == 0) {
             onBindFail("no models in composition data");
@@ -229,31 +252,69 @@ public class BindingController {
         if (this.bindingModels.size() == 0) {
             onBindFail("no target models found");
         } else {
-
             log("models prepared: " + this.bindingModels.size());
-            /*for (BindingModel bindingModel :
-                    bindingModels) {
-                logMessage( "model - " + bindingModel.modelId);
-            }*/
             bindingDevice.setCompositionData(compositionData);
-            addAppKey();
+            //  draft feature
+//            isAggSupported = false;
+            if (isAggSupported) {
+                log("bind app key by opcode-aggregator");
+                sendOpAggMessage();
+            } else {
+                addAppKey();
+            }
         }
     }
+
+    /**
+     * add app key,
+     */
+    private void sendOpAggMessage() {
+        updateStep(STEP_SEND_OP_AGG);
+
+        List<MeshMessage> aggMsgs = new ArrayList<>();
+        // B8090600000000009F2F5D99D2B563E4CA8390D116DC7C73803D060000000200803D060000000300803D060000000010803D060000000210803D060000000410803D060000000610803D060000000710803D060000000013803D060000000113803D060000000313803D060000000413803D0600000011020000803D070000000210803D070000000613
+        AppKeyAddMessage appKeyAddMsg = new AppKeyAddMessage(this.bindingDevice.getMeshAddress());
+        appKeyAddMsg.setNetKeyIndex(this.netKeyIndex);
+        appKeyAddMsg.setAppKeyIndex(this.bindingDevice.getAppKeyIndex());
+        appKeyAddMsg.setAppKey(this.appKey);
+        // insert app key add message
+        aggMsgs.add(appKeyAddMsg);
+
+        ModelAppBindMessage bindMsg;
+        for (BindingModel bindingModel : bindingModels) {
+            int modelId = bindingModel.modelId;
+            bindMsg = new ModelAppBindMessage(bindingDevice.getMeshAddress());
+
+            int eleAdr = bindingDevice.getMeshAddress() + bindingModel.elementOffset;
+            bindMsg.setElementAddress(eleAdr);
+            bindMsg.setAppKeyIndex(bindingDevice.getAppKeyIndex());
+            bindMsg.setSigModel(bindingModel.sig);
+            bindMsg.setModelIdentifier(modelId);
+            aggMsgs.add(bindMsg);
+        }
+        int elementAddress = this.bindingDevice.getMeshAddress();
+        byte[] params = MeshUtils.aggregateMessages(elementAddress, aggMsgs);
+        MeshMessage aggSeqMsg = new OpcodeAggregatorSequenceMessage(this.bindingDevice.getMeshAddress(), AccessType.DEVICE, bindingDevice.getAppKeyIndex(), params);
+        onMeshMessagePrepared(aggSeqMsg);
+    }
+
 
     private List<BindingModel> getAllModels(CompositionData compositionData) {
         if (compositionData.elements == null) return null;
 
         List<BindingModel> models = new ArrayList<>();
-
+        isAggSupported = false;
         int offset = 0;
-        for (CompositionData.Element ele : compositionData.elements) {
+        for (Element ele : compositionData.elements) {
             if (ele.sigModels != null) {
                 for (int modelId : ele.sigModels) {
-                    if (!MeshSigModel.isConfigurationModel(modelId)) {
+                    if (!MeshSigModel.useDeviceKeyForEnc(modelId)) {
                         models.add(new BindingModel(modelId, offset, true));
                     }
+                    if (modelId == MeshSigModel.SIG_MD_CFG_OP_AGG_S.modelId) {
+                        isAggSupported = true;
+                    }
                 }
-
             }
             if (ele.vendorModels != null) {
                 for (int modelId : ele.vendorModels) {
@@ -279,50 +340,113 @@ public class BindingController {
                 onCompositionDataReceived(compositionData);
                 break;
 
-            case APPKEY_STATUS:
+            case APPKEY_STATUS: {
                 if (step != STEP_APP_KEY_ADD) {
                     log("step not app key adding");
                     return;
                 }
-
                 AppKeyStatusMessage appKeyStatusMessage = ((AppKeyStatusMessage) message.getStatusMessage());
-                if (appKeyStatusMessage.getStatus() == 0) {
-                    log("app key add success");
-                    if (bindingDevice.isDefaultBound()) {
-                        log("default bound complete");
-                        onBindSuccess();
-                    } else {
-                        updateStep(STEP_APP_KEY_BIND);
-                        bindNextModel();
-                    }
-                } else {
-                    onBindFail("app key status error");
-                }
-
+                onAppKeyStatus(appKeyStatusMessage);
                 break;
-
-            case MODE_APP_STATUS:
+            }
+            case MODE_APP_STATUS: {
                 if (step != STEP_APP_KEY_BIND) {
                     log("step not app key binding");
                     return;
                 }
                 ModelAppStatusMessage appStatus = ((ModelAppStatusMessage) message.getStatusMessage());
-                if (bindingModels.size() > modelIndex) {
-                    final int modelId = bindingModels.get(modelIndex).modelId;
-                    final boolean sig = bindingModels.get(modelIndex).sig;
-                    if (modelId == appStatus.getModelIdentifier()) {
-                        if (!sig || appStatus.getStatus() == 0) {
-                            modelIndex++;
-                            bindNextModel();
+                onModelAppStatus(appStatus);
+                break;
+            }
+            case OP_AGGREGATOR_STATUS: {
+                if (step != STEP_SEND_OP_AGG) {
+                    log("step not at sending op agg");
+                    return;
+                }
+                OpcodeAggregatorStatusMessage opAggStatusMsg = (OpcodeAggregatorStatusMessage) message.getStatusMessage();
+                if (opAggStatusMsg.status != 0) {
+                    onBindFail("opcode aggregator status error: " + opAggStatusMsg.status);
+                    return;
+                }
+
+                List<StatusMessage> statusMessageList = MeshUtils.parseOpcodeAggregatorStatus(opAggStatusMsg);
+                if (statusMessageList == null || statusMessageList.size() == 0) {
+                    onBindFail("opcode agg status parse error");
+                    return;
+                }
+
+                StatusMessage statusMessage;
+                for (int i = 0; i < statusMessageList.size(); i++) {
+                    statusMessage = statusMessageList.get(i);
+                    if (statusMessage instanceof AppKeyStatusMessage) {
+                        AppKeyStatusMessage appKeyStatusMessage = (AppKeyStatusMessage) statusMessage;
+                        if (appKeyStatusMessage.getStatus() == 0) {
+                            log("app key add success (op agg)");
                         } else {
-                            onBindFail("mode app status error");
+                            onBindFail("app key status error (op agg)");
+                            return;
                         }
-                    } else {
-                        log("model id error");
-                        bindNextModel();
+                    } else if (statusMessage instanceof ModelAppStatusMessage) {
+                        ModelAppStatusMessage appStatus = ((ModelAppStatusMessage) statusMessage);
+                        int modelId = appStatus.getModelIdentifier();
+                        boolean isSig = isSigModel(modelId);
+                        if (!isSig || appStatus.getStatus() == 0) {
+                            log(String.format("model bind success (op agg) modelId-%06X isSig-%b", modelId, isSig));
+                        } else {
+                            onBindFail("mode app status error (op agg)");
+                            return;
+                        }
                     }
                 }
-                break;
+                log("bind complete by op agg");
+                onBindSuccess();
+            }
+            break;
+        }
+    }
+
+    private boolean isSigModel(int modelId) {
+        for (BindingModel model : bindingModels) {
+            if (model.modelId == modelId) {
+                return model.sig;
+            }
+        }
+        return false;
+    }
+
+
+    private void onAppKeyStatus(AppKeyStatusMessage appKeyStatusMessage) {
+        if (appKeyStatusMessage.getStatus() == 0) {
+            log("app key add success");
+            if (bindingDevice.isDefaultBound()) {
+                log("default bound complete");
+                onBindSuccess();
+            } else {
+                updateStep(STEP_APP_KEY_BIND);
+                bindNextModel();
+            }
+        } else {
+            onBindFail("app key status error");
+        }
+
+    }
+
+    private void onModelAppStatus(ModelAppStatusMessage appStatus) {
+        if (bindingModels.size() > modelIndex) {
+            final int modelId = bindingModels.get(modelIndex).modelId;
+            final boolean sig = bindingModels.get(modelIndex).sig;
+            if (modelId == appStatus.getModelIdentifier()) {
+                if (!sig || appStatus.getStatus() == 0) {
+                    modelIndex++;
+                    bindNextModel();
+                } else {
+                    onBindFail("mode app status error");
+                }
+            } else {
+                log("model id error");
+                modelIndex++;
+                bindNextModel();
+            }
         }
     }
 

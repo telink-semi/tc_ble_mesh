@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     TelinkHttpManager.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  TelinkHttpManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2020/4/29.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     TelinkHttpManager.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/4/29
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "TelinkHttpManager.h"
 #import <CommonCrypto/CommonDigest.h>
@@ -145,6 +139,30 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     return req;
 }
 
+/// 3.check firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
++ (TelinkHttpRequest *)firmwareCheckRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
+    TelinkHttpRequest *req = [[TelinkHttpRequest alloc] init];
+    req.httpBlock = block;
+    NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
+    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/check?cfwid=%@",updateURI,firewareIDString] withHeader:header withContent:nil];
+    return req;
+}
+
+/// 4.get firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
++ (TelinkHttpRequest *)firmwareGetRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
+    TelinkHttpRequest *req = [[TelinkHttpRequest alloc] init];
+    req.httpBlock = block;
+    NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
+    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/get?cfwid=%@",updateURI,firewareIDString] withHeader:header withContent:nil];
+    return req;
+}
+
 @end
 
 @interface TelinkHttpManager ()
@@ -184,6 +202,36 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 - (void)downloadJsonDictionaryWithUUID:(NSString *)uuid didLoadData:(MyBlock)block {
     __weak typeof(self) weakSelf = self;
     TelinkHttpRequest *request = [TelinkHttpRequest downloadJsonDictionaryWithUUID:uuid didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
+        [weakSelf.telinkHttpRequests removeObject:request];
+        if (block) {
+            block(result,err);
+        }
+    }];
+    [_telinkHttpRequests addObject:request];
+}
+
+/// 3.check firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
+- (void)firmwareCheckRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
+    __weak typeof(self) weakSelf = self;
+    TelinkHttpRequest *request = [TelinkHttpRequest firmwareCheckRequestWithFirewareIDString:firewareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
+        [weakSelf.telinkHttpRequests removeObject:request];
+        if (block) {
+            block(result,err);
+        }
+    }];
+    [_telinkHttpRequests addObject:request];
+}
+
+/// 4.get firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
+- (void)firmwareGetRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
+    __weak typeof(self) weakSelf = self;
+    TelinkHttpRequest *request = [TelinkHttpRequest firmwareGetRequestWithFirewareIDString:firewareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
         [weakSelf.telinkHttpRequests removeObject:request];
         if (block) {
             block(result,err);

@@ -1,37 +1,25 @@
 /********************************************************************************************************
-* @file     AppKeyAddVC.m
-*
-* @brief    Add or edit the AppKey of Mesh network.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  AppKeyAddVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     AppKeyAddVC.m
+ *
+ * @brief    Add or edit the AppKey of Mesh network.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "AppKeyAddVC.h"
 #import "NSString+extension.h"
@@ -78,6 +66,27 @@
 }
 
 - (void)clickSave {
+    BOOL hadBound = NO;
+    NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in temNodes) {
+        if (node.appKeys && node.appKeys.count > 0) {
+            for (SigNodeKeyModel *nodeKey in node.appKeys) {
+                if (nodeKey.index == self.appKeyModel.index) {
+                    hadBound = YES;
+                    break;
+                }
+            }
+            if (hadBound) {
+                break;
+            }
+        }
+    }
+    if (hadBound) {
+        [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t edit it!" sure:nil];
+        /*客户需要保证绑定该AppKey的设备都在线，并且给所有绑定该AppKey的设备发送SigConfigAppKeyUpdate指令且成功后，才可以修改mesh里面的AppKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个AppKey的功能：可以先从设备里面移除该AppKey，再在setting界面修改AppKey，再给设备重新绑定AppKey。*/
+        return;
+    }
+
     [self.indexTF resignFirstResponder];
     [self.boundNetKeyTF resignFirstResponder];
     [self.keyTF resignFirstResponder];
@@ -147,11 +156,17 @@
         hadExist = NO;
         for (SigAppkeyModel *tem in temAppkeys) {
             if ([tem.key isEqualToString:self.keyTF.text]) {
-                if (self.isAdd) {
+                //不允许不同的NetKey下的APPkey相同
+//                if (self.isAdd) {
+                //允许不同的NetKey下的APPkey相同
+                if (self.isAdd && tem.boundNetKey == boundNetKey) {
                     hadExist = YES;
                     break;
                 } else {
-                    if (tem != self.appKeyModel) {
+                    //不允许不同的NetKey下的APPkey相同
+//                    if (tem != self.appKeyModel) {
+                    //允许不同的NetKey下的APPkey相同
+                        if (tem != self.appKeyModel && tem.boundNetKey == boundNetKey) {
                         hadExist = YES;
                         break;
                     }

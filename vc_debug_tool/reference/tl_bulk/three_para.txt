@@ -1,0 +1,2 @@
+//sample PID + secret data           +Mac
+002 046e681127ede670944418ddb1b17bdc  78da0711169e

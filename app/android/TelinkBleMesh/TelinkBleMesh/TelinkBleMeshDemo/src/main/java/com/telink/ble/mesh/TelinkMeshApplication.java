@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh;
 
@@ -25,7 +26,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.StatusMessage;
@@ -36,6 +36,7 @@ import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
@@ -44,15 +45,15 @@ import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
-import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.security.KeyPair;
 import java.util.List;
 
 /**
@@ -72,22 +73,14 @@ public class TelinkMeshApplication extends MeshApplication {
     public void onCreate() {
         super.onCreate();
         mThis = this;
-        // 2018-11-20T10:05:20-08:00
-        // 2020-07-27T15:15:29+0800
         HandlerThread offlineCheckThread = new HandlerThread("offline check thread");
         offlineCheckThread.start();
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());
-        initMesh();
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
-        MeshLogger.d(meshInfo.toString());
         AppCrashHandler.init(this);
+        ObjectBox.init(this);
         closePErrorDialog();
-//        byte[] data = Arrays.hexToBytes("BA0536160EE76CD499E7C49845CD5");
-//        MeshLogger.d(Arrays.bytesToHexString(data));
     }
-
-
-
 
     private void closePErrorDialog() {
         if (Build.VERSION.SDK_INT <= 27) {
@@ -117,19 +110,17 @@ public class TelinkMeshApplication extends MeshApplication {
         return mOfflineCheckHandler;
     }
 
-    private void initMesh() {
-        Object configObj = FileSystem.readAsObject(this, MeshInfo.FILE_NAME);
-        if (configObj == null) {
-            meshInfo = MeshInfo.createNewMesh(this);
-            meshInfo.saveOrUpdate(this);
-        } else {
-            meshInfo = (MeshInfo) configObj;
-        }
-    }
-
     public void setupMesh(MeshInfo mesh) {
-        MeshLogger.d("setup mesh info: " + meshInfo.toString());
+        SharedPreferenceHelper.setSelectedMeshId(this, mesh.id);
+
+        MeshLogger.d("setup mesh info: " + mesh.toString());
+        if (mesh.extendGroups.size() == 0) {
+            if (SharedPreferenceHelper.isLevelServiceEnable(this)) {
+                mesh.addExtendGroups();
+            }
+        }
         this.meshInfo = mesh;
+        MeshService.getInstance().setupMeshNetwork(mesh.convertToConfiguration());
         dispatchEvent(new MeshEvent(this, MeshEvent.EVENT_TYPE_MESH_RESET, "mesh reset"));
     }
 
@@ -147,7 +138,7 @@ public class TelinkMeshApplication extends MeshApplication {
         if (MeshEvent.EVENT_TYPE_DISCONNECTED.equals(eventType)) {
             AppSettings.ONLINE_STATUS_ENABLE = false;
             for (NodeInfo nodeInfo : meshInfo.nodes) {
-                nodeInfo.setOnOff(NodeInfo.ON_OFF_STATE_OFFLINE);
+                nodeInfo.setOnlineState(OnlineState.OFFLINE);
             }
         }
     }
@@ -164,10 +155,10 @@ public class TelinkMeshApplication extends MeshApplication {
                 int onOff = onOffStatusMessage.isComplete() ? onOffStatusMessage.getTargetOnOff() : onOffStatusMessage.getPresentOnOff();
                 for (NodeInfo nodeInfo : meshInfo.nodes) {
                     if (nodeInfo.meshAddress == message.getSrc()) {
-                        if (nodeInfo.getOnOff() != onOff) {
+                        if (nodeInfo.getOnlineState().st != onOff) {
                             statusChangedNode = nodeInfo;
                         }
-                        nodeInfo.setOnOff(onOff);
+                        nodeInfo.setOnlineState(OnlineState.getBySt(onOff));
                         break;
                     }
                 }
@@ -250,10 +241,10 @@ public class TelinkMeshApplication extends MeshApplication {
     private boolean onLumStatus(NodeInfo nodeInfo, int lum) {
         boolean statusChanged = false;
         int tarOnOff = lum > 0 ? 1 : 0;
-        if (nodeInfo.getOnOff() != tarOnOff) {
+        if (nodeInfo.getOnlineState().st != tarOnOff) {
             statusChanged = true;
         }
-        nodeInfo.setOnOff(tarOnOff);
+        nodeInfo.setOnlineState(OnlineState.getBySt(tarOnOff));
         if (nodeInfo.lum != lum) {
             statusChanged = true;
             nodeInfo.lum = lum;
@@ -296,16 +287,14 @@ public class TelinkMeshApplication extends MeshApplication {
                     } else {
                         onOff = 1;
                     }
-
-
                 }
                 /*if (deviceInfo.getOnOff() != onOff){
 
                 }*/
-                if (deviceInfo.getOnOff() != onOff) {
+                if (deviceInfo.getOnlineState().st != onOff) {
                     statusChangedNode = deviceInfo;
                 }
-                deviceInfo.setOnOff(onOff);
+                deviceInfo.setOnlineState(OnlineState.getBySt(onOff));
                 if (deviceInfo.lum != onlineStatusInfo.status[0]) {
                     statusChangedNode = deviceInfo;
                     deviceInfo.lum = onlineStatusInfo.status[0];
@@ -326,9 +315,13 @@ public class TelinkMeshApplication extends MeshApplication {
      * save sequence number and iv index when mesh info updated
      */
     protected void onNetworkInfoUpdate(NetworkInfoUpdateEvent networkInfoUpdateEvent) {
+        MeshLogger.d(String.format("mesh info update from local sequenceNumber-%06X ivIndex-%08X to sequenceNumber-%06X ivIndex-%08X",
+                meshInfo.sequenceNumber, meshInfo.ivIndex,
+                networkInfoUpdateEvent.getSequenceNumber(), networkInfoUpdateEvent.getIvIndex()));
         this.meshInfo.ivIndex = networkInfoUpdateEvent.getIvIndex();
         this.meshInfo.sequenceNumber = networkInfoUpdateEvent.getSequenceNumber();
-        this.meshInfo.saveOrUpdate(this);
+        MeshInfoService.getInstance().updateMeshInfo(this.meshInfo);
+//        this.meshInfo.saveOrUpdate(this);
     }
 
 

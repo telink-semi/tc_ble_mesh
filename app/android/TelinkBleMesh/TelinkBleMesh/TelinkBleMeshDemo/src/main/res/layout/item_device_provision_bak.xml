@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -33,48 +32,44 @@
                 android:layout_weight="1"
                 android:breakStrategy="simple"
                 android:ellipsize="end"
-                android:lines="6"
-                android:maxLines="6"
+                android:gravity="center_vertical"
+                android:lines="3"
+                android:maxLines="4"
+                android:text="1232312"
                 android:textSize="11sp" />
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <LinearLayout
+                <ImageView
+                    android:id="@+id/iv_close"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackground"
+                    android:src="@drawable/ic_close"
+                    android:tint="@color/grey" />
 
-                    <TextView
-                        android:id="@+id/tv_state"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="bind"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <CheckBox
-                    android:id="@+id/cb_select"
+                <ImageView
+                    android:id="@+id/iv_cert"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:checked="false" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/ic_cert" />
 
-                <Button
-                    android:id="@+id/btn_add"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="ADD"
-                    android:textColor="@color/colorPrimary"
-                    android:visibility="gone" />
-            </FrameLayout>
-
-
+            </LinearLayout>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_weight="1"
+            android:text="device connected"
+            android:textSize="11sp" />
 
         <ProgressBar
             android:id="@+id/pb_provision"
@@ -111,6 +106,28 @@
                     android:text="device connected"
                     android:textSize="11sp" />
 
+
+                <Button
+                    android:id="@+id/btn_add"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="ADD"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <!--<ImageView
+                    android:id="@+id/iv_add"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_add_circle"
+                    android:tint="@color/file_color_primary" />-->
 
             </LinearLayout>
 

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/16
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigBluetooth.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/16.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigBluetooth.h"
 
@@ -41,6 +35,7 @@
 @property (nonatomic,strong) CBCharacteristic *PROXY_InCharacteristic;
 @property (nonatomic,strong) CBCharacteristic *OnlineStatusCharacteristic;//私有定制，上报节点的状态的特征
 @property (nonatomic,strong) CBCharacteristic *MeshOTACharacteristic;
+@property (nonatomic,strong) CBCharacteristic *readCharacteristic;
 
 @property (nonatomic,assign) BOOL isInitFinish;
 @property (nonatomic,strong) NSMutableArray <CBUUID *>*scanServiceUUIDs;
@@ -53,15 +48,17 @@
 @property (nonatomic,copy) bleScanSpecialPeripheralCallback bluetoothScanSpecialPeripheralCallback;
 @property (nonatomic,copy) bleConnectPeripheralCallback bluetoothConnectPeripheralCallback;
 @property (nonatomic,copy) bleDiscoverServicesCallback bluetoothDiscoverServicesCallback;
-@property (nonatomic,copy) bleChangeNotifyCallback bluetoothOpenNotifyCallback;
+@property (nonatomic,copy) bleCharacteristicResultCallback bluetoothOpenNotifyCallback;
 @property (nonatomic,copy) bleReadOTACharachteristicCallback bluetoothReadOTACharachteristicCallback;
+@property (nonatomic,copy) bleReadOTACharachteristicCallback bluetoothReadCharachteristicCallback;
 @property (nonatomic,copy) bleCancelConnectCallback bluetoothCancelConnectCallback;
 @property (nonatomic,copy) bleCentralUpdateStateCallback bluetoothCentralUpdateStateCallback;
-@property (nonatomic,copy) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic,copy) bleIsReadyToSendWriteWithoutResponseCallback bluetoothIsReadyToSendWriteWithoutResponseCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueForCharacteristicCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateOnlineStatusValueCallback;
- 
+/// 打开通道的回调
+@property (nonatomic, copy, nullable) openChannelResultCallback didOpenChannelResultBlock;
+
 @end
 
 @implementation SigBluetooth
@@ -84,7 +81,7 @@
 #pragma  mark - Public
 
 - (void)bleInit:(bleInitSuccessCallback)result {
-    TeLogInfo(@"start init SigBluetooth.");
+    TeLogVerbose(@"start init SigBluetooth.");
     self.bluetoothInitSuccessCallback = result;
 }
 
@@ -92,12 +89,8 @@
     return self.manager.state == CBCentralManagerStatePoweredOn;
 }
 
-- (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
+- (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
     _bluetoothCentralUpdateStateCallback = bluetoothCentralUpdateStateCallback;
-}
-
-- (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback {
-    _bluetoothDisconnectCallback = bluetoothDisconnectCallback;
 }
 
 - (void)setBluetoothIsReadyToSendWriteWithoutResponseCallback:(bleIsReadyToSendWriteWithoutResponseCallback)bluetoothIsReadyToSendWriteWithoutResponseCallback {
@@ -130,7 +123,7 @@
         self.bluetoothScanPeripheralCallback = result;
         [self.manager scanForPeripheralsWithServices:UUIDs options:nil];
     } else {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
     }
 }
 
@@ -160,16 +153,13 @@
     self.scanPeripheralUUID = nil;
     self.bluetoothScanPeripheralCallback = nil;
     if (self.manager.isScanning) {
-        TeLogVerbose(@"");
         [self.manager stopScan];
-    } else {
-        TeLogVerbose(@"Bluetooth is not scanning.")
     }
 }
 
 - (void)connectPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
         if (block) {
             block(peripheral,NO);
         }
@@ -194,14 +184,14 @@
 /// if timeout is 0,means will not timeout forever.
 - (void)discoverServicesOfPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleDiscoverServicesCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
         if (block) {
             block(peripheral,NO);
         }
         return;
     }
     if (peripheral.state != CBPeripheralStateConnected) {
-        TeLogError(@"peripheral is not connected.")
+        TeLogError(@"peripheral is not connected.");
         if (block) {
             block(peripheral,NO);
         }
@@ -217,18 +207,20 @@
     [self.currentPeripheral discoverServices:nil];
 }
 
-- (void)changeNotifyToState:(BOOL)state Peripheral:(CBPeripheral *)peripheral characteristic:(CBCharacteristic *)characteristic timeout:(NSTimeInterval)timeout resultBlock:(bleChangeNotifyCallback)block {
+- (void)changeNotifyToState:(BOOL)state Peripheral:(CBPeripheral *)peripheral characteristic:(CBCharacteristic *)characteristic timeout:(NSTimeInterval)timeout resultBlock:(bleCharacteristicResultCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
         if (block) {
-            block(peripheral,NO);
+            NSError *error = [NSError errorWithDomain:@"Bluetooth is not power on." code:-1 userInfo:nil];
+            block(peripheral, characteristic, error);
         }
         return;
     }
     if (peripheral.state != CBPeripheralStateConnected) {
-        TeLogError(@"peripheral is not connected.")
+        TeLogError(@"peripheral is not connected.");
         if (block) {
-            block(peripheral,NO);
+            NSError *error = [NSError errorWithDomain:@"Bluetooth is not power on." code:-1 userInfo:nil];
+            block(peripheral, characteristic, error);
         }
         return;
     }
@@ -244,27 +236,27 @@
 }
 
 - (void)cancelAllConnecttionWithComplete:(bleCancelAllConnectCallback)complete{
-    TeLogVerbose(@"");
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
     }
+    self.bluetoothConnectPeripheralCallback = nil;
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         NSArray *tem = [NSArray arrayWithArray:weakSelf.connectedPeripherals];
         for (CBPeripheral *p in tem) {
             if (p.state == CBPeripheralStateConnected || p.state == CBPeripheralStateConnecting) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                [weakSelf cancelConnectionPeripheral:p timeout:4-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+                [weakSelf cancelConnectionPeripheral:p timeout:2-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                     dispatch_semaphore_signal(semaphore);
                 }];
-                //Most provide 4 seconds to disconnect bluetooth connection
-                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+                //Most provide 2 seconds to disconnect bluetooth connection
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
             }
         }
         if (weakSelf.currentPeripheral) {
-            [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+            [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                 [weakSelf ressetParameters];
                 weakSelf.currentPeripheral = nil;
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -325,7 +317,7 @@
     self.bluetoothReadOTACharachteristicCallback = nil;
 }
 
-- (CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
+- (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
     NSMutableArray *identiferArray = [[NSMutableArray alloc] init];
     
     [identiferArray addObject:[CBUUID UUIDWithString:uuidString]];
@@ -337,7 +329,7 @@
     return nil;
 }
 
-- (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
+- (nullable CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
     CBCharacteristic *tem = nil;
     for (CBService *s in peripheral.services) {
         for (CBCharacteristic *c in s.characteristics) {
@@ -383,6 +375,64 @@
     self.currentPeripheral.delegate = self;
     [self.currentPeripheral writeValue:value forCharacteristic:characteristic type:type];
     return YES;
+}
+
+#pragma mark - new gatt api since v3.3.3
+- (void)readCharachteristicWithCharacteristic:(CBCharacteristic *)characteristic ofPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout complete:(bleReadOTACharachteristicCallback)complete {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(readCharachteristicTimeout) object:nil];
+        [self performSelector:@selector(readCharachteristicTimeout) withObject:nil afterDelay:timeout];
+    });
+    self.readCharacteristic = characteristic;
+    self.bluetoothReadCharachteristicCallback = complete;
+    [peripheral readValueForCharacteristic:characteristic];
+}
+
+#pragma mark - new gatt api since v3.3.5
+
+/// 打开蓝牙通道
+- (void)openChannelWithPeripheral:(CBPeripheral *)peripheral PSM:(CBL2CAPPSM)psm timeout:(NSTimeInterval)timeout resultBlock:(openChannelResultCallback)block {
+    if (self.manager.state != CBCentralManagerStatePoweredOn) {
+        TeLogError(@"Bluetooth is not power on.")
+        if (block) {
+            NSError *error = [NSError errorWithDomain:@"Bluetooth is not power on." code:-1 userInfo:nil];
+            block(peripheral,nil,error);
+        }
+        return;
+    }
+    if (peripheral.state != CBPeripheralStateConnected) {
+        TeLogError(@"peripheral is not connected.")
+        if (block) {
+            NSError *error = [NSError errorWithDomain:@"peripheral is not connected." code:-1 userInfo:nil];
+            block(peripheral,nil,error);
+        }
+        return;
+    }
+    if (@available(iOS 11.0, *)) {
+        self.didOpenChannelResultBlock = block;
+        self.currentPeripheral = peripheral;
+        self.currentPeripheral.delegate = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(openChannelOfPeripheralTimeout) object:nil];
+            [self performSelector:@selector(openChannelOfPeripheralTimeout) withObject:nil afterDelay:timeout];
+        });
+        [peripheral openL2CAPChannel:psm];
+    } else {
+        TeLogError(@"The iOS system is lower than 11.0.")
+        if (block) {
+            NSError *error = [NSError errorWithDomain:@"The iOS system is lower than 11.0." code:-1 userInfo:nil];
+            block(peripheral,nil,error);
+        }
+    }
+}
+
+- (void)openChannelOfPeripheralTimeout {
+    TeLogInfo(@"peripheral open channel timeout.")
+    if (self.didOpenChannelResultBlock) {
+        NSError *error = [NSError errorWithDomain:@"peripheral open channel timeout." code:-1 userInfo:nil];
+        self.didOpenChannelResultBlock(self.currentPeripheral,nil,error);
+        self.didOpenChannelResultBlock = nil;
+    }
 }
 
 #pragma  mark - Private
@@ -443,9 +493,10 @@
 }
 
 - (void)openNotifyOfPeripheralTimeout {
-    TeLogInfo(@"peripheral open notify fail.")
+    TeLogInfo(@"peripheral open notify timeout.")
     if (self.bluetoothOpenNotifyCallback) {
-        self.bluetoothOpenNotifyCallback(self.currentPeripheral,self.currentCharacteristic.isNotifying);
+        NSError *error = [NSError errorWithDomain:@"peripheral open notify timeout." code:-1 userInfo:nil];
+        self.bluetoothOpenNotifyCallback(self.currentPeripheral, self.currentCharacteristic, error);
     }
 //    self.bluetoothOpenNotifyCallback = nil;
 }
@@ -455,7 +506,7 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(openNotifyOfPeripheralTimeout) object:nil];
     });
     if (self.bluetoothOpenNotifyCallback) {
-        self.bluetoothOpenNotifyCallback(self.currentPeripheral, self.currentCharacteristic.isNotifying);
+        self.bluetoothOpenNotifyCallback(self.currentPeripheral, self.currentCharacteristic, nil);
     }
 //    self.bluetoothOpenNotifyCallback = nil;
 }
@@ -465,8 +516,10 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(cancelConnectPeripheralTimeout) object:nil];
     });
     if (self.bluetoothCancelConnectCallback && self.currentPeripheral) {
-        TeLogInfo(@"cancelConnect peripheral fail.")
-        self.bluetoothCancelConnectCallback(self.currentPeripheral,NO);
+        TeLogInfo(@"cancelConnect peripheral timeout.")
+//        self.bluetoothCancelConnectCallback(self.currentPeripheral,NO);
+        //修复上一个设备断开异常后，导致之后一直走不到连接下一个设备的逻辑的bug。
+        self.bluetoothCancelConnectCallback(self.currentPeripheral,YES);
     }
     self.bluetoothCancelConnectCallback = nil;
 }
@@ -498,6 +551,26 @@
     if (self.bluetoothReadOTACharachteristicCallback) {
         self.bluetoothReadOTACharachteristicCallback(characteristic, YES);
         self.bluetoothReadOTACharachteristicCallback = nil;
+    }
+}
+
+- (void)readCharachteristicTimeout {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(readCharachteristicTimeout) object:nil];
+    });
+    if (self.bluetoothReadCharachteristicCallback) {
+        self.bluetoothReadCharachteristicCallback(self.readCharacteristic, NO);
+        self.bluetoothReadCharachteristicCallback = nil;
+    }
+}
+
+- (void)readCharachteristicFinish:(CBCharacteristic *)characteristic {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(readCharachteristicTimeout) object:nil];
+    });
+    if (self.bluetoothReadCharachteristicCallback) {
+        self.bluetoothReadCharachteristicCallback(characteristic, YES);
+        self.bluetoothReadCharachteristicCallback = nil;
     }
 }
 
@@ -586,19 +659,19 @@
     
     NSString *suuidString = ((CBUUID *)suuids.firstObject).UUIDString;
     /// which means the device can be add to a new mesh(没有入网)
-    BOOL provisionAble = [suuidString  isEqualToString:kPBGATTService];
+    BOOL provisionAble = [suuidString  isEqualToString:kPBGATTService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPBGATTService]];
     /// which means the device has been add to a mesh(已经入网)
-    BOOL unProvisionAble = [suuidString isEqualToString:kPROXYService];
+    BOOL unProvisionAble = [suuidString isEqualToString:kPROXYService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPROXYService]];
     
     if (!provisionAble && !unProvisionAble) {
         return;
     }
     
     BOOL shouldReturn = YES;
-    if (self.scanServiceUUIDs && [self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPBGATTService]] && provisionAble) {
+    if (self.scanServiceUUIDs && ([self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPBGATTService]]) && provisionAble) {
         shouldReturn = NO;
     }
-    if (self.scanServiceUUIDs && [self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPROXYService]] && unProvisionAble) {
+    if (self.scanServiceUUIDs && ([self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPROXYService]]) && unProvisionAble) {
         shouldReturn = NO;
     }
     if (shouldReturn) {
@@ -614,12 +687,6 @@
         }
     }
     
-    //=================test==================//
-//    if (![scanRspModel.macAddress.uppercaseString isEqualToString:@"A4C138E44B94"]) {
-//        return;
-//    }
-    //=================test==================//
-
 //    TeLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     BOOL shouldDelay = scanRspModel.macAddress == nil || scanRspModel.macAddress.length == 0;
     if (shouldDelay && self.waitScanRseponseEnabel) {
@@ -629,10 +696,10 @@
 
     if (unProvisionAble && self.checkNetworkEnable) {
         scanRspModel.uuid = peripheral.identifier.UUIDString;
-        BOOL isExist = [SigDataSource.share existScanRspModelOfCurrentMeshNetwork:scanRspModel];
+        BOOL isExist = [SigMeshLib.share.dataSource existScanRspModelOfCurrentMeshNetwork:scanRspModel];
         // 注释该逻辑，假定设备都不广播MacAddress
 //        if (isExist && scanRspModel.networkIDData && scanRspModel.networkIDData.length > 0) {
-//            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:scanRspModel.address];
+//            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:scanRspModel.address];
 //            isExist = node != nil;
 //        }
         if (!isExist) {
@@ -641,7 +708,7 @@
     }
 
     TeLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
-    [SigDataSource.share updateScanRspModelToDataSource:scanRspModel];
+    [SigMeshLib.share.dataSource updateScanRspModelToDataSource:scanRspModel];
     
     if (self.bluetoothScanPeripheralCallback) {
         self.bluetoothScanPeripheralCallback(peripheral,advertisementData,RSSI,provisionAble);
@@ -653,8 +720,10 @@
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     TeLogInfo(@"uuid:%@",peripheral.identifier.UUIDString);
     //v3.3.0,用于过滤重复的sequenceNumber，设备连接成功则清除当前缓存的设备返回的旧的最大sequenceNumber字典。(因为所有设备断电时设备端的sequenceNumber会归零。)
-    [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigDataSource.share.meshUUID];
+    [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigMeshLib.share.dataSource.meshUUID];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    SigMeshLib.share.secureNetworkBeacon = nil;
+    SigMeshLib.share.meshPrivateBeacon = nil;
     if ([peripheral isEqual:self.currentPeripheral]) {
         [self addConnectedPeripheralToLocations:peripheral];
         [self connectPeripheralFinish];
@@ -673,7 +742,7 @@
         [self connectPeripheralFail];
         [self cancelConnectPeripheralFinish];
         [self removeConnectedPeripheralFromLocations:peripheral];
-        NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        NSArray *curNodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.curNodes];
         for (SigNodeModel *node in curNodes) {
             if (node.hasOpenPublish) {
                 [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(node.address)];
@@ -745,6 +814,7 @@
 //            TeLogInfo(@"<--- from:PROXY, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
         } else {
             TeLogInfo(@"<--- from:GATT, length:%d",characteristic.value.length);
+//            TeLogInfo(@"<--- from:GATT, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
         }
         if (self.bluetoothDidUpdateValueForCharacteristicCallback) {
             self.bluetoothDidUpdateValueForCharacteristicCallback(peripheral, characteristic,error);
@@ -762,10 +832,17 @@
             self.bluetoothDidUpdateOnlineStatusValueCallback(peripheral, characteristic,error);
         }
     }
+    if ([characteristic isEqual:self.readCharacteristic]) {
+        TeLogInfo(@"<--- from:readCharacteristics, length:%d",characteristic.value.length);
+        if (self.bluetoothReadCharachteristicCallback) {
+            self.bluetoothReadCharachteristicCallback(characteristic, YES);
+            self.bluetoothReadCharachteristicCallback = nil;
+        }
+    }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    TeLogInfo(@"uuid=%@ didUpdateNotification state=%d",characteristic.UUID.UUIDString,characteristic.isNotifying);
+    TeLogInfo(@"uuid=%@ didUpdateNotification state=%d, error=%@",characteristic.UUID.UUIDString,characteristic.isNotifying,error);
     if ([peripheral isEqual:self.currentPeripheral] && [characteristic isEqual:self.currentCharacteristic]) {
         [self openNotifyOfPeripheralFinish];
     }
@@ -782,5 +859,29 @@
         }
     }
 }
+
+//since ios 11.0
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+-(void)peripheral:(CBPeripheral *)peripheral didOpenL2CAPChannel:(CBL2CAPChannel *)channel error:(NSError *)error {
+    TeLogInfo(@"[%@->%@]",NSStringFromClass([self class]), NSStringFromSelector(_cmd));
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(openChannelOfPeripheralTimeout) object:nil];
+    });
+    if (error) {
+        TeLogError(@"error.localizedDescription = %@",error.localizedDescription);
+        if (self.didOpenChannelResultBlock) {
+            self.didOpenChannelResultBlock(self.currentPeripheral,channel,error);
+            self.didOpenChannelResultBlock = nil;
+        }
+    } else {
+        if (self.didOpenChannelResultBlock) {
+            self.didOpenChannelResultBlock(self.currentPeripheral,channel,nil);
+            self.didOpenChannelResultBlock = nil;
+        }
+    }
+}
+#pragma clang diagnostic pop
 
 @end

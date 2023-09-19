@@ -1,28 +1,30 @@
 /********************************************************************************************************
- * @file     vendor_model.h 
+ * @file	vendor_model.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #if (VENDOR_MD_NORMAL_EN)
 // vendor model id
@@ -31,14 +33,22 @@
 #define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (0))
 #define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (0))
 #else
-    #if AIS_ENABLE
-#define TEMP_VD_ID_MODEL                (SHA256_BLE_MESH_PID)   // TEMP_VD_ID_MODEL is just use in this file.
-    #else
-#define TEMP_VD_ID_MODEL                (VENDOR_ID)
-    #endif
-#define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (TEMP_VD_ID_MODEL))
+#define VENDOR_ID_2ND_ENABLE			0			// enable in some platform
+
+#if VENDOR_ID_2ND_ENABLE
+#define VENDOR_ID_2ND                	(VENDOR_ID)	// user can define the second vendor id
+#else
+#define VENDOR_ID_2ND                	(VENDOR_ID)
+#endif
+	#if DU_ENABLE
+#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S               ((0x0002<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S2              ((0x0003<<16) | (VENDOR_ID_2ND))
+	#else
+#define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (MD_VENDOR_2ND_EN?VENDOR_ID_2ND:VENDOR_ID))
+	#endif
 #endif
 
 // op cmd 11xxxxxx yyyyyyyy yyyyyyyy (vendor)
@@ -66,6 +76,13 @@
 		#endif
     #endif
 
+	#if DU_ENABLE
+#define VD_LPN_REPROT					0xF9// report event .
+#define VD_TIME_REQ						0xF8// TIME REQ
+#define VD_TIME_REQ_ACK					0xFA// TIME REQ ACK
+#define VD_TIME_CMD						0xFD// client send time proc 
+#define VD_TIME_RSP						0xFF// server send time rsp 
+	#endif
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
 // ------ 0xC0 to 0xDF for telink used
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
@@ -249,6 +266,18 @@ static inline int is_vendor_extend_op(u16 op)
 
 typedef struct{
 	u8 tid;
+	u16 op;
+	u32 time;
+}time_cmd_str;
+
+typedef struct{
+	u8 tid;
+	u16 op;
+	u8 sts;
+}time_cmd_rsp_str;
+
+typedef struct{
+	u8 tid;
 	u16 attr_type;
 }vd_msg_attr_get_t;
 
@@ -303,8 +332,6 @@ typedef struct{
 	u32 run_time_us;
 	u32 sleep_time_us;
 	u8  appWakeup_flg;
-	u8  soft_timer_pending;
-	u8  soft_timer_send_flag;
 }mesh_sleep_pre_t;
 
 extern mesh_tx_indication_t mesh_indication_retry;

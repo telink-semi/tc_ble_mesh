@@ -1,29 +1,29 @@
 /********************************************************************************************************
- * @file     Encipher.java 
+ * @file Encipher.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
@@ -34,6 +34,7 @@ import org.spongycastle.crypto.macs.CMac;
 import org.spongycastle.crypto.modes.CCMBlockCipher;
 import org.spongycastle.crypto.params.AEADParameters;
 import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.jcajce.provider.digest.SHA256;
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
@@ -43,6 +44,7 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -53,9 +55,14 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by kee on 2019/7/19.
@@ -78,12 +85,17 @@ public final class Encipher {
 
     private static final byte[] SALT_NKIK = "nkik".getBytes();
 
-    private static final byte[] SALT_BKIK = "nkbk".getBytes();
+    private static final byte[] SALT_NKBK = "nkbk".getBytes();
+
+    private static final byte[] SALT_NKPK = "nkpk".getBytes();
 
     private static final byte[] SALT_ID128 = "id128".getBytes();
 
     // 48 bit
     private static final byte[] NODE_IDENTITY_HASH_PADDING = new byte[]{0, 0, 0, 0, 0, 0};
+
+    // 40 bit
+    private static final byte[] NODE_PRIVATE_IDENTITY_HASH_PADDING = new byte[]{0, 0, 0, 0, 0};
 
     public static final byte[] PRCK = "prck".getBytes();
 
@@ -92,6 +104,8 @@ public final class Encipher {
     public static final byte[] PRSN = "prsn".getBytes();
 
     public static final byte[] PRDK = "prdk".getBytes();
+
+    public static final byte[] PRCK256 = "prck256".getBytes();
 
 
     public static KeyPair generateKeyPair() {
@@ -109,16 +123,16 @@ public final class Encipher {
     }
 
     public static byte[] generateECDH(byte[] xy, PrivateKey provisionerPrivateKey) {
-        BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
-        BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
-
-        ECParameterSpec ecParameters = ECNamedCurveTable.getParameterSpec("secp256r1");
-        ECCurve curve = ecParameters.getCurve();
-        ECPoint ecPoint = curve.validatePoint(x, y);
-
-        ECPublicKeySpec keySpec = new ECPublicKeySpec(ecPoint, ecParameters);
-        KeyFactory keyFactory;
         try {
+            BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
+            BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
+
+            ECParameterSpec ecParameters = ECNamedCurveTable.getParameterSpec("secp256r1");
+            ECCurve curve = ecParameters.getCurve();
+            ECPoint ecPoint = curve.validatePoint(x, y);
+
+            ECPublicKeySpec keySpec = new ECPublicKeySpec(ecPoint, ecParameters);
+            KeyFactory keyFactory;
             keyFactory = KeyFactory.getInstance("ECDH", "SC");
             ECPublicKey publicKey = (ECPublicKey) keyFactory.generatePublic(keySpec);
 
@@ -126,13 +140,7 @@ public final class Encipher {
             keyAgreement.init(provisionerPrivateKey);
             keyAgreement.doPhase(publicKey, true);
             return keyAgreement.generateSecret();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | IllegalArgumentException | NoSuchProviderException | InvalidKeySpecException | InvalidKeyException e) {
             e.printStackTrace();
         }
         return null;
@@ -162,6 +170,14 @@ public final class Encipher {
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             };
 
+    private static final byte[] SALT_KEY_ZERO_32 =
+            {
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+
     /**
      * S1
      * s1(M) = AES-CMAC ZERO (M)
@@ -171,6 +187,10 @@ public final class Encipher {
      */
     public static byte[] generateSalt(byte[] m) {
         return aesCmac(m, SALT_KEY_ZERO);
+    }
+
+    public static byte[] s2(byte[] m) {
+        return hMacSha256(m, SALT_KEY_ZERO_32);
     }
 
     /*
@@ -273,6 +293,30 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return (byte) ((result[15]) & 0x3F);
     }
 
+
+    /**
+     * N is 32 or more octets
+     * SALT is 256 bits
+     * P is 1 or more octets
+     * The key (T) is computed as follows:
+     * T = HMAC-SHA-256 SALT (N)
+     * The output of the derivation function k5 is as follows:
+     * k5(N, SALT, P) = HMAC-SHA-256T (P)
+     */
+    public static byte[] k5(byte[] n, byte[] salt, byte[] p) {
+        byte[] t = hMacSha256(n, salt);
+        return hMacSha256(p, t);
+    }
+
+    /**
+     * The Hash field is calculated as shown below:
+     * Hash = e(IdentityKey, Padding || Random || Address) mod 264
+     * Where:
+     * Padding – 48 bits of padding, all bits set to 0.
+     * Random – 64-bit random value.
+     * Address – The unicast address of the node.
+     * The Random field is the 64-bit random value used in the Hash field calculation
+     */
     public static byte[] generateNodeIdentityHash(byte[] identityKey, byte[] random, int src) {
         int length = NODE_IDENTITY_HASH_PADDING.length + random.length + 2;
         ByteBuffer bufferHashInput = ByteBuffer.allocate(length).order(ByteOrder.BIG_ENDIAN);
@@ -288,6 +332,32 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return buffer.array();
     }
 
+    /**
+     * The Hash field is calculated as shown below:
+     * Hash = e(IdentityKey, Padding || 0x03 || Random || Address) mod 264
+     * Where:
+     * Padding – 40 bits of padding, all bits set to 0
+     * Random – 64-bit random value
+     * Address – The unicast address of the node
+     * The Random field is the 64-bit random value used in the Hash field calculation
+     */
+    public static byte[] generatePrivateNodeIdentityHash(byte[] identityKey, byte[] random, int src) {
+        int length = NODE_PRIVATE_IDENTITY_HASH_PADDING.length + random.length + 3;
+        ByteBuffer bufferHashInput = ByteBuffer.allocate(length).order(ByteOrder.BIG_ENDIAN);
+        bufferHashInput.put(NODE_PRIVATE_IDENTITY_HASH_PADDING)
+                .put((byte) 0x03);
+        bufferHashInput.put(random);
+        bufferHashInput.putShort((short) src);
+        byte[] hashInput = bufferHashInput.array();
+        byte[] hash = aes(hashInput, identityKey);
+
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.put(hash, 8, 8);
+
+        return buffer.array();
+    }
+
+
     public static byte[] generateIdentityKey(byte[] networkKey) {
         byte[] salt = generateSalt(SALT_NKIK);
         ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
@@ -298,7 +368,16 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
     }
 
     public static byte[] generateBeaconKey(byte[] networkKey) {
-        byte[] salt = generateSalt(SALT_BKIK);
+        byte[] salt = generateSalt(SALT_NKBK);
+        ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
+        buffer.put(SALT_ID128);
+        buffer.put((byte) 0x01);
+        byte[] p = buffer.array();
+        return k1(networkKey, salt, p);
+    }
+
+    public static byte[] generatePrivateBeaconKey(byte[] networkKey) {
+        byte[] salt = generateSalt(SALT_NKPK);
         ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
         buffer.put(SALT_ID128);
         buffer.put((byte) 0x01);
@@ -365,4 +444,208 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         System.arraycopy(status, 0, data, ivLen, status.length);
         return data;
     }
+
+    public static byte[] sha256(byte[] text) {
+        SHA256.Digest Digest = new SHA256.Digest();
+        return Digest.digest(text);
+    }
+
+
+    /**
+     * @param text
+     * @return
+     */
+    public static byte[] hMacSha256(byte[] text, byte[] key) {
+        Mac sha256_HMAC = null;
+        try {
+            sha256_HMAC = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(key, "HmacSHA256");
+            sha256_HMAC.init(secret_key);
+            return sha256_HMAC.doFinal(text);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
+     * "ecdsa-with-SHA256"
+     * check certificate data and return inner public key
+     *
+     * @param cerData certificate data formatted by x509 der
+     * @return public key
+     */
+    public static X509Certificate checkCertificate(byte[] cerData) {
+        CertificateFactory factory = null;
+        try {
+            factory = CertificateFactory.getInstance("X.509");
+
+            X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(cerData));
+            MeshLogger.d("certificate info: " + certificate.toString());
+
+            /**
+             * get and check X509 version
+             */
+            if (certificate.getVersion() != 3) {
+                MeshLogger.d("version check err");
+                return null;
+            }
+
+
+            /*int serialNumber = certificate.getSerialNumber().intValue();
+            if (serialNumber != 4096) {
+                MeshLogger.d("serial number check err");
+                return null;
+            }*/
+
+            /**
+             * check datetime validity
+             */
+            certificate.checkValidity();
+
+            /**
+             * get subject names ,
+             */
+            certificate.getSubjectAlternativeNames();
+            certificate.getExtendedKeyUsage();
+//          byte[]  publicKey = certificate.getPublicKey().getEncoded();
+
+            Signature verifier = Signature.getInstance(certificate.getSigAlgName(), "SC");
+//            verifier.initVerify(certificate.getPublicKey()); // This cert is signed by CA
+            verifier.initVerify(certificate); // This cert is signed by CA
+            verifier.update(certificate.getTBSCertificate());  //TBS is to get the "To Be Signed" part of the certificate - .getEncoded() gets the whole cert, which includes the signature
+
+            boolean result = verifier.verify(certificate.getSignature());
+
+
+            /*java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
+            byte[] keyX = pk.getW().getAffineX().toByteArray();
+            if (keyX.length > 32) {
+                byte[] x = new byte[32];
+                System.arraycopy(keyX, 1, x, 0, 32);
+                keyX = x;
+            }
+            byte[] keyY = pk.getW().getAffineY().toByteArray();
+            if (keyY.length > 32) {
+                byte[] y = new byte[32];
+                System.arraycopy(keyY, 1, y, 0, 32);
+                keyY = y;
+            }
+
+            byte[] pubKeyKey = new byte[keyX.length + keyY.length];
+            System.arraycopy(keyX, 0, pubKeyKey, 0, keyX.length);
+            System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);*/
+
+            if (result) {
+                System.out.println("signature validation pass");
+//                return null;
+                return certificate;
+            } else {
+                System.out.println("signature validation failed");
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public static X509Certificate checkCertificateByCa(byte[] cerData, byte[] caData) {
+        CertificateFactory factory = null;
+        try {
+            factory = CertificateFactory.getInstance("X.509");
+
+            X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(cerData));
+            MeshLogger.d("certificate info: " + certificate.toString());
+
+            /**
+             * get and check X509 version
+             */
+            if (certificate.getVersion() != 3) {
+                MeshLogger.d("version check err");
+                return null;
+            }
+
+
+            /*int serialNumber = certificate.getSerialNumber().intValue();
+            if (serialNumber != 4096) {
+                MeshLogger.d("serial number check err");
+                return null;
+            }*/
+
+            /**
+             * check datetime validity
+             */
+            certificate.checkValidity();
+
+            /**
+             * get subject names ,
+             */
+            certificate.getSubjectAlternativeNames();
+            certificate.getExtendedKeyUsage();
+
+            X509Certificate caCert = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(caData));
+            certificate.verify(caCert.getPublicKey());
+//            Signature verifier = Signature.getInstance(certificate.getSigAlgName(), "SC");
+//            verifier.initVerify(certificate); // This cert is signed by CA
+//            verifier.update(certificate.getTBSCertificate());  //TBS is to get the "To Be Signed" part of the certificate - .getEncoded() gets the whole cert, which includes the signature
+
+//            boolean result = verifier.verify(certificate.getSignature());
+            MeshLogger.d("signature validation pass");
+            return certificate;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static byte[] getPublicKeyInCert(X509Certificate certificate) {
+        java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
+        byte[] keyX = pk.getW().getAffineX().toByteArray();
+        if (keyX.length > 32) {
+            byte[] x = new byte[32];
+            System.arraycopy(keyX, 1, x, 0, 32);
+            keyX = x;
+        } else if (keyX.length < 32) {
+            byte[] x = new byte[32];
+            System.arraycopy(keyX, 0, x, 32 - keyX.length, keyX.length);
+            keyX = x;
+        }
+        byte[] keyY = pk.getW().getAffineY().toByteArray();
+        if (keyY.length > 32) {
+            byte[] y = new byte[32];
+            System.arraycopy(keyY, 1, y, 0, 32);
+            keyY = y;
+        } else if (keyY.length < 32) {
+            byte[] y = new byte[32];
+            System.arraycopy(keyY, 0, y, 32 - keyY.length, keyY.length);
+            keyY = y;
+        }
+
+        byte[] pubKeyKey = new byte[keyX.length + keyY.length];
+        System.arraycopy(keyX, 0, pubKeyKey, 0, keyX.length);
+        System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);
+        MeshLogger.d("public key in cert: " + Arrays.bytesToHexString(pubKeyKey));
+        return pubKeyKey;
+    }
+
+    public static byte[] getStaticOOBInCert(X509Certificate certificate) {
+//        Set<String> nces = certificate.getNonCriticalExtensionOIDs();
+        final String staticOOBKey = "2.25.234763379998062148653007332685657680359";
+        byte[] extension = certificate.getExtensionValue(staticOOBKey);
+
+        if (extension == null || extension.length < 16) {
+            MeshLogger.d("static oob in cert not found");
+            return null;
+        }
+        // oob should be 16 bytes
+        byte[] oob = new byte[16];
+        System.arraycopy(extension, extension.length - 16, oob, 0, 16);
+        MeshLogger.d("static oob in cert: " + Arrays.bytesToHexString(oob));
+        return oob;
+    }
+
 }
