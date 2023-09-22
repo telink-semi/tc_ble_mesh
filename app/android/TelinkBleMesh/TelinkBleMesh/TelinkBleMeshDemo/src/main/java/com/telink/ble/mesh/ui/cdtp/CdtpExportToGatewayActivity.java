@@ -164,7 +164,7 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
         jsonData = CdtpEncoder.compress(jsonRaw, false);
         MeshLogger.d("json data length compressed - " + jsonData.length);
 
-        addTestData();
+//        addTestData();
 
         appendLog("json data length: " + jsonData.length);
     }
