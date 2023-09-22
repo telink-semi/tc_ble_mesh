@@ -42,13 +42,33 @@ public enum MeshSigModel implements Serializable {
 
     SIG_MD_REMOTE_PROV_SERVER(0x0004, "remote provision server", "", true),
     SIG_MD_REMOTE_PROV_CLIENT(0x0005, "remote provision client", "", true),
-    SIG_MD_DF_CFG_S(0xBF30, "", "df cfg server", true),
-    SIG_MD_DF_CFG_C(0xBF31, "", "df cfg client", true),
-    SIG_MD_BRIDGE_CFG_SERVER(0xBF32, "", "", true),
-    SIG_MD_BRIDGE_CFG_CLIENT(0xBF33, "", "", true),
 
-    SIG_MD_PRIVATE_BEACON_SERVER(0xBF40, "", "", true),
-    SIG_MD_PRIVATE_BEACON_CLIENT(0xBF41, "", "", true),
+    SIG_MD_DF_CFG_S(0x0006, "Directed Forwarding Configuration server", "", true),
+    SIG_MD_DF_CFG_C(0x0007, "Directed Forwarding Configuration client", "", true),
+
+    SIG_MD_BRIDGE_CFG_SERVER(0x0008, "Bridge Configuration Server", "", true),
+    SIG_MD_BRIDGE_CFG_CLIENT(0x0009, "Bridge Configuration Client", "", true),
+
+    SIG_MD_PRIVATE_BEACON_SERVER(0x000A, "Mesh Private Beacon Server", "", true),
+    SIG_MD_PRIVATE_BEACON_CLIENT(0x000B, "Mesh Private Beacon Client", "", true),
+
+    SIG_MD_ON_DEMAND_PROXY_S(0x000C, "On-Demand Private Proxy Server", "", true),
+    SIG_MD_ON_DEMAND_PROXY_C(0x000D, "On-Demand Private Proxy Client", "", true),
+
+    SIG_MD_SAR_CFG_S(0x000E, "SAR Configuration Server", "", true),
+    SIG_MD_SAR_CFG_C(0x000F, "SAR Configuration Client", "", true),
+
+    // opcode aggregator
+    SIG_MD_CFG_OP_AGG_S(0x0010, "Opcodes Aggregator Server", "aggregator", true),
+    SIG_MD_CFG_OP_AGG_C(0x0011, "Opcodes Aggregator Client", "aggregator", true),
+
+    // large composition data
+    SIG_MD_LARGE_CPS_S(0x0012, "Large Composition Data Server", "", true),
+    SIG_MD_LARGE_CPS_C(0x0013, "Large Composition Data Client", "", true),
+
+    // Solicitation PDU RPL Configuration
+    SIG_MD_SOL_PDU_RPL_CFG_S(0x0014, "Solicitation PDU RPL Configuration Server", "", true),
+    SIG_MD_SOL_PDU_RPL_CFG_C(0x0015, "Solicitation PDU RPL Configuration Client", "", true),
 
 
     SIG_MD_G_ONOFF_S(0x1000, "Generic OnOff Server", "Generic"),
@@ -107,36 +127,27 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_LIGHT_LC_SETUP_S(0x1310, "Light LC Setup Server", "Lighting"),
     SIG_MD_LIGHT_LC_C(0x1311, "Light LC Client", "Lighting"),
 
+//    SIG_MD_DF_CFG_S
+//    SIG_MD_CFG_DF_S(0xBF30, "direct forwarding server", "", true),
+//    SIG_MD_CFG_DF_C(0xBF31, "direct forwarding client", "", true),
 
-    SIG_MD_CFG_DF_S(0xBF30, "direct forwarding server", "", true),
-    SIG_MD_CFG_DF_C(0xBF31, "direct forwarding client", "", true),
+//    SIG_MD_CFG_BRIDGE_S(0xBF32, "subnet bridge server", "", true),
+//    SIG_MD_CFG_BRIDGE_C(0xBF33, "subnet bridge client", "", true),
 
-    SIG_MD_CFG_BRIDGE_S(0xBF32, "subnet bridge server", "", true),
-    SIG_MD_CFG_BRIDGE_C(0xBF33, "subnet bridge client", "", true),
+
+    SIG_MD_OBJ_TRANSFER_S(0x1400, "BLOB Transfer Server", "OTA"),
+    SIG_MD_OBJ_TRANSFER_C(0x1401, "BLOB Transfer Client", "OTA"),
 
     /**
      * firmware update model
      */
-    SIG_MD_FW_UPDATE_S(0xFE00, "firmware update server", "OTA"),
-    SIG_MD_FW_UPDATE_C(0xFE01, "firmware update client", "OTA"),
-    SIG_MD_FW_DISTRIBUT_S(0xFE02, "firmware distribute server", "OTA"),
-    SIG_MD_FW_DISTRIBUT_C(0xFE03, "firmware distribute client", "OTA"),
-    SIG_MD_OBJ_TRANSFER_S(0xFF00, "object transfer server", "OTA"),
-    SIG_MD_OBJ_TRANSFER_C(0xFF01, "object transfer client", "OTA"),
+    SIG_MD_FW_UPDATE_S(0x1402, "Firmware Update Server", "OTA"),
+    SIG_MD_FW_UPDATE_C(0x1403, "Firmware Update Client", "OTA"),
+    SIG_MD_FW_DISTRIBUT_S(0x1404, "Firmware Distribute Server", "OTA"),
+    SIG_MD_FW_DISTRIBUT_C(0x1405, "Firmware Distribute Client", "OTA"),
+//    SIG_MD_OBJ_TRANSFER_S(0xFF00, "Object Transfer Server", "OTA"),
+//    SIG_MD_OBJ_TRANSFER_C(0xFF01, "Object Transfer Client", "OTA"),
 
-    // opcode aggregator
-    SIG_MD_CFG_OP_AGG_S(0xBF54, "opcode aggregator server", "aggregator", true),
-    SIG_MD_CFG_OP_AGG_C(0xBF55, "opcode aggregator client", "aggregator", true),
-
-
-    SIG_MD_LARGE_CPS_S(0xBF56, "large cps server", "", true),
-    SIG_MD_LARGE_CPS_C(0xBF57, "large cps client", "", true),
-
-    SIG_MD_SAR_CFG_S(0xBF52, "SAR config server", "", true),
-    SIG_MD_SAR_CFG_C(0xBF53, "SAR config client", "", true),
-
-    SIG_MD_ON_DEMAND_PROXY_S(0xBF50, "SAR config server", "", true),
-    SIG_MD_ON_DEMAND_PROXY_C(0xBF51, "SAR config client", "", true),
 
 
     ;

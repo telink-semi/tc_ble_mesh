@@ -45,6 +45,14 @@ public class ScanStartMessage extends RemoteProvisionMessage {
      */
     private byte[] uuid;
 
+    public static ScanStartMessage getSimple(int destinationAddress, int rspMax, byte scannedItemsLimit, byte timeout) {
+        ScanStartMessage message = new ScanStartMessage(destinationAddress);
+        message.setResponseMax(rspMax);
+        message.scannedItemsLimit = scannedItemsLimit;
+        message.timeout = timeout;
+        return message;
+    }
+
     /**
      * Creates a new ScanStartMessage with the specified destination address.
      *
