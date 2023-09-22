@@ -32,6 +32,10 @@ import com.telink.ble.mesh.util.Arrays;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents an item in an aggregator.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
+ */
 public class AggregatorItem implements Parcelable {
     public static final int LENGTH_SHORT = 0x00;
 
@@ -47,6 +51,9 @@ public class AggregatorItem implements Parcelable {
 
     public byte[] parameters;
 
+    /**
+     * Default constructor for the AggregatorItem class.
+     */
     public AggregatorItem() {
     }
 
@@ -55,22 +62,41 @@ public class AggregatorItem implements Parcelable {
         this.parameters = parameters;
     }
 
+    /**
+     * Constructor for the AggregatorItem class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the params.
+     */
     protected AggregatorItem(Parcel in) {
         opcode = in.readInt();
         parameters = in.createByteArray();
     }
 
+    /**
+     * Writes the params to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(opcode);
         dest.writeByteArray(parameters);
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Creator constant for the AggregatorItem class.
+     */
     public static final Creator<AggregatorItem> CREATOR = new Creator<AggregatorItem>() {
         @Override
         public AggregatorItem createFromParcel(Parcel in) {
@@ -83,6 +109,11 @@ public class AggregatorItem implements Parcelable {
         }
     };
 
+    /**
+     * converts the AggregatorItem object to a byte array.
+     *
+     * @return result
+     */
     public byte[] toBytes() {
         int opcodeLen = OpcodeType.getByFirstByte((byte) opcode).length;
         int len = parameters == null ? opcodeLen : (opcodeLen + parameters.length);
@@ -102,6 +133,12 @@ public class AggregatorItem implements Parcelable {
         return buffer.array();
     }
 
+    /**
+     * converts a byte array to an AggregatorItem object.
+     *
+     * @param data byte array
+     * @return result
+     */
     public static AggregatorItem fromBytes(byte[] data) {
         OpcodeType opType = OpcodeType.getByFirstByte(data[0]);
 
@@ -122,6 +159,11 @@ public class AggregatorItem implements Parcelable {
         return item;
     }
 
+    /**
+     * string representation of this object.
+     *
+     * @return a string representation of the AggregatorItem object.
+     */
     @Override
     public String toString() {
         return "AggregatorItem{" +

@@ -115,10 +115,17 @@ public class FDStatusMessage extends StatusMessage implements Parcelable {
      */
     public int distImageIndex;
 
+    /**
+     * Default constructor.
+     */
     public FDStatusMessage() {
     }
 
-
+    /**
+     * Parcelable constructor.
+     * Used for creating an instance of FDStatusMessage from a Parcel.
+     * @param in The Parcel object containing the data.
+     */
     protected FDStatusMessage(Parcel in) {
         status = in.readInt();
         distPhase = in.readInt();

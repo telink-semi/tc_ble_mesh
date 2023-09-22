@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -50,16 +50,27 @@ public class NodeIdentityStatusMessage extends StatusMessage implements Parcelab
      */
     public int identity;
 
+    /**
+     * Constructs a new NodeIdentityStatusMessage object.
+     */
     public NodeIdentityStatusMessage() {
     }
 
 
+    /**
+     * Constructs a new NodeIdentityStatusMessage object from a Parcel.
+     *
+     * @param in the Parcel object containing the NodeIdentityStatusMessage data
+     */
     protected NodeIdentityStatusMessage(Parcel in) {
         status = in.readInt();
         netKeyIndex = in.readInt();
         identity = in.readInt();
     }
 
+    /**
+     * A Creator object that generates instances of NodeIdentityStatusMessage from a Parcel.
+     */
     public static final Creator<NodeIdentityStatusMessage> CREATOR = new Creator<NodeIdentityStatusMessage>() {
         @Override
         public NodeIdentityStatusMessage createFromParcel(Parcel in) {
@@ -72,6 +83,11 @@ public class NodeIdentityStatusMessage extends StatusMessage implements Parcelab
         }
     };
 
+    /**
+     * Parses the parameters of the NodeIdentityStatusMessage from a byte array.
+     *
+     * @param params the byte array containing the parameters of the NodeIdentityStatusMessage
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -92,12 +108,22 @@ public class NodeIdentityStatusMessage extends StatusMessage implements Parcelab
     public int getIdentity() {
         return identity;
     }
-
+    /**
+     * Describes the contents of the NodeIdentityStatusMessage object.
+     *
+     * @return an integer representing the contents of the NodeIdentityStatusMessage object
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the NodeIdentityStatusMessage object to a Parcel.
+     *
+     * @param dest  the Parcel object to write the NodeIdentityStatusMessage object to
+     * @param flags additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);

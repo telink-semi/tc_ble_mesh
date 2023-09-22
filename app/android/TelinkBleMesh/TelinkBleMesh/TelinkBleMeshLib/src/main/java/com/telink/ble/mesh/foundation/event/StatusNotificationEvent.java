@@ -39,6 +39,7 @@ import com.telink.ble.mesh.foundation.Event;
  * Created by kee on 2019/9/12.
  */
 public class StatusNotificationEvent extends Event<String> implements Parcelable {
+
     /**
      * all unrecognized notification
      */
@@ -49,15 +50,30 @@ public class StatusNotificationEvent extends Event<String> implements Parcelable
      */
     private NotificationMessage notificationMessage;
 
+    /**
+     * Constructor for the StatusNotificationEvent class.
+     *
+     * @param sender              the object that sends the event
+     * @param type                the type of the event
+     * @param notificationMessage the notification message associated with the event
+     */
     public StatusNotificationEvent(Object sender, String type, NotificationMessage notificationMessage) {
         super(sender, type);
         this.notificationMessage = notificationMessage;
     }
 
+    /**
+     * Constructor for the StatusNotificationEvent class used for parceling.
+     *
+     * @param in the parcel to read from
+     */
     protected StatusNotificationEvent(Parcel in) {
         notificationMessage = in.readParcelable(NotificationMessage.class.getClassLoader());
     }
 
+    /**
+     * Creator for the StatusNotificationEvent class used for parceling.
+     */
     public static final Creator<StatusNotificationEvent> CREATOR = new Creator<StatusNotificationEvent>() {
         @Override
         public StatusNotificationEvent createFromParcel(Parcel in) {
@@ -70,15 +86,31 @@ public class StatusNotificationEvent extends Event<String> implements Parcelable
         }
     };
 
+    /**
+     * Getter for the notification message associated with the event.
+     *
+     * @return the notification message
+     */
     public NotificationMessage getNotificationMessage() {
         return notificationMessage;
     }
 
+    /**
+     * Implementing the describeContents() method of the Parcelable interface.
+     *
+     * @return 0 as there are no special objects in the parcel
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Implementing the writeToParcel() method of the Parcelable interface.
+     *
+     * @param dest  the parcel to write to
+     * @param flags additional flags for writing
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(notificationMessage, flags);

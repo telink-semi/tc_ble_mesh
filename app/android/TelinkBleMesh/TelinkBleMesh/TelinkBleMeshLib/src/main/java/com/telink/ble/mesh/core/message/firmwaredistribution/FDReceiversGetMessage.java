@@ -28,6 +28,10 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a message used to request the Firmware Distribution Receivers List from a server.
+ * It extends the UpdatingMessage class and includes the necessary parameters for the request.
+ */
 public class FDReceiversGetMessage extends UpdatingMessage {
 
     /**
@@ -44,10 +48,23 @@ public class FDReceiversGetMessage extends UpdatingMessage {
      */
     public int entriesLimit;
 
+    /**
+     * Constructs a new FDReceiversGetMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDReceiversGetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDReceiversGetMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDReceiversGetMessage object.
+     */
     public static FDReceiversGetMessage getSimple(int destinationAddress, int appKeyIndex, int firstIndex, int entriesLimit) {
         FDReceiversGetMessage message = new FDReceiversGetMessage(destinationAddress, appKeyIndex);
         message.firstIndex = firstIndex;
@@ -56,16 +73,31 @@ public class FDReceiversGetMessage extends UpdatingMessage {
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDReceiversGetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_RECEIVERS_GET.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDReceiversGetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_RECEIVERS_LIST.value;
     }
 
+    /**
+     * Gets the byte array representation of the parameters in the FDReceiversGetMessage.
+     *
+     * @return The byte array representation of the parameters.
+     */
     @Override
     public byte[] getParams() {
         return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)

@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer;
 
+/**
+ * This enum defines a set of constants representing different transfer statuses.
+ * Each constant has a code and a description associated with it.
+ */
 public enum TransferStatus {
 
     SUCCESS(0x00, "The message was processed successfully"),
@@ -49,11 +53,24 @@ public enum TransferStatus {
     public final int code;
     public final String desc;
 
+    /**
+     * Constructor for the TransferStatus enum.
+     *
+     * @param code The code representing the status.
+     * @param desc The description of the status.
+     */
     TransferStatus(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the TransferStatus enum value corresponding to the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to find the corresponding status for.
+     * @return The TransferStatus enum value.
+     */
     public static TransferStatus valueOf(int code) {
         for (TransferStatus status : values()) {
             if (status.code == code) return status;

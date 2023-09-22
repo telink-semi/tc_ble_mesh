@@ -53,7 +53,7 @@ public interface AccessBridge {
     boolean onAccessMessagePrepared(MeshMessage meshMessage, int mode);
 
     /**
-     * @param state binding state
+     * @param state new state
      * @param desc  desc
      */
     void onAccessStateChanged(int state, String desc, int mode, Object obj);

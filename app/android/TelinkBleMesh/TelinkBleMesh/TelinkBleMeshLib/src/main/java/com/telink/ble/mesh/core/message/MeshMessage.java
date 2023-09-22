@@ -27,6 +27,7 @@ import com.telink.ble.mesh.core.networking.AccessType;
 
 /**
  * Created by kee on 2019/8/14.
+ * This class represents a mesh message.
  */
 public class MeshMessage {
 
@@ -145,6 +146,7 @@ public class MeshMessage {
     protected boolean isSegmented = false;
 
     /**
+     * Checks if the message is reliable.
      * if true, message will be cached and checked completion by message response or retryCnt == 0
      * if false, message will not be cached and checked
      */
@@ -152,136 +154,291 @@ public class MeshMessage {
         return getResponseOpcode() != OPCODE_INVALID;
     }
 
+    /**
+     * Gets the response opcode of the message.
+     *
+     * @return the response opcode.
+     */
     public int getResponseOpcode() {
         return responseOpcode;
     }
 
+    /**
+     * Sets the response opcode of the message.
+     *
+     * @param responseOpcode the response opcode to set.
+     */
     public void setResponseOpcode(int responseOpcode) {
         this.responseOpcode = responseOpcode;
     }
 
+    /**
+     * Gets the position of the transaction identifier (tid) in the message parameters.
+     *
+     * @return the tid position.
+     */
     public int getTidPosition() {
         return tidPosition;
     }
 
+    /**
+     * Sets the position of the transaction identifier (tid) in the message parameters.
+     *
+     * @param tidPosition the tid position to set.
+     */
     public void setTidPosition(int tidPosition) {
         this.tidPosition = tidPosition;
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return the opcode.
+     */
     public int getOpcode() {
         return opcode;
     }
 
+    /**
+     * Sets the opcode of the message.
+     *
+     * @param opcode the opcode to set.
+     */
     public void setOpcode(int opcode) {
         this.opcode = opcode;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return the parameters.
+     */
     public byte[] getParams() {
         return params;
     }
 
+    /**
+     * Sets the parameters of the message.
+     *
+     * @param params the parameters to set.
+     */
     public void setParams(byte[] params) {
         this.params = params;
     }
 
+    /**
+     * Gets the retry count for sending the message.
+     *
+     * @return the retry count.
+     */
     public int getRetryCnt() {
         return retryCnt;
     }
 
+    /**
+     * Sets the retry count for sending the message.
+     *
+     * @param retryCnt the retry count to set.
+     */
     public void setRetryCnt(int retryCnt) {
         this.retryCnt = retryCnt;
     }
 
+    /**
+     * Gets the maximum number of responses expected for the message.
+     *
+     * @return the maximum number of responses.
+     */
     public int getResponseMax() {
         return responseMax;
     }
 
+    /**
+     * Sets the maximum number of responses expected for the message.
+     *
+     * @param responseMax the maximum number of responses to set.
+     */
     public void setResponseMax(int responseMax) {
         this.responseMax = responseMax;
     }
 
+    /**
+     * Gets the access type of the message.
+     *
+     * @return the access type.
+     */
     public AccessType getAccessType() {
         return accessType;
     }
 
+    /**
+     * Sets the access type of the message.
+     *
+     * @param accessType the access type to set.
+     */
     public void setAccessType(AccessType accessType) {
         this.accessType = accessType;
     }
 
+    /**
+     * Gets the control type of the message.
+     *
+     * @return the control type.
+     */
     public int getCtl() {
         return this.ctl;
     }
 
     /**
-     * @deprecated
+     * Sets the control type of the message.
+     *
+     * @param ctl the control type to set.
+     * @deprecated This method is deprecated and should not be used.
      */
     public void setCtl(int ctl) {
         this.ctl = ctl;
     }
 
+    /**
+     * Gets the time to live value of the message.
+     *
+     * @return the time to live value.
+     */
     public int getTtl() {
         return ttl;
     }
 
+    /**
+     * Sets the time to live value of the message.
+     *
+     * @param ttl the time to live value to set.
+     */
     public void setTtl(int ttl) {
         this.ttl = ttl;
     }
 
     /**
-     * mic size
+     * Gets the szmic value of the message.
+     *
+     * @return the szmic value.
      */
     public int getSzmic() {
         return szmic;
     }
 
+    /**
+     * Sets the szmic value of the message.
+     *
+     * @param szmic the szmic value to set.
+     */
     public void setSzmic(int szmic) {
         this.szmic = szmic;
     }
 
+    /**
+     * Gets the access key of the message.
+     *
+     * @return the access key.
+     */
     public byte[] getAccessKey() {
         return accessKey;
     }
 
+    /**
+     * Sets the access key of the message.
+     *
+     * @param accessKey the access key to set.
+     */
     public void setAccessKey(byte[] accessKey) {
         this.accessKey = accessKey;
     }
 
+    /**
+     * Gets the source address of the message.
+     *
+     * @return the source address.
+     */
     public int getSourceAddress() {
         return sourceAddress;
     }
 
+    /**
+     * Sets the source address of the message.
+     *
+     * @param sourceAddress the source address to set.
+     */
     public void setSourceAddress(int sourceAddress) {
         this.sourceAddress = sourceAddress;
     }
 
+    /**
+     * Returns the destination address of the message.
+     *
+     * @return the destination address
+     */
     public int getDestinationAddress() {
         return destinationAddress;
     }
 
+    /**
+     * Sets the destination address of the message.
+     *
+     * @param destinationAddress the destination address to set
+     */
     public void setDestinationAddress(int destinationAddress) {
         this.destinationAddress = destinationAddress;
     }
 
+    /**
+     * Returns the application key index of the message.
+     *
+     * @return the application key index
+     */
     public int getAppKeyIndex() {
         return appKeyIndex;
     }
 
+    /**
+     * Sets the application key index of the message.
+     *
+     * @param appKeyIndex the application key index to set
+     */
     public void setAppKeyIndex(int appKeyIndex) {
         this.appKeyIndex = appKeyIndex;
     }
 
+    /**
+     * Checks if the message is segmented.
+     *
+     * @return true if the message is segmented, false otherwise
+     */
     public boolean isSegmented() {
         return isSegmented;
     }
 
+    /**
+     * Sets whether the message is segmented or not.
+     *
+     * @param segmented true if the message is segmented, false otherwise
+     */
     public void setSegmented(boolean segmented) {
         isSegmented = segmented;
     }
 
+    /**
+     * Returns the retry interval of the message.
+     *
+     * @return the retry interval
+     */
     public long getRetryInterval() {
         return retryInterval;
     }
 
+    /**
+     * Sets the retry interval of the message.
+     *
+     * @param retryInterval the retry interval to set
+     */
     public void setRetryInterval(long retryInterval) {
         this.retryInterval = retryInterval;
     }

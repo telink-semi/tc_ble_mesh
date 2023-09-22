@@ -23,20 +23,32 @@
 package com.telink.ble.mesh.core.provisioning.pdu;
 
 /**
- * Created by kee on 2019/7/19.
+ * This class represents a Provisioning Records Get PDU.
+ * It implements the ProvisioningStatePDU interface.
  */
-
 public class ProvisioningRecordsGetPDU implements ProvisioningStatePDU {
 
-
+    /**
+     * Constructs a ProvisioningRecordsGetPDU object.
+     */
     public ProvisioningRecordsGetPDU() {
     }
 
+    /**
+     * Converts the ProvisioningRecordsGetPDU object to a byte array.
+     *
+     * @return the byte array representation of the PDU
+     */
     @Override
     public byte[] toBytes() {
         return null;
     }
 
+    /**
+     * Retrieves the state of the ProvisioningRecordsGetPDU object.
+     *
+     * @return the state of the PDU
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_RECORDS_GET;

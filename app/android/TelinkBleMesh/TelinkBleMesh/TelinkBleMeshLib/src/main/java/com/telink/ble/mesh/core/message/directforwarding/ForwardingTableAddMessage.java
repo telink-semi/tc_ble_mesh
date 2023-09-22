@@ -28,7 +28,10 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-
+/**
+ * This class represents a Forwarding Table Add Message, which is a type of ConfigMessage.
+ * It contains various fields and methods to handle the message parameters and generate the message payload.
+ */
 public class ForwardingTableAddMessage extends ConfigMessage {
 
     /**
@@ -87,6 +90,12 @@ public class ForwardingTableAddMessage extends ConfigMessage {
     public int bearerTowardPathTarget = 0; //
 
 
+    /**
+     * Creates a simple ForwardingTableAddMessage with the given destination address and NetKey Index.
+     * @param destinationAddress The destination address of the message.
+     * @param netKeyIndex The NetKey Index used in the subnet.
+     * @return The created ForwardingTableAddMessage.
+     */
     public static ForwardingTableAddMessage getSimple(int destinationAddress, int netKeyIndex) {
         ForwardingTableAddMessage message = new ForwardingTableAddMessage(destinationAddress);
         message.setResponseMax(1);
@@ -94,31 +103,44 @@ public class ForwardingTableAddMessage extends ConfigMessage {
         return message;
     }
 
+    /**
+     * Constructs a ForwardingTableAddMessage with the given destination address.
+     * @param destinationAddress The destination address of the message.
+     */
     public ForwardingTableAddMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode value of the ForwardingTableAddMessage.
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FORWARDING_TABLE_ADD.value;
     }
 
+    /**
+     * Gets the response opcode value of the ForwardingTableAddMessage.
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FORWARDING_TABLE_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the ForwardingTableAddMessage as a byte array.
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         // 6 = (NetKeyIndex + flags) + Bearer_Toward_Path_Origin + Bearer_Toward_Path_Target
         // 2 = Multicast_Destination
         boolean isUnicast = unicastDestinationFlag == 1;
-        int len = 6 + pathOriginUnicastAddrRange.length +
-                (isUnicast ? pathTargetUnicastAddrRange.length : 2);
-
+        int len = 6 + pathOriginUnicastAddrRange.length + (isUnicast ? pathTargetUnicastAddrRange.length : 2);
         ByteBuffer bf = ByteBuffer.allocate(len).order(ByteOrder.LITTLE_ENDIAN);
         int idxAndFlags = (backwardPathValidatedFlag << 15) | (unicastDestinationFlag << 14) | netKeyIndex;
-//                (netKeyIndex << 4) | (unicastDestinationFlag << 1) | backwardPathValidatedFlag;
         bf.putShort((short) idxAndFlags).put(pathOriginUnicastAddrRange);
         if (isUnicast) {
             bf.put(pathTargetUnicastAddrRange);

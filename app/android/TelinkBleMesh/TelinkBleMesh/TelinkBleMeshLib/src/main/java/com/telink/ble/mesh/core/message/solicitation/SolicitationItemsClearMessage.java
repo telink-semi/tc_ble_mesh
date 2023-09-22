@@ -27,32 +27,48 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 
 /**
- * A SAR_RECEIVER_GET message is an acknowledged message used to get the current SAR Receiver state of a node
+ * SolicitationItemsClearMessage
  */
 public class SolicitationItemsClearMessage extends ConfigMessage {
+    public byte[] addressRange; // The address range for which the SAR Receiver state is requested 
+    public boolean ack; // Flag indicating whether the message is an acknowledgement or not 
 
-    public byte[] addressRange;
-
-    public boolean ack;
-
+    /**
+     * Constructs a new SolicitationItemsClearMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message
+     */
     public SolicitationItemsClearMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode of the message based on the acknowledgement flag.
+     *
+     * @return The opcode of the message
+     */
     @Override
     public int getOpcode() {
         return ack ? Opcode.SOLI_PDU_RPL_ITEM_CLEAR.value : Opcode.SOLI_PDU_RPL_ITEM_CLEAR_NACK.value;
     }
 
+    /**
+     * Returns the response opcode of the message based on the acknowledgement flag.
+     *
+     * @return The response opcode of the message
+     */
     @Override
     public int getResponseOpcode() {
         return ack ? Opcode.SOLI_PDU_RPL_ITEM_STATUS.value : OPCODE_INVALID;
     }
 
+    /**
+     * Returns the parameters of the message, which is the address range.
+     *
+     * @return The parameters of the message
+     */
     @Override
     public byte[] getParams() {
         return addressRange;
     }
-
-
 }

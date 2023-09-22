@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ package com.telink.ble.mesh.core.message.rp;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * Created by kee on 2019/8/20.
+ * It contains a list of static final byte variables
+ * that define different status codes for messages related to a Remote Provisioning Server.
  */
 
 public abstract class RPStatusMessage extends StatusMessage {

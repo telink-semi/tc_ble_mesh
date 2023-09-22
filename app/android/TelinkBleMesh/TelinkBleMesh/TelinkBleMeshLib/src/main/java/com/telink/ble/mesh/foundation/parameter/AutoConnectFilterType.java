@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,27 +23,41 @@
 package com.telink.ble.mesh.foundation.parameter;
 
 /**
- * Created by kee on 2019/9/18.
+ * Enum representing the types of filters for auto-connect functionality.
+ * Each filter type has a flag indicating whether it supports node identity, network id, or both.
  */
-
 public enum AutoConnectFilterType {
     /**
-     * node identity only
+     * Filter type that supports node identity only.
      */
     NODE_IDENTITY(true, false),
+
     /**
-     * network id only
+     * Filter type that supports network id only.
      */
     NETWORK_ID(false, true),
+
     /**
-     * both supported
+     * Filter type that supports both node identity and network id.
      */
     AUTO(true, true);
 
+    /**
+     * Flag indicating whether the filter type supports node identity.
+     */
     public final boolean isNodeIdentitySupport;
 
+    /**
+     * Flag indicating whether the filter type supports network id.
+     */
     public final boolean isNetworkIdSupport;
 
+    /**
+     * Constructor for the AutoConnectFilterType enum.
+     *
+     * @param isNodeIdentitySupport - Flag indicating whether the filter type supports node identity.
+     * @param isNetworkIdSupport    - Flag indicating whether the filter type supports network id.
+     */
     AutoConnectFilterType(boolean isNodeIdentitySupport, boolean isNetworkIdSupport) {
         this.isNodeIdentitySupport = isNodeIdentitySupport;
         this.isNetworkIdSupport = isNetworkIdSupport;

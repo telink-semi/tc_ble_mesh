@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -24,17 +24,33 @@ package com.telink.ble.mesh.core.provisioning.pdu;
 
 
 /**
+ * provision public key PDU
  * Created by kee on 2019/7/18.
  */
-
 public class ProvisioningPubKeyPDU implements ProvisioningStatePDU {
     private static final int LEN = 64;
     // 32 bytes
+    /**
+     * X
+     */
     public byte[] x;
+
+    /**
+     * Y
+     */
     public byte[] y;
 
+    /**
+     * raw data
+     */
     private byte[] rawData;
 
+    /**
+     * takes in a byte array as input and returns a ProvisioningPubKeyPDU object.
+     *
+     * @param data key data
+     * @return PDU
+     */
     public static ProvisioningPubKeyPDU fromBytes(byte[] data) {
         if (data.length != LEN) return null;
 
@@ -49,6 +65,11 @@ public class ProvisioningPubKeyPDU implements ProvisioningStatePDU {
         return pubKeyPDU;
     }
 
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         if (rawData != null) return rawData;
@@ -59,6 +80,11 @@ public class ProvisioningPubKeyPDU implements ProvisioningStatePDU {
         return re;
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_PUBLIC_KEY;

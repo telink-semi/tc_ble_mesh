@@ -27,42 +27,70 @@ import com.telink.ble.mesh.core.message.Opcode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+
 /**
- * The Config NetKey Delete is an acknowledged message used to delete a NetKey on a NetKey List from a node.
+ * The NetKeyDeleteMessage class represents a Config NetKey Delete message.
+ * This message is used to delete a NetKey from a NetKey List on a node.
  * <p>
- * The response to a Config NetKey Delete message is a Config NetKey Status message.
+ * The message is sent to the destination address specified in the constructor.
+ * <p>
+ * The Config NetKey Delete is an acknowledged message used to delete a NetKey on a NetKey List from a node.
+ * The response to this message is a Config NetKey Status message.
  */
 public class NetKeyDeleteMessage extends ConfigMessage {
 
-
+    // The index of the NetKey to be deleted
     public int netKeyIndex;
 
-
+    /**
+     * Constructs a NetKeyDeleteMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address for the message.
+     */
     public NetKeyDeleteMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Constructs a NetKeyDeleteMessage object with the specified destination address and NetKey index.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param netKeyIndex        The index of the NetKey to be deleted.
+     */
     public NetKeyDeleteMessage(int destinationAddress, int netKeyIndex) {
         super(destinationAddress);
         this.netKeyIndex = netKeyIndex;
     }
 
+    /**
+     * Returns the opcode for the NetKey Delete message.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.NETKEY_DEL.value;
     }
 
+    /**
+     * Returns the opcode for the response to the NetKey Delete message.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.NETKEY_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the NetKey Delete message as a byte array.
+     *
+     * @return The parameters byte array.
+     */
     @Override
     public byte[] getParams() {
         ByteBuffer paramsBuffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN)
                 .putShort((short) this.netKeyIndex);
         return paramsBuffer.array();
     }
-
-
 }

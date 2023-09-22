@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,17 +25,21 @@ package com.telink.ble.mesh.foundation.parameter;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
 
-/**
- * Created by kee on 2019/9/5.
- */
 
+/**
+ * This class represents the parameters for fast provisioning.
+ * It extends the Parameters class.
+ */
 public class FastProvisioningParameters extends Parameters {
 
+    /**
+     * Constructs a new FastProvisioningParameters object with the given fast provisioning configuration.
+     *
+     * @param fastProvisioningConfiguration The fast provisioning configuration to be set.
+     */
     public FastProvisioningParameters(FastProvisioningConfiguration fastProvisioningConfiguration) {
         this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROVISION));
         this.set(ACTION_FAST_PROVISION_CONFIG, fastProvisioningConfiguration);
         this.set(COMMON_PROXY_FILTER_INIT_NEEDED, false);
     }
-
-
 }

@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/8/16.
+ * This class represents a Segment Acknowledgment Message, which is a type of Unsegmented Control Message PDU.
+ * It contains the necessary fields and methods to parse and generate the byte array representation of the message.
  */
-
 public class SegmentAcknowledgmentMessage extends UnsegmentedControlMessagePDU {
     public static final int DATA_LEN = 7;
 
@@ -68,6 +68,13 @@ public class SegmentAcknowledgmentMessage extends UnsegmentedControlMessagePDU {
      */
     private int blockAck = 0;
 
+    /**
+     * Parses the byte array representation of the message and populates the fields accordingly.
+     * Returns true if the parsing is successful, false otherwise.
+     *
+     * @param lowerTransportData The byte array representation of the message
+     * @return True if parsing is successful, false otherwise
+     */
     public boolean parse(byte[] lowerTransportData) {
         if (lowerTransportData.length != DATA_LEN) return false;
 //        int seqZero = ((lowerTransportData[1] & 0x7F) << 6) | ((lowerTransportData[2] & 0xFF) >> 2);
@@ -84,14 +91,28 @@ public class SegmentAcknowledgmentMessage extends UnsegmentedControlMessagePDU {
         return true;
     }
 
+    /**
+     * Default constructor for SegmentAcknowledgmentMessage.
+     */
     public SegmentAcknowledgmentMessage() {
     }
 
+    /**
+     * Constructor for SegmentAcknowledgmentMessage.
+     *
+     * @param seqZero  The SeqZero of the Upper Transport PDU
+     * @param blockAck The block acknowledgment for segments
+     */
     public SegmentAcknowledgmentMessage(int seqZero, int blockAck) {
         this.seqZero = seqZero;
         this.blockAck = blockAck;
     }
 
+    /**
+     * Converts the message to its byte array representation.
+     *
+     * @return The byte array representation of the message
+     */
     @Override
     public byte[] toByteArray() {
         return ByteBuffer.allocate(DATA_LEN).order(ByteOrder.BIG_ENDIAN)
@@ -102,6 +123,11 @@ public class SegmentAcknowledgmentMessage extends UnsegmentedControlMessagePDU {
 
     }
 
+    /**
+     * Returns a string representation of the SegmentAcknowledgmentMessage object.
+     *
+     * @return A string representation of the object
+     */
     @Override
     public String toString() {
         return "SegmentAcknowledgmentMessage{" +
@@ -114,10 +140,20 @@ public class SegmentAcknowledgmentMessage extends UnsegmentedControlMessagePDU {
                 '}';
     }
 
+    /**
+     * Returns the SeqZero of the Upper Transport PDU.
+     *
+     * @return The SeqZero value
+     */
     public int getSeqZero() {
         return seqZero;
     }
 
+    /**
+     * Returns the block acknowledgment for segments.
+     *
+     * @return The block acknowledgment value
+     */
     public int getBlockAck() {
         return blockAck;
     }

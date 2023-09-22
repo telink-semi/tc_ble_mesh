@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
+ * This class represents a model publication in the Bluetooth Mesh network.
  * publication entity used when send publicationSet message or receive publication status message
  * Created by kee on 2018/9/17.
  */
@@ -154,9 +155,24 @@ public final class ModelPublication implements Serializable, Parcelable {
         }
     };
 
+    /**
+     * Constructs a new ModelPublication object.
+     * This is used for creating a default instance of the class.
+     */
     public ModelPublication() {
     }
 
+    /**
+     * Creates a default ModelPublication object with the specified parameters.
+     *
+     * @param elementAddress    The element address.
+     * @param publishAddress    The publish address.
+     * @param appKeyIndex       The index of the application key.
+     * @param periodMillisecond The period for periodic status publishing in milliseconds.
+     * @param modelId           The SIG Model ID or Vendor Model ID.
+     * @param sig               Indicates whether the model is a SIG model.
+     * @return A new instance of the ModelPublication class with the specified parameters.
+     */
     public static ModelPublication createDefault(int elementAddress, int publishAddress, int appKeyIndex, long periodMillisecond, int modelId, boolean sig) {
         ModelPublication instance = new ModelPublication();
         instance.elementAddress = elementAddress;
@@ -168,6 +184,11 @@ public final class ModelPublication implements Serializable, Parcelable {
         return instance;
     }
 
+    /**
+     * Converts the ModelPublication object to a byte array.
+     *
+     * @return The byte array representation of the ModelPublication object.
+     */
     public byte[] toBytes() {
         final int len = sig ? 11 : 13;
         ByteBuffer bf = ByteBuffer.allocate(len).order(ByteOrder.LITTLE_ENDIAN);

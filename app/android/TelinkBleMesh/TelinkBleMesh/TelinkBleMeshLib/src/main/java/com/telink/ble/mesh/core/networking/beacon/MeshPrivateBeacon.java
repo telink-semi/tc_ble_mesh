@@ -30,6 +30,12 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a Mesh Private Beacon, which is a type of Mesh Beacon PDU.
+ * It extends the MeshBeaconPDU class.
+ * <p>
+ * The Mesh Private Beacon has a payload length of 27 bytes.
+ */
 public class MeshPrivateBeacon extends MeshBeaconPDU {
 
     private static final int LENGTH_PAYLOAD = 27;
@@ -62,6 +68,13 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
      */
     private byte[] authenticationTag;
 
+    /**
+     * Creates a MeshPrivateBeacon object from the given payload and private beacon key.
+     *
+     * @param payload          The payload of the Mesh Private Beacon.
+     * @param privateBeaconKey The private beacon key used for authentication.
+     * @return The MeshPrivateBeacon object if the payload is valid, null otherwise.
+     */
     public static MeshPrivateBeacon from(byte[] payload, byte[] privateBeaconKey) {
         if (payload.length != LENGTH_PAYLOAD) {
             return null;
@@ -108,6 +121,14 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         }
     }
 
+    /**
+     * Creates a MeshPrivateBeacon object for an IV updating beacon.
+     *
+     * @param curIvIndex       The current IV index.
+     * @param privateBeaconKey The private beacon key used for authentication.
+     * @param updating         True if the IV is updating, false otherwise.
+     * @return The MeshPrivateBeacon object.
+     */
     public static MeshPrivateBeacon createIvUpdatingBeacon(int curIvIndex, byte[] privateBeaconKey, boolean updating) {
         MeshPrivateBeacon meshPrivateBeacon = new MeshPrivateBeacon();
 
@@ -145,6 +166,14 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         return meshPrivateBeacon;
     }
 
+    /**
+     * Calculates the authentication tag for the private beacon data.
+     *
+     * @param privateBeaconData The private beacon data.
+     * @param random            The random number.
+     * @param privateBeaconKey  The private beacon key.
+     * @return The authentication tag.
+     */
     private static byte[] calcAuthTag(byte[] privateBeaconData, byte[] random, byte[] privateBeaconKey) {
 
         /*
@@ -182,11 +211,21 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         return authTag;
     }
 
+    /**
+     * Gets the beacon type.
+     *
+     * @return The beacon type.
+     */
     public byte getBeaconType() {
         return beaconType;
     }
 
 
+    /**
+     * Converts the MeshPrivateBeacon object to a byte array.
+     *
+     * @return The byte array representation of the MeshPrivateBeacon object.
+     */
     @Override
     public byte[] toBytes() {
         ByteBuffer buffer1 = ByteBuffer.allocate(LENGTH_PAYLOAD).order(ByteOrder.BIG_ENDIAN);
@@ -195,22 +234,49 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         return buffer1.array();
     }
 
+
+    /**
+     * Gets the flags of the MeshPrivateBeacon.
+     *
+     * @return The flags.
+     */
     public byte getFlags() {
         return flags;
     }
 
+    /**
+     * Gets the IV index of the MeshPrivateBeacon.
+     *
+     * @return The IV index.
+     */
     public int getIvIndex() {
         return ivIndex;
     }
 
+    /**
+     * Gets the random number of the MeshPrivateBeacon.
+     *
+     * @return The random number.
+     */
     public byte[] getRandom() {
         return random;
     }
 
+
+    /**
+     * Checks if the MeshPrivateBeacon is an IV updating beacon.
+     *
+     * @return True if the beacon is an IV updating beacon, false otherwise.
+     */
     public boolean isIvUpdating() {
         return (flags & MASK_IV_UPDATE) != 0;
     }
 
+    /**
+     * Converts the MeshPrivateBeacon object to a string representation.
+     *
+     * @return The string representation of the MeshPrivateBeacon object.
+     */
     @Override
     public String toString() {
         return "MeshPrivateBeacon{" +
@@ -220,3 +286,4 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
                 '}';
     }
 }
+

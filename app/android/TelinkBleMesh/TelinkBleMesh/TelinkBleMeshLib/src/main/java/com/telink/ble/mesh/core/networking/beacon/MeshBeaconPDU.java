@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -24,27 +24,37 @@ package com.telink.ble.mesh.core.networking.beacon;
 
 import com.telink.ble.mesh.core.provisioning.pdu.PDU;
 
-/**
- * Created by kee on 2019/11/18.
- */
 
+/**
+ * This abstract class represents a Mesh Beacon PDU (Protocol Data Unit).
+ * It implements the PDU interface.
+ * The Mesh Beacon PDU is used in a mesh network to transmit various types of beacons.
+ */
 public abstract class MeshBeaconPDU implements PDU {
 
+    /**
+     * The beacon type for an unprovisioned device.
+     */
     public static final byte BEACON_TYPE_UNPROVISIONED_DEVICE = 0x00;
 
     /**
-     * secure beacon
+     * The beacon type for a secure network.
      */
     public static final byte BEACON_TYPE_SECURE_NETWORK = 0x01;
 
     /**
-     * mesh private beacon
+     * The beacon type for a mesh private beacon.
      */
     public static final byte BEACON_TYPE_MESH_PRIVATE = 0x02;
 
+    /**
+     * The beacon type of this MeshBeaconPDU.
+     */
     protected byte beaconType;
 
+    /**
+     * The beacon data of this MeshBeaconPDU.
+     */
     protected byte[] beaconData;
-
 
 }

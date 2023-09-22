@@ -63,11 +63,19 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
     public FDReceiversListMessage() {
     }
 
+    /**
+     * Constructor for the FDReceiversListMessage class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the receiversListCount and firstIndex.
+     */
     protected FDReceiversListMessage(Parcel in) {
         receiversListCount = in.readInt();
         firstIndex = in.readInt();
     }
 
+    /**
+     * Creator constant for the FDReceiversListMessage class.
+     */
     public static final Creator<FDReceiversListMessage> CREATOR = new Creator<FDReceiversListMessage>() {
         @Override
         public FDReceiversListMessage createFromParcel(Parcel in) {
@@ -80,6 +88,11 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
         }
     };
 
+    /**
+     * Parses the byte array to extract the params.
+     *
+     * @param params The byte array containing the params.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -108,25 +121,51 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
         }
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the params to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(receiversListCount);
         dest.writeInt(firstIndex);
     }
 
+    /**
+     * Returns receivers list count.
+     *
+     * @return The receivers list count.
+     */
     public int getReceiversListCount() {
         return receiversListCount;
     }
 
+    /**
+     * Returns firstIndex.
+     *
+     * @return The firstIndex.
+     */
     public int getFirstIndex() {
         return firstIndex;
     }
 
+    /**
+     * Returns receiversList.
+     *
+     * @return The receiversList.
+     */
     public List<DistributionReceiver> getReceiversList() {
         return receiversList;
     }
@@ -175,6 +214,11 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
          */
         public byte imageIndex;
 
+        /**
+         * Returns a string representation of the DistributionReceiver object.
+         *
+         * @return A string representation of the DistributionReceiver object.
+         */
         @Override
         public String toString() {
             return "DistributionReceiver{" +

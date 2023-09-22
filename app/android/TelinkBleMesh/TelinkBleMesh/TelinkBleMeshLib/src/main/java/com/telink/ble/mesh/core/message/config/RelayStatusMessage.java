@@ -58,15 +58,26 @@ public class RelayStatusMessage extends StatusMessage implements Parcelable {
     public byte retransmitIntervalSteps;
 
 
+    /**
+     * Default constructor for RelayStatusMessage.
+     */
     public RelayStatusMessage() {
     }
 
+    /**
+     * Constructor for RelayStatusMessage that initializes the relay status from a Parcel.
+     *
+     * @param in The Parcel from which to read the subnet bridge state.
+     */
     protected RelayStatusMessage(Parcel in) {
         relay = in.readByte();
         retransmitCount = in.readByte();
         retransmitIntervalSteps = in.readByte();
     }
 
+    /**
+     * Creator for RelayStatusMessage that is used to create new instances from a Parcel.
+     */
     public static final Creator<RelayStatusMessage> CREATOR = new Creator<RelayStatusMessage>() {
         @Override
         public RelayStatusMessage createFromParcel(Parcel in) {
@@ -79,6 +90,11 @@ public class RelayStatusMessage extends StatusMessage implements Parcelable {
         }
     };
 
+    /**
+     * Parses the byte array and sets the fields of the RelayStatusMessage object accordingly.
+     *
+     * @param params the byte array to parse
+     */
     @Override
     public void parse(byte[] params) {
         relay = params[0];
@@ -86,11 +102,22 @@ public class RelayStatusMessage extends StatusMessage implements Parcelable {
         this.retransmitIntervalSteps = (byte) ((params[1] & 0xFF) >> 3);
     }
 
+    /**
+     * Returns the bitmask describing the contents of the Parcelable.
+     *
+     * @return The bitmask describing the contents of the Parcelable.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the fields of the RelayStatusMessage object to a Parcel object.
+     *
+     * @param dest  the Parcel object
+     * @param flags additional flags for writing the object
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(relay);

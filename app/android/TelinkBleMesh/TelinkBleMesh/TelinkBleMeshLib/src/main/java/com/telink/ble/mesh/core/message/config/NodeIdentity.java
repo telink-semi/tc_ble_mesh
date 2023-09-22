@@ -38,11 +38,24 @@ public enum NodeIdentity {
     public final byte code;
     public final String desc;
 
+    /**
+     * Constructor for the NodeIdentity enum.
+     *
+     * @param code The code representing the Identity.
+     * @param desc The description of the Identity.
+     */
     NodeIdentity(byte code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the NodeIdentity enum value corresponding to the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to find the corresponding identity for.
+     * @return The NodeIdentity enum value.
+     */
     public static NodeIdentity valueOf(int code) {
         for (NodeIdentity status : values()) {
             if (status.code == code) return status;

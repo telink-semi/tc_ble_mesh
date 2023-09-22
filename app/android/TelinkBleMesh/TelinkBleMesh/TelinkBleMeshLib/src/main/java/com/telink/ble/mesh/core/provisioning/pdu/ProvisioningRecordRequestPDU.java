@@ -48,20 +48,38 @@ public class ProvisioningRecordRequestPDU implements ProvisioningStatePDU {
      */
     public int fragmentMaxSize;
 
-
+    /**
+     * Constructs a ProvisioningRecordRequestPDU object with the specified parameters.
+     *
+     * @param recordID        The identifier of the provisioning record.
+     * @param fragmentOffset  The starting offset of the requested fragment.
+     * @param fragmentMaxSize The maximum size of the provisioning record fragment.
+     */
     public ProvisioningRecordRequestPDU(int recordID, int fragmentOffset, int fragmentMaxSize) {
         this.recordID = recordID;
         this.fragmentOffset = fragmentOffset;
         this.fragmentMaxSize = fragmentMaxSize;
     }
 
+    /**
+     * Converts the ProvisioningRecordRequestPDU object to a byte array.
+     *
+     * @return The byte array representation of the ProvisioningRecordRequestPDU object.
+     */
     @Override
     public byte[] toBytes() {
-        return ByteBuffer.allocate(6).order(ByteOrder.BIG_ENDIAN).putShort((short) recordID)
+        return ByteBuffer.allocate(6).order(ByteOrder.BIG_ENDIAN)
+                .putShort((short) recordID)
                 .putShort((short) fragmentOffset)
-                .putShort((short) fragmentMaxSize).array();
+                .putShort((short) fragmentMaxSize)
+                .array();
     }
 
+    /**
+     * Returns the type of the ProvisioningRecordRequestPDU.
+     *
+     * @return The type of the ProvisioningRecordRequestPDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_RECORD_REQUEST;

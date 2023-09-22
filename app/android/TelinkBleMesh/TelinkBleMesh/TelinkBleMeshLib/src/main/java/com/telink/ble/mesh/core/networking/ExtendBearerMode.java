@@ -22,6 +22,13 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
+/**
+ * This enum represents the different modes for extending the bearer.
+ * <p>
+ * - NONE: No extension is used.
+ * - GATT: Only GATT (Generic Attribute Profile) is used for extending the bearer.
+ * - GATT_ADV: Both GATT and advertising are used for extending the bearer.
+ */
 public enum ExtendBearerMode {
     // no extension
     NONE,

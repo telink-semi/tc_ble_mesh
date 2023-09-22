@@ -30,24 +30,46 @@ import com.telink.ble.mesh.core.message.Opcode;
  * The response to a Config Default TTL Get message is a Config Default TTL Status message {@link DefaultTTLStatusMessage}.
  */
 public class DefaultTTLGetMessage extends ConfigMessage {
-
+    /**
+     * Constructs an empty DefaultTTLGetMessage object.
+     */
     public DefaultTTLGetMessage() {
     }
 
+    /**
+     * Constructs a DefaultTTLGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The address of the node to which the message is being sent.
+     */
     public DefaultTTLGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_DEFAULT_TTL_GET.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_DEFAULT_TTL_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return null.
+     */
     @Override
     public byte[] getParams() {
         return null;

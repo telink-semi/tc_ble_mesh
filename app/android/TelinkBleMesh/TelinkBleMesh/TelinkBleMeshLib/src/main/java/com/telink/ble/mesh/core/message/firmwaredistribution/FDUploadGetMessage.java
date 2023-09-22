@@ -31,22 +31,44 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDUploadGetMessage extends UpdatingMessage {
 
-
+    /**
+     * Constructs a new FDUploadGetMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDUploadGetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDUploadGetMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDUploadGetMessage object.
+     */
     public static FDUploadGetMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDUploadGetMessage message = new FDUploadGetMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDUploadGetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_UPLOAD_GET.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDUploadGetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;

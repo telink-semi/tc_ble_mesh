@@ -33,20 +33,40 @@ import com.telink.ble.mesh.core.message.Opcode;
 public class CompositionDataGetMessage extends ConfigMessage {
     private static final byte PAGE_ALL = (byte) 0xFF;
 
+    /**
+     * Constructs a CompositionDataGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The address of the node to which the message is being sent.
+     */
     public CompositionDataGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode of the Cps Get message.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.COMPOSITION_DATA_GET.value;
     }
 
+    /**
+     * Returns the opcode of the expected response message to the Cps Get message.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.COMPOSITION_DATA_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the Cps Get message.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{PAGE_ALL};

@@ -33,12 +33,18 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobInfoStat
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferStatus;
 
+
 /**
- * response local messages
+ * This class is responsible for responding to local messages by generating notification messages.
  * only support distribution messages
  */
 public class MessageResponder {
-
+    /**
+     * Generates a notification message in response to the given mesh message.
+     *
+     * @param meshMessage The mesh message to respond to
+     * @return The generated notification message
+     */
     public static NotificationMessage responseMessage(MeshMessage meshMessage) {
         final int src = MeshUtils.LOCAL_MESSAGE_ADDRESS;
         final int dst = MeshUtils.LOCAL_MESSAGE_ADDRESS;
@@ -49,6 +55,12 @@ public class MessageResponder {
         return notificationMessage;
     }
 
+    /**
+     * Generates a status message based on the response opcode of the given mesh message.
+     *
+     * @param meshMessage The mesh message to generate the status message for
+     * @return The generated status message
+     */
     public static StatusMessage generateStatusMessage(MeshMessage meshMessage) {
         int rspOpcode = meshMessage.getResponseOpcode();
         StatusMessage statusMessage = null;

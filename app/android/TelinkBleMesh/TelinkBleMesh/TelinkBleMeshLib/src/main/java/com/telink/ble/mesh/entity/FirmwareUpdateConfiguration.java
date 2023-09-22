@@ -32,10 +32,11 @@ import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by kee on 2019/9/6.
- */
 
+/**
+ * This class represents the configuration for a firmware update.
+ * It contains various parameters and settings related to the update process.
+ */
 public class FirmwareUpdateConfiguration {
 
     /**
@@ -113,6 +114,15 @@ public class FirmwareUpdateConfiguration {
     private int proxyAddress;
 
 
+    /**
+     * Constructs a new FirmwareUpdateConfiguration object with the given parameters.
+     *
+     * @param updatingDevices The list of target devices that will be updated.
+     * @param firmwareData    The firmware data.
+     * @param metadata        The metadata associated with the firmware.
+     * @param appKeyIndex     The index of the application key to be used for the update.
+     * @param groupAddress    The group address for the subscription message.
+     */
     public FirmwareUpdateConfiguration(List<MeshUpdatingDevice> updatingDevices,
                                        byte[] firmwareData,
                                        byte[] metadata,

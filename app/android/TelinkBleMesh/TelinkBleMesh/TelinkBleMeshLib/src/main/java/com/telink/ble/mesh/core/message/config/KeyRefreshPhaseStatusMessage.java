@@ -46,16 +46,27 @@ public class KeyRefreshPhaseStatusMessage extends StatusMessage implements Parce
 
     public byte phase;
 
+    /**
+     * Constructs a new KeyRefreshPhaseStatusMessage object.
+     */
     public KeyRefreshPhaseStatusMessage() {
     }
 
 
+    /**
+     * Constructs a new KeyRefreshPhaseStatusMessage object from a Parcel.
+     *
+     * @param in the Parcel object containing the KeyRefreshPhaseStatusMessage data
+     */
     protected KeyRefreshPhaseStatusMessage(Parcel in) {
         status = in.readByte();
         netKeyIndex = in.readInt();
         phase = in.readByte();
     }
 
+    /**
+     * A Creator object that generates instances of KeyRefreshPhaseStatusMessage from a Parcel.
+     */
     public static final Creator<KeyRefreshPhaseStatusMessage> CREATOR = new Creator<KeyRefreshPhaseStatusMessage>() {
         @Override
         public KeyRefreshPhaseStatusMessage createFromParcel(Parcel in) {
@@ -68,6 +79,11 @@ public class KeyRefreshPhaseStatusMessage extends StatusMessage implements Parce
         }
     };
 
+    /**
+     * Parses the parameters of the KeyRefreshPhaseStatusMessage from a byte array.
+     *
+     * @param params the byte array containing the parameters of the KeyRefreshPhaseStatusMessage
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -77,11 +93,22 @@ public class KeyRefreshPhaseStatusMessage extends StatusMessage implements Parce
         phase = params[index];
     }
 
+    /**
+     * Describes the contents of the KeyRefreshPhaseStatusMessage object.
+     *
+     * @return an integer representing the contents of the KeyRefreshPhaseStatusMessage object
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the KeyRefreshPhaseStatusMessage object to a Parcel.
+     *
+     * @param parcel the Parcel object to write the KeyRefreshPhaseStatusMessage object to
+     * @param i      additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeByte(status);

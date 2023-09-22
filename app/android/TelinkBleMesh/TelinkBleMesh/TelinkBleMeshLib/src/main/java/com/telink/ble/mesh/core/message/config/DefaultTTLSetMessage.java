@@ -37,26 +37,53 @@ public class DefaultTTLSetMessage extends ConfigMessage {
      */
     public byte newTTL;
 
+    /**
+     * Creates a new DefaultTTLSetMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public DefaultTTLSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Creates a simple instance of DefaultTTLSetMessage with the specified destination address and ttl.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param newTTL             new ttl.
+     * @return A simple instance of FriendSetMessage.
+     */
     public static DefaultTTLSetMessage getSimple(int destinationAddress, byte newTTL) {
         DefaultTTLSetMessage instance = new DefaultTTLSetMessage(destinationAddress);
         instance.newTTL = newTTL;
         return instance;
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_DEFAULT_TTL_SET.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_DEFAULT_TTL_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{newTTL};

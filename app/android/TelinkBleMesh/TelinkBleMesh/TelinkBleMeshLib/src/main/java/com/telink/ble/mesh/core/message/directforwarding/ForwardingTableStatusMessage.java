@@ -30,6 +30,10 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a Forwarding Table Status Message in a network.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy data transfer between components.
+ */
 public class ForwardingTableStatusMessage extends StatusMessage implements Parcelable {
 
     /**
@@ -57,9 +61,17 @@ public class ForwardingTableStatusMessage extends StatusMessage implements Parce
     public int destination;
 
 
+    /**
+     * Default constructor for the ForwardingTableStatusMessage class.
+     */
     public ForwardingTableStatusMessage() {
     }
 
+    /**
+     * Constructor for the ForwardingTableStatusMessage class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the status code and receivers list count.
+     */
     protected ForwardingTableStatusMessage(Parcel in) {
         status = in.readInt();
         netKeyIndex = in.readInt();
@@ -67,6 +79,9 @@ public class ForwardingTableStatusMessage extends StatusMessage implements Parce
         destination = in.readInt();
     }
 
+    /**
+     * Creator constant for the ForwardingTableStatusMessage class.
+     */
     public static final Creator<ForwardingTableStatusMessage> CREATOR = new Creator<ForwardingTableStatusMessage>() {
         @Override
         public ForwardingTableStatusMessage createFromParcel(Parcel in) {
@@ -79,6 +94,11 @@ public class ForwardingTableStatusMessage extends StatusMessage implements Parce
         }
     };
 
+    /**
+     * Parses the byte array to params.
+     *
+     * @param params The byte array containing the params.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -94,11 +114,22 @@ public class ForwardingTableStatusMessage extends StatusMessage implements Parce
         this.destination = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the params to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
@@ -107,6 +138,11 @@ public class ForwardingTableStatusMessage extends StatusMessage implements Parce
         dest.writeInt(destination);
     }
 
+    /**
+     * Returns a string representation of the ForwardingTableStatusMessage object.
+     *
+     * @return A string representation of the ForwardingTableStatusMessage object.
+     */
     @Override
     public String toString() {
         return "ForwardingTableStatusMessage{" +

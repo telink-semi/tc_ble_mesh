@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,10 +22,12 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
-/**
- * Created by kee on 2019/8/14.
- */
 
+/**
+ * interface definition for a NetworkingPDU (Protocol Data Unit) that is generic and can be used with any data type T.
+ *
+ * @param <T>
+ */
 public interface NetworkingPDU<T> {
 
     /**
@@ -34,5 +36,11 @@ public interface NetworkingPDU<T> {
      * @return instance
      */
 //    T parse(byte[] data);
+
+    /**
+     * convert pdu to byte array
+     *
+     * @return byte array
+     */
     byte[] toByteArray();
 }

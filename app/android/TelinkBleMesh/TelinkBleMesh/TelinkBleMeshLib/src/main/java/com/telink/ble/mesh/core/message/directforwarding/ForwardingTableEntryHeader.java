@@ -24,6 +24,7 @@ package com.telink.ble.mesh.core.message.directforwarding;
 
 /**
  * Created by kee on 2019/8/23.
+ * ignore
  */
 public class ForwardingTableEntryHeader {
 

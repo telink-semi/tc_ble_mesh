@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,23 +23,38 @@
 package com.telink.ble.mesh.core.provisioning.pdu;
 
 /**
- * Created by kee on 2019/7/19.
+ * The ProvisioningDataPDU class represents a Provisioning State PDU containing encrypted data.
+ * It implements the ProvisioningStatePDU interface.
  */
-
 public class ProvisioningDataPDU implements ProvisioningStatePDU {
 
     // including mic
     public byte[] encryptedData;
 
+    /**
+     * constructor
+     *
+     * @param encryptedData encryptedData
+     */
     public ProvisioningDataPDU(byte[] encryptedData) {
         this.encryptedData = encryptedData;
     }
 
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         return encryptedData;
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_DATA;

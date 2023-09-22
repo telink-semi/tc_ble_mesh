@@ -28,9 +28,12 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * A LARGE_COMPOSITION_DATA_STATUS message is an unacknowledged message used to report a
- * portion of a page of the Composition Data
+ * SarReceiverStatusMessage
+ * This class represents a status message for the SAR (Segmentation and Reassembly) receiver.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy serialization.
+ * The class contains various state variables that represent different aspects of the SAR receiver's status.
  */
+
 public class SarReceiverStatusMessage extends StatusMessage implements Parcelable {
 
     /**
@@ -59,7 +62,7 @@ public class SarReceiverStatusMessage extends StatusMessage implements Parcelabl
 
     /**
      * 2 bits
-     *  New SAR Acknowledgment Retransmissions Count state
+     * New SAR Acknowledgment Retransmissions Count state
      */
     public int ackRetransCount;
 
@@ -67,10 +70,19 @@ public class SarReceiverStatusMessage extends StatusMessage implements Parcelabl
      * Reserved for Future Use
      */
     public int rfu;
+
+    /**
+     * Default constructor for SarReceiverStatusMessage.
+     */
     public SarReceiverStatusMessage() {
     }
 
-
+    /**
+     * Constructor for SarReceiverStatusMessage that takes a Parcel as input.
+     * Used for deserialization.
+     *
+     * @param in The Parcel object containing the serialized SarReceiverStatusMessage.
+     */
     protected SarReceiverStatusMessage(Parcel in) {
         segmentsThreshold = in.readInt();
         ackDelayIncrement = in.readInt();
@@ -80,6 +92,10 @@ public class SarReceiverStatusMessage extends StatusMessage implements Parcelabl
         rfu = in.readInt();
     }
 
+    /**
+     * Creator object for SarReceiverStatusMessage.
+     * Used for deserialization.
+     */
     public static final Creator<SarReceiverStatusMessage> CREATOR = new Creator<SarReceiverStatusMessage>() {
         @Override
         public SarReceiverStatusMessage createFromParcel(Parcel in) {
@@ -92,25 +108,41 @@ public class SarReceiverStatusMessage extends StatusMessage implements Parcelabl
         }
     };
 
+    /**
+     * Parses the byte array representation of the SAR receiver status message.
+     * Extracts the state variables from the byte array and assigns them to the corresponding fields.
+     *
+     * @param params The byte array representation of the SAR receiver status message.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
         segmentsThreshold = params[index] & 0xFF;
         ackDelayIncrement = (params[index++] & 0xFF) >> 5;
-
         discardTimeout = params[index] & 0xFF;
         receiverSegmentIntervalStep = (params[index++] & 0xFF) >> 4;
-
         ackRetransCount = params[index] & 0xFF;
         rfu = (params[index++] & 0xFF) >> 2;
     }
 
-
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     * Always returns 0 in this implementation.
+     *
+     * @return An integer value representing the bitmask.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flatten this object into a Parcel.
+     * Serializes the SarReceiverStatusMessage object into a Parcel.
+     *
+     * @param dest  The Parcel object to write the serialized data to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(segmentsThreshold);

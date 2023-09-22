@@ -30,39 +30,51 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a firmware status message for a Firmware Distribution Server.
+ * It extends the StatusMessage class and implements the Parcelable interface.
+ * It contains information about the status code, entry count, distribution firmware image index,
+ * and firmware ID.
+ */
 public class FDFirmwareStatusMessage extends StatusMessage implements Parcelable {
-
     /**
-     * Status Code for the requesting message
-     * 1 byte
+     * Status Code for the requesting message.
+     * It is represented by 1 byte.
      */
     public int status;
 
     /**
-     * Entry Count
-     * The number of firmware images stored on the Firmware Distribution Server
-     * 2 bytes
+     * Entry Count.
+     * It represents the number of firmware images stored on the Firmware Distribution Server.
+     * It is represented by 2 bytes.
      */
     public int entryCount;
 
     /**
-     * Distribution Firmware Image Index
-     * Index of the firmware image in the Firmware Images List state
-     * 2 bytes
+     * Distribution Firmware Image Index.
+     * It represents the index of the firmware image in the Firmware Images List state.
+     * It is represented by 2 bytes.
      */
     public int distImageIndex;
 
     /**
-     * Firmware ID
-     * Identifies associated firmware image
-     * Variable length
+     * Firmware ID.
+     * It identifies the associated firmware image.
+     * It has a variable length.
      */
     public byte[] firmwareID;
 
+    /**
+     * Default constructor for FDFirmwareStatusMessage.
+     */
     public FDFirmwareStatusMessage() {
     }
 
-
+    /**
+     * Constructor for FDFirmwareStatusMessage that initializes the object from a Parcel.
+     *
+     * @param in The Parcel object to read the values from.
+     */
     protected FDFirmwareStatusMessage(Parcel in) {
         status = in.readInt();
         entryCount = in.readInt();
@@ -70,6 +82,9 @@ public class FDFirmwareStatusMessage extends StatusMessage implements Parcelable
         firmwareID = in.createByteArray();
     }
 
+    /**
+     * Parcelable creator for FDFirmwareStatusMessage.
+     */
     public static final Creator<FDFirmwareStatusMessage> CREATOR = new Creator<FDFirmwareStatusMessage>() {
         @Override
         public FDFirmwareStatusMessage createFromParcel(Parcel in) {
@@ -82,13 +97,17 @@ public class FDFirmwareStatusMessage extends StatusMessage implements Parcelable
         }
     };
 
+    /**
+     * Parses the byte array and sets the values of the FDFirmwareStatusMessage object.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
         this.status = params[index++] & 0xFF;
         this.entryCount = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-
         this.distImageIndex = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
         if (params.length == 5) return;
@@ -96,11 +115,22 @@ public class FDFirmwareStatusMessage extends StatusMessage implements Parcelable
         System.arraycopy(params, index, this.firmwareID, 0, this.firmwareID.length);
     }
 
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return A bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the values of the FDFirmwareStatusMessage object to a Parcel.
+     *
+     * @param dest  The Parcel object to write the values to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);

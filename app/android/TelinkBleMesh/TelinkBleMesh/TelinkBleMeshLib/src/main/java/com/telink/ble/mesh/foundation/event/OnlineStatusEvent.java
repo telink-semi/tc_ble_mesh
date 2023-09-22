@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -32,24 +32,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by kee on 2019/9/4.
+ * OnlineStatusEvent class represents an event that notifies the online status of a device.
+ * It extends the Event class and implements the Parcelable interface.
  */
-
 public class OnlineStatusEvent extends Event<String> implements Parcelable {
 
     public static final String EVENT_TYPE_ONLINE_STATUS_NOTIFY = "com.telink.ble.mesh.EVENT_TYPE_ONLINE_STATUS_NOTIFY";
-
     private List<OnlineStatusInfo> onlineStatusInfoList;
 
+    /**
+     * Constructor for creating an OnlineStatusEvent object.
+     *
+     * @param sender           the object that sends the event
+     * @param onlineStatusData the raw data of the online status
+     */
     public OnlineStatusEvent(Object sender, byte[] onlineStatusData) {
         this(sender, EVENT_TYPE_ONLINE_STATUS_NOTIFY);
         this.onlineStatusInfoList = parseOnlineStatusData(onlineStatusData);
     }
 
+    /**
+     * Constructor for creating an OnlineStatusEvent object from a Parcel.
+     *
+     * @param in the Parcel object
+     */
     protected OnlineStatusEvent(Parcel in) {
         onlineStatusInfoList = in.createTypedArrayList(OnlineStatusInfo.CREATOR);
     }
 
+    /**
+     * Creator constant for creating OnlineStatusEvent objects from a Parcel.
+     */
     public static final Creator<OnlineStatusEvent> CREATOR = new Creator<OnlineStatusEvent>() {
         @Override
         public OnlineStatusEvent createFromParcel(Parcel in) {
@@ -61,6 +74,13 @@ public class OnlineStatusEvent extends Event<String> implements Parcelable {
             return new OnlineStatusEvent[size];
         }
     };
+
+    /**
+     * Parses the raw online status data and returns a list of OnlineStatusInfo objects.
+     *
+     * @param rawData the raw online status data
+     * @return a list of OnlineStatusInfo objects
+     */
 
     private List<OnlineStatusInfo> parseOnlineStatusData(byte[] rawData) {
         if (rawData == null || rawData.length < 4) return null;
@@ -113,15 +133,30 @@ public class OnlineStatusEvent extends Event<String> implements Parcelable {
         return statusInfoList;
     }
 
+    /**
+     * Constructor for creating an OnlineStatusEvent object.
+     *
+     * @param sender the object that sends the event
+     * @param type   the type of the event
+     */
     public OnlineStatusEvent(Object sender, String type) {
         super(sender, type);
     }
 
-
+    /**
+     * Returns the list of OnlineStatusInfo objects.
+     *
+     * @return the list of OnlineStatusInfo objects
+     */
     public List<OnlineStatusInfo> getOnlineStatusInfoList() {
         return onlineStatusInfoList;
     }
 
+    /**
+     * Sets the list of OnlineStatusInfo objects.
+     *
+     * @param onlineStatusInfoList the list of OnlineStatusInfo objects
+     */
     public void setOnlineStatusInfoList(List<OnlineStatusInfo> onlineStatusInfoList) {
         this.onlineStatusInfoList = onlineStatusInfoList;
     }

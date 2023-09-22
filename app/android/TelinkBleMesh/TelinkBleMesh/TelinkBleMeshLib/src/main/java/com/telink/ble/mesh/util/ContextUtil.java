@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -37,6 +37,12 @@ import static android.os.Build.VERSION.SDK_INT;
 public class ContextUtil {
     public static final int SDK_VERSION = Build.VERSION.SDK_INT;
 
+    /**
+     * check is the phone location enabled
+     *
+     * @param context Context
+     * @return check result
+     */
     public static boolean isLocationEnable(final Context context) {
         LocationManager locationManager
                 = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -46,20 +52,38 @@ public class ContextUtil {
         return gps || network;
     }
 
-
+    /**
+     * check sdk version >= android L
+     *
+     * @return check result
+     */
     public static boolean versionAboveL() {
         return SDK_VERSION >= Build.VERSION_CODES.LOLLIPOP;
     }
 
+
+    /**
+     * check sdk version >= android N
+     *
+     * @return check result
+     */
     public static boolean versionAboveN() {
         return SDK_VERSION >= Build.VERSION_CODES.N;
     }
 
+
+    /**
+     * check sdk version == android N
+     *
+     * @return check result
+     */
     public static boolean versionIsN() {
         return SDK_VERSION == Build.VERSION_CODES.N;
     }
 
-
+    /**
+     * use reflect to skip warning
+     */
     public static void skipReflectWarning() {
         if (SDK_INT < Build.VERSION_CODES.P) {
             return;

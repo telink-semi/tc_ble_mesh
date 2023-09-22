@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.networking.ExtendBearerMode;
@@ -242,6 +243,8 @@ public class MeshService implements MeshController.EventCallback {
     }
 
     /**
+     * send GATT request if the gatt is connected {@link GattConnection#isConnected()}
+     *
      * @param request gatt request
      * @return if request sent
      */
@@ -274,7 +277,9 @@ public class MeshService implements MeshController.EventCallback {
     }
 
     /**
-     * get all devices status
+     * Telink-private protocol.
+     * get all devices status by send command to OnlineStatus handle
+     * @see com.telink.ble.mesh.core.ble.UUIDInfo#CHARACTERISTIC_ONLINE_STATUS
      *
      * @return if online_status supported
      */

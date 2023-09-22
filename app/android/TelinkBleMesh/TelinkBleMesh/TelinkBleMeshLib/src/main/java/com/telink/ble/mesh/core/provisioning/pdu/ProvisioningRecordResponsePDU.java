@@ -28,10 +28,13 @@ import com.telink.ble.mesh.util.Arrays;
 
 import java.nio.ByteOrder;
 
-/**
- * Created by kee on 2019/7/18.
- */
 
+/**
+ * This class represents a Provisioning Record Response PDU.
+ * It implements the ProvisioningStatePDU interface.
+ * It contains fields for the raw data, status, record ID, fragment offset, total length, and data.
+ * It provides methods to convert the PDU to bytes and to parse bytes into a PDU object.
+ */
 public class ProvisioningRecordResponsePDU implements ProvisioningStatePDU {
 
 
@@ -49,7 +52,9 @@ public class ProvisioningRecordResponsePDU implements ProvisioningStatePDU {
      * status Requested Offset Is Out Of Bounds
      */
     public static final byte STATUS_OFFSET_OUT_OF_BOUNDS = 0x02;
-
+    /**
+     * The raw data of the PDU.
+     */
     public byte[] rawData;
     /**
      * Indicates whether or not the request was handled successfully
@@ -57,17 +62,28 @@ public class ProvisioningRecordResponsePDU implements ProvisioningStatePDU {
     public byte status;
 
     /**
-     *
+     * The ID of the record.
      */
     public int recordID;
-
+    /**
+     * The fragment offset of the record.
+     */
     public int fragmentOffset;
-
+    /**
+     * The total length of the record.
+     */
     public int totalLength;
-
+    /**
+     * The data of the record.
+     */
     public byte[] data;
 
-
+    /**
+     * Constructs a ProvisioningRecordResponsePDU object from a byte array.
+     *
+     * @param data The byte array representing the PDU.
+     * @return The ProvisioningRecordResponsePDU object.
+     */
     public static ProvisioningRecordResponsePDU fromBytes(byte[] data) {
 
         int index = 0;
@@ -88,17 +104,32 @@ public class ProvisioningRecordResponsePDU implements ProvisioningStatePDU {
         return responsePDU;
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
 
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_RECORD_RESPONSE;
     }
 
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         return rawData;
     }
 
+    /**
+     * Converts the PDU object to a string representation.
+     *
+     * @return The string representation of the PDU object.
+     */
     @Override
     public String toString() {
         return "ProvisioningRecordResponsePDU{" +

@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,27 +28,36 @@ import android.os.Parcelable;
 
 /**
  * online status
+ * This class represents the online status information of a user.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
  */
 public class OnlineStatusInfo implements Parcelable {
 
-    public int address;
+    public int address; // The address of the user
+    public byte sn; // The serial number indicating the online status (0 for offline)
+    public byte[] status; // The additional status information
 
-//        byte rsv; // 1 bit
-
-    // sn: 0 offline
-    public byte sn;
-
-    public byte[] status;
-
+    /**
+     * Default constructor for the OnlineStatusInfo class.
+     */
     public OnlineStatusInfo() {
     }
 
+    /**
+     * Constructor for the OnlineStatusInfo class that takes a Parcel as input.
+     * Used for deserialization.
+     *
+     * @param in The Parcel containing the serialized OnlineStatusInfo object.
+     */
     protected OnlineStatusInfo(Parcel in) {
         address = in.readInt();
         sn = in.readByte();
         status = in.createByteArray();
     }
 
+    /**
+     * Creator constant for the Parcelable interface.
+     */
     public static final Creator<OnlineStatusInfo> CREATOR = new Creator<OnlineStatusInfo>() {
         @Override
         public OnlineStatusInfo createFromParcel(Parcel in) {
@@ -61,11 +70,23 @@ public class OnlineStatusInfo implements Parcelable {
         }
     };
 
+    /**
+     * Returns a bitmask indicating the set of special object types
+     * describing the OnlineStatusInfo instance.
+     *
+     * @return A bitmask indicating the set of special object types.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the OnlineStatusInfo object's data to the given Parcel.
+     *
+     * @param dest  The Parcel to write the object's data to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(address);

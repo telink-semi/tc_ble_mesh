@@ -33,34 +33,68 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDCancelMessage extends UpdatingMessage {
 
-    private boolean ack = true;
+    private boolean ack = true; // Flag indicating if an acknowledgement is expected 
 
+    /**
+     * Constructor for the FDCancelMessage class.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param appKeyIndex        The application key index for the message.
+     */
     public FDCancelMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDCancelMessage with default values.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param appKeyIndex        The application key index for the message.
+     * @return A simple FDCancelMessage object.
+     */
     public static FDCancelMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDCancelMessage message = new FDCancelMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Returns the opcode value for the FDCancelMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_CANCEL.value;
     }
 
+    /**
+     * Returns the acknowledgement flag for the FDCancelMessage.
+     *
+     * @return The acknowledgement flag.
+     */
     public boolean isAck() {
         return ack;
     }
 
+    /**
+     * Sets the acknowledgement flag for the FDCancelMessage.
+     *
+     * @param ack The acknowledgement flag.
+     */
     public void setAck(boolean ack) {
         this.ack = ack;
     }
 
+    /**
+     * Returns the response opcode value for the FDCancelMessage.
+     * If the acknowledgement flag is true, it returns the FD_STATUS opcode value.
+     * Otherwise, it returns the OPCODE_INVALID value.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return ack ? Opcode.FD_STATUS.value : MeshMessage.OPCODE_INVALID;
     }
-
 }

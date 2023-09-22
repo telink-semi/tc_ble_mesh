@@ -26,26 +26,50 @@ import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.lighting.LightingMessage;
 
 /**
- * Created by kee on 2019/9/19.
+ * This class represents a Scene Register Get Message, which is a type of Lighting Message.
+ * It is used to retrieve information about scene registration from a specific destination address and app key index.
  */
-
 public class SceneRegisterGetMessage extends LightingMessage {
 
+    /**
+     * Creates a new SceneRegisterGetMessage with the given destination address and app key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The app key index of the message.
+     */
+    public SceneRegisterGetMessage(int destinationAddress, int appKeyIndex) {
+        super(destinationAddress, appKeyIndex);
+    }
+
+    /**
+     * Returns a new SceneRegisterGetMessage with the given destination address, app key index, and response maximum value.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The app key index of the message.
+     * @param rspMax The response maximum value of the message.
+     * @return A new SceneRegisterGetMessage object.
+     */
     public static SceneRegisterGetMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax) {
         SceneRegisterGetMessage message = new SceneRegisterGetMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(rspMax);
         return message;
     }
 
-    public SceneRegisterGetMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
-    }
-
+    /**
+     * Returns the opcode value of the Scene Register Get Message.
+     *
+     * @return The opcode value of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.SCENE_REG_GET.value;
     }
 
+    /**
+     * Returns the response opcode value of the Scene Register Get Message.
+     *
+     * @return The response opcode value of the message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.SCENE_REG_STATUS.value;

@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,22 +28,37 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.util.Arrays;
 
 /**
- * Model for provisioning flow
- * Created by kee on 2019/9/4.
+ * This class represents a fast provisioning device.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
  */
-// advertisingDevice is null
 public class FastProvisioningDevice implements Parcelable {
-
+    /**
+     * the original address of the device
+     */
     private int originAddress;
-
+    /**
+     * the new address of the device
+     */
     private int newAddress;
 
+    /**
+     * the product ID of the device
+     */
     private int pid;
 
+    /**
+     * the number of elements in the device
+     */
     private int elementCount;
 
+    /**
+     * the MAC address of the device
+     */
     private byte[] mac;
 
+    /**
+     * the device key of the device
+     */
     private byte[] deviceKey;
 
 

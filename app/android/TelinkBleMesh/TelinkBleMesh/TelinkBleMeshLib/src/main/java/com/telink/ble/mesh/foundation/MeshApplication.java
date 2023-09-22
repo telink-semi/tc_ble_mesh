@@ -31,6 +31,20 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.util.MeshLogger;
 
 /**
+ * abstract Application
+ * Provide instance of {@link EventBus}, provide interface for :
+ * receive event {@link #addEventListener(String, EventListener)}
+ * and
+ * dispatch event {@link #dispatchEvent(Event) }.
+ * <p>
+ * <p>
+ * Provide callbacks for some basic events
+ *
+ * @see #onNetworkInfoUpdate(NetworkInfoUpdateEvent)  for sequence-number or iv-index info update
+ * @see #onStatusNotificationEvent(StatusNotificationEvent) for Mesh status notification, such as OnOffStatus {@link com.telink.ble.mesh.core.message.generic.OnOffStatusMessage}
+ * @see #onOnlineStatusEvent(OnlineStatusEvent) for Telink-Private OnlineStatus notification
+ * @see #onMeshEvent(MeshEvent) for MeshEvent
+ * <p>
  * Created by kee on 2019/9/4.
  */
 public abstract class MeshApplication extends Application implements EventHandler {

@@ -29,23 +29,37 @@ import com.telink.ble.mesh.core.message.Opcode;
  * <p>
  * The response to a Config Node Reset message is a Config Node Reset Status message.
  */
-
 public class NodeResetMessage extends ConfigMessage {
 
     public NodeResetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode value for the NodeResetMessage, which is Opcode.NODE_RESET.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.NODE_RESET.value;
     }
 
+    /**
+     * Returns the parameters of the NodeResetMessage.
+     *
+     * @return null.
+     */
     @Override
     public byte[] getParams() {
         return null;
     }
 
+    /**
+     * Returns the response opcode value for the NodeResetMessage, which is Opcode.NODE_RESET_STATUS.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.NODE_RESET_STATUS.value;

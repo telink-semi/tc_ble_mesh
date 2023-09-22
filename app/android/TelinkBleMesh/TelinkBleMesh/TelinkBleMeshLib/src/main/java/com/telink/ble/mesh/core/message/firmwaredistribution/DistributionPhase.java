@@ -23,7 +23,7 @@
 package com.telink.ble.mesh.core.message.firmwaredistribution;
 
 /**
- * firmware-update state
+ * This enum represents the different phases of a firmware update process.
  */
 public enum DistributionPhase {
     IDLE(0x00,
@@ -59,6 +59,12 @@ public enum DistributionPhase {
 
     public final String desc;
 
+    /**
+     * Constructor for the DistributionPhase enum.
+     *
+     * @param value The numerical value representing the distribution phase.
+     * @param desc  A description of the distribution phase.
+     */
     DistributionPhase(int value, String desc) {
         this.value = value;
         this.desc = desc;

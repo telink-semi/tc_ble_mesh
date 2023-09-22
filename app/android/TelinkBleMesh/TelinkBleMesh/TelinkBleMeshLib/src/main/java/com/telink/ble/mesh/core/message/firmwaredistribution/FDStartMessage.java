@@ -31,8 +31,6 @@ import java.nio.ByteOrder;
 /**
  * The Firmware Distribution Start message is an acknowledged message sent by a Firmware Distribution Client to start the firmware image distribution to the Updating nodes in the Distribution Receivers List.
  * The response to a Firmware Distribution Start message is a Firmware Distribution Status message.
- *
- * @see
  */
 public class FDStartMessage extends UpdatingMessage {
 
@@ -93,27 +91,54 @@ public class FDStartMessage extends UpdatingMessage {
      */
     public int distributionMulticastAddress;
 
-
+    /**
+     * Constructs a new FDStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDStartMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDStartMessage object.
+     */
     public static FDStartMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDStartMessage message = new FDStartMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDStartMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_START.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDStartMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_STATUS.value;
     }
 
+    /**
+     * Gets the byte array representation of the parameters in the FDStartMessage.
+     *
+     * @return The byte array representation of the parameters.
+     */
     @Override
     public byte[] getParams() {
 

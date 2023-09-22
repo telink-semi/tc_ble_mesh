@@ -24,10 +24,14 @@ package com.telink.ble.mesh.core.provisioning.pdu;
 
 import com.telink.ble.mesh.core.provisioning.AuthenticationMethod;
 
-/**
- * Created by kee on 2019/7/18.
- */
 
+/**
+ * This class represents a Provisioning Start PDU (Protocol Data Unit).
+ * It implements the ProvisioningStatePDU interface.
+ * The Provisioning Start PDU is used to initiate the provisioning process.
+ * It contains information about the algorithm used for provisioning, the public key used,
+ * the authentication method used, the authentication action, and the authentication size.
+ */
 public class ProvisioningStartPDU implements ProvisioningStatePDU {
     private static final int LEN = 5;
 
@@ -71,6 +75,13 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
      */
     public byte authenticationSize;
 
+    /**
+     * Creates a simple ProvisioningStartPDU with default values.
+     *
+     * @param useOOBPublicKey    true if OOB Public Key is used, false otherwise
+     * @param staticOOBSupported true if Static OOB authentication is supported, false otherwise
+     * @return a ProvisioningStartPDU object
+     */
     public static ProvisioningStartPDU getSimple(boolean useOOBPublicKey, boolean staticOOBSupported) {
         ProvisioningStartPDU startPDU = new ProvisioningStartPDU();
         startPDU.algorithm = 0;
@@ -83,14 +94,29 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
         return startPDU;
     }
 
+    /**
+     * Sets the algorithm used for provisioning.
+     *
+     * @param algorithm the algorithm byte value
+     */
     public void setAlgorithm(byte algorithm) {
         this.algorithm = algorithm;
     }
 
+    /**
+     * Sets whether OOB Public Key is used or not.
+     *
+     * @param publicKeyEnable true if OOB Public Key is used, false otherwise
+     */
     public void setPublicKey(boolean publicKeyEnable) {
         this.publicKey = (byte) (publicKeyEnable ? 1 : 0);
     }
 
+    /**
+     * Converts the ProvisioningStartPDU object to a byte array.
+     *
+     * @return a byte array representing the ProvisioningStartPDU
+     */
     @Override
     public byte[] toBytes() {
         return new byte[]{
@@ -102,8 +128,15 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
         };
     }
 
+    /**
+     * Gets the state of the ProvisioningStartPDU.
+     *
+     * @return the state byte value
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_START;
     }
 }
+
+

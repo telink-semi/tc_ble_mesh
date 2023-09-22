@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,13 +25,19 @@ package com.telink.ble.mesh.core.message.time;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.networking.AccessType;
 
+/**
+ * This class represents a time-based message in the mesh network.
+ */
 public abstract class TimeMessage extends MeshMessage {
-
+    /**
+     * Constructs a TimeMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The address of the destination node for this message.
+     * @param appKeyIndex        The index of the application key to be used for encryption and decryption.
+     */
     public TimeMessage(int destinationAddress, int appKeyIndex) {
         this.destinationAddress = destinationAddress;
         this.appKeyIndex = appKeyIndex;
         this.accessType = AccessType.APPLICATION;
     }
-
-
 }

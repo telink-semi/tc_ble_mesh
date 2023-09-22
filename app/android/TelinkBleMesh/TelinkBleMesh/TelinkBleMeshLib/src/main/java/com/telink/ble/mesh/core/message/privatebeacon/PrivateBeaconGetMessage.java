@@ -30,17 +30,24 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
  */
 public class PrivateBeaconGetMessage extends ConfigMessage {
 
-
+    /**
+     * ignore
+     */
     public PrivateBeaconGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
-
+    /**
+     * ignore
+     */
     @Override
     public int getOpcode() {
         return OPCODE_INVALID;
     }
 
+    /**
+     * ignore
+     */
     @Override
     public int getResponseOpcode() {
         return OPCODE_INVALID;

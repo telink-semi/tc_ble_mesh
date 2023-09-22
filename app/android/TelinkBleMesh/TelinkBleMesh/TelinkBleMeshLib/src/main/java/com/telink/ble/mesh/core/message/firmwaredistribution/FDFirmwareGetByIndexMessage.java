@@ -39,25 +39,47 @@ public class FDFirmwareGetByIndexMessage extends UpdatingMessage {
     public int distImageIndex;
 
 
+    /**
+     * Constructs a new FDFirmwareGetByIndexMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address to send the message to.
+     * @param appKeyIndex        The index of the application key to use for encryption and decryption.
+     */
     public FDFirmwareGetByIndexMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDFirmwareGetByIndexMessage object with the specified destination address and application key index.
+     * This method sets the response maximum to 1.
+     *
+     * @param destinationAddress The destination address to send the message to.
+     * @param appKeyIndex        The index of the application key to use for encryption and decryption.
+     * @return A simple FDFirmwareGetByIndexMessage object.
+     */
     public static FDFirmwareGetByIndexMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDFirmwareGetByIndexMessage message = new FDFirmwareGetByIndexMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value of the FDFirmwareGetByIndexMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_FIRMWARE_GET.value;
     }
 
+    /**
+     * Gets the response opcode value of the FDFirmwareGetByIndexMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;
     }
-
-
 }

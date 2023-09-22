@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -33,6 +33,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class represents a Blob Block Status Message.
+ * It extends the StatusMessage class and implements the Parcelable interface for serialization.
+ * The Blob Block Status Message is used to provide information about the status of a block in a blob transfer.
+ */
 public class BlobBlockStatusMessage extends StatusMessage implements Parcelable {
 
     /**
@@ -98,11 +103,18 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
      */
     private List<Integer> encodedMissingChunks;
 
-
+    /**
+     * Default constructor for the BlobBlockStatusMessage class.
+     */
     public BlobBlockStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the BlobBlockStatusMessage class that takes a Parcel as input.
+     * It reads the attributes from the Parcel and initializes the object.
+     *
+     * @param in The Parcel object to read from.
+     */
     protected BlobBlockStatusMessage(Parcel in) {
         status = in.readInt();
         format = in.readInt();
@@ -115,6 +127,10 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         in.readList(encodedMissingChunks, null);
     }
 
+    /**
+     * Creator constant for the class.
+     * It is used to create new instances of the class from a Parcel.
+     */
     public static final Creator<BlobBlockStatusMessage> CREATOR = new Creator<BlobBlockStatusMessage>() {
         @Override
         public BlobBlockStatusMessage createFromParcel(Parcel in) {
@@ -127,6 +143,11 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         }
     };
 
+    /**
+     * Parses the given byte array and sets the attributes of the object accordingly.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -151,11 +172,22 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         }
     }
 
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return Always returns 0 as there are no special object types.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flattens the object into a Parcel.
+     *
+     * @param dest  The Parcel object to write into.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
@@ -167,54 +199,120 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         dest.writeList(encodedMissingChunks);
     }
 
+    /**
+     * Gets the status of the object.
+     *
+     * @return The status of the object.
+     */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * Gets the format of the object.
+     *
+     * @return The format of the object.
+     */
     public int getFormat() {
         return format;
     }
 
+    /**
+     * Gets the block number of the object.
+     *
+     * @return The block number of the object.
+     */
     public int getBlockNumber() {
         return blockNumber;
     }
 
+    /**
+     * Gets the chunk size of the object.
+     *
+     * @return The chunk size of the object.
+     */
     public long getChunkSize() {
         return chunkSize;
     }
 
+    /**
+     * Gets the missing chunks of the object.
+     *
+     * @return The missing chunks of the object.
+     */
     public List<Integer> getMissingChunks() {
         return missingChunks;
     }
 
+    /**
+     * Gets the encoded missing chunks of the object.
+     *
+     * @return The encoded missing chunks of the object.
+     */
     public List<Integer> getEncodedMissingChunks() {
         return encodedMissingChunks;
     }
 
+    /**
+     * Sets the status of the object.
+     *
+     * @param status The status to be set.
+     */
     public void setStatus(int status) {
         this.status = status;
     }
 
+    /**
+     * Sets the format of the object.
+     *
+     * @param format The format to be set.
+     */
     public void setFormat(int format) {
         this.format = format;
     }
 
+    /**
+     * Sets the block number of the object.
+     *
+     * @param blockNumber The block number to be set.
+     */
     public void setBlockNumber(int blockNumber) {
         this.blockNumber = blockNumber;
     }
 
+    /**
+     * Sets the chunk size of the object.
+     *
+     * @param chunkSize The chunk size to be set.
+     */
     public void setChunkSize(int chunkSize) {
         this.chunkSize = chunkSize;
     }
 
+    /**
+     * Sets the missing chunks of the object.
+     *
+     * @param missingChunks The missing chunks to be set.
+     */
     public void setMissingChunks(List<Integer> missingChunks) {
         this.missingChunks = missingChunks;
     }
 
+    /**
+     * Sets the encoded missing chunks of the object.
+     *
+     * @param encodedMissingChunks The encoded missing chunks to be set.
+     */
     public void setEncodedMissingChunks(List<Integer> encodedMissingChunks) {
         this.encodedMissingChunks = encodedMissingChunks;
     }
 
+
+    /**
+     * Returns a string representation of the BlobInfoStatusMessage object.
+     *
+     * @return A string representation of the object.
+     */
     @Override
     public String toString() {
         return "BlobBlockStatusMessage{" +

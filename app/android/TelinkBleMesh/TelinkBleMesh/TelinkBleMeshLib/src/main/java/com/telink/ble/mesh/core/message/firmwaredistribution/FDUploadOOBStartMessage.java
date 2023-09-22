@@ -52,21 +52,44 @@ public class FDUploadOOBStartMessage extends UpdatingMessage {
      */
     public byte[] uploadFirmwareID;
 
+    /**
+     * Constructs a new FDUploadOOBStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDUploadOOBStartMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDUploadOOBStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDUploadOOBStartMessage object.
+     */
     public static FDUploadOOBStartMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDUploadOOBStartMessage message = new FDUploadOOBStartMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDUploadOOBStartMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_UPLOAD_START.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDUploadOOBStartMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;

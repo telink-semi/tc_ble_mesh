@@ -30,14 +30,17 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a status message for firmware distribution receivers.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy data transfer.
+ * The status code and the number of entries in the distribution receivers list are stored as instance variables.
+ */
 public class FDReceiversStatusMessage extends StatusMessage implements Parcelable {
-
     /**
      * Status Code for the requesting message
      * 1 byte
      */
     private int status;
-
     /**
      * Receivers List Count
      * The number of entries in the Distribution Receivers List state
@@ -45,15 +48,25 @@ public class FDReceiversStatusMessage extends StatusMessage implements Parcelabl
      */
     private int receiversListCount;
 
+    /**
+     * Default constructor for the FDReceiversStatusMessage class.
+     */
     public FDReceiversStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the FDReceiversStatusMessage class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the status code and receivers list count.
+     */
     protected FDReceiversStatusMessage(Parcel in) {
         status = in.readInt();
         receiversListCount = in.readInt();
     }
 
+    /**
+     * Creator constant for the FDReceiversStatusMessage class.
+     */
     public static final Creator<FDReceiversStatusMessage> CREATOR = new Creator<FDReceiversStatusMessage>() {
         @Override
         public FDReceiversStatusMessage createFromParcel(Parcel in) {
@@ -66,6 +79,11 @@ public class FDReceiversStatusMessage extends StatusMessage implements Parcelabl
         }
     };
 
+    /**
+     * Parses the byte array to extract the status code and receivers list count.
+     *
+     * @param params The byte array containing the status code and receivers list count.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -73,25 +91,51 @@ public class FDReceiversStatusMessage extends StatusMessage implements Parcelabl
         this.receiversListCount = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
+    /**
+     * Returns the status code.
+     *
+     * @return The status code.
+     */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * Returns the number of entries in the distribution receivers list.
+     *
+     * @return The number of entries in the distribution receivers list.
+     */
     public int getReceiversListCount() {
         return receiversListCount;
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the status code and receivers list count to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
         dest.writeInt(receiversListCount);
     }
 
+    /**
+     * Returns a string representation of the FDReceiversStatusMessage object.
+     *
+     * @return A string representation of the FDReceiversStatusMessage object.
+     */
     @Override
     public String toString() {
         return "FirmwareDistributionReceiversStatus{" +

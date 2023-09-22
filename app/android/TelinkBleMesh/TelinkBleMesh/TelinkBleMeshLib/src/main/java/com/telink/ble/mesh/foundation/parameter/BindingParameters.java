@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,13 +25,18 @@ package com.telink.ble.mesh.foundation.parameter;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.entity.BindingDevice;
 
-/**
- * Created by kee on 2019/9/5.
- */
 
+/**
+ * This class represents the binding parameters for a target device.
+ * It extends the Parameters class.
+ */
 public class BindingParameters extends Parameters {
 
     /**
+     * The BindingParameters constructor takes a BindingDevice object as a parameter, which represents the target device.
+     * It sets the scan filter using the createScanFilter method and passing the UUIDInfo.SERVICE_PROXY parameter.
+     * It also sets the ACTION_BINDING_TARGET parameter to the provided device.
+     *
      * @param device target device
      */
     public BindingParameters(BindingDevice device) {

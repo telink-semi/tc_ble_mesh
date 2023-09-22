@@ -50,6 +50,7 @@ import com.telink.ble.mesh.core.access.fu.FUCallback;
 import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
 import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.config.NetworkTransmitGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
@@ -255,6 +256,16 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         initBottomSheetDialog();
 
         checkIsContinue();
+        getNetworkTransmit();
+    }
+
+    private void getNetworkTransmit() {
+        int address = MeshService.getInstance().getDirectConnectedNodeAddress();
+        if (address == 0) {
+            MeshLogger.d("get transmit params error: mesh not connected");
+            return;
+        }
+        MeshService.getInstance().sendMeshMessage(new NetworkTransmitGetMessage(address));
     }
 
     private void showWarningDialog() {

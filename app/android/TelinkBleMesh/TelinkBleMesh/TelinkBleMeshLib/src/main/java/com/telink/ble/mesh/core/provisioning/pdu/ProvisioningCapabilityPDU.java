@@ -22,12 +22,15 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
-/**
- * Created by kee on 2019/7/18.
- */
+
 // 03:01:
 // 02:00:01:00:00:00:00:00:00:00:00
 // from device
+
+/**
+ * The ProvisioningCapabilityPDU class represents a Provisioning State PDU containing Capability data.
+ * It implements the ProvisioningStatePDU interface.
+ */
 public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
 
     private static final int LEN = 11;
@@ -42,6 +45,7 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
      */
     private static final int ALG_BIT_MASK_HMAC = 0b10;
 
+    // raw data
     public byte[] rawData;
 
 
@@ -123,6 +127,12 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
      */
     public short inputOOBAction;
 
+    /**
+     * create instance from byte array
+     *
+     * @param data data
+     * @return instance
+     */
     public static ProvisioningCapabilityPDU fromBytes(byte[] data) {
         if (data == null || data.length < LEN) {
             return null;
@@ -142,6 +152,10 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
         return capability;
     }
 
+    /**
+     * @return string representation of the  ProvisioningCapabilityPDU  object,
+     * including its various attributes such as  eleNum ,  algorithms ,  publicKeyType , etc.
+     */
     @Override
     public String toString() {
         return "ProvisioningCapabilityPDU{" +
@@ -156,20 +170,38 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
                 '}';
     }
 
+    /**
+     * @return the raw byte array representation of the  ProvisioningCapabilityPDU  object.
+     */
     @Override
     public byte[] toBytes() {
         return rawData;
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_CAPABILITIES;
     }
 
+    /**
+     * checks if the static Out-of-Band (OOB) type is supported by the  ProvisioningCapabilityPDU  object.
+     *
+     * @return true  if the  staticOOBType  attribute is not equal to 0.
+     */
     public boolean isStaticOOBSupported() {
         return staticOOBType != 0;
     }
 
+    /**
+     * method checks if the HMAC algorithm is supported by the  ProvisioningCapabilityPDU  object.
+     *
+     * @return true  if the  algorithms  attribute has the  ALG_BIT_MASK_HMAC  bit set.
+     */
     public boolean isHMacAlgorithmSupported() {
         return (algorithms & ALG_BIT_MASK_HMAC) != 0;
     }

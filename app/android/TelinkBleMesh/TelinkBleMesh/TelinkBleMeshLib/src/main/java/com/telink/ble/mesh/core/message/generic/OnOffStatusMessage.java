@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,28 +28,27 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * Created by kee on 2019/8/20.
+ * This class represents a message for the on/off status of a device.
+ * It extends the StatusMessage class and implements the Parcelable interface.
  */
-
 public class OnOffStatusMessage extends StatusMessage implements Parcelable {
-
     private static final int DATA_LEN_COMPLETE = 3;
-
     private byte presentOnOff;
-
-    /**
-     * The target value of the Generic OnOff state (optional).
-     */
     private byte targetOnOff;
-
     private byte remainingTime;
-
     private boolean isComplete = false;
 
+    /**
+     * Default constructor for the OnOffStatusMessage class.
+     */
     public OnOffStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the OnOffStatusMessage class that initializes its attributes from a Parcel.
+     *
+     * @param in The Parcel object to read the attributes from.
+     */
     protected OnOffStatusMessage(Parcel in) {
         presentOnOff = in.readByte();
         targetOnOff = in.readByte();
@@ -57,6 +56,9 @@ public class OnOffStatusMessage extends StatusMessage implements Parcelable {
         isComplete = in.readByte() != 0;
     }
 
+    /**
+     * A Creator object that implements the Parcelable.Creator interface.
+     */
     public static final Creator<OnOffStatusMessage> CREATOR = new Creator<OnOffStatusMessage>() {
         @Override
         public OnOffStatusMessage createFromParcel(Parcel in) {
@@ -69,6 +71,11 @@ public class OnOffStatusMessage extends StatusMessage implements Parcelable {
         }
     };
 
+    /**
+     * Parses the given byte array to initialize the attributes of the OnOffStatusMessage object.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         this.presentOnOff = params[0];
@@ -79,27 +86,58 @@ public class OnOffStatusMessage extends StatusMessage implements Parcelable {
         }
     }
 
+    /**
+     * Returns the present on/off status.
+     *
+     * @return The present on/off status.
+     */
     public byte getPresentOnOff() {
         return presentOnOff;
     }
 
+    /**
+     * Returns the target on/off status.
+     *
+     * @return The target on/off status.
+     */
     public byte getTargetOnOff() {
         return targetOnOff;
     }
 
+    /**
+     * Returns the remaining time for the on/off status change.
+     *
+     * @return The remaining time for the on/off status change.
+     */
     public byte getRemainingTime() {
         return remainingTime;
     }
 
+    /**
+     * Returns whether the message is complete or not.
+     *
+     * @return True if the message is complete, false otherwise.
+     */
     public boolean isComplete() {
         return isComplete;
     }
 
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return A bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flattens the object into a Parcel.
+     *
+     * @param dest  The Parcel in which the object should be written.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(presentOnOff);

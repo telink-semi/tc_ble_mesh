@@ -31,20 +31,40 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
  */
 public class SarReceiverGetMessage extends ConfigMessage {
 
+    /**
+     * Constructs a SarReceiverGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address to send the message to.
+     */
     public SarReceiverGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode .
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_SAR_RECEIVER_GET.value;
     }
 
+    /**
+     * Returns the response opcode .
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_SAR_RECEIVER_STATUS.value;
     }
 
+    /**
+     * Returns the parameters .
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return null;

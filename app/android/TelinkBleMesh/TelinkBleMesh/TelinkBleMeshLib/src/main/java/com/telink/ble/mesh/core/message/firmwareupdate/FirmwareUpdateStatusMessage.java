@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -30,62 +30,66 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a firmware update status message.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy transfer of objects between components.
+ */
 public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcelable {
-
-
     /**
-     * @see UpdateStatus
-     * 3 lower bits in first byte
+     * The status of the firmware update.
+     * It is represented by the 3 lower bits in the first byte of the message.
      */
     private int status;
-
     /**
-     * 3 higher bits in first byte (2 bits rfu)
+     * The phase of the firmware update.
+     * It is represented by the 3 higher bits in the first byte of the message.
      */
     private int phase;
-
     /**
-     * Time To Live value to use during firmware image transfer
-     * 1 byte
+     * The Time To Live (TTL) value to use during firmware image transfer.
+     * It is represented by 1 byte in the message.
      */
     private byte updateTtl;
-
-
     /**
-     * 5 bits (3 bits rfu)
+     * Additional information about the firmware update.
+     * It is represented by 5 bits in the message (3 bits reserved for future use).
      */
     private int additionalInfo;
-
     /**
-     * Used to compute the timeout of the firmware image transfer
-     * Client Timeout = [12,000 * (Client Timeout Base + 1) + 100 * Transfer TTL] milliseconds
-     * using blockSize
-     * 2 bytes
+     * The base value used to compute the timeout of the firmware image transfer.
+     * The client timeout is calculated as [12,000 * (Client Timeout Base + 1) + 100 * Transfer TTL] milliseconds.
+     * It is represented by 2 bytes in the message.
      */
     private int updateTimeoutBase;
-
     /**
-     * BLOB identifier for the firmware image
-     * 8 bytes
+     * The BLOB identifier for the firmware image.
+     * It is represented by 8 bytes in the message.
      */
     private long updateBLOBID;
-
     /**
-     * length: 1 byte
+     * The index of the firmware image being updated.
+     * It is represented by 1 byte in the message.
      */
     private int updateFirmwareImageIndex;
-
     /**
-     * If the Update TTL field is present,
-     * the Additional Information field, Update Timeout field, BLOB ID field, and Installed Firmware ID field shall be present;
+     * Indicates if the firmware update message is complete or not.
+     * If the Update TTL field is present, the Additional Information field, Update Timeout field, BLOB ID field, and Installed Firmware ID field shall be present;
      * otherwise, the Additional Information field, Update Timeout field, BLOB ID field, and Installed Firmware ID field shall not be present.
      */
     private boolean isComplete = false;
 
+    /**
+     * Default constructor for the FirmwareUpdateStatusMessage class.
+     */
     public FirmwareUpdateStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the FirmwareUpdateStatusMessage class that takes a Parcel as input.
+     * It is used for Parcelable implementation.
+     *
+     * @param in The Parcel object to read the values from.
+     */
     protected FirmwareUpdateStatusMessage(Parcel in) {
         status = in.readInt();
         phase = in.readInt();
@@ -97,6 +101,9 @@ public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcel
         isComplete = in.readByte() != 0;
     }
 
+    /**
+     * Parcelable creator for the FirmwareUpdateStatusMessage class.
+     */
     public static final Creator<FirmwareUpdateStatusMessage> CREATOR = new Creator<FirmwareUpdateStatusMessage>() {
         @Override
         public FirmwareUpdateStatusMessage createFromParcel(Parcel in) {
@@ -109,37 +116,107 @@ public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcel
         }
     };
 
+    /**
+     * Parses the byte array to populate the fields of the FirmwareUpdateStatusMessage object.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
-
         this.status = params[index] & 0x07;
-
         this.phase = (params[index] & 0xFF) >> 5;
-
         isComplete = params.length > 1;
         if (!isComplete) return;
         index++;
-
         this.updateTtl = params[index++];
-
         this.additionalInfo = (params[index++] & 0x1F);
-
         this.updateTimeoutBase = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-
         this.updateBLOBID = MeshUtils.bytes2Integer(params, index, 8, ByteOrder.LITTLE_ENDIAN);
         index += 8;
-
         this.updateFirmwareImageIndex = params[index] & 0xFF;
-
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    /**
+     * Returns the status of the firmware update.
+     *
+     * @return The status of the firmware update.
+     */
+    public int getStatus() {
+        return status;
     }
 
+    /**
+     * Returns the phase of the firmware update.
+     *
+     * @return The phase of the firmware update.
+     */
+    public int getPhase() {
+        return phase;
+    }
+
+    /**
+     * Returns the Time To Live (TTL) value used during firmware image transfer.
+     *
+     * @return The Time To Live (TTL) value used during firmware image transfer.
+     */
+    public byte getUpdateTtl() {
+        return updateTtl;
+    }
+
+    /**
+     * Returns the additional information about the firmware update.
+     *
+     * @return The additional information about the firmware update.
+     */
+    public int getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    /**
+     * Returns the base value used to compute the timeout of the firmware image transfer.
+     *
+     * @return The base value used to compute the timeout of the firmware image transfer.
+     */
+    public int getUpdateTimeoutBase() {
+        return updateTimeoutBase;
+    }
+
+    /**
+     * Returns the BLOB identifier for the firmware image.
+     *
+     * @return The BLOB identifier for the firmware image.
+     */
+    public long getUpdateBLOBID() {
+        return updateBLOBID;
+    }
+
+    /**
+     * Returns the index of the firmware image being updated.
+     *
+     * @return The index of the firmware image being updated.
+     */
+    public int getUpdateFirmwareImageIndex() {
+        return updateFirmwareImageIndex;
+    }
+
+    /**
+     * Returns whether the firmware update message is complete or not.
+     *
+     * @return True if the firmware update message is complete, false otherwise.
+     */
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    /**
+     * Writes the values of the FirmwareUpdateStatusMessage object to a Parcel.
+     * It is used for Parcelable implementation.
+     *
+     * @param dest  The Parcel object to write the values to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
@@ -152,38 +229,21 @@ public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcel
         dest.writeByte((byte) (isComplete ? 1 : 0));
     }
 
-    public int getStatus() {
-        return status;
+    /**
+     * Describes the contents of the FirmwareUpdateStatusMessage object.
+     *
+     * @return An integer representing the contents of the object.
+     */
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
-    public int getPhase() {
-        return phase;
-    }
-
-    public byte getUpdateTtl() {
-        return updateTtl;
-    }
-
-    public int getAdditionalInfo() {
-        return additionalInfo;
-    }
-
-    public int getUpdateTimeoutBase() {
-        return updateTimeoutBase;
-    }
-
-    public long getUpdateBLOBID() {
-        return updateBLOBID;
-    }
-
-    public int getUpdateFirmwareImageIndex() {
-        return updateFirmwareImageIndex;
-    }
-
-    public boolean isComplete() {
-        return isComplete;
-    }
-
+    /**
+     * Returns a string representation of the FirmwareUpdateStatusMessage object.
+     *
+     * @return A string representation of the FirmwareUpdateStatusMessage object.
+     */
     @Override
     public String toString() {
         return "FirmwareUpdateStatusMessage{" +

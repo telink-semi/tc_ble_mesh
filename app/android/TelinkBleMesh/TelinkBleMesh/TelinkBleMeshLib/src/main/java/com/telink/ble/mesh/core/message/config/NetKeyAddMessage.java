@@ -34,34 +34,61 @@ import java.nio.ByteOrder;
  * The response to a Config NetKey Add message is a Config NetKey Status message.
  */
 
+/**
+ * This class represents a network key add message that is used to add a new network key to a device.
+ * It extends the ConfigMessage class.
+ */
 public class NetKeyAddMessage extends ConfigMessage {
+    public int netKeyIndex; // The index of the network key
+    public byte[] netKey; // The network key
 
-
-    public int netKeyIndex;
-
-    public byte[] netKey;
-
-
+    /**
+     * Constructs a NetKeyAddMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public NetKeyAddMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Constructs a NetKeyAddMessage object with the specified destination address, network key index, and network key.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param netKeyIndex        The index of the network key.
+     * @param netKey             The network key.
+     */
     public NetKeyAddMessage(int destinationAddress, int netKeyIndex, byte[] netKey) {
         super(destinationAddress);
         this.netKeyIndex = netKeyIndex;
         this.netKey = netKey;
     }
 
+    /**
+     * Returns the opcode of the message, which is NETKEY_ADD.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.NETKEY_ADD.value;
     }
 
+    /**
+     * Returns the response opcode of the message, which is NETKEY_STATUS.
+     *
+     * @return The response opcode of the message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.NETKEY_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the message as a byte array.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
         ByteBuffer paramsBuffer = ByteBuffer.allocate(2 + 16).order(ByteOrder.LITTLE_ENDIAN)
@@ -69,6 +96,4 @@ public class NetKeyAddMessage extends ConfigMessage {
                 .put(netKey);
         return paramsBuffer.array();
     }
-
-
 }

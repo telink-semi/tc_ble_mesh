@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,25 +22,44 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
-/**
- * Created by kee on 2019/7/19.
- */
 
+/**
+ * This class represents a Provisioning Invite PDU (Protocol Data Unit) used in the provisioning process.
+ * It implements the ProvisioningStatePDU interface.
+ * The attentionDuration field represents the duration of attention required by the receiver of the invite.
+ * The toBytes() method converts the PDU object to a byte array.
+ * The getState() method returns the type of the PDU, which is TYPE_INVITE for the Provisioning Invite PDU.
+ */
 public class ProvisioningInvitePDU implements ProvisioningStatePDU {
 
 
     // Attention Timer state
     public byte attentionDuration;
 
+    /**
+     * constructor
+     *
+     * @param attentionDuration attention
+     */
     public ProvisioningInvitePDU(byte attentionDuration) {
         this.attentionDuration = attentionDuration;
     }
 
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         return new byte[]{attentionDuration};
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_INVITE;

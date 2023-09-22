@@ -83,29 +83,54 @@ public class FDUploadStartMessage extends UpdatingMessage {
      */
     public byte[] uploadFirmwareID;
 
-
+    /**
+     * Constructs a new FDUploadStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDUploadStartMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDUploadStartMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDUploadStartMessage object.
+     */
     public static FDUploadStartMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDUploadStartMessage message = new FDUploadStartMessage(destinationAddress, appKeyIndex);
-
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDUploadStartMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_UPLOAD_START.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDUploadStartMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;
     }
 
-
+    /**
+     * Gets the byte array representation of the parameters in the FDUploadStartMessage.
+     *
+     * @return The byte array representation of the parameters.
+     */
     @Override
     public byte[] getParams() {
         ByteBuffer buffer = ByteBuffer.allocate(16 + uploadFirmwareMetadata.length + uploadFirmwareID.length).order(ByteOrder.LITTLE_ENDIAN);

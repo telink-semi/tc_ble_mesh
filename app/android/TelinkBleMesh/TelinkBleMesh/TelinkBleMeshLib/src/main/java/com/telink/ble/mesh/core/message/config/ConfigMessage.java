@@ -33,6 +33,9 @@ import com.telink.ble.mesh.core.networking.AccessType;
  */
 public abstract class ConfigMessage extends MeshMessage {
 
+    /**
+     * Constructs a new ConfigMessage object.
+     */
     public ConfigMessage() {
     }
 

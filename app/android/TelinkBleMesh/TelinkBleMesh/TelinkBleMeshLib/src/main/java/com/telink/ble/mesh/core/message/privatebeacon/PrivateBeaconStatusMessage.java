@@ -33,35 +33,41 @@ import java.nio.ByteOrder;
 /**
  * A PRIVATE_BEACON_STATUS message is an unacknowledged message used to report the current Private Beacon state and Random Update Interval Steps state of a node.
  * This message is a response to PRIVATE_BEACON_GET message or a PRIVATE_BEACON_SET message.
+ * The PrivateBeaconStatusMessage class represents an unacknowledged message used to report the current state of a Private Beacon and Random Update Interval Steps of a node. This message is typically a response to a PRIVATE_BEACON_GET or PRIVATE_BEACON_SET message.
  */
-
 public class PrivateBeaconStatusMessage extends StatusMessage implements Parcelable {
-
     /**
-     * 1 byte
-     * New Private Beacon state
+     * New Private Beacon state.
+     * This field is a 1-byte value.
      */
     public byte privateBeacon;
-
     /**
-     * 2 bytes
-     * New Random Update Interval Steps state (optional)
+     * New Random Update Interval Steps state (optional).
+     * This field is a 2-byte value.
      */
     public int randomUpdateIntervalSteps;
-
     public boolean isComplete = false;
 
-
+    /**
+     * Default constructor for the PrivateBeaconStatusMessage class.
+     */
     public PrivateBeaconStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the PrivateBeaconStatusMessage class.
+     *
+     * @param in The Parcel object used for deserialization.
+     */
     protected PrivateBeaconStatusMessage(Parcel in) {
         privateBeacon = in.readByte();
         randomUpdateIntervalSteps = in.readInt();
         isComplete = in.readByte() != 0;
     }
 
+    /**
+     * A Creator object that implements the Parcelable interface for the PrivateBeaconStatusMessage class.
+     */
     public static final Creator<PrivateBeaconStatusMessage> CREATOR = new Creator<PrivateBeaconStatusMessage>() {
         @Override
         public PrivateBeaconStatusMessage createFromParcel(Parcel in) {
@@ -74,6 +80,11 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
         }
     };
 
+    /**
+     * Parses the byte array and sets the values of the PrivateBeaconStatusMessage object accordingly.
+     *
+     * @param params The byte array to be parsed.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -84,12 +95,22 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
         }
     }
 
-
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return A bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flattens the object into a Parcel.
+     *
+     * @param dest  The Parcel object to write the flattened object to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(privateBeacon);

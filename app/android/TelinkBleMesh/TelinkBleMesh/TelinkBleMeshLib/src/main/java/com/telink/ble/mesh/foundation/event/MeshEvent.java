@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -27,30 +27,44 @@ import android.os.Parcel;
 import com.telink.ble.mesh.foundation.Event;
 
 /**
- * Created by kee on 2019/9/4.
+ * Represents a mesh event.
+ * Extends the Event class with a String type.
+ * Contains constants for different types of mesh events.
+ * Stores a description of the event.
  */
-
 public class MeshEvent extends Event<String> {
-
+    // Constants for different types of mesh events
     public static final String EVENT_TYPE_MESH_EMPTY = "com.telink.ble.mesh.MESH_EMPTY";
-
     public static final String EVENT_TYPE_DISCONNECTED = "com.telink.ble.mesh.EVENT_TYPE_DISCONNECTED";
-
     public static final String EVENT_TYPE_MESH_RESET = "com.telink.sig.mesh.EVENT_TYPE_MESH_RESET";
 
-//    public static final String EVENT_TYPE_MESH_LOGIN = "com.telink.sig.mesh.EVENT_TYPE_MESH_LOGIN";
-
+    // Description of the event
     private String desc;
 
+    /**
+     * Constructs a MeshEvent object with the specified sender, type, and description.
+     *
+     * @param sender the object that sent the event
+     * @param type   the type of the event
+     * @param desc   the description of the event
+     */
     public MeshEvent(Object sender, String type, String desc) {
         super(sender, type);
         this.desc = desc;
     }
 
+    /**
+     * Constructs a MeshEvent object from a Parcel.
+     *
+     * @param in the Parcel to read from
+     */
     protected MeshEvent(Parcel in) {
         desc = in.readString();
     }
 
+    /**
+     * Creator for creating MeshEvent objects from a Parcel.
+     */
     public static final Creator<MeshEvent> CREATOR = new Creator<MeshEvent>() {
         @Override
         public MeshEvent createFromParcel(Parcel in) {
@@ -63,6 +77,11 @@ public class MeshEvent extends Event<String> {
         }
     };
 
+    /**
+     * Gets the description of the event.
+     *
+     * @return the description of the event
+     */
     public String getDesc() {
         return desc;
     }

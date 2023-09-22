@@ -24,42 +24,76 @@ package com.telink.ble.mesh.core.message.config;
 
 import com.telink.ble.mesh.core.message.Opcode;
 
-/**
- * The Config GATT Proxy Set is an acknowledged message used to set the GATT Proxy state of a node
- * <p>
- * The response to a Config GATT Proxy Get message is a Config GATT Proxy Status message.
- * {@link GattProxyStatusMessage}
- */
 
+/**
+ * The GattProxySetMessage class represents an acknowledged message used to set the GATT Proxy state of a node.
+ * This message is used to enable or disable the GATT Proxy feature.
+ * <p>
+ * The response to a GattProxySetMessage is a GattProxyStatusMessage.
+ * <p>
+ * Example usage:
+ * GattProxySetMessage message = GattProxySetMessage.getSimple(destinationAddress, gattProxy);
+ *
+ * @see ConfigMessage
+ * @see GattProxyStatusMessage
+ */
 public class GattProxySetMessage extends ConfigMessage {
 
     /**
-     * New GATT Proxy state
-     * 00 enabled
-     * 01 disabled
+     * The new GATT Proxy state.
+     * Possible values:
+     * - 00: enabled
+     * - 01: disabled
      */
     public byte gattProxy;
 
+    /**
+     * Constructs a GattProxySetMessage with the specified destination address.
+     *
+     * @param destinationAddress The address of the node to which the message is being sent.
+     */
     public GattProxySetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Creates a simple GattProxySetMessage with the specified destination address and GATT Proxy state.
+     *
+     * @param destinationAddress The address of the node to which the message is being sent.
+     * @param gattProxy          The new GATT Proxy state.
+     * @return GattProxySetMessage instance.
+     */
     public static GattProxySetMessage getSimple(int destinationAddress, byte gattProxy) {
         GattProxySetMessage instance = new GattProxySetMessage(destinationAddress);
         instance.gattProxy = gattProxy;
         return instance;
     }
 
+    /**
+     * Gets the opcode of the GattProxySetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_GATT_PROXY_SET.value;
     }
 
+    /**
+     * Gets the response opcode of the GattProxySetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_GATT_PROXY_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the GattProxySetMessage.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{gattProxy};

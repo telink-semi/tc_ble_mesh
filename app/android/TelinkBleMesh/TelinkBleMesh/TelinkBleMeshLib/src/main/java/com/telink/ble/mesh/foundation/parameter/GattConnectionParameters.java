@@ -26,16 +26,21 @@ import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.entity.ConnectionFilter;
 
-/**
- * Created by kee on 2017/11/23.
- */
 
+/**
+ * This class represents the parameters for a GATT connection. It extends the Parameters class.
+ * It takes a ConnectionFilter object as a parameter in its constructor.
+ */
 public class GattConnectionParameters extends Parameters {
 
-
+    /**
+     * Constructs a new GattConnectionParameters object with the specified ConnectionFilter.
+     * Initializes the COMMON_PROXY_FILTER_INIT_NEEDED parameter to true and sets the ACTION_CONNECTION_FILTER parameter to the given filter.
+     *
+     * @param filter The ConnectionFilter object to be set as the ACTION_CONNECTION_FILTER parameter.
+     */
     public GattConnectionParameters(@NonNull ConnectionFilter filter) {
         this.set(COMMON_PROXY_FILTER_INIT_NEEDED, true);
         this.set(ACTION_CONNECTION_FILTER, filter);
     }
-
 }

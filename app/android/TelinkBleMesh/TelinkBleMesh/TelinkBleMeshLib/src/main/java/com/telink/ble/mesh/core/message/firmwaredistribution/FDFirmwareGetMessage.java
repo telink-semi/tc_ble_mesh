@@ -38,26 +38,47 @@ public class FDFirmwareGetMessage extends UpdatingMessage {
      */
     public int firmwareID;
 
-
+    /**
+     * Constructs a new FDFirmwareGetMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index of the message.
+     */
     public FDFirmwareGetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDFirmwareGetMessage object with the specified destination address and application key index.
+     * This method sets the maximum number of response messages to 1.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index of the message.
+     * @return A simple FDFirmwareGetMessage object.
+     */
     public static FDFirmwareGetMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDFirmwareGetMessage message = new FDFirmwareGetMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Returns the opcode value of the FDFirmwareGetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_FIRMWARE_GET.value;
     }
 
+    /**
+     * Returns the response opcode value of the FDFirmwareGetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;
     }
-
-
 }

@@ -24,12 +24,25 @@ package com.telink.ble.mesh.core.message;
 
 import java.util.List;
 
-/**
+
+/** 
+ * A callback interface for handling the completion and response of a mesh message. 
  * todo
- */
+ */ 
 public interface MeshMessageCallback {
-
+    /** 
+     * Called when a mesh message has been completed. 
+     * 
+     * @param meshMessage The completed mesh message. 
+     * @param success     Indicates whether the message was successfully sent. 
+     * @param responseCount The number of responses received for the message. 
+     */ 
     void onMessageComplete(MeshMessage meshMessage, boolean success, int responseCount);
-
+    /** 
+     * Called when a response is received for a mesh message. 
+     * 
+     * @param meshMessage         The original mesh message. 
+     * @param notificationMessages The list of notification messages received as response. 
+     */ 
     void onMessageResponse(MeshMessage meshMessage, List<NotificationMessage> notificationMessages);
 }

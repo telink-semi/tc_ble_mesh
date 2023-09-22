@@ -170,12 +170,12 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     }
 
     private void addTestData() {
-        ByteBuffer bf = ByteBuffer.allocate(jsonData.length * 100 + 33);
-        for (int i = 0; i < 100; i++) {
+        ByteBuffer bf = ByteBuffer.allocate(jsonData.length * 500 + 33);
+        for (int i = 0; i < 500; i++) {
             bf.put(jsonData);
         }
         jsonData = bf.array();
-        MeshLogger.d("json data length compressed - (*100) - " + jsonData.length);
+        MeshLogger.d("json data length compressed - (*500) - " + jsonData.length);
     }
 
 

@@ -31,33 +31,48 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDFirmwareDeleteAllMessage extends UpdatingMessage {
 
+
     /**
-     * Firmware ID
-     * The Firmware ID identifying the firmware image to check
-     * Variable length
+     * Constructs a new FDFirmwareDeleteAllMessage with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index.
      */
-    public int firmwareID;
-
-
     public FDFirmwareDeleteAllMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDFirmwareDeleteAllMessage with the specified destination address and application key index.
+     * This method sets the response maximum to 1.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index.
+     * @return The created FDFirmwareDeleteAllMessage.
+     */
     public static FDFirmwareDeleteAllMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDFirmwareDeleteAllMessage message = new FDFirmwareDeleteAllMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode for the FDFirmwareDeleteAllMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
-        return Opcode.FD_FIRMWARE_DELETE.value;
+        return Opcode.FD_FIRMWARE_DELETE_ALL.value;
     }
 
+    /**
+     * Gets the response opcode for the FDFirmwareDeleteAllMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;
     }
-
-
 }

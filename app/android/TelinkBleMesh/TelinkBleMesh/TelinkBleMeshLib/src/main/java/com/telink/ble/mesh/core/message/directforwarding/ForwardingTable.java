@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.core.message.directforwarding;
 
 /**
+ * This is a class representing a Forwarding Table used in networking.
  * Created by kee on 2019/8/23.
  */
 public class ForwardingTable {

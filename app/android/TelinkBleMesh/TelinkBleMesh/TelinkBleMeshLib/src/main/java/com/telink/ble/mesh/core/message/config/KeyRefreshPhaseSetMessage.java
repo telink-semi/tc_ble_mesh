@@ -29,37 +29,62 @@ import java.nio.ByteOrder;
 
 /**
  * The Config Key Refresh Phase Set is an acknowledged message used to set the Key Refresh Phase state of the identified network key
+ * The KeyRefreshPhaseSetMessage class represents an acknowledged message used to set the Key Refresh Phase state of the identified network key.
  */
-
 public class KeyRefreshPhaseSetMessage extends ConfigMessage {
-
     public int netKeyIndex;
-
     /**
-     * New Key Refresh Phase Transition
+     * The new Key Refresh Phase transition value.
      */
     public byte transition;
 
+    /**
+     * Constructs a new KeyRefreshPhaseSetMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address for the message.
+     */
     public KeyRefreshPhaseSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
-    public static KeyRefreshPhaseSetMessage getSimple(int destinationAddress, byte gattProxy) {
+    /**
+     * Creates a simple KeyRefreshPhaseSetMessage with the specified destination address and Key Refresh Phase transition value.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param transition         The new Key Refresh Phase transition value.
+     * @return An instance of KeyRefreshPhaseSetMessage.
+     */
+    public static KeyRefreshPhaseSetMessage getSimple(int destinationAddress, byte transition) {
         KeyRefreshPhaseSetMessage instance = new KeyRefreshPhaseSetMessage(destinationAddress);
-        instance.transition = gattProxy;
+        instance.transition = transition;
         return instance;
     }
 
+    /**
+     * Gets the opcode for the KeyRefreshPhaseSetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_KEY_REFRESH_PHASE_SET.value;
     }
 
+    /**
+     * Gets the response opcode for the KeyRefreshPhaseSetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_KEY_REFRESH_PHASE_STATUS.value;
     }
 
+    /**
+     * Gets the parameters for the KeyRefreshPhaseSetMessage.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN).putShort((short) netKeyIndex)

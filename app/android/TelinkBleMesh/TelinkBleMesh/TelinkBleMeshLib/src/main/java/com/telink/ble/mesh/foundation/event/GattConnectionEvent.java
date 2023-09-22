@@ -28,27 +28,47 @@ import android.os.Parcel;
 import com.telink.ble.mesh.foundation.Event;
 
 /**
- * Created by kee on 2017/8/30.
+ * This class represents a GattConnectionEvent, which is an event that occurs during a GATT connection.
+ * It extends the Event class and contains information about the event type and a description.
  */
-
 public class GattConnectionEvent extends Event<String> {
 
+    /**
+     * The event type for a successful connection.
+     */
     public static final String EVENT_TYPE_CONNECT_SUCCESS = "com.telink.sig.mesh.CONNECT_SUCCESS";
 
+    /**
+     * The event type for a failed connection.
+     */
     public static final String EVENT_TYPE_CONNECT_FAIL = "com.telink.sig.mesh.CONNECT_FAIL";
 
-    private String desc;
+    private String desc; // The description of the event.
 
-
+    /**
+     * Constructs a GattConnectionEvent object with the specified sender, type, and description.
+     *
+     * @param sender the object that sends the event
+     * @param type   the type of the event
+     * @param desc   the description of the event
+     */
     public GattConnectionEvent(Object sender, String type, String desc) {
         super(sender, type);
         this.desc = desc;
     }
 
+    /**
+     * Constructs a GattConnectionEvent object from a Parcel.
+     *
+     * @param in the Parcel to read from
+     */
     protected GattConnectionEvent(Parcel in) {
         desc = in.readString();
     }
 
+    /**
+     * Creator for generating instances of GattConnectionEvent from a Parcel.
+     */
     public static final Creator<GattConnectionEvent> CREATOR = new Creator<GattConnectionEvent>() {
         @Override
         public GattConnectionEvent createFromParcel(Parcel in) {
@@ -61,6 +81,11 @@ public class GattConnectionEvent extends Event<String> {
         }
     };
 
+    /**
+     * Gets the description of the event.
+     *
+     * @return the description of the event
+     */
     public String getDesc() {
         return desc;
     }

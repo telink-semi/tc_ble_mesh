@@ -25,29 +25,53 @@ package com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
-
+/**
+ * This class represents a Blob Information Get Message, which is used to request information about a blob.
+ * It extends the UpdatingMessage class.
+ */
 public class BlobInfoGetMessage extends UpdatingMessage {
 
-
-    public static BlobInfoGetMessage getSimple(int destinationAddress, int appKeyIndex) {
-        BlobInfoGetMessage message = new BlobInfoGetMessage(destinationAddress, appKeyIndex);
-        message.setResponseMax(1);
-        return message;
-    }
-
+    /**
+     * Creates a new BlobInfoGetMessage with the given destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The application key index of the message.
+     */
     public BlobInfoGetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Returns the opcode value for the Blob Information Get Message.
+     *
+     * @return The opcode value for the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.BLOB_INFORMATION_GET.value;
     }
 
+    /**
+     * Returns the response opcode value for the Blob Information Get Message.
+     *
+     * @return The response opcode value for the message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.BLOB_INFORMATION_STATUS.value;
     }
 
-
+    /**
+     * Creates and returns a simple BlobInfoGetMessage with the given destination address and application key index.
+     * The response max is set to 1.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The application key index of the message.
+     * @return A simple BlobInfoGetMessage object.
+     */
+    public static BlobInfoGetMessage getSimple(int destinationAddress, int appKeyIndex) {
+        BlobInfoGetMessage message = new BlobInfoGetMessage(destinationAddress, appKeyIndex);
+        message.setResponseMax(1);
+        return message;
+    }
 }

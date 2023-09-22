@@ -26,7 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 
 /**
- * array util
+ * Provide APIs for byte array
  */
 public final class Arrays {
     public static final char[] HEX_BASIC = "0123456789ABCDEF".toCharArray();
@@ -37,8 +37,8 @@ public final class Arrays {
     /**
      * reverse array
      *
-     * @param a
-     * @return
+     * @param a input
+     * @return reversed array
      */
     public static byte[] reverse(byte[] a) {
 
@@ -58,10 +58,10 @@ public final class Arrays {
     /**
      * reverse part of array
      *
-     * @param arr
-     * @param begin
-     * @param end
-     * @return
+     * @param arr   input
+     * @param begin start offset
+     * @param end   end offset
+     * @return output array
      */
     public static byte[] reverse(byte[] arr, int begin, int end) {
 
@@ -79,9 +79,9 @@ public final class Arrays {
     /**
      * compare two arrays
      *
-     * @param array1
-     * @param array2
-     * @return
+     * @param array1 array-1
+     * @param array2 array-2
+     * @return is equals
      */
     public static boolean equals(byte[] array1, byte[] array2) {
 
@@ -102,6 +102,13 @@ public final class Arrays {
         return true;
     }
 
+    /**
+     * convert byte array to string,
+     * output format is "[1, 2]"
+     *
+     * @param array input
+     * @return DEC string
+     */
     public static String bytesToString(byte[] array) {
 
         if (array == null) {
@@ -123,17 +130,36 @@ public final class Arrays {
         return sb.toString();
     }
 
+    /**
+     * convert byte to string by target charset
+     *
+     * @param data        input
+     * @param charsetName charset
+     * @return string
+     * @throws UnsupportedEncodingException throw exception if charset not support
+     */
     public static String bytesToString(byte[] data, String charsetName) throws UnsupportedEncodingException {
         return new String(data, charsetName);
     }
 
-
+    /**
+     * convert byte array to hex string, without separator
+     * for example: {0x1A, 0x2B, 0x3C} -> "1A2B3C"
+     *
+     * @param array input
+     * @return converted HEX string
+     */
     public static String bytesToHexString(byte[] array) {
         return bytesToHexString(array, "");
     }
 
     /**
-     * array to hex string
+     * convert byte array to hex string, without separator
+     * for example: input array={0x1A, 0x2B, 0x3C}, separator=":" , return "1A:2B:3C"
+     *
+     * @param array     input
+     * @param separator separator
+     * @return converted HEX string
      */
     public static String bytesToHexString(byte[] array, String separator) {
         if (array == null || array.length == 0)
@@ -153,6 +179,13 @@ public final class Arrays {
         return hexResult.toString();
     }
 
+    /**
+     * convert HEX string to byte array
+     * for example: "1A2B3C" -> {0x1A, 0x2B, 0x3C}
+     *
+     * @param hexStr input
+     * @return converted byte array
+     */
     public static byte[] hexToBytes(String hexStr) {
         if (hexStr == null) return null;
         if (hexStr.length() == 1) {
@@ -168,6 +201,12 @@ public final class Arrays {
         return result;
     }
 
+    /**
+     * generate random byte array
+     *
+     * @param length byte array length
+     * @return output
+     */
     public static byte[] generateRandom(int length) {
         byte[] data = new byte[length];
         SecureRandom secureRandom = new SecureRandom();

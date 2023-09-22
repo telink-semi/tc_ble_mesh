@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,6 +22,14 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.foundation;
 
+/**
+ * This interface is to provide a contract for classes that want to handle events.
+ */
 public interface EventHandler {
+    /**
+     * The onEventHandle method will be implemented by classes that implement this interface, and it will be responsible for handling the event passed to it.
+     *
+     * @param event
+     */
     void onEventHandle(Event<String> event);
 }

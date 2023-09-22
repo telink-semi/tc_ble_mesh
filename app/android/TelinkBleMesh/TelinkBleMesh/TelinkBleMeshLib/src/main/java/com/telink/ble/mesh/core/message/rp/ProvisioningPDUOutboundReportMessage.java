@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,22 +28,30 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * Created by kee on 2019/8/20.
+ * This class represents a ProvisioningPDUOutboundReportMessage, which is a type of StatusMessage that is used to report the number of outbound PDUs.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization of the object.
  */
-
 public class ProvisioningPDUOutboundReportMessage extends StatusMessage implements Parcelable {
-
     private byte outboundPDUNumber;
 
-
+    /**
+     * Default constructor for the ProvisioningPDUOutboundReportMessage class.
+     */
     public ProvisioningPDUOutboundReportMessage() {
     }
 
-
+    /**
+     * Constructor for the ProvisioningPDUOutboundReportMessage class that takes a Parcel as input and initializes the outboundPDUNumber field.
+     *
+     * @param in The Parcel object used for deserialization.
+     */
     protected ProvisioningPDUOutboundReportMessage(Parcel in) {
         outboundPDUNumber = in.readByte();
     }
 
+    /**
+     * Creator constant for the ProvisioningPDUOutboundReportMessage class, used to create new instances of the class from a Parcel.
+     */
     public static final Creator<ProvisioningPDUOutboundReportMessage> CREATOR = new Creator<ProvisioningPDUOutboundReportMessage>() {
         @Override
         public ProvisioningPDUOutboundReportMessage createFromParcel(Parcel in) {
@@ -56,21 +64,42 @@ public class ProvisioningPDUOutboundReportMessage extends StatusMessage implemen
         }
     };
 
+    /**
+     * Parses the given byte array and sets the outboundPDUNumber field.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         this.outboundPDUNumber = params[0];
     }
 
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the outboundPDUNumber field to the given Parcel object.
+     *
+     * @param dest  The Parcel object to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(outboundPDUNumber);
     }
 
+    /**
+     * Returns the number of outbound PDUs.
+     *
+     * @return The number of outbound PDUs.
+     */
     public byte getOutboundPDUNumber() {
         return outboundPDUNumber;
     }

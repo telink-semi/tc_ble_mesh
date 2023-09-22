@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -32,25 +32,35 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
- * Created by kee on 2019/8/20.
+ * This class represents a Mesh Address Status Message, which is a type of Status Message in a mesh network.
+ * It extends the StatusMessage class and implements the Parcelable interface for serialization.
+ * The Mesh Address Status Message contains information about the MAC address and PID (Product ID) of a device.
  */
-
 public class MeshAddressStatusMessage extends StatusMessage implements Parcelable {
+    private byte[] mac; // The MAC address of the device
+    private int pid; // The Product ID of the device
 
-    private byte[] mac;
-
-    private int pid;
-
-
+    /**
+     * Default constructor for the MeshAddressStatusMessage class.
+     */
     public MeshAddressStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the MeshAddressStatusMessage class that takes a Parcel as input.
+     * It is used for deserialization of the object.
+     *
+     * @param in The Parcel object to read the data from.
+     */
     protected MeshAddressStatusMessage(Parcel in) {
         mac = in.createByteArray();
         pid = in.readInt();
     }
 
+    /**
+     * Creator constant for the MeshAddressStatusMessage class.
+     * It is used to create new instances of the class from a Parcel.
+     */
     public static final Creator<MeshAddressStatusMessage> CREATOR = new Creator<MeshAddressStatusMessage>() {
         @Override
         public MeshAddressStatusMessage createFromParcel(Parcel in) {
@@ -63,6 +73,11 @@ public class MeshAddressStatusMessage extends StatusMessage implements Parcelabl
         }
     };
 
+    /**
+     * Method to parse the byte array data and populate the object fields.
+     *
+     * @param params The byte array containing the data to be parsed.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -73,26 +88,51 @@ public class MeshAddressStatusMessage extends StatusMessage implements Parcelabl
         this.pid = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
-
+    /**
+     * Method to describe the contents of the MeshAddressStatusMessage object.
+     *
+     * @return An integer value representing the contents of the object.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Method to write the object data to a Parcel object for serialization.
+     *
+     * @param dest  The Parcel object to write the data to.
+     * @param flags Additional flags for writing the data.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByteArray(mac);
         dest.writeInt(pid);
     }
 
+    /**
+     * Getter method for the MAC address of the device.
+     *
+     * @return A byte array representing the MAC address.
+     */
     public byte[] getMac() {
         return mac;
     }
 
+    /**
+     * Getter method for the Product ID of the device.
+     *
+     * @return An integer value representing the Product ID.
+     */
     public int getPid() {
         return pid;
     }
 
+    /**
+     * Method to generate a string representation of the MeshAddressStatusMessage object.
+     *
+     * @return A string representation of the object.
+     */
     @Override
     public String toString() {
         return "MeshAddressStatusMessage{" +

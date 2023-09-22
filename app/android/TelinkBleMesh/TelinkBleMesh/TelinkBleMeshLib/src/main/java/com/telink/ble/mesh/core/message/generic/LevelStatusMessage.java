@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -33,35 +33,41 @@ import java.nio.ByteOrder;
  * Created by kee on 2019/9/3.
  */
 
+/**
+ * This class represents a status message for the Generic Level state in a mesh network.
+ * It extends the StatusMessage class.
+ * The status message includes the present level value, target level value (optional),
+ * remaining time, and a flag indicating if the message is complete.
+ * The present level and target level values are represented as integers.
+ * The remaining time is represented as a byte.
+ */
 public class LevelStatusMessage extends StatusMessage {
-
     private static final int DATA_LEN_COMPLETE = 5;
-
-    /**
-     * The present value of the Generic Level state.
-     * 2 bytes
-     */
     private int presentLevel;
-
-    /**
-     * The target value of the Generic Level state (Optional).
-     * 2 bytes
-     */
     private int targetLevel;
-
     private byte remainingTime;
-
     private boolean isComplete = false;
 
+    /**
+     * Default constructor.
+     */
     public LevelStatusMessage() {
     }
 
+    /**
+     * Constructor for creating a LevelStatusMessage object from a Parcel.
+     *
+     * @param in The Parcel object to read the values from.
+     */
     protected LevelStatusMessage(Parcel in) {
         presentLevel = in.readInt();
         targetLevel = in.readInt();
         remainingTime = in.readByte();
     }
 
+    /**
+     * Creator object for creating LevelStatusMessage objects from a Parcel.
+     */
     public static final Creator<LevelStatusMessage> CREATOR = new Creator<LevelStatusMessage>() {
         @Override
         public LevelStatusMessage createFromParcel(Parcel in) {
@@ -74,6 +80,12 @@ public class LevelStatusMessage extends StatusMessage {
         }
     };
 
+    /**
+     * Parses the byte array and sets the values of the present level, target level (if available),
+     * remaining time, and the completion flag.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -87,11 +99,22 @@ public class LevelStatusMessage extends StatusMessage {
         }
     }
 
+    /**
+     * Returns the description of the contents of this object.
+     *
+     * @return The description of the contents.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the values of the present level, target level, and remaining time to the Parcel.
+     *
+     * @param dest  The Parcel to write the values to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(presentLevel);
@@ -99,18 +122,38 @@ public class LevelStatusMessage extends StatusMessage {
         dest.writeByte(remainingTime);
     }
 
+    /**
+     * Returns the present level value.
+     *
+     * @return The present level value.
+     */
     public int getPresentLevel() {
         return presentLevel;
     }
 
+    /**
+     * Returns the target level value.
+     *
+     * @return The target level value.
+     */
     public int getTargetLevel() {
         return targetLevel;
     }
 
+    /**
+     * Returns the remaining time value.
+     *
+     * @return The remaining time value.
+     */
     public byte getRemainingTime() {
         return remainingTime;
     }
 
+    /**
+     * Returns a flag indicating if the status message is complete.
+     *
+     * @return True if the message is complete, false otherwise.
+     */
     public boolean isComplete() {
         return isComplete;
     }

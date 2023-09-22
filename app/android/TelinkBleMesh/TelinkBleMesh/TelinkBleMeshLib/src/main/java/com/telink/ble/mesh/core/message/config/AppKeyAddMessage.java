@@ -48,6 +48,11 @@ public class AppKeyAddMessage extends ConfigMessage {
 
     private byte[] appKey;
 
+    /**
+     * Creates a new AppKeyAddMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public AppKeyAddMessage(int destinationAddress) {
         super(destinationAddress);
     }
@@ -65,16 +70,31 @@ public class AppKeyAddMessage extends ConfigMessage {
         this.appKey = appKey;
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.APPKEY_ADD.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.APPKEY_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
 

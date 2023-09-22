@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
+ * mesh message used to add BridgingTable to a node
  * Created by kee on 2021/1/14.
  */
 public class BridgingTableAddMessage extends ConfigMessage {
@@ -64,20 +65,40 @@ public class BridgingTableAddMessage extends ConfigMessage {
     public int address2;
 
 
+    /**
+     * Creates a new BridgingTableAddMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public BridgingTableAddMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.BRIDGING_TABLE_ADD.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.BRIDGING_TABLE_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
         int netKeyIndexes = (netKeyIndex1 & 0x0FFF) | ((netKeyIndex2 & 0x0FFF) << 12);

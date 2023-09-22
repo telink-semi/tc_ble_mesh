@@ -26,26 +26,47 @@ import com.telink.ble.mesh.core.message.Opcode;
 
 /**
  * The Config Network Transmit Get is an acknowledged message used to get the current Network Transmit state of a node
+ * The NetworkTransmitGetMessage class represents an acknowledged message used to retrieve the current Network Transmit state of a node.
+ * It extends the ConfigMessage class.
  */
 public class NetworkTransmitGetMessage extends ConfigMessage {
 
+    /**
+     * Constructs a new NetworkTransmitGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public NetworkTransmitGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode value for the Network Transmit Get message.
+     *
+     * @return The opcode value for the Network Transmit Get message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_NW_TRANSMIT_GET.value;
     }
 
+    /**
+     * Returns the opcode value for the response message to the Network Transmit Get message.
+     *
+     * @return The opcode value for the response message to the Network Transmit Get message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_NW_TRANSMIT_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the Network Transmit Get message.
+     *
+     * @return The parameters of the Network Transmit Get message.
+     */
     @Override
     public byte[] getParams() {
         return null;
     }
-
 }

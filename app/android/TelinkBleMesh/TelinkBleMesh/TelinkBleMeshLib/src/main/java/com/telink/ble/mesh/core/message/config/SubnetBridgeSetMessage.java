@@ -25,36 +25,59 @@ package com.telink.ble.mesh.core.message.config;
 import com.telink.ble.mesh.core.message.Opcode;
 
 /**
- * Created by kee on 2021/1/14.
+ * This class represents a message for setting the state of a subnet bridge.
+ * It extends the ConfigMessage class.
  */
-
 public class SubnetBridgeSetMessage extends ConfigMessage {
-
     public byte subnetBridgeState;
 
+    /**
+     * Constructs a SubnetBridgeSetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public SubnetBridgeSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Constructs a SubnetBridgeSetMessage object with the specified destination address and bridge state.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param bridgeState        The state of the subnet bridge.
+     */
     public SubnetBridgeSetMessage(int destinationAddress, byte bridgeState) {
         super(destinationAddress);
         this.subnetBridgeState = bridgeState;
     }
 
+    /**
+     * Returns the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.SUBNET_BRIDGE_SET.value;
     }
 
+    /**
+     * Returns the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.SUBNET_BRIDGE_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the message.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{subnetBridgeState};
     }
-
-
 }

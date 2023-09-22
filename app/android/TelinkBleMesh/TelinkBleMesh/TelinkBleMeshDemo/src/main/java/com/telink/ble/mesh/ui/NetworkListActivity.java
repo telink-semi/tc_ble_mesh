@@ -83,7 +83,9 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         initView();
     }
 
-
+    /**
+     * init UI
+     */
     private void initView() {
         initTitle();
         RecyclerView rv_df = findViewById(R.id.rv_network);
@@ -91,6 +93,7 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         findViewById(R.id.fab_import).setOnClickListener(this);
 
         listAdapter = new NetworkListAdapter(this, this::showBottomDialog);
+        listAdapter.setOnItemClickListener(this::showBottomDialog);
         rv_df.setAdapter(listAdapter);
         updateListData();
         initBottomDialog();

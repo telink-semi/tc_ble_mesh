@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * A PRIVATE_BEACON_SET message is an acknowledged message used to set the Private Beacon state and the Random Update Interval Steps state of a node.
+ * @deprecated A PRIVATE_BEACON_SET message is an acknowledged message used to set the Private Beacon state and the Random Update Interval Steps state of a node.
  * The response to a PRIVATE_BEACON_SET message is a PRIVATE_BEACON_STATUS message.
  */
 
@@ -48,20 +48,34 @@ public class PrivateBeaconSetMessage extends ConfigMessage {
 
     public boolean isComplete = false;
 
+    /**
+     * ignore
+     *
+     * @param destinationAddress
+     */
     public PrivateBeaconSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * ignore
+     */
     @Override
     public int getOpcode() {
         return OPCODE_INVALID;
     }
 
+    /**
+     * ignore
+     */
     @Override
     public int getResponseOpcode() {
         return OPCODE_INVALID;
     }
 
+    /**
+     * ignore
+     */
     @Override
     public byte[] getParams() {
         if (!isComplete) {

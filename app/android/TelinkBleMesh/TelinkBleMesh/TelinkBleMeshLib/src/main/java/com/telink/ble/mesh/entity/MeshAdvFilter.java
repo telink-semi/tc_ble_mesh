@@ -22,6 +22,13 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
+/**
+ * Enum representing different mesh advertisement filters.
+ * <p>
+ * - ANY: Matches any mesh advertisement.
+ * - NETWORK_ID_ONLY: Matches mesh advertisements containing only network ID.
+ * - NODE_ID_ONLY: Matches mesh advertisements containing only node ID.
+ */
 public enum MeshAdvFilter {
     ANY,
     NETWORK_ID_ONLY,

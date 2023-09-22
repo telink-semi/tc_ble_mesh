@@ -58,16 +58,26 @@ public class OpcodeAggregatorStatusMessage extends StatusMessage implements Parc
      */
     public List<AggregatorItem> statusItems;
 
-
+    /**
+     * Default constructor for the OpcodeAggregatorStatusMessage class.
+     */
     public OpcodeAggregatorStatusMessage() {
     }
 
+    /**
+     * Constructor for the OpcodeAggregatorStatusMessage class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the params.
+     */
     protected OpcodeAggregatorStatusMessage(Parcel in) {
         status = in.readByte();
         elementAddress = in.readInt();
         statusItems = in.createTypedArrayList(AggregatorItem.CREATOR);
     }
 
+    /**
+     * Creator constant for the OpcodeAggregatorStatusMessage class.
+     */
     public static final Creator<OpcodeAggregatorStatusMessage> CREATOR = new Creator<OpcodeAggregatorStatusMessage>() {
         @Override
         public OpcodeAggregatorStatusMessage createFromParcel(Parcel in) {
@@ -80,6 +90,11 @@ public class OpcodeAggregatorStatusMessage extends StatusMessage implements Parc
         }
     };
 
+    /**
+     * Parses the byte array to extract the params.
+     *
+     * @param params The byte array containing the params.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -112,11 +127,22 @@ public class OpcodeAggregatorStatusMessage extends StatusMessage implements Parc
 
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the params to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(status);
@@ -124,6 +150,11 @@ public class OpcodeAggregatorStatusMessage extends StatusMessage implements Parc
         dest.writeTypedList(statusItems);
     }
 
+    /**
+     * Returns a string representation of the OpcodeAggregatorStatusMessage object.
+     *
+     * @return A string representation of the OpcodeAggregatorStatusMessage object.
+     */
     @Override
     public String toString() {
         return "OpcodeAggregatorStatusMessage{" +

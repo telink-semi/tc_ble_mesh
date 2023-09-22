@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@
 package com.telink.ble.mesh.core.proxy;
 
 /**
- * Created by kee on 2019/7/18.
+ * This abstract class represents a Proxy Protocol Data Unit (PDU).
+ * A PDU is a message that is sent between devices in a network.
+ * The ProxyPDU class provides fields and constants for defining the structure and content of a PDU.
  */
-
 public abstract class ProxyPDU {
 
     /**
@@ -47,6 +48,9 @@ public abstract class ProxyPDU {
      */
     public static final int MASK_TYPE = 0b00111111;
 
+    /**
+     * used to extract the sar field from the data[0] byte using bitwise AND operation.
+     */
     public static final int MASK_SAR = 0b11000000;
 
 
@@ -60,8 +64,14 @@ public abstract class ProxyPDU {
      */
     public static final byte SAR_SEG_FIRST = 0b01 << 6;
 
+    /**
+     * represents a segment that is not the first or last segment of a message.
+     */
     public static final byte SAR_SEG_CONTINUE = (byte) (0b10 << 6);
 
+    /**
+     * represents the last segment of a message.
+     */
     public static final byte SAR_SEG_LAST = (byte) (0b11 << 6);
 
 
@@ -69,11 +79,23 @@ public abstract class ProxyPDU {
      * PDU typeValue
      */
 
+    /**
+     * represents a PDU for network communication.
+     */
     public static final byte TYPE_NETWORK_PDU = 0x00;
 
+    /**
+     * represents a PDU for mesh beacon communication.
+     */
     public static final byte TYPE_MESH_BEACON = 0x01;
 
+    /**
+     * represents a PDU for proxy configuration.
+     */
     public static final byte TYPE_PROXY_CONFIGURATION = 0x02;
 
+    /**
+     * represents a PDU for provisioning communication.
+     */
     public static final byte TYPE_PROVISIONING_PDU = 0x03;
 }

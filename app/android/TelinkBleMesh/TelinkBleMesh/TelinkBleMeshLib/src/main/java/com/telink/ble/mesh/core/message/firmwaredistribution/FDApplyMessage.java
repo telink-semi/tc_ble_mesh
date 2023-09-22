@@ -33,25 +33,47 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDApplyMessage extends UpdatingMessage {
 
-
+    /**
+     * Constructs a FDApplyMessage object with the given destination address and app key index.
+     *
+     * @param destinationAddress The address of the destination device.
+     * @param appKeyIndex        The app key index to be used for the firmware update.
+     */
     public FDApplyMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDApplyMessage object with the given destination address and app key index.
+     * Sets the maximum number of responses to 1.
+     *
+     * @param destinationAddress The address of the destination device.
+     * @param appKeyIndex        The app key index to be used for the firmware update.
+     * @return The created FDApplyMessage object.
+     */
     public static FDApplyMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDApplyMessage message = new FDApplyMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FD_APPLY message.
+     *
+     * @return The opcode value for the FD_APPLY message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_APPLY.value;
     }
 
+    /**
+     * Gets the opcode value for the FD_STATUS response message.
+     *
+     * @return The opcode value for the FD_STATUS response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_STATUS.value;
     }
-
 }

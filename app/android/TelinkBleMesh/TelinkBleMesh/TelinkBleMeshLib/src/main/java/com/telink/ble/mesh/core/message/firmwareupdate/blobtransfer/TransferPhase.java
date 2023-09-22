@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,6 +22,11 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer;
 
+/**
+ * This enum represents the different phases of a BLOB transfer process.
+ * Each phase is defined by a unique code and a corresponding description.
+ * The enum also provides a method to retrieve the TransferPhase based on its code.
+ */
 public enum TransferPhase {
 
     INACTIVE(0x00,
@@ -45,11 +50,24 @@ public enum TransferPhase {
     public final int code;
     public final String desc;
 
+    /**
+     * Constructs a TransferPhase enum with the given code and description.
+     *
+     * @param code The code representing the transfer phase.
+     * @param desc The description of the transfer phase.
+     */
     TransferPhase(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the TransferPhase enum corresponding to the given code.
+     * If no matching TransferPhase is found, UNKNOWN_ERROR is returned.
+     *
+     * @param code The code to retrieve the TransferPhase for.
+     * @return The TransferPhase enum for the given code, or UNKNOWN_ERROR if not found.
+     */
     public static TransferPhase valueOf(int code) {
         for (TransferPhase status : values()) {
             if (status.code == code) return status;

@@ -29,11 +29,13 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * Created by kee on 2019/7/18.
+ * This class represents a Provisioning Records List PDU (Protocol Data Unit).
+ * It implements the ProvisioningStatePDU interface.
+ * The Provisioning Records List PDU contains information about the provisioning extensions supported by the device
+ * and a list of the Record IDs of the provisioning records stored on the device.
+ * The class includes methods to convert the PDU to and from a byte array.
  */
-
 public class ProvisioningRecordsListPDU implements ProvisioningStatePDU {
 
 
@@ -49,6 +51,12 @@ public class ProvisioningRecordsListPDU implements ProvisioningStatePDU {
      */
     public List<Integer> recordsList;
 
+    /**
+     * Converts a byte array to a ProvisioningRecordsListPDU object.
+     *
+     * @param data The byte array containing the PDU data.
+     * @return The ProvisioningRecordsListPDU object.
+     */
     public static ProvisioningRecordsListPDU fromBytes(byte[] data) {
 
         int index = 0;
@@ -71,12 +79,21 @@ public class ProvisioningRecordsListPDU implements ProvisioningStatePDU {
 
     }
 
-
+    /**
+     * Returns the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_RECORDS_LIST;
     }
 
+    /**
+     * Converts the ProvisioningRecordsListPDU object to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         return rawData;

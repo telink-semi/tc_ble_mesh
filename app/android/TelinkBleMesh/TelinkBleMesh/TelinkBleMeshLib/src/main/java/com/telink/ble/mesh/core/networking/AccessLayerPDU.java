@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
+ * This class represents a PDU (Protocol Data Unit) for the Access Layer in a networking protocol.
  * An access payload may be sent in up to 32 segments of 12 octets each.
  * This implies that the maximum number of octets is 384 including the TransMIC
  * <p>
@@ -52,16 +53,29 @@ public class AccessLayerPDU implements NetworkingPDU {
 
 //    public byte[] decryptedPayload;
 
+    /**
+     * Private constructor to prevent direct instantiation of the class.
+     */
     private AccessLayerPDU() {
     }
 
-
+    /**
+     * Constructs an AccessLayerPDU object with the given opcode and params.
+     *
+     * @param opcode The opcode value of the PDU.
+     * @param params The parameters of the PDU.
+     */
     public AccessLayerPDU(int opcode, byte[] params) {
         this.opcode = opcode;
         this.params = params;
     }
 
-
+    /**
+     * Parses the given payload byte array and returns an AccessLayerPDU object.
+     *
+     * @param payload The payload byte array to be parsed.
+     * @return An AccessLayerPDU object representing the parsed payload.
+     */
     public static AccessLayerPDU parse(byte[] payload) {
         AccessLayerPDU accessPDU = new AccessLayerPDU();
         OpcodeType opType = OpcodeType.getByFirstByte(payload[0]);
@@ -79,6 +93,11 @@ public class AccessLayerPDU implements NetworkingPDU {
     }
 
 
+    /**
+     * Converts the AccessLayerPDU object to a byte array.
+     *
+     * @return A byte array representing the AccessLayerPDU object.
+     */
     @Override
     public byte[] toByteArray() {
         int opcodeLen = OpcodeType.getByFirstByte((byte) opcode).length;

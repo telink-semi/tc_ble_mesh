@@ -31,22 +31,44 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDUploadCancelMessage extends UpdatingMessage {
 
-
+    /**
+     * Constructs a new FDUploadCancelMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     */
     public FDUploadCancelMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Creates a simple FDUploadCancelMessage object with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The index of the application key used for encryption.
+     * @return The created FDUploadCancelMessage object.
+     */
     public static FDUploadCancelMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDUploadCancelMessage message = new FDUploadCancelMessage(destinationAddress, appKeyIndex);
         message.setResponseMax(1);
         return message;
     }
 
+    /**
+     * Gets the opcode value for the FDUploadCancelMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.FD_UPLOAD_CANCEL.value;
     }
 
+    /**
+     * Gets the response opcode value for the FDUploadCancelMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.FD_UPLOAD_STATUS.value;

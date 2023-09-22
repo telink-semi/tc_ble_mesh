@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,12 +22,16 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
-/**
- * Created by kee on 2019/7/18.
- */
 
+/**
+ * This interface represents a Provisioning State PDU (Protocol Data Unit).
+ * It extends the PDU interface.
+ */
 public interface ProvisioningStatePDU extends PDU {
     /**
+     * Returns the provision state of the PDU.
+     * This method is used in conjunction with ProvisioningPDU.
+     *
      * @return provision state
      * @see ProvisioningPDU
      */

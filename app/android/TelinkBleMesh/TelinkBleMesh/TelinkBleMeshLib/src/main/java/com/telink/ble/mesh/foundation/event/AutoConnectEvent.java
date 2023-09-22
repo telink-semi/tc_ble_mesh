@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -27,23 +27,42 @@ import android.os.Parcel;
 import com.telink.ble.mesh.foundation.Event;
 
 /**
- * Created by kee on 2019/9/12.
+ * Represents an event for auto connection.
+ * This event is triggered when a device is automatically connected.
+ * The connected device's address is stored in the event.
  */
-
 public class AutoConnectEvent extends Event<String> {
+
+    // Event type for auto connect login
     public static final String EVENT_TYPE_AUTO_CONNECT_LOGIN = "com.telink.ble.mesh.EVENT_TYPE_AUTO_CONNECT_LOGIN";
 
+    // Address of the connected device
     private int connectedAddress;
 
+    /**
+     * Constructs a new AutoConnectEvent with the specified sender, type, and connected address.
+     *
+     * @param sender           the object that triggered the event
+     * @param type             the type of the event
+     * @param connectedAddress the address of the connected device
+     */
     public AutoConnectEvent(Object sender, String type, int connectedAddress) {
         super(sender, type);
         this.connectedAddress = connectedAddress;
     }
 
+    /**
+     * Constructs a new AutoConnectEvent from a Parcel.
+     *
+     * @param in the parcel containing the event data
+     */
     protected AutoConnectEvent(Parcel in) {
         connectedAddress = in.readInt();
     }
 
+    /**
+     * Creator for generating instances of AutoConnectEvent from a Parcel.
+     */
     public static final Creator<AutoConnectEvent> CREATOR = new Creator<AutoConnectEvent>() {
         @Override
         public AutoConnectEvent createFromParcel(Parcel in) {
@@ -56,6 +75,11 @@ public class AutoConnectEvent extends Event<String> {
         }
     };
 
+    /**
+     * Gets the address of the connected device.
+     *
+     * @return the connected device's address
+     */
     public int getConnectedAddress() {
         return connectedAddress;
     }

@@ -75,6 +75,11 @@ public class MeshConfiguration {
      */
     public int[] proxyFilterWhiteList;
 
+    /**
+     * get the default application key index
+     *
+     * @return
+     */
     public int getDefaultAppKeyIndex() {
         return appKeyMap.size() > 0 ? appKeyMap.keyAt(0) : 0;
     }

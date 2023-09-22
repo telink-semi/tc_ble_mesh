@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,13 +25,12 @@ package com.telink.ble.mesh.foundation.parameter;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 
 /**
- * Created by kee on 2019/9/5.
+ * This class represents the parameters for auto-connecting to a device.
+ * It extends the base class Parameters.
+ * The class sets a scan filter for the specified UUID service proxy.
  */
-
 public class AutoConnectParameters extends Parameters {
-
     public AutoConnectParameters() {
         this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROXY));
     }
-
 }

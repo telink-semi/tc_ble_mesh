@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,10 +22,13 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.proxy;
 
-/**
- * Created by kee on 2019/8/26.
- */
 
+/**
+ * This enum represents the types of proxy filters.
+ * It includes two types: WhiteList and BlackList.
+ * The value field holds the byte value associated with each type.
+ * The ProxyFilterType constructor initializes the value field for each type.
+ */
 public enum ProxyFilterType {
     WhiteList((byte) 0),
     BlackList((byte) 1);

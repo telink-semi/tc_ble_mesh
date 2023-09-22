@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -26,18 +26,22 @@ import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
 
-/**
- * fast provisioning configurations
- * Created by kee on 2020/03/09.
- */
 
+/**
+ * This class represents the configuration for fast provisioning.
+ * It contains various constants and settings related to fast provisioning.
+ */
 public class FastProvisioningConfiguration {
 
+
     /**
-     * 2000ms
+     * The default reset delay in milliseconds.
      */
     public static final int DEFAULT_RESET_DELAY = 2000;
 
+    /**
+     * The PID value representing all elements.
+     */
     public static final int PID_ALL = 0xFFFF;
 
     /**
@@ -57,8 +61,14 @@ public class FastProvisioningConfiguration {
     public static final byte[] DEFAULT_APP_KEY = {0x63, (byte) 0x96, 0x47, 0x71, 0x73, 0x4f,
             (byte) 0xbd, 0x76, (byte) 0xe3, (byte) 0xb4, 0x74, 0x65, 0x6c, 0x69, 0x6e, 0x6b};
 
+    /**
+     * The default network key index.
+     */
     public static final int DEFAULT_NETWORK_KEY_INDEX = 0;
 
+    /**
+     * The default app key index.
+     */
     public static final int DEFAULT_APP_KEY_INDEX = 0;
 
     private int resetDelay;
@@ -94,6 +104,14 @@ public class FastProvisioningConfiguration {
 
     private int defaultAppKeyIndex = 0;
 
+
+    /**
+     * Returns the default fast provisioning configuration.
+     *
+     * @param provisioningIndex The provisioning start address.
+     * @param elementPidMap     The element count for each PID.
+     * @return The default fast provisioning configuration.
+     */
     public static FastProvisioningConfiguration getDefault(int provisioningIndex, SparseIntArray elementPidMap) {
         FastProvisioningConfiguration configuration = new FastProvisioningConfiguration();
         configuration.resetDelay = DEFAULT_RESET_DELAY;
@@ -109,7 +127,10 @@ public class FastProvisioningConfiguration {
     }
 
     /**
-     * @return if pid exist in map
+     * Checks if the given PID exists in the element PID map.
+     *
+     * @param pid The PID to check.
+     * @return True if the PID exists, false otherwise.
      */
     public boolean pidExist(int pid) {
         if (elementPidMap != null) {
@@ -119,8 +140,10 @@ public class FastProvisioningConfiguration {
     }
 
     /**
-     * @param pid target pid
-     * @return 0 error
+     * Returns the element count for the given PID.
+     *
+     * @param pid The PID to get the element count for.
+     * @return The element count for the given PID, or 0 if not found.
      */
     public int getElementCount(int pid) {
         if (elementPidMap != null) {
@@ -128,6 +151,7 @@ public class FastProvisioningConfiguration {
         }
         return 0;
     }
+
 
     public int getProvisioningIndex() {
         return provisioningIndex;
@@ -206,5 +230,4 @@ public class FastProvisioningConfiguration {
     public void setResetDelay(int resetDelay) {
         this.resetDelay = resetDelay;
     }
-
 }

@@ -40,14 +40,22 @@ public class BeaconStatusMessage extends StatusMessage implements Parcelable {
     public byte beacon;
 
 
+    /**
+     * Constructs a new BeaconStatusMessage object.
+     */
     public BeaconStatusMessage() {
     }
 
-
+    /**
+     * A Creator object that generates instances of BeaconStatusMessage from a Parcel.
+     */
     protected BeaconStatusMessage(Parcel in) {
         beacon = in.readByte();
     }
 
+    /**
+     * A Creator object that generates instances of BeaconStatusMessage from a Parcel.
+     */
     public static final Creator<BeaconStatusMessage> CREATOR = new Creator<BeaconStatusMessage>() {
         @Override
         public BeaconStatusMessage createFromParcel(Parcel in) {
@@ -60,16 +68,32 @@ public class BeaconStatusMessage extends StatusMessage implements Parcelable {
         }
     };
 
+    /**
+     * Parses the parameters of the BeaconStatusMessage from a byte array.
+     *
+     * @param params the byte array containing the parameters of the BeaconStatusMessage
+     */
     @Override
     public void parse(byte[] params) {
         beacon = params[0];
     }
 
+    /**
+     * Describes the contents of the BeaconStatusMessage object.
+     *
+     * @return an integer representing the contents of the BeaconStatusMessage object
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the BeaconStatusMessage object to a Parcel.
+     *
+     * @param dest  the Parcel object to write the BeaconStatusMessage object to
+     * @param flags additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(beacon);

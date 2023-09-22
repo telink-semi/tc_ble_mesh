@@ -29,12 +29,33 @@ import com.telink.ble.mesh.core.message.generic.GenericMessage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a MeshGetAddressMessage, which is a specific type of GenericMessage.
+ * It is used to request the address of a device in a mesh network.
+ */
 public class MeshGetAddressMessage extends GenericMessage {
-
     private int pid;
-
     private int address = 0;
 
+    /**
+     * Creates a new MeshGetAddressMessage with the specified destination address and application key index.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index of the message.
+     */
+    public MeshGetAddressMessage(int destinationAddress, int appKeyIndex) {
+        super(destinationAddress, appKeyIndex);
+    }
+
+    /**
+     * Creates a simple MeshGetAddressMessage with the specified parameters.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex        The application key index of the message.
+     * @param rspMax             The maximum number of responses expected.
+     * @param pid                The process identifier.
+     * @return The created MeshGetAddressMessage.
+     */
     public static MeshGetAddressMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, int pid) {
         MeshGetAddressMessage message = new MeshGetAddressMessage(destinationAddress, appKeyIndex);
         message.setRetryCnt(0);
@@ -43,20 +64,31 @@ public class MeshGetAddressMessage extends GenericMessage {
         return message;
     }
 
-    public MeshGetAddressMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
-    }
-
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode.
+     */
     @Override
     public int getOpcode() {
         return Opcode.VD_MESH_ADDR_GET.value;
     }
 
+    /**
+     * Gets the response opcode of the message.
+     *
+     * @return The response opcode.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.VD_MESH_ADDR_GET_STS.value;
     }
 
+    /**
+     * Gets the parameters of the message as a byte array.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         if (address == 0) {
@@ -69,11 +101,20 @@ public class MeshGetAddressMessage extends GenericMessage {
         }
     }
 
-
+    /**
+     * Sets the process identifier of the message.
+     *
+     * @param pid The process identifier.
+     */
     public void setPid(int pid) {
         this.pid = pid;
     }
 
+    /**
+     * Sets the address of the message.
+     *
+     * @param address The address.
+     */
     public void setAddress(int address) {
         this.address = address;
     }

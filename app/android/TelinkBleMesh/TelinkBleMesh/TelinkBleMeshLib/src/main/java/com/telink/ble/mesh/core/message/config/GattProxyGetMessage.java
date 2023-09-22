@@ -26,29 +26,49 @@ import com.telink.ble.mesh.core.message.Opcode;
 
 /**
  * The Config GATT Proxy Get is an acknowledged message used to get the current GATT Proxy state of a node
- * <p>
+ * The GattProxyGetMessage class represents an acknowledged message used to retrieve the current GATT Proxy state of a node.
+ * This message is sent to a destination address and expects a response in the form of a GattProxyStatusMessage.
  * The response to a Config GATT Proxy Get message is a Config GATT Proxy Status message.
  * {@link GattProxyStatusMessage}
  */
 public class GattProxyGetMessage extends ConfigMessage {
 
+    /**
+     * Constructs a GattProxyGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address to send the message to.
+     */
     public GattProxyGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode value for the GattProxyGetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_GATT_PROXY_GET.value;
     }
 
+    /**
+     * Gets the response opcode value for the GattProxyGetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_GATT_PROXY_STATUS.value;
     }
 
+    /**
+     * Gets the parameters for the GattProxyGetMessage.
+     *
+     * @return The parameters.
+     */
     @Override
     public byte[] getParams() {
         return null;
     }
-
 }

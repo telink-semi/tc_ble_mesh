@@ -53,13 +53,18 @@ import com.telink.ble.mesh.util.MeshLogger;
  * splash page
  * Created by kee on 2019/4/8.
  */
-
 public class SplashActivity extends BaseActivity {
 
+    /**
+     * permission request code
+     */
     private static final int PERMISSIONS_REQUEST_ALL = 0x10;
 
     private Handler delayHandler = new Handler();
 
+    /**
+     * permission tip dialog
+     */
     private AlertDialog settingDialog;
 
     @Override
@@ -80,6 +85,21 @@ public class SplashActivity extends BaseActivity {
         setContentView(R.layout.activity_splash);
     }
 
+    /**
+     * check permissions when start
+     * for SDK >= 31(Android S),check these permissions
+     * {@link Manifest.permission#BLUETOOTH_SCAN},
+     * {@link Manifest.permission#BLUETOOTH_CONNECT},
+     * {@link Manifest.permission#BLUETOOTH_ADVERTISE},
+     * {@link Manifest.permission#READ_EXTERNAL_STORAGE},
+     * {@link Manifest.permission#WRITE_EXTERNAL_STORAGE}.
+     * <p>
+     * <p>
+     * for SDK >= 23(Android M),check these permissions
+     * {@link Manifest.permission#ACCESS_FINE_LOCATION},
+     * {@link Manifest.permission#READ_EXTERNAL_STORAGE},
+     * {@link Manifest.permission#WRITE_EXTERNAL_STORAGE}.
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -98,6 +118,8 @@ public class SplashActivity extends BaseActivity {
                         ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
                         &&
                         ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 ) {
                     onPermissionChecked();
                 } else {
@@ -106,9 +128,9 @@ public class SplashActivity extends BaseActivity {
                                     Manifest.permission.BLUETOOTH_SCAN,
                                     Manifest.permission.BLUETOOTH_CONNECT,
                                     Manifest.permission.BLUETOOTH_ADVERTISE,
-
                                     Manifest.permission.READ_EXTERNAL_STORAGE,
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    Manifest.permission.ACCESS_FINE_LOCATION},
                             PERMISSIONS_REQUEST_ALL);
                 }
             } else {
@@ -133,12 +155,22 @@ public class SplashActivity extends BaseActivity {
         }
     }
 
+    /**
+     * invoke when all permissions check complete
+     */
     private void onPermissionChecked() {
         MeshLogger.log("permission check pass");
         delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(this::checkMeshInfo, 500);
     }
 
+    /**
+     * check and load database
+     * 1. init local storage service;
+     * 2. if exist load the last selected mesh network;
+     * 3. if not exist, create a new mesh network
+     * 4. setup the mesh network
+     */
     private void checkMeshInfo() {
         MeshInfoService.getInstance().init(ObjectBox.get());
         long id = SharedPreferenceHelper.getSelectedMeshId(this);
@@ -156,7 +188,13 @@ public class SplashActivity extends BaseActivity {
         goToNext(meshInfo);
     }
 
-
+    /**
+     * add test data to mesh info,
+     * only for test,
+     * ignore.
+     *
+     * @param meshInfo target mesh network
+     */
     private void testAddDevice(MeshInfo meshInfo) {
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = 0x0002;
@@ -169,6 +207,11 @@ public class SplashActivity extends BaseActivity {
         meshInfo.nodes.add(nodeInfo);
     }
 
+    /**
+     * save the selected {@link MeshInfo#id} to SharedPreference
+     *
+     * @param meshInfo selected mesh network
+     */
     private void goToNext(MeshInfo meshInfo) {
         SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
@@ -177,6 +220,9 @@ public class SplashActivity extends BaseActivity {
         finish();
     }
 
+    /**
+     * show tip dialog when permission denied
+     */
     private void onPermissionDenied() {
         if (settingDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);

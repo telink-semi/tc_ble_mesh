@@ -28,8 +28,9 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * A LARGE_COMPOSITION_DATA_STATUS message is an unacknowledged message used to report a
- * portion of a page of the Composition Data
+ * A SAR Transmit status message is an unacknowledged message
+ * This class represents a SAR Transmit status message, which is an unacknowledged message.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy data transfer.
  */
 public class SarTransmitStatusMessage extends StatusMessage implements Parcelable {
 
@@ -73,10 +74,17 @@ public class SarTransmitStatusMessage extends StatusMessage implements Parcelabl
      */
     public int rfu;
 
+    /**
+     * Default constructor for the SarTransmitStatusMessage class.
+     */
     public SarTransmitStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the SarTransmitStatusMessage class that initializes its fields from a Parcel.
+     *
+     * @param in The Parcel object to read the fields from.
+     */
     protected SarTransmitStatusMessage(Parcel in) {
         segmentIntervalStep = in.readInt();
         unicastRetransCnt = in.readInt();
@@ -88,6 +96,9 @@ public class SarTransmitStatusMessage extends StatusMessage implements Parcelabl
         rfu = in.readInt();
     }
 
+    /**
+     * A Creator object that implements the Parcelable.Creator interface for the SarTransmitStatusMessage class.
+     */
     public static final Creator<SarTransmitStatusMessage> CREATOR = new Creator<SarTransmitStatusMessage>() {
         @Override
         public SarTransmitStatusMessage createFromParcel(Parcel in) {
@@ -100,27 +111,40 @@ public class SarTransmitStatusMessage extends StatusMessage implements Parcelabl
         }
     };
 
+    /**
+     * Parses the given byte array and sets the fields of the SarTransmitStatusMessage object accordingly.
+     *
+     * @param params The byte array to parse.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
         segmentIntervalStep = params[index] & 0x0F;
         unicastRetransCnt = (params[index++] & 0xF0) >> 4;
-
         unicastRetransWithoutProgCnt = params[index] & 0x0F;
         unicastRetransIntervalStep = (params[index++] & 0xF0) >> 4;
-
         unicastRetransIntervalIncrement = params[index] & 0x0F;
         multicastRetransCnt = (params[index++] & 0xF0) >> 4;
-
         multicastRetransInterval = params[index] & 0x0F;
         multicastRetransCnt = (params[index] & 0xF0) >> 4;
     }
 
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return A bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flattens the SarTransmitStatusMessage object into a Parcel.
+     *
+     * @param dest  The Parcel object to write the fields to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(segmentIntervalStep);
@@ -132,6 +156,5 @@ public class SarTransmitStatusMessage extends StatusMessage implements Parcelabl
         dest.writeInt(multicastRetransInterval);
         dest.writeInt(rfu);
     }
-
-
 }
+

@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@
 package com.telink.ble.mesh.core.provisioning.pdu;
 
 /**
- * Created by kee on 2019/7/18.
+ * It declares a method named "toBytes" which returns a byte array.
+ * This method is intended to convert the PDU object into a byte array representation.
  */
-
 public interface PDU {
 
     /**

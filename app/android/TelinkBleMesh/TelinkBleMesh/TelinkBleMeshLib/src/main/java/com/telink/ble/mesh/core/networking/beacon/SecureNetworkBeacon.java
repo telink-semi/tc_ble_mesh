@@ -30,6 +30,9 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a secure network beacon in a mesh network.
+ */
 public class SecureNetworkBeacon extends MeshBeaconPDU {
 
     private static final int LENGTH_PAYLOAD = 22;
@@ -66,19 +69,30 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
 
 
     /**
-     * @return if is key refreshing
+     * Returns whether the beacon is currently performing key refreshing.
+     *
+     * @return true if key refreshing is enabled, false otherwise.
      */
     public boolean isKeyRefreshing() {
         return (flags & MASK_KEY_REFRESH) != 0;
     }
 
     /**
-     * @return if is iv updating
+     * Returns whether the beacon is currently performing IV updating.
+     *
+     * @return true if IV updating is enabled, false otherwise.
      */
     public boolean isIvUpdating() {
         return (flags & MASK_IV_UPDATE) != 0;
     }
 
+    /**
+     * Creates a SecureNetworkBeacon object from the given payload and beacon key.
+     *
+     * @param payload   the payload of the beacon.
+     * @param beaconKey the beacon key used for authentication.
+     * @return a SecureNetworkBeacon object if the payload is valid and authentication is successful, null otherwise.
+     */
     public static SecureNetworkBeacon from(byte[] payload, byte[] beaconKey) {
         if (payload.length != LENGTH_PAYLOAD) {
             return null;
@@ -104,6 +118,15 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         }
     }
 
+    /**
+     * Creates a SecureNetworkBeacon object for IV updating.
+     *
+     * @param curIvIndex the current IV index.
+     * @param networkId  the network ID.
+     * @param beaconKey  the beacon key used for authentication.
+     * @param updating   true if IV updating is enabled, false otherwise.
+     * @return a SecureNetworkBeacon object for IV updating.
+     */
     public static SecureNetworkBeacon createIvUpdatingBeacon(int curIvIndex, byte[] networkId, byte[] beaconKey, boolean updating) {
         SecureNetworkBeacon networkBeacon = new SecureNetworkBeacon();
         networkBeacon.flags = (byte) (updating ? 0b10 : 0);
@@ -113,6 +136,14 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         return networkBeacon;
     }
 
+
+    /**
+     * Generates the authentication value for the given SecureNetworkBeacon and beacon key.
+     *
+     * @param networkBeacon the SecureNetworkBeacon object.
+     * @param beaconKey     the beacon key used for authentication.
+     * @return the authentication value.
+     */
     private static byte[] generateAuthValue(SecureNetworkBeacon networkBeacon, byte[] beaconKey) {
         final int calLen = 1 + 8 + 4;
         ByteBuffer buffer = ByteBuffer.allocate(calLen).order(ByteOrder.BIG_ENDIAN);
@@ -126,6 +157,12 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
     }
 
 
+    /**
+     * Returns a string representation of the SecureNetworkBeacon object.
+     *
+     * @return a string representation of the object.
+     */
+
     @Override
     public String toString() {
         return "SecureNetworkBeacon{" +
@@ -137,43 +174,92 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
                 '}';
     }
 
+    /**
+     * Returns the beacon type.
+     *
+     * @return the beacon type.
+     */
     public byte getBeaconType() {
         return beaconType;
     }
 
-
+    /**
+     * Returns the flags.
+     *
+     * @return the flags.
+     */
     public byte getFlags() {
         return flags;
     }
 
+    /**
+     * Sets the flags.
+     *
+     * @param flags the flags to set.
+     */
     public void setFlags(byte flags) {
         this.flags = flags;
     }
 
+    /**
+     * Returns the network ID.
+     *
+     * @return the network ID.
+     */
     public byte[] getNetworkID() {
         return networkID;
     }
 
+    /**
+     * Sets the network ID.
+     *
+     * @param networkID the network ID to set.
+     */
     public void setNetworkID(byte[] networkID) {
         this.networkID = networkID;
     }
 
+    /**
+     * Returns the IV index.
+     *
+     * @return the IV index.
+     */
     public int getIvIndex() {
         return ivIndex;
     }
 
+    /**
+     * Sets the IV index.
+     *
+     * @param ivIndex the IV index to set.
+     */
     public void setIvIndex(int ivIndex) {
         this.ivIndex = ivIndex;
     }
 
+    /**
+     * Returns the authentication value.
+     *
+     * @return the authentication value.
+     */
     public byte[] getAuthenticationValue() {
         return authenticationValue;
     }
 
+    /**
+     * Sets the authentication value.
+     *
+     * @param authenticationValue the authentication value to set.
+     */
     public void setAuthenticationValue(byte[] authenticationValue) {
         this.authenticationValue = authenticationValue;
     }
 
+    /**
+     * Converts the SecureNetworkBeacon object to a byte array.
+     *
+     * @return the byte array representation of the object.
+     */
     @Override
     public byte[] toBytes() {
         ByteBuffer buffer1 = ByteBuffer.allocate(LENGTH_PAYLOAD).order(ByteOrder.BIG_ENDIAN);

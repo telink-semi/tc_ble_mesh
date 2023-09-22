@@ -31,9 +31,7 @@ import java.nio.ByteOrder;
 
 
 /**
- * The Config Composition Data Get is an acknowledged message used to read one page of the Composition Data
- * <p>
- * The response to a Config Composition Data Get message is a Config Composition Data Status message {@link CompositionDataStatusMessage}.
+ * SarReceiverSetMessage
  */
 public class SarReceiverSetMessage extends ConfigMessage {
 
@@ -71,22 +69,38 @@ public class SarReceiverSetMessage extends ConfigMessage {
      * Reserved for Future Use
      */
     public int rfu;
-
+    /**
+     * Constructs a SarReceiverSetMessage object with the specified destination address.
+     *
+     * @param destinationAddress the destination address of the message
+     */
 
     public SarReceiverSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
-
+    /**
+     * Gets the opcode for the SAR transmit set message.
+     *
+     * @return the opcode for the message
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_SAR_RECEIVER_SET.value;
     }
-
+    /**
+     * Gets the opcode for the response to the SAR transmit set message.
+     *
+     * @return the opcode for the response message
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_SAR_RECEIVER_STATUS.value;
     }
-
+    /**
+     * Gets the parameters for the SAR transmit set message.
+     *
+     * @return the parameters as a byte array
+     */
     @Override
     public byte[] getParams() {
         return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)

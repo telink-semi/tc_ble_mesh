@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate;
 
+/**
+ * The DistributionStatus enum represents the possible statuses of a message during the distribution process.
+ * Each status has a corresponding code and description.
+ */
 public enum DistributionStatus {
 
 
@@ -53,11 +57,24 @@ public enum DistributionStatus {
     public final int code;
     public final String desc;
 
+    /**
+     * Constructor for the DistributionStatus enum.
+     *
+     * @param code The code representing the status.
+     * @param desc The description of the status.
+     */
     DistributionStatus(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the DistributionStatus enum value corresponding to the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to find the corresponding status for.
+     * @return The DistributionStatus enum value.
+     */
     public static DistributionStatus valueOf(int code) {
         for (DistributionStatus status : values()) {
             if (status.code == code) return status;

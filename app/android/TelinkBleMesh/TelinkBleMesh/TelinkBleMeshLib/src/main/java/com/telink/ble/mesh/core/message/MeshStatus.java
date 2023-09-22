@@ -81,12 +81,21 @@ import com.telink.ble.mesh.core.message.scheduler.SchedulerStatusMessage;
 import com.telink.ble.mesh.core.message.solicitation.SolicitationItemsStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
 
+
 /**
- * All registered StatusMessage should have empty constructor for [Creating Instance]
+ * MeshStatus is a class that represents the status of a mesh network message.
+ * It contains the opcode and the class of the status message.
+ * The opcode is the unique identifier of the message.
+ * The status message class is the class that extends the StatusMessage class.
+ * <p>
+ * This class also includes a nested class called Container, which is responsible for registering the opcode and the corresponding status message class.
+ * The register method is used to register the opcode and the status message class.
+ * The getMessageClass method is used to retrieve the status message class based on the opcode.
+ * <p>
+ * Note: All registered status messages should have an empty constructor for creating an instance of the message.
  * {@link StatusMessage#createByAccessMessage(int, byte[])}
  * Created by kee on 2019/9/3.
  */
-
 public class MeshStatus {
     /**
      * status message opcode {@link com.telink.ble.mesh.core.networking.AccessLayerPDU#opcode}

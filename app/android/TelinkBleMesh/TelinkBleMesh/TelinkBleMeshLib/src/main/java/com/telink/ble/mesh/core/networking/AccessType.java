@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ package com.telink.ble.mesh.core.networking;
 
 /**
  * Access Command
- * Created by kee on 2019/8/12.
+ * This enum represents the access type for encryption/decryption in a Bluetooth mesh network.
  */
 public enum AccessType {
     /**
@@ -40,7 +40,12 @@ public enum AccessType {
      */
     DEVICE(0);
 
-
+    /**
+     * retrieve the access type based on the Akf
+     *
+     * @param akf akf
+     * @return result
+     */
     public static AccessType getByAkf(byte akf) {
         for (AccessType at :
                 values()) {

@@ -75,10 +75,17 @@ public class DirectedControlStatusMessage extends StatusMessage implements Parce
      */
     public byte directedFriend;
 
+    /**
+     * Default constructor for the DirectedControlStatusMessage class.
+     */
     public DirectedControlStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the DirectedControlStatusMessage class that initializes the instance variables from a Parcel.
+     *
+     * @param in The Parcel containing the params.
+     */
     protected DirectedControlStatusMessage(Parcel in) {
         status = in.readInt();
         netKeyIndex = in.readInt();
@@ -89,6 +96,9 @@ public class DirectedControlStatusMessage extends StatusMessage implements Parce
         directedFriend = in.readByte();
     }
 
+    /**
+     * Creator constant for the DirectedControlStatusMessage class.
+     */
     public static final Creator<DirectedControlStatusMessage> CREATOR = new Creator<DirectedControlStatusMessage>() {
         @Override
         public DirectedControlStatusMessage createFromParcel(Parcel in) {
@@ -101,6 +111,11 @@ public class DirectedControlStatusMessage extends StatusMessage implements Parce
         }
     };
 
+    /**
+     * Parses the byte array to extract the params.
+     *
+     * @param params The byte array containing the params.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -117,11 +132,22 @@ public class DirectedControlStatusMessage extends StatusMessage implements Parce
         directedFriend = params[index];
     }
 
+    /**
+     * Implements the describeContents() method from the Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the params to the Parcel.
+     *
+     * @param dest  The Parcel to write to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
@@ -133,6 +159,11 @@ public class DirectedControlStatusMessage extends StatusMessage implements Parce
         dest.writeByte(directedFriend);
     }
 
+    /**
+     * Returns a string representation of the DirectedControlStatusMessage object.
+     *
+     * @return A string representation of the DirectedControlStatusMessage object.
+     */
     @Override
     public String toString() {
         return "DirectedControlStatusMessage{" +

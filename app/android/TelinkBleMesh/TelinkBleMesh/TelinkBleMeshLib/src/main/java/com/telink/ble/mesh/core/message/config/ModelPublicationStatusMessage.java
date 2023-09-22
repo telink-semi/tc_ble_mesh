@@ -33,24 +33,41 @@ import java.nio.ByteOrder;
 
 /**
  * The Config Model Publication Status is an unacknowledged message used to report the model Publication state of an outgoing message that is published by the model.
+ * The ModelPublicationStatusMessage class represents an unacknowledged message used to report the model Publication state of an outgoing message that is published by the model.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy serialization and deserialization.
  */
 public class ModelPublicationStatusMessage extends StatusMessage implements Parcelable {
 
     /**
-     * Status Code for the requesting message
+     * The status code for the requesting message.
      */
     private byte status;
 
+    /**
+     * The model publication information.
+     */
     private ModelPublication publication;
 
+    /**
+     * Default constructor for the ModelPublicationStatusMessage class.
+     */
     public ModelPublicationStatusMessage() {
     }
 
+    /**
+     * Constructor for the ModelPublicationStatusMessage class that takes a Parcel as input and initializes the object.
+     * This constructor is used for deserialization.
+     *
+     * @param in The Parcel object containing the serialized data.
+     */
     protected ModelPublicationStatusMessage(Parcel in) {
         status = in.readByte();
         publication = in.readParcelable(ModelPublication.class.getClassLoader());
     }
 
+    /**
+     * The Creator object that is used to create instances of the ModelPublicationStatusMessage class from a Parcel.
+     */
     public static final Creator<ModelPublicationStatusMessage> CREATOR = new Creator<ModelPublicationStatusMessage>() {
         @Override
         public ModelPublicationStatusMessage createFromParcel(Parcel in) {
@@ -63,6 +80,11 @@ public class ModelPublicationStatusMessage extends StatusMessage implements Parc
         }
     };
 
+    /**
+     * Parses the byte array data and populates the fields of the ModelPublicationStatusMessage object.
+     *
+     * @param data The byte array data to parse.
+     */
     @Override
     public void parse(byte[] data) {
         int index = 0;
@@ -73,42 +95,60 @@ public class ModelPublicationStatusMessage extends StatusMessage implements Parc
         index += 2;
         modelPublication.publishAddress = MeshUtils.bytes2Integer(data, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-
         modelPublication.appKeyIndex = (data[index++] & 0xFF) | ((data[index] & 0b1111) << 8);
-
         modelPublication.credentialFlag = (data[index] >> 4) & 0b1;
         modelPublication.rfu = (data[index] >> 5) & 0b111;
         index++;
-
         modelPublication.ttl = data[index++];
         modelPublication.period = data[index++];
         modelPublication.retransmitCount = (data[index] >> 5) & 0b111;
         modelPublication.retransmitIntervalSteps = data[index++] & 0x1F;
-
         modelPublication.modelId = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
+
         if ((index + 2) <= data.length) {
             modelPublication.sig = false;
             modelPublication.modelId |= ((data[index++] & 0xFF) << 16) | ((data[index] & 0xFF) << 24);
         }
+
         this.publication = modelPublication;
     }
 
-
+    /**
+     * Returns a bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     *
+     * @return A bitmask indicating the set of special object types marshaled by this Parcelable object instance.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Flatten this object into a Parcel.
+     *
+     * @param dest  The Parcel object to write the data to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(status);
         dest.writeParcelable(publication, flags);
     }
 
+    /**
+     * Returns the status code for the requesting message.
+     *
+     * @return The status code for the requesting message.
+     */
     public byte getStatus() {
         return status;
     }
 
+    /**
+     * Returns the model publication information.
+     *
+     * @return The model publication information.
+     */
     public ModelPublication getPublication() {
         return publication;
     }

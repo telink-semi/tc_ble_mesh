@@ -28,24 +28,35 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
- * A LARGE_COMPOSITION_DATA_STATUS message is an unacknowledged message used to report a
- * portion of a page of the Composition Data
+ * This class represents a message containing the status of solicitation items.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy serialization.
  */
 public class SolicitationItemsStatusMessage extends StatusMessage implements Parcelable {
 
     /**
-     * Page number of the Composition Data
+     * The page number of the composition data.
      */
     public byte privateProxy;
 
+    /**
+     * Default constructor for the SolicitationItemsStatusMessage class.
+     */
     public SolicitationItemsStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the SolicitationItemsStatusMessage class that takes a Parcel as input.
+     * Used for deserialization.
+     *
+     * @param in The Parcel containing the data to be read.
+     */
     protected SolicitationItemsStatusMessage(Parcel in) {
         privateProxy = in.readByte();
     }
 
+    /**
+     * Creator constant for the Parcelable interface.
+     */
     public static final Creator<SolicitationItemsStatusMessage> CREATOR = new Creator<SolicitationItemsStatusMessage>() {
         @Override
         public SolicitationItemsStatusMessage createFromParcel(Parcel in) {
@@ -58,16 +69,32 @@ public class SolicitationItemsStatusMessage extends StatusMessage implements Par
         }
     };
 
+    /**
+     * Method to parse the byte array and set the privateProxy field.
+     *
+     * @param params The byte array to be parsed.
+     */
     @Override
     public void parse(byte[] params) {
         privateProxy = params[0];
     }
 
+    /**
+     * Method to describe the contents of the Parcelable object.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Method to write the object's data to a Parcel.
+     *
+     * @param dest  The Parcel to write the data to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(privateProxy);

@@ -49,10 +49,24 @@ public class RelaySetMessage extends ConfigMessage {
      */
     public byte retransmitIntervalSteps;
 
+    /**
+     * Constructs a new RelaySetMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public RelaySetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Creates a new RelaySetMessage with the specified parameters.
+     *
+     * @param destinationAddress      The destination address of the message.
+     * @param relay                   The relay state of the node.
+     * @param retransmitCount         The number of retransmissions.
+     * @param retransmitIntervalSteps The interval between retransmissions.
+     * @return The created RelaySetMessage instance.
+     */
     public static RelaySetMessage getSimple(int destinationAddress, byte relay, byte retransmitCount, byte retransmitIntervalSteps) {
         RelaySetMessage instance = new RelaySetMessage(destinationAddress);
         instance.relay = relay;
@@ -61,16 +75,31 @@ public class RelaySetMessage extends ConfigMessage {
         return instance;
     }
 
+    /**
+     * Returns the opcode value for the RelaySetMessage, which is Opcode.CFG_RELAY_SET.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_RELAY_SET.value;
     }
 
+    /**
+     * Returns the response opcode value for the RelaySetMessage, which is Opcode.CFG_RELAY_STATUS.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_RELAY_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the RelaySetMessage.
+     *
+     * @return The parameters.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{

@@ -27,7 +27,7 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 
 /**
- * A SAR_RECEIVER_GET message is an acknowledged message used to get the current SAR Receiver state of a node
+ * represents a message that can be sent to request information about an on-demand private proxy.
  */
 public class OnDemandPrivateProxyGetMessage extends ConfigMessage {
 
@@ -35,16 +35,32 @@ public class OnDemandPrivateProxyGetMessage extends ConfigMessage {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode value for the OnDemandPrivateProxyGetMessage, which is Opcode.CFG_ON_DEMAND_PROXY_GET.
+     *
+     * @return The opcode value for the OnDemandPrivateProxyGetMessage.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_ON_DEMAND_PROXY_GET.value;
     }
+
+    /**
+     * Returns the response opcode value for the OnDemandPrivateProxyGetMessage, which is Opcode.CFG_ON_DEMAND_PROXY_GET.
+     *
+     * @return The response opcode value for the OnDemandPrivateProxyGetMessage.
+     */
 
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_ON_DEMAND_PROXY_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the OnDemandPrivateProxyGetMessage.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return null;

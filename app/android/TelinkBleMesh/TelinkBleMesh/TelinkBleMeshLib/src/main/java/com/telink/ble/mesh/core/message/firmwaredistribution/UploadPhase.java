@@ -24,6 +24,7 @@ package com.telink.ble.mesh.core.message.firmwaredistribution;
 
 /**
  * upload phase
+ * Enum representing the different phases of firmware upload.
  */
 public enum UploadPhase {
 
@@ -45,10 +46,22 @@ public enum UploadPhase {
 
     ;
 
+    /**
+     * The integer value associated with the upload phase.
+     */
     public final int value;
 
+    /**
+     * The description of the upload phase.
+     */
     public final String desc;
 
+    /**
+     * Constructor for UploadPhase enum.
+     *
+     * @param value The integer value associated with the upload phase.
+     * @param desc  The description of the upload phase.
+     */
     UploadPhase(int value, String desc) {
         this.value = value;
         this.desc = desc;

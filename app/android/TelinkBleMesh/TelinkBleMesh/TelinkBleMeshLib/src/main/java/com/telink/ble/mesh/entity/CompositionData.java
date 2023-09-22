@@ -35,7 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by kee on 2019/8/12.
+ * CompositionData class represents the composition data of a Bluetooth device in a mesh network.
+ * It implements the Serializable and Parcelable interfaces for data serialization and deserialization.
  */
 public class CompositionData implements Serializable, Parcelable {
     /**
@@ -85,15 +86,27 @@ public class CompositionData implements Serializable, Parcelable {
      * 16 bits
      */
     public int features;
-
+    /**
+     * The list of elements present in the device.
+     */
     public List<Element> elements;
-
+    /**
+     * The raw byte array representation of the composition data.
+     */
     public byte[] raw;
 
+    /**
+     * Default constructor for the CompositionData class.
+     */
     public CompositionData() {
 
     }
 
+    /**
+     * Parcelable constructor for the CompositionData class.
+     *
+     * @param in The Parcel object containing the composition data.
+     */
     protected CompositionData(Parcel in) {
         cid = in.readInt();
         pid = in.readInt();
@@ -102,7 +115,9 @@ public class CompositionData implements Serializable, Parcelable {
         features = in.readInt();
     }
 
-
+    /**
+     * Parcelable creator for the CompositionData class.
+     */
     public static final Creator<CompositionData> CREATOR = new Creator<CompositionData>() {
         @Override
         public CompositionData createFromParcel(Parcel in) {
@@ -115,6 +130,12 @@ public class CompositionData implements Serializable, Parcelable {
         }
     };
 
+    /**
+     * Creates a CompositionData object from the given byte array.
+     *
+     * @param data The byte array representing the composition data.
+     * @return The CompositionData object created from the byte array.
+     */
     public static CompositionData from(byte[] data) {
 
         int index = 0;
@@ -154,7 +175,11 @@ public class CompositionData implements Serializable, Parcelable {
         return cpsData;
     }
 
-
+    /**
+     * Converts the CompositionData object to a byte array.
+     *
+     * @return The byte array representation of the CompositionData object.
+     */
     public byte[] toBytes() {
         if (raw != null) return raw;
         byte[] re = ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN)
@@ -184,8 +209,11 @@ public class CompositionData implements Serializable, Parcelable {
     }
 
     /**
-     * @param configExcept config model not include
-     * @deprecated
+     * Retrieves all the models present in the CompositionData object.
+     *
+     * @param configExcept Flag indicating whether to exclude config models.
+     * @return A list of all the models present in the CompositionData object.
+     * @deprecated This method is deprecated.
      */
     public List<Integer> getAllModels(boolean configExcept) {
         if (elements == null) return null;
@@ -211,6 +239,12 @@ public class CompositionData implements Serializable, Parcelable {
         return models;
     }
 
+    /**
+     * Retrieves the element offset of the specified model.
+     *
+     * @param modelId The model identifier.
+     * @return The element offset of the specified model, or -1 if not found.
+     */
     public int getElementOffset(int modelId) {
         int offset = 0;
         for (Element ele : elements) {
@@ -225,27 +259,58 @@ public class CompositionData implements Serializable, Parcelable {
         return -1;
     }
 
+    /**
+     * Checks if the device supports the relay feature.
+     *
+     * @return True if the device supports the relay feature, false otherwise.
+     */
     public boolean relaySupport() {
         return (features & FEATURE_RELAY) != 0;
     }
 
+    /**
+     * Checks if the device supports the proxy feature.
+     *
+     * @return True if the device supports the proxy feature, false otherwise.
+     */
     public boolean proxySupport() {
         return (features & FEATURE_PROXY) != 0;
     }
 
+    /**
+     * Checks if the device supports the friend feature.
+     *
+     * @return True if the device supports the friend feature, false otherwise.
+     */
     public boolean friendSupport() {
         return (features & FEATURE_FRIEND) != 0;
     }
 
+    /**
+     * Checks if the device supports the low power feature.
+     *
+     * @return True if the device supports the low power feature, false otherwise.
+     */
     public boolean lowPowerSupport() {
         return (features & FEATURE_LOW_POWER) != 0;
     }
 
+    /**
+     * Parcelable method for describing the contents of the CompositionData object.
+     *
+     * @return An integer value representing the contents description.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Parcelable method for writing the CompositionData object to a Parcel.
+     *
+     * @param dest  The Parcel object to write the CompositionData object to.
+     * @param flags Additional flags for writing the object.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(cid);
@@ -256,6 +321,11 @@ public class CompositionData implements Serializable, Parcelable {
         dest.writeTypedList(elements);
     }
 
+    /**
+     * Returns a string representation of the CompositionData object.
+     *
+     * @return A string representation of the CompositionData object.
+     */
     @Override
     public String toString() {
         StringBuilder elementInfo = new StringBuilder();

@@ -23,14 +23,16 @@
 package com.telink.ble.mesh.entity;
 
 /**
- * Created by kee on 2019/2/25.
+ * The TransitionTime class represents a transition time value used in a system.
+ * It consists of a number and a step, which together determine the resolution and duration of the transition.
+ * The number is a value between 0 and 63, representing the number of steps in the transition.
+ * The step is a 2-bit value, indicating the resolution of the transition.
+ * The class provides methods for creating a TransitionTime object from a given time in milliseconds,
+ * as well as retrieving the value, number, step, and resolution of a TransitionTime object.
  */
-
 public class TransitionTime {
-
     // 6 bits
     private byte number;
-
     /**
      * 2 bits
      * 0b00
@@ -45,22 +47,30 @@ public class TransitionTime {
     private byte step;
     // 0b111111
     private static final int MAX_STEP_VALUE = 0x3F;
-
     private static final byte STEP_RESOLUTION_100_MILL = 0b00;
     private static final byte STEP_RESOLUTION_1_SECOND = 0b01;
     private static final byte STEP_RESOLUTION_10_SECOND = 0b10;
     private static final byte STEP_RESOLUTION_10_MINUTE = 0b11;
-
     private static final int PERIOD_STEP_100_MILL = 100;
     private static final int PERIOD_STEP_1_SECOND = 1000;
     private static final int PERIOD_STEP_10_SECOND = 10 * 1000;
     private static final int PERIOD_STEP_10_MINUTE = 10 * 60 * 1000;
 
+    /**
+     * Constructs a TransitionTime object with the given number and step values.
+     * @param number the number of steps in the transition
+     * @param step the resolution of the transition
+     */
     public TransitionTime(byte number, byte step) {
         this.number = number;
         this.step = step;
     }
 
+    /**
+     * Creates a TransitionTime object from the given time in milliseconds.
+     * @param millisecond the time in milliseconds
+     * @return a TransitionTime object representing the given time
+     */
     public static TransitionTime fromTime(long millisecond) {
         byte step = 0, number = 0;
         if (millisecond <= 0) {
@@ -82,29 +92,43 @@ public class TransitionTime {
         return new TransitionTime(number, step);
     }
 
+    /**
+     * Returns the value of the TransitionTime object.
+     * The value is a byte representation of the number and step values.
+     * @return the value of the TransitionTime object
+     */
     public byte getValue() {
         return (byte) ((step << 6) | number);
     }
 
+    /**
+     * Returns the number of steps in the transition.
+     * @return the number of steps
+     */
     public byte getNumber() {
         return number;
     }
 
+    /**
+     * Returns the resolution of the transition.
+     * @return the resolution in milliseconds
+     */
     public byte getStep() {
         return step;
     }
 
+    /**
+     * Returns the resolution of the transition in milliseconds.
+     * @return the resolution in milliseconds
+     */
     public int getResolution() {
         switch (step) {
             case STEP_RESOLUTION_100_MILL:
                 return PERIOD_STEP_100_MILL;
-
             case STEP_RESOLUTION_1_SECOND:
                 return PERIOD_STEP_1_SECOND;
-
             case STEP_RESOLUTION_10_SECOND:
                 return PERIOD_STEP_10_SECOND;
-
             case STEP_RESOLUTION_10_MINUTE:
                 return PERIOD_STEP_10_MINUTE;
         }

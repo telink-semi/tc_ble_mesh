@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate;
 
+/**
+ * Represents different additional information codes.
+ * Each code has a corresponding description.
+ */
 public enum AdditionalInformation {
 
 
@@ -39,11 +43,24 @@ public enum AdditionalInformation {
     public final int code;
     public final String desc;
 
+    /**
+     * Constructor for the AdditionalInformation enum.
+     *
+     * @param code The code representing the status.
+     * @param desc The description of the status.
+     */
     AdditionalInformation(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the AdditionalInformation enum value corresponding to the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to find the corresponding status for.
+     * @return The AdditionalInformation enum value.
+     */
     public static AdditionalInformation valueOf(int code) {
         for (AdditionalInformation status : values()) {
             if (status.code == code) return status;

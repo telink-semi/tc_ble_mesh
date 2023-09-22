@@ -35,26 +35,53 @@ public class BeaconSetMessage extends ConfigMessage {
      */
     public byte beacon;
 
+    /**
+     * Creates a new BeaconSetMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public BeaconSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Creates a simple instance of BeaconSetMessage with the specified destination address and ttl.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param beacon             beacon.
+     * @return A simple instance of FriendSetMessage.
+     */
     public static BeaconSetMessage getSimple(int destinationAddress, byte beacon) {
         BeaconSetMessage instance = new BeaconSetMessage(destinationAddress);
         instance.beacon = beacon;
         return instance;
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_BEACON_SET.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_BEACON_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return The parameters of the message.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{beacon};

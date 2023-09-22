@@ -30,29 +30,38 @@ import java.nio.ByteOrder;
 /**
  * The Config Model Publication Get is an acknowledged message used to get the publish address and parameters of an outgoing message that originates from a model.
  * The response to a Config Model Publication Get message is a Config Model Publication Status message.
+ * <p>
+ * The Config Model Publication Get message is used to request the publish address and parameters of an outgoing message that originates from a model.
+ * This message is sent to a destination address and expects a response in the form of a Config Model Publication Status message.
  *
  * @see ModelPublicationStatusMessage
  */
 public class ModelPublicationGetMessage extends ConfigMessage {
-
-
     /**
-     * Address of the element
-     * 16 bits
+     * The address of the element.
+     * It is represented by 16 bits.
      */
     public int elementAddress;
-
     /**
-     * 16 or 32 bits
+     * The ID of the model.
+     * It can be represented by either 16 or 32 bits.
      */
     public int modelId;
-
     /**
-     * if sig model
-     * #modelId
+     * Specifies whether the model is a SIG model.
+     * If true, the model is a SIG model.
+     * If false, the model is a vendor model.
      */
     public boolean sig = true;
 
+    /**
+     * Creates a simple ModelPublicationGetMessage object.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param elementAddress     The address of the element.
+     * @param modelId            The ID of the model.
+     * @return A ModelPublicationGetMessage object.
+     */
     public static ModelPublicationGetMessage getSimple(int destinationAddress, int elementAddress, int modelId) {
         ModelPublicationGetMessage message = new ModelPublicationGetMessage(destinationAddress);
         message.elementAddress = elementAddress;
@@ -60,20 +69,40 @@ public class ModelPublicationGetMessage extends ConfigMessage {
         return message;
     }
 
+    /**
+     * Constructs a ModelPublicationGetMessage object with the given destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public ModelPublicationGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_MODEL_PUB_GET.value;
     }
 
+    /**
+     * Gets the response opcode of the message.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_MODEL_PUB_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         int len = sig ? 4 : 6;
@@ -86,5 +115,4 @@ public class ModelPublicationGetMessage extends ConfigMessage {
         }
         return bf.array();
     }
-
 }

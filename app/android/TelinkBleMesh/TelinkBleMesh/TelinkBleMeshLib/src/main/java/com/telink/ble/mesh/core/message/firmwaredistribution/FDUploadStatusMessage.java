@@ -28,6 +28,10 @@ import android.os.Parcelable;
 import com.telink.ble.mesh.core.message.StatusMessage;
 import com.telink.ble.mesh.util.Arrays;
 
+/**
+ * This class represents a status message for the firmware image upload to a Firmware Distribution Server.
+ * It extends the StatusMessage class and implements the Parcelable interface for easy data transfer.
+ */
 public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
 
     /**
@@ -69,10 +73,17 @@ public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
      */
     public byte[] uploadFirmwareID;
 
+    /**
+     * Default constructor.
+     */
     public FDUploadStatusMessage() {
     }
 
-
+    /**
+     * Parcelable constructor.
+     * Used for creating an instance of FDUploadStatusMessage from a Parcel.
+     * @param in The Parcel object containing the data.
+     */
     protected FDUploadStatusMessage(Parcel in) {
         status = in.readInt();
         uploadPhase = in.readInt();
@@ -80,6 +91,9 @@ public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
         uploadFirmwareID = in.createByteArray();
     }
 
+    /**
+     * Creator constant for Parcelable implementation.
+     */
     public static final Creator<FDUploadStatusMessage> CREATOR = new Creator<FDUploadStatusMessage>() {
         @Override
         public FDUploadStatusMessage createFromParcel(Parcel in) {
@@ -92,6 +106,10 @@ public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
         }
     };
 
+    /**
+     * Parses the byte array data and sets the corresponding fields of the FDUploadStatusMessage object.
+     * @param params The byte array containing the data to be parsed.
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -104,11 +122,20 @@ public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
         System.arraycopy(params, index, this.uploadFirmwareID, 0, this.uploadFirmwareID.length);
     }
 
+    /**
+     * Parcelable method for describing the contents of the FDUploadStatusMessage object.
+     * @return An integer value representing the contents description.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Parcelable method for writing the FDUploadStatusMessage object to a Parcel.
+     * @param dest The Parcel object to write the data to.
+     * @param flags Additional flags for the operation.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
@@ -117,6 +144,10 @@ public class FDUploadStatusMessage extends StatusMessage implements Parcelable {
         dest.writeByteArray(uploadFirmwareID);
     }
 
+    /**
+     * Returns a string representation of the FDUploadStatusMessage object.
+     * @return A string containing the values of the status, uploadPhase, uploadProgress, uploadType, and uploadFirmwareID fields.
+     */
     @Override
     public String toString() {
         return "FDUploadStatusMessage{" +

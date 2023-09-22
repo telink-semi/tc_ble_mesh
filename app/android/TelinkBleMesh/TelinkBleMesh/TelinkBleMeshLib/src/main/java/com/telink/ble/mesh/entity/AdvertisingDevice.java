@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -30,19 +30,30 @@ import android.os.Parcelable;
 import java.util.Arrays;
 
 /**
- * scanned devices
+ * This class represents an advertising device discovered during a Bluetooth scan.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
  */
 public class AdvertisingDevice implements Parcelable {
-    public BluetoothDevice device;
-    public int rssi;
-    public byte[] scanRecord;
+    public BluetoothDevice device; // The Bluetooth device associated with this advertising device
+    public int rssi; // The received signal strength indicator (RSSI) of the advertising device
+    public byte[] scanRecord; // The scan record of the advertising device
 
+    /**
+     * Constructs a new AdvertisingDevice object.
+     *
+     * @param device     The Bluetooth device associated with this advertising device
+     * @param rssi       The received signal strength indicator (RSSI) of the advertising device
+     * @param scanRecord The scan record of the advertising device
+     */
     public AdvertisingDevice(BluetoothDevice device, int rssi, byte[] scanRecord) {
         this.device = device;
         this.rssi = rssi;
         this.scanRecord = scanRecord;
     }
 
+    /**
+     * Parcelable.Creator necessary for implementing Parcelable interface.
+     */
     public static final Creator<AdvertisingDevice> CREATOR = new Creator<AdvertisingDevice>() {
         @Override
         public AdvertisingDevice createFromParcel(Parcel in) {
@@ -55,6 +66,11 @@ public class AdvertisingDevice implements Parcelable {
         }
     };
 
+    /**
+     * Constructs an AdvertisingDevice object from a Parcel.
+     *
+     * @param in The Parcel object to read the data from
+     */
     public AdvertisingDevice(Parcel in) {
         this.device = in.readParcelable(getClass().getClassLoader());
         this.rssi = in.readInt();

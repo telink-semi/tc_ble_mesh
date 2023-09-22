@@ -29,28 +29,36 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 
 /**
  * The Config Friend Status is an unacknowledged message used to report the current Friend state of a node
- * <p>
- * response of {@link FriendGetMessage} {@link FriendSetMessage}
+ * The FriendStatusMessage class represents an unacknowledged message used to report the current Friend state of a node.
+ * This message is a response to FriendGetMessage and FriendSetMessage.
  *
  * @see com.telink.ble.mesh.core.message.Opcode#CFG_FRIEND_STATUS
  */
 public class FriendStatusMessage extends StatusMessage implements Parcelable {
 
-
     /**
-     * Friend state
+     * The Friend state of the node.
      */
     public byte friend;
 
-
+    /**
+     * Default constructor for the FriendStatusMessage class.
+     */
     public FriendStatusMessage() {
     }
 
-
+    /**
+     * Constructor for the FriendStatusMessage class.
+     *
+     * @param in The Parcel object containing the message data.
+     */
     protected FriendStatusMessage(Parcel in) {
         friend = in.readByte();
     }
 
+    /**
+     * Creator constant for the FriendStatusMessage class.
+     */
     public static final Creator<FriendStatusMessage> CREATOR = new Creator<FriendStatusMessage>() {
         @Override
         public FriendStatusMessage createFromParcel(Parcel in) {
@@ -63,16 +71,32 @@ public class FriendStatusMessage extends StatusMessage implements Parcelable {
         }
     };
 
+    /**
+     * Parses the message parameters.
+     *
+     * @param params The byte array containing the message parameters.
+     */
     @Override
     public void parse(byte[] params) {
         friend = params[0];
     }
 
+    /**
+     * Describes the contents of the message.
+     *
+     * @return An integer value representing the contents of the message.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the message data to a Parcel object.
+     *
+     * @param dest  The Parcel object to write the message data to.
+     * @param flags Additional flags about how the object should be written.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(friend);

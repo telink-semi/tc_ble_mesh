@@ -101,6 +101,12 @@ public class NetworkLayerPDU {
 //    private int transMic;
     protected NetworkEncryptionSuite encryptionSuite;
 
+    /**
+     * This constructor initializes a NetworkLayerPDU object with the specified encryption suite.
+     * The encryption suite is used to provide security measures for the network layer protocol data unit.
+     *
+     * @param encryptionSuite enc
+     */
     public NetworkLayerPDU(NetworkEncryptionSuite encryptionSuite) {
         this.encryptionSuite = encryptionSuite;
     }
@@ -112,7 +118,11 @@ public class NetworkLayerPDU {
         this.nid = nid;
     }*/
 
-
+    /**
+     * generates an encrypted payload for a network PDU
+     *
+     * @return pdu data
+     */
     public byte[] generateEncryptedPayload() {
         final byte iviNid = (byte) ((ivi << 7) | nid);
         final byte ctlTTL = (byte) ((ctl << 7) | ttl);
@@ -133,6 +143,15 @@ public class NetworkLayerPDU {
                 .array();
     }
 
+    /**
+     * creates an obfuscated network header by combining various parameters.
+     *
+     * @param ctlTTL control TTL (Time to Live)
+     * @param sno    sequence number
+     * @param src    source address
+     * @param pecb   pecb
+     * @return header
+     */
     private byte[] createObfuscatedNetworkHeader(final byte ctlTTL, int sno, final int src, final byte[] pecb) {
 
         byte[] seqNo = MeshUtils.integer2Bytes(sno, 3, ByteOrder.BIG_ENDIAN);
@@ -155,6 +174,15 @@ public class NetworkLayerPDU {
         return obfuscated;
     }
 
+    /**
+     * This method creates a PECB (Privacy Encryption and Control Block) by combining the privacy random value with other parameters.
+     * It first creates a ByteBuffer with a specific size and order.
+     * Then, it populates the buffer with a sequence of bytes, including the privacy random value.
+     * Finally, it encrypts the buffer using AES encryption with the privacy key and returns the encrypted data.
+     *
+     * @param privacyRandom random
+     * @return PECB
+     */
     private byte[] createPECB(byte[] privacyRandom) {
         final ByteBuffer buffer = ByteBuffer.allocate(5 + privacyRandom.length + 4);
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -165,13 +193,29 @@ public class NetworkLayerPDU {
         return Encipher.aes(temp, this.encryptionSuite.privacyKey);
     }
 
+    /**
+     * This method extracts the privacy random value from the encrypted upper transport PDU (Protocol Data Unit)
+     * and returns it as a byte array.
+     *
+     * @param encryptedUpperTransportPDU PDU
+     * @return random
+     */
     private byte[] createPrivacyRandom(byte[] encryptedUpperTransportPDU) {
         final byte[] privacyRandom = new byte[7];
         System.arraycopy(encryptedUpperTransportPDU, 0, privacyRandom, 0, privacyRandom.length);
         return privacyRandom;
     }
 
-
+    /**
+     * This method encrypts the payload of a network PDU by combining it with other parameters.
+     * It first generates a network nonce using specific parameters.
+     * Then, it creates an unencrypted network payload by combining the destination address and the lower PDU.
+     * Finally, it encrypts the unencrypted payload using CCM (Counter with CBC-MAC) mode with the encryption key, network nonce, and a specific MIC (Message Integrity Code) length,
+     * and returns the encrypted data.
+     *
+     * @param lowerPDU lower transport PDU
+     * @return payload
+     */
     private byte[] encryptNetworkPduPayload(byte[] lowerPDU) {
         // seqNo 3 bytes
 //        byte ctlTTL = (byte) ((ctl << 7) | ttl);
@@ -183,18 +227,34 @@ public class NetworkLayerPDU {
         return Encipher.ccm(unencryptedNetworkPayload, this.encryptionSuite.encryptionKey, networkNonce, getMicLen(), true);
     }
 
+    /**
+     * This method generates a network nonce by
+     * combining the CTL (Control) and TTL (Time to Live) values,
+     * the sequence number, the source address, and the IV Index (Initialization Vector Index).
+     * It returns the generated nonce as a byte array.
+     *
+     * @return nonce
+     */
     protected byte[] generateNonce() {
         byte ctlTTL = (byte) ((ctl << 7) | ttl);
         byte[] seqNo = MeshUtils.integer2Bytes(seq, 3, ByteOrder.BIG_ENDIAN);
         return NonceGenerator.generateNetworkNonce(ctlTTL, seqNo, src, this.encryptionSuite.ivIndex);
     }
 
+    /**
+     * This method determines the MIC length based on the value of the CTL.
+     * If the CTL is 0, the MIC length is 4; otherwise, it is 8.
+     *
+     * @return mic length
+     */
     private int getMicLen() {
         return ctl == 0 ? 4 : 8;
     }
 
     /**
-     * parse
+     * parse header
+     *
+     * @param pdu input pdu
      */
     public byte[] parseObfuscatedNetworkHeader(byte[] pdu) {
         final ByteBuffer obfuscatedNetworkBuffer = ByteBuffer.allocate(6);
@@ -216,6 +276,12 @@ public class NetworkLayerPDU {
         return deobfuscatedData;
     }
 
+    /**
+     * parse pdu
+     *
+     * @param pduData data
+     * @return parse result
+     */
     public boolean parse(byte[] pduData) {
 
         int iviNid = pduData[0] & 0xFF;
@@ -268,70 +334,157 @@ public class NetworkLayerPDU {
         return true;
     }
 
+    /**
+     * used to validate a network PDU (Protocol Data Unit) based on the given IVI (Initialization Vector Index) and NID (Network Identifier). It checks if the NID matches the encryption suite's NID and if the IVI matches the least significant bit of the encryption suite's IV Index.
+     *
+     * @param ivi ivi
+     * @param nid nid
+     * @return check result
+     */
     private boolean validateNetworkPdu(int ivi, int nid) {
         return nid == this.encryptionSuite.nid && ivi == (this.encryptionSuite.ivIndex & 0b01);
     }
 
+    /**
+     * Returns the IV index of the packet.
+     *
+     * @return The IV index.
+     */
     public byte getIvi() {
         return ivi;
     }
 
+    /**
+     * Sets the IV index of the packet.
+     *
+     * @param ivi The IV index to set.
+     */
     public void setIvi(byte ivi) {
         this.ivi = ivi;
     }
 
+    /**
+     * Returns the Network ID of the packet.
+     *
+     * @return The Network ID.
+     */
     public byte getNid() {
         return nid;
     }
 
+    /**
+     * Sets the Network ID of the packet.
+     *
+     * @param nid The Network ID to set.
+     */
     public void setNid(byte nid) {
         this.nid = nid;
     }
 
+    /**
+     * Returns the Control field of the packet.
+     *
+     * @return The Control field.
+     */
     public byte getCtl() {
         return ctl;
     }
 
+    /**
+     * Sets the Control field of the packet.
+     *
+     * @param ctl The Control field to set.
+     */
     public void setCtl(byte ctl) {
         this.ctl = ctl;
     }
 
+    /**
+     * Returns the Time to Live (TTL) of the packet.
+     *
+     * @return The TTL.
+     */
     public byte getTtl() {
         return ttl;
     }
 
+    /**
+     * Sets the Time to Live (TTL) of the packet.
+     *
+     * @param ttl The TTL to set.
+     */
     public void setTtl(byte ttl) {
         this.ttl = ttl;
     }
 
+    /**
+     * Returns the Sequence number of the packet.
+     *
+     * @return The Sequence number.
+     */
     public int getSeq() {
         return seq;
     }
 
+    /**
+     * Sets the Sequence number of the packet.
+     *
+     * @param seq The Sequence number to set.
+     */
     public void setSeq(int seq) {
         this.seq = seq;
     }
 
+    /**
+     * Returns the Source address of the packet.
+     *
+     * @return The Source address.
+     */
     public int getSrc() {
         return src;
     }
 
+    /**
+     * Sets the Source address of the packet.
+     *
+     * @param src The Source address to set.
+     */
     public void setSrc(int src) {
         this.src = src;
     }
 
+    /**
+     * Returns the Destination address of the packet.
+     *
+     * @return The Destination address.
+     */
     public int getDst() {
         return dst;
     }
 
+    /**
+     * Sets the Destination address of the packet.
+     *
+     * @param dst The Destination address to set.
+     */
     public void setDst(int dst) {
         this.dst = dst;
     }
 
+    /**
+     * Returns the Transport Protocol Data Unit (PDU) of the packet.
+     *
+     * @return The Transport PDU.
+     */
     public byte[] getTransportPDU() {
         return transportPDU;
     }
 
+    /**
+     * Sets the Transport Protocol Data Unit (PDU) of the packet.
+     *
+     * @param transportPDU The Transport PDU to set.
+     */
     public void setTransportPDU(byte[] transportPDU) {
         this.transportPDU = transportPDU;
     }
@@ -348,6 +501,16 @@ public class NetworkLayerPDU {
 
         protected int nid;
 
+        /**
+         * This class represents a network encryption suite used for secure communication.
+         * It encapsulates the necessary parameters for encryption, such as the initialization vector index,
+         * encryption key, privacy key, and network ID.
+         *
+         * @param ivIndex       The index of the initialization vector used for encryption.
+         * @param encryptionKey The encryption key used for secure communication.
+         * @param privacyKey    The privacy key used for secure communication.
+         * @param nid           The network ID associated with the encryption suite.
+         */
         public NetworkEncryptionSuite(int ivIndex, byte[] encryptionKey, byte[] privacyKey, int nid) {
             this.ivIndex = ivIndex;
             this.encryptionKey = encryptionKey;
@@ -357,6 +520,13 @@ public class NetworkLayerPDU {
     }
 
 
+    /**
+     * Returns a string representation of the NetworkLayerPDU object.
+     * The string includes the values of its instance variables.
+     * The transportPDU byte array is converted into a hexadecimal string.
+     *
+     * @return a string representation of the NetworkLayerPDU object.
+     */
     @Override
     public String toString() {
         return "NetworkLayerPDU{" +

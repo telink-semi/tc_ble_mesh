@@ -23,7 +23,6 @@
 package com.telink.ble.mesh.core.message.sarconfig;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 import java.nio.ByteBuffer;
@@ -31,9 +30,8 @@ import java.nio.ByteOrder;
 
 
 /**
- * The Config Composition Data Get is an acknowledged message used to read one page of the Composition Data
- * <p>
- * The response to a Config Composition Data Get message is a Config Composition Data Status message {@link CompositionDataStatusMessage}.
+ * SarTransmitSetMessage is a class that
+ * represents a configuration message for setting the SAR (Segmentation and Reassembly) transmit parameters.
  */
 public class SarTransmitSetMessage extends ConfigMessage {
 
@@ -78,20 +76,40 @@ public class SarTransmitSetMessage extends ConfigMessage {
     public int rfu;
 
 
+    /**
+     * Constructs a SarTransmitSetMessage object with the specified destination address.
+     *
+     * @param destinationAddress the destination address of the message
+     */
     public SarTransmitSetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode for the SAR transmit set message.
+     *
+     * @return the opcode for the message
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_SAR_TRANSMITTER_SET.value;
     }
 
+    /**
+     * Gets the opcode for the response to the SAR transmit set message.
+     *
+     * @return the opcode for the response message
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_SAR_TRANSMITTER_STATUS.value;
     }
 
+    /**
+     * Gets the parameters for the SAR transmit set message.
+     *
+     * @return the parameters as a byte array
+     */
     @Override
     public byte[] getParams() {
         return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
@@ -100,6 +118,4 @@ public class SarTransmitSetMessage extends ConfigMessage {
                 .put((byte) (unicastRetransIntervalIncrement | (multicastRetransCnt << 4)))
                 .put((byte) (multicastRetransInterval | (rfu << 4))).array();
     }
-
-
 }

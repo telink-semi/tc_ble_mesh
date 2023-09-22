@@ -72,10 +72,18 @@ public class BridgingTableStatusMessage extends StatusMessage implements Parcela
     public int address2;
 
 
+    /**
+     * Constructs a new BridgingTableStatusMessage object.
+     */
     public BridgingTableStatusMessage() {
     }
 
 
+    /**
+     * Constructs a new BridgingTableStatusMessage object from a Parcel.
+     *
+     * @param in the Parcel object containing the BridgingTableStatusMessage data
+     */
     protected BridgingTableStatusMessage(Parcel in) {
         status = in.readInt();
         currentDirections = in.readByte();
@@ -85,6 +93,9 @@ public class BridgingTableStatusMessage extends StatusMessage implements Parcela
         address2 = in.readInt();
     }
 
+    /**
+     * A Creator object that generates instances of BridgingTableStatusMessage from a Parcel.
+     */
     public static final Creator<BridgingTableStatusMessage> CREATOR = new Creator<BridgingTableStatusMessage>() {
         @Override
         public BridgingTableStatusMessage createFromParcel(Parcel in) {
@@ -97,6 +108,11 @@ public class BridgingTableStatusMessage extends StatusMessage implements Parcela
         }
     };
 
+    /**
+     * Parses the parameters of the BridgingTableStatusMessage from a byte array.
+     *
+     * @param params the byte array containing the parameters of the BridgingTableStatusMessage
+     */
     @Override
     public void parse(byte[] params) {
         int index = 0;
@@ -116,36 +132,76 @@ public class BridgingTableStatusMessage extends StatusMessage implements Parcela
         this.address2 = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
-
+    /**
+     * return message status
+     *
+     * @return message status
+     */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * return Current Directions
+     *
+     * @return Current Directions
+     */
     public byte getCurrentDirections() {
         return currentDirections;
     }
 
+    /**
+     * return network key index 1
+     *
+     * @return network key index 1
+     */
     public int getNetKeyIndex1() {
         return netKeyIndex1;
     }
 
+    /**
+     * return network key index 2
+     *
+     * @return network key index 2
+     */
     public int getNetKeyIndex2() {
         return netKeyIndex2;
     }
 
+    /**
+     * return address 1
+     *
+     * @return address 1
+     */
     public int getAddress1() {
         return address1;
     }
 
+    /**
+     * return address 2
+     *
+     * @return address 2
+     */
     public int getAddress2() {
         return address2;
     }
 
+    /**
+     * Describes the contents of the BridgingTableStatusMessage object.
+     *
+     * @return an integer representing the contents of the BridgingTableStatusMessage object
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the BridgingTableStatusMessage object to a Parcel.
+     *
+     * @param dest  the Parcel object to write the BridgingTableStatusMessage object to
+     * @param flags additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);

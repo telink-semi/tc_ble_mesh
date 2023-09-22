@@ -51,10 +51,15 @@ public class AppKeyStatusMessage extends StatusMessage {
      */
     private int appKeyIndex;
 
-
+    /**
+     * Constructs a new AppKeyStatusMessage object.
+     */
     public AppKeyStatusMessage() {
     }
 
+    /**
+     * A Creator object that generates instances of AppKeyStatusMessage from a Parcel.
+     */
     protected AppKeyStatusMessage(Parcel in) {
         status = in.readByte();
         netKeyIndex = in.readInt();

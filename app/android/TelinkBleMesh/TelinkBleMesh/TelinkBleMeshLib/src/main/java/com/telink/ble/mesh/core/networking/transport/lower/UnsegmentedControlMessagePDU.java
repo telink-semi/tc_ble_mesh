@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,6 +28,11 @@ import java.nio.ByteBuffer;
  * Created by kee on 2019/8/16.
  */
 
+/**
+ * This class represents an unsegmented control message PDU (Protocol Data Unit)
+ * in the lower transport layer.
+ * It extends the LowerTransportPDU class.
+ */
 public class UnsegmentedControlMessagePDU extends LowerTransportPDU {
 
     /**
@@ -47,7 +52,11 @@ public class UnsegmentedControlMessagePDU extends LowerTransportPDU {
      */
     byte[] params;
 
-
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toByteArray() {
         byte header = (byte) ((seg << 7) | (opcode));
@@ -59,12 +68,22 @@ public class UnsegmentedControlMessagePDU extends LowerTransportPDU {
         return byteBuffer.array();
     }
 
+    /**
+     * Gets the type of the PDU.
+     *
+     * @return The type of the PDU.
+     */
 
     @Override
     public int getType() {
         return TYPE_UNSEGMENTED_CONTROL_MESSAGE;
     }
 
+    /**
+     * Checks if the PDU is segmented.
+     *
+     * @return True if the PDU is segmented, false otherwise.
+     */
     @Override
     public boolean segmented() {
         return false;

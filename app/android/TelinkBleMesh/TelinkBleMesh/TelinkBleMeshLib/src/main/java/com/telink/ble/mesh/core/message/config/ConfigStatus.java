@@ -78,11 +78,24 @@ public enum ConfigStatus {
      */
     public final String desc;
 
+    /**
+     * Constructor for the ConfigStatus enum.
+     *
+     * @param code The code representing the Identity.
+     * @param desc The description of the Identity.
+     */
     ConfigStatus(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the ConfigStatus enum value corresponding to the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to find the corresponding ConfigStatus for.
+     * @return The ConfigStatus enum value.
+     */
     public static ConfigStatus valueOf(int code) {
         for (ConfigStatus status : values()) {
             if (status.code == code) return status;

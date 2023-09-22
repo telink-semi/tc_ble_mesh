@@ -27,29 +27,42 @@ import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.message.StatusMessage;
 
+
 /**
  * The Config Default TTL Status is an unacknowledged message used to report the current Default TTL state of a node
- * <p>
+ * The DefaultTTLStatusMessage class represents an unacknowledged message used to report the current Default TTL state of a node.
+ * It is the response to DefaultTTLSetMessage and DefaultTTLGetMessage.
  * response of {@link DefaultTTLSetMessage} {@link DefaultTTLGetMessage}
+ * <p>
+ * This message has an opcode of CFG_DEFAULT_TTL_STATUS.
  *
  * @see com.telink.ble.mesh.core.message.Opcode#CFG_DEFAULT_TTL_STATUS
  */
 public class DefaultTTLStatusMessage extends StatusMessage implements Parcelable {
 
     /**
-     * Default TTL
+     * Default TTL value
      */
     public byte ttl;
 
-
+    /**
+     * Constructs a new DefaultTTLStatusMessage object.
+     */
     public DefaultTTLStatusMessage() {
     }
 
-
+    /**
+     * Constructs a new DefaultTTLStatusMessage object from a Parcel.
+     *
+     * @param in the Parcel object containing the DefaultTTLStatusMessage data
+     */
     protected DefaultTTLStatusMessage(Parcel in) {
         ttl = in.readByte();
     }
 
+    /**
+     * A Creator object that generates instances of DefaultTTLStatusMessage from a Parcel.
+     */
     public static final Creator<DefaultTTLStatusMessage> CREATOR = new Creator<DefaultTTLStatusMessage>() {
         @Override
         public DefaultTTLStatusMessage createFromParcel(Parcel in) {
@@ -62,16 +75,32 @@ public class DefaultTTLStatusMessage extends StatusMessage implements Parcelable
         }
     };
 
+    /**
+     * Parses the parameters of the DefaultTTLStatusMessage from a byte array.
+     *
+     * @param params the byte array containing the parameters of the DefaultTTLStatusMessage
+     */
     @Override
     public void parse(byte[] params) {
         ttl = params[0];
     }
 
+    /**
+     * Describes the contents of the DefaultTTLStatusMessage object.
+     *
+     * @return an integer representing the contents of the DefaultTTLStatusMessage object
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the DefaultTTLStatusMessage object to a Parcel.
+     *
+     * @param dest  the Parcel object to write the DefaultTTLStatusMessage object to
+     * @param flags additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(ttl);

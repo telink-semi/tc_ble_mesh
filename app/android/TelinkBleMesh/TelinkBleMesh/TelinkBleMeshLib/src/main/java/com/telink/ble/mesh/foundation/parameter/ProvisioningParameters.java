@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -26,11 +26,16 @@ import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 
 /**
- * Created by kee on 2019/9/5.
+ * This is a class called ProvisioningParameters that extends the Parameters class.
+ * used in {@link com.telink.ble.mesh.foundation.MeshService#startProvisioning(ProvisioningParameters)}
  */
-
 public class ProvisioningParameters extends Parameters {
 
+    /**
+     * constructor that takes a ProvisioningDevice object as a parameter.
+     *
+     * @param device ProvisioningDevice
+     */
     public ProvisioningParameters(ProvisioningDevice device) {
         this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROVISION));
         this.set(ACTION_PROVISIONING_TARGET, device);

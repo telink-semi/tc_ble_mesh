@@ -23,36 +23,51 @@
 package com.telink.ble.mesh.core.message.sarconfig;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 
 /**
- * A SAR_TRANSMITTER_GET message is an acknowledged message used to get the current SAR Transmitter state of a node.
+ * The SarTransmitGetMessage class represents a message used to request the current state of the SAR Transmitter of a node.
+ * This message is acknowledged and contains the destination address of the node.
  */
 public class SarTransmitGetMessage extends ConfigMessage {
 
+    /**
+     * Constructs a SarTransmitGetMessage object with the specified destination address.
+     *
+     * @param destinationAddress The destination address to send the message to.
+     */
     public SarTransmitGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode for this SAR Transmit Get Message.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_SAR_TRANSMITTER_GET.value;
     }
 
+    /**
+     * Returns the response opcode for this SAR Transmit Get Message.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_SAR_TRANSMITTER_STATUS.value;
     }
 
+    /**
+     * Returns the parameters for this SAR Transmit Get Message.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return null;
     }
-
-
 }

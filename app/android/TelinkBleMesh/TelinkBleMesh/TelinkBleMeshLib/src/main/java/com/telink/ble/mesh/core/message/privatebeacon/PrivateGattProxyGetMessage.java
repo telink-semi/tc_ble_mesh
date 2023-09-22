@@ -30,17 +30,30 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
  */
 public class PrivateGattProxyGetMessage extends ConfigMessage {
 
-
+    /**
+     * ignore
+     *
+     * @return
+     */
     public PrivateGattProxyGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
-
+    /**
+     * ignore
+     *
+     * @return
+     */
     @Override
     public int getOpcode() {
         return OPCODE_INVALID;
     }
 
+    /**
+     * ignore
+     *
+     * @return
+     */
     @Override
     public int getResponseOpcode() {
         return OPCODE_INVALID;

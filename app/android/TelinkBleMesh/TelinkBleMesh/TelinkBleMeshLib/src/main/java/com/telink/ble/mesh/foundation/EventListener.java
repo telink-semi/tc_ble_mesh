@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,6 +23,17 @@
 
 package com.telink.ble.mesh.foundation;
 
+/**
+ * This interface allows for a flexible and extensible event handling mechanism, where different classes can implement the "EventListener" interface to handle events of different types.
+ *
+ * @param <T>
+ */
 public interface EventListener<T> {
+
+    /**
+     * This method should be implemented by these classes to define the logic for handling the event.
+     *
+     * @param event target event
+     */
     void performed(Event<T> event);
 }

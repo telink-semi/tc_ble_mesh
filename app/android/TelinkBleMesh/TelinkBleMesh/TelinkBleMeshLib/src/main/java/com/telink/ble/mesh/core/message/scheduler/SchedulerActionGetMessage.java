@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -26,15 +26,24 @@ import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
 /**
- * scheduler action get
- * Created by kee on 2019/8/14.
+ * This class represents a message for getting scheduler action.
+ * It extends the GenericMessage class.
+ * It contains the index of the scene.
+ * It provides methods for creating a simple message, setting the index, and getting the response opcode and opcode.
  */
 public class SchedulerActionGetMessage extends GenericMessage {
-
     // scene id
     private byte index;
 
-
+    /**
+     * Creates and returns a simple scheduler action get message.
+     *
+     * @param address        The destination address.
+     * @param appKeyIndex    The application key index.
+     * @param schedulerIndex The index of the scheduler.
+     * @param rspMax         The maximum response.
+     * @return The scheduler action get message.
+     */
     public static SchedulerActionGetMessage getSimple(int address, int appKeyIndex, byte schedulerIndex, int rspMax) {
         SchedulerActionGetMessage message = new SchedulerActionGetMessage(address, appKeyIndex);
         message.index = schedulerIndex;
@@ -42,25 +51,51 @@ public class SchedulerActionGetMessage extends GenericMessage {
         return message;
     }
 
+    /**
+     * Constructs a scheduler action get message with the given destination address and application key index.
+     *
+     * @param destinationAddress The destination address.
+     * @param appKeyIndex        The application key index.
+     */
     public SchedulerActionGetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
     }
 
+    /**
+     * Gets the response opcode for the scheduler action get message.
+     *
+     * @return The response opcode.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.SCHD_ACTION_STATUS.value;
     }
 
+    /**
+     * Gets the opcode for the scheduler action get message.
+     *
+     * @return The opcode.
+     */
     @Override
     public int getOpcode() {
         return Opcode.SCHD_ACTION_GET.value;
     }
 
+    /**
+     * Gets the parameters for the scheduler action get message.
+     *
+     * @return The parameters.
+     */
     @Override
     public byte[] getParams() {
         return new byte[]{index};
     }
 
+    /**
+     * Sets the index of the scheduler action get message.
+     *
+     * @param index The index of the scheduler.
+     */
     public void setIndex(byte index) {
         this.index = index;
     }

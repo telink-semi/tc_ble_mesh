@@ -29,31 +29,51 @@ import java.nio.ByteOrder;
 
 /**
  * The Config Node Identity Get is an acknowledged message used to get the current Node Identity state for a subnet
+ * The NodeIdentityGetMessage class represents an acknowledged message used to retrieve the current Node Identity state for a specific subnet.
  */
 public class NodeIdentityGetMessage extends ConfigMessage {
-
     public int netKeyIndex;
 
+    /**
+     * Constructs a new NodeIdentityGetMessage with the specified destination address and network key index.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param netKeyIndex        The network key index.
+     */
     public NodeIdentityGetMessage(int destinationAddress, int netKeyIndex) {
         super(destinationAddress);
         this.netKeyIndex = netKeyIndex;
     }
 
+    /**
+     * Returns the opcode value for the NodeIdentityGetMessage.
+     *
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.NODE_ID_GET.value;
     }
 
+    /**
+     * Returns the response opcode value for the NodeIdentityGetMessage.
+     *
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.NODE_ID_STATUS.value;
     }
 
+    /**
+     * Returns the parameters of the NodeIdentityGetMessage as a byte array.
+     *
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         ByteBuffer paramsBuffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN)
                 .putShort((short) (netKeyIndex & 0x0FFF));
         return paramsBuffer.array();
     }
-
 }

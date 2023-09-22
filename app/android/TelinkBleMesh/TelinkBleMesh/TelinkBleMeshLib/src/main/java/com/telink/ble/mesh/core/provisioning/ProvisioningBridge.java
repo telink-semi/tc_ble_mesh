@@ -22,13 +22,15 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning;
 
-/**
- * Created by kee on 2019/9/12.
- */
 
+/** 
+ * This interface represents a Provisioning Bridge, which allows communication between a provisioning module and other components. 
+ * It provides methods to handle changes in the provisioning state and prepared GATT commands. 
+ */ 
 public interface ProvisioningBridge {
 
     /**
+     * This method is called when the provisioning state changes. 
      * @param state provisioning state
      * @param desc  desc
      */

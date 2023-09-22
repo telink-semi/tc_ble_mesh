@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -27,46 +27,58 @@ import com.telink.ble.mesh.core.message.Opcode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * This class represents a message to start scanning for remote provisioning.
+ * It extends the RemoteProvisionMessage class.
+ */
 public class ScanStartMessage extends RemoteProvisionMessage {
-
     /**
-     * 1 bytes
+     * The limit of scanned items (1 byte).
      */
     private byte scannedItemsLimit;
-
     /**
-     * 1 bytes
+     * The timeout for scanning (1 byte).
      */
     private byte timeout;
-
     /**
-     * Device UUID (Optional)
+     * The UUID of the device (optional).
      */
     private byte[] uuid;
 
-    public static ScanStartMessage getSimple(int destinationAddress, int rspMax, byte scannedItemsLimit, byte timeout) {
-        ScanStartMessage message = new ScanStartMessage(destinationAddress);
-        message.setResponseMax(rspMax);
-        message.scannedItemsLimit = scannedItemsLimit;
-        message.timeout = timeout;
-        return message;
-    }
-
+    /**
+     * Creates a new ScanStartMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public ScanStartMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Returns the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.REMOTE_PROV_SCAN_START.value;
     }
 
+    /**
+     * Returns the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
-//        return Opcode.REMOTE_PROV_SCAN_STS.value;
         return super.getResponseOpcode();
     }
 
+    /**
+     * Returns the parameters of the message as a byte array.
+     *
+     * @return The parameters of the message as a byte array.
+     */
     @Override
     public byte[] getParams() {
         int len = uuid == null ? 2 : 18;
@@ -78,14 +90,29 @@ public class ScanStartMessage extends RemoteProvisionMessage {
         return bf.array();
     }
 
+    /**
+     * Sets the limit of scanned items.
+     *
+     * @param scannedItemsLimit The limit of scanned items.
+     */
     public void setScannedItemsLimit(byte scannedItemsLimit) {
         this.scannedItemsLimit = scannedItemsLimit;
     }
 
+    /**
+     * Sets the timeout for scanning.
+     *
+     * @param timeout The timeout for scanning.
+     */
     public void setTimeout(byte timeout) {
         this.timeout = timeout;
     }
 
+    /**
+     * Sets the UUID of the device.
+     *
+     * @param uuid The UUID of the device.
+     */
     public void setUuid(byte[] uuid) {
         this.uuid = uuid;
     }

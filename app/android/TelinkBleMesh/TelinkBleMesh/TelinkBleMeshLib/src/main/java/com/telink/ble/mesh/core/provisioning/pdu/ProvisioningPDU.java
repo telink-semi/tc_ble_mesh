@@ -115,6 +115,11 @@ public abstract class ProvisioningPDU implements PDU {
      */
     private byte[] params;
 
+    /**
+     * Converts the PDU to a byte array.
+     *
+     * @return The byte array representation of the PDU.
+     */
     @Override
     public byte[] toBytes() {
         final int len = params == null ? 1 : 1 + params.length;

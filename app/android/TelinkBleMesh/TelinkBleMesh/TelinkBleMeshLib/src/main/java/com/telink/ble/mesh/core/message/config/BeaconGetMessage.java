@@ -29,20 +29,40 @@ import com.telink.ble.mesh.core.message.Opcode;
  */
 public class BeaconGetMessage extends ConfigMessage {
 
+    /**
+     * Creates a new BeaconGetMessage with the specified destination address.
+     *
+     * @param destinationAddress The destination address of the message.
+     */
     public BeaconGetMessage(int destinationAddress) {
         super(destinationAddress);
     }
 
+    /**
+     * Gets the opcode of the message.
+     *
+     * @return The opcode of the message.
+     */
     @Override
     public int getOpcode() {
         return Opcode.CFG_BEACON_GET.value;
     }
 
+    /**
+     * Gets the opcode of the response message.
+     *
+     * @return The opcode of the response message.
+     */
     @Override
     public int getResponseOpcode() {
         return Opcode.CFG_BEACON_STATUS.value;
     }
 
+    /**
+     * Gets the parameters of the message.
+     *
+     * @return null.
+     */
     @Override
     public byte[] getParams() {
         return null;

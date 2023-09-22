@@ -24,10 +24,12 @@ package com.telink.ble.mesh.core.message;
 
 import java.io.Serializable;
 
-/**
- * Created by kee on 2018/6/6.
- */
 
+/**
+ * This enum represents the different mesh SIG models available in a mesh network.
+ * Each model has a unique model ID, a model name, and a group description.
+ * Some models use device key for encryption, while others use application key.
+ */
 public enum MeshSigModel implements Serializable {
 
     SIG_MD_CFG_SERVER(0x0000, "config server", "", true),
@@ -38,8 +40,8 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_HEALTH_CLIENT(0x0003, "health client", "health client", false),
 
 
-    SIG_MD_REMOTE_PROV_SERVER(0x0004, "rp", "", true),
-    SIG_MD_REMOTE_PROV_CLIENT(0x0005, "rp", "", true),
+    SIG_MD_REMOTE_PROV_SERVER(0x0004, "remote provision server", "", true),
+    SIG_MD_REMOTE_PROV_CLIENT(0x0005, "remote provision client", "", true),
     SIG_MD_DF_CFG_S(0xBF30, "", "df cfg server", true),
     SIG_MD_DF_CFG_C(0xBF31, "", "df cfg client", true),
     SIG_MD_BRIDGE_CFG_SERVER(0xBF32, "", "", true),
@@ -178,6 +180,7 @@ public enum MeshSigModel implements Serializable {
         MeshSigModel model = getById(modelId);
         return model != null && model.deviceKeyEnc;
     }
+
     public static boolean useDeviceKeyForEnc(String modelIdHex) {
         int modelId = Integer.valueOf(modelIdHex, 16);
         MeshSigModel model = getById(modelId);

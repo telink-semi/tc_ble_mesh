@@ -22,14 +22,22 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwaredistribution;
 
+/**
+ * This is an interface called DistributorCapabilities that defines an enumeration called OOBRetrievalSupported.
+ */
 public interface DistributorCapabilities {
 
-
+    // This enum class represents the supported states for Out-of-Band (OOB) retrieval.
     enum OOBRetrievalSupported {
         SUPPORTED(1),
         NotSupported(0);
         final int value;
 
+        /**
+         * The constructor initializes the value field for each constant.
+         *
+         * @param value value
+         */
         OOBRetrievalSupported(int value) {
             this.value = value;
         }

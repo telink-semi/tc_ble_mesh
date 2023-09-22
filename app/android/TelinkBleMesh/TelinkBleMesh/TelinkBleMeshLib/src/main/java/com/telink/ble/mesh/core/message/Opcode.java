@@ -25,6 +25,11 @@ package com.telink.ble.mesh.core.message;
 
 import androidx.annotation.Nullable;
 
+/**
+ * This is an enum class that represents different opcodes (operation codes) used in a communication protocol.
+ * Each opcode has a unique value and an optional information string.
+ * Some opcodes also have a reliability value, indicating whether the command is reliable or unreliable.
+ */
 public enum Opcode {
 
     APPKEY_ADD(0x00, "Add Application key"),
