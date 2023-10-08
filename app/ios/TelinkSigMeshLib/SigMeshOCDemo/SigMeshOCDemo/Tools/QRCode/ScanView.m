@@ -191,7 +191,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         _remind.font = [UIFont systemFontOfSize: 15.f * SCREEN_WIDTH / 375.f];
         _remind.textColor = [UIColor whiteColor];
         _remind.textAlignment = NSTextAlignmentCenter;
-        _remind.text = @"将二维码放入框内，即可自动扫描";
+        _remind.text = @"Put the QR code into the box, and it can be automatically scanned";
         _remind.backgroundColor = [UIColor clearColor];
         _remind.numberOfLines = 0;
     }

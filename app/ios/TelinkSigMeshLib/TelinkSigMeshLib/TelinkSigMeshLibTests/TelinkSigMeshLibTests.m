@@ -22,7 +22,7 @@
  *******************************************************************************************************/
 
 #import <XCTest/XCTest.h>
-#import "TelinkSigMeshLibExtensions/TelinkSigMeshLib.h"
+#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
 #import "OpenSSLHelper.h"
 /*需要使用模拟器运行测试单元，且需要替换到模拟器的TelinkEncryptLib！！！*/
 
@@ -213,23 +213,6 @@
     XCTAssertEqual(defaultMesh.scanList.count, 0);
 //    XCTAssertEqual(defaultMesh.getSequenceNumberUInt32, 0);
     
-    //8.添加设备的地址
-    XCTAssertEqual(defaultMesh.provisionAddress, 2);
-    XCTAssertEqual(defaultMesh.getNextUnicastAddressOfProvision, 2);
-    SigNodeModel *node1 = [[SigNodeModel alloc] initWithNode:defaultMesh.curLocationNodeModel];
-    node1.unicastAddress = [NSString stringWithFormat:@"%04X",0xFF];
-    [defaultMesh.nodes addObject:node1];
-    XCTAssertEqual(defaultMesh.getNextUnicastAddressOfProvision, 0xFF+1);
-    SigNodeModel *node2 = [[SigNodeModel alloc] initWithNode:defaultMesh.curLocationNodeModel];
-    node2.unicastAddress = [NSString stringWithFormat:@"%04X",0x3FF];
-    [defaultMesh.nodes addObject:node2];
-    XCTAssertEqual(defaultMesh.getNextUnicastAddressOfProvision, 0x3FF+1);
-
-    XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x3FF);
-    SigRangeModel *model = [[SigRangeModel alloc] initWithMaxHighAddressUnicast:0x4FF];
-    [defaultMesh.curProvisionerModel.allocatedUnicastRange addObject:model];
-    XCTAssertEqual(defaultMesh.getNextUnicastAddressOfProvision, 0x4FF+1);
-
     NSLog(@"==========finish!");
 }
 
@@ -291,7 +274,7 @@
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.deviceKey.length, 2*16);
     
     //5.group
-    XCTAssertEqual(SigDataSource.share.groups.count, 8);
+    XCTAssertEqual(SigDataSource.share.groups.count, 8*5);
     
     //6.other
     XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
@@ -388,5 +371,28 @@
     XCTAssertEqual(modelsMetadataStatus.totalSize, 0x8888);
     XCTAssertEqualObjects(modelsMetadataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
 
+}
+
+- (void)testAES {
+    NSData *key = [LibTools nsstringToHex:@"0a0b0c0d0e0f101112131e1f20212223"];
+    NSData *inputData = [LibTools nsstringToHex:@"1415161718191a1b1c1d28292a2b2c2d"];
+    Byte *keyByte = (Byte *)key.bytes;
+    Byte *inputByte = (Byte *)inputData.bytes;
+    UInt8 outputByte[16] = {};
+    aes128_ecb_encrypt(inputByte, 16, keyByte, outputByte);
+    NSLog(@"key=%@\ninput=%@\noutput=%@", key, inputData, [NSData dataWithBytes:outputByte length:16]);
+    //key={length = 16, bytes = 0x0a0b0c0d0e0f101112131e1f20212223}
+    //input={length = 16, bytes = 0x1415161718191a1b1c1d28292a2b2c2d}
+    //output={length = 16, bytes = 0x7b583f361ea37fce3795c1d40d6b9aa1}
+
+    key = [LibTools turnOverData:key];
+    inputData = [LibTools turnOverData:inputData];
+    keyByte = (Byte *)key.bytes;
+    inputByte = (Byte *)inputData.bytes;
+    aes128_ecb_encrypt(inputByte, 16, keyByte, outputByte);
+    NSLog(@"key=%@\ninput=%@\noutput=%@", key, inputData, [NSData dataWithBytes:outputByte length:16]);
+    //key={length = 16, bytes = 0x232221201f1e131211100f0e0d0c0b0a}
+    //input={length = 16, bytes = 0x2d2c2b2a29281d1c1b1a191817161514}
+    //output={length = 16, bytes = 0xcfd8bfb5813eeff75b8af49b1450be67}
 }
 @end

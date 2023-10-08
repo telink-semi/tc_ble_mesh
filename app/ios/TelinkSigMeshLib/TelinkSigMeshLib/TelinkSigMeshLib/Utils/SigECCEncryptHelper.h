@@ -34,7 +34,12 @@ typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigECCEncryptHelper *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (void)eccInit;
 

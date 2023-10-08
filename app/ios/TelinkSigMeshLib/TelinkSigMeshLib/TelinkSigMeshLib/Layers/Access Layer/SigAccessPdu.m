@@ -26,54 +26,23 @@
 
 @implementation SigAccessPdu
 
-//- (BOOL)isSegmented {
-//    if (_message == nil) {
-//        return NO;
-//    }
-////新增判断：SigTelinkExtendBearerMode_extendGATTOnly模式只对直连节点发送DLE长包，非直连节点发送短包。
-//    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-//        return _accessPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
-//    } else {
-//        return _accessPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
-//    }
-//}
-
-//- (int)segmentsCount {
-//    if (_message == nil) {
-//        return 0;
-//    }
-//    if (![self isSegmented]) {
-//        return 1;
-//    }
-//    switch (_message.security) {
-//        case SigMeshMessageSecurityLow:
-//            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-//                return 1 + (int)((_accessPdu.length + 3) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-//            } else {
-//                return 1 + (int)((_accessPdu.length + 3) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-//            }
-//            break;
-//        case SigMeshMessageSecurityHigh:
-//            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-//                return 1 + (int)((_accessPdu.length + 7) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-//            } else {
-//                return 1 + (int)((_accessPdu.length + 7) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-//            }
-//            break;
-//        default:
-//            break;
-//    }
-//}
-
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Initialize SigAccessPdu object.
+/// @param pdu The SigUpperTransportPdu object.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = nil;
         _localElement = nil;
@@ -92,8 +61,18 @@
     return self;
 }
 
+/// Initialize SigAccessPdu object.
+/// @param message The Mesh Message that is being sent, or `nil`, when the message
+/// was received.
+/// @param localElement The local Element that is sending the message, or `nil` when the
+/// message was received.
+/// @param destination Destination Address.
+/// @param userInitiated Whether sending this message has been initiated by the user.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromMeshMessage:(SigMeshMessage *)message sentFromLocalElement:(SigElementModel *)localElement toDestination:(SigMeshAddress *)destination userInitiated:(BOOL)userInitiated {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = message;
         _localElement = localElement;

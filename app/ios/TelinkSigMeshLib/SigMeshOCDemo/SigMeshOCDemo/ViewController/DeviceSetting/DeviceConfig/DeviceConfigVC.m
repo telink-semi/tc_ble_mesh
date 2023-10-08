@@ -38,7 +38,9 @@
 @end
 @implementation ShowModel
 - (instancetype)initWithTitle:(NSString *)title detail:(NSString *)detail value:(NSString *)value {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _title = title;
         _detail = detail;
         _value = value;
@@ -83,6 +85,9 @@
     ShowModel *m6 = [[ShowModel alloc] initWithTitle:@"Friend" detail:@"The Friend state indicates support for the Friend feature. If Friend feature is supported, then this also indicates and controls whether Friend feature is enabled or disabled." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.friendFeature]]];
     ShowModel *m7 = [[ShowModel alloc] initWithTitle:@"Key Refresh Phase" detail:@"The Key Refresh Phase state indicates and controls the Key Refresh procedure for each NetKey in the NetKey List." value:[NSString stringWithFormat:@"value: phase: %@",[SigHelper.share getDetailOfKeyRefreshPhase:3]]];
     ShowModel *m8 = [[ShowModel alloc] initWithTitle:@"Network Transmit" detail:@"The Network Transmit state is a composite state that controls the number and timing of the transmissions of Network PDU originating from a node." value:[NSString stringWithFormat:@"value:%@\ntransmit count: 0x%lX\ntransmit interval steps: 0x%lX",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps]];
+    ShowModel *m9 = [[ShowModel alloc] initWithTitle:@"Mesh Private Beacon" detail:@"The Mesh Private Beacon state determines if a node is periodically broadcasting Mesh Private beacon messages." value:[NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps]];
+    ShowModel *m10 = [[ShowModel alloc] initWithTitle:@"Private GATT Proxy" detail:@"The Private GATT Proxy state indicates if the Mesh Private Beacon Service is supported, and if supported, it indicates and controls the status of the Mesh Private Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]]];
+    ShowModel *m11 = [[ShowModel alloc] initWithTitle:@"Private Node Identity" detail:@"The Private Node Identity state determines if a node that supports the Mesh Private Beacon Service is advertising on a subnet using Private Node Identity messages." value:@"value:stopped"];
 
     [self.dataArray addObject:m1];
     [self.dataArray addObject:m2];
@@ -92,16 +97,9 @@
     [self.dataArray addObject:m6];
     [self.dataArray addObject:m7];
     [self.dataArray addObject:m8];
-    
-    //新增draft-feature的配置项，基础库不显示。
-#ifdef kExist
-    ShowModel *m9 = [[ShowModel alloc] initWithTitle:@"Mesh Private Beacon" detail:@"The Mesh Private Beacon state determines if a node is periodically broadcasting Mesh Private beacon messages." value:[NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps]];
-    ShowModel *m10 = [[ShowModel alloc] initWithTitle:@"Private GATT Proxy" detail:@"The Private GATT Proxy state indicates if the Mesh Private Beacon Service is supported, and if supported, it indicates and controls the status of the Mesh Private Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]]];
-    ShowModel *m11 = [[ShowModel alloc] initWithTitle:@"Private Node Identity" detail:@"The Private Node Identity state determines if a node that supports the Mesh Private Beacon Service is advertising on a subnet using Private Node Identity messages." value:@"value:stopped"];
     [self.dataArray addObject:m9];
     [self.dataArray addObject:m10];
     [self.dataArray addObject:m11];
-#endif
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -132,7 +130,7 @@
     
     backView.tag = 1000 + section;
     headView.backgroundColor = [UIColor clearColor];
-    backView.backgroundColor = [UIColor whiteColor];
+    backView.backgroundColor = UIColor.telinkBackgroundWhite;
     
     UILabel *titlelabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, SCREENWIDTH - 60, 50)];
     [backView addSubview:titlelabel];
@@ -352,9 +350,7 @@
                 [ShowTipsHandle.share delayHidden:1.0];
             });
         }];
-    }
-#ifdef kExist
-    else if (indexPath.section == 8) {
+    } else if (indexPath.section == 8) {
         [ShowTipsHandle.share show:@"Get Mesh Private Beacon..."];
         //Get Mesh Private Beacon
         [SDKLibCommand privateBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
@@ -412,7 +408,6 @@
             });
         }];
     }
-#endif
 }
 
 - (void)clickSetWithIndexPath:(NSIndexPath *)indexPath {
@@ -756,9 +751,7 @@
             }
         }];
         [customAlertView showCustomAlertView];
-    }
-#ifdef kExist
-    else if (indexPath.section == 8) {
+    } else if (indexPath.section == 8) {
         //Set Mesh Private Beacon
         AlertItemModel *item1 = [[AlertItemModel alloc] init];
         item1.itemType = ItemType_Choose;
@@ -887,13 +880,6 @@
         }];
         [customAlertView showCustomAlertView];
     }
-#endif
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 - (void)refreshUIWithSigConfigDefaultTtlStatus:(SigConfigDefaultTtlStatus *)responseMessage andIndexPath:(NSIndexPath *)indexPath {
@@ -1061,7 +1047,7 @@
     CFRelease(pathRef);
     // 按照shape layer的path填充颜色，类似于渲染render
     // layer.fillColor = [UIColor colorWithWhite:1.f alpha:0.8f].CGColor;
-    layer.fillColor = [UIColor whiteColor].CGColor;
+    layer.fillColor = UIColor.telinkBackgroundWhite.CGColor;
     
     // view大小与cell一致
     UIView *roundView = [[UIView alloc] initWithFrame:bounds];

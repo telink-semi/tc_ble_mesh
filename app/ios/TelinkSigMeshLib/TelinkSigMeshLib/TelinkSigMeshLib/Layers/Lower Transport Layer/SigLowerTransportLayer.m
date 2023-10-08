@@ -33,6 +33,11 @@
 #import "SigSegmentedControlMessage.h"
 #import "SigNetworkManager.h"
 
+/*
+ The lower transport layer defines how upper transport layer messages are segmented and reassembled
+ into multiple Lower Transport PDUs to deliver large upper transport layer messages to other nodes.
+ It also defines a single control message to manage segmentation and reassembly.
+ */
 @interface SigLowerTransportLayer ()
 @property (nonatomic,strong) dispatch_queue_t mutex;
 
@@ -41,7 +46,9 @@
 @implementation SigLowerTransportLayer
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _networkManager = networkManager;
         self.incompleteSegments = [NSMutableDictionary dictionary];
         self.incompleteTimers = [NSMutableDictionary dictionary];
@@ -55,6 +62,11 @@
     return self;
 }
 
+/// This method handles the received Network PDU. If needed, it will reassembly
+/// the message, send block acknowledgment to the sender, and pass the Upper
+/// Transport PDU to the Upper Transport Layer.
+///
+/// - parameter networkPdu: The Network PDU received.
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu {
     TeLogVerbose(@"receive:%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
     @synchronized(self) {
@@ -87,7 +99,7 @@
             BOOL segmented = networkPdu.isSegmented;
 //            TeLogInfo(@"==========networkPdu.isSegmented=%d,networkPdu.type=%d",networkPdu.isSegmented,networkPdu.type);
             if (segmented) {
-                if (networkPdu.type == SigLowerTransportPduType_accessMessage) {
+                if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigSegmentedAccessMessage *segment = [[SigSegmentedAccessMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
 //                        TeLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
@@ -95,13 +107,14 @@
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
                             [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:pdu];
-                        } else {
-                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
                         }
+//                        else {
+//                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
+//                        }
                     }else{
                         TeLogError(@"segmented = nil.");
                     }
-                } else if (networkPdu.type == SigLowerTransportPduType_controlMessage) {
+                } else if (networkPdu.ctl == SigLowerTransportPduType_transportControlMessage) {
                     SigSegmentedControlMessage *segment = [[SigSegmentedControlMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
 //                        TeLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
@@ -109,9 +122,10 @@
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
                             [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:pdu];
-                        } else {
-                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
                         }
+//                        else {
+//                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
+//                        }
                     } else {
                         TeLogError(@"segmented = nil.");
                     }
@@ -119,7 +133,7 @@
                     TeLogError(@"networkPdu.type no exist.");
                 }
             }else{
-                if (networkPdu.type == SigLowerTransportPduType_accessMessage) {
+                if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigAccessMessage *accessMessage = [[SigAccessMessage alloc] initFromUnsegmentedPdu:networkPdu];
                     if (accessMessage) {
 //                        TeLogVerbose(@"%@ receieved (decrypted using key: %@)",accessMessage,accessMessage.networkKey);
@@ -128,7 +142,7 @@
                     } else {
                         TeLogError(@"accessMessage = nil.");
                     }
-                }else if (networkPdu.type == SigLowerTransportPduType_controlMessage) {
+                }else if (networkPdu.ctl == SigLowerTransportPduType_transportControlMessage) {
                     UInt8 tem = 0;
                     Byte *byte = (Byte *)networkPdu.transportPdu.bytes;
                     memcpy(&tem, byte, 1);
@@ -163,10 +177,18 @@
     SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initBusySegmentAcknowledgmentMessageWithNetworkPdu:networkPdu];
     dispatch_async(SigMeshLib.share.queue, ^{
         TeLogInfo(@"sending busy ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x, ======sourceOfReceiveSegmentPDU=0x%x",ack,ack.source,ack.destination,ack.sequenceZero, SigMeshLib.share.sourceOfReceiveSegmentPDU);
-        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:SigMeshLib.share.defaultTtl];
+        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:SigMeshLib.share.defaultTtl ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex];
     });
 }
 
+/// This method tries to send the Upper Transport Message.
+/// - Parameters:
+///   - pdu:        The unsegmented Upper Transport PDU to be sent.
+///   - initialTtl: The initial TTL (Time To Live) value of the message.
+///                 If `nil`, the default Node TTL will be used.
+///   - networkKey: The Network Key to be used to encrypt the message on
+///                 on Network Layer.
+///   - ivIndex: The ivIndex of mrdh network.
 - (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
     SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (provisionerNode == nil) {
@@ -186,25 +208,14 @@
     [_networkManager notifyAboutDeliveringMessage:pdu.message fromLocalElement:pdu.localElement toDestination:pdu.destination];
 }
 
-- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey {
-    SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
-    if (provisionerNode == nil) {
-        TeLogError(@"curLocationNodeModel = nil.");
-        return;
-    }
-    UInt8 ttl = initialTtl;
-    if (![SigHelper.share isRelayedTTL:ttl]) {
-        ttl = provisionerNode.defaultTTL;
-        if (![SigHelper.share isRelayedTTL:ttl]) {
-            ttl = _networkManager.defaultTtl;
-        }
-    }
-    SigAccessMessage *message = [[SigAccessMessage alloc] initFromUnsegmentedUpperTransportPdu:pdu usingNetworkKey:networkKey];
-    _networkManager.lowerTransportLayer.unSegmentLowerTransportPdu = message;
-    [_networkManager.networkLayer sendLowerTransportPdu:message ofType:SigPduType_networkPdu withTtl:ttl];
-    [_networkManager notifyAboutDeliveringMessage:pdu.message fromLocalElement:pdu.localElement toDestination:pdu.destination];
-}
-
+/// This method tries to send the Upper Transport Message.
+/// - Parameters:
+///   - pdu: The segmented Upper Transport PDU to be sent.
+///   - initialTtl: The initial TTL (Time To Live) value of the message.
+///                         If `nil`, the default Node TTL will be used.
+///   - networkKey: The Network Key to be used to encrypt the message on
+///                         on Network Layer.
+///   - ivIndex: The ivIndex of mrdh network.
 - (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
     SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (provisionerNode == nil) {
@@ -238,39 +249,6 @@
     [self sendSegmentsForSequenceZero:sequenceZero limit:_networkManager.retransmissionLimit];
 }
 
-- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey {
-    SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
-    if (provisionerNode == nil) {
-        TeLogError(@"curLocationNodeModel = nil.");
-        return;
-    }
-    /// Last 13 bits of the sequence number are known as seqZero.
-    UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
-    //==========telink need this==========//
-    if ([SigHelper.share isUnicastAddress:pdu.destination]) {
-        [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
-    }
-    //==========telink need this==========//
-    /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength;
-    // Create all segments to be sent.
-    NSMutableArray *outgoingSegments = [NSMutableArray array];
-    for (int i=0; i<count; i++) {
-        SigSegmentedAccessMessage *msg = [[SigSegmentedAccessMessage alloc] initFromUpperTransportPdu:pdu usingNetworkKey:networkKey offset:(UInt8)i];
-        [outgoingSegments addObject:msg];
-    }
-    UInt8 ttl = initialTtl;
-    if (![SigHelper.share isRelayedTTL:ttl] || ttl == 0) {
-        ttl = provisionerNode.defaultTTL;
-        if (![SigHelper.share isRelayedTTL:ttl]) {
-            ttl = _networkManager.defaultTtl;
-        }
-    }
-    _segmentTtl[@(sequenceZero)] = @(ttl);
-    _outgoingSegments[@(sequenceZero)] = outgoingSegments;
-    [self sendSegmentsForSequenceZero:sequenceZero limit:_networkManager.retransmissionLimit];
-}
-
 - (void)cancelTXSendingSegmentedWithDestination:(UInt16)destination {
     if (_incompleteTimers && _incompleteTimers.allKeys.count > 0) {
         NSArray *keys = _incompleteTimers.allKeys;
@@ -287,6 +265,9 @@
     }
 }
 
+/// Cancels sending segmented Upper Transoprt PDU.
+///
+/// - parameter pdu: The Upper Transport PDU.
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu {
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
@@ -305,14 +286,10 @@
 
 - (BOOL)checkAgainstReplayAttackWithNetworkPdu:(SigNetworkPdu *)networkPdu {
     //v3.3.3.6及之后防重放攻击逻辑：isSegmented则比较seqZero，非isSegmented则比较sequenceNumber。
-    //缓存结构：{@"SeqAuth":@(7Bytes), @"SeqZero":@{@"value":@(13Bits), @"SeqAuths":@[@(7Bytes),···,@(7Bytes)]}}
-    //busy的segment为{@"SeqAuth":@(7Bytes), @"SeqZero":@{@"value":@(13Bits), @"SeqAuths":@[]}}，SeqAuths为空数组
-    NSDictionary *oldDic = [[NSUserDefaults standardUserDefaults] objectForKey:SigMeshLib.share.dataSource.meshUUID];
-    NSDictionary *nodeDic = [oldDic objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
+    SigNodeSequenceNumberCacheModel *nodeSequenceNumberCacheModel = [SigMeshLib.share.dataSource getSigNodeSequenceNumberCacheModelWithUnicastAddress:networkPdu.source];
     UInt64 receiveSequence = (UInt64)networkPdu.sequence;
     UInt64 receiveIvIndex = (UInt64)networkPdu.getDecodeIvIndex;
     UInt64 receivedSeqAuth = (receiveIvIndex << 24) | receiveSequence;
-    NSDictionary *newNodeDic = nil;
     UInt16 receivedSeqZero = 0;
     if (networkPdu.isSegmented) {
         NSData *data = networkPdu.transportPdu;
@@ -323,16 +300,16 @@
         receivedSeqZero = (UInt16)(((tem1 & 0x7F) << 6) | (UInt16)(tem2 >> 2));
     }
     
-    BOOL newSource = nodeDic == nil;//source为node的address
+    BOOL newSource = nodeSequenceNumberCacheModel == nil;//source为node的address
     if (!newSource) {
-        NSNumber *lastSeqAuthNumber = [nodeDic objectForKey:@"SeqAuth"];
+        NSNumber *lastSeqAuthNumber = nodeSequenceNumberCacheModel.seqAuth;
         UInt64 lastSeqAuth = lastSeqAuthNumber.intValue;
         if (networkPdu.isSegmented) {
-            if ([nodeDic.allKeys containsObject:@"SeqZero"]) {
-                //获取
-                NSDictionary *lastSZ = [nodeDic objectForKey:@"SeqZero"];
-                NSNumber *lastSeqZeroValue = [lastSZ objectForKey:@"value"];
-                NSMutableArray *lastSeqAuths = [NSMutableArray arrayWithArray:[lastSZ objectForKey:@"SeqAuths"]];
+            if (nodeSequenceNumberCacheModel.seqZero != nil) {
+                // get cache of seqZero
+                SigNodeSeqZeroModel *seqZero = nodeSequenceNumberCacheModel.seqZero;
+                NSNumber *lastSeqZeroValue = seqZero.value;
+                NSMutableArray *lastSeqAuths = seqZero.seqAuths;
                 if (lastSeqZeroValue.intValue == receivedSeqZero && lastSeqAuths.count == 0) {
                     TeLogError(@"Discarding packet (lastSeqZeroValue:0x%X, receivedSeqZero >0x%X, lastSeqAuths=%@)", lastSeqZeroValue.intValue, receivedSeqZero, lastSeqAuths);
                     return NO;
@@ -347,94 +324,43 @@
                     TeLogError(@"Discarding packet (lastSeqAuths:%@, receivedSeqAuth >0x%X)", lastSeqAuths, receivedSeqAuth);
                     return NO;
                 }
-                
                 [lastSeqAuths addObject:@(receivedSeqAuth)];
-                newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth), @"SeqZero":@{@"value":@(receivedSeqZero),@"SeqAuths":lastSeqAuths}}];
             } else {
-                //新存
+                // add cache of seqZero
                 if (lastSeqAuth > receivedSeqAuth) {
                     TeLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
                     return NO;
                 }
-
-                newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth), @"SeqZero":@{@"value":@(receivedSeqZero),@"SeqAuths":@[@(receivedSeqAuth)]}}];
+                SigNodeSeqZeroModel *seqZero = [[SigNodeSeqZeroModel alloc] initWithValue:@(receivedSeqZero) seqAuth:@(receivedSeqAuth)];
+                nodeSequenceNumberCacheModel.seqZero = seqZero;
             }
-
         } else {
             if (lastSeqAuth > receivedSeqAuth) {
                 TeLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
                 return NO;
             }
-
-            newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth)}];
+            nodeSequenceNumberCacheModel.seqAuth = @(receivedSeqAuth);
+            nodeSequenceNumberCacheModel.seqZero = nil;
         }
     } else {
+        nodeSequenceNumberCacheModel = [[SigNodeSequenceNumberCacheModel alloc] init];
+        nodeSequenceNumberCacheModel.unicastAddress = networkPdu.source;
+        nodeSequenceNumberCacheModel.seqAuth = @(receivedSeqAuth);
         if (networkPdu.isSegmented) {
+            SigNodeSeqZeroModel *seqZero = [[SigNodeSeqZeroModel alloc] init];
+            seqZero.value = @(receivedSeqZero);
+            nodeSequenceNumberCacheModel.seqZero = seqZero;
             if (networkPdu.source != SigMeshLib.share.sourceOfReceiveSegmentPDU && SigMeshLib.share.sourceOfReceiveSegmentPDU != 0) {
                 //busy的ack
-                newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth), @"SeqZero":@{@"value":@(receivedSeqZero),@"SeqAuths":@[]}}];
             } else {
                 //不busy
-                newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth), @"SeqZero":@{@"value":@(receivedSeqZero),@"SeqAuths":@[@(receivedSeqAuth)]}}];
+                [nodeSequenceNumberCacheModel.seqZero.seqAuths addObject:@(receivedSeqAuth)];
             }
-        } else {
-            newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"SeqAuth":@(receivedSeqAuth)}];
         }
+        [SigMeshLib.share.dataSource.nodeSequenceNumberCacheList addObject:nodeSequenceNumberCacheModel];
     }
-    NSMutableDictionary *newDic = [NSMutableDictionary dictionaryWithDictionary:oldDic];
-    [newDic setValue:newNodeDic forKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
-    [[NSUserDefaults standardUserDefaults] setValue:newDic forKey:SigMeshLib.share.dataSource.meshUUID];
-    [[NSUserDefaults standardUserDefaults] synchronize];
     return YES;
 }
-
-///// This method checks the given Network PDU against replay attacks.
-/////
-///// Unsegmented messages are checked against their sequence number.
-/////
-///// Segmented messages are checked against the SeqAuth value of the first segment of the message. Segments may be received in random order and unless the message SeqAuth is always greater, the replay attack is not possible.
-/////
-///// @param networkPdu The Network PDU to validate.
-//- (BOOL)checkAgainstReplayAttackWithNetworkPdu:(SigNetworkPdu *)networkPdu {
-    //v3.3.2及之前旧逻辑：比较SeqAuth。当设备返回长包时触发publication返回，会导致SeqAuth比较异常。
-//    UInt32 sequence = [networkPdu messageSequence];
-//    UInt64 receivedSeqAuth = ((UInt64)networkPdu.networkKey.ivIndex.index) << 24 | (UInt64)sequence;
-//    NSDictionary *oldDic = [[NSUserDefaults standardUserDefaults] objectForKey:SigMeshLib.share.dataSource.meshUUID];
-//    NSNumber *lastSequenceAuthNumber = [oldDic objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
-//    BOOL newSource = lastSequenceAuthNumber == nil;//source为node的address
-//
-////    TeLogVerbose(@"============newSource=%d,networkPdu.source=0x%x",newSource,networkPdu.source);
-//    if (!newSource) {
-//        UInt64 localSeqAuth = (UInt64)lastSequenceAuthNumber.intValue;
-//
-//        // In general, the SeqAuth of the received message must be greater
-//        // than SeqAuth of any previously received message from the same source.
-//        // However, for SAR (Segmentation and Reassembly) sessions, it is
-//        // the SeqAuth of the message, not segment, that is being checked.
-//        // If SAR is active (at least one segment for the same SeqAuth has
-//        // been previously received), the segments may be processed in any order.
-//        // The SeqAuth of this message must be greater or equal to the last one.
-//        BOOL reassemblyInProgress = NO;
-//        if (networkPdu.isSegmented) {
-//            UInt16 sequenceZero = (UInt16)(sequence & 0x1FFF);
-//            UInt32 key = (UInt32)[self getKeyForAddress:networkPdu.source sequenceZero:sequenceZero];
-//            SigSegmentAcknowledgmentMessage *msg = _acknowledgments[@(networkPdu.source)];
-//            reassemblyInProgress = _incompleteSegments[@(key)] != nil || msg.sequenceZero == sequenceZero;
-//        }
-//        if (receivedSeqAuth > localSeqAuth || (reassemblyInProgress && receivedSeqAuth == localSeqAuth)) {
-////            TeLogInfo(@"============SeqAuth校验通过！")
-//        }else{
-//            TeLogError(@"Discarding packet (seqAuth:0x%X, expected >0x%X)",receivedSeqAuth,localSeqAuth);
-//            return NO;
-//        }
-//    }
-//    // SeqAuth is valid, save the new sequence authentication value.
-//    NSMutableDictionary *newDic = [NSMutableDictionary dictionaryWithDictionary:oldDic];
-//    [newDic setValue:@(receivedSeqAuth) forKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
-//    [[NSUserDefaults standardUserDefaults] setValue:newDic forKey:SigMeshLib.share.dataSource.meshUUID];
-//    [[NSUserDefaults standardUserDefaults] synchronize];
-//    return YES;
-//}
 
 /// Handles the segment created from the given network PDU.
 /// @param segment The segment to handle.
@@ -454,6 +380,10 @@
                 if (![SigHelper.share isRelayedTTL:ttl]) {
                     ttl = _networkManager.defaultTtl;
                 }
+            }
+            //解决接收完一组完整的segment后，可能由于网络原因还接收到重复的segment，导致后续的segment接收异常的问题。
+            if (networkPdu.source == SigMeshLib.share.sourceOfReceiveSegmentPDU) {
+                [SigMeshLib.share cleanReceiveSegmentBusyStatus];
             }
             [self sendAckSigSegmentAcknowledgmentMessage:lastAck withTtl:ttl];
         } else {
@@ -639,7 +569,7 @@
     // 先判断发送的Segment字典内是否有对应这个ack.sequenceZero的SegmentedMessage，且这个SegmentedMessage未被设备返回ack
     SigSegmentedMessage *segment = [self firstNotAcknowledgedFrom:_outgoingSegments[@(ack.sequenceZero)]];
     if (segment == nil) {
-        TeLogError(@"No location SigSegmentedMessage of ack.sequenceZero=(0x%X),ack=%@",ack.sequenceZero,ack);
+        TeLogError(@"No local SigSegmentedMessage of ack.sequenceZero=(0x%X),ack=%@",ack.sequenceZero,ack);
         return;
     }
     // 取消这个SegmentedMessage的Transmission定时器
@@ -709,7 +639,7 @@
 //    });
     dispatch_async(SigMeshLib.share.queue, ^{
         TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
-        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
+        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl  ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex];
     });
 }
 
@@ -743,9 +673,9 @@
             ackExpected = [SigHelper.share isUnicastAddress:segment.destination];
             [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl ivIndex:segment.ivIndex];
             //==========test==========//
-            //因为非直连设备地址的segment包需要在mesh网络内部进行转发，且设备不一定存在ack返回。（BLOBChunkTransfer）
+            //因为非直连设备地址的segment包需要在mesh网络内部进行转发，且设备不一定存在ack返回。（BLOBChunkTransfer目标地址为组播地址时）
             if (segment.destination != SigMeshLib.share.dataSource.getCurrentConnectedNode.address) {
-                [NSThread sleepForTimeInterval:SigMeshLib.share.networkTransmitInterval];
+                [NSThread sleepForTimeInterval:SigMeshLib.share.maxNetworkTransmitInterval];
             }
             //==========test==========//
         }
@@ -806,7 +736,7 @@
     NSInteger ttl = [userInfo[@"ttl"] integerValue];
     for (int i=0; i<segments.count; i++) {
         SigSegmentedMessage *segment = segments[i];
-        [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl];
+        [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl  ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex];
     }
     if (timer) {
         [timer invalidate];

@@ -42,8 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigMeshLib *manager;
 @property (nonatomic,strong) SDKLibCommand *command;
 
-//- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager;
-
 - (instancetype)initForSDKLibCommand:(SDKLibCommand *)command usingManager:(SigMeshLib *)manager;
 
 /// Cancels sending the message.

@@ -30,8 +30,15 @@
 
 @implementation BackgroundTimer
 
+/// Chedules a timer that can be started from a background DispatchQueue.
+/// - Parameters:
+///   - interval: Time Interval
+///   - repeats: repeats
+///   - block: handle for timer.
 - (instancetype)initWithTimeInterval:(NSTimeInterval)interval repeats:(BOOL)repeats block:(void (^ _Nonnull)(BackgroundTimer * _Nonnull))block {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _interval = interval;
         _repeats = repeats;
         _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND,0));
@@ -57,16 +64,22 @@
 }
 
 /// Chedules a timer that can be started from a background DispatchQueue.
+/// - Parameters:
+///   - interval: Time Interval
+///   - repeats: repeats
+///   - block: handle for timer.
 + (BackgroundTimer * _Nonnull)scheduledTimerWithTimeInterval:(NSTimeInterval)interval repeats:(BOOL)repeats block:(void (^ _Nonnull)(BackgroundTimer * _Nonnull t))block {
     return [[self alloc] initWithTimeInterval:interval repeats:repeats block:block];
 }
 
 /// Asynchronously cancels the dispatch source, preventing any further invocation of its event handler block.
 - (void)invalidate {
-    if (_timer) {
-        dispatch_source_set_event_handler(_timer, nil);
-        dispatch_source_cancel(_timer);
-        _timer = nil;
+    @synchronized (self) {
+        if (_timer) {
+            dispatch_source_set_event_handler(_timer, nil);
+            dispatch_source_cancel(_timer);
+            _timer = nil;
+        }
     }
 }
 

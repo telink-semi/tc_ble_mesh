@@ -56,10 +56,10 @@ typedef enum : UInt16 {
 
 @interface SigProvisioningManager ()
 @property (nonatomic, assign) UInt16 unicastAddress;
-@property (nonatomic, strong) NSData *staticOobData;
+@property (nonatomic, strong, nullable) NSData *staticOobData;
 @property (nonatomic, strong) SigScanRspModel *unprovisionedDevice;
-@property (nonatomic,copy) addDevice_provisionSuccessCallBack provisionSuccessBlock;
-@property (nonatomic,copy) ErrorBlock failBlock;
+@property (nonatomic, copy) addDevice_provisionSuccessCallBack provisionSuccessBlock;
+@property (nonatomic, copy) ErrorBlock failBlock;
 @property (nonatomic, assign) BOOL isProvisionning;
 @property (nonatomic, assign) UInt16 totalLength;
 //@property (nonatomic, strong) NSMutableData *deviceCertificateData;
@@ -77,7 +77,9 @@ typedef enum : UInt16 {
 @implementation SigProvisioningManager
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _state = ProvisioningState_ready;
         _isProvisionning = NO;
         _attentionDuration = 0;
@@ -136,7 +138,6 @@ typedef enum : UInt16 {
 - (void)provisionSuccess{
     UInt16 address = self.provisioningData.unicastAddress;
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
-    [SigMeshLib.share.dataSource saveLocationProvisionAddress:address+ele_count-1];
     NSData *devKeyData = self.provisioningData.deviceKey;
     TeLogInfo(@"deviceKey=%@",devKeyData);
     
@@ -202,13 +203,158 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:YES];
 }
 
-+ (SigProvisioningManager *)share {
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigProvisioningManager *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[SigProvisioningManager alloc] init];
     });
     return shareManager;
+}
+
+/**
+ * @brief   Provision
+ * @param   networkKey    the networkKey of mesh.
+ * @param   netkeyIndex    the netkeyIndex of mesh.
+ * @param   oobData    the staticOobData of node.
+ * @param   capabilitiesResponse    callback when app receive capabilities pdu from node.
+ * @param   provisionSuccess    callback when node provision success.
+ * @param   fail    callback when node provision fail.
+ * @note    oobData is nil means do no oob provision, oobData is not nil means do static oob provision.
+ */
+- (void)provisionWithNetworkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData * _Nullable)oobData capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+
+    self.staticOobData = oobData;
+    self.provisionSuccessBlock = provisionSuccess;
+    self.capabilitiesResponseBlock = capabilitiesResponse;
+    self.failBlock = fail;
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    SigNetkeyModel *provisionNet = nil;
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
+        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+            provisionNet = net;
+            break;
+        }
+    }
+    if (provisionNet == nil) {
+        TeLogError(@"error network key.");
+        return;
+    }
+    __weak typeof(self) weakSelf = self;
+    [self reset];
+    [SigBearer.share setBearerProvisioned:NO];
+    self.networkKey = provisionNet;
+    self.isProvisionning = YES;
+    TeLogInfo(@"start provision.");
+    self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
+    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
+        if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
+            if (weakSelf.isProvisionning) {
+                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                if (fail) {
+                    weakSelf.isProvisionning = NO;
+                    NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
+                    fail(err);
+                }
+            }
+        }
+    }];
+    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf getCapabilitiesResultWithResponse:response];
+    }];
+
+}
+
+/**
+ * @brief   Provision Method, calculate unicastAddress when capabilities response from unProvision node. (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
+ * @param   peripheral CBPeripheral of CoreBluetooth will be provision.
+ * @param   networkKey network key.
+ * @param   netkeyIndex netkey index.
+ * @param   staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+ * @param   capabilitiesResponse callback when capabilities response, app need return unicastAddress for provision process.
+ * @param   provisionSuccess callback when provision success.
+ * @param   fail callback when provision fail.
+ * @note    1.get provision type from Capabilities response.
+ * 2.Static OOB Type is NO_OOB, SDK will call no oob provision.
+ * 3.Static OOB Type is Static_OOB, SDK will call static oob provision.
+ * 4.if it is no static oob data when Static OOB Type is Static_OOB, SDK will try on oob provision when SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable is YES.
+ */
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOOBData:(nullable NSData *)staticOOBData capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+    if (peripheral.state == CBPeripheralStateConnected) {
+        [self provisionWithNetworkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess fail:fail];
+    } else {
+        __weak typeof(self) weakSelf = self;
+        TeLogVerbose(@"start connect for provision.");
+        [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
+            if (successful) {
+                TeLogVerbose(@"connect successful.");
+                [weakSelf provisionWithPeripheral:peripheral networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess fail:fail];
+            } else {
+                if (fail) {
+                    NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
+                    fail(err);
+                }
+            }
+        }];
+    }
+}
+
+/// founcation4: certificateBased provision
+/// @param peripheral CBPeripheral of CoreBluetooth will be provision.
+/// @param networkKey networkKey
+/// @param netkeyIndex netkeyIndex
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+/// @param provisionSuccess callback when provision success.
+/// @param fail callback when provision fail.
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOOBData:(nullable NSData *)staticOOBData capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+
+    self.staticOobData = nil;
+    self.provisionSuccessBlock = provisionSuccess;
+    self.capabilitiesResponseBlock = capabilitiesResponse;
+    self.failBlock = fail;
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    SigNetkeyModel *provisionNet = nil;
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
+        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+            provisionNet = net;
+            break;
+        }
+    }
+    if (provisionNet == nil) {
+        TeLogError(@"error network key.");
+        return;
+    }
+    self.certificateDict = [NSMutableDictionary dictionary];
+    self.currentRecordID = 0;
+    
+    [self reset];
+    [SigBearer.share setBearerProvisioned:NO];
+    self.networkKey = provisionNet;
+    self.isProvisionning = YES;
+    TeLogInfo(@"start certificateBasedProvision.");
+    
+    __weak typeof(self) weakSelf = self;
+    [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf sentProvisioningRecordsGetWithResponse:response];
+    }];
 }
 
 - (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
@@ -309,40 +455,28 @@ typedef enum : UInt16 {
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
-
-    if (provisionType == ProvisionType_NoOOB || provisionType == ProvisionType_StaticOOB) {
-        if (peripheral.state == CBPeripheralStateConnected) {
-            if (provisionType == ProvisionType_NoOOB) {
-                TeLogVerbose(@"start noOob provision.");
-                [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];
-            } else if (provisionType == ProvisionType_StaticOOB) {
-                TeLogVerbose(@"start staticOob provision.");
-                [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
-            }
-        } else {
-            __weak typeof(self) weakSelf = self;
-            TeLogVerbose(@"start connect for provision.");
-            [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
-                if (successful) {
-                    TeLogVerbose(@"connect successful.");
-                    [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
-                } else {
-                    if (fail) {
-                        NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
-                        fail(err);
-                    }
-                }
-            }];
-        }
+    if (peripheral.state == CBPeripheralStateConnected) {
+        [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
     } else {
-        TeLogError(@"unsupport provision type.");
+        __weak typeof(self) weakSelf = self;
+        TeLogVerbose(@"start connect for provision.");
+        [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
+            if (successful) {
+                TeLogVerbose(@"connect successful.");
+                [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
+            } else {
+                if (fail) {
+                    NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
+                    fail(err);
+                }
+            }
+        }];
     }
 }
 
@@ -351,11 +485,10 @@ typedef enum : UInt16 {
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -386,28 +519,24 @@ typedef enum : UInt16 {
     self.isProvisionning = YES;
     TeLogInfo(@"start certificateBasedProvision.");
     
-    if (provisionType == ProvisionType_NoOOB || provisionType == ProvisionType_StaticOOB) {
-        if (peripheral.state == CBPeripheralStateConnected) {
-            TeLogVerbose(@"start RecordsGet.");
-            [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-                [weakSelf sentProvisioningRecordsGetWithResponse:response];
-            }];
-        } else {
-            TeLogVerbose(@"start connect for provision.");
-            [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
-                if (successful) {
-                    TeLogVerbose(@"connect successful.");
-                    [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
-                } else {
-                    if (fail) {
-                        NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
-                        fail(err);
-                    }
-                }
-            }];
-        }
+    if (peripheral.state == CBPeripheralStateConnected) {
+        TeLogVerbose(@"start RecordsGet.");
+        [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf sentProvisioningRecordsGetWithResponse:response];
+        }];
     } else {
-        TeLogError(@"unsupport provision type.");
+        TeLogVerbose(@"start connect for provision.");
+        [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
+            if (successful) {
+                TeLogVerbose(@"connect successful.");
+                [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
+            } else {
+                if (fail) {
+                    NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
+                    fail(err);
+                }
+            }
+        }];
     }
 }
 
@@ -591,6 +720,9 @@ typedef enum : UInt16 {
         self.provisioningCapabilities = capabilitiesPdu;
         self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
         self.state = ProvisioningState_capabilitiesReceived;
+        if (self.capabilitiesResponseBlock) {
+            self.unicastAddress = self.capabilitiesResponseBlock(capabilitiesPdu);
+        }
         if (self.unicastAddress == 0) {
             self.state = ProvisioningState_fail;
         }else{
@@ -973,7 +1105,6 @@ typedef enum : UInt16 {
 /// 当SDK不支持EPA功能时，默认都使用SigFipsP256EllipticCurve_CMAC_AES128。
 - (Algorithm)getCurrentProvisionAlgorithm {
     Algorithm algorithm = Algorithm_fipsP256EllipticCurve;
-#if SUPPORTEPA
     if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_CMAC_AES128) {
         algorithm = Algorithm_fipsP256EllipticCurve;
     } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_HMAC_SHA256) {
@@ -985,7 +1116,6 @@ typedef enum : UInt16 {
             algorithm = Algorithm_fipsP256EllipticCurve;
         }
     }
-#endif
     return algorithm;
 }
 

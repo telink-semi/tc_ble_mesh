@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ShareTipsVC : BaseViewController
 
+@property (nonatomic, strong) NSString *tipsMessage;
+
 @end
 
 NS_ASSUME_NONNULL_END

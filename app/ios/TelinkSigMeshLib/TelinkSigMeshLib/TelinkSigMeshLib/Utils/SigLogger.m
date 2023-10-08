@@ -30,7 +30,7 @@
 #if DEBUG
 #define kTelinkSDKDebugLogDataSize ((double)1024*1024*100) //DEBUG默认日志最大存储大小为100M。每10*60秒检查一次日志文件大小。
 #else
-#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //RELEASE默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*100) //RELEASE默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
 #endif
 
 @interface SigLogger ()
@@ -39,10 +39,19 @@
 
 @implementation SigLogger
 
-+ (SigLogger *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigLogger *shareLogger = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareLogger = [[SigLogger alloc] init];
     });
     return shareLogger;
@@ -76,6 +85,7 @@
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:kTelinkSDKMeshJsonData];
 }
 
+/// 设置log等级，debug模式设置为SigLogLevelDebug即可，上架推荐使用SigLogLevelOff。
 - (void)setSDKLogLevel:(SigLogLevel)logLevel{
     _logLevel = logLevel;
     if (logLevel != SigLogLevelOff) {
@@ -108,9 +118,14 @@
     NSData *data = [handle readDataToEndOfFile];
     [handle closeFile];
     NSInteger length = data.length;
-    if (length > kTelinkSDKDebugLogDataSize) {
+    if (length > kTelinkSDKDebugLogDataSize * 2) {
+        //log文件大小异常，直接清除所有log，重新生成log文件
+        [self clearAllLog];
+        TelinkLogWithFile(NO, @"Call `clearAllLog` by SDK!");
+    }
+    else if (length > kTelinkSDKDebugLogDataSize) {
         NSInteger saveLength = ceil(kTelinkSDKDebugLogDataSize * 0.8);
-        //该写法是解决直接裁剪NSData导致部分字符串被裁剪了一般导致NSData转NSString异常，从而出现log文件很大但log的字符串却很短的bug。
+        //该写法是解决直接裁剪NSData导致部分字符串被裁剪了一半导致NSData转NSString异常，从而出现log文件很大但log的字符串却很短的bug。
         NSData *saveData = [NSData data];
         do {
             if (saveData.length > 0) {
@@ -120,6 +135,16 @@
             NSString *subStr = [oldStr substringFromIndex:ceil(oldStr.length * 0.2)];
             saveData = [subStr dataUsingEncoding:NSUTF8StringEncoding];
         } while (saveData.length > saveLength);
+        //清除无效的0000
+        UInt8 zero[20] = {0};
+        NSData *zeroData = [NSData dataWithBytes:zero length:20];
+        while (saveData.length >= 20 && [[saveData subdataWithRange:NSMakeRange(0, 20)] isEqualToData:zeroData]) {
+            if (saveData.length == 20) {
+                saveData = [NSData data];
+            } else {
+                saveData = [saveData subdataWithRange:NSMakeRange(20, saveData.length - 20)];
+            }
+        }
         NSData *tem = [@"[replace some log]\n" dataUsingEncoding:NSUTF8StringEncoding];
         NSMutableData *mData = [NSMutableData dataWithData:tem];
         [mData appendData:saveData];
@@ -131,8 +156,7 @@
 }
 
 static NSFileHandle *fileHandle = nil;
-static NSFileHandle *TelinkLogFileHandle()
-{
+static NSFileHandle *TelinkLogFileHandle(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSFileManager *manager = [NSFileManager defaultManager];
@@ -150,6 +174,9 @@ static NSFileHandle *TelinkLogFileHandle()
     return fileHandle;
 }
 
+/**
+ 自定义打印，会自动写文件
+ */
 extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
     va_list L;
     va_start(L, format);
@@ -183,6 +210,7 @@ extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
     va_end(L);
 }
 
+/// 清除所有log
 - (void)clearAllLog {
     NSFileManager *fileManage = [NSFileManager defaultManager];
     if ([fileManage fileExistsAtPath:self.logFilePath]) {
@@ -193,6 +221,7 @@ extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
     [fileHandle seekToEndOfFile];
 }
 
+/// 获取特定长度的log字符串
 - (NSString *)getLogStringWithLength:(NSInteger)length {
     NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
     NSData *data = [handle readDataToEndOfFile];
@@ -206,6 +235,7 @@ extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
     return str;
 }
 
+/// 缓存加密的json数据于iTunes中
 void saveMeshJsonData(id data){
     if (SigLogger.share.logLevel > 0) {
         NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.meshJsonFilePath];
@@ -264,8 +294,7 @@ void saveMeshJsonData(id data){
         data = [self DESEncrypt:data WithKey:key];
         //IOS 自带DES加密 End
         return [self base64EncodedStringFrom:data];
-    }
-    else {
+    } else {
         return LocalStr_None;
     }
 }
@@ -286,8 +315,7 @@ void saveMeshJsonData(id data){
         data = [self DESDecrypt:data WithKey:key];
         //IOS 自带DES加密 End
         return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }
-    else {
+    } else {
         return LocalStr_None;
     }
 }
@@ -299,8 +327,7 @@ void saveMeshJsonData(id data){
         data = [self DESDecrypt:data WithKey:password];
         //IOS 自带DES加密 End
         return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }
-    else {
+    } else {
         return LocalStr_None;
     }
 }
@@ -326,13 +353,7 @@ void saveMeshJsonData(id data){
     void *buffer = malloc(bufferSize);
     
     size_t numBytesEncrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmDES,
-                                          kCCOptionPKCS7Padding | kCCOptionECBMode,
-                                          keyPtr, kCCBlockSizeDES,
-                                          NULL,
-                                          [data bytes], dataLength,
-                                          buffer, bufferSize,
-                                          &numBytesEncrypted);
+    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmDES, kCCOptionPKCS7Padding | kCCOptionECBMode, keyPtr, kCCBlockSizeDES, NULL, [data bytes], dataLength, buffer, bufferSize, &numBytesEncrypted);
     if (cryptStatus == kCCSuccess) {
         return [NSData dataWithBytesNoCopy:buffer length:numBytesEncrypted];
     }
@@ -362,13 +383,7 @@ void saveMeshJsonData(id data){
     void *buffer = malloc(bufferSize);
     
     size_t numBytesDecrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmDES,
-                                          kCCOptionPKCS7Padding | kCCOptionECBMode,
-                                          keyPtr, kCCBlockSizeDES,
-                                          NULL,
-                                          [data bytes], dataLength,
-                                          buffer, bufferSize,
-                                          &numBytesDecrypted);
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmDES, kCCOptionPKCS7Padding | kCCOptionECBMode, keyPtr, kCCBlockSizeDES, NULL, [data bytes], dataLength, buffer, bufferSize, &numBytesDecrypted);
     
     if (cryptStatus == kCCSuccess) {
         return [NSData dataWithBytesNoCopy:buffer length:numBytesDecrypted];
@@ -395,8 +410,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
         return [NSData data];
     
     static char *decodingTable = NULL;
-    if (decodingTable == NULL)
-    {
+    if (decodingTable == NULL) {
         decodingTable = malloc(256);
         if (decodingTable == NULL)
             return nil;
@@ -415,19 +429,17 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     NSUInteger length = 0;
     
     NSUInteger i = 0;
-    while (YES)
-    {
+    while (YES) {
         char buffer[4];
         short bufferLength;
-        for (bufferLength = 0; bufferLength < 4; i++)
-        {
+        for (bufferLength = 0; bufferLength < 4; i++) {
             if (characters[i] == '\0')
                 break;
             if (isspace(characters[i]) || characters[i] == '=')
                 continue;
             buffer[bufferLength] = decodingTable[(short)characters[i]];
-            if (buffer[bufferLength++] == CHAR_MAX)      //  Illegal character!
-            {
+            if (buffer[bufferLength++] == CHAR_MAX) {
+                // Illegal character!
                 free(bytes);
                 return nil;
             }
@@ -435,8 +447,8 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
         
         if (bufferLength == 0)
             break;
-        if (bufferLength == 1)      //  At least two characters are needed to produce one byte!
-        {
+        if (bufferLength == 1) {
+            //  At least two characters are needed to produce one byte!
             free(bytes);
             return nil;
         }
@@ -471,8 +483,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     NSUInteger length = 0;
     
     NSUInteger i = 0;
-    while (i < [data length])
-    {
+    while (i < [data length]) {
         char buffer[3] = {0,0,0};
         short bufferLength = 0;
         while (bufferLength < 3 && i < [data length])

@@ -24,6 +24,7 @@
 #import "BaseViewController.h"
 #import "ShowTipsView.h"
 #import "UIImage+Extension.h"
+#import "UIViewController+Message.h"
 
 @implementation BaseViewController
 
@@ -43,6 +44,17 @@
     [super viewWillDisappear:animated];
     [self nilBlock];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kNotifyCommandIsBusyOrNot object:nil];
+}
+
+- (void)showTips:(NSString *)message {
+    [self showTips:message sure:nil];
+}
+
+- (void)showTips:(NSString *)message sure:(void (^) (UIAlertAction *action))sure {
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:sure];
+    });
 }
 
 - (void)isBusy:(NSNotification *)notify{
@@ -73,16 +85,45 @@
 }
 
 - (void)normalSetting{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    //这里是弃用的属性
     //解决iOS9下tableview头尾存在一大块空白视图的bug
-    self.automaticallyAdjustsScrollViewInsets = NO;
-    //导航栏背景颜色
-    UINavigationBar *bar = self.navigationController.navigationBar;
-    bar.translucent = NO;
-    UIImage *bgImage = [UIImage createImageWithColor:kDefultColor];
-    [bar setBackgroundImage:bgImage forBarMetrics:UIBarMetricsDefault];
+        self.automaticallyAdjustsScrollViewInsets=YES;
+#pragma clang diagnostic pop
+    //设置导航栏不透明
+    self.navigationController.navigationBar.translucent = NO;
+    //设置导航条背景颜色和Title颜色
+    UIImage *bgImage = [UIImage createImageWithColor:UIColor.telinkBlue];
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = bgImage;
+        appearance.titleTextAttributes = @{NSForegroundColorAttributeName:[UIColor whiteColor]};
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+    }else{
+        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[UIColor whiteColor]};
+    }
+    [self.navigationController.navigationBar setBackgroundImage:bgImage forBarMetrics:UIBarMetricsDefault];
+    //设置TabBar的颜色
+    for (UITabBarItem *tabBarItem in self.tabBarController.tabBar.items) {
+        [tabBarItem setTitleTextAttributes:@{NSForegroundColorAttributeName:HEX(#7D7D7D)} forState:UIControlStateNormal];
+        [tabBarItem setTitleTextAttributes:@{NSForegroundColorAttributeName:HEX(#4A87EE)} forState:UIControlStateSelected];
+    }
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
     
+    // 配置iOS13工具条
+    if (@available(iOS 13.0, *)) {
+        UITabBarAppearance *appearance = self.tabBarController.tabBar.standardAppearance.copy;
+        appearance.backgroundImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarBackgroundColor"]];
+        appearance.backgroundColor = [UIColor colorNamed:@"telinkTabBarBackgroundColor"];
+        appearance.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarshadowImageColor"]];
+        appearance.shadowColor = [UIColor colorNamed:@"telinkTabBarshadowImageColor"];
+        self.tabBarController.tabBar.standardAppearance = appearance;
+    }
+
     [self configTabBarForiOS15];
     [self configNavigationBarForiOS15];
 }
@@ -91,8 +132,8 @@
 - (void)configTabBarForiOS15 {
     if (@available(iOS 15.0, *)) {
         UITabBarAppearance *bar = [[UITabBarAppearance alloc] init];
-        bar.backgroundColor = [UIColor colorWithRed:247/255.0 green:247/255.0 blue:247/255.0 alpha:1.0];
-        bar.shadowImage = [UIImage createImageWithColor:[UIColor colorWithRed:178/255.0 green:178/255.0 blue:178/255.0 alpha:1.0]];
+        bar.backgroundColor = [UIColor colorNamed:@"telinkTabBarBackgroundColor"];
+        bar.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarshadowImageColor"]];
         self.tabBarController.tabBar.scrollEdgeAppearance = bar;
         self.tabBarController.tabBar.standardAppearance = bar;
     }
@@ -105,7 +146,7 @@
         // 不透明背景色
         [app configureWithOpaqueBackground];
         // 设置背景色
-        app.backgroundColor = kDefultColor;
+        app.backgroundColor = UIColor.telinkBlue;
         // 磨砂效果
         app.backgroundEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
         // 导航条底部分割线图片（这里设置为透明）
@@ -120,7 +161,7 @@
         self.navigationController.navigationBar.standardAppearance = app;
         // 应用于导航栏背景的色调。
 //        self.navigationController.navigationBar.barTintColor = self.barBackgroundColor;
-        self.navigationController.navigationBar.barTintColor = kDefultColor;
+        self.navigationController.navigationBar.barTintColor = UIColor.telinkBlue;
         // 应用于导航栏按钮项的着色颜色。
 //        self.navigationController.navigationBar.tintColor = self.barTintColor;
         self.navigationController.navigationBar.tintColor = [UIColor whiteColor];

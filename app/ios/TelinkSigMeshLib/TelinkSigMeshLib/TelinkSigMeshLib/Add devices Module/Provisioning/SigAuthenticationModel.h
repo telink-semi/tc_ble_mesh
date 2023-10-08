@@ -59,8 +59,6 @@ typedef void (^displayAlphanumericCallback)(NSString *text);
 ///For Input OOB, InputAction is not InputAction_inputAlphanumeric.
 - (instancetype)initWithInputAction:(InputAction)inputAction inputOobCallback:(displayNumberCallback)callback;
 
-- (void)handelAuthentication:(id)firstArg, ... NS_REQUIRES_NIL_TERMINATION;
-
 @end
 
 NS_ASSUME_NONNULL_END

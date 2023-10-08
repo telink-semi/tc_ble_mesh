@@ -32,8 +32,15 @@
 @interface CMDViewController()<UITextViewDelegate>
 @property (strong, nonatomic) IBOutlet UITextView *inTextView;
 @property (strong, nonatomic) IBOutlet UITextView *showTextView;
+@property (weak, nonatomic) IBOutlet UIButton *vendorOnButton;
+@property (weak, nonatomic) IBOutlet UIButton *vendorOffButton;
+@property (weak, nonatomic) IBOutlet UIButton *vendorOnOffGetButton;
+@property (weak, nonatomic) IBOutlet UIButton *vendorOnNoackButton;
+@property (weak, nonatomic) IBOutlet UIButton *vendorOffNoackButton;
+@property (weak, nonatomic) IBOutlet UIButton *sigModelOnButton;
 @property (weak, nonatomic) IBOutlet UIButton *devKeyAggregator;
 @property (weak, nonatomic) IBOutlet UIButton *appKeyAggregator;
+@property (weak, nonatomic) IBOutlet UIButton *sendButton;
 @property (nonatomic,strong) NSString *sendString;
 @property (nonatomic,strong) NSData *sendData;
 @property (nonatomic,strong) NSString *logString;
@@ -175,14 +182,20 @@
 - (void)normalSetting{
     [super normalSetting];
     [self configUI];
-#ifdef kExist
-    self.devKeyAggregator.hidden = NO;
-    self.appKeyAggregator.hidden = NO;
-#endif
     self.logString = @"";
+    self.inTextView.editable = !SigDataSource.share.curMeshIsVisitor;
 }
 
 - (void)configUI{
+    self.vendorOnButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.vendorOffButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.vendorOnOffGetButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.vendorOnNoackButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.vendorOffNoackButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.sigModelOnButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.devKeyAggregator.backgroundColor = UIColor.telinkButtonBlue;
+    self.appKeyAggregator.backgroundColor = UIColor.telinkButtonBlue;
+    self.sendButton.backgroundColor = UIColor.telinkButtonBlue;
     self.inTextView.layer.borderWidth = 1;
     self.inTextView.layer.borderColor = [[UIColor darkGrayColor] CGColor];
     self.inTextView.delegate = self;
@@ -197,12 +210,6 @@
         [self.inTextView resignFirstResponder];
     }
     sender.cancelsTouchesInView = NO;
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -224,21 +231,6 @@
     [self showTips:@"Please enter a valid hexadecimal data."];
     return NO;
 }
-
-//- (void)blockState{
-//    [super blockState];
-//    __weak typeof(self) weakSelf = self;
-//#warning 2019年12月20日11:27:37，ini待完善
-////    [self.ble.commandHandle setResponseVendorIDCallBack:^(VendorResponseModel *m) {
-////        [weakSelf showNewLogMessage:[NSString stringWithFormat:@"Response: %@",m.rspData]];
-////    }];
-//}
-//
-//- (void)nilBlock{
-//    [super nilBlock];
-//#warning 2019年12月20日11:27:37，ini待完善
-////    self.ble.commandHandle.responseVendorIDCallBack = nil;
-//}
 
 -(void)dealloc{
     SigBluetooth.share.bluetoothDidUpdateValueCallback = nil;

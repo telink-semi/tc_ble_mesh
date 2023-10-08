@@ -36,8 +36,10 @@
 @end
 @implementation SigTransaction
 /// Returns the last used TID.
-- (instancetype)init{
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _lastTid = arc4random()%(0xff+1);
     }
     return self;
@@ -72,7 +74,9 @@
 @end
 @implementation SigAcknowledgmentContext
 - (instancetype)initForRequest:(SigAcknowledgedMeshMessage *)request sentFromSource:(UInt16)source toDestination:(UInt16)destination repeatAfterDelay:(NSTimeInterval)delay repeatBlock:(void (^ _Nonnull)(void))repeatBlock timeout:(NSTimeInterval)timeout timeoutBlock:(void (^ _Nonnull)(void))timeoutBlock {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _request = request;
         _source = source;
         _destination = destination;
@@ -119,6 +123,14 @@
 
 @end
 
+
+/*
+ The access layer defines how higher layer applications can use the upper transport layer.
+ It defines the format of the application data; it defines and controls the application
+ data encryption and decryption performed in the upper transport layer; and it checks whether
+ the incoming application data has been received in the context of the right network and
+ application keys before forwarding it to the higher layer.
+ */
 @interface SigAccessLayer ()
 @property (nonatomic,strong) SigNetworkManager *networkManager;
 /// A map of current transactions.
@@ -131,16 +143,24 @@
 
 @implementation SigAccessLayer
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _transactions = [NSMutableDictionary dictionary];
         _reliableMessageContexts = [NSMutableArray array];
     }
     return self;
 }
 
+/// Initialize SigAccessLayer object.
+/// @param networkManager The SigNetworkManager object.
+/// @returns return `nil` when initialize SigAccessLayer object fail.
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _networkManager = networkManager;
         _transactions = [NSMutableDictionary dictionary];
         _reliableMessageContexts = [NSMutableArray array];
@@ -158,6 +178,11 @@
     [_reliableMessageContexts removeAllObjects];
 }
 
+/// This method handles the Upper Transport PDU and reads the Opcode.
+/// If the Opcode is supported, a message object is created and sent to the delegate.
+/// Otherwise, a generic MeshMessage object is created for the app to handle.
+/// @param upperTransportPdu The decoded Upper Transport PDU.
+/// @param keySet The keySet that the message was encrypted with.
 - (void)handleUpperTransportPdu:(SigUpperTransportPdu *)upperTransportPdu sentWithSigKeySet:(SigKeySet *)keySet {
     SigAccessPdu *accessPdu = [[SigAccessPdu alloc] initFromUpperTransportPdu:upperTransportPdu];
     if (accessPdu == nil) {
@@ -186,6 +211,16 @@
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
 }
 
+/// Sends the MeshMessage to the destination.
+/// The message is encrypted using given Application Key and a Network Key bound to it.
+/// Before sending, this method updates the transaction identifier (TID) for message extending `TransactionMessage`.
+///
+/// @param message The Mesh Message to send.
+/// @param element The source Element.
+/// @param destination The destination Address. This can be any valid mesh Address.
+/// @param initialTtl The initial TTL (Time To Live) value of the message. If `nil`, the default Node TTL will be used.
+/// @param applicationKey The Application Key to sign the message with.
+/// @param command The command of the message.
 - (void)sendMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
     // Should the TID be updated?
     SigMeshMessage *m = message;
@@ -233,6 +268,12 @@
     [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
 }
 
+/// Sends the ConfigMessage to the destination. The message is encrypted using the Device Key
+/// which belongs to the target Node, and first Network Key known to this Node.
+/// @param message The Mesh Config Message to send.
+/// @param destination The destination address. This must be a Unicast Address.
+/// @param initialTtl The initial TTL (Time To Live) value of the message. If `nil`, the default Node TTL will be used.
+/// @param command The command of the message.
 - (void)sendSigConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt16)initialTtl command:(SDKLibCommand *)command {
     SigElementModel *element = SigMeshLib.share.dataSource.curLocationNodeModel.elements.firstObject;
     SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
@@ -256,6 +297,13 @@
     [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
 }
 
+/// Replies to the received message, which was sent with the given key set, with the given message.
+/// @param origin The destination address of the message that the reply is for.
+/// @param message The response message to be sent.
+/// @param element The source Element.
+/// @param destination The destination address. This must be a Unicast Address.
+/// @param keySet The set of keys that the message was encrypted with.
+/// @param command The command of the message.
 - (void)replyToMessageSentToOrigin:(UInt16)origin withMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
     TeLogInfo(@"Replying with %@ from: %@, to: 0x%x",message,element,destination);
     SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithAddress:destination];
@@ -281,6 +329,8 @@
     });
 }
 
+/// Cancels sending the message with the given handle.
+/// @param handle The message handle.
 - (void)cancelSigMessageHandle:(SigMessageHandle *)handle {
 //    TeLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
     NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
@@ -296,6 +346,25 @@
     [_networkManager.lowerTransportLayer cancelTXSendingSegmentedWithDestination:handle.destination];
 }
 
+/// This method delivers the received PDU to all Models that support it
+/// and are subscribed to the message destination address.
+///
+/// In general, each Access PDU should be consumed only by one Model in an Element.
+/// For example, Generic OnOff Client may send Generic OnOff Set message to the corresponding Server,
+/// which can decode it, change its state and reply with Generic OnOff Status message,
+/// that will be consumed by the Client.
+///
+/// However, nothing stop the developers to reuse the same opcode in multiple Models. For example,
+/// there may be a Log Model on an Element, which accepts all opcodes supported by other Models on this Element,
+/// and logs the received data. The Log Models, instead of decoding the received Access PDU to Generic OnOff Set message,
+/// it may decode it as some "Message X" type.
+///
+/// This method will make sure that each Model will receive a message decoded to the type specified in `messageTypes` in its `ModelDelegate`,
+/// but the manager's delegate will be notified with the first message only.
+///
+/// @param accessPdu The Access PDU received.
+/// @param keySet The set of keys that the message was encrypted with.
+/// @param request The previosly sent request message, that the received message responds to, or `nil`, if no request has been sent.
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(nullable SigAcknowledgedMeshMessage *)request {
     SigNodeModel *localNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (localNode == nil) {

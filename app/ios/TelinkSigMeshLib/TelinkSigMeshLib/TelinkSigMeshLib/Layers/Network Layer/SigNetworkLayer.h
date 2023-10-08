@@ -27,11 +27,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigLowerTransportPdu,SigNetworkManager,SigSegmentAcknowledgmentMessage;
 
+/*
+ The network layer defines how transport messages are addressed towards one or more elements.
+ It defines the network message format that allows Transport PDUs to be transported by the
+ bearer layer. The network layer decides whether to relay/forward messages, accept them for
+ further processing, or reject them. It also defines how a network message is encrypted and
+ authenticated.
+ */
 @interface SigNetworkLayer : NSObject
 @property (nonatomic,strong) SigNetworkManager *networkManager;
 @property (nonatomic,strong) SigDataSource *meshNetwork;
-//@property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
-//@property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
 @property (nonatomic,strong,nullable) SigSegmentAcknowledgmentMessage *lastNeedSendAckMessage;
@@ -45,8 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter type: The PDU type.
 - (void)handleIncomingPdu:(NSData *)pdu ofType:(SigPduType)type;
 
-- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
-
 /// This method tries to send the Lower Transport Message of given type to the
 /// given destination address. If the local Provisioner does not exist, or
 /// does not have Unicast Address assigned, this method does nothing.
@@ -54,9 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter pdu:  The Lower Transport PDU to be sent.
 /// - parameter type: The PDU type.
 /// - parameter ttl:  The initial TTL (Time To Live) value of the message.
+/// - parameter ivIndex:  The initial ivIndex value of the message.
 /// - throws: This method may throw when the `transmitter` is not set, or has
 ///           failed to send the PDU.
-- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl;
+- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Proxy Configuration Message.
 ///
@@ -64,17 +68,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - parameter message: The Proxy Confifuration message to be sent.
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message;
-
-/// Updates the information about the Network Key known to the current Proxy Server.
-/// The Network Key is required to send Proxy Configuration Messages that can be
-/// decoded by the connected Proxy.
-///
-/// If the method detects that the Proxy has just been connected, or was reconnected,
-/// it will initiate the Proxy Filter with local Provisioner's Unicast Address and
-/// the `Address.allNodes` group address.
-///
-/// - parameter networkKey: The Network Key known to the connected Proxy.
-//- (void)updateProxyFilterUsingNetworkKey:(SigNetkeyModel *)networkKey;
 
 @end
 

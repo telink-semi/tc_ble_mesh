@@ -31,15 +31,25 @@
 
 @implementation OpenSSLHelper
 
-+ (OpenSSLHelper *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static OpenSSLHelper *shareHelper = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareHelper = [[OpenSSLHelper alloc] init];
     });
     return shareHelper;
 }
 
+/// Generates 128-bit random data.
 - (NSData *)generateRandom {
     Byte buffer[16];
     int rc = RAND_bytes(buffer, sizeof(buffer));
@@ -50,6 +60,8 @@
    return [[NSData alloc] initWithBytes: buffer length: sizeof(buffer)];
 }
 
+/// Calculates salt over given data.
+/// @param someData A non-zero length octet array or ASCII encoded string.
 - (NSData *)calculateSalt:(NSData *)someData {
     //For S1, the key is constant
     unsigned char key[16] = {0x00};
@@ -58,6 +70,11 @@
     return [self calculateCMAC: someData andKey: keyData];
 }
 
+/// Calculates Cipher-based Message Authentication Code (CMAC) that uses
+/// AES-128 as the block cipher function, also known as AES-CMAC.
+/// @param someData Data to be authenticated.
+/// @param key The 128-bit key.
+/// @return The 128-bit authentication code (MAC).
 - (NSData *)calculateCMAC:(NSData *)someData andKey:(NSData *)key {
     unsigned char mact[16] = {0x00};
     size_t mactlen;
@@ -71,28 +88,20 @@
     return output;
 }
 
-- (NSData *)calculateECB:(NSData *)someData andKey:(NSData *)key {
-    int len;
-    unsigned char iv[16] = {0x00};
-    unsigned char outbuf[16] = {0x00};
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, [key bytes], iv);
-    EVP_EncryptUpdate(ctx, outbuf, &len, [someData bytes], (int) [someData length] / sizeof(unsigned char));
-    EVP_EncryptFinal_ex(ctx, outbuf + len, &len);
-    EVP_CIPHER_CTX_free(ctx);
-    return [[NSData alloc] initWithBytes: outbuf length: 16];
-}
-
-- (NSData *)calculateCCM:(NSData *)someData
-                 withKey:(NSData *)key
-                   nonce:(NSData *)nonce
-              andMICSize:(UInt8)size
-      withAdditionalData:(NSData *)aad {
+/// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
+/// This method generates ciphertext and MIC (Message Integrity Check).
+/// @param someData The data to be encrypted and authenticated, also known as plaintext.
+/// @param key The 128-bit key.
+/// @param nonce A 104-bit nonce.
+/// @param micSize Length of the MIC to be generated, in bytes.
+/// @param aad Additional data to be authenticated.
+/// @return Encrypted data concatenated with MIC of given size.
+- (NSData *)calculateCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMICSize:(UInt8)micSize withAdditionalData:(NSData *)aad {
     int outlen = 0;
     int messageLength = (int) [someData length] / sizeof(unsigned char);
     int nonceLength   = (int) [nonce length]    / sizeof(unsigned char);
     int aadLength     = (int) [aad length]      / sizeof(unsigned char);
-    int micLength = size;
+    int micLength = micSize;
     // Octets for Encrypted data + octets for TAG (MIC).
     unsigned char outbuf[messageLength + micLength];
 
@@ -131,11 +140,14 @@
     return outputData;
 }
 
-- (NSData *)calculateDecryptedCCM:(NSData *)someData
-                          withKey:(NSData *)key
-                            nonce:(NSData *)nonce
-                           andMIC:(NSData *)mic
-               withAdditionalData:(NSData *)aad {
+/// Decrypts data encrypted with CCM.
+/// @param someData Encrypted data.
+/// @param key The 128-bit key.
+/// @param nonce A 104-bit nonce.
+/// @param mic Message Integrity Check data.
+/// @param aad Additional data to be authenticated.
+/// @return Decrypted data, if decryption is successful and MIC is valid, otherwise `nil`.
+- (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad {
     int outlen;
     unsigned char outbuf[1024];
     
@@ -179,13 +191,17 @@
     }
 }
 
-- (NSData *)obfuscate:(NSData *)data
-   usingPrivacyRandom:(NSData *)random
-              ivIndex:(UInt32) ivIndex
-        andPrivacyKey:(NSData *)privacyKey {
+/// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
+/// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
+/// @param data The data to obfuscate.
+/// @param privacyRandom Data used as Privacy Random.
+/// @param ivIndex The current IV Index value.
+/// @param privacyKey The 128-bit Privacy Key.
+/// @return Obfuscated data of the same size as input data.
+- (NSData *)obfuscate:(NSData *)data usingPrivacyRandom:(NSData *)privacyRandom ivIndex:(UInt32)ivIndex andPrivacyKey:(NSData *)privacyKey {
     NSMutableData *privacyRandomSource = [[NSMutableData alloc] init];
-    [privacyRandomSource appendData: random];
-    NSData *privacyRandom = [privacyRandomSource subdataWithRange: NSMakeRange(0, 7)];
+    [privacyRandomSource appendData: privacyRandom];
+    NSData *pRandom = [privacyRandomSource subdataWithRange: NSMakeRange(0, 7)];
     NSMutableData *pecbInputs = [[NSMutableData alloc] init];
     const unsigned ivIndexBigEndian = CFSwapInt32HostToBig(ivIndex);
     
@@ -194,17 +210,21 @@
     NSData *padding = [[NSData alloc] initWithBytes:byteArray length: 5];
     [pecbInputs appendData: padding];
     [pecbInputs appendData: [[NSData alloc] initWithBytes: &ivIndexBigEndian length: 4]];
-    [pecbInputs appendData: privacyRandom];
+    [pecbInputs appendData: pRandom];
     
     NSData *pecb = [[self calculateECB: pecbInputs andKey: privacyKey] subdataWithRange:NSMakeRange(0, 6)];
     
-    NSData *obfuscatedData = [self xor: data withData: pecb];
+    NSData *obfuscatedData = [self calculateXORWithFirstData: data secondData: pecb];
     return obfuscatedData;
 }
 
-- (NSData *)deobfuscate:(NSData *)data
-                ivIndex:(UInt32) ivIndex
-             privacyKey:(NSData *)privacyKey {
+/// Deobfuscates given data. This method reverses the obfuscation done by method above.
+///
+/// @param data The obfuscated data.
+/// @param ivIndex The current IV Index value.
+/// @param privacyKey The 128-bit Privacy Key.
+/// @return Deobfuscated data of the same size as input data.
+- (NSData *)deobfuscate:(NSData *)data ivIndex:(UInt32)ivIndex privacyKey:(NSData *)privacyKey {
     //Privacy random = EncDST || ENCTransportPDU || NetMIC [0-6]
     NSData *obfuscatedData = [data subdataWithRange: NSMakeRange(1, 6)];
     NSData *privacyRandom = [data subdataWithRange: NSMakeRange(7, 7)];
@@ -221,12 +241,21 @@
     NSData *pecb = [[self calculateECB:pecbInputs andKey: privacyKey] subdataWithRange: NSMakeRange(0, 6)];
     
     //DeobfuscatedData = CTL, TTL, SEQ, SRC
-    NSData *deobfuscatedData = [self xor: obfuscatedData withData: pecb];
+    NSData *deobfuscatedData = [self calculateXORWithFirstData:obfuscatedData secondData:pecb];
     return deobfuscatedData;
 }
 
-/// 3.10.4.1.1 Private beacon security function
-/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+/**
+ * @brief   Calculate Authentication Tag.
+ * @param   keyRefreshFlag    Key Refresh Flag, 0: False, 1: True.
+ * @param   ivUpdateActive    IV Update Flag, 0: Normal Operation, 1: IV Update in Progress.
+ * @param   ivIndex    Current value of the IV Index of the mesh network.
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  AuthenticationTag hex data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
 - (NSData *)calculateAuthenticationTagWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
     /*
      B0 = 0x19 || Random || 0x0005
@@ -290,16 +319,25 @@
      T2 = T1 ⊕ e (PrivateBeaconKey, C0)
      Authentication_Tag = T2[0-7]
      */
-    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetworkKey:networkKey];
     NSData *T0 = [self calculateECB:B0 andKey:privateBeaconKey];
-    NSData *T1 = [self calculateECB:[self xor:T0 withData:P] andKey:privateBeaconKey];
-    NSData *T2 = [self xor:T1 withData:[self calculateECB:C0 andKey:privateBeaconKey]];
+    NSData *T1 = [self calculateECB:[self calculateXORWithFirstData:T0 secondData:P] andKey:privateBeaconKey];
+    NSData *T2 = [self calculateXORWithFirstData:T1 secondData:[self calculateECB:C0 andKey:privateBeaconKey]];
     authenticationTag = [T2 subdataWithRange:NSMakeRange(0, 8)];
     return authenticationTag;
 }
 
-/// 3.10.4.1.1 Private beacon security function
-/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+/**
+ * @brief   Calculate Obfuscated Private Beacon Data.
+ * @param   keyRefreshFlag    Key Refresh Flag, 0: False, 1: True.
+ * @param   ivUpdateActive    IV Update Flag, 0: Normal Operation, 1: IV Update in Progress.
+ * @param   ivIndex    Current value of the IV Index of the mesh network.
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Obfuscated Private Beacon Data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
 - (NSData *)calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
     /*
      B0 = 0x19 || Random || 0x0005
@@ -342,12 +380,21 @@
      S = e (PrivateBeaconKey, C1)
      Obfuscated_Private_Beacon_Data = (S [0-4]) ⊕ (Private Beacon Data))
      */
-    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetworkKey:networkKey];
     NSData *S = [self calculateECB:C1 andKey:privateBeaconKey];
-    obfuscatedPrivateBeaconData = [self xor:[S subdataWithRange:NSMakeRange(0, 5)] withData:privateBeaconData];
+    obfuscatedPrivateBeaconData = [self calculateXORWithFirstData:[S subdataWithRange:NSMakeRange(0, 5)] secondData:privateBeaconData];
     return obfuscatedPrivateBeaconData;
 }
 
+/**
+ * @brief   Calculate Private Beacon Data.
+ * @param   obfuscatedPrivateBeaconData    Obfuscated Private Beacon Data
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Private Beacon Data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
 - (NSData *)calculatePrivateBeaconDataWithObfuscatedPrivateBeaconData:(NSData *)obfuscatedPrivateBeaconData randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
     /*
      B0 = 0x19 || Random || 0x0005
@@ -373,15 +420,20 @@
      S = e (PrivateBeaconKey, C1)
      Obfuscated_Private_Beacon_Data = (S [0-4]) ⊕ (Private Beacon Data))
      */
-    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetworkKey:networkKey];
     NSData *S = [self calculateECB:C1 andKey:privateBeaconKey];
-    NSData *privateBeaconData = [self xor:[S subdataWithRange:NSMakeRange(0, 5)] withData:obfuscatedPrivateBeaconData];
+    NSData *privateBeaconData = [self calculateXORWithFirstData:[S subdataWithRange:NSMakeRange(0, 5)] secondData:obfuscatedPrivateBeaconData];
     return privateBeaconData;
 }
 
-/// 3.9.6.3.5 PrivateBeaconKey
-/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.200)
-- (NSData *)calculatePrivateBeaconKeyWithNetKey:(NSData *)netKey {
+/**
+ * @brief   Calculate Private Beacon Key.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Private Beacon Key hex data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.203)
+ * 3.9.6.3.5 PrivateBeaconKey
+ */
+- (NSData *)calculatePrivateBeaconKeyWithNetworkKey:(NSData *)networkKey {
     /*
      salt = s1(“nkpk”)
      P = “id128” || 0x01
@@ -393,11 +445,19 @@
     NSMutableData *P = [NSMutableData dataWithData:[@"id128" dataUsingEncoding:NSASCIIStringEncoding]];
     [P appendData:[NSData dataWithBytes:&tem8 length:1]];
     
-    NSData *privateBeaconKey = [[OpenSSLHelper share] calculateK1WithN:netKey salt:salt andP:P];
+    NSData *privateBeaconKey = [[OpenSSLHelper share] calculateK1WithN:networkKey salt:salt andP:P];
     return privateBeaconKey;
 }
 
-// MARK:- Helpers
+// MARK: - Helpers
+
+/// THe network key material derivation function k1 is used to generate instances of Identity Key and Beacon Key.
+///
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
+/// @param N is 0 or more octets.
+/// @param salt is 128 bits.
+/// @param P is 0 or more octets.
+/// @return 128-bit key.
 - (NSData *)calculateK1WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P {
     // Calculace K1 (outputs the confirmationKey).
     // T is calculated first using AES-CMAC N with SALT.
@@ -407,6 +467,14 @@
     return output;
 }
 
+/// The network key material derivation function k2 is used to generate instances of Encryption Key,
+/// Privacy Key and NID for use as Master and Private Low Power node communication.
+/// This method returns 33 byte data.
+///
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
+/// @param N 128-bit key.
+/// @param P 1 or more octets.
+/// @return NID (7 bits), Encryption Key (128 bits) and Privacy Key (128 bits).
 - (NSData *)calculateK2WithN:(NSData *)N andP:(NSData *)P {
     const char byteArray[] = { 0x73, 0x6D, 0x6B, 0x32 }; //smk2 string.
     NSData *smk2String = [[NSData alloc] initWithBytes: byteArray length: 4];
@@ -459,6 +527,11 @@
     return output;
 }
 
+/// The derivation function k3 us used to generate a public value of 64 bits derived from a private key.
+///
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
+/// @param N 128-bit key.
+/// @return 64 bits of a public value derived from the key.
 - (NSData *)calculateK3WithN:(NSData *)N {
     // Calculace K3 (outputs public value).
     // SALT is calculated using S1 with smk3 in ASCII.
@@ -478,6 +551,11 @@
     return output;
 }
 
+/// The derivation function k4 us used to generate a public value of 6 bits derived from a private key.
+///
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
+/// @param N 128-bit key.
+/// @return UInt8 with 6 LSB bits of a public value derived from the key.
 - (UInt8) calculateK4WithN:(NSData *)N {
     // Calculace K4 (outputs 6 bit public value)
     // SALT is calculated using S1 with smk3 in ASCII.
@@ -498,261 +576,36 @@
     return dataPtr[15] & 0x3F;
 }
 
+/// Encrypts given data using the key.
+/// @param someData Data to be encrypted.
+/// @param key The 128-bit key.
+/// @return A byte array of encrypted data using the key. The size of the returned  array is equal to the size of input data.
 - (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key {
     return [self calculateECB: someData andKey: key];
 }
 
-- (NSData *)xor:(NSData *)someData withData:(NSData *)otherData {
-    const char *someDataBytes   = [someData bytes];
-    const char *otherDataBytes  = [otherData bytes];
+/// Calculate the XOR value of two data.
+/// @param firstData first data.
+/// @param secondData second data.
+- (NSData *)calculateXORWithFirstData:(NSData *)firstData secondData:(NSData *)secondData {
+    const char *someDataBytes   = [firstData bytes];
+    const char *otherDataBytes  = [secondData bytes];
     NSMutableData *result = [[NSMutableData alloc] init];
-    for (int i = 0; i < someData.length; i++){
-        const char resultByte = someDataBytes[i] ^ otherDataBytes[i % otherData.length];
+    for (int i = 0; i < firstData.length; i++){
+        const char resultByte = someDataBytes[i] ^ otherDataBytes[i % secondData.length];
         [result appendBytes: &resultByte length: 1];
     }
    return result;
 }
 
-- (NSData *)calculateSHA1:(NSData *)someData {
-    unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA_CTX sha;
-    SHA_Init(&sha);
-    SHA_Update(&sha, someData.bytes, someData.length);
-    SHA_Final(hash, &sha);
-    NSData *output = [NSData dataWithBytes:hash length:SHA_DIGEST_LENGTH];
-    return output;
-}
-
-- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData {
-    OpenSSL_add_all_algorithms();
-    //x509证书验证示例,https://blog.csdn.net/chuicao4350/article/details/52875329
-
-    int ret;
-
-    X509 *user = NULL;
-    X509 *ca = NULL;
-
-    X509_STORE *ca_store = NULL;
-    X509_STORE_CTX *ctx = NULL;
-    STACK_OF(X509) *ca_stack = NULL;
-
-    /* x509初始化 */
-    ca_store = X509_STORE_new();
-    ctx = X509_STORE_CTX_new();
-
-    /* 父证书DER编码转X509结构 */
-    ca = der_to_x509(rootCerData.bytes, (unsigned int)rootCerData.length);
-    /* 加入证书存储区 */
-    ret = X509_STORE_add_cert(ca_store, ca);
-    if ( ret != 1 )
-    {
-        fprintf(stderr, "X509_STORE_add_cert fail, ret = %d\n", ret);
-        goto EXIT;
-    }
-
-    /* 需要校验的证书 */
-    for (NSData *userCerData  in userCerDatas) {
-        user = der_to_x509(userCerData.bytes, (unsigned int)userCerData.length);
-
-        ret = X509_STORE_CTX_init(ctx, ca_store, user, ca_stack);
-        if ( ret != 1 )
-        {
-            fprintf(stderr, "X509_STORE_CTX_init fail, ret = %d\n", ret);
-            goto EXIT;
-        }
-    }
-    
-    //openssl-1.0.1c/crypto/x509/x509_vfy.h
-    ret = X509_verify_cert(ctx);
-    if ( ret != 1 )
-    {
-        fprintf(stderr, "X509_verify_cert fail, ret = %d, error id = %d, %s\n",
-                ret, ctx->error, X509_verify_cert_error_string(ctx->error));
-        goto EXIT;
-    }
-    fprintf(stdout, "X509_verify_cert successful\n");
-EXIT:
-    X509_free(user);
-    X509_free(ca);
-
-    X509_STORE_CTX_cleanup(ctx);
-    X509_STORE_CTX_free(ctx);
-
-    X509_STORE_free(ca_store);
-
-    return ret == 1 ? YES : NO;
-}
-
-X509 *der_to_x509(const unsigned char *der_str, unsigned int der_str_len) {
-    X509 *x509;
-    x509 = d2i_X509(NULL, &der_str, der_str_len);
-    if ( NULL == x509 )
-    {
-        fprintf(stderr, "d2i_X509 fail\n");
-
-        return NULL;
-    }
-    return x509;
-}
-
-//- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData {
-//    OpenSSL_add_all_algorithms();
-//
-//    X509* x509 = NULL;
-//    NSData *staticOOB = nil;
-//
-//    @try {
-//        const unsigned char* certificateData = [cerData bytes];
-//        long certificateDataLength = [cerData length];
-//        x509 = d2i_X509(NULL, &certificateData, certificateDataLength);
-//        if (!x509) {
-//            NSLog(@"Failed to read certificate, function: d2i_X509");
-//            @throw [NSException exceptionWithName:@"Failed to read certificate"   reason:@"crush's function: d2i_X509" userInfo:nil];
-//        }
-//
-//        //打印证书
-//        BIO *b;
-//        b = BIO_new(BIO_s_file());
-//        BIO_set_fp(b, stdout, BIO_NOCLOSE);
-//        X509_print(b, x509);
-//
-//        //获取staticOOB数据
-//        int ExtCount = X509_get_ext_count(x509);
-//        for ( int k = 0; k < ExtCount; ++k ) {
-//            X509_EXTENSION *ex = X509_get_ext(x509, k);
-//
-//            if( ex == NULL )
-//            continue;
-//
-//            ASN1_OBJECT* obj = X509_EXTENSION_get_object(ex);
-//            char *extstr;
-//            char *extValue;
-//            extstr=(char*) OBJ_nid2sn(OBJ_obj2nid(obj));
-//            extValue=(char*) OBJ_nid2ln(OBJ_obj2nid(obj));
-//
-//            NSLog(@"%@:%@",[NSString stringWithCString:extstr encoding:NSASCIIStringEncoding],[NSString stringWithCString:extValue encoding:NSASCIIStringEncoding]);
-//            if(!strcmp(extstr,"2.25.234763379998062148653007332685657680359"))
-//            {
-//
-//            }
-//
-//            if ( obj == NULL )
-//            continue;
-//
-//            int nID = OBJ_obj2nid( obj );
-//#define EXTNAME_LEN 100
-//            if (nID == NID_undef) {
-//                // no lookup found for the provided OID so nid came back as undefined.
-//                char extname[EXTNAME_LEN];
-//                OBJ_obj2txt(extname, EXTNAME_LEN, (const ASN1_OBJECT *) obj, 1);
-//                printf("extension name is %s\n", extname);
-//                printf("extension length is %u\n", obj->length);
-//                printf("extension length is %u\n", obj->length);
-//                printf("extension value is %s\n", obj->data);
-//
-//                ASN1_OCTET_STRING *s = X509_EXTENSION_get_data(ex);
-//                printf("extension length is %u\n", s->length);
-//                printf("extension value is %s\n", s->data);
-//                NSLog(@"%@:%d",[NSData dataWithBytes:s->data length:s->length],s->type);
-//
-//            } else {
-//                // the OID translated to a NID which implies that the OID has a known sn/ln
-////                const char *c_ext_name = OBJ_nid2ln(nid);
-////                IFNULL_FAIL(c_ext_name, "invalid X509v3 extension name");
-////                printf("extension name is %s\n", c_ext_name);
-//            }
-//
-//
-//            if (nID == 0) {
-//                staticOOB = [NSData dataWithBytes:obj->data length:obj->length];
-////                NSLog(@"nID = %d, object=%@",nID,staticOOB);
-////                break;
-//            } else {
-////                NSLog(@"nID = %d, object=%@",nID,[NSData dataWithBytes:obj->data length:obj->length]);
-//            }
-//        }
-//        X509_free(x509);
-//        if (staticOOB && staticOOB.length >= 20) {
-//            return [staticOOB subdataWithRange:NSMakeRange(4, 16)];
-////            return [LibTools turnOverData:[staticOOB subdataWithRange:NSMakeRange(4, 16)]];
-//        } else {
-//            return staticOOB;
-//        }
-//    }
-//    @catch (NSException *exception) {
-//        EVP_cleanup();
-//        CRYPTO_cleanup_all_ex_data();  //generic
-//        X509_free(x509);
-//        return nil;
-//    }
-//}
-
-- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData {
-    OpenSSL_add_all_algorithms();
-
-    X509* x509 = NULL;
-    NSData *staticOOB = nil;
-    
-    @try {
-        const unsigned char* certificateData = [cerData bytes];
-        long certificateDataLength = [cerData length];
-        x509 = d2i_X509(NULL, &certificateData, certificateDataLength);
-        if (!x509) {
-            NSLog(@"Failed to read certificate, function: d2i_X509");
-            @throw [NSException exceptionWithName:@"Failed to read certificate"   reason:@"crush's function: d2i_X509" userInfo:nil];
-        }
-        
-        //获取staticOOB数据
-        int ExtCount = X509_get_ext_count(x509);
-        for ( int k = 0; k < ExtCount; ++k ) {
-            X509_EXTENSION *ex = X509_get_ext(x509, k);
-
-            if( ex == NULL )
-            continue;
-
-            ASN1_OBJECT* obj = X509_EXTENSION_get_object(ex);
-//            char *extstr;
-//            char *extValue;
-//            extstr=(char*) OBJ_nid2sn(OBJ_obj2nid(obj));
-//            extValue=(char*) OBJ_nid2ln(OBJ_obj2nid(obj));
-//            NSLog(@"%@:%@",[NSString stringWithCString:extstr encoding:NSASCIIStringEncoding],[NSString stringWithCString:extValue encoding:NSASCIIStringEncoding]);
-//            if(!strcmp(extstr,"2.25.234763379998062148653007332685657680359"))
-//            {
-//
-//            }
-
-            if ( obj == NULL )
-            continue;
-
-            int nID = OBJ_obj2nid( obj );
-#define EXTNAME_LEN 100
-            if (nID == NID_undef) {
-                // no lookup found for the provided OID so nid came back as undefined.
-                char extname[EXTNAME_LEN];
-                OBJ_obj2txt(extname, EXTNAME_LEN, (const ASN1_OBJECT *) obj, 1);
-//                printf("extension name is %s\n", extname);
-
-                ASN1_OCTET_STRING *s = X509_EXTENSION_get_data(ex);
-//                NSLog(@"%@:%d",[NSData dataWithBytes:s->data length:s->length],s->type);
-                staticOOB = [NSData dataWithBytes:s->data length:s->length];
-                break;
-            }
-        }
-        X509_free(x509);
-        if (staticOOB && staticOOB.length >= 16) {
-            return [staticOOB subdataWithRange:NSMakeRange(staticOOB.length-16, 16)];
-        } else {
-            return staticOOB;
-        }
-    }
-    @catch (NSException *exception) {
-        EVP_cleanup();
-        CRYPTO_cleanup_all_ex_data();  //generic
-        X509_free(x509);
-        return nil;
-    }
-}
-
+/// Check Certificate Hex Data
+/// check version & time & Serial Number
+///
+/// "ecdsa-with-SHA256"
+/// check certificate data and return inner public key
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @param superCerData certificate data formatted by x509 IntermediateCertificate der.
+/// @return public key.
 - (NSData *)checkCertificate:(NSData *)cerData withSuperCertificate:(NSData *)superCerData {
     OpenSSL_add_all_algorithms();
 
@@ -913,6 +766,147 @@ X509 *der_to_x509(const unsigned char *der_str, unsigned int der_str_len) {
     }
 }
 
+/// Get Static OOB data from Certificate hex data
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @return Static OOB data.
+- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData {
+    OpenSSL_add_all_algorithms();
+
+    X509* x509 = NULL;
+    NSData *staticOOB = nil;
+    
+    @try {
+        const unsigned char* certificateData = [cerData bytes];
+        long certificateDataLength = [cerData length];
+        x509 = d2i_X509(NULL, &certificateData, certificateDataLength);
+        if (!x509) {
+            NSLog(@"Failed to read certificate, function: d2i_X509");
+            @throw [NSException exceptionWithName:@"Failed to read certificate"   reason:@"crush's function: d2i_X509" userInfo:nil];
+        }
+        
+        //获取staticOOB数据
+        int ExtCount = X509_get_ext_count(x509);
+        for ( int k = 0; k < ExtCount; ++k ) {
+            X509_EXTENSION *ex = X509_get_ext(x509, k);
+
+            if( ex == NULL )
+            continue;
+
+            ASN1_OBJECT* obj = X509_EXTENSION_get_object(ex);
+//            char *extstr;
+//            char *extValue;
+//            extstr=(char*) OBJ_nid2sn(OBJ_obj2nid(obj));
+//            extValue=(char*) OBJ_nid2ln(OBJ_obj2nid(obj));
+//            NSLog(@"%@:%@",[NSString stringWithCString:extstr encoding:NSASCIIStringEncoding],[NSString stringWithCString:extValue encoding:NSASCIIStringEncoding]);
+//            if(!strcmp(extstr,"2.25.234763379998062148653007332685657680359"))
+//            {
+//
+//            }
+
+            if ( obj == NULL )
+            continue;
+
+            int nID = OBJ_obj2nid( obj );
+#define EXTNAME_LEN 100
+            if (nID == NID_undef) {
+                // no lookup found for the provided OID so nid came back as undefined.
+                char extname[EXTNAME_LEN];
+                OBJ_obj2txt(extname, EXTNAME_LEN, (const ASN1_OBJECT *) obj, 1);
+//                printf("extension name is %s\n", extname);
+
+                ASN1_OCTET_STRING *s = X509_EXTENSION_get_data(ex);
+//                NSLog(@"%@:%d",[NSData dataWithBytes:s->data length:s->length],s->type);
+                staticOOB = [NSData dataWithBytes:s->data length:s->length];
+                break;
+            }
+        }
+        X509_free(x509);
+        if (staticOOB && staticOOB.length >= 16) {
+            return [staticOOB subdataWithRange:NSMakeRange(staticOOB.length-16, 16)];
+        } else {
+            return staticOOB;
+        }
+    }
+    @catch (NSException *exception) {
+        EVP_cleanup();
+        CRYPTO_cleanup_all_ex_data();  //generic
+        X509_free(x509);
+        return nil;
+    }
+}
+
+/// Verify the user certificate list using the root certificate.
+/// @param userCerDatas certificate data formatted by x509 DeviceCertificate der.
+/// @param rootCerData certificate data formatted by x509 root der.
+/// @return YES means verify success, NO means verify fail.
+- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData {
+    OpenSSL_add_all_algorithms();
+    //x509证书验证示例,https://blog.csdn.net/chuicao4350/article/details/52875329
+
+    int ret;
+
+    X509 *user = NULL;
+    X509 *ca = NULL;
+
+    X509_STORE *ca_store = NULL;
+    X509_STORE_CTX *ctx = NULL;
+    STACK_OF(X509) *ca_stack = NULL;
+
+    /* x509初始化 */
+    ca_store = X509_STORE_new();
+    ctx = X509_STORE_CTX_new();
+
+    /* 父证书DER编码转X509结构 */
+    ca = der_to_x509(rootCerData.bytes, (unsigned int)rootCerData.length);
+    /* 加入证书存储区 */
+    ret = X509_STORE_add_cert(ca_store, ca);
+    if ( ret != 1 ) {
+        fprintf(stderr, "X509_STORE_add_cert fail, ret = %d\n", ret);
+        goto EXIT;
+    }
+
+    /* 需要校验的证书 */
+    for (NSData *userCerData  in userCerDatas) {
+        user = der_to_x509(userCerData.bytes, (unsigned int)userCerData.length);
+
+        ret = X509_STORE_CTX_init(ctx, ca_store, user, ca_stack);
+        if ( ret != 1 ) {
+            fprintf(stderr, "X509_STORE_CTX_init fail, ret = %d\n", ret);
+            goto EXIT;
+        }
+    }
+    
+    //openssl-1.0.1c/crypto/x509/x509_vfy.h
+    ret = X509_verify_cert(ctx);
+    if ( ret != 1 ) {
+        fprintf(stderr, "X509_verify_cert fail, ret = %d, error id = %d, %s\n",
+                ret, ctx->error, X509_verify_cert_error_string(ctx->error));
+        goto EXIT;
+    }
+    fprintf(stdout, "X509_verify_cert successful\n");
+EXIT:
+    X509_free(user);
+    X509_free(ca);
+
+    X509_STORE_CTX_cleanup(ctx);
+    X509_STORE_CTX_free(ctx);
+
+    X509_STORE_free(ca_store);
+
+    return ret == 1 ? YES : NO;
+}
+
+X509 *der_to_x509(const unsigned char *der_str, unsigned int der_str_len) {
+    X509 *x509;
+    x509 = d2i_X509(NULL, &der_str, der_str_len);
+    if ( NULL == x509 ) {
+        fprintf(stderr, "d2i_X509 fail\n");
+
+        return NULL;
+    }
+    return x509;
+}
+
 - (NSDate *)convertASN1_TIMEToNSDate:(ASN1_TIME *)asn1_time {
     NSString* dateString = [NSString stringWithCString:(const char*)asn1_time->data encoding:NSASCIIStringEncoding];
     NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
@@ -927,6 +921,18 @@ X509 *der_to_x509(const unsigned char *der_str, unsigned int der_str_len) {
     }
     NSDate* d = [formatter dateFromString:dateString];
     return d;
+}
+
+- (NSData *)calculateECB:(NSData *)someData andKey:(NSData *)key {
+    int len;
+    unsigned char iv[16] = {0x00};
+    unsigned char outbuf[16] = {0x00};
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, [key bytes], iv);
+    EVP_EncryptUpdate(ctx, outbuf, &len, [someData bytes], (int) [someData length] / sizeof(unsigned char));
+    EVP_EncryptFinal_ex(ctx, outbuf + len, &len);
+    EVP_CIPHER_CTX_free(ctx);
+    return [[NSData alloc] initWithBytes: outbuf length: 16];
 }
 
 @end

@@ -40,7 +40,13 @@
 }
 
 - (void)updateContent:(AddDeviceModel *)model{
-    _nameLabel.text = [NSString stringWithFormat:@"adr:0x%X\nmac:%@",model.scanRspModel.address,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    NSString *addressString = @"";
+    if (model.state == AddDeviceModelStateScanned || model.state == AddDeviceModelStateConnecting || model.scanRspModel.address == 0) {
+        addressString = @"[Unallocated]";
+    } else {
+        addressString = [NSString stringWithFormat:@"0x%04X", model.scanRspModel.address];
+    }    
+    _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nmac:%@",addressString,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
     _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
     switch (model.state) {

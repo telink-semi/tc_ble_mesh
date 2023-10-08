@@ -25,7 +25,12 @@
 
 @interface OTAFileSource : NSObject
 
-+ (OTAFileSource *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share;
 
 - (NSArray <NSString *>*)getAllBinFile;
 

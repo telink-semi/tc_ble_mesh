@@ -35,7 +35,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigKeyBindManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 /// Do key bound(纯keyBind接口)
 - (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail;

@@ -46,10 +46,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSTimeInterval)incompleteMessageTimeout;
 
-//- (NSTimeInterval)acknowledgmentMessageTimeout;
-
-//- (NSTimeInterval)acknowledgmentMessageInterval:(UInt8)ttl segmentCount:(int)segmentCount;
-
 - (NSTimeInterval)acknowledgmentTimerInterval:(UInt8)ttl;
 
 - (NSTimeInterval)transmissionTimerInterval:(UInt8)ttl;
@@ -61,7 +57,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigNetworkManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 #pragma mark - Receiving messages
 
@@ -74,7 +75,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Sending messages
 
 /// Encrypts the message with the Application Key and a Network Key bound to it, and sends to the given destination address.
-/// This method does not send nor return PDUs to be sent. Instead, for each created segment it calls transmitter's `send(:ofType)`, which should send the PDU over the air. This is in order to support retransmittion in case a packet was lost and needs to be sent again after block acknowlegment was received.
+/// This method does not send nor return PDUs to be sent. Instead, for each created segment it calls transmitter's `send(:ofType)`,
+/// which should send the PDU over the air. This is in order to support retransmittion in case a packet was lost and needs to be sent
+/// again after block acknowlegment was received.
 ///
 /// @param message The message to be sent.
 /// @param element The source Element.
@@ -84,7 +87,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param command The command of the message.
 - (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
 
-/// Encrypts the message with the Device Key and the first Network Key known to the target device, and sends to the given destination address.
+/// Encrypts the message with the Device Key and the first Network Key known to the target device,
+/// and sends to the given destination address.
 /// The `ConfigNetKeyDelete` will be signed with a different Network Key that is being removed.
 ///
 /// @param configMessage The message to be sent.
@@ -93,7 +97,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param command The command of the message.
 - (void)sendConfigMessage:(SigConfigMessage *)configMessage toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command;
 
-/// Replies to the received message, which was sent with the given key set, with the given message. The message will be sent from the local Primary Element.
+/// Replies to the received message, which was sent with the given key set, with the given message.
+/// The message will be sent from the local Primary Element.
 ///
 /// @param origin The destination address of the message that the reply is for.
 /// @param message The response message to be sent.

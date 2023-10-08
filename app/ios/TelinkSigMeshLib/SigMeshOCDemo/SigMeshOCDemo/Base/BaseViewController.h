@@ -26,6 +26,10 @@
 
 @interface BaseViewController : UIViewController
 
+- (void)showTips:(NSString *)message;
+
+- (void)showTips:(NSString *)message sure:(void (^) (UIAlertAction *action))sure;
+
 - (void)isBusy:(NSNotification *)notify;
 
 - (void)normalSetting;

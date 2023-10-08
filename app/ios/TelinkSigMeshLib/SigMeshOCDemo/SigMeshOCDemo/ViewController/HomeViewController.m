@@ -27,7 +27,6 @@
 #import "ReKeyBindViewController.h"
 #import "HomeItemCell.h"
 #import "SingleDeviceViewController.h"
-#import "AddDeviceViewController.h"
 #import "UIViewController+Message.h"
 #import "SensorVC.h"
 #import "RemoteAddVC.h"
@@ -36,7 +35,9 @@
 @interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate,SigDataSourceDelegate,SigMessageDelegate,SigBluetoothDelegate>
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*source;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *AddBarButton;
+@property (weak, nonatomic) IBOutlet UIButton *allONButton;
+@property (weak, nonatomic) IBOutlet UIButton *allOFFButton;
+@property (weak, nonatomic) IBOutlet UIButton *cmdButton;
 @property (assign, nonatomic) BOOL shouldSetAllOffline;//APP will set all nodes offline when user click refresh button.
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
@@ -50,7 +51,7 @@
     int tem = 0;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *node in curNodes) {
-        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess) {
+        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess && node.state != DeviceStateOutOfLine) {
             tem++;
         }
     }
@@ -63,7 +64,7 @@
 }
 
 #pragma mark add node entrance
-- (IBAction)addNewDevice:(UIBarButtonItem *)sender {
+- (void)addNewDevice {
     //v3.3.3.6及之后版本，初次分享过来，没有ivIndex时，需要连接mesh成功或者用户手动输入ivIndex。
     if (!SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
         __weak typeof(self) weakSelf = self;
@@ -106,25 +107,29 @@
 - (void)pushToAddDeviceVC {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
+    [SigDataSource.share setAllDevicesOutline];
     if (isRemoteAdd) {
         TeLogVerbose(@"click remote add device");
-        
         RemoteAddVC *vc = (RemoteAddVC *)[UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
-        [SigDataSource.share setAllDevicesOutline];
         [self.navigationController pushViewController:vc animated:YES];
     } else {
         BOOL isFastAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType] boolValue];
         if (isFastAdd) {
             UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
-            [SigDataSource.share setAllDevicesOutline];
             [self.navigationController pushViewController:vc animated:YES];
         } else {
-            TeLogVerbose(@"click normal add device");
-            
-            //自动添加多个设备
-            AddDeviceViewController *vc = (AddDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceViewControllerID];
-            [SigDataSource.share setAllDevicesOutline];
-            [self.navigationController pushViewController:vc animated:YES];
+            BOOL isAutoProvision = [[[NSUserDefaults standardUserDefaults] valueForKey:kAutoProvision] boolValue];
+            if (isAutoProvision) {
+                TeLogVerbose(@"click auto add device");
+                //自动添加多个设备
+                UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AutoAddDeviceVCID];
+                [self.navigationController pushViewController:vc animated:YES];
+            } else {
+                TeLogVerbose(@"click normal add device");
+                //先扫描，用户选择添加设备
+                UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceVCID];
+                [self.navigationController pushViewController:vc animated:YES];
+            }
         }
     }
 }
@@ -169,14 +174,14 @@
 - (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
 //    TeLogDebug(@"");
     
-    int tem = 0;
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-    for (SigNodeModel *node in curNodes) {
-        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess) {
-            tem++;
-        }
-    }
-    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:tem successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+//    int tem = 0;
+//    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+//    for (SigNodeModel *node in curNodes) {
+//        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess) {
+//            tem++;
+//        }
+//    }
+    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
     } resultCallback:resultCallback];
     if (result && self.shouldSetAllOffline) {
@@ -316,22 +321,14 @@
                         [ShowTipsHandle.share show:t];
                         [ShowTipsHandle.share delayHidden:1.0];
                         weakSelf.cancelDistributorAddress = addressNumber.intValue;
-                        #ifdef kExist
-                        if (kExistMeshOTA) {
-                            MeshOTAManager.share.distributorAddress = addressNumber.intValue;
-                        }
-                        #endif
+                        MeshOTAManager.share.distributorAddress = addressNumber.intValue;
                         [weakSelf workNormal];
                     }
                 }]];
                 [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                     TeLogDebug(@"点击取消");
                     weakSelf.cancelDistributorAddress = addressNumber.intValue;
-                    #ifdef kExist
-                    if (kExistMeshOTA) {
-                        MeshOTAManager.share.distributorAddress = addressNumber.intValue;
-                    }
-                    #endif
+                    MeshOTAManager.share.distributorAddress = addressNumber.intValue;
                     [weakSelf workNormal];
                 }]];
                 [weakSelf presentViewController:alertController animated:YES completion:nil];
@@ -355,16 +352,6 @@
     });
 }
 
-- (void)showTips:(NSString *)tips{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:tips preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
-        }]];
-        [self presentViewController:alertController animated:YES completion:nil];
-    });
-}
-
 - (void)getOnOffAction {
     //Demo can show Bluetooth.share.currentPeripheral in HomeViewController when CanControl callback.
     [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
@@ -377,6 +364,12 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = NO;
+    if (SigDataSource.share.curMeshIsVisitor) {
+        self.navigationItem.rightBarButtonItem = nil;
+    } else {
+        UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDevice)];
+        self.navigationItem.rightBarButtonItem = item;
+    }
     //get status of node
     SigBearer.share.dataDelegate = self;
     SigMeshLib.share.delegateForDeveloper = self;
@@ -414,6 +407,9 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    self.allONButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.allOFFButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.cmdButton.backgroundColor = UIColor.telinkButtonBlue;
     self.needDelayReloadData = NO;
     SigDataSource.share.delegate = self;
     self.title = @"Device";
@@ -486,23 +482,19 @@
 //    TeLogInfo(@"bearer did open!");
 //    [self blockState];
     if (self.cancelDistributorAddress) {
-        #ifdef kExist
-        if (kExistMeshOTA) {
-            __weak typeof(self) weakSelf = self;
-            [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
-                weakSelf.cancelDistributorAddress = 0;
-                [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
-                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
-                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
-                [[NSUserDefaults standardUserDefaults] synchronize];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *tip = [NSString stringWithFormat:@"cancel Mesh ota finish!"];
-                    [weakSelf showTips:tip];
-                    [weakSelf freshOnline:nil];
-                });
-            }];
-        }
-        #endif
+        __weak typeof(self) weakSelf = self;
+        [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
+            weakSelf.cancelDistributorAddress = 0;
+            [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
+            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
+            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSString *tip = [NSString stringWithFormat:@"cancel Mesh ota finish!"];
+                [weakSelf showTips:tip];
+                [weakSelf freshOnline:nil];
+            });
+        }];
     } else {
         //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此次再次修改)
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -528,9 +520,12 @@
     TeLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
-///// Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!（如果APP实现了该代理方法，SDK会在当前provisioner地址还剩余10个或者更少的时候给provisioner分配一段新的地址区间。如果APP未实现该方法，SDK在但区间耗尽时超界分配地址(即- (UInt16)provisionAddress方法会返回非本区间的地址)。）
-///// @param unicastRange Randge model had beed change.
-///// @param provisioner provisioner of unicastRange.
+/**
+ * @brief   Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!
+ * @param   unicastRange Randge model had beed change.
+ * @param   provisioner provisioner of unicastRange.
+ * @note    The address of the last node may be out of range.
+ */
 //- (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner {
 //    //注意：客户如果不想使用SDK分配的区间，可以从provisioner里面remove这个SDK创建的unicastRange。
 //    TeLogVerbose(@"当前provisioner的地址区间已经被分配完毕，SDK自动给provisioner.uuid=%@分配新的地址区间%@~~~>%@",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress);
@@ -557,6 +552,10 @@
 
 #pragma mark - SigMessageDelegate
 
+/// A callback called whenever a Mesh Message has been received from the mesh network.
+/// @param message The received message.
+/// @param source The Unicast Address of the Element from which the message was sent.
+/// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
     if ([message isKindOfClass:[SigGenericOnOffStatus class]]
         || [message isKindOfClass:[SigTelinkOnlineStatusMessage class]]
@@ -570,10 +569,14 @@
     }
 }
 
+/// A callback called whenever a SigSecureNetworkBeacon Message has been received from the mesh network.
+/// @param message The received message.
 - (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message {
     TeLogInfo(@"%@",message);
 }
 
+/// A callback called whenever a SigMeshPrivateBeacon Message has been received from the mesh network.
+/// @param message The received message.
 - (void)didReceiveSigMeshPrivateBeaconMessage:(SigMeshPrivateBeacon *)message {
     TeLogInfo(@"%@",message);
 }

@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet UIButton *sendButton;
 @property (weak, nonatomic) IBOutlet UIView *bgView;
 
+@property (nonatomic, strong) UIViewController *vc;
 @end
 
 NS_ASSUME_NONNULL_END

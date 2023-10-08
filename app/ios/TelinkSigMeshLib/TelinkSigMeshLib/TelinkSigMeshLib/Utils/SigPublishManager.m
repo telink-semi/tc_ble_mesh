@@ -30,10 +30,19 @@
 
 @implementation SigPublishManager
 
-+ (SigPublishManager *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigPublishManager *sharePublish = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         sharePublish = [[SigPublishManager alloc] init];
         [sharePublish initData];
     });
@@ -63,6 +72,8 @@
     }
 }
 
+/// Start monitoring the online and offline status of node.
+/// - Parameter address: The unicastAddress of node.
 - (void)startCheckOfflineTimerWithAddress:(NSNumber *)address{
     SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:address.intValue];
     if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod) {
@@ -75,6 +86,8 @@
     }
 }
 
+/// Stop monitoring the online and offline status of node.
+/// - Parameter address: The unicastAddress of node.
 - (void)stopCheckOfflineTimerWithAddress:(NSNumber *)address{
     BackgroundTimer *timer = _checkOfflineTimerDict[address];
     if (timer) {

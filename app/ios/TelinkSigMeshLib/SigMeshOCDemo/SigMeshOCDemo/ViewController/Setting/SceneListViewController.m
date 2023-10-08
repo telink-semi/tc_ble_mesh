@@ -24,8 +24,8 @@
 #import "SceneListViewController.h"
 #import "SceneItemCell.h"
 #import "SceneDetailViewController.h"
-#import "DeviceStateItemView.h"
 #import "UIViewController+Message.h"
+#import "DeviceElementItemView.h"
 
 @interface SceneListViewController ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -56,18 +56,20 @@
     }];
     
     for (UIView *view in cell.contentView.subviews) {
-        if ([view isMemberOfClass:[DeviceStateItemView class]]) {
+        if ([view isMemberOfClass:[DeviceElementItemView class]]) {
             [view removeFromSuperview];
         }
     }
     if (model.actionList.count > 0) {
         for (int i=0; i<model.actionList.count; i++) {
-            DeviceStateItemView *view = [[DeviceStateItemView alloc] init];
+            DeviceElementItemView *view = [[NSBundle mainBundle] loadNibNamed:@"DeviceElementItemView" owner:self options:nil].firstObject;
+            view.selectButton.hidden = YES;
             view.frame = CGRectMake(20, 44+45.0*i, [UIScreen mainScreen].bounds.size.width-20, 45.0);
             [view updateContent:model.actionList[i]];
             [cell.contentView addSubview:view];
         }
     }
+
     return cell;
 }
 

@@ -25,21 +25,30 @@
 
 @implementation SigSegmentedMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _sequenceZero = 0;
     }
     return self;
 }
 
+/// Returns whether the message is composed of only a single
+/// segment. Single segment messages are used to send short,
+/// acknowledged messages. The maximum size of payload of upper
+/// transport control PDU is 8 bytes.
 - (BOOL)isSingleSegment {
     return _lastSegmentNumber == 0;
 }
 
+/// Returns the `segmentOffset` as `Int`.
 - (int)index {
     return (int)_segmentOffset;
 }
 
+/// Returns the expected number of segments for this message.
 - (int)count {
     return (int)_lastSegmentNumber + 1;
 }

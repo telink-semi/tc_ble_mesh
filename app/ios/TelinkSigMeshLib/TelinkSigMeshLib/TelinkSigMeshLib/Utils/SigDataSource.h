@@ -23,61 +23,126 @@
 
 #import <Foundation/Foundation.h>
 
-@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigIvIndex,SigExclusionModel,SigBaseMeshMessage, SigForwardingTableModel;
+NS_ASSUME_NONNULL_BEGIN
+
+@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigExclusionListObjectModel, SigIvIndex,SigBaseMeshMessage, SigForwardingTableModel;
 
 @protocol SigDataSourceDelegate <NSObject>
 @optional
 
-/// Callback called when the sequenceNumber or ivIndex change.
-/// @param sequenceNumber sequenceNumber of current provisioner.
-/// @param ivIndex ivIndex of current mesh network.
+/**
+ * @brief   Callback called when the sequenceNumber or ivIndex change.
+ * @param   sequenceNumber sequenceNumber of current provisioner.
+ * @param   ivIndex ivIndex of current mesh network.
+ */
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex;
 
-/// Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!（如果APP实现了该代理方法，SDK会在当前provisioner地址还剩余10个或者更少的时候给provisioner分配一段新的地址区间。如果APP未实现该方法，SDK在但区间耗尽时超界分配地址(即- (UInt16)provisionAddress方法会返回非本区间的地址)。）
-/// @param unicastRange Randge model had beed change.
-/// @param provisioner provisioner of unicastRange.
+/**
+ * @brief   Callback called when the unicastRange of provisioner had been changed.
+ * APP need update the json to cloud at this time!
+ * @param   unicastRange Randge model had beed change.
+ * @param   provisioner provisioner of unicastRange.
+ * @note    The address of the last node may be out of range.
+ */
 - (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner;
 
 @end
 
+
+/// This specification defines a representation of the Mesh Configuration Database in
+/// JavaScript Object Notation (JSON), as defined by [2], and follows the format defined
+/// by the JSON Schema Draft 4 [3]. Guidelines for creating the Mesh Configuration
+/// Database are provided in Appendix A.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.7),
+/// 2 Mesh Configuration Database format.
 @interface SigDataSource : NSObject
 
-@property (nonatomic, weak) id <SigDataSourceDelegate>delegate;
-
-@property (nonatomic, strong) NSMutableArray<SigProvisionerModel *> *provisioners;
-
-@property (nonatomic, strong) NSMutableArray<SigNodeModel *> *nodes;
-
-@property (nonatomic, strong) NSMutableArray<SigGroupModel *> *groups;
-
-@property (nonatomic, strong) NSMutableArray<SigSceneModel *> *scenes;
-
-@property (nonatomic, strong) NSMutableArray<SigNetkeyModel *> *netKeys;
-
-@property (nonatomic, strong) NSMutableArray<SigAppkeyModel *> *appKeys;
-
-/// The networkExclusions property contains the array of exclusionList objects
-@property (nonatomic, strong) NSMutableArray<SigExclusionModel *> *networkExclusions;
-
-/*JSON中存储格式为：
- "standardUUID": {
- "type": "string",
- "name": "UUID",
- "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}
+/*
+ 2.1 Mesh object
+ A Mesh Configuration Database shall contain a single JSON object that
+ describes the mesh network, called the Mesh Object. The Mesh Object
+ shall only contain information about a single mesh network and associated
+ subnets. The Mesh Object documents the current state of the mesh network
+ known by the device that generates and maintains this database.
  */
-@property (nonatomic, copy) NSString *meshUUID;
 
+/// The $schema property contains a URL (see Section 4) that points to the version of the JSON
+/// Schema specification that is used to generate the Mesh Configuration Database schema,
+/// which corresponds to JSON Schema Draft 4 [3].
 @property (nonatomic, copy) NSString *schema;
+
+/// The id property contains a URL (see Section 4) that points to the version of the Mesh
+/// Configuration Database schema that defines the format for this Mesh Object.
 @property (nonatomic, copy) NSString *jsonFormatID;
 
+/// The version property contains a string that represents a version number of the Mesh
+/// Configuration Database that this Mesh Object supports. The version property for the Mesh
+/// Configuration Database that is defined by this specification is “1.0.1”.
 @property (nonatomic, copy) NSString *version;
 
+/// The meshUUID property is defined as a string that represents the 128-bit Universally
+/// Unique Identifier (UUID), which allows differentiation among multiple mesh networks.
+/// This string shall follow the UUID string representation format as defined by [7].
+/// @note   UUID format in JSON："standardUUID": {
+/// "type": "string",
+/// "name": "UUID",
+/// "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}
+@property (nonatomic, copy) NSString *meshUUID;
+
+/// The meshName property contains a UTF-8 string, which should be a human-readable
+/// name for the mesh network. This is useful when a Mesh Manager tracks multiple mesh
+/// networks to enable a user to identify different mesh networks.
 @property (nonatomic, copy) NSString *meshName;
-/// The timestamp property contains a hexadecimal string that contains an integer representing the last time the Provisioner database has been modified. 
+
+/// The timestamp property contains a string that represents the last time the Mesh Object
+/// has been modified. The timestamp is based on Coordinated Universal Time (UTC) and
+/// follows the “date-time” format as defined by JSON Schema Draft 4 [3], which is based
+/// on the Internet date/time format described in Section 5.6 of RFC 3339 [6]:
+/// YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DDThh:mm:ss+/- timeoffset
+/// where “YYYY” denotes a year; “MM” denotes a two-digit month (01 to 12); “DD” denotes
+/// a two-digit day of the month (01 to 31); “hh” denotes a two-digit hour (00 to 23); “mm”
+/// denotes a two-digit minute (00 to 59);'ss" denotes a two-digit second (00 to 59); “Z” denotes
+/// the UTC time zone; and “timeoffset” denotes the offset between local time and UTC in the
+/// format of +hh:mm or -hh:mm.
 @property (nonatomic, copy) NSString *timestamp;
 
 /// The partial property indicates if this Mesh Configuration Database is part of a larger database.
 @property (nonatomic, assign) bool partial;
+
+/// The provisioners property contains an array of provisioner objects (see Section 2.1.1) that
+/// includes information about known Provisioners and ranges of addresses that have been
+/// allocated to these Provisioners.
+@property (nonatomic, strong) NSMutableArray<SigProvisionerModel *> *provisioners;
+
+/// The netKeys property contains an array of network key objects (see Section 2.1.2) that
+/// includes information about network keys used in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigNetkeyModel *> *netKeys;
+
+/// The appKeys property contains an array of application key objects (see Section 2.1.3) that
+/// includes information about application keys used in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigAppkeyModel *> *appKeys;
+
+/// The nodes property contains an array of node objects (see Section 2.1.4) that includes
+/// information about mesh nodes in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigNodeModel *> *nodes;
+
+/// The groups property contains an array of group objects (see Section 2.1.5) that includes
+/// information about groups configured in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigGroupModel *> *groups;
+
+/// The scenes property contains an array of scene objects (see Section 2.1.6) that includes
+/// information about scenes configured in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigSceneModel *> *scenes;
+
+/// The networkExclusions property contains the array of exclusionList objects
+/// (see section 2.1.7).(Optional)
+@property (nonatomic, strong) NSMutableArray<SigExclusionListObjectModel *> *networkExclusions;
+
+/// The proxy for callbacks when Mesh data has been updated.
+/// @note   1.Callback called when the sequenceNumber or ivIndex change.
+/// @note   2.Callback called when the unicastRange of provisioner had been changed.
+@property (nonatomic, weak) id <SigDataSourceDelegate>delegate;
+
 
 @property (nonatomic,strong) NSMutableArray <SigEncryptedModel *>*encryptedArray;
 
@@ -90,7 +155,7 @@
 /* cache value */
 @property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
 /// nodes should show in HomeViewController
-@property (nonatomic,strong) NSMutableArray <SigNodeModel *>*curNodes;
+@property (nonatomic,strong, nullable) NSMutableArray <SigNodeModel *>*curNodes;
 /// There is the modelID that show in ModelIDListViewController, it is using when app use whiteList at keybind.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*keyBindModelIDs;
 /// modelID of subscription group
@@ -101,7 +166,8 @@
 @property (nonatomic, assign) UInt16 unicastAddressOfConnected;
 @property (nonatomic, assign) BOOL needPublishTimeModel;
 @property (nonatomic, strong) NSMutableArray <SigOOBModel *>*OOBList;
-/// `YES` means SDK will add staticOOB devcie that never input staticOOB data by noOOB provision. `NO` means SDK will not add staticOOB devcie that never input staticOOB data.
+/// `YES` means SDK will add staticOOB devcie that never input staticOOB data by noOOB provision.
+/// `NO` means SDK will not add staticOOB devcie that never input staticOOB data.
 @property (nonatomic, assign) BOOL addStaticOOBDeviceByNoOOBEnable;
 /// default retry count of every command. default is 2.
 @property (nonatomic, assign) UInt8 defaultRetryCount;
@@ -151,139 +217,605 @@
 
 /// v3.3.3.6及之后的版本添加，
 @property (nonatomic, assign) BOOL sendByDirectedSecurity;
+@property (nonatomic, strong) SigProxyFilterModel *filterModel;
+//@property (nonatomic, strong) NSMutableArray <SigNodeSeqZeroModel *>*nodeSequenceNumberCacheList;
+@property (nonatomic, strong) NSMutableArray <SigNodeSequenceNumberCacheModel *>*nodeSequenceNumberCacheList;
 
-//取消该限制：因为客户可以init该类型，用于创建一个中间的mesh数据，用于比较前后的mesh信息。
+
+//取消该限制：客户可以初始化该类型的对象，创建一个中间的mesh数据，用于比较前后的mesh信息。
 //+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 //- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share;
 
-+ (SigDataSource *)share;
-
-- (NSDictionary *)getDictionaryFromDataSource;
+/**
+ * @brief   Set mesh dictionary to SDK DataSource.
+ * @param   dictionary    mesh dictionary.
+ */
 - (void)setDictionaryToDataSource:(NSDictionary *)dictionary;
+
+/**
+ * @brief   Get dictionary for save local.
+ * @return  mesh dictionary
+ * @note    Developer need use this API to get mesh data save locally.
+ */
+- (NSDictionary *)getDictionaryFromDataSource;
+
+/**
+ * @brief   Get formatDictionary for Export mesh.
+ * @return  mesh formatDictionary
+ * @note    Developer need use this API to export mesh data.
+ */
 - (NSDictionary *)getFormatDictionaryFromDataSource;
 
-- (UInt16)provisionAddress;
-- (SigProvisionerModel *)curProvisionerModel;
-- (NSData *)curNetKey;
-- (NSData *)curAppKey;
-- (SigNodeModel *)curLocationNodeModel;
-- (NSInteger)getOnlineDevicesNumber;
-- (BOOL)hasNodeExistTimeModelID;
-///Special handling: store the uuid of current provisioner.
-- (void)saveCurrentProvisionerUUID:(NSString *)uuid;
-///Special handling: get the uuid of current provisioner.
-- (NSString *)getCurrentProvisionerUUID;
+/**
+ * @brief   Get the unicastAddress for provision in add device process.
+ * @return  unicastAddress for provision
+ * @note    The address of the last node may be out of range..
+ */
+- (UInt16)provisionAddress DEPRECATED_MSG_ATTRIBUTE("Use 'getProvisionAddressWithElementCount:' instead");
 
-/// Special handling: store the ivIndex+sequenceNumber of current meshUUID+provisionerUUID+unicastAddress.
-- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber;
-- (NSString *)getLocationIvIndexString;
-- (UInt32)getLocationIvIndexUInt32;
-- (NSString *)getLocationSequenceNumberString;
-- (UInt32)getLocationSequenceNumberUInt32;
-- (BOOL)existLocationIvIndexAndLocationSequenceNumber;
+/**
+ * @brief   Get the unicastAddress for provision in add device process.
+ * @param   elementCount    the element count of node.
+ * @return  unicastAddress for provision
+ * @note    If the allocatedUnicastRange of provision has been exhausted, SDK will add a new allocatedUnicastRange. 0 means all allocatedUnicastRange is exhausted.
+ */
+- (UInt16)getProvisionAddressWithElementCount:(UInt8)elementCount;
+
+/**
+ * @brief   Get current netKey hex data of current mesh.
+ * @return  netKey hex data
+ */
+- (NSData *)curNetKey;
+
+/**
+ * @brief   Get current appKey hex data of current mesh.
+ * @return  appKey hex data
+ */
+- (NSData *)curAppKey;
+
+/**
+ * @brief   Get local provisioner of current mesh.
+ * @return  local provisioner
+ */
+- (SigProvisionerModel *)curProvisionerModel;
+
+/**
+ * @brief   Get local provisioner node of current mesh.
+ * @return  local provisioner node
+ */
+- (SigNodeModel *)curLocationNodeModel;
+
+/**
+ * @brief   Get online node count of current mesh.
+ * @return  online node count
+ */
+- (NSInteger)getOnlineDevicesNumber;
+
+/**
+ * @brief   Determine whether there is a node containing the time modelID.
+ * @return  `YES` means exist, `NO` means not exist.
+ */
+- (BOOL)hasNodeExistTimeModelID;
+
+/**
+ * @brief   Get the ivIndex of current mesh.
+ * @return  ivIndex
+ */
 - (UInt32)getIvIndexUInt32;
+
+/**
+ * @brief   Set the ivIndex to current mesh.
+ * @param   ivIndexUInt32    the ivIndex of mesh.
+ * @note    Developer can set ivIndex by this API if ivIndex is save in other place. Range is 0~0xFFFFFFFF, SDK will trigger ivUpdate process when sequenceNumber is greater than 0xC00000.
+ */
 - (void)setIvIndexUInt32:(UInt32)ivIndexUInt32;
+
+/**
+ * @brief   Get the SequenceNumber of current mesh.
+ * @return  SequenceNumber
+ */
 - (UInt32)getSequenceNumberUInt32;
+
+/**
+ * @brief   Set the sequenceNumber to current mesh.
+ * @param   sequenceNumberUInt32    the sequenceNumber of mesh.
+ * @note    Developer can set sequenceNumber by this API if sequenceNumber is save in other place. Range is 0~0xFFFFFF, SDK will trigger ivUpdate process when sequenceNumber is greater than 0xC00000.
+ */
 - (void)setSequenceNumberUInt32:(UInt32)sequenceNumberUInt32;
-- (NSData *)getIvIndexData;
+
+/**
+ * @brief   Get the SigNodeSequenceNumberCacheModel from the match SequenceNumberCache through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  A SigNodeSequenceNumberCacheModel that save NodeSequenceNumber infomation. nil means there are no SigNodeSequenceNumberCacheModel match this unicastAddress had been receive.
+ * @note    SDK will clean all SigNodeSequenceNumberCacheModel when connect mesh success, then SDK add SigNodeSequenceNumberCacheModel by all mesh message notify on current mesh.
+ */
+- (SigNodeSequenceNumberCacheModel *)getSigNodeSequenceNumberCacheModelWithUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Update ivIndex in local after SDK receivce a new vaild beacon.
+ * @param   ivIndexUInt32    the new ivIndexUInt32.
+ * @note    Callback this API when SDK receivce a new vaild beacon.
+ */
 - (void)updateIvIndexUInt32FromBeacon:(UInt32)ivIndexUInt32;
+
+/**
+ * @brief   Update sequenceNumber after SDK send a mesh message.
+ * @param   sequenceNumberUInt32    the sequenceNumberUInt32 for next networkPDU.
+ * @note    Callback this API when SDK send a networkPDU in SigNetworkLayer.
+ */
 - (void)updateSequenceNumberUInt32WhenSendMessage:(UInt32)sequenceNumberUInt32;
 
-/// Init SDK location Data(include create mesh.json, check provisioner, provisionLocation)
+/**
+ * @brief   Loading local mesh data
+ * @note    1.create provisionerUUID if need. 2.create mesh if need. 3.check provisioner. 4.load SigScanRspModel cache list.
+ */
 - (void)configData;
 
-/// check SigDataSource.provisioners, this api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
+/**
+ * @brief   Check SigDataSource.provisioners.
+ * @note    This api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
+ */
 - (void)checkExistLocationProvisioner;
 
-- (void)changeLocationProvisionerNodeAddressToAddress:(UInt16)address;
+/**
+ * @brief   Add node of provisioner to mesh network.
+ * @param   provisioner    the SigProvisionerModel object.
+ * @note    Callback this API when add a new provisioner to the mesh network.
+ */
+- (void)addLocationNodeWithProvisioner:(SigProvisionerModel *)provisioner;
 
+/**
+ * @brief   Add node to mesh network.
+ * @param   model    the SigNodeModel object.
+ * @note    Callback this API when provision success.
+ */
 - (void)addAndSaveNodeToMeshNetworkWithDeviceModel:(SigNodeModel *)model;
 
+/**
+ * @brief   Delete node from mesh network.
+ * @param   deviceAddress    the unicastAddress of node.
+ * @note    Callback this API when APP delete node complete. 1.SDK will set this node to blacklisted, then optimization Data Of Blacklisted.  2.Delete action with this unicasetAddress in scene. 3.Delete ScanRspModel of this unicastAddress. 4.Delete SigEncryptedModel of this unicastAddress.
+ */
 - (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress;
 
+/**
+ * @brief   Get max unicast address of all provisioner.allocatedUnicastRange.
+ * @return  new scene address, min address is 1.
+ * @note    new scene address = exist scene address + 1, min address is 1.
+ */
+- (UInt16)getMaxHighAllocatedUnicastAddress;
+
+/**
+ * @brief   add or delete the groupID of node.
+ * @param   add    `YES` means add groupID to node, `NO` means delete groupID from node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @param   groupAddress    the groupAddress of group.
+ */
 - (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress;
 
+/**
+ * @brief   Update the state of all nodes to DeviceStateOutOfLine.
+ * @note    1.set _curNodes to nil. 2.set node of _nodes to DeviceStateOutOfLine.
+ */
 - (void)setAllDevicesOutline;
 
+/**
+ * @brief   Save Current SigDataSource to local by NSUserDefaults.
+ * @note    1.sort _nodes, sort _groups, sort _scene. 2.change SigDataSource to data, and save by NSUserDefaults. 3. save encrypt json data to file `TelinkSDKMeshJsonData`.
+ */
 - (void)saveLocationData;
-- (void)saveLocationProvisionAddress:(NSInteger)address;
 
+/**
+ * @brief   update the state of node.
+ * @param   responseMessage    the state responseMessage of node.
+ * @param   source    the unicastAddress of responseMessage.
+ */
 - (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source;
 
+/**
+ * @brief   Get the new scene address for add a new scene object.
+ * @return  new scene address, min address is 1.
+ * @note    new scene address = exist scene address + 1, min address is 1.
+ */
 - (UInt16)getNewSceneAddress;
+
+/**
+ * @brief   Add or Update the infomation of  SigSceneModel to _scenes..
+ * @param   model    the SigSceneModel object.
+ */
 - (void)saveSceneModelWithModel:(SigSceneModel *)model;
+
+/**
+ * @brief   Delete SigSceneModel from _scenes..
+ * @param   model   the SigSceneModel object.
+ */
 - (void)deleteSceneModelWithModel:(SigSceneModel *)model;
 
+/**
+ * @brief   Get the SigEncryptedModel from the match advertisementDataServiceData cache through the unicastAddress of node..
+ * @param   address    the unicastAddress of node.
+ * @return  A SigEncryptedModel that save advertisementDataServiceData infomation. nil means there are no SigEncryptedModel match this unicastAddress had been scaned.
+ * @note    SDK will cache the SigEncryptedModel when SDK scaned the nodeIdentity broadcast data of provisioned node or when SDK scaned the nodeIdentity broadcast data of provisioned node.
+ */
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address;
-///Special handling: determine model whether exist current meshNetwork
+
+/**
+ * @brief   Determine whether the SigScanRspModel is in current mesh network.
+ * @param   model    the ScanRspModel object.
+ * @return  `YES` means model belong to the network, `NO` means model does not belong to the network.
+ * @note    The SigScanRspModel has all infomation of peripheral in Apple System.
+ */
 - (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model;
-///Special handling: determine peripheralUUIDString whether exist current meshNetwork
+
+/**
+ * @brief   Determine whether the peripheralUUIDString is in current mesh network.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @return  `YES` means peripheralUUIDString belong to the network, `NO` means peripheralUUIDString does not belong to the network.
+ * @note    The peripheralUUIDString is the peripheral identify in Apple System.
+ */
 - (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString;
+
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is nodeIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   nodes    the node list of mesh network.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey;
+
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is privateNetworkIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchPrivateNetworkIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString networkKey:(SigNetkeyModel *)networkKey;
+
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is privateNodeIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   nodes    the node list of mesh network.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchPrivateNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey;
 
-///Special handling: update the uuid and MAC mapping relationship.
+/**
+ * @brief   update the ScanRspModel object infomation to dataSource.
+ * @param   model    the ScanRspModel object.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
 - (void)updateScanRspModelToDataSource:(SigScanRspModel *)model;
-- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)uuid;
-- (SigScanRspModel *)getScanRspModelWithMac:(NSString *)mac;
-- (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address;
-- (void)deleteScanRspModelWithAddress:(UInt16)address;
 
-- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId;
-- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index;
+/**
+ * @brief   Get the ScanRspModel object through the peripheral UUIDString of node.
+ * @param   peripheralUUIDString    the peripheral UUIDString of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)peripheralUUIDString;
 
-- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex;
+/**
+ * @brief   Get the ScanRspModel object through the macAddress of node.
+ * @param   macAddress    the macAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithMacAddress:(NSString *)macAddress;
 
-- (SigNodeModel *)getNodeWithUUID:(NSString *)uuid;
-- (SigNodeModel *)getNodeWithAddress:(UInt16)address;
-- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress;
-- (SigNodeModel *)getCurrentConnectedNode;
+/**
+ * @brief   Get the ScanRspModel object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithUnicastAddress:(UInt16)unicastAddress;
 
+/**
+ * @brief   Delete the ScanRspModel object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (void)deleteScanRspModelWithUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Get the netKey object through the networkId of netKey.
+ * @param   networkId    the networkId of netKey.
+ * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this networkId in mesh network.
+ */
+- (SigNetkeyModel * _Nullable)getNetkeyModelWithNetworkId:(NSData *)networkId;
+
+/**
+ * @brief   Get the netKey object through the netKeyIndex of netKey.
+ * @param   netKeyIndex    the netKeyIndex of netKey.
+ * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this netKeyIndex in mesh network.
+ */
+- (SigNetkeyModel * _Nullable)getNetkeyModelWithNetkeyIndex:(NSInteger)netKeyIndex;
+
+/**
+ * @brief   Get the appKey object through the appKeyIndex of appKey.
+ * @param   appkeyIndex    the appKeyIndex of appKey.
+ * @return  A SigAppkeyModel that save appKey infomation. nil means there are no appKey with this appKeyIndex in mesh network.
+ */
+- (SigAppkeyModel * _Nullable)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex;
+
+/**
+ * @brief   Get the node object through the bluetooth PeripheralUUID of node.
+ * @param   peripheralUUIDString    the bluetooth PeripheralUUID of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network. The bluetooth PeripheralUUID is the unique identifier of Apple System.
+ */
+- (SigNodeModel * _Nullable)getNodeWithPeripheralUUIDString:(NSString *)peripheralUUIDString;
+
+/**
+ * @brief   Get the node object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network.
+ */
+- (SigNodeModel * _Nullable)getNodeWithAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Get current connected node object.
+ * @return  A SigNodeModel that save node infomation. nil means there are no connected node in the mesh network.
+ */
+- (SigNodeModel * _Nullable)getCurrentConnectedNode;
+
+/**
+ * @brief   Get the provisioner object through the provisioner node address.
+ * @param   address    the unicastAddress of provisioner node.
+ * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this unicastAddress.
+ */
 - (SigProvisionerModel * _Nullable)getProvisionerModelWithAddress:(UInt16)address;
 
-- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID;
+/**
+ * @brief   Get the provisioner object through the provisionerUUID.
+ * @param   provisionerUUIDString    The UUID String of provisioner.
+ * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this UUID.
+ */
+- (SigProvisionerModel * _Nullable)getProvisionerModelWithProvisionerUUIDString:(NSString *)provisionerUUIDString;
 
-- (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress;
+/**
+ * @brief   Get the modelID object through the modelID
+ * @param   modelID    The id of model.
+ * @return  A ModelIDModel that save model infomation. nil means no model infomation of this modelID.
+ */
+- (ModelIDModel * _Nullable)getModelIDModel:(NSNumber *)modelID;
 
-- (DeviceTypeModel *)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID;
+/**
+ * @brief   Get the group object through the group address
+ * @param   groupAddress    The address of group.
+ * @return  A SigGroupModel that save group infomation. nil means no group infomation of this groupAddress.
+ */
+- (SigGroupModel * _Nullable)getGroupModelWithGroupAddress:(UInt16)groupAddress;
+
+/**
+ * @brief   Obtain the DeviceTypeModel through the PID and CID of the node.
+ * @param   CID    The company id of node.
+ * @param   PID    The product id of node.
+ * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
+ * @note    This API is using to get the DeviceTypeModel through the PID and CID of the node, DeviceTypeModel has default composition data of node.
+ */
+- (DeviceTypeModel * _Nullable)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID;
 
 #pragma mark - OOB存取相关
 
+/**
+ * @brief   Add a oobModel cached by the SDK.
+ * @param   oobModel    an oob object.
+ * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ */
 - (void)addAndUpdateSigOOBModel:(SigOOBModel *)oobModel;
+
+/**
+ * @brief   Add a list of oobModel cached by the SDK.
+ * @param   oobModelList    a list of oob object.
+ * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ */
 - (void)addAndUpdateSigOOBModelList:(NSArray <SigOOBModel *>*)oobModelList;
+
+/**
+ * @brief   Delete one oobModel cached by the SDK.
+ * @param   oobModel    The oob object.
+ * @note    This API is using to delete oob infomation of node, oob infomation is use for OOB provision.
+ */
 - (void)deleteSigOOBModel:(SigOOBModel *)oobModel;
+
+/**
+ * @brief   Remove all OOB data cached by the SDK.
+ * @note    This API is using to delete oob infomation of all nodes, oob infomation is use for OOB provision.
+ */
 - (void)deleteAllSigOOBModel;
+
+/**
+ * @brief   Obtaining OOB information of node based on UUID of unprovision node.
+ * @param   UUIDString    The UUID of unprovision node, app get UUID from scan unprovision node.
+ * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
+ * @note    This API is using to get oob infomation of node, oob infomation is use for OOB provision.
+ */
 - (SigOOBModel *)getSigOOBModelWithUUID:(NSString *)UUIDString;
 
 #pragma mark - new api since v3.3.3
 
-- (UInt16)getMaxUsedUnicastAddressOfJson;
-
-- (UInt16)getMaxUsedUnicastAddressOfJsonWithProvisioner:(SigProvisionerModel *)provisioner;
-
-- (UInt16)getMaxUsedUnicastAddressOfJsonWithUnicastRange:(SigRangeModel *)unicastRange;
-
-/// 修正下一次添加设备使用的短地址到当前provisioner的地址范围，剩余地址个数小于10时给当前provisioner再申请一个地址区间
-- (void)fixUnicastAddressOfAddDeviceOnAllocatedUnicastRange;
-
-/// 地址范围是1~0x7FFF,其它值为地址耗尽，分配地址失败。返回用于添加设备的地址，如果APP未实现代理方法`onUpdateAllocatedUnicastRange:ofProvisioner:`则本Provisioner地址耗尽时会超界分配地址，如果APP实现了代理方法`onUpdateAllocatedUnicastRange:ofProvisioner:`则本Provisioner地址耗尽时会重新分配地址区间并通过该代理方法回调给APP，如果所有地址区间都已经分配完成则会超界分配地址且不新增区间也不回调区间更新方法。
-- (UInt16)getNextUnicastAddressOfProvision;
-
-/// 地址范围是1~0x7FFF,其它值为地址耗尽，分配地址失败。返回经过设备端返回的参数ElementCount进行修正后的添加设备地址。如区间1~0xFF已经使用到了0xFE，只剩下一个地址0xFF未使用，则当前provisioner添加的下一个设备的地址为0xFF，如果当前需要添加的设备的elementCount大于1，则需要重新修正添加的地址。
-- (UInt16)getNextUnicastAddressOfProvisionWithElementCount:(UInt8)elementCount;
-
+/**
+ * @brief   Assign a new address range to the current provisioner. The SDK will automatically call this method internally, without the need for users to actively call it.
+ * @return  `YES` means add success, `NO` means add fail.
+ * @note    This API is using to add a new UnicastRange to  current provisioner.
+ */
 - (BOOL)addNewUnicastRangeToCurrentProvisioner;
 
-- (NSString *)getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:(NSString *)meshUUID provisionerUUID:(NSString *)provisionerUUID;
-
-/// 初始化一个mesh网络的数据。默认所有参数随机生成。不会清除SigDataSource.share里面的数据（包括scanList、sequenceNumber、sequenceNumberOnDelegate）。
+/**
+ * @brief   Initialize data for a mesh network. By default, all parameters are randomly generated. The data in SigDataSource.share (including scanList, sequenceNumber, and sequenceNumberOnDelegate) will not be cleared.
+ * @note    This API is using to create a new mesh network.
+ */
 - (instancetype)initDefaultMesh;
 
-/// 清除SigDataSource.share里面的所有参数（包括scanList、sequenceNumber、sequenceNumberOnDelegate），并随机生成新的默认参数。
+/**
+ * @brief   Clear all parameters in SigDataSource.share (including scanList, sequenceNumber, sequenceNumberOnDelegate) and randomly generate new default parameters.
+ * @note    This API is using to clear all paramter of SigDataSource. The sequenceNumber of current provisioner of current mesh will save in NSUserDefaults for use next time.
+ */
 - (void)resetMesh;
 
+/**
+ * @brief   Update and save the vid of node to SigDataSource.
+ * @param   address    the unicastAddress of node.
+ * @param   vid    the versionID of node.
+ * @note    This API is using to update and save the vid of node when meshOTA success.
+ */
 - (void)updateNodeModelVidWithAddress:(UInt16)address vid:(UInt16)vid;
 
+#pragma mark - new api since v4.1.0.0
+
+/**
+ * @brief   Method for add extend group information.
+ * @note    This API is using to fix the bug about level control of group.(When customers export Mesh, if they do not want to export extension group information, they can call this method to remove the extension group information and then export Mesh.)
+ */
+-(void)addExtendGroupList;
+
+/**
+ * @brief   Method for deleting extend group information.
+ * @note    This API is using to fix the bug about level control of group.(When customers export Mesh, if they do not want to export extension group information, they can call this method to remove the extension group information and then export Mesh.)
+ */
+-(void)removeExtendGroupList;
+
+/**
+ * @brief   Create an array of all extend groups for a single base group.
+ * @param   groupModel    the base SigGroupModel.
+ * @return  A list of SigGroupModel that is base group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)createExtendGroupListOfGroupModel:(SigGroupModel *)groupModel;
+
+/**
+ * @brief   Get all base group arrays for the current Mesh, the base group addresses ranging from 0xC000 to 0xC0FF.
+ * @return  A list of SigGroupModel that is base group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllBaseGroupList;
+
+/**
+ * @brief   Get all extend group arrays for the current Mesh, the extend group addresses ranging from 0xD000 to 0xDFFF.
+ * @return  A list of SigGroupModel that is extend group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllExtendGroupList;
+
+/**
+ * @brief   Get all invalid group arrays for the current Mesh, the invalid group addresses ranging from 0xE000 to 0xFEFF.
+ * @return  A list of SigGroupModel that is invalid.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllInvalidGroupList;
+
+/**
+ * @brief   Get a list of all UI displayed groups for the current Mesh, including a basic group list and an invalid group list.
+ * @return  A list of SigGroupModel that show on APP.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllShowGroupList;
+
+/**
+ * @brief   Calculate the extrnd group address based on the base group address.
+ * @param   baseGroupAddress    the base group address.
+ * @return  Extend group address is UInt16.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (UInt16)getExtendGroupAddressWithBaseGroupAddress:(UInt16)baseGroupAddress;
+
+#pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
+
+/**
+ * @brief   Use the key meshUUID+provisionerUUID+unicastAddress to store ivIndex+sequenceNumber locally.
+ * @param   ivIndex    the ivIndex of mesh.
+ * @param   sequenceNumber    the sequenceNumber of mesh.
+ */
+- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber;
+
+/**
+ * @brief   Get local ivIndex.
+ * @return  the ivIndex of mesh.
+ * @note    This API is used to get the value of ivIndex stored locally.
+ */
+- (NSString *)getLocalIvIndexString;
+
+/**
+ * @brief   Get local sequenceNumber.
+ * @return  the sequenceNumber of mesh.
+ * @note    This API is used to get the value of sequenceNumber stored locally.
+ */
+- (NSString *)getLocalSequenceNumberString;
+
+/**
+ * @brief   Get local sequenceNumber.
+ * @return  the sequenceNumber of mesh.
+ * @note    This API is used to get the value of sequenceNumber stored locally.
+ */
+- (UInt32)getLocalSequenceNumberUInt32;
+
+/**
+ * @brief   Get whether local had store IvIndexAndLocalSequenceNumber.
+ * @return  `YES` means store, `NO` means no store.
+ */
+- (BOOL)existLocationIvIndexAndLocationSequenceNumber;
+
+#pragma mark - provisioner UUID API
+
+/**
+ * @brief   Save the unique identifier UUID of the current phone, it also the unique identifier UUID of current provisioner.
+ * @param   uuid    The unique identifier UUID of the current phone.
+ * @note    The unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
+ */
+- (void)saveCurrentProvisionerUUID:(NSString *)uuid;
+
+/**
+ * @brief   Get the unique identifier UUID of the current phone, it also the unique identifier UUID of current provisioner.
+ * @return  The unique identifier UUID of the current phone.
+ * @note    The unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
+ */
+- (NSString *)getCurrentProvisionerUUID;
+
+#pragma mark - deprecated API
+
+/**
+ * @brief   Add the meshUUID to the cache of visitor meshUUID List.
+ * @param   meshUUID    the identifier of mesh.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (void)addMeshUUIDToVisitorListCache:(NSString *_Nonnull)meshUUID;
+
+/**
+ * @brief   Remove the meshUUID from the cache of visitor meshUUID List.
+ * @param   meshUUID    the identifier of mesh.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (void)removeMeshUUIDFromVisitorListCache:(NSString *_Nonnull)meshUUID;
+
+/**
+ * @brief   Get whether the current provisioner is an administrator of current Mesh.
+ * @return  `YES` means visitor, `NO` means administrator.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (BOOL)curMeshIsVisitor;
+
+/**
+ * @brief   Get the node object through the bluetooth macAddress of node.
+ * @param   macAddress    the bluetooth macAddress of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this macAddress in mesh network.
+ * @note    The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.
+ */
+- (SigNodeModel * _Nullable)getDeviceWithMacAddress:(NSString *)macAddress DEPRECATED_MSG_ATTRIBUTE("The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.");
+
 @end
+
+NS_ASSUME_NONNULL_END

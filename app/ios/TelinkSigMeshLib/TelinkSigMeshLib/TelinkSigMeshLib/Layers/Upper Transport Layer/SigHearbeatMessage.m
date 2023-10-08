@@ -26,8 +26,13 @@
 
 @implementation SigHearbeatMessage
 
+/// Initialize SigHearbeatMessage object.
+/// @param message The SigControlMessage object.
+/// @returns return `nil` when initialize SigHearbeatMessage object fail.
 - (instancetype)initFromControlMessage:(SigControlMessage *)message {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _opCode = message.opCode;
         NSData *data = message.upperTransportPdu;
         if (_opCode != 0x0A || data.length != 3) {
@@ -48,8 +53,16 @@
     return self;
 }
 
+/// Creates a Heartbeat message.
+///
+/// - parameter ttl:         Initial TTL used when sending the message.
+/// - parameter features:    Currently active features of the node.
+/// - parameter source:      The source address.
+/// - parameter destination: The destination address.
 - (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targettingDestination:(UInt16)destination {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _opCode = 0x0A;
         _initTtl = ttl;
         _features = features;

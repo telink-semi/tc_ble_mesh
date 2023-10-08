@@ -29,7 +29,12 @@ UIKIT_EXTERN NSString *const NotifyUpdateTestLogContent;
 
 @interface TLog : NSObject
 
-+ (TLog *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (void)initLogFile;
 

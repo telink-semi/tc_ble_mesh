@@ -154,7 +154,7 @@
         }
 
         TeLogInfo(@"send request for edit publish list");
-        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:2];
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:0];
         SigPublish *publish = [[SigPublish alloc] initWithDestination:publishAddress withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];//ttl=0xFF(表示采用节点默认参数)
         [SDKLibCommand configModelPublicationSetWithDestination:nodeAddress publish:publish elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
@@ -214,7 +214,7 @@
         }
         return NO;
     } else {
-        UInt16 lightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
+        UInt16 lightness = [LibTools lumToLightness:brightness100];
         TeLogInfo(@"send request for change brightness100 value:%d,UInt16 lightness=%d",brightness100,lightness);
         [SDKLibCommand lightLightnessSetWithDestination:address lightness:lightness retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
@@ -231,7 +231,7 @@
         }
         return NO;
     } else {
-        UInt16 temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:temprature100];
+        UInt16 temperature = [LibTools temp100ToTemp:temprature100];
         TeLogInfo(@"send request for change temprature100 value:%d,UInt16 temperature=%d",temprature100,temperature);
         [SDKLibCommand lightCTLTemperatureSetWithDestination:address temperature:temperature deltaUV:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV comfirm later
         return YES;

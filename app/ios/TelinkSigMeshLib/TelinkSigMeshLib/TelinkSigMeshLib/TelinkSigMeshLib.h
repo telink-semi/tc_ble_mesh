@@ -33,23 +33,6 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
-/*注意：
- 1.注释‘#define kExist’则生成不包含MeshOTA、remote provision代码的库TelinkSigMeshLib.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
- 2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibExtensions.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
- 3.default release TelinkSigMeshLib.framework.
- */
-//#define kExist
-#ifndef kExist
-
-// 1.该部分为不包含MeshOTA、remote provision代码的公开头文件
-/*是否存在MeshOTA功能*/
-#define kExistMeshOTA   (NO)
-/*是否存在remote provision功能*/
-#define kExistRemoteProvision   (NO)
-/*是否存在CertificateBasedProvision功能*/
-#define kExistCertificateBasedProvision   (NO)
-/*是否存在Forwarding Table Entry功能*/
-#define kExistForwardingTableEntry   (NO)
 #import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigStruct.h>
@@ -78,58 +61,17 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigAddDeviceManager.h>
 #import <TelinkSigMeshLib/SigPdu.h>
 #import <TelinkSigMeshLib/ConnectTools.h>
-
-#else
-
-// 2.该部分为包含MeshOTA、remote provision代码的公开头文件
-/*是否存在MeshOTA功能*/
-#define kExistMeshOTA   (YES)
-/*是否存在remote provision功能*/
-#define kExistRemoteProvision   (YES)
-/*是否存在CertificateBasedProvision功能*/
-#define kExistCertificateBasedProvision   (YES)
-/*是否存在Forwarding Table Entry功能*/
-#define kExistForwardingTableEntry   (YES)
-#import <TelinkSigMeshLibExtensions/SigConst.h>
-#import <TelinkSigMeshLibExtensions/SigEnumeration.h>
-#import <TelinkSigMeshLibExtensions/SigStruct.h>
-#import <TelinkSigMeshLibExtensions/SigLogger.h>
-#import <TelinkSigMeshLibExtensions/SigModel.h>
-#import <TelinkSigMeshLibExtensions/BackgroundTimer.h>
-#import <TelinkSigMeshLibExtensions/SigBearer.h>
-#import <TelinkSigMeshLibExtensions/SigDataSource.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand.h>
-#import <TelinkSigMeshLibExtensions/SigConfigMessage.h>
-#import <TelinkSigMeshLibExtensions/SigMeshMessage.h>
-#import <TelinkSigMeshLibExtensions/SigMeshLib.h>
-#import <TelinkSigMeshLibExtensions/SigHelper.h>
-#import <TelinkSigMeshLibExtensions/SigMessageHandle.h>
-#import <TelinkSigMeshLibExtensions/SigProxyConfigurationMessage.h>
-#import <TelinkSigMeshLibExtensions/LibTools.h>
-#import <TelinkSigMeshLibExtensions/SigGenericMessage.h>
-#import <TelinkSigMeshLibExtensions/SigHearbeatMessage.h>
-#import <TelinkSigMeshLibExtensions/OTAManager.h>
-#import <TelinkSigMeshLibExtensions/SigPublishManager.h>
-#import <TelinkSigMeshLibExtensions/TelinkHttpManager.h>
-#import <TelinkSigMeshLibExtensions/SigFastProvisionAddManager.h>
-#import <TelinkSigMeshLibExtensions/MeshOTAManager.h>
-#import <TelinkSigMeshLibExtensions/SigRemoteAddManager.h>
-#import <TelinkSigMeshLibExtensions/SigBluetooth.h>
-#import <TelinkSigMeshLibExtensions/SigAddDeviceManager.h>
-#import <TelinkSigMeshLibExtensions/SigPdu.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+subnetBridge.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+certificate.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+opcodesAggregatorSequence.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+privateBeacon.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+firmwareUpdate.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+remoteProvision.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+directForwarding.h>
-#import <TelinkSigMeshLibExtensions/ConnectTools.h>
-#import <TelinkSigMeshLibExtensions/OTSCommand.h>
-#import <TelinkSigMeshLibExtensions/OTSBaseModel.h>
-#import <TelinkSigMeshLibExtensions/OTSHandle.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+CDTP.h>
-#import <TelinkSigMeshLibExtensions/NSData+Compression.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand+minor_ENH.h>
-
-#endif
+#import <TelinkSigMeshLib/SDKLibCommand+subnetBridge.h>
+#import <TelinkSigMeshLib/SDKLibCommand+certificate.h>
+#import <TelinkSigMeshLib/SDKLibCommand+opcodesAggregatorSequence.h>
+#import <TelinkSigMeshLib/SDKLibCommand+privateBeacon.h>
+#import <TelinkSigMeshLib/SDKLibCommand+firmwareUpdate.h>
+#import <TelinkSigMeshLib/SDKLibCommand+remoteProvision.h>
+#import <TelinkSigMeshLib/SDKLibCommand+directForwarding.h>
+#import <TelinkSigMeshLib/OTSCommand.h>
+#import <TelinkSigMeshLib/OTSBaseModel.h>
+#import <TelinkSigMeshLib/OTSHandle.h>
+#import <TelinkSigMeshLib/NSData+Compression.h>
+#import <TelinkSigMeshLib/SDKLibCommand+minor_ENH.h>
+#import <TelinkSigMeshLib/CDTPServiceModel.h>
+#import <TelinkSigMeshLib/CDTPClientModel.h>

@@ -68,8 +68,10 @@
 - (void)tryConnectRemote {
     //判断直连节点，重试直连遥控器
     if (SigBearer.share.isOpen && SigDataSource.share.unicastAddressOfConnected == self.model.address) {
+        [self showTips:@"The current remote control is already connected."];
         [self.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
     } else {
+        [self showTips:@"The current remote control is not connected. Please press the remote control button to enter Bluetooth broadcast mode."];
         [self.connectTipButton setTitle:@"device connecting..." forState:UIControlStateNormal];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -111,6 +113,7 @@
     cell.pubAdrTF.text = [NSString stringWithFormat:@"%04X",pubAdr];
     cell.bgView.layer.cornerRadius = 5.0;
     cell.bgView.clipsToBounds = YES;
+    cell.vc = self;
     __weak typeof(self) weakSelf = self;
     [cell.sendButton addAction:^(UIButton *button) {
         [weakSelf.view endEditing:YES];
@@ -189,12 +192,6 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 176.0;
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 - (BOOL)validateString:(NSString *)str{

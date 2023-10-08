@@ -30,7 +30,9 @@
 
 @implementation SigAccessKeySet
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _applicationKey = applicationKey;
     }
     return self;
@@ -41,24 +43,10 @@
 }
 
 - (NSData *)accessKey {
-//    if (self.networkKey.phase == distributingKeys) {
-//        NSData *oldkey = self.applicationKey.getDataOldKey;
-//        if (oldkey != nil && oldkey.length != 0) {
-//            return oldkey;
-//        }
-//        return _applicationKey.getDataKey;
-//    }
     return _applicationKey.getDataKey;
 }
 
 - (UInt8)aid {
-//    if (self.networkKey.phase == distributingKeys) {
-//        UInt8 aid = self.applicationKey.oldAid;
-//        if (aid != 0) {
-//            return aid;
-//        }
-//        return _applicationKey.aid;
-//    }
     return _applicationKey.aid;
 }
 
@@ -71,8 +59,11 @@
 
 @implementation SigDeviceKeySet
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isInitAid = NO;
     }
     return self;
@@ -83,7 +74,9 @@
 }
 
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey node:(SigNodeModel *)node {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.networkKey = networkKey;
         _node = node;
         _isInitAid = NO;

@@ -26,10 +26,23 @@
 @implementation SigBaseMeshMessage
 @end
 
+
+/// The base class of every mesh message. Mesh messages can be sent and
+/// and recieved from the mesh network. For messages with the opcode known
+/// during compilation a `StaticMeshMessage` protocol should be preferred.
+///
+/// Parameters `security` and `isSegmented` are checked and should be set
+/// only for outgoing messages.
 @implementation SigMeshMessage
 
+/// This initializer should construct the message based on the received
+/// parameters.
+///
+/// - parameter parameters: The Access Layer parameters.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.parameters = parameters;
     }
     return self;
@@ -111,10 +124,17 @@
 
 @end
 
+
+/// A mesh message containing the operation status.
 @implementation SigStatusMessage
 @end
 
 
+/// A message with Transaction Identifier.
+///
+/// The Transaction Identifier will automatically be set and incremented
+/// each time a message is sent. The counter is reuesed for all types that
+/// extend this protocol.
 @implementation SigTransactionMessage
 - (void)setTid:(UInt8)tid{
     _isInitTid = YES;
@@ -125,25 +145,46 @@
 }
 @end
 
+
 @implementation SigTransitionMessage
 @end
+
 
 @implementation SigTransitionStatusMessage
 @end
 
+
+/// The base class for acknowledged messages.
+///
+/// An acknowledged message is transmitted and acknowledged by each
+/// receiving element by responding to that message. The response is
+/// typically a status message. If a response is not received within
+/// an arbitrary time period, the message will be retransmitted
+/// automatically until the timeout occurs.
 @implementation SigAcknowledgedMeshMessage
 @end
+
 
 @implementation SigStaticMeshMessage
 @end
 
+
 @implementation SigUnknownMessage
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.opCode = 0;
     }
     return self;
 }
+
+/**
+ * @brief   Initialize SigUnknownMessage object.
+ * @param   parameters    the hex data of SigUnknownMessage.
+ * @return  return `nil` when initialize SigUnknownMessage object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super initWithParameters:parameters]) {
         self.opCode = 0;
@@ -151,6 +192,7 @@
     return self;
 }
 @end
+
 
 @implementation SigIniMeshMessage
 @end

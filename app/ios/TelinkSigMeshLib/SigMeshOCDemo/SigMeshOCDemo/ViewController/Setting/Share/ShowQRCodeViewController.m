@@ -38,14 +38,32 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
-    self.title = @"Share";
+    if (self.uuidString.length == 36) {
+        //QRCode + Cloud
+        self.title = @"QRCode + Cloud";
+        self.endDate = [NSDate dateWithTimeInterval:60 * 5 sinceDate:[NSDate date]];
+        self.timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(refreshCountDownLabel) userInfo:nil repeats:YES];
+        [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+        TeLogInfo(@"计时开始");
+        [self.timer fire];
+    } else {
+        self.countDownLabel.hidden = YES;
+        //QRCode + BLE Transfer
+        self.title = @"QRCode + BLE Transfer";
+    }
     self.QRCodeImage.image = [UIImage createQRImageWithString:self.uuidString rate:3];
-    self.endDate = [NSDate dateWithTimeInterval:60 * 5 sinceDate:[NSDate date]];
-    self.timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(refreshCountDownLabel) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-    TeLogInfo(@"计时开始");
-    [self.timer fire];
+}
+
+- (void)backToMain{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.navigationController popViewControllerAnimated:YES];
+    });
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear: animated];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(backToMain) name:@"BackToMain" object:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -54,6 +72,7 @@
         [self.timer invalidate];
         self.timer = nil;
     }
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"BackToMain" object:nil];
 }
 
 - (void)refreshCountDownLabel {
@@ -65,19 +84,11 @@
         [self.timer invalidate];
         self.timer = nil;
         TeLogInfo(@"计时结束");
-        [self showTips:@"QR_Code is invalid!"];
+        __weak typeof(self) weakSelf = self;
+        [self showTips:@"QR_Code is invalid!" sure:^(UIAlertAction *action) {
+            [weakSelf.navigationController popViewControllerAnimated:YES];
+        }];
     }
-}
-
-- (void)showTips:(NSString *)tips{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:tips preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
-            [self.navigationController popViewControllerAnimated:YES];
-        }]];
-        [self presentViewController:alertController animated:YES completion:nil];
-    });
 }
 
 -(void)dealloc{

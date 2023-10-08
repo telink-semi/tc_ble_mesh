@@ -67,10 +67,19 @@ typedef enum : NSUInteger {
 
 @implementation OTAManager
 
-+ (OTAManager *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static OTAManager *shareOTA = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareOTA = [[OTAManager alloc] init];
         [shareOTA initData];
     });
@@ -336,13 +345,22 @@ typedef enum : NSUInteger {
 - (void)startSendGATTOTAPackets {
     TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
     self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
-    if (@available(iOS 11.0, *)) {
-        //ios11.0及以上，6ms发送一个包，SendPacketsFinishCallback这个block返回则发送下一个包，不需要read。127KB耗时75秒
-        [self sendPartDataAvailableIOS11];
-    } else {
-        //ios11.0以下，6ms发送一个包，发送8个包read一次OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
-        [self sendPartData];
-    }
+    [self sendReadFirmwareVersionWithComplete:nil];
+    [self sendStartOTAWithComplete:nil];
+    //注意：startOta与index=0之间的新增read，让固件有充足的时间进行ota配置。
+    __weak typeof(self) weakSelf = self;
+    [SDKLibCommand readOTACharachteristicWithTimeout:self.readTimeoutInterval complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
+        if (successful) {
+            if (@available(iOS 11.0, *)) {
+                //ios11.0及以上，6ms发送一个包，SendPacketsFinishCallback这个block返回则发送下一个包，不需要read。127KB耗时75秒
+                [weakSelf sendPartDataAvailableIOS11];
+            } else {
+                //ios11.0以下，6ms发送一个包，发送8个包read一次OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
+                [weakSelf sendPartData];
+            }        } else {
+            [weakSelf readTimeout];
+        }
+    }];
 }
 
 - (void)sendPartDataAvailableIOS11 {
@@ -362,12 +380,6 @@ typedef enum : NSUInteger {
         }
         
         self.otaIndex ++;
-        //OTA开始包特殊处理
-        if (self.otaIndex == 0) {
-            [self sendReadFirmwareVersionWithComplete:nil];
-            [self sendStartOTAWithComplete:nil];
-        }
-        
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
         NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
         self.offset += writeLength;
@@ -377,16 +389,9 @@ typedef enum : NSUInteger {
         }
         __weak typeof(self) weakSelf = self;
         [self sendOTAData:writeData index:(int)self.otaIndex complete:^{
-            //注意：index=0与index=1之间的时间间隔修改为300ms，让固件有充足的时间进行ota配置。
-            if (weakSelf.otaIndex == 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
-                });
-            } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:weakSelf.writeOTAInterval];
-                });
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:weakSelf.writeOTAInterval];
+            });
         }];
     }
 }
@@ -413,12 +418,6 @@ typedef enum : NSUInteger {
         }
         
         self.otaIndex ++;
-        //OTA开始包特殊处理
-        if (self.otaIndex == 0) {
-            [self sendReadFirmwareVersionWithComplete:nil];
-            [self sendStartOTAWithComplete:nil];
-        }
-        
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
         NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
         [self sendOTAData:writeData index:(int)self.otaIndex complete:nil];
@@ -440,13 +439,8 @@ typedef enum : NSUInteger {
             }];
             return;
         }
-        //注意：index=0与index=1之间的时间间隔修改为300ms，让固件有充足的时间进行ota配置。
-        NSTimeInterval timeInterval = self.writeOTAInterval;
-        if (self.otaIndex == 0) {
-            timeInterval = 0.3;
-        }
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self performSelector:@selector(sendPartData) withObject:nil afterDelay:timeInterval];
+            [self performSelector:@selector(sendPartData) withObject:nil afterDelay:self.writeOTAInterval];
         });
     }
 }

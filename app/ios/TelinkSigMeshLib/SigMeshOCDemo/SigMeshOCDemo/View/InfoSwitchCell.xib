@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21678"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -29,21 +29,37 @@
                     <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zup-jy-rnN">
                         <rect key="frame" x="261" y="6.5" width="51" height="31"/>
                     </switch>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dOk-Ej-MIC">
+                        <rect key="frame" x="103" y="7" width="30" height="30"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="30" id="hmH-ch-mK0"/>
+                            <constraint firstAttribute="width" constant="30" id="jh4-F5-AT2"/>
+                        </constraints>
+                        <state key="normal" title="Any" image="tishi"/>
+                        <state key="selected" image="xuan"/>
+                    </button>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="zup-jy-rnN" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="dOk-Ej-MIC" secondAttribute="trailing" constant="5" id="9ya-5g-jRp"/>
                     <constraint firstAttribute="trailing" secondItem="zup-jy-rnN" secondAttribute="trailing" constant="10" id="IPa-Md-2MG"/>
+                    <constraint firstItem="dOk-Ej-MIC" firstAttribute="leading" secondItem="AoA-It-UVm" secondAttribute="trailing" constant="5" id="Mia-n7-nDV"/>
                     <constraint firstItem="AoA-It-UVm" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="W7E-U7-Wdw"/>
                     <constraint firstItem="zup-jy-rnN" firstAttribute="centerY" secondItem="AoA-It-UVm" secondAttribute="centerY" id="XXR-Pb-qgF"/>
                     <constraint firstItem="AoA-It-UVm" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="10" id="eVq-Pf-qR2"/>
-                    <constraint firstItem="zup-jy-rnN" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="AoA-It-UVm" secondAttribute="trailing" id="hXy-XT-cRn"/>
+                    <constraint firstItem="dOk-Ej-MIC" firstAttribute="centerY" secondItem="AoA-It-UVm" secondAttribute="centerY" id="g5U-qS-4FM"/>
                 </constraints>
             </tableViewCellContentView>
             <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
             <connections>
                 <outlet property="showLabel" destination="AoA-It-UVm" id="0Yg-VF-cRA"/>
                 <outlet property="showSwitch" destination="zup-jy-rnN" id="7q7-GN-MRj"/>
+                <outlet property="tipsButton" destination="dOk-Ej-MIC" id="mnp-ah-mUL"/>
             </connections>
-            <point key="canvasLocation" x="139" y="92"/>
+            <point key="canvasLocation" x="137.68115942028987" y="91.741071428571431"/>
         </tableViewCell>
     </objects>
+    <resources>
+        <image name="tishi" width="35" height="35"/>
+        <image name="xuan" width="100" height="100"/>
+    </resources>
 </document>

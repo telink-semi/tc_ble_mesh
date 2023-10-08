@@ -42,11 +42,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,copy,nullable) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic, weak) id <SigBluetoothDelegate>delegate;
 
-+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
-- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+/* mesh v1.1后，CDTP也需要连接一个蓝牙设备，为了避免相同功能的代码在写一遍，修改为可以允许通过new和init的方式新建蓝牙管理类SigBluetooth  */
+//+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+//- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigBluetooth *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share;
 
 #pragma  mark - Public
 
@@ -54,15 +60,37 @@ NS_ASSUME_NONNULL_BEGIN
 /// init system CBCentralManager, developer can scan CBPeripheral when CBCentralManager.state is CBCentralManagerStatePoweredOn.
 /// @param result callback when CBCentralManager had inited.
 - (void)bleInit:(bleInitSuccessCallback)result;
+
+/**
+ * @brief   Returns whether Bluetooth has been initialized.
+ * @return  YES means Bluetooth has been initialized, NO means other.
+ */
 - (BOOL)isBLEInitFinish;
 
+/**
+ * @brief   Set handle of BluetoothCentralUpdateState.
+ * @param   bluetoothCentralUpdateStateCallback callback of BluetoothCentralUpdateState.
+ */
 - (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
 
+/**
+ * @brief   Scan unprovisioned devices.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 
+/**
+ * @brief   Scan provisioned devices.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 
-/// 自定义扫描接口，checkNetworkEnable表示是否对已经入网的1828设备进行NetworkID过滤，过滤则只能扫描到当前手机的本地mesh数据里面的设备。
+/**
+ * @brief   Scan devices with ServiceUUIDs.
+ * @param   UUIDs ServiceUUIDs.
+ * @param   checkNetworkEnable YES means the device must belong current mesh network.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result;
 
 - (void)setBluetoothIsReadyToSendWriteWithoutResponseCallback:(bleIsReadyToSendWriteWithoutResponseCallback)bluetoothIsReadyToSendWriteWithoutResponseCallback;
@@ -71,11 +99,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setBluetoothDidUpdateOnlineStatusValueCallback:(bleDidUpdateValueForCharacteristicCallback)bluetoothDidUpdateOnlineStatusValueCallback;
 
+/**
+ * @brief   Scan devices with specified UUID.
+ * @param   peripheralUUID uuid of peripheral.
+ * @param   timeout timeout of scan.
+ * @param   block Report when the specified device is scanned.
+ */
 - (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block;
 
+/**
+ * @brief   Stop scan action.
+ */
 - (void)stopScan;
 
 - (void)connectPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralCallback)block;
+- (void)connectPeripheralWithError:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralWithErrorCallback)block;
 
 - (void)discoverServicesOfPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleDiscoverServicesCallback)block;
 
@@ -89,6 +127,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString;
 
+/**
+ * @brief   Get Characteristic of peripheral.
+ * @param   uuid UUIDString of Characteristic.
+ * @param   peripheral the CBPeripheral object.
+ * @return  A CBCharacteristic object.
+ */
 - (nullable CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
 
 - (BOOL)isWorkNormal;

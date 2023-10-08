@@ -22,8 +22,7 @@
  *******************************************************************************************************/
 
 #import <XCTest/XCTest.h>
-#import "TelinkSigMeshLibExtensions/TelinkSigMeshLib.h"
-//#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
+#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
 #import "OpenSSLHelper.h"
 #import "OpenSSLHelper+EPA.h"
 #import "SigNetworkManager.h"
@@ -344,7 +343,7 @@
     SigMeshLib.share.dataSource.unicastAddressOfConnected = node.address;
     SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = [LibTools uint32From16String:defaultMesh.ivIndex];
 
-    IniCommandModel *m = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:defaultMesh.curNetkeyModel.index appkeyIndex:defaultMesh.curAppkeyModel.index retryCount:0 responseMax:1 address:node.address opcode:0x2A vendorId:0xA responseOpcode:0x2B needTid:NO tid:0 commandData:[LibTools nsstringToHex:@"576f726c64"]];
+    IniCommandModel *m = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:defaultMesh.curNetkeyModel.index appkeyIndex:defaultMesh.curAppkeyModel.index retryCount:0 responseMax:1 address:node.address opcode:0x2A vendorId:0xA responseOpcode:0x2B needTid:NO tidPosition:0 tid:0 commandData:[LibTools nsstringToHex:@"576f726c64"]];
     m.curAppkey = defaultMesh.curAppkeyModel;
     m.curNetkey = defaultMesh.curNetkeyModel;
     m.curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
@@ -733,7 +732,7 @@
     SigOpcodesAggregatorItemModel *model2 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightCTLStatus alloc] initWithPresentCTLLightness:[LibTools lumToLightness:100] presentCTLTemperature:[LibTools temp100ToTemp:100] targetCTLLightness:[LibTools lumToLightness:100] targetCTLTemperature:[LibTools temp100ToTemp:100] remainingTime:nil]];
     SigOpcodesAggregatorItemModel *model3 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightHSLStatus alloc] initWithHSLLightness:[LibTools lumToLightness:100] HSLHue:[LibTools lumToLightness:100] HSLSaturation:[LibTools lumToLightness:100] remainingTime:nil]];
     NSArray *items = @[model1,model2,model3];
-    SigOpcodesAggregatorStatus *responseMessage = [[SigOpcodesAggregatorStatus alloc] initWithStatus:SigConfigMessageStatus_success elementAddress:0x0002 items:items];
+    SigOpcodesAggregatorStatus *responseMessage = [[SigOpcodesAggregatorStatus alloc] initWithStatus:SigOpcodesAggregatorMessagesStatus_success elementAddress:0x0002 items:items];
     dispatch_async(SigMeshLib.share.delegateQueue, ^{
         if ([SigMeshLib.share.delegate respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
             [SigMeshLib.share.delegate didReceiveMessage:responseMessage sentFromSource:0x0002 toDestination:SigMeshLib.share.dataSource.curLocationNodeModel.address];

@@ -25,7 +25,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TelinkHttpRequest;
 typedef void (^MyBlock) (id _Nullable result, NSError * _Nullable err);
 
 @interface TelinkHttpManager : NSObject
@@ -34,7 +33,12 @@ typedef void (^MyBlock) (id _Nullable result, NSError * _Nullable err);
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (TelinkHttpManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 /// 1.upload json dictionary
 /// @param jsonDict json dictionary

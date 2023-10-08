@@ -38,7 +38,9 @@
 @implementation CustomAlertView
 
 - (instancetype)initWithTitle:(NSString *)title detail:(NSString *)detail itemArray:(NSArray <AlertItemModel *>*)itemArray leftBtnTitle:(NSString *)leftBtnTitle rightBtnTitle:(NSString *)rightBtnTitle alertResult:(AlertResult) alertResult {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.frame = [UIScreen mainScreen].bounds;
         self.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
         self.title = title;

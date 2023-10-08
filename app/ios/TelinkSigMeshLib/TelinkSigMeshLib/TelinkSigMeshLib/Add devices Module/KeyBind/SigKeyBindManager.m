@@ -22,9 +22,7 @@
  *******************************************************************************************************/
 
 #import "SigKeyBindManager.h"
-#if SUPPORTOPCODESAGGREGATOR
 #import "SDKLibCommand+opcodesAggregatorSequence.h"
-#endif
 
 @interface SigKeyBindManager ()
 @property (nonatomic,strong) SigMessageHandle *messageHandle;
@@ -49,10 +47,19 @@
 
 @implementation SigKeyBindManager
 
-+ (SigKeyBindManager *)share {
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigKeyBindManager *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[SigKeyBindManager alloc] init];
         shareManager.getCompositionTimeOut = 20;
         shareManager.appkeyAddTimeOut = 20;
@@ -132,7 +139,6 @@
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
                 });
-#if SUPPORTOPCODESAGGREGATOR
                 BOOL hasOpCodes = NO;
                 SigPage0 *page0 = (SigPage0 *)weakSelf.page;
                 NSArray *elements = [NSArray arrayWithArray:page0.elements];
@@ -140,7 +146,7 @@
                     element.parentNodeAddress = weakSelf.node.address;
                     NSArray *models = [NSArray arrayWithArray:element.models];
                     for (SigModelIDModel *modelID in models) {
-                        if (modelID.getIntModelID == kSigModel_OP_AGG_S_ID) {
+                        if (modelID.getIntModelID == kSigModel_OpcodesAggregatorServer_ID) {
                             hasOpCodes = YES;
                             break;
                         }
@@ -154,9 +160,6 @@
                 } else {
                     [weakSelf appkeyAdd];
                 }
-#else
-                [weakSelf appkeyAdd];
-#endif
             }
         }
     }];
@@ -193,11 +196,11 @@
                     }
                     if (deviceType == nil) {
                         TeLogError(@"this node not support fast bind!!!");
-                        deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID];
+                        deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID compositionData:nil];
                     }
                     if (deviceType.defaultCompositionData.elements == nil || deviceType.defaultCompositionData.elements.count == 0) {
                         TeLogError(@"defaultCompositionData had setted to CT");
-                        deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:1];
+                        deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:1 compositionData:nil];
                     }
                     weakSelf.page = deviceType.defaultCompositionData;
                     [weakSelf keyBindSuccessAction];
@@ -306,7 +309,6 @@
 }
 
 - (void)sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequence {
-#if SUPPORTOPCODESAGGREGATOR
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout) object:nil];
         [self performSelector:@selector(sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout) withObject:nil afterDelay:self.appkeyAddTimeOut+self.bindModelTimeOut];
@@ -362,7 +364,7 @@
     if (hasTimeServerModel == YES && timeServerModelElementAddress > 0 && SigMeshLib.share.dataSource.needPublishTimeModel) {
         TeLogInfo(@"SDK need publish time");
         //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数），0表示不relay。
-        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:2];
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:0];
         SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigMeshLib.share.dataSource.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0 periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
         SigConfigModelPublicationSet *timePublication = [[SigConfigModelPublicationSet alloc] initWithPublish:publish toElementAddress:timeServerModelElementAddress modelIdentifier:kSigModel_TimeServer_ID companyIdentifier:0];
         SigOpcodesAggregatorItemModel *model = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:timePublication];
@@ -428,8 +430,6 @@
             }
         }
     }];
-    
-#endif
 }
 
 - (void)sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout {
@@ -467,8 +467,8 @@
             __weak typeof(self) weakSelf = self;
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 UInt16 eleAdr = [elementAddresses.firstObject intValue];
-                //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数），0表示不relay。
-                SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:2];
+                //周期，30秒上报一次。ttl:0xff（表示采用节点默认参数），0表示不relay。
+                SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:0];
                 SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigMeshLib.share.dataSource.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0 periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
                 SigModelIDModel *modelID = [node getModelIDModelWithModelID:option andElementAddress:eleAdr];
                 [SDKLibCommand configModelPublicationSetWithDestination:self.address publish:publish elementAddress:eleAdr modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:self.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
@@ -515,9 +515,11 @@
     [SigMeshLib.share cleanAllCommandsAndRetry];
     SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
     //callback
-    if (self.keyBindSuccessBlock) {
-        self.keyBindSuccessBlock(self.node.peripheralUUID, self.address);
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.keyBindSuccessBlock) {
+            self.keyBindSuccessBlock(self.node.peripheralUUID, self.address);
+        }
+    });
 }
 
 - (void)saveKeyBindSuccessToLocationData {

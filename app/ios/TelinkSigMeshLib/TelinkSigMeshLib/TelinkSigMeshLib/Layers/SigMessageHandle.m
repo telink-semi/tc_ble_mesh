@@ -23,20 +23,22 @@
 
 #import "SigMessageHandle.h"
 
+/// The mesh message handle is returned upon sending a mesh message
+/// and allows the message to be cancelled.
+///
+/// Only segmented or acknowledged messages may be cancelled.
+/// Unsegmented unacknowledged messages are sent almost instantaneously
+/// (depending on the connection interval and message size)
+/// and therefore cannot be cancelled.
+///
+/// The handle contains information about the message that was sent:
+/// its opcode, source and destination addresses.
 @implementation SigMessageHandle
 
-//- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager {
-//    if (self = [super init]) {
-//        _opCode = message.opCode;
-//        _source = source;
-//        _destination = destination;
-//        _manager = manager;
-//    }
-//    return self;
-//}
-
 - (instancetype)initForSDKLibCommand:(SDKLibCommand *)command usingManager:(SigMeshLib *)manager {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]]) {
             _opCode = ((SigMeshMessage *)command.curMeshMessage).opCode;
         }

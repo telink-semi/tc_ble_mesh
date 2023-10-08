@@ -23,6 +23,8 @@
 
 #import "SigBluetooth.h"
 
+#define kNeedDiscoverDescriptors    (YES)
+
 @interface SigBluetooth ()<CBCentralManagerDelegate, CBPeripheralDelegate>
 @property (nonatomic,strong) CBCentralManager *manager;
 @property (nonatomic,strong,nullable) CBPeripheral *currentPeripheral;
@@ -43,10 +45,11 @@
 @property (nonatomic,strong) NSString *scanPeripheralUUID;
 
 @property (nonatomic,copy) bleInitSuccessCallback bluetoothInitSuccessCallback;
-@property (nonatomic,copy) bleEnableCallback bluetoothEnableCallback;
+//@property (nonatomic,copy) bleEnableCallback bluetoothEnableCallback;
 @property (nonatomic,copy) bleScanPeripheralCallback bluetoothScanPeripheralCallback;
 @property (nonatomic,copy) bleScanSpecialPeripheralCallback bluetoothScanSpecialPeripheralCallback;
 @property (nonatomic,copy) bleConnectPeripheralCallback bluetoothConnectPeripheralCallback;
+@property (nonatomic,copy) bleConnectPeripheralWithErrorCallback bluetoothConnectPeripheralWithErrorCallback;
 @property (nonatomic,copy) bleDiscoverServicesCallback bluetoothDiscoverServicesCallback;
 @property (nonatomic,copy) bleCharacteristicResultCallback bluetoothOpenNotifyCallback;
 @property (nonatomic,copy) bleReadOTACharachteristicCallback bluetoothReadOTACharachteristicCallback;
@@ -63,19 +66,42 @@
 
 @implementation SigBluetooth
 
-+ (SigBluetooth *)share {
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigBluetooth *shareBLE = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareBLE = [[SigBluetooth alloc] init];
-        shareBLE.manager = [[CBCentralManager alloc] initWithDelegate:shareBLE queue:dispatch_get_main_queue()];
-        shareBLE.isInitFinish = NO;
-        shareBLE.waitScanRseponseEnabel = NO;
-        shareBLE.checkNetworkEnable = NO;
-        shareBLE.connectedPeripherals = [NSMutableArray array];
-        shareBLE.scanServiceUUIDs = [NSMutableArray array];
+        [shareBLE configBluetooth];
     });
     return shareBLE;
+}
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        [self configBluetooth];
+    }
+    return self;
+}
+
+- (void)configBluetooth {
+    _manager = [[CBCentralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
+    _isInitFinish = NO;
+    _waitScanRseponseEnabel = NO;
+    _checkNetworkEnable = NO;
+    _connectedPeripherals = [NSMutableArray array];
+    _scanServiceUUIDs = [NSMutableArray array];
 }
 
 #pragma  mark - Public
@@ -85,10 +111,18 @@
     self.bluetoothInitSuccessCallback = result;
 }
 
+/**
+ * @brief   Returns whether Bluetooth has been initialized.
+ * @return  YES means Bluetooth has been initialized, NO means other.
+ */
 - (BOOL)isBLEInitFinish {
     return self.manager.state == CBCentralManagerStatePoweredOn;
 }
 
+/**
+ * @brief   Set handle of BluetoothCentralUpdateState.
+ * @param   bluetoothCentralUpdateStateCallback callback of BluetoothCentralUpdateState.
+ */
 - (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
     _bluetoothCentralUpdateStateCallback = bluetoothCentralUpdateStateCallback;
 }
@@ -105,17 +139,30 @@
     _bluetoothDidUpdateOnlineStatusValueCallback = bluetoothDidUpdateOnlineStatusValueCallback;
 }
 
+/**
+ * @brief   Scan unprovisioned devices.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result {
 //    TeLogInfo(@"");
     [self scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kPBGATTService]] checkNetworkEnable:NO result:result];
 }
 
+/**
+ * @brief   Scan provisioned devices.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result {
 //    TeLogInfo(@"");
     [self scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kPROXYService]] checkNetworkEnable:YES result:result];
 }
 
-/// 自定义扫描接口，checkNetworkEnable表示是否对已经入网的1828设备进行NetworkID过滤，过滤则只能扫描到当前手机的本地mesh数据里面的设备。
+/**
+ * @brief   Scan devices with ServiceUUIDs.
+ * @param   UUIDs ServiceUUIDs.
+ * @param   checkNetworkEnable YES means the device must belong current mesh network.
+ * @param   result Report once when a device is scanned.
+ */
 - (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result {
     if (self.isInitFinish) {
         self.checkNetworkEnable = checkNetworkEnable;
@@ -127,6 +174,12 @@
     }
 }
 
+/**
+ * @brief   Scan devices with specified UUID.
+ * @param   peripheralUUID uuid of peripheral.
+ * @param   timeout timeout of scan.
+ * @param   block Report when the specified device is scanned.
+ */
 - (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block {
     self.bluetoothScanSpecialPeripheralCallback = block;
     __weak typeof(self) weakSelf = self;
@@ -148,6 +201,9 @@
     }];
 }
 
+/**
+ * @brief   Stop scan action.
+ */
 - (void)stopScan {
     [self.scanServiceUUIDs removeAllObjects];
     self.scanPeripheralUUID = nil;
@@ -172,6 +228,31 @@
         return;
     }
     self.bluetoothConnectPeripheralCallback = block;
+    self.currentPeripheral = peripheral;
+    TeLogVerbose(@"call system connectPeripheral: uuid=%@",peripheral.identifier.UUIDString);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectPeripheralTimeout) object:nil];
+        [self performSelector:@selector(connectPeripheralTimeout) withObject:nil afterDelay:timeout];
+    });
+    [self.manager connectPeripheral:peripheral options:nil];
+}
+
+- (void)connectPeripheralWithError:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralWithErrorCallback)block {
+    if (self.manager.state != CBCentralManagerStatePoweredOn) {
+        TeLogError(@"Bluetooth is not power on.");
+        NSError *error = [NSError errorWithDomain:@"Bluetooth is not power on." code:-1 userInfo:nil];
+        if (block) {
+            block(peripheral, error);
+        }
+        return;
+    }
+    if (peripheral.state == CBPeripheralStateConnected) {
+        if (block) {
+            block(peripheral, nil);
+        }
+        return;
+    }
+    self.bluetoothConnectPeripheralWithErrorCallback = block;
     self.currentPeripheral = peripheral;
     TeLogVerbose(@"call system connectPeripheral: uuid=%@",peripheral.identifier.UUIDString);
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -238,21 +319,24 @@
 - (void)cancelAllConnecttionWithComplete:(bleCancelAllConnectCallback)complete{
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
+        return;
     }
     self.bluetoothConnectPeripheralCallback = nil;
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        NSArray *tem = [NSArray arrayWithArray:weakSelf.connectedPeripherals];
-        for (CBPeripheral *p in tem) {
-            if (p.state == CBPeripheralStateConnected || p.state == CBPeripheralStateConnecting) {
-                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                [weakSelf cancelConnectionPeripheral:p timeout:2-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-                    dispatch_semaphore_signal(semaphore);
-                }];
-                //Most provide 2 seconds to disconnect bluetooth connection
-                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
+        if (weakSelf.connectedPeripherals && weakSelf.connectedPeripherals.count > 0) {
+            NSArray *tem = [NSArray arrayWithArray:weakSelf.connectedPeripherals];
+            for (CBPeripheral *p in tem) {
+                if (p.state == CBPeripheralStateConnected || p.state == CBPeripheralStateConnecting) {
+                    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                    [weakSelf cancelConnectionPeripheral:p timeout:2-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+                        dispatch_semaphore_signal(semaphore);
+                    }];
+                    //Most provide 2 seconds to disconnect bluetooth connection
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
+                }
             }
         }
         if (weakSelf.currentPeripheral) {
@@ -304,6 +388,7 @@
             [self performSelector:@selector(readOTACharachteristicTimeout) withObject:nil afterDelay:timeout];
         });
         self.bluetoothReadOTACharachteristicCallback = complete;
+        TeLogVerbose(@"readOTACharachteristic");
         [self.currentPeripheral readValueForCharacteristic:self.OTACharacteristic];
     }else{
         TeLogInfo(@"app don't found OTACharacteristic");
@@ -329,6 +414,12 @@
     return nil;
 }
 
+/**
+ * @brief   Get Characteristic of peripheral.
+ * @param   uuid UUIDString of Characteristic.
+ * @param   peripheral the CBPeripheral object.
+ * @return  A CBCharacteristic object.
+ */
 - (nullable CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
     CBCharacteristic *tem = nil;
     for (CBService *s in peripheral.services) {
@@ -379,12 +470,14 @@
 
 #pragma mark - new gatt api since v3.3.3
 - (void)readCharachteristicWithCharacteristic:(CBCharacteristic *)characteristic ofPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout complete:(bleReadOTACharachteristicCallback)complete {
+    TeLogInfo(@"");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(readCharachteristicTimeout) object:nil];
         [self performSelector:@selector(readCharachteristicTimeout) withObject:nil afterDelay:timeout];
     });
     self.readCharacteristic = characteristic;
     self.bluetoothReadCharachteristicCallback = complete;
+    peripheral.delegate = self;
     [peripheral readValueForCharacteristic:characteristic];
 }
 
@@ -416,6 +509,7 @@
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(openChannelOfPeripheralTimeout) object:nil];
             [self performSelector:@selector(openChannelOfPeripheralTimeout) withObject:nil afterDelay:timeout];
         });
+        TeLogInfo(@"openL2CAPChannel=%d", psm);
         [peripheral openL2CAPChannel:psm];
     } else {
         TeLogError(@"The iOS system is lower than 11.0.")
@@ -472,6 +566,10 @@
         self.bluetoothConnectPeripheralCallback(self.currentPeripheral, YES);
     }
     self.bluetoothConnectPeripheralCallback = nil;
+    if (self.bluetoothConnectPeripheralWithErrorCallback) {
+        self.bluetoothConnectPeripheralWithErrorCallback(self.currentPeripheral, nil);
+    }
+    self.bluetoothConnectPeripheralWithErrorCallback = nil;
 }
 
 - (void)discoverServicesOfPeripheralTimeout {
@@ -601,14 +699,33 @@
 }
 
 #pragma mark - CBCentralManagerDelegate
+/*
+ The delegate of a {@link CBCentralManager} object must adopt the <code>CBCentralManagerDelegate</code> protocol. The
+ single required method indicates the availability of the central manager, while the optional methods allow for the discovery and
+ connection of peripherals.
+ */
 
+/*!
+ *  @method centralManagerDidUpdateState:
+ *
+ *  @param central  The central manager whose state has changed.
+ *
+ *  @discussion     Invoked whenever the central manager's state has been updated. Commands should only be issued when the state is
+ *                  <code>CBCentralManagerStatePoweredOn</code>. A state below <code>CBCentralManagerStatePoweredOn</code>
+ *                  implies that scanning has stopped and any connected peripherals have been disconnected. If the state moves below
+ *                  <code>CBCentralManagerStatePoweredOff</code>, all <code>CBPeripheral</code> objects obtained from this central
+ *                  manager become invalid and must be retrieved or discovered again.
+ *
+ *  @see            state
+ *
+ */
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
 //    TeLogInfo(@"state=%ld",(long)central.state)
     if (self.manager.state == CBCentralManagerStatePoweredOn) {
         if (_isInitFinish) {
-            if (self.bluetoothEnableCallback) {
-                self.bluetoothEnableCallback(central,YES);
-            }
+//            if (self.bluetoothEnableCallback) {
+//                self.bluetoothEnableCallback(central,YES);
+//            }
         }else{
             _isInitFinish = YES;
             if (self.bluetoothInitSuccessCallback) {
@@ -617,9 +734,9 @@
             self.bluetoothInitSuccessCallback = nil;
         }
     } else {
-        if (self.bluetoothEnableCallback) {
-            self.bluetoothEnableCallback(central,NO);
-        }
+//        if (self.bluetoothEnableCallback) {
+//            self.bluetoothEnableCallback(central,NO);
+//        }
         if (self.currentPeripheral) {
             NSError *err = [NSError errorWithDomain:@"CBCentralManager.state is not CBCentralManagerStatePoweredOn!" code:-1 userInfo:nil];
             [self callbackDisconnectOfPeripheral:self.currentPeripheral error:err];
@@ -631,6 +748,22 @@
     }
 }
 
+/*!
+ *  @method centralManager:didDiscoverPeripheral:advertisementData:RSSI:
+ *
+ *  @param central              The central manager providing this update.
+ *  @param peripheral           A <code>CBPeripheral</code> object.
+ *  @param advertisementData    A dictionary containing any advertisement and scan response data.
+ *  @param RSSI                 The current RSSI of <i>peripheral</i>, in dBm. A value of <code>127</code> is reserved and indicates the RSSI
+ *                                was not available.
+ *
+ *  @discussion                 This method is invoked while scanning, upon the discovery of <i>peripheral</i> by <i>central</i>. A discovered peripheral must
+ *                              be retained in order to use it; otherwise, it is assumed to not be of interest and will be cleaned up by the central manager. For
+ *                              a list of <i>advertisementData</i> keys, see {@link CBAdvertisementDataLocalNameKey} and other similar constants.
+ *
+ *  @seealso                    CBAdvertisementData.h
+ *
+ */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
     // 将127修正为-90，防止APP扫描不到设备。
     if (RSSI.intValue == 127) {
@@ -662,8 +795,10 @@
     BOOL provisionAble = [suuidString  isEqualToString:kPBGATTService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPBGATTService]];
     /// which means the device has been add to a mesh(已经入网)
     BOOL unProvisionAble = [suuidString isEqualToString:kPROXYService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPROXYService]];
-    
-    if (!provisionAble && !unProvisionAble) {
+    /// which means the device is a mesh CDTP Service
+    BOOL isOtsService = [suuidString isEqualToString:kObjectTransferService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kObjectTransferService]];
+
+    if (!provisionAble && !unProvisionAble && !isOtsService) {
         return;
     }
     
@@ -672,6 +807,9 @@
         shouldReturn = NO;
     }
     if (self.scanServiceUUIDs && ([self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPROXYService]]) && unProvisionAble) {
+        shouldReturn = NO;
+    }
+    if (self.scanServiceUUIDs && [self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kObjectTransferService]]) {
         shouldReturn = NO;
     }
     if (shouldReturn) {
@@ -717,11 +855,19 @@
     
 }
 
+/*!
+ *  @method centralManager:didConnectPeripheral:
+ *
+ *  @param central      The central manager providing this information.
+ *  @param peripheral   The <code>CBPeripheral</code> that has connected.
+ *
+ *  @discussion         This method is invoked when a connection initiated by {@link connectPeripheral:options:} has succeeded.
+ *
+ */
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     TeLogInfo(@"uuid:%@",peripheral.identifier.UUIDString);
     //v3.3.0,用于过滤重复的sequenceNumber，设备连接成功则清除当前缓存的设备返回的旧的最大sequenceNumber字典。(因为所有设备断电时设备端的sequenceNumber会归零。)
-    [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigMeshLib.share.dataSource.meshUUID];
-    [[NSUserDefaults standardUserDefaults] synchronize];
+    [SigMeshLib.share.dataSource.nodeSequenceNumberCacheList removeAllObjects];
     SigMeshLib.share.secureNetworkBeacon = nil;
     SigMeshLib.share.meshPrivateBeacon = nil;
     if ([peripheral isEqual:self.currentPeripheral]) {
@@ -730,15 +876,50 @@
     }
 }
 
+/*!
+ *  @method centralManager:didFailToConnectPeripheral:error:
+ *
+ *  @param central      The central manager providing this information.
+ *  @param peripheral   The <code>CBPeripheral</code> that has failed to connect.
+ *  @param error        The cause of the failure.
+ *
+ *  @discussion         This method is invoked when a connection initiated by {@link connectPeripheral:options:} has failed to complete. As connection attempts do not
+ *                      timeout, the failure of a connection is atypical and usually indicative of a transient issue.
+ *
+ */
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
+    TeLogInfo(@"peripheral=%@,error=%@",peripheral,error);
     if ([peripheral isEqual:self.currentPeripheral]) {
+        if (self.bluetoothConnectPeripheralWithErrorCallback) {
+            TeLogInfo(@"peripheral connect fail.")
+            self.bluetoothConnectPeripheralWithErrorCallback(self.currentPeripheral, error);
+        }
+        self.bluetoothConnectPeripheralWithErrorCallback = nil;
         [self connectPeripheralFail];
     }
 }
 
+/*!
+ *  @method centralManager:didDisconnectPeripheral:error:
+ *
+ *  @param central      The central manager providing this information.
+ *  @param peripheral   The <code>CBPeripheral</code> that has disconnected.
+ *  @param error        If an error occurred, the cause of the failure.
+ *
+ *  @discussion         This method is invoked upon the disconnection of a peripheral that was connected by {@link connectPeripheral:options:}. If the disconnection
+ *                      was not initiated by {@link cancelPeripheralConnection}, the cause will be detailed in the <i>error</i> parameter. Once this method has been
+ *                      called, no more methods will be invoked on <i>peripheral</i>'s <code>CBPeripheralDelegate</code>.
+ *
+ */
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     TeLogInfo(@"peripheral=%@,error=%@",peripheral,error);
     if ([peripheral isEqual:self.currentPeripheral]) {
+        if (self.bluetoothConnectPeripheralWithErrorCallback) {
+            TeLogInfo(@"peripheral connect fail.")
+            self.bluetoothConnectPeripheralWithErrorCallback(self.currentPeripheral, error);
+        }
+        self.bluetoothConnectPeripheralWithErrorCallback = nil;
+
         [self connectPeripheralFail];
         [self cancelConnectPeripheralFinish];
         [self removeConnectedPeripheralFromLocations:peripheral];
@@ -754,6 +935,16 @@
 
 #pragma mark - CBPeripheralDelegate
 
+/*!
+ *  @method peripheral:didDiscoverServices:
+ *
+ *  @param peripheral    The peripheral providing this information.
+ *    @param error        If an error occurred, the cause of the failure.
+ *
+ *  @discussion            This method returns the result of a @link discoverServices: @/link call. If the service(s) were read successfully, they can be retrieved via
+ *                        <i>peripheral</i>'s @link services @/link property.
+ *
+ */
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(nullable NSError *)error {
     TeLogInfo(@"");
     for (CBService *s in peripheral.services) {
@@ -761,9 +952,18 @@
     }
 }
 
+/*!
+ *  @method peripheral:didDiscoverCharacteristicsForService:error:
+ *
+ *  @param peripheral    The peripheral providing this information.
+ *  @param service        The <code>CBService</code> object containing the characteristic(s).
+ *    @param error        If an error occurred, the cause of the failure.
+ *
+ *  @discussion            This method returns the result of a @link discoverCharacteristics:forService: @/link call. If the characteristic(s) were read successfully,
+ *                        they can be retrieved via <i>service</i>'s <code>characteristics</code> property.
+ */
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(nullable NSError *)error {
     for (CBCharacteristic *c in service.characteristics) {
-        [peripheral discoverDescriptorsForCharacteristic:c];
         if ([c.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
             self.OTACharacteristic = c;
         }else if ([c.UUID.UUIDString isEqualToString:kPBGATT_Out_CharacteristicsID]){
@@ -780,31 +980,69 @@
         }else if ([c.UUID.UUIDString isEqualToString:kMeshOTA_CharacteristicsID]){
             self.MeshOTACharacteristic = c;
         }
-    }
-}
-
-- (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    if ([peripheral isEqual:self.currentPeripheral]) {
-        CBCharacteristic *lastCharacteristic = nil;
-        for (CBService *s in peripheral.services) {
-            if (s.characteristics && s.characteristics.count > 0) {
-                lastCharacteristic = s.characteristics.lastObject;
+        if (kNeedDiscoverDescriptors) {
+            [peripheral discoverDescriptorsForCharacteristic:c];
+        } else {
+            CBService *lastService = peripheral.services.lastObject;
+            if (lastService == service) {
+                [self discoverServicesFinish];
             }
         }
-        if (lastCharacteristic == characteristic) {
-            [self discoverServicesFinish];
+    }
+}
+
+/*!
+ *  @method peripheral:didDiscoverDescriptorsForCharacteristic:error:
+ *
+ *  @param peripheral        The peripheral providing this information.
+ *  @param characteristic    A <code>CBCharacteristic</code> object.
+ *    @param error            If an error occurred, the cause of the failure.
+ *
+ *  @discussion                This method returns the result of a @link discoverDescriptorsForCharacteristic: @/link call. If the descriptors were read successfully,
+ *                            they can be retrieved via <i>characteristic</i>'s <code>descriptors</code> property.
+ */
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
+    if (kNeedDiscoverDescriptors) {
+        if ([peripheral isEqual:self.currentPeripheral]) {
+            CBCharacteristic *lastCharacteristic = nil;
+            for (CBService *s in peripheral.services) {
+                if (s.characteristics && s.characteristics.count > 0) {
+                    lastCharacteristic = s.characteristics.lastObject;
+                }
+            }
+            if (lastCharacteristic == characteristic) {
+                [self discoverServicesFinish];
+            }
         }
     }
 }
 
+/*!
+ *  @method peripheral:didWriteValueForCharacteristic:error:
+ *
+ *  @param peripheral        The peripheral providing this information.
+ *  @param characteristic    A <code>CBCharacteristic</code> object.
+ *    @param error            If an error occurred, the cause of the failure.
+ *
+ *  @discussion                This method returns the result of a {@link writeValue:forCharacteristic:type:} call, when the <code>CBCharacteristicWriteWithResponse</code> type is used.
+ */
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     if (self.bluetoothDidWriteValueCallback) {
         self.bluetoothDidWriteValueCallback(peripheral,characteristic,error);
     }
 }
 
+/*!
+ *  @method peripheral:didUpdateValueForCharacteristic:error:
+ *
+ *  @param peripheral        The peripheral providing this information.
+ *  @param characteristic    A <code>CBCharacteristic</code> object.
+ *    @param error            If an error occurred, the cause of the failure.
+ *
+ *  @discussion                This method is invoked after a @link readValueForCharacteristic: @/link call, or upon receipt of a notification/indication.
+ */
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-//    TeLogInfo(@"<--- from:uuid:%@, length:%d",characteristic.UUID.UUIDString,characteristic.value.length);
+    TeLogInfo(@"<--- from:uuid:%@, length:%d",characteristic.UUID.UUIDString,characteristic.value.length);
     if (self.bluetoothDidUpdateValueCallback) {
         self.bluetoothDidUpdateValueCallback(peripheral,characteristic,error);
     }
@@ -821,6 +1059,7 @@
         }
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
+        TeLogVerbose(@"<--- from:OTA, %@", characteristic.value);
         if (self.bluetoothReadOTACharachteristicCallback) {
             self.bluetoothReadOTACharachteristicCallback(characteristic,YES);
             self.bluetoothReadOTACharachteristicCallback = nil;
@@ -833,14 +1072,24 @@
         }
     }
     if ([characteristic isEqual:self.readCharacteristic]) {
-        TeLogInfo(@"<--- from:readCharacteristics, length:%d",characteristic.value.length);
-        if (self.bluetoothReadCharachteristicCallback) {
-            self.bluetoothReadCharachteristicCallback(characteristic, YES);
-            self.bluetoothReadCharachteristicCallback = nil;
+        TeLogInfo(@"<--- from:readCharacteristics, value:%@",characteristic.value);
+        if (error) {
+            [self readCharachteristicTimeout];
+        } else {
+            [self readCharachteristicFinish:characteristic];
         }
     }
 }
 
+/*!
+ *  @method peripheral:didUpdateNotificationStateForCharacteristic:error:
+ *
+ *  @param peripheral        The peripheral providing this information.
+ *  @param characteristic    A <code>CBCharacteristic</code> object.
+ *    @param error            If an error occurred, the cause of the failure.
+ *
+ *  @discussion                This method returns the result of a @link setNotifyValue:forCharacteristic: @/link call.
+ */
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
     TeLogInfo(@"uuid=%@ didUpdateNotification state=%d, error=%@",characteristic.UUID.UUIDString,characteristic.isNotifying,error);
     if ([peripheral isEqual:self.currentPeripheral] && [characteristic isEqual:self.currentCharacteristic]) {
@@ -849,6 +1098,15 @@
 }
 
 //since ios 11.0
+/*!
+ *  @method peripheralIsReadyToSendWriteWithoutResponse:
+ *
+ *  @param peripheral   The peripheral providing this update.
+ *
+ *  @discussion         This method is invoked after a failed call to @link writeValue:forCharacteristic:type: @/link, when <i>peripheral</i> is again
+ *                      ready to send characteristic value updates.
+ *
+ */
 - (void)peripheralIsReadyToSendWriteWithoutResponse:(CBPeripheral *)peripheral {
 //    TeLogVerbose(@"since ios 11.0,peripheralIsReadyToSendWriteWithoutResponse");
     if ([peripheral isEqual:self.currentPeripheral]) {
@@ -863,6 +1121,15 @@
 //since ios 11.0
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunguarded-availability-new"
+/*!
+ *  @method peripheral:didOpenL2CAPChannel:error:
+ *
+ *  @param peripheral        The peripheral providing this information.
+ *  @param channel            A <code>CBL2CAPChannel</code> object.
+ *    @param error            If an error occurred, the cause of the failure.
+ *
+ *  @discussion                This method returns the result of a @link openL2CAPChannel: @link call.
+ */
 -(void)peripheral:(CBPeripheral *)peripheral didOpenL2CAPChannel:(CBL2CAPChannel *)channel error:(NSError *)error {
     TeLogInfo(@"[%@->%@]",NSStringFromClass([self class]), NSStringFromSelector(_cmd));
     

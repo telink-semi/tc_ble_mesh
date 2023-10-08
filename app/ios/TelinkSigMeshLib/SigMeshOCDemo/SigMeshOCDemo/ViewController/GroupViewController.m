@@ -58,7 +58,7 @@
 }
 
 - (void)updateData{
-    self.source = [NSMutableArray arrayWithArray:SigDataSource.share.groups];
+    self.source = [NSMutableArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadData];
     });

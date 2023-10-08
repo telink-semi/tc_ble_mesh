@@ -39,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Currently active features of the node.
 @property (nonatomic,assign) SigFeatures features;
 
+/// Initialize SigHearbeatMessage object.
+/// @param message The SigControlMessage object.
+/// @returns return `nil` when initialize SigHearbeatMessage object fail.
 - (instancetype)initFromControlMessage:(SigControlMessage *)message;
 
 /// Creates a Heartbeat message.
