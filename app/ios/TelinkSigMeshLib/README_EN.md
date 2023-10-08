@@ -1,6 +1,8 @@
 # TelinkSigMeshLib
 
-version: v3.3.4
+version: v4.1.0.0
+
+APP store download url: https://apps.apple.com/cn/app/telinksigmesh/id1536722792
 
 ## About
 
@@ -8,7 +10,7 @@ The TelinkSigMeshLib library allows to provision、keybind and send messages to 
 
 > Bluetooth Mesh specification may be found here: https://www.bluetooth.com/specifications/mesh-specifications/
 
-The library is compatible with version 1.0.1 of the Bluetooth Mesh Profile Specification.
+The library is compatible with version 1.1.0 of the Bluetooth Mesh Profile Specification.
 
 ## Sample app
 
@@ -16,25 +18,26 @@ The sample application demonstrates how to use the library.
 
 ## Supported features
 
-1. GATT provisioning with no oob devices and static oob devices that available in Bluetooth Mesh Profile 1.0.1.
-2. Fast provisioning with no oob devices that avilable the telink private protocol.
-3. Normal keybind:connect node -> read servers -> open notify -> set filter -> get composition -> appkey add ->
-bind model to appkey.
-4. Fast keybind(Default Bound, node need avilable the telink private protocol):connect node -> read servers -> open notify -> set filter -> appkey add.
-5. Control node with unicastAddress and groupAddress:onoff，light，temperature，level，HSL.
-6. Setting and clearing publication to a Model.
-7. Setting and removing subscriptions to a Model.
-8. Add node to group and delete node from group.
-9. Add LPN node.
-10. GATT OTA: nodes need avilable the telink private protocol.
-11. Scheduler models.
-12. Scene models.
-13. Proxy Filter.
+1. GATT provisioning with no oob devices and static oob devices that is available in Bluetooth Mesh Protocol Specification 1.0.0.
+2. Remote provisioning with no oob devices and static oob devices that is available in Bluetooth Mesh Protocol Specification 1.1.0.
+3. Fast provisioning with no oob devices that avilable the telink private protocol.
+4. Normal keybind:connect node -> read servers -> open notify -> set filter -> get composition -> appkey add -> bind model to appkey.
+5. Fast keybind(Default Bound, node need avilable the telink private protocol):connect node -> read servers -> open notify -> set filter -> appkey add.
+6. Control node with unicastAddress and groupAddress:onoff，light，temperature，level，HSL.
+7. Setting and clearing publication to a Model.
+8. Setting and removing subscriptions to a Model.
+9. Add node to group and delete node from group.
+10. Add LPN node.
+11. GATT OTA: nodes need avilable the telink private protocol.
+12. Mesh OTA: nodes need avilable the Mesh Device Firmware Update Protocol Specification. It is available in Bluetooth Mesh Protocol Specification 1.1.0.
+13. Scheduler models.
+14. Scene models.
+15. Proxy Filter.
 
 ## Requirements
 
 * Xcode 11.0 or newer.
-* An iOS 9.0 or newer device with BLE capabilities.
+* An iOS 11.0 or newer device with BLE capabilities.
 
 ## Setting up the library
 
@@ -42,78 +45,98 @@ bind model to appkey.
 
 ## Open API
 
-* 1. Start SDK.
+* 1.Start SDK.
 
 ```Object-C
 [SDKLibCommand startMeshSDK];
 ```
-* 2. Set SDK log level.
+* 2.Set SDK log level.
 
 ```Object-C
 [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 ```
-* 3. GATT add nodes API1 (auto add)
+* 3.GATT add nodes API1 (auto add)
 
 ```Object-C
 - (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
 ```
-* 4. GATT add node API2 (single add)
+* 4.GATT add node API2 (single add)
 
 ```Object-C
 - (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 ```
-* 5. GATT add node API3: simple api (single add)
+* 5.GATT add node API3: simple api (single add)
 
 ```Object-C
 - (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 ```
-* 6. Add nodes by fast provision
+* 6.Add nodes by fast provision
 
 ```Object-C
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 ```
-* 7. Start connect mesh network(this api will retry connect action every 5 seconds unless connect success or call `stopMeshConnectWithComplete:`)
+* 7. Add nodes by remote provision
+
+>7.1. scan remote provision node
+```Object-C
+- (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback;
+```
+>7.2. provision node
+```Object-C
+- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+```
+>7.3. keybind node
+```Object-C
+- (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail;
+```
+* 8.Start connect mesh network(this api will retry connect action every 5 seconds unless connect success or call `stopMeshConnectWithComplete:`)
 
 ```Object-C
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete;
 ```
-* 8. Stop connect mesh network
+* 9.Stop connect mesh network
 
 ```Object-C
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete;
 ```
-* 9. Control node: OnOffSet(more control api in `SDKLibCommand`)
+* 10.Control node: OnOffSet(more control api in `SDKLibCommand`)
 
 ```Object-C
 + (SigMessageHandle *)genericOnOffSetWithDestination:(UInt16)destination isOn:(BOOL)isOn retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 ```
-* 10. Send ini command API1(api reference c-lib SDK, iniData like "a3ff000000000200ffffc21102c4020100".)
+* 11.Send ini command API1(api reference c-lib SDK, iniData like "a3ff000000000200ffffc21102c4020100".)
 
 ```Object-C
 + (nullable NSError *)sendOpINIData:(NSData *)iniData successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 ```
-* 11. Send ini command API2
+* 12.Send ini command API2
 
 ```Object-C
 + (nullable NSError *)sendIniCommandModel:(IniCommandModel *)model successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 ```
-* 12. Message's live from TelinkSigMeshLib(developer need set `SigMeshLib.share.delegateForDeveloper = self;`)
+* 13.Message's live from TelinkSigMeshLib(developer need set `SigMeshLib.share.delegateForDeveloper = self;`)
 
->12.1. APP did Receive Message from node.
+>13.1. APP did Receive Message from node.
 ```Object-C
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
 ```
->12.2. APP did Send Message to node.
+>13.2. APP did Send Message to node.
 ```Object-C
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination;
 ```
->12.3. APP failed To Send Message.
+>13.3. APP failed To Send Message.
 ```Object-C
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error;
 ```
->12.4. APP did Receive SigProxyConfiguration Message from node.
+>13.4. APP did Receive SigProxyConfiguration Message from node.
 ```Object-C
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
+```
+
+* 14.How to configure whitelist addresses
+TelinkSigMeshLib configures the proxy node as `SigProxyFilerType_whitelist` mode by default after connecting the BLE process complete, the default whitelist address is the provisioner address and 0xFFFF. If the customer needs to add some new whitelist addresses, he can call the following interface to add same new whitelist addresses after the `startMeshConnectWithComplete` callback succeeds.
+```Object-C
++ (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
 ```
 
 SigMesh iOS SDK of Telink Semiconductor (Shanghai) Co., Ltd.
