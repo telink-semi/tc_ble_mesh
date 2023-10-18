@@ -256,6 +256,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
                 MeshService.getInstance().sendMeshMessage(cancelMessage);
             } else if (which == DialogInterface.BUTTON_NEUTRAL) {
+                // CLEAR
+                FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
+                MeshService.getInstance().sendMeshMessage(cancelMessage);
                 FUCacheService.getInstance().clear(MainActivity.this);
             }
         };
@@ -264,7 +267,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 .setMessage("MeshOTA distribution is still running, continue?\n" +
                         "click GO to enter MeshOTA processing page \n"
                         + "click STOP to stop distribution \n" +
-                        "click CLEAR to clear cache")
+                        "click CLEAR to clear cache(Used when an Mesh OTA upgrade exception occurs)")
                 .setPositiveButton("GO", dialogBtnClick)
                 .setNegativeButton("STOP", dialogBtnClick)
                 .setNeutralButton("CLEAR", dialogBtnClick);
