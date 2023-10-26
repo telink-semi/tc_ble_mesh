@@ -36,7 +36,7 @@ import java.security.cert.X509Certificate;
 
 public class CertDetailActivity extends BaseActivity {
 
-    public static final String KEY_EXTRA_CERT_DATA = "CERT_DATA";
+//    public static final String KEY_EXTRA_CERT_DATA = "CERT_DATA";
 
     public static final String KEY_EXTRA_CERT_INFO = "CERT_INFO";
 
@@ -55,8 +55,8 @@ public class CertDetailActivity extends BaseActivity {
             tv_cert_detail.append("cert info error");
             return;
         }
-        byte[] certData = getIntent().getByteArrayExtra(KEY_EXTRA_CERT_DATA);
-        tv_cert_detail.append("raw: " + Arrays.bytesToHexString(certData) + "\n");
+//        byte[] certData = getIntent().getByteArrayExtra(KEY_EXTRA_CERT_DATA);
+//        tv_cert_detail.append("raw: " + Arrays.bytesToHexString(certData) + "\n");
         tv_cert_detail.append(certificate.toString());
 
     }

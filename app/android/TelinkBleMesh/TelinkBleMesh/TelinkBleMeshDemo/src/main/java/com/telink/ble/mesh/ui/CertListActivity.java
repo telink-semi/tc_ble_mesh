@@ -25,7 +25,6 @@ package com.telink.ble.mesh.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -46,8 +45,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * show static OOB list
@@ -61,9 +58,6 @@ public class CertListActivity extends BaseActivity {
     private static final int REQUEST_CODE_SELECT_CERT = 1;
 
     private CertListAdapter mAdapter;
-    private List<byte[]> certDataList = new ArrayList<>();
-    private List<X509Certificate> certificateList = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,31 +70,27 @@ public class CertListActivity extends BaseActivity {
         enableBackNav(true);
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.cert_list);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_cert_add) {
-                    startActivityForResult(new Intent(CertListActivity.this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, "der")
-                                    .putExtra(FileSelectActivity.KEY_TITLE, "select cert(.der)")
-                            , REQUEST_CODE_SELECT_CERT);
-                } else if (item.getItemId() == R.id.item_cert_clear) {
-                    showClearDialog();
-                }
-                return false;
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_cert_add) {
+                startActivityForResult(new Intent(CertListActivity.this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, "der")
+                                .putExtra(FileSelectActivity.KEY_TITLE, "select cert(.der)")
+                        , REQUEST_CODE_SELECT_CERT);
+            } else if (item.getItemId() == R.id.item_cert_clear) {
+                showClearDialog();
             }
+            return false;
         });
 
-        parseCacheCerts();
-        int rootIndex = CertCacheService.getInstance().getRootIndex();
-        mAdapter = new CertListAdapter(this, certificateList, rootIndex);
 
-        /**
+        mAdapter = new CertListAdapter(this);
+        mAdapter.resetData();
+
+        /*
          * edit cert
          */
         mAdapter.setOnItemClickListener(position -> startActivityForResult(
                 new Intent(CertListActivity.this, CertDetailActivity.class)
-                        .putExtra(CertDetailActivity.KEY_EXTRA_CERT_INFO, certificateList.get(position))
-                        .putExtra(CertDetailActivity.KEY_EXTRA_CERT_DATA, certDataList.get(position))
+                        .putExtra(CertDetailActivity.KEY_EXTRA_CERT_INFO, mAdapter.get(position))
                 , OobListActivity.REQUEST_CODE_EDIT_OOB
         ));
         mAdapter.setOnItemLongClickListener(position -> {
@@ -112,19 +102,6 @@ public class CertListActivity extends BaseActivity {
         rv_oob.setAdapter(mAdapter);
     }
 
-    private void parseCacheCerts() {
-        certDataList.addAll(CertCacheService.getInstance().get());
-        for (byte[] certData : certDataList) {
-            try {
-                CertificateFactory factory = CertificateFactory.getInstance("X.509");
-                X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(certData));
-                certificateList.add(certificate);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void showActionsDialog(final int position) {
         AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
         final boolean root = position == CertCacheService.getInstance().getRootIndex();
@@ -133,11 +110,13 @@ public class CertListActivity extends BaseActivity {
         deleteDialog.setItems(title, (dialog, which) -> {
             if (which == 0) {
                 // delete
-                CertCacheService.getInstance().delete(getApplicationContext(), position);
-                certDataList.remove(position);
-                certificateList.remove(position);
-                mAdapter.updateRootIndex(CertCacheService.getInstance().getRootIndex());
-                mAdapter.notifyDataSetChanged();
+                if (position == 0) {
+                    toastMsg("can not delete default root-cert");
+                } else {
+                    CertCacheService.getInstance().delete(getApplicationContext(), position);
+                    mAdapter.remove(position);
+                    mAdapter.updateRootIndex(CertCacheService.getInstance().getRootIndex());
+                }
             } else if (which == 1) {
                 // set root
                 CertCacheService.getInstance().setRootIndex(getApplicationContext(), position);
@@ -148,13 +127,10 @@ public class CertListActivity extends BaseActivity {
         deleteDialog.show();
     }
 
-
     private void showClearDialog() {
-        showConfirmDialog("Delete all certs? ", (dialog, which) -> {
-            certDataList.clear();
-            certificateList.clear();
-            CertCacheService.getInstance().clear(getApplicationContext());
-            mAdapter.notifyDataSetChanged();
+        showConfirmDialog("Delete all certs(except default root-cert)? ", (dialog, which) -> {
+            CertCacheService.getInstance().clearAndReload(getApplicationContext());
+            mAdapter.resetData();
         });
     }
 
@@ -169,8 +145,7 @@ public class CertListActivity extends BaseActivity {
             MeshLogger.log("select: " + path);
             X509Certificate parseResult = parseCert(path);
             if (parseResult != null) {
-                certificateList.add(parseResult);
-                mAdapter.notifyDataSetChanged();
+                mAdapter.add(parseResult);
                 Toast.makeText(CertListActivity.this, "Cert Import Success", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(CertListActivity.this, "Cert Import Fail: check the file format", Toast.LENGTH_SHORT).show();
@@ -195,7 +170,6 @@ public class CertListActivity extends BaseActivity {
             CertificateFactory factory = CertificateFactory.getInstance("X.509");
             X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(certData));
             if (certificate != null) {
-                certDataList.add(certData);
                 CertCacheService.getInstance().addCert(this, certData);
             }
             return certificate;

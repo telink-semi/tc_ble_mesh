@@ -29,7 +29,8 @@ import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,12 @@ import java.util.List;
  * cert cache
  */
 public class CertCacheService {
+
+    /**
+     * cert in assets
+     */
+    private static final String CERT_IN_ASSET = "mesh_default_root.der";
+
 
     private static final String CERT_CACHE_PREFIX = "tlk_cert";
 
@@ -50,8 +57,8 @@ public class CertCacheService {
 
     private List<byte[]> certs = new ArrayList<>();
 
-    // selected root cert index
-    private int rootIndex = -1;
+    // selected root cert index, changed from -1 to 0
+    private int rootIndex = 0;
 
     private CertCacheService() {
     }
@@ -64,6 +71,20 @@ public class CertCacheService {
      * load cert storage
      */
     public void load(Context context) {
+        loadCerts(context);
+        loadRootIndex(context);
+        if (rootIndex >= certs.size()) {
+            rootIndex = -1;
+        }
+    }
+
+    private void loadCerts(Context context) {
+        certs.clear();
+        byte[] certInAssets = parseAsset(context);
+        if (certInAssets != null) {
+            certs.add(certInAssets);
+        }
+
         File dir = getCertDir(context);
         if (!dir.exists()) return;
         String[] targets = dir.list((dir1, name) -> {
@@ -74,7 +95,6 @@ public class CertCacheService {
             return;
         }
         File file;
-        certs.clear();
         for (String certFile : targets) {
             file = new File(dir, certFile);
             byte[] data = FileSystem.readByteArray(file);
@@ -82,8 +102,19 @@ public class CertCacheService {
                 certs.add(data);
             }
         }
+    }
 
-        loadRootIndex(context);
+    private byte[] parseAsset(Context context) {
+        try {
+            InputStream stream = context.getAssets().open(CERT_IN_ASSET);
+            int length = stream.available();
+            byte[] firmwareData = new byte[length];
+            stream.read(firmwareData);
+            stream.close();
+            return firmwareData;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public byte[] getRootCert() {
@@ -93,20 +124,27 @@ public class CertCacheService {
         return null;
     }
 
-
+    /**
+     * load root index file
+     *
+     * @param context
+     */
     private void loadRootIndex(Context context) {
         File dir = getCertDir(context);
         File rootIdxFile = new File(dir, CERT_CACHE_ROOT_INDEX);
         if (!rootIdxFile.exists()) {
-            rootIndex = -1;
+            MeshLogger.d("root index file not exist");
+            rootIndex = 0;
             return;
         }
 
         byte[] data = FileSystem.readByteArray(rootIdxFile);
         if (data == null) {
-            rootIndex = -1;
+            MeshLogger.d("root index file parse error");
+            rootIndex = 0;
         } else {
             this.rootIndex = MeshUtils.bytes2Integer(data, ByteOrder.LITTLE_ENDIAN);
+            MeshLogger.d("load root index: " + rootIndex);
         }
     }
 
@@ -136,18 +174,14 @@ public class CertCacheService {
     public void delete(Context context, int index) {
         File dir = getCertDir(context);
         if (!dir.exists()) return;
-        String[] targets = dir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(CERT_CACHE_PREFIX);
-            }
-        });
+        if (index == 0) return;
+        String[] targets = dir.list((dir1, name) -> name.startsWith(CERT_CACHE_PREFIX));
         if (targets == null || targets.length < index) {
             return;
         }
-        File file = new File(dir, targets[index]);
+        File file = new File(dir, targets[index - 1]);
         boolean deleted = file.delete();
-        MeshLogger.d("delete file at " + index + " -- " + targets[index] + " -- " + deleted);
+        MeshLogger.d("delete file at " + index + " -- " + targets[index - 1] + " -- " + deleted);
         this.certs.remove(index);
         if (index == rootIndex) {
             rootIndex = -1;
@@ -155,24 +189,17 @@ public class CertCacheService {
             rootIndex -= 1;
         }
         saveRootIndex(context);
-
     }
 
     /**
      * clear memory and remove file in disk
      */
-    public void clear(Context context) {
-        MeshLogger.d("FUCache clear");
-        this.certs.clear();
+    public void clearAndReload(Context context) {
+        MeshLogger.d("Cert Cache clear");
 
         File dir = getCertDir(context);
         if (!dir.exists()) return;
-        String[] targets = dir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(CERT_CACHE_PREFIX);
-            }
-        });
+        String[] targets = dir.list((dir1, name) -> name.startsWith(CERT_CACHE_PREFIX));
         if (targets == null || targets.length == 0) {
             return;
         }
@@ -182,8 +209,14 @@ public class CertCacheService {
                 file.delete();
             }
         }
-        this.rootIndex = -1;
+//        if (this.rootIndex != 0) {
+//            this.rootIndex = -1;
+//        }
+        this.rootIndex = 0;
         saveRootIndex(context);
+
+        // reload
+        load(context);
     }
 
     public int getRootIndex() {
@@ -200,6 +233,7 @@ public class CertCacheService {
     }
 
     private void saveRootIndex(Context context) {
+        MeshLogger.d("update root index : " + this.rootIndex);
         byte[] indexData = MeshUtils.integer2Bytes(this.rootIndex, 4, ByteOrder.LITTLE_ENDIAN);
         FileSystem.writeByteArray(getCertDir(context), CERT_CACHE_ROOT_INDEX, indexData);
     }

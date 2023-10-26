@@ -33,8 +33,12 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.CertCacheService;
 
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,12 +48,42 @@ public class CertListAdapter extends BaseRecyclerViewAdapter<CertListAdapter.Vie
 
     private Context mContext;
     private List<X509Certificate> certificateList;
-    private int rootIndex;
+    private int rootIndex = 0;
 
-    public CertListAdapter(Context context, List<X509Certificate> certificateList, int rootIndex) {
+    public CertListAdapter(Context context) {
         this.mContext = context;
-        this.certificateList = certificateList;
-        this.rootIndex = rootIndex;
+        this.certificateList = new ArrayList<>();
+    }
+
+    public void resetData() {
+        certificateList.clear();
+        List<byte[]> certDataList = new ArrayList<>(CertCacheService.getInstance().get());
+        for (byte[] certData : certDataList) {
+            try {
+                CertificateFactory factory = CertificateFactory.getInstance("X.509");
+                X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(certData));
+                certificateList.add(certificate);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        rootIndex = CertCacheService.getInstance().getRootIndex();
+        notifyDataSetChanged();
+    }
+
+    public X509Certificate get(int position) {
+        return certificateList.get(position);
+    }
+
+    public void add(X509Certificate certificate) {
+        certificateList.add(certificate);
+        this.notifyDataSetChanged();
+    }
+
+
+    public void remove(int position) {
+        this.certificateList.remove(position);
+        this.notifyDataSetChanged();
     }
 
     public void updateRootIndex(int index) {
@@ -87,6 +121,9 @@ public class CertListAdapter extends BaseRecyclerViewAdapter<CertListAdapter.Vie
             holder.iv_cert.setColorFilter(mContext.getResources().getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
         } else {
             holder.iv_cert.setColorFilter(mContext.getResources().getColor(R.color.grey), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+        if (position == 0) {
+            holder.tv_cert_info.append("\n(Default)");
         }
 //        holder.tv_root.setVisibility(rootIndex == position ? View.VISIBLE : View.GONE);
     }
