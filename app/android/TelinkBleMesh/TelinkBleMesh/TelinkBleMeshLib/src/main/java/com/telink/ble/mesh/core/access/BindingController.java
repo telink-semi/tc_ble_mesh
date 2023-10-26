@@ -358,7 +358,7 @@ public class BindingController {
                 onModelAppStatus(appStatus);
                 break;
             }
-            case OP_AGGREGATOR_STATUS: {
+            case CFG_OP_AGG_STATUS: {
                 if (step != STEP_SEND_OP_AGG) {
                     log("step not at sending op agg");
                     return;

@@ -382,11 +382,6 @@ public enum Opcode {
     VD_MESH_PROV_CONFIRM_STS(0x0211CC),
     VD_MESH_PROV_COMPLETE(0x0211CD),
 
-    // opcode aggregator
-    OP_AGGREGATOR_SEQUENCE(0x09B8),
-    OP_AGGREGATOR_STATUS(0x10B8),
-
-
     // direct control
     DIRECTED_CONTROL_GET(0x7B80),
     DIRECTED_CONTROL_SET(0x7C80),
@@ -454,7 +449,7 @@ public enum Opcode {
     CFG_ON_DEMAND_PROXY_SET(0x6A80),
     CFG_ON_DEMAND_PROXY_STATUS(0x6B80),
 
-
+    // opcode aggregator
     CFG_OP_AGG_SEQ(0x7280),
     CFG_OP_AGG_STATUS(0x7380),
 

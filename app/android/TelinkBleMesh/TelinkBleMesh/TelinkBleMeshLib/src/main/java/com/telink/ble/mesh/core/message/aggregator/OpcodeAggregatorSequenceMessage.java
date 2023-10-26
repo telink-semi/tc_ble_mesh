@@ -59,7 +59,7 @@ public class OpcodeAggregatorSequenceMessage extends MeshMessage {
      */
     @Override
     public int getOpcode() {
-        return Opcode.OP_AGGREGATOR_SEQUENCE.value;
+        return Opcode.CFG_OP_AGG_SEQ.value;
     }
 
     /**
@@ -69,7 +69,7 @@ public class OpcodeAggregatorSequenceMessage extends MeshMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return Opcode.OP_AGGREGATOR_STATUS.value;
+        return Opcode.CFG_OP_AGG_STATUS.value;
     }
 
 }

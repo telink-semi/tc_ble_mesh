@@ -219,7 +219,7 @@ public class MeshStatus {
             register(Opcode.VD_MESH_ADDR_GET_STS.value, MeshAddressStatusMessage.class);
 
             // opcode aggregator
-            register(Opcode.OP_AGGREGATOR_STATUS.value, OpcodeAggregatorStatusMessage.class);
+            register(Opcode.CFG_OP_AGG_STATUS.value, OpcodeAggregatorStatusMessage.class);
 
             // direct forwarding table
             register(Opcode.FORWARDING_TABLE_STATUS.value, ForwardingTableStatusMessage.class);
