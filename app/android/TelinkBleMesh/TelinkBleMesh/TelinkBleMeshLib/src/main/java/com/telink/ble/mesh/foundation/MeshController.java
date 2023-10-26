@@ -1056,6 +1056,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             } else if (actionMode == Mode.FAST_PROVISION) {
                 mFastProvisioningController.clear();
                 isLogin = false;
+                setupMeshNetwork(this.meshConfiguration);
             }
             actionMode = targetMode;
             return true;
@@ -1190,6 +1191,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * connected and filter set success
      */
     private void onAutoConnectSuccess() {
+        mGattConnection.enableOnlineStatus();
         onAutoConnectEvent(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN);
     }
 
@@ -1211,7 +1213,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * @return true if send gatt command success, otherwise false
      */
     public boolean getOnlineStatus() {
-        return isLogin && mGattConnection.enableOnlineStatus();
+        return isLogin && mGattConnection.getOnlineStatus();
     }
 
     /**
