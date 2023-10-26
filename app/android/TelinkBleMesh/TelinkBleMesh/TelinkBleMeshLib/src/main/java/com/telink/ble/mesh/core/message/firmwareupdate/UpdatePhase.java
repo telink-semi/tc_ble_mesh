@@ -29,19 +29,28 @@ package com.telink.ble.mesh.core.message.firmwareupdate;
  */
 public enum UpdatePhase {
 
-    IDLE(0x00, "Ready to start a Receive Firmware procedure"),
+    IDLE(0x00, "No firmware transfer is in progress"),
 
-    TRANSFER_ERROR(0x01, "The Transfer BLOB procedure failed."),
+    TRANSFER_ERROR(0x01, "Firmware transfer was not completed"),
 
-    TRANSFER_ACTIVE(0x02, "The Receive Firmware procedure is being executed"),
+    TRANSFER_ACTIVE(0x02, "Firmware transfer is in progress"),
 
-    VERIFICATION_ACTIVE(0x03, "The Verify Firmware procedure is being executed"),
+    VERIFYING_UPDATE(0x03, "Verification of the firmware image is in progress"),
 
-    VERIFICATION_SUCCESS(0x04, "The Verify Firmware procedure completed successfully."),
+    VERIFICATION_SUCCEEDED(0x04, "Firmware image verification succeeded"),
 
-    VERIFICATION_FAILED(0x05, "The Verify Firmware procedure failed."),
+    VERIFICATION_FAILED(0x05, "Firmware image verification failed"),
 
-    APPLYING_UPDATE(0x06, "The Apply New Firmware procedure is being executed."),
+    APPLYING_UPDATE(0x06, "Firmware applying is in progress"),
+
+    /**
+     * 0x07 -> 0x09 is added in spec MshDFU 1.0#4.2.1 table 4.8
+     */
+    TRANSFER_CANCELED(0x07, "Firmware transfer has been canceled"),
+
+    APPLY_SUCCESS(0x08, "Firmware applying succeeded"),
+
+    APPLY_FAILED(0x09, "Firmware applying failed"),
 
     UNKNOWN_ERROR(0xFF, "unknown error");
     /**

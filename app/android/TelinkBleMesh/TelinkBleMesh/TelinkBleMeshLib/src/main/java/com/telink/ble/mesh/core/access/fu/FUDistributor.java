@@ -281,7 +281,6 @@ class FUDistributor implements BlobTransferCallback {
      * one device by one device
      * if all devices executed, then next step
      */
-    // draft feature
     private void nextAction() {
 
         if (nodeIndex >= nodes.size()) {
@@ -414,7 +413,7 @@ class FUDistributor implements BlobTransferCallback {
                     onDeviceFail(nodes.get(nodeIndex), "firmware update phase err");
                 } else {
                     if (step == STEP_UPDATE_APPLY) {
-                        if (phase == UpdatePhase.VERIFICATION_SUCCESS
+                        if (phase == UpdatePhase.VERIFICATION_SUCCEEDED
                                 || phase == UpdatePhase.APPLYING_UPDATE) {
                             onDeviceApplySuccess(nodes.get(nodeIndex));
                         } else {

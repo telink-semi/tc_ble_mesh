@@ -147,7 +147,6 @@ public class RemoteDistributorAssist {
                 executeAction();
             }
         }, delay);
-
     }
 
 
@@ -207,7 +206,6 @@ public class RemoteDistributorAssist {
                 onAssistComplete(false, "distribute status error");
             }
         }
-
     }
 
 

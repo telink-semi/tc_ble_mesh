@@ -291,7 +291,6 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         }
     };
 
-    // draft feature
     private void onMeshMessagePrepared(MeshMessage meshMessage) {
         log("remote provisioning message prepared: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X -- params: ", meshMessage.getOpcode(), meshMessage.getDestinationAddress())

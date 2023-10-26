@@ -219,8 +219,10 @@ public class FUController implements FUActionHandler {
                     // rebooted, check firmware
                     onFUStateUpdate(FUState.UPDATE_RECHECKING, "device may reboot complete");
                     distributorAssist.recheckFirmware(true);
-                } else if (phase == UpdatePhase.TRANSFER_ERROR.code) {
-                    onDeviceUpdate(deviceList.get(firstIndexInList), "device ReceiversList phase error");
+                } else if (phase == UpdatePhase.TRANSFER_ERROR.code
+                        || phase == UpdatePhase.APPLY_FAILED.code
+                        || phase == UpdatePhase.TRANSFER_CANCELED.code) {
+                    onDeviceUpdate(deviceList.get(firstIndexInList), "device ReceiversList phase error : phase-" + phase);
                     firstIndexInList++;
                     if (firstIndexInList >= deviceList.size()) {
                         onComplete(false, "all devices phase error");
@@ -231,7 +233,7 @@ public class FUController implements FUActionHandler {
                     MeshLogger.d("onProgressState : " + currentState);
 
                     if (updatePolicy == UpdatePolicy.VerifyOnly) {
-                        if (phase == UpdatePhase.VERIFICATION_FAILED.code || phase == UpdatePhase.VERIFICATION_SUCCESS.code) {
+                        if (phase == UpdatePhase.VERIFICATION_FAILED.code || phase == UpdatePhase.VERIFICATION_SUCCEEDED.code) {
                             // apply all devices update
                             onFUStateUpdate(FUState.UPDATE_APPLYING, null);
                             distributorAssist.applyDistribute();
@@ -245,7 +247,11 @@ public class FUController implements FUActionHandler {
                             onFUStateUpdate(FUState.UPDATE_RECHECKING, null);
                             log("waiting for disconnect -- 1");
                         } else {
-                            if (phase == UpdatePhase.APPLYING_UPDATE.code) {
+//                            if (phase == UpdatePhase.APPLYING_UPDATE.code) {
+                            /**
+                             * changed from 0x06 to 0x08
+                             */
+                            if (phase == UpdatePhase.APPLY_SUCCESS.code || phase == UpdatePhase.APPLYING_UPDATE.code) {
                                 onFUStateUpdate(FUState.DISTRIBUTE_CONFIRMING, null);
                                 distributorAssist.confirmDistribute();
                             } else {

@@ -41,6 +41,7 @@ public class BindingParameters extends Parameters {
      */
     public BindingParameters(BindingDevice device) {
         this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROXY));
+//        this.set(COMMON_PROXY_FILTER_INIT_NEEDED, false);// for pts test
         this.set(ACTION_BINDING_TARGET, device);
     }
 

@@ -183,16 +183,12 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     public void proxyInit() {
-        enableNotifications();
-        writeCCCForPx();
-//        writeCCCForPv();
-
+        enableProxyNotify();
     }
 
     public void provisionInit() {
-        enableNotifications();
-        writeCCCForPv();
-        writeCCCForPx();
+        enableProvisionNotify();
+        enableProxyNotify();
     }
 
     /**
@@ -247,35 +243,55 @@ public class GattConnection extends BluetoothGattCallback {
 
 
     // 27 18
-    public void writeCCCForPv() {
-        log("write ccc in provision service");
-        GattRequest cmd = GattRequest.newInstance();
-        BluetoothGattService service = getProvisionService();
-        if (service == null) return;
-        cmd.serviceUUID = service.getUuid();
-        cmd.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
-        cmd.descriptorUUID = UUIDInfo.DESCRIPTOR_CFG_UUID;
-        cmd.data = new byte[]{0x01, 0x00};
-        cmd.type = GattRequest.RequestType.WRITE_DESCRIPTOR;
-        sendRequest(cmd);
+    public void enableProvisionNotify() {
+        BluetoothGattService provisionService = getProvisionService();
+        if (provisionService == null) {
+            log("provision service not found");
+            return;
+        }
+
+        GattRequest gattRequest = GattRequest.newInstance();
+        gattRequest.type = GattRequest.RequestType.ENABLE_NOTIFY;
+        gattRequest.serviceUUID = provisionService.getUuid();
+        gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
+        sendRequest(gattRequest);
+
+        log("write ccc to provision service");
+        GattRequest cccCmd = GattRequest.newInstance();
+        cccCmd.serviceUUID = provisionService.getUuid();
+        cccCmd.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
+        cccCmd.descriptorUUID = UUIDInfo.DESCRIPTOR_CFG_UUID;
+        cccCmd.data = new byte[]{0x01, 0x00};
+        cccCmd.type = GattRequest.RequestType.WRITE_DESCRIPTOR;
+        sendRequest(cccCmd);
     }
 
-
     // 28 18
-    public void writeCCCForPx() {
-        log("write ccc in proxy service");
+    public void enableProxyNotify() {
+        BluetoothGattService proxyService = getProxyService(false);
+        if (proxyService == null) {
+            log("proxy service not found");
+            return;
+        }
+        log("enable proxy notify");
+        GattRequest gattRequest = GattRequest.newInstance();
+        gattRequest.type = GattRequest.RequestType.ENABLE_NOTIFY;
+        gattRequest.serviceUUID = proxyService.getUuid();
+        gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PROXY_OUT;
+        sendRequest(gattRequest);
+
+        log("write ccc to proxy service");
         GattRequest cmd = GattRequest.newInstance();
-        BluetoothGattService service = getProxyService(false);
-        if (service == null) return;
-        cmd.serviceUUID = service.getUuid();
+        cmd.serviceUUID = proxyService.getUuid();
         cmd.characteristicUUID = UUIDInfo.CHARACTERISTIC_PROXY_OUT;
         cmd.descriptorUUID = UUIDInfo.DESCRIPTOR_CFG_UUID;
         cmd.data = new byte[]{0x01, 0x00};
         cmd.type = GattRequest.RequestType.WRITE_DESCRIPTOR;
         sendRequest(cmd);
+
     }
 
-    public boolean enableOnlineStatus() {
+    public boolean getOnlineStatus() {
         GattRequest cmd = GattRequest.newInstance();
         if (!isConnected()) return false;
         if (!checkOnlineStatusService()) return false;
@@ -311,26 +327,9 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
 
-    private void enableNotifications() {
+    public void enableOnlineStatus() {
+        if (!checkOnlineStatusService()) return;
         GattRequest gattRequest;
-        BluetoothGattService provisionService = getProvisionService();
-        if (provisionService != null) {
-            gattRequest = GattRequest.newInstance();
-            gattRequest.type = GattRequest.RequestType.ENABLE_NOTIFY;
-            gattRequest.serviceUUID = provisionService.getUuid();
-            gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
-            sendRequest(gattRequest);
-        }
-
-        BluetoothGattService proxyService = getProxyService(false);
-        if (proxyService != null) {
-            gattRequest = GattRequest.newInstance();
-            gattRequest.type = GattRequest.RequestType.ENABLE_NOTIFY;
-            gattRequest.serviceUUID = proxyService.getUuid();
-            gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PROXY_OUT;
-            sendRequest(gattRequest);
-        }
-
         {
             gattRequest = GattRequest.newInstance();
             gattRequest.type = GattRequest.RequestType.ENABLE_NOTIFY;

@@ -371,7 +371,6 @@ public class ProvisioningController {
         delayHandler.removeCallbacks(provisioningTimeoutTask);
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
-        // draft feature
         final int oobInfo = device.getOobInfo();
         if (MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
             provisionRecordsGet();
@@ -379,8 +378,6 @@ public class ProvisioningController {
             provisionInvite();
         }
 
-        // draft feature
-//        provisionInvite();
     }
 
     /**
@@ -482,8 +479,13 @@ public class ProvisioningController {
      * @return auth
      */
     private byte[] getAuthValue() {
-        if (pvCapability.isStaticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
-            return mProvisioningDevice.getAuthValue();
+        byte[] auth = mProvisioningDevice.getAuthValue();
+        if (pvCapability.isStaticOOBSupported() && auth != null) {
+            // If the device does not support epa, only the first 16 bytes are fetched
+            if (!pvCapability.isHMacAlgorithmSupported() && auth.length == 32) {
+                return ByteBuffer.allocate(16).put(auth, 0, 16).array();
+            }
+            return auth;
         } else {
             if (pvCapability.isHMacAlgorithmSupported()) {
                 return AUTH_NO_OOB_EPA;
@@ -555,10 +557,20 @@ public class ProvisioningController {
         final boolean useOOBPublicKey = recordPubKey != null;
         startPDU = ProvisioningStartPDU.getSimple(useOOBPublicKey, isStaticOOB);
         startPDU.setPublicKey(pvCapability.publicKeyType == 1 && recordPubKey != null);
-        byte algo = (byte) (pvCapability.isHMacAlgorithmSupported() ? 1 : 0);
+//        byte algo = (byte) (pvCapability.isHMacAlgorithmSupported() ? 1 : 0);
+        byte algo = getSupportAlg();
         startPDU.setAlgorithm(algo);
         updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB + " - algo:" + algo);
         sendProvisionPDU(startPDU);
+    }
+
+    private byte getSupportAlg() {
+        if (!pvCapability.isHMacAlgorithmSupported()) return 0;
+        byte[] auth = mProvisioningDevice.getAuthValue();
+        if (auth != null && auth.length == 16) {
+            return 0;
+        }
+        return 1;
     }
 
     /**
@@ -600,6 +612,9 @@ public class ProvisioningController {
                 onProvisionFail("authValue not found when device static oob supported!");
                 return;
             }
+        }
+        if (useStaticOOB) {
+            log("use static oob - " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceUUID()) + " - " + Arrays.bytesToHexString(mProvisioningDevice.getAuthValue()));
         }
         provisionStart(useStaticOOB);
         provisionSendPubKey();
@@ -703,7 +718,8 @@ ConfirmationInputs = ProvisioningInvitePDUValue || ProvisioningCapabilitiesPDUVa
      * @return true if the HMAC algorithm is supported, false otherwise.
      */
     private boolean isHmac() {
-        return pvCapability != null && pvCapability.isHMacAlgorithmSupported();
+//        return pvCapability != null && pvCapability.isHMacAlgorithmSupported();
+        return pvCapability != null && getSupportAlg() == 1;
     }
 
     /**
