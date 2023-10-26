@@ -88,11 +88,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:checked="true"
                     android:drawableRight="@drawable/ic_tip"
                     android:drawablePadding="12dp"
                     android:drawableTint="@color/colorPrimary"
-                    android:text="Export to other phone(CDTP)" />
+                    android:text="Export to other phone(CDTP)"
+                    android:visibility="gone" />
 
                 <RadioButton
                     android:id="@+id/rb_cdtp_to_gw"
@@ -102,13 +102,15 @@
                     android:drawableRight="@drawable/ic_tip"
                     android:drawablePadding="12dp"
                     android:drawableTint="@color/colorPrimary"
-                    android:text="Export to gateway(CDTP)" />
+                    android:text="Export to gateway(CDTP)"
+                    android:visibility="gone" />
 
                 <RadioButton
                     android:id="@+id/rb_qrcode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
+                    android:checked="true"
                     android:drawableRight="@drawable/ic_tip"
                     android:drawablePadding="12dp"
                     android:drawableTint="@color/colorPrimary"

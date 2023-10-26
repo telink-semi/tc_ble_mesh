@@ -26,8 +26,10 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -87,6 +89,11 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         checkPermissionAndStart();
     }
 
@@ -117,7 +124,6 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     public void onPause() {
         super.onPause();
         mScannerView.stopCamera();
-
     }
 
 
@@ -173,16 +179,43 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
                 restartCamera();
             } else {
                 Toast.makeText(this, "camera permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                onPermissionDenied();
+//                finish();
             }
         }
     }
 
 
-    private void showCompleteDialog(String jsonData) {
+    /**
+     * show tip dialog when camera permission denied
+     */
+    AlertDialog permissionDialog;
 
+    private void onPermissionDenied() {
+        if (permissionDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(false);
+            builder.setTitle("Warn");
+            builder.setMessage("camera permission denied, click [Go Settings] to set permission");
+            builder.setPositiveButton("Go Settings", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                }
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                dialog.dismiss();
+                finish();
+            });
+            permissionDialog = builder.create();
+        }
+        if (permissionDialog.isShowing()) {
+            return;
+        }
+        permissionDialog.show();
     }
-
 
     private void onDownloadSuccess(final String meshJson) {
         MeshLogger.d("device import json string: " + meshJson);
@@ -191,7 +224,6 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
         builder.setTitle("Warning");
         builder.setMessage("Mesh JSON receive complete, import data?");
         builder.setPositiveButton("Confirm", (dialog, which) -> {
-
             MeshInfo meshInfo = MeshStorageService.getInstance().importExternal(meshJson, this);
             if (meshInfo != null) {
                 dialog.dismiss();
@@ -200,9 +232,13 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
                 setResult(RESULT_OK, intent);
                 finish();
             }
-
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            dialog.dismiss();
+//            finish();
+            handling = false;
+            restartCamera();
+        });
         builder.show();
         /* MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         if (MeshStorageService.getInstance().importExternal(meshJson, this)) {
@@ -210,7 +246,6 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
         } else {
             MeshLogger.d("Mesh storage import fail");
         }*/
-
     }
 
     private void syncData(MeshInfo newMesh) {
@@ -224,15 +259,11 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
 
 
     private void onDownloadFail(final String desc) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                dismissWaitingDialog();
-                MeshLogger.w(desc);
-                showErrorDialog(desc);
-            }
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            MeshLogger.w(desc);
+            showErrorDialog(desc);
         });
-
     }
 
     private Callback downloadCallback = new Callback() {
@@ -259,8 +290,7 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
 
             if (httpResponse.isSuccess) {
                 final String meshJson = (String) httpResponse.data;
-                onDownloadSuccess(meshJson);
-
+                runOnUiThread(() -> onDownloadSuccess(meshJson));
             } else {
                 onDownloadFail("fail: " + httpResponse.msg);
             }
