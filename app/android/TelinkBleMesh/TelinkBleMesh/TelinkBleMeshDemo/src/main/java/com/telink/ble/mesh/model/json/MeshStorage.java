@@ -102,7 +102,7 @@ public class MeshStorage {
 //    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
 
     public static class Provisioner {
-        public long id;
+//        public long id;
 
         public String provisionerName;
 

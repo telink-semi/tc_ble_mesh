@@ -72,7 +72,13 @@ public class Scene implements Serializable {
         if (addressList == null) {
             addressList = new ArrayList<>();
         }
-        addressList.add(MeshUtils.intToHex2(address));
+        String adrStr = MeshUtils.intToHex2(address);
+        for (String adr : addressList) {
+            if (adr.equalsIgnoreCase(adrStr)) {
+                return;
+            }
+        }
+        addressList.add(adrStr);
         MeshInfoService.getInstance().updateScene(this);
     }
 

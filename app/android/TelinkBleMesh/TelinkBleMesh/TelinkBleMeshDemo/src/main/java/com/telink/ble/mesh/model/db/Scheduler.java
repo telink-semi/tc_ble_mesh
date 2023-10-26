@@ -85,10 +85,11 @@ public final class Scheduler implements Serializable, Parcelable {
     public Scheduler() {
     }
 
-    private Scheduler(byte index, SchedulerRegister register) {
-        this.index = index;
-        this.register.setTarget(register);
-    }
+//    private Scheduler(byte index, SchedulerRegister register) {
+//        this.index = index;
+////        this.register = new ToOne<SchedulerRegister>(this, SchedulerRegister_.__)
+//        this.register.setTarget(register);
+//    }
 
     /*public long getRegisterParam0() {
         return index |
@@ -143,7 +144,11 @@ public final class Scheduler implements Serializable, Parcelable {
         reg.action = (data[6] >> 4 & 0b1111); // d6 8
         reg.transTime = data[7] & 0xFF; // d7 8
         reg.sceneId = (data[8] & 0xFF) | ((data[9] << 8) & 0xFF); // d8 d9
-        return new Scheduler(index, reg);
+        Scheduler scheduler = new Scheduler();
+        scheduler.index = index;
+        scheduler.register.setTarget(reg);
+        return scheduler;
+//        return new Scheduler(index, reg);
     }
 
     public byte[] toBytes() {
@@ -336,7 +341,11 @@ public final class Scheduler implements Serializable, Parcelable {
                     this.transTime,
                     this.sceneId
             );
-            return new Scheduler(this.index, register);
+            Scheduler scheduler = new Scheduler();
+            scheduler.index = index;
+            scheduler.register.setTarget(register);
+            return scheduler;
+//            return new Scheduler(this.index, register);
         }
     }
 
