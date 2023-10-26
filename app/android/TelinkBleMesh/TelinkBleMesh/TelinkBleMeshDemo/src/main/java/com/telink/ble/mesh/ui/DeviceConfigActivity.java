@@ -75,7 +75,6 @@ import com.telink.ble.mesh.model.ConfigState;
 import com.telink.ble.mesh.model.DeviceConfig;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
-import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceConfigListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -183,7 +182,7 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
     }
 
     private String getTTLDesc(byte ttl) {
-        return "" + ttl;
+        return String.format("%02X", ttl);
     }
 
     private String getRelayDesc(boolean relayEnable, byte relayRetransmit) {

@@ -30,6 +30,15 @@
         android:focusable="false"
         android:focusableInTouchMode="false" />
 
+    <ImageView
+        android:id="@+id/iv_refresh_scene"
+        android:layout_width="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_refresh"
+        android:tint="@color/colorPrimary" />
+
     <TextView
         android:id="@+id/tv_not_sp"
         android:layout_width="wrap_content"

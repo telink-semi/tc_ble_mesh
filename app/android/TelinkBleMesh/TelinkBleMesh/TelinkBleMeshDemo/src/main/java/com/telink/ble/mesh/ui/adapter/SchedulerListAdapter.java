@@ -37,7 +37,6 @@ import com.telink.ble.mesh.model.db.Scheduler;
 import com.telink.ble.mesh.model.db.SchedulerRegister;
 import com.telink.ble.mesh.ui.SchedulerSettingActivity;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -194,7 +193,8 @@ public class SchedulerListAdapter extends BaseRecyclerViewAdapter<SchedulerListA
             int position = (int) v.getTag();
             Intent intent = new Intent(mContext, SchedulerSettingActivity.class);
             intent.putExtra("address", address)
-                    .putExtra("scheduler", (Serializable) mSchedulerList.get(position));
+                    .putExtra("schedulerPosition", position);
+//                    .putExtra("schedulerIndex", (Parcelable) mSchedulerList.get(position));
 
             mContext.startActivity(intent);
         }

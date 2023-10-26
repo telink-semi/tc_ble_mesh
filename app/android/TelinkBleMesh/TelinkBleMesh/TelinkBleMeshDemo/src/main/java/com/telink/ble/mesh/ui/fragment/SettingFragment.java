@@ -37,7 +37,6 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.CertListActivity;
 import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.NetworkListActivity;
@@ -84,12 +83,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_tests).setVisibility(View.GONE); // for release
 
         View view_cert = view.findViewById(R.id.view_cert);
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            view_cert.setVisibility(View.VISIBLE);
-            view_cert.setOnClickListener(this);
-        } else {
-            view_cert.setVisibility(View.GONE);
-        }
+        view_cert.setOnClickListener(this);
     }
 
     @Override

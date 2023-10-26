@@ -25,7 +25,7 @@ package com.telink.ble.mesh.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -36,7 +36,6 @@ import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
-import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 /**
@@ -45,9 +44,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
     private Switch switch_log, switch_private, switch_no_oob, switch_level;
-    private EditText et_extend, et_net_key, et_app_key;
     private RadioGroup rg_pv_mode, rg_extend_bearer, rg_share_action;
-    private MeshInfo mesh;
     private TextView tv_online_status;
     private final String[] EXTEND_TYPES = new String[]{
             "No Extend",
@@ -74,10 +71,6 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         rg_pv_mode = findViewById(R.id.rg_pv_mode);
         rg_pv_mode.setOnCheckedChangeListener((group, checkedId) -> updatePvMode(checkedId));
-
-        if (!AppSettings.DRAFT_FEATURES_ENABLE) {
-            findViewById(R.id.rb_pv_remote).setVisibility(View.GONE);
-        }
 
         switch_no_oob = findViewById(R.id.switch_no_oob);
         switch_no_oob.setOnCheckedChangeListener((buttonView, isChecked) -> SharedPreferenceHelper.setNoOOBEnable(SettingsActivity.this, isChecked));
@@ -112,6 +105,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
 
+        findViewById(R.id.iv_tip_share_import).setOnClickListener(this);
+
         findViewById(R.id.iv_tip_online_status).setOnClickListener(this);
 
 //        showMeshInfo();
@@ -124,11 +119,14 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
     private void loadSettings() {
         switch_log.setChecked(SharedPreferenceHelper.isLogEnable(this));
         switch_private.setChecked(SharedPreferenceHelper.isPrivateMode(this));
-        rg_pv_mode.check(getPvRbId());
+        ((RadioButton) rg_pv_mode.findViewById(getPvRbId())).setChecked(true);
         switch_no_oob.setChecked(SharedPreferenceHelper.isNoOOBEnable(this));
         switch_level.setChecked(SharedPreferenceHelper.isLevelServiceEnable(this));
-        rg_extend_bearer.check(getExBrModeResId());
-        rg_share_action.check(getShareActionResId());
+
+        ((RadioButton) rg_extend_bearer.findViewById(getExBrModeResId())).setChecked(true);
+
+        ((RadioButton) rg_share_action.findViewById(getShareActionResId())).setChecked(true);
+
     }
 
     private int getPvRbId() {
@@ -276,6 +274,21 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                                 .putExtra(TipsActivity.INTENT_KEY_TIP_SUB_TITLE, "Online Status")
                 );
                 break;
+            case R.id.iv_tip_share_import:
+                startActivity(
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.share_import_action_complete_tip)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_SUB_TITLE, "Share Complete Action")
+                );
+                break;
+
+            case R.id.iv_tip_bearer:
+                startActivity(
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.extend_bearer_mode_tip)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_SUB_TITLE, "Extend Bearer Mode")
+                );
+                break;
 
             case R.id.btn_reset_settings:
                 showConfirmDialog("Reset all settings to default values? ", (dialog, which) -> {
@@ -284,6 +297,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                     toastMsg("reset all setting success");
                 });
                 break;
+
         }
     }
 }

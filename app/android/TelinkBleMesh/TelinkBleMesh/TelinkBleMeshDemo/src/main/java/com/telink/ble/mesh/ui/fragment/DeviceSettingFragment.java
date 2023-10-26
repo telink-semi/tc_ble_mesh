@@ -48,10 +48,8 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
-import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
@@ -106,12 +104,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.view_ota).setOnClickListener(this);
         view.findViewById(R.id.view_net_key).setOnClickListener(this);
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
-
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            view.findViewById(R.id.view_subnet).setOnClickListener(this);
-        } else {
-            view.findViewById(R.id.view_subnet).setVisibility(View.GONE);
-        }
+        view.findViewById(R.id.view_subnet).setOnClickListener(this);
 
 
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);

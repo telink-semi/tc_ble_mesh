@@ -36,7 +36,6 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
@@ -63,15 +62,10 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         tv_mesh_name = view.findViewById(R.id.tv_mesh_name);
         view.findViewById(R.id.view_scene_setting).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_info).setOnClickListener(this);
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
-            view.findViewById(R.id.view_df).setVisibility(View.VISIBLE);
-            view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
-            view.findViewById(R.id.view_df).setOnClickListener(this);
-        } else {
-            view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
-            view.findViewById(R.id.view_df).setVisibility(View.GONE);
-        }
+        view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.view_df).setVisibility(View.VISIBLE);
+        view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
+        view.findViewById(R.id.view_df).setOnClickListener(this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
 
     }

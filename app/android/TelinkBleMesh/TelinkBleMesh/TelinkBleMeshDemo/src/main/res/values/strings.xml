@@ -217,17 +217,14 @@
 
     <string name="df_route_node">Node-%s</string>
 
-    <string name="tip_share_import_cdtp">11</string>
+    <string name="extend_bearer_mode_tip">
+        1. No Extend: No extension is used. \n\n
+        2. Extend GATT Only: Only GATT (Generic Attribute Profile) is used for extending the bearer. \n\n
+        3. Extend GATT &amp; ADV: Both GATT and advertising are used for extending the bearer. \n\n
+    </string>
 
-    <string name="tip_share_import_file">11</string>
-
-    <string name="tip_share_import_qrcode">11</string>
-
-    <string name="tip_share_export_cdtp_phone">11</string>
-
-    <string name="tip_share_export_cdtp_gateway">11</string>
-
-    <string name="tip_share_export_file">11</string>
-
-    <string name="tip_share_export_qrcode">11</string>
+    <string name="share_import_action_complete_tip">
+        1. Manual Switch(Default): Switch mesh network by manual. \n\n
+        2. Auto Switch: Switch mesh network automatically after import complete. \n\n
+    </string>
 </resources>

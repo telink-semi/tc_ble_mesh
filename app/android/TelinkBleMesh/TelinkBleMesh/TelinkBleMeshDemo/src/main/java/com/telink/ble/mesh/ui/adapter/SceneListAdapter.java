@@ -179,7 +179,7 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
             super.onBindViewHolder(holder, position);
             String address = scene.addressList.get(position);
             holder.iv_address.setImageResource(R.drawable.ic_element);
-            holder.tv_address.setText("address: 0x" + address);
+            holder.tv_address.setText("element address: 0x" + address);
             holder.iv_recall_ele.setOnClickListener(
                     v -> ((SceneListActivity) (mContext)).recall(MeshUtils.hexToIntB(address), scene.sceneId)
             );

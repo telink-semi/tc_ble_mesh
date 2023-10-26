@@ -211,6 +211,7 @@ public class CdtpImportActivity extends BaseActivity {
     private void createSocket() {
         new Thread(() -> {
             try {
+                appendLog("create socket - start");
                 ContextUtil.skipReflectWarning();
                 Constructor<BluetoothSocket> construct = BluetoothSocket.class.getDeclaredConstructor(
                         int.class,
@@ -221,6 +222,7 @@ public class CdtpImportActivity extends BaseActivity {
                 socket = construct.newInstance(4, -1, true, true, bluetoothDevice, psm, null);
                 socket.connect();
                 appendLog("socket establish success");
+                readObjectSize();
                 InputStream inputStream = socket.getInputStream();
                 while (true) {
                     int a = inputStream.available();
@@ -286,9 +288,12 @@ public class CdtpImportActivity extends BaseActivity {
         if (!bond) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Warning");
-            builder.setMessage("Device Not Bond, please check device state; click [start] to start transfer, click [bond] to cancel action");
-            builder.setPositiveButton("start", (dialog, which) -> start());
-            builder.setNegativeButton("bond", (dialog, which) -> bluetoothDevice.createBond());
+            builder.setMessage("Device Not Bond, please check device state; click [CANCEL] to cancel action, click [BOND] to create bond");
+            builder.setPositiveButton("CANCEL", (dialog, which) -> {
+                dialog.dismiss();
+//                start();
+            });
+            builder.setNegativeButton("BOND", (dialog, which) -> bluetoothDevice.createBond());
             builder.show();
         } else {
             start();
@@ -326,6 +331,7 @@ public class CdtpImportActivity extends BaseActivity {
 
     // read object size
     private void readObjectSize() {
+        appendLog("read object size - start");
         GattRequest command = new GattRequest();
         command.serviceUUID = UUIDInfo.SERVICE_OTS;
         command.characteristicUUID = UUIDInfo.CHARACTERISTIC_OBJECT_SIZE;
@@ -336,6 +342,7 @@ public class CdtpImportActivity extends BaseActivity {
     }
 
     private void readOacp(int size) {
+        appendLog("read oacp - start");
         GattRequest command = new GattRequest();
         command.serviceUUID = UUIDInfo.SERVICE_OTS;
         command.characteristicUUID = UUIDInfo.CHARACTERISTIC_OACP;
@@ -366,7 +373,7 @@ public class CdtpImportActivity extends BaseActivity {
 
     private void onPsmConfirmed() {
         createSocket();
-        readObjectSize();
+//        readObjectSize();
     }
 
     private Runnable flowTimeout = () -> onError("flow timeout");

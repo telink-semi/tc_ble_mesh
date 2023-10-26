@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
@@ -71,6 +72,13 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
 
     int delta = 0;
 
+    private boolean isLumLevelSupported = false;
+
+    private boolean isTempLevelSupported = false;
+
+    private boolean isHueLevelSupported = false;
+
+    private boolean isSatLevelSupported = false;
 
 
     private SeekBar.OnSeekBarChangeListener onProgressChangeListener = new SeekBar.OnSeekBarChangeListener() {
@@ -218,10 +226,40 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         List<NodeInfo> innerDevices = new ArrayList<>();
         outer:
         for (NodeInfo device : localDevices) {
+
+
             if (device.subList != null) {
                 for (String groupAdr : device.subList) {
                     if (MeshUtils.hexToIntB(groupAdr) == group.address) {
                         innerDevices.add(device);
+
+                        /*
+                        check any device support extend address control
+                         */
+
+                        if (!isLumLevelSupported) {
+                            if (device.getLevelAssociatedEleAdr(MeshSigModel.SIG_MD_LIGHTNESS_S.modelId) != -1) {
+                                isLumLevelSupported = true;
+                            }
+                        }
+
+                        if (!isTempLevelSupported) {
+                            if (device.getLevelAssociatedEleAdr(MeshSigModel.SIG_MD_LIGHT_CTL_TEMP_S.modelId) != -1) {
+                                isTempLevelSupported = true;
+                            }
+                        }
+
+                        if (!isHueLevelSupported) {
+                            if (device.getLevelAssociatedEleAdr(MeshSigModel.SIG_MD_LIGHT_HSL_HUE_S.modelId) != -1) {
+                                isHueLevelSupported = true;
+                            }
+                        }
+
+                        if (!isSatLevelSupported) {
+                            if (device.getLevelAssociatedEleAdr(MeshSigModel.SIG_MD_LIGHT_HSL_SAT_S.modelId) != -1) {
+                                isSatLevelSupported = true;
+                            }
+                        }
                         continue outer;
                     }
                 }
@@ -248,45 +286,81 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
         switch (v.getId()) {
             case R.id.iv_lum_minus:
+                if (!isLumLevelSupported) {
+                    showTipDialog("The group do not have device that has lum level capability!");
+                    return;
+                }
                 DeltaSetMessage deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(0),
                         appKeyIndex, -delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_lum_add:
+                if (!isLumLevelSupported) {
+                    showTipDialog("The group do not have device that has lum level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(0),
                         appKeyIndex, delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_temp_minus:
+                if (!isTempLevelSupported) {
+                    showTipDialog("The group do not have device that has temperature level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(1),
                         appKeyIndex, -delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_temp_add:
+                if (!isTempLevelSupported) {
+                    showTipDialog("The group do not have device that has temperature level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(1),
                         appKeyIndex, delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_hue_minus:
+                if (!isHueLevelSupported) {
+                    showTipDialog("The group do not have device that has hue level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(2),
                         appKeyIndex, -delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_hue_add:
+                if (!isHueLevelSupported) {
+                    showTipDialog("The group do not have device that has hue level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(2),
                         appKeyIndex, delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_sat_minus:
+                if (!isSatLevelSupported) {
+                    showTipDialog("The group do not have device that has sat level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(3),
                         appKeyIndex, -delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
             case R.id.iv_sat_add:
+                if (!isSatLevelSupported) {
+                    showTipDialog("The group do not have device that has sat level capability!");
+                    return;
+                }
                 deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(3),
                         appKeyIndex, delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
         }
+    }
+
+    private void showSupportErrorDialog() {
+
     }
 }

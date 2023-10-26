@@ -37,13 +37,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.db.MeshInfoService;
-import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -120,6 +117,8 @@ public class SplashActivity extends BaseActivity {
                         ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
                         &&
                         ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+//                        &&
+//                        ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_PRIVILEGED) == PackageManager.PERMISSION_GRANTED
                 ) {
                     onPermissionChecked();
                 } else {
@@ -130,6 +129,7 @@ public class SplashActivity extends BaseActivity {
                                     Manifest.permission.BLUETOOTH_ADVERTISE,
                                     Manifest.permission.READ_EXTERNAL_STORAGE,
                                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//                                    Manifest.permission.BLUETOOTH_PRIVILEGED,
                                     Manifest.permission.ACCESS_FINE_LOCATION},
                             PERMISSIONS_REQUEST_ALL);
                 }
@@ -161,31 +161,7 @@ public class SplashActivity extends BaseActivity {
     private void onPermissionChecked() {
         MeshLogger.log("permission check pass");
         delayHandler.removeCallbacksAndMessages(null);
-        delayHandler.postDelayed(this::checkMeshInfo, 500);
-    }
-
-    /**
-     * check and load database
-     * 1. init local storage service;
-     * 2. if exist load the last selected mesh network;
-     * 3. if not exist, create a new mesh network
-     * 4. setup the mesh network
-     */
-    private void checkMeshInfo() {
-        MeshInfoService.getInstance().init(ObjectBox.get());
-        long id = SharedPreferenceHelper.getSelectedMeshId(this);
-        if (id != -1) {
-            // exists
-            MeshInfo meshInfo = MeshInfoService.getInstance().getById(id);
-            if (meshInfo != null) {
-                goToNext(meshInfo);
-                return;
-            }
-        }
-        MeshInfo meshInfo = MeshInfo.createNewMesh(this, "Default Mesh");
-//        testAddDevice(meshInfo);
-        MeshInfoService.getInstance().addMeshInfo(meshInfo);
-        goToNext(meshInfo);
+        delayHandler.postDelayed(this::goToNext, 500);
     }
 
     /**
@@ -209,11 +185,9 @@ public class SplashActivity extends BaseActivity {
 
     /**
      * save the selected {@link MeshInfo#id} to SharedPreference
-     *
-     * @param meshInfo selected mesh network
      */
-    private void goToNext(MeshInfo meshInfo) {
-        SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
+    private void goToNext() {
+//        SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
 //                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -228,7 +202,7 @@ public class SplashActivity extends BaseActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setCancelable(false);
             builder.setTitle("Warn");
-            builder.setMessage("Location permission is necessary when searching bluetooth device on 6.0 or upper device");
+            builder.setMessage("Bluetooth , Location permission is necessary when searching bluetooth device on 6.0 or upper device");
             builder.setPositiveButton("Go Settings", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

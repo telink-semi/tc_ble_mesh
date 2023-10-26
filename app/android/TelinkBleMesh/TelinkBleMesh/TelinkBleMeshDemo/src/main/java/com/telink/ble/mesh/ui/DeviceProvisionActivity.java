@@ -24,6 +24,7 @@ package com.telink.ble.mesh.ui;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -59,7 +60,6 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
@@ -80,7 +80,6 @@ import java.util.List;
  * Created by kee on 2020/11/12.
  */
 public class DeviceProvisionActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
-
 
     /**
      * found by bluetooth scan
@@ -255,9 +254,8 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         NetworkingDevice processingDevice = new NetworkingDevice(nodeInfo);
         processingDevice.bluetoothDevice = advertisingDevice.device;
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            processingDevice.oobInfo = oobInfo;
-        }
+        processingDevice.oobInfo = oobInfo;
+
         processingDevice.state = NetworkingState.IDLE;
         processingDevice.addLog(NetworkingDevice.TAG_SCAN, "device found");
         devices.add(processingDevice);
@@ -483,11 +481,18 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         pvDevice.addLog(NetworkingDevice.TAG_BIND, "action start");
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = mesh.getDefaultAppKeyIndex();
+
         BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setDefaultBound(defaultBound);
         bindingDevice.setBearer(BindingBearer.GattOnly);
 //        bindingDevice.setDefaultBound(false);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
+//        final boolean dfBond = defaultBound;
+//        showConfirmDialog("provision success, go next?", (dialog, which) -> {
+//
+//        });
+
+
     }
 
     private void onKeyBindFail(BindingEvent event) {

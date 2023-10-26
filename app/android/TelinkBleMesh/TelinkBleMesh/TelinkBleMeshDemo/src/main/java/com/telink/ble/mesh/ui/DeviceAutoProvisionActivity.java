@@ -56,7 +56,6 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
@@ -178,9 +177,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            provisioningDevice.setOobInfo(oobInfo);
-        }
+        provisioningDevice.setOobInfo(oobInfo);
 
         // check if oob exists
         byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
@@ -207,9 +204,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             NetworkingDevice device = new NetworkingDevice(nodeInfo);
             device.bluetoothDevice = advertisingDevice.device;
             device.state = NetworkingState.PROVISIONING;
-            if (AppSettings.DRAFT_FEATURES_ENABLE) {
-                device.oobInfo = oobInfo;
-            }
+            device.oobInfo = oobInfo;
+
             devices.add(device);
             mListAdapter.notifyDataSetChanged();
         } else {

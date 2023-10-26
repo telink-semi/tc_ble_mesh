@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -110,10 +111,11 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
-        int address = getIntent().getIntExtra("address", -1);
+        Intent intent = getIntent();
+        int address = intent.getIntExtra("address", -1);
         mDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
-        scheduler = (Scheduler) getIntent().getSerializableExtra("scheduler");
-        if (scheduler == null) {
+        int scPst = intent.getIntExtra("schedulerPosition", -1);
+        if (scPst == -1) {
             index = mDevice.allocSchedulerIndex();
             if (index == -1) {
                 Toast.makeText(getApplicationContext(), "no available index", Toast.LENGTH_SHORT).show();
@@ -121,6 +123,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 return;
             }
         } else {
+            scheduler = mDevice.schedulers.get(scPst);
             index = scheduler.getIndex();
         }
         setContentView(R.layout.activity_scheduler_setting);

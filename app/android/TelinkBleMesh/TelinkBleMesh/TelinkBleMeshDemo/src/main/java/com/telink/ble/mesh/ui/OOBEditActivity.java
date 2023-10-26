@@ -114,7 +114,7 @@ public class OOBEditActivity extends BaseActivity {
         }
 
         byte[] oob = Arrays.hexToBytes(oobInput);
-        if (oob == null || oob.length != 16) {
+        if (oob == null || (oob.length != 16 && oob.length != 32)) {
             toastMsg("oob format error");
             return false;
         }

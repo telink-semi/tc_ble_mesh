@@ -84,7 +84,7 @@ public class OobListActivity extends BaseActivity {
                 if (msg.obj != null) {
                     List<OobInfo> oobFromFile = (List<OobInfo>) msg.obj;
                     MeshInfoService.getInstance().addOobInfo(oobFromFile);
-                    mAdapter.notifyDataSetChanged();
+                    mAdapter.resetData();
                     Toast.makeText(OobListActivity.this, "Success : " + oobFromFile.size() + " oob imported", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(OobListActivity.this, "Import Fail: check the file format", Toast.LENGTH_SHORT).show();
@@ -151,7 +151,7 @@ public class OobListActivity extends BaseActivity {
             public void onClick(DialogInterface dialog, int which) {
                 MeshInfoService.getInstance().clearAllOobInfo();
                 toastMsg("Wipe oob info success");
-                mAdapter.notifyDataSetChanged();
+                mAdapter.resetData();
             }
         });
     }
@@ -196,11 +196,15 @@ public class OobListActivity extends BaseActivity {
             List<OobInfo> result = null;
             OobInfo oobInfo;
             while ((line = br.readLine()) != null) {
-                if (line.length() != 65) {
-                    continue;
-                }
+//                if (line.length() != 65) {
+//                    continue;
+//                }
                 String[] rawPair = line.split(" ");
-                if (rawPair.length != 2 || rawPair[0].length() != 32 || rawPair[1].length() != 32) {
+                /*
+                rawPair
+                16 bytes uuid + 16(32) bytes oob
+                 */
+                if (rawPair.length != 2 || rawPair[0].length() != 32 || (rawPair[1].length() != 32 && rawPair[1].length() != 64)) {
                     continue;
                 }
                 byte[] uuid = Arrays.hexToBytes(rawPair[0]);

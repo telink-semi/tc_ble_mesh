@@ -167,10 +167,10 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setCancelable(true);
             builder.setTitle("Tip");
-            builder.setMessage(msg);
             builder.setPositiveButton("Confirm", null);
             tipDialog = builder.create();
         }
+        tipDialog.setMessage(msg);
         tipDialog.show();
     }
 

@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import com.telink.ble.mesh.demo.R;
  */
 public class TipsActivity extends BaseActivity {
     public static final String INTENT_KEY_TIP_RES_ID = "TipsActivity.TIP_RES_ID";
+    public static final String INTENT_KEY_TIP_STRING = "TipsActivity.TIP_STRING";
     public static final String INTENT_KEY_TIP_SUB_TITLE = "TipsActivity.INTENT_KEY_TIP_SUB_TITLE";
 
     @Override
@@ -42,12 +44,18 @@ public class TipsActivity extends BaseActivity {
             return;
         }
         setContentView(R.layout.activity_share_tip);
-
-        int tipResId = getIntent().getIntExtra(INTENT_KEY_TIP_RES_ID, R.string.share_tip);
-        String subTitle = getIntent().getStringExtra(INTENT_KEY_TIP_SUB_TITLE);
-        setTitle("Tip", subTitle);
         TextView tv_tip = findViewById(R.id.tv_tip);
-        tv_tip.setText(tipResId);
+        Intent intent = getIntent();
+        if (intent.hasExtra(INTENT_KEY_TIP_STRING)) {
+            tv_tip.setText(intent.getStringExtra(INTENT_KEY_TIP_STRING));
+        } else {
+            int tipResId = getIntent().getIntExtra(INTENT_KEY_TIP_RES_ID, R.string.share_tip);
+            tv_tip.setText(tipResId);
+        }
+        
+        String subTitle = intent.getStringExtra(INTENT_KEY_TIP_SUB_TITLE);
+        setTitle("Tip", subTitle);
+
         enableBackNav(true);
     }
 
