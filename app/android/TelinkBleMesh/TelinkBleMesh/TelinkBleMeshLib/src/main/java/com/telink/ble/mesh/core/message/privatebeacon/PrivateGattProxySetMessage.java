@@ -22,10 +22,11 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.privatebeacon;
 
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 /**
- * @deprecated A PRIVATE_GATT_PROXY_SET message is an acknowledged message used to set the Private GATT Proxy state of a node (see Section 4.2.45).
+ * A PRIVATE_GATT_PROXY_SET message is an acknowledged message used to set the Private GATT Proxy state of a node (see Section 4.2.45).
  * The response to a PRIVATE_GATT_PROXY_SET message is a PRIVATE_GATT_PROXY_STATUS message.
  */
 
@@ -47,13 +48,26 @@ public class PrivateGattProxySetMessage extends ConfigMessage {
     }
 
     /**
+     * Creates a simple PrivateGattProxySetMessage with the specified destination address and GATT Proxy state.
+     *
+     * @param destinationAddress The address of the node to which the message is being sent.
+     * @param gattProxy          The new GATT Proxy state.
+     * @return PrivateGattProxySetMessage instance.
+     */
+    public static PrivateGattProxySetMessage getSimple(int destinationAddress, byte gattProxy) {
+        PrivateGattProxySetMessage instance = new PrivateGattProxySetMessage(destinationAddress);
+        instance.privateGattProxy = gattProxy;
+        return instance;
+    }
+
+    /**
      * ignore
      *
      * @return
      */
     @Override
     public int getOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_GATT_PROXY_SET.value;
     }
 
     /**
@@ -63,7 +77,7 @@ public class PrivateGattProxySetMessage extends ConfigMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_GATT_PROXY_STATUS.value;
     }
 
     /**

@@ -43,9 +43,9 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
     public byte privateBeacon;
     /**
      * New Random Update Interval Steps state (optional).
-     * This field is a 2-byte value.
+     * This field is a 1-byte value.
      */
-    public int randomUpdateIntervalSteps;
+    public byte randomUpdateIntervalSteps;
     public boolean isComplete = false;
 
     /**
@@ -61,7 +61,7 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
      */
     protected PrivateBeaconStatusMessage(Parcel in) {
         privateBeacon = in.readByte();
-        randomUpdateIntervalSteps = in.readInt();
+        randomUpdateIntervalSteps = in.readByte();
         isComplete = in.readByte() != 0;
     }
 
@@ -89,9 +89,9 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
     public void parse(byte[] params) {
         int index = 0;
         privateBeacon = params[index++];
-        if (params.length >= 3) {
+        if (params.length >= 2) {
             isComplete = true;
-            randomUpdateIntervalSteps = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
+            randomUpdateIntervalSteps = params[index];
         }
     }
 
@@ -114,7 +114,7 @@ public class PrivateBeaconStatusMessage extends StatusMessage implements Parcela
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(privateBeacon);
-        dest.writeInt(randomUpdateIntervalSteps);
+        dest.writeByte(randomUpdateIntervalSteps);
         dest.writeByte((byte) (isComplete ? 1 : 0));
     }
 }

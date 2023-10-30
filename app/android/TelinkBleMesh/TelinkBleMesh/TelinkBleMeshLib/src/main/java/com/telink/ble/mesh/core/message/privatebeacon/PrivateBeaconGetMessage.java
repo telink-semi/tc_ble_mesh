@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.privatebeacon;
 
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 /**
@@ -42,7 +43,7 @@ public class PrivateBeaconGetMessage extends ConfigMessage {
      */
     @Override
     public int getOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_BEACON_GET.value;
     }
 
     /**
@@ -50,7 +51,7 @@ public class PrivateBeaconGetMessage extends ConfigMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_BEACON_STATUS.value;
     }
 
 }

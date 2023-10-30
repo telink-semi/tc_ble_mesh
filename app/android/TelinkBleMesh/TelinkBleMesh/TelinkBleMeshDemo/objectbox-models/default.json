@@ -270,7 +270,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "31:7083973705940019782",
+      "lastPropertyId": "33:8426405745807769616",
       "name": "NodeInfo",
       "properties": [
         {
@@ -426,6 +426,16 @@
           "id": "31:7083973705940019782",
           "name": "name",
           "type": 9
+        },
+        {
+          "id": "32:1250097596279928258",
+          "name": "privateBeaconOpened",
+          "type": 1
+        },
+        {
+          "id": "33:8426405745807769616",
+          "name": "privateGattProxyEnable",
+          "type": 1
         }
       ],
       "relations": [

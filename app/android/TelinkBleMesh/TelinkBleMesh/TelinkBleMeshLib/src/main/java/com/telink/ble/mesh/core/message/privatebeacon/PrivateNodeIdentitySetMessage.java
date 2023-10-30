@@ -22,7 +22,9 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.privatebeacon;
 
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
+import com.telink.ble.mesh.core.message.config.NodeIdentitySetMessage;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -53,13 +55,28 @@ public class PrivateNodeIdentitySetMessage extends ConfigMessage {
     }
 
     /**
+     * Creates a simple PrivateNodeIdentitySetMessage with the given destination address, netKeyIndex, and identity.
+     *
+     * @param destinationAddress The destination address for the message.
+     * @param netKeyIndex        The netKey index to set.
+     * @param identity           The identity to set.
+     * @return The created PrivateNodeIdentitySetMessage.
+     */
+    public static PrivateNodeIdentitySetMessage getSimple(int destinationAddress, int netKeyIndex, byte identity) {
+        PrivateNodeIdentitySetMessage message = new PrivateNodeIdentitySetMessage(destinationAddress);
+        message.netKeyIndex = netKeyIndex;
+        message.privateIdentity = identity;
+        return message;
+    }
+
+    /**
      * Returns the opcode of the message.
      *
      * @return The opcode of the message.
      */
     @Override
     public int getOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_NODE_IDENTITY_SET.value;
     }
 
     /**
@@ -69,7 +86,7 @@ public class PrivateNodeIdentitySetMessage extends ConfigMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_NODE_IDENTITY_STATUS.value;
     }
 
     /**

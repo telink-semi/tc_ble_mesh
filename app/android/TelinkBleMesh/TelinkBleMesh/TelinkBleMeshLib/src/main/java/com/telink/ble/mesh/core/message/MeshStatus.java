@@ -67,6 +67,9 @@ import com.telink.ble.mesh.core.message.lighting.HslStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslTargetStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyStatusMessage;
+import com.telink.ble.mesh.core.message.privatebeacon.PrivateBeaconStatusMessage;
+import com.telink.ble.mesh.core.message.privatebeacon.PrivateGattProxyStatusMessage;
+import com.telink.ble.mesh.core.message.privatebeacon.PrivateNodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.rp.LinkStatusMessage;
 import com.telink.ble.mesh.core.message.rp.ProvisioningPDUOutboundReportMessage;
 import com.telink.ble.mesh.core.message.rp.ProvisioningPDUReportMessage;
@@ -156,6 +159,11 @@ public class MeshStatus {
             register(Opcode.CFG_FRIEND_STATUS.value, FriendStatusMessage.class);
             register(Opcode.CFG_GATT_PROXY_STATUS.value, GattProxyStatusMessage.class);
             register(Opcode.CFG_KEY_REFRESH_PHASE_STATUS.value, KeyRefreshPhaseStatusMessage.class);
+
+            // private beacon
+            register(Opcode.PRIVATE_BEACON_STATUS.value, PrivateBeaconStatusMessage.class);
+            register(Opcode.PRIVATE_NODE_IDENTITY_STATUS.value, PrivateNodeIdentityStatusMessage.class);
+            register(Opcode.PRIVATE_GATT_PROXY_STATUS.value, PrivateGattProxyStatusMessage.class);
 
             // generic
             register(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class);

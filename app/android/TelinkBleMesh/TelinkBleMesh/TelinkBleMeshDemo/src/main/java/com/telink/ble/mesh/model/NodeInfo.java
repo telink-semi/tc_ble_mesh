@@ -193,6 +193,10 @@ public class NodeInfo implements Serializable {
 
     public boolean directFriend = false;
 
+    public boolean privateBeaconOpened = false;
+
+    public boolean privateGattProxyEnable = false;
+
     @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
         onlineState = OnlineState.OFFLINE;

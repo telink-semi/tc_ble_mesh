@@ -223,8 +223,31 @@
         3. Extend GATT &amp; ADV: Both GATT and advertising are used for extending the bearer. \n\n
     </string>
 
+
     <string name="share_import_action_complete_tip">
         1. Manual Switch(Default): Switch mesh network by manual. \n\n
-        2. Auto Switch: Switch mesh network automatically after import complete. \n\n
+        2. Auto Switch: Switch mesh network automatically after import comple. \n\n
     </string>
+
+    <string name="tip_enable_pvt_gatt_prx">
+        When the switch is on:\n
+            \t1. turned off gatt proxy by sent Gatt Proxy Set Message (gattProxy=0)\n
+            \t2. turned on private beacon by sent Private Gatt Proxy Set Message (privateGattProxy=1)\n
+        Otherwise, the value in message is reversed (gattProxy=1, privateGattProxy=0)
+    </string>
+
+    <string name="tip_enable_pvt_node_id">
+        When the switch is on:\n
+            \t1. turned off node identity by sent Node Identity Set Message (identity=0)\n
+            \t2. turned on private node identity by sent Private Node Identity Set Message (privateIdentity=1)\n
+        Otherwise, the value in message is reversed (identity=1, privateIdentity=0)
+    </string>
+
+    <string name="tip_enable_pv_bcn">
+        When the switch is on:\n
+            \t1. turned off beacon by sent Beacon Set Message (beacon=0)\n
+            \t2. turned on private beacon by sent Private Beacon Set Message (privateBeacon=0)\n
+        Otherwise, the value in message is reversed (beacon=1, privateBeacon=0)
+    </string>
+
 </resources>

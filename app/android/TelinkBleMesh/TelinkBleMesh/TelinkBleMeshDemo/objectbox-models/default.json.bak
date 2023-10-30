@@ -221,6 +221,21 @@
           "id": "7:5560402327294148212",
           "name": "extendGroups",
           "targetId": "4:7050452310995110296"
+        },
+        {
+          "id": "12:1451763253102119136",
+          "name": "allProvisioners",
+          "targetId": "16:9091345760396773004"
+        },
+        {
+          "id": "13:9109301361413788209",
+          "name": "excludedNodes",
+          "targetId": "8:6579166990100229747"
+        },
+        {
+          "id": "14:750515626164944415",
+          "name": "provisionerNodes",
+          "targetId": "8:6579166990100229747"
         }
       ]
     },
@@ -255,7 +270,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "30:1946681122139823938",
+      "lastPropertyId": "31:7083973705940019782",
       "name": "NodeInfo",
       "properties": [
         {
@@ -406,6 +421,11 @@
           "id": "30:1946681122139823938",
           "name": "compositionData",
           "type": 23
+        },
+        {
+          "id": "31:7083973705940019782",
+          "name": "name",
+          "type": 9
         }
       ],
       "relations": [
@@ -623,11 +643,75 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "16:9091345760396773004",
+      "lastPropertyId": "3:5237394518513339767",
+      "name": "Provisioner",
+      "properties": [
+        {
+          "id": "1:6331221499117126151",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6706302340015216544",
+          "name": "provisionerName",
+          "type": 9
+        },
+        {
+          "id": "3:5237394518513339767",
+          "name": "UUID",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "15:3897692237543528373",
+          "name": "allocatedUnicastRange",
+          "targetId": "2:1764302752021457479"
+        },
+        {
+          "id": "16:4719440422919075677",
+          "name": "allocatedGroupRange",
+          "targetId": "2:1764302752021457479"
+        },
+        {
+          "id": "17:1644692976533144517",
+          "name": "allocatedSceneRange",
+          "targetId": "17:5719042239068213177"
+        }
+      ]
+    },
+    {
+      "id": "17:5719042239068213177",
+      "lastPropertyId": "3:2144907213425026123",
+      "name": "SceneRange",
+      "properties": [
+        {
+          "id": "1:3542670181193611278",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7496379706960056173",
+          "name": "firstScene",
+          "type": 5
+        },
+        {
+          "id": "3:2144907213425026123",
+          "name": "lastScene",
+          "type": 5
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "15:3478473560802249521",
+  "lastEntityId": "17:5719042239068213177",
   "lastIndexId": "3:1206649210262279878",
-  "lastRelationId": "11:8313588883292029431",
+  "lastRelationId": "17:1644692976533144517",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,

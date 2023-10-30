@@ -523,8 +523,6 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                     config.desc = getRelayDesc(deviceInfo.relayEnable, deviceInfo.relayRetransmit);
                 }
             } else if (event.getType().equals(BeaconStatusMessage.class.getName())) {
-
-
                 BeaconStatusMessage beaconStatusMessage = (BeaconStatusMessage) notificationMessage.getStatusMessage();
                 deviceInfo.beaconOpened = beaconStatusMessage.beacon == 1;
                 config = getDeviceConfig(ConfigState.SECURE_NETWORK_BEACON);

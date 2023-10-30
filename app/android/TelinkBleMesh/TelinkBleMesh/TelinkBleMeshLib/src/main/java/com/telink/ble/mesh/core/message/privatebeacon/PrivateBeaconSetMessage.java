@@ -22,16 +22,16 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.privatebeacon;
 
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * @deprecated A PRIVATE_BEACON_SET message is an acknowledged message used to set the Private Beacon state and the Random Update Interval Steps state of a node.
+ * A PRIVATE_BEACON_SET message is an acknowledged message used to set the Private Beacon state and the Random Update Interval Steps state of a node.
  * The response to a PRIVATE_BEACON_SET message is a PRIVATE_BEACON_STATUS message.
  */
-
 public class PrivateBeaconSetMessage extends ConfigMessage {
 
     /**
@@ -41,10 +41,10 @@ public class PrivateBeaconSetMessage extends ConfigMessage {
     public byte privateBeacon;
 
     /**
-     * 2 bytes
+     * 1 bytes
      * New Random Update Interval Steps state (optional)
      */
-    public int randomUpdateIntervalSteps;
+    public byte randomUpdateIntervalSteps;
 
     public boolean isComplete = false;
 
@@ -57,12 +57,26 @@ public class PrivateBeaconSetMessage extends ConfigMessage {
         super(destinationAddress);
     }
 
+
+    /**
+     * Creates a simple instance of PrivateBeaconSetMessage with the specified destination address and ttl.
+     *
+     * @param destinationAddress The destination address of the message.
+     * @param beacon             beacon.
+     * @return A simple instance of PrivateBeaconSetMessage.
+     */
+    public static PrivateBeaconSetMessage getSimple(int destinationAddress, byte beacon) {
+        PrivateBeaconSetMessage instance = new PrivateBeaconSetMessage(destinationAddress);
+        instance.privateBeacon = beacon;
+        return instance;
+    }
+
     /**
      * ignore
      */
     @Override
     public int getOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_BEACON_SET.value;
     }
 
     /**
@@ -70,7 +84,7 @@ public class PrivateBeaconSetMessage extends ConfigMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return OPCODE_INVALID;
+        return Opcode.PRIVATE_BEACON_STATUS.value;
     }
 
     /**
@@ -81,8 +95,8 @@ public class PrivateBeaconSetMessage extends ConfigMessage {
         if (!isComplete) {
             return new byte[]{privateBeacon};
         } else {
-            return ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN)
-                    .put(privateBeacon).putShort((short) randomUpdateIntervalSteps).array();
+            return ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN)
+                    .put(privateBeacon).put(randomUpdateIntervalSteps).array();
         }
     }
 

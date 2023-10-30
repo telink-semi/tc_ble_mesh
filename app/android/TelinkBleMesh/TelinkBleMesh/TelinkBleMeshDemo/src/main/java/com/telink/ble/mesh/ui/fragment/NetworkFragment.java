@@ -39,6 +39,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
+import com.telink.ble.mesh.ui.PrivateBeaconSettingActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -62,12 +63,10 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         tv_mesh_name = view.findViewById(R.id.tv_mesh_name);
         view.findViewById(R.id.view_scene_setting).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_info).setOnClickListener(this);
-        view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
-        view.findViewById(R.id.view_df).setVisibility(View.VISIBLE);
         view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
         view.findViewById(R.id.view_df).setOnClickListener(this);
+        view.findViewById(R.id.view_private_beacon).setOnClickListener(this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
-
     }
 
     @Override
@@ -99,6 +98,10 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
 
             case R.id.view_df:
                 startActivity(new Intent(getActivity(), DirectForwardingListActivity.class));
+                break;
+
+            case R.id.view_private_beacon:
+                startActivity(new Intent(getActivity(), PrivateBeaconSettingActivity.class));
                 break;
         }
     }
