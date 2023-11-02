@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     ResetNetworkMessage.java 
+ * @file ResetNetworkMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date     Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.fastpv;
 
@@ -25,42 +26,71 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
-
 import java.nio.ByteOrder;
-
+/**
+ * This class represents a message to reset the network.
+ * It extends the GenericMessage class.
+ */
 public class ResetNetworkMessage extends GenericMessage {
-
     /**
-     * milliseconds
-     * 2 bytes
+     * The delay in milliseconds.
+     * It is represented by 2 bytes.
      */
     private int delay;
-
+    
+    /**
+     * Creates a new ResetNetworkMessage with the given destination address, app key index, and delay.
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The app key index of the message.
+     */
+    public ResetNetworkMessage(int destinationAddress, int appKeyIndex) {
+        super(destinationAddress, appKeyIndex);
+    }
+    
+    /**
+     * Returns a simple ResetNetworkMessage with the given destination address, app key index, and delay.
+     * @param destinationAddress The destination address of the message.
+     * @param appKeyIndex The app key index of the message.
+     * @param delay The delay in milliseconds.
+     * @return A ResetNetworkMessage object.
+     */
     public static ResetNetworkMessage getSimple(int destinationAddress, int appKeyIndex, int delay) {
         ResetNetworkMessage message = new ResetNetworkMessage(destinationAddress, appKeyIndex);
         message.delay = delay;
         return message;
     }
-
-    public ResetNetworkMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
-    }
-
+    
+    /**
+     * Returns the opcode of the message.
+     * @return The opcode value.
+     */
     @Override
     public int getOpcode() {
         return Opcode.VD_MESH_RESET_NETWORK.value;
     }
-
+    
+    /**
+     * Returns the response opcode of the message.
+     * @return The response opcode value.
+     */
     @Override
     public int getResponseOpcode() {
         return OPCODE_INVALID;
     }
-
+    
+    /**
+     * Returns the parameters of the message as a byte array.
+     * @return The parameters as a byte array.
+     */
     @Override
     public byte[] getParams() {
         return MeshUtils.integer2Bytes(delay, 2, ByteOrder.LITTLE_ENDIAN);
     }
-
+    
+    /**
+     * Sets the delay of the message.
+     * @param delay The delay in milliseconds.
+     */
     public void setDelay(int delay) {
         this.delay = delay;
     }

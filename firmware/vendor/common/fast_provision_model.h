@@ -1,28 +1,30 @@
 /********************************************************************************************************
- * @file     lighting_model.h 
+ * @file	fast_provision_model.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 
@@ -35,10 +37,10 @@ typedef struct{
 	u16 pid;
 	u16 ele_addr;
 }mac_addr_get_t;
-extern my_fifo_t fast_prov_mac_fifo;
+extern _align_4_ my_fifo_t fast_prov_mac_fifo;
 
 void mesh_device_key_set_default();
-void mesh_fast_prov_start(u16 pid);
+void mesh_fast_prov_start(u16 pid, u16 start_addr);
 void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp);
 int mesh_fast_prov_sts_set(u8 sts_set);
 void mesh_fast_prov_val_init();
@@ -61,8 +63,6 @@ int cb_vd_mesh_addr_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_primary_addr_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_provison_data_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_provision_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-u16 get_win32_prov_unicast_adr();
-int set_win32_prov_unicast_adr(u16 adr);
 u8 get_win32_ele_cnt(u8 pid);
 void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid);
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid);

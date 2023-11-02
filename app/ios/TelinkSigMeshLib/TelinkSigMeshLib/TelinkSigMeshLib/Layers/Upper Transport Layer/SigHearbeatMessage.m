@@ -3,37 +3,36 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigHearbeatMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SigHearbeatMessage.h"
 #import "SigControlMessage.h"
 
 @implementation SigHearbeatMessage
 
+/// Initialize SigHearbeatMessage object.
+/// @param message The SigControlMessage object.
+/// @returns return `nil` when initialize SigHearbeatMessage object fail.
 - (instancetype)initFromControlMessage:(SigControlMessage *)message {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _opCode = message.opCode;
         NSData *data = message.upperTransportPdu;
         if (_opCode != 0x0A || data.length != 3) {
@@ -54,8 +53,16 @@
     return self;
 }
 
+/// Creates a Heartbeat message.
+///
+/// - parameter ttl:         Initial TTL used when sending the message.
+/// - parameter features:    Currently active features of the node.
+/// - parameter source:      The source address.
+/// - parameter destination: The destination address.
 - (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targettingDestination:(UInt16)destination {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _opCode = 0x0A;
         _initTtl = ttl;
         _features = features;

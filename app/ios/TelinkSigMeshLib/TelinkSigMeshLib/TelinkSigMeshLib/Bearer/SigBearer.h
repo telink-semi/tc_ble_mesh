@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/23
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigBearer.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/23.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -43,11 +37,13 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 @protocol SigBearerDelegate <NSObject>
 @optional
+
 /// Callback called when a packet has been received using the SigBearer. Data longer than MTU will automatically be reassembled using the bearer protocol if bearer implements segmentation.
 /// @param bearer The SigBearer on which the data were received.
 /// @param data The data received.
 /// @param type The type of the received data.
 - (void)bearer:(SigBearer *)bearer didDeliverData:(NSData *)data ofType:(SigPduType)type;
+
 @end
 
 
@@ -88,7 +84,12 @@ typedef void(^SendPacketsFinishCallback)(void);
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigBearer *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (BOOL)isOpen;
 - (BOOL)isProvisioned;
@@ -116,10 +117,18 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 - (void)setBearerProvisioned:(BOOL)provisioned;
 
-/// 开始连接SigDataSource这个单列的mesh网络。内部会10秒重试一次，直到连接成功或者调用了停止连接`stopMeshConnectWithComplete:`
+/**
+ * @brief   Start connecting to the single column mesh network of SigDataSource.
+ * @param   complete callback of connect mesh complete.
+ * @note    Internally, it will retry every 10 seconds until the connection is successful or the 'stopMeshConnectWithComplete' call is made to stop the connection:`
+ */
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete;
 
-/// 断开一个mesh网络的连接，切换不同的mesh网络时使用。
+/**
+ * @brief   Disconnect mesh connect.
+ * @param   complete callback of connect mesh complete.
+ * @note    It will use in switch mesh network.
+ */
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete;
 
 @end

@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     TelinkHttpManager.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  TelinkHttpManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2020/4/29.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     TelinkHttpManager.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/4/29
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "TelinkHttpManager.h"
 #import <CommonCrypto/CommonDigest.h>
@@ -40,6 +34,7 @@
 
 #define CustomErrorDomain @"cn.telink.httpRequest"
 
+@class TelinkHttpRequest;
 typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullable result, NSError * _Nullable err);
 
 @interface TelinkHttpRequest : NSObject<NSURLConnectionDataDelegate>
@@ -50,8 +45,11 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     NSMutableData *_httpReceiveData;
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _httpReceiveData = [[NSMutableData alloc] init];
     }
     return self;
@@ -177,10 +175,19 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 
 @implementation TelinkHttpManager
 
-+ (TelinkHttpManager *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static TelinkHttpManager *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[TelinkHttpManager alloc] init];
         shareManager.telinkHttpRequests = [NSMutableArray array];
     });

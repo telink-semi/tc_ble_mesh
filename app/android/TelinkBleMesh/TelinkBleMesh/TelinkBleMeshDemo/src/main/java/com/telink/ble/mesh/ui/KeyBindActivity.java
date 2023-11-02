@@ -1,27 +1,27 @@
 /********************************************************************************************************
- * @file     KeyBindActivity.java 
+ * @file KeyBindActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -41,6 +41,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.util.Arrays;
 
 /**
@@ -152,7 +153,16 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
                 mesh.getDefaultAppKeyIndex());
 //        KeyBindParameters parameters = KeyBindParameters.getDefault(targetDevice,
 //                mesh.appKey, mesh.appKeyIndex, mesh.netKeyIndex, false);
+        int adr = MeshService.getInstance().getDirectConnectedNodeAddress();
+
         bindingDevice.setBearer(BindingBearer.Any);
+        if (adr != 0) {
+            NodeInfo dirNode = mesh.getDeviceByMeshAddress(adr);
+            if (dirNode != null && dirNode.isLpn()) {
+                bindingDevice.setBearer(BindingBearer.GattOnly);
+            }
+        }
+
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
         showWaitingDialog("binding...");
     }
@@ -182,20 +192,15 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         kickDirect = targetDevice.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress());
         showWaitingDialog("kick out processing");
         if (!cmdSent || !kickDirect) {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onKickOutFinish();
-                }
-            }, 3 * 1000);
+            handler.postDelayed(this::onKickOutFinish, 3 * 1000);
         }
     }
 
     private void onKickOutFinish() {
         handler.removeCallbacksAndMessages(null);
         MeshService.getInstance().removeDevice(targetDevice.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().removeDeviceByMeshAddress(targetDevice.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
+        TelinkMeshApplication.getInstance().getMeshInfo().removeNode(targetDevice);
+//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
         dismissWaitingDialog();
         finish();
     }
@@ -210,7 +215,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         local.bound = true;
 //        local. = remote.boundModels;
         local.compositionData = remote.getCompositionData();
-        mesh.saveOrUpdate(this);
+        local.save();
 
         infoTxt = "bind success";
         dotState = 0;
@@ -232,17 +237,9 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         dotState = 0;
         handler.removeCallbacks(dotTask);
         handler.post(dotTask);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                dismissWaitingDialog();
-                showConfirmDialog("Bind Fail, retry?", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startKeyBind();
-                    }
-                });
-            }
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            showConfirmDialog("Bind Fail, retry?", (dialog, which) -> startKeyBind());
         });
     }
 }

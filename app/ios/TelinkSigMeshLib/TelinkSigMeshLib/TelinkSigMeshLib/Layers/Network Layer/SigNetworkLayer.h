@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/9
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigNetworkLayer.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/9.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -33,11 +27,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigLowerTransportPdu,SigNetworkManager,SigSegmentAcknowledgmentMessage;
 
+/*
+ The network layer defines how transport messages are addressed towards one or more elements.
+ It defines the network message format that allows Transport PDUs to be transported by the
+ bearer layer. The network layer decides whether to relay/forward messages, accept them for
+ further processing, or reject them. It also defines how a network message is encrypted and
+ authenticated.
+ */
 @interface SigNetworkLayer : NSObject
 @property (nonatomic,strong) SigNetworkManager *networkManager;
 @property (nonatomic,strong) SigDataSource *meshNetwork;
-//@property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
-//@property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
 @property (nonatomic,strong,nullable) SigSegmentAcknowledgmentMessage *lastNeedSendAckMessage;
@@ -51,8 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter type: The PDU type.
 - (void)handleIncomingPdu:(NSData *)pdu ofType:(SigPduType)type;
 
-- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
-
 /// This method tries to send the Lower Transport Message of given type to the
 /// given destination address. If the local Provisioner does not exist, or
 /// does not have Unicast Address assigned, this method does nothing.
@@ -60,9 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter pdu:  The Lower Transport PDU to be sent.
 /// - parameter type: The PDU type.
 /// - parameter ttl:  The initial TTL (Time To Live) value of the message.
+/// - parameter ivIndex:  The initial ivIndex value of the message.
 /// - throws: This method may throw when the `transmitter` is not set, or has
 ///           failed to send the PDU.
-- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl;
+- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Proxy Configuration Message.
 ///
@@ -70,17 +68,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - parameter message: The Proxy Confifuration message to be sent.
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message;
-
-/// Updates the information about the Network Key known to the current Proxy Server.
-/// The Network Key is required to send Proxy Configuration Messages that can be
-/// decoded by the connected Proxy.
-///
-/// If the method detects that the Proxy has just been connected, or was reconnected,
-/// it will initiate the Proxy Filter with local Provisioner's Unicast Address and
-/// the `Address.allNodes` group address.
-///
-/// - parameter networkKey: The Network Key known to the connected Proxy.
-//- (void)updateProxyFilterUsingNetworkKey:(SigNetkeyModel *)networkKey;
 
 @end
 

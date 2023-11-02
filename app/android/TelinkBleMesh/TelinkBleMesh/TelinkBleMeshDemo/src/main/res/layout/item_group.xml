@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
@@ -17,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_group"
-            android:tint="@color/grey" />
+            android:tint="@color/colorPrimary" />
 
         <TextView
             android:id="@+id/tv_group_name"
@@ -25,13 +24,15 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
             android:layout_weight="1"
-            android:maxLines="1" />
+            android:maxLines="1"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <Switch
             android:id="@+id/switch_on_off"
             android:layout_width="wrap_content"
-            android:checked="true"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:checked="true" />
 
     </LinearLayout>
 
@@ -39,7 +40,7 @@
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         android:layout_marginTop="8dp"
+        android:layout_marginRight="16dp"
         android:background="@color/grey" />
 </LinearLayout>

@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     SwitchListAdapter.java 
+ * @file SwitchListAdapter.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -29,15 +30,16 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.telink.ble.mesh.demo.R;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.NodeInfo;
 
 import java.util.List;
-
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * on/off switch
@@ -48,11 +50,13 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
 
     List<Integer> mAdrList;
     Context mContext;
+    NodeInfo mNode;
     int address;
 
-    public SwitchListAdapter(Context context, List<Integer> adrList) {
+    public SwitchListAdapter(Context context, List<Integer> adrList, NodeInfo nodeInfo) {
         mContext = context;
         mAdrList = adrList;
+        this.mNode = nodeInfo;
     }
 
     @Override
@@ -75,24 +79,20 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
         int adr = mAdrList.get(position);
         holder.tv_ele.setText("ele adr: " + adr);
         holder.switch_ele.setTag(adr);
-        holder.switch_ele.setOnCheckedChangeListener(switchChangeListner);
+        holder.switch_ele.setOnCheckedChangeListener(switchChangeListener);
     }
 
-    private CompoundButton.OnCheckedChangeListener switchChangeListner = new CompoundButton.OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            int adr = (int) buttonView.getTag();
-            boolean ack = !AppSettings.ONLINE_STATUS_ENABLE;
-            int rspMax = ack ? 1 : 0;
-            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-            OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
-            MeshService.getInstance().sendMeshMessage(message);
-        }
+    private CompoundButton.OnCheckedChangeListener switchChangeListener = (buttonView, isChecked) -> {
+        int adr = (int) buttonView.getTag();
+        boolean ack = !AppSettings.ONLINE_STATUS_ENABLE;
+        int rspMax = ack ? 1 : 0;
+        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+        OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
+        MeshService.getInstance().sendMeshMessage(message);
     };
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
-
 
         private TextView tv_ele;
         private Switch switch_ele;

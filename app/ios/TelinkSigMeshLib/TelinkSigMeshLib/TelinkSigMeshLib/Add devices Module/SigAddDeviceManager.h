@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/4
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigAddDeviceManager.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/4.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -42,33 +36,129 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigAddDeviceManager *)share;
-
-/// function1 :add bluetooth devices (auto add)
-- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
-
-/// function2 :add bluetooth device (single add)
-- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
-
-/*
- parameter of SigAddConfigModel:
- 
-    1.normal provision + normal keybind:
-peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionType:ProvisionTpye_NoOOB+keyBindType:KeyBindTpye_Normal
-    2.normal provision + fast keybind:
- peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionType:ProvisionTpye_NoOOB+keyBindType:KeyBindTpye_Fast+productID+cpsData
-    3.static oob provision(cloud oob) + normal keybind:
- peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionType:ProvisionTpye_StaticOOB+staticOOBData+keyBindType:KeyBindTpye_Normal
-    4.static oob provision(cloud oob) + fast keybind:
- peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionType:ProvisionTpye_StaticOOB+staticOOBData+keyBindType:KeyBindTpye_Fast+productID+cpsData
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
  */
-/// Add Single Device (provision+keyBind)
-/// @param configModel all config message of add device.
-/// @param provisionSuccess callback when provision success.
-/// @param provisionFail callback when provision fail.
-/// @param keyBindSuccess callback when keybind success.
-/// @param keyBindFail callback when keybind fail.
-- (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
++ (instancetype)share;
+
+/**
+ * @brief   Deprecated Add Device Method1 (auto add)
+ * @param   address UnicastAddress of new device.
+ * @param   networkKey network key, which provsion need, you can see it as password of the mesh.
+ * @param   netkeyIndex netkey index.
+ * @param   appkeyModel appkey model.
+ * @param   uuid uuid of remote device.
+ * @param   type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式.
+ * @param   productID product identify of node.
+ * @param   cpsData composition data of node.
+ * @param   isAuto 添加完成一个设备后，是否自动扫描添加下一个设备.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ * @param   finish callback when add device finish.
+ */
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish DEPRECATED_MSG_ATTRIBUTE("Use 'startAddDeviceWithSigAddConfigModel:capabilitiesResponse:provisionSuccess:provisionFail:keyBindSuccess:keyBindFail:' instead");
+
+/**
+ * @brief   Deprecated Add Device Method2 (auto add), add new callback of startConnect and startProvision.
+ * @param   address UnicastAddress of new device.
+ * @param   networkKey network key, which provsion need, you can see it as password of the mesh.
+ * @param   netkeyIndex netkey index.
+ * @param   appkeyModel appkey model.
+ * @param   uuid uuid of remote device.
+ * @param   type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式.
+ * @param   productID product identify of node.
+ * @param   cpsData composition data of node.
+ * @param   isAuto 添加完成一个设备后，是否自动扫描添加下一个设备.
+ * @param   startConnect callback when SDK start connect node.
+ * @param   startProvision callback when SDK start provision node.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ * @param   finish callback when add device finish.
+ */
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto startConnect:(addDevice_startConnectCallBack)startConnect startProvision:(addDevice_startProvisionCallBack)startProvision provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish DEPRECATED_MSG_ATTRIBUTE("Use 'startAddDeviceWithSigAddConfigModel:capabilitiesResponse:provisionSuccess:provisionFail:keyBindSuccess:keyBindFail:' instead");
+
+/**
+ * @brief   Deprecated Add Device Method3 (single add)
+ * @param   address UnicastAddress of new device.
+ * @param   networkKey network key, which provsion need, you can see it as password of the mesh.
+ * @param   netkeyIndex netkey index.
+ * @param   appkeyModel appkey model.
+ * @param   peripheral the bluetooth Peripheral object of node..
+ * @param   staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+ * @param   type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式.
+ * @param   productID product identify of node.
+ * @param   cpsData composition data of node.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ */
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail DEPRECATED_MSG_ATTRIBUTE("Use 'startAddDeviceWithSigAddConfigModel:capabilitiesResponse:provisionSuccess:provisionFail:keyBindSuccess:keyBindFail:' instead");
+
+/**
+ * @brief   Deprecated Add Device Method4 (single add), calculate unicastAddress when capabilities response from unProvision node.
+ * @param   networkKey network key, which provsion need, you can see it as password of the mesh.
+ * @param   netkeyIndex netkey index.
+ * @param   appkeyModel appkey model.
+ * @param   peripheral the bluetooth Peripheral object of node..
+ * @param   staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+ * @param   type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式.
+ * @param   productID product identify of node.
+ * @param   cpsData composition data of node.
+ * @param   capabilitiesResponse callback when capabilities response from unProvision node.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ */
+- (void)startAddDeviceWithNetworkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData capabilitiesResponse:(nullable addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail DEPRECATED_MSG_ATTRIBUTE("Use 'startAddDeviceWithSigAddConfigModel:capabilitiesResponse:provisionSuccess:provisionFail:keyBindSuccess:keyBindFail:' instead");
+
+/**
+ * @brief   Add Single Device (provision+keyBind), the flag of Certificate Based in unProvision adv data is 1, SDK will get and verify the Certificate of node.
+ * @param   networkKey network key, which provsion need, you can see it as password of the mesh.
+ * @param   netkeyIndex netkey index.
+ * @param   appkeyModel appkey model.
+ * @param   peripheral the bluetooth Peripheral object of node..
+ * @param   staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+ * @param   type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式.
+ * @param   productID product identify of node.
+ * @param   cpsData composition data of node.
+ * @param   startConnect callback when SDK start connect node.
+ * @param   startProvision callback when SDK start provision node.
+ * @param   capabilitiesResponse callback when capabilities response from unProvision node.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ */
+- (void)startCertificateBasedWithNetworkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData startConnect:(addDevice_startConnectCallBack)startConnect startProvision:(addDevice_startProvisionCallBack)startProvision capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
+
+/**
+ * @brief   Add Single Device (provision+keyBind)
+ * @param   configModel all config message of add device.
+ * @param   capabilitiesResponse callback when capabilities response.
+ * @param   provisionSuccess callback when provision success.
+ * @param   provisionFail callback when provision fail.
+ * @param   keyBindSuccess callback when keybind success.
+ * @param   keyBindFail callback when keybind fail.
+ * @note    SDK will call this api automatically, when SDK set filter success.
+ * @note    parameter of SigAddConfigModel:
+ *  1.normal provision + normal keybind:
+ *  peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+keyBindType:KeyBindType_Normal
+ *  2.normal provision + fast keybind:
+ *  peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+keyBindType:KeyBindType_Fast+productID+cpsData
+ *  3.static oob provision(cloud oob) + normal keybind:
+ *  peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+staticOOBData+keyBindType:KeyBindType_Normal
+ *  4.static oob provision(cloud oob) + fast keybind:
+ *  peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+staticOOBData+keyBindType:KeyBindType_Fast+productID+cpsData
+ */
+- (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 
 @end
 

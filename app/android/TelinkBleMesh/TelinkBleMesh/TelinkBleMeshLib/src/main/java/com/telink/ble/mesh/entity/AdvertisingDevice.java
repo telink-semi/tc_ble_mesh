@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     AdvertisingDevice.java 
+ * @file AdvertisingDevice.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 package com.telink.ble.mesh.entity;
@@ -26,24 +27,33 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.telink.ble.mesh.util.MeshLogger;
-
 import java.util.Arrays;
 
 /**
- * scanned devices
+ * This class represents an advertising device discovered during a Bluetooth scan.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
  */
 public class AdvertisingDevice implements Parcelable {
-    public BluetoothDevice device;
-    public int rssi;
-    public byte[] scanRecord;
+    public BluetoothDevice device; // The Bluetooth device associated with this advertising device
+    public int rssi; // The received signal strength indicator (RSSI) of the advertising device
+    public byte[] scanRecord; // The scan record of the advertising device
 
+    /**
+     * Constructs a new AdvertisingDevice object.
+     *
+     * @param device     The Bluetooth device associated with this advertising device
+     * @param rssi       The received signal strength indicator (RSSI) of the advertising device
+     * @param scanRecord The scan record of the advertising device
+     */
     public AdvertisingDevice(BluetoothDevice device, int rssi, byte[] scanRecord) {
         this.device = device;
         this.rssi = rssi;
         this.scanRecord = scanRecord;
     }
 
+    /**
+     * Parcelable.Creator necessary for implementing Parcelable interface.
+     */
     public static final Creator<AdvertisingDevice> CREATOR = new Creator<AdvertisingDevice>() {
         @Override
         public AdvertisingDevice createFromParcel(Parcel in) {
@@ -56,6 +66,11 @@ public class AdvertisingDevice implements Parcelable {
         }
     };
 
+    /**
+     * Constructs an AdvertisingDevice object from a Parcel.
+     *
+     * @param in The Parcel object to read the data from
+     */
     public AdvertisingDevice(Parcel in) {
         this.device = in.readParcelable(getClass().getClassLoader());
         this.rssi = in.readInt();

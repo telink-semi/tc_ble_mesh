@@ -4,35 +4,44 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
+import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 /**
  * scene
  * Created by kee on 2018/10/8.
  */
 
+@Entity
 public class Scene implements Serializable {
 
+    @Id
+    public long id;
 
     /**
      * scene name
@@ -42,121 +51,54 @@ public class Scene implements Serializable {
     /**
      * scene id
      */
-    public int id;
+    public int sceneId;
 
-    public List<SceneState> states = new ArrayList<>();
+    /**
+     * element address(unicast address) list, hex big endian
+     */
+    public List<String> addressList = new ArrayList<>();
 
-    public static class SceneState implements Serializable {
-        /**
-         * address
-         * device unicast address(0x01 -- 0x7FFF) or group address (C000 - 0xFEFF)
-         */
-        public int address;
 
-        /**
-         * on off value
-         * -1 unknown
-         */
-        public int onOff;
-
-        /**
-         * lum(lightness 0-100) value
-         * -1 unknown
-         */
-        public int lum;
-
-        /**
-         * temperature value
-         * -1 unknown
-         */
-        public int temp;
-
-        public SceneState() {
-        }
-
-        public SceneState(int address) {
-            this.address = address;
-            this.onOff = -1;
-            this.lum = -1;
-            this.temp = -1;
-        }
+    public Scene() {
     }
 
-
-    //    public List<Group> innerGroups = new ArrayList<>();
-//    public List<DeviceInfo> innerDevices = new ArrayList<>();
-
-    public void saveFromDeviceInfo(NodeInfo deviceInfo) {
-        for (SceneState state : states) {
-            if (state.address == deviceInfo.meshAddress) {
-                state.onOff = deviceInfo.getOnOff();
-                state.lum = deviceInfo.lum;
-                state.temp = deviceInfo.temp;
-                return;
-            }
-        }
-        SceneState state = new SceneState();
-        state.address = deviceInfo.meshAddress;
-        state.onOff = deviceInfo.getOnOff();
-        state.lum = deviceInfo.lum;
-        state.temp = deviceInfo.temp;
-        states.add(state);
+    public Scene(String name, int sceneId, List<String> addressList) {
+        this.name = name;
+        this.sceneId = sceneId;
+        this.addressList = addressList;
     }
 
-    public void removeByAddress(int address) {
-        Iterator<SceneState> iterator = states.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().address == address) {
-                iterator.remove();
-                return;
-            }
+    public void save(int address) {
+        if (addressList == null) {
+            addressList = new ArrayList<>();
         }
+        addressList.add(MeshUtils.intToHex2(address));
+        MeshInfoService.getInstance().updateScene(this);
     }
 
-    /*public void insertDevice(DeviceInfo deviceInfo) {
-        for (DeviceInfo device : innerDevices) {
-            if (device.meshAddress == deviceInfo.meshAddress) {
-                device.macAddress = deviceInfo.macAddress;
-                device.setOnOff(deviceInfo.getOnOff());
-                device.lum = deviceInfo.lum;
-                device.temp = deviceInfo.temp;
-                return;
-            }
-        }
-        DeviceInfo device = new DeviceInfo();
-        device.meshAddress = deviceInfo.meshAddress;
-        device.macAddress = deviceInfo.macAddress;
-        device.setOnOff(deviceInfo.getOnOff());
-        device.lum = deviceInfo.lum;
-        device.temp = deviceInfo.temp;
-        innerDevices.add(device);
-    }*/
+    public void remove(int address) {
+        String formatAdr = MeshUtils.intToHex2(address);
+        addressList.remove(formatAdr);
+    }
 
-    /*public void deleteDevice(int address) {
-        Iterator<DeviceInfo> iterator = innerDevices.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().meshAddress == address) {
-                iterator.remove();
-                return;
+    public boolean remove(NodeInfo nodeInfo) {
+        boolean anyRemoved = false;
+        if (nodeInfo.compositionData != null) {
+            int adr;
+            for (int i = 0; i < nodeInfo.compositionData.elements.size(); i++) {
+                adr = i + nodeInfo.meshAddress;
+                if (this.contains(adr)) {
+                    remove(adr);
+                    anyRemoved = true;
+                }
             }
         }
-    }*/
+        return anyRemoved;
+    }
 
-    /*public boolean contains(Group group) {
-        for (Group inner : innerGroups) {
-            if (inner.address == group.address) {
-                return true;
-            }
-        }
-        return false;
-    }*/
-
-    public boolean contains(NodeInfo device) {
-        for (SceneState inner : states) {
-            if (inner.address == device.meshAddress) {
-                return true;
-            }
-        }
-        return false;
+    public boolean contains(int address) {
+        if (addressList == null || addressList.size() == 0) return false;
+        String formatAdr = MeshUtils.intToHex2(address);
+        return addressList.contains(formatAdr);
     }
 }

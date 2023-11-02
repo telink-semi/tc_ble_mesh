@@ -3,34 +3,29 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/10
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SingleDeviceViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/10.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SingleDeviceViewController.h"
 #import "DeviceControlViewController.h"
 #import "DeviceGroupViewController.h"
 #import "DeviceSettingViewController.h"
+#import "DeviceRemoteVC.h"
 
 @interface SingleDeviceViewController ()
 
@@ -81,9 +76,10 @@
     }];
     
     [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
-        *norColor = [UIColor lightGrayColor];
+        *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
         *selColor = [UIColor blackColor];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / 3;
+        *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
+        *titleWidth = [UIScreen mainScreen].bounds.size.width / ((weakSelf.model.isRemote || SigDataSource.share.curMeshIsVisitor) ? 2 : 3);
     }];
     
     // 标题渐变
@@ -93,7 +89,7 @@
     }];
     
     [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
-        *underLineColor = kDefultColor;
+        *underLineColor = UIColor.telinkButtonBlue;
         *isUnderLineEqualTitleWidth = YES;
     }];
 
@@ -105,19 +101,29 @@
 - (void)setUpAllViewController
 {
     // control
-    DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storybroad:@"DeviceSetting"];
-    wordVc1.title = @"CONTROL";
-    wordVc1.model = self.model;
-    [self addChildViewController:wordVc1];
+    if (self.model.isRemote) {
+        DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storyboard:@"DeviceSetting"];
+        wordVc1.title = @"CONTROL";
+        wordVc1.model = self.model;
+        [self addChildViewController:wordVc1];
+    } else {
+        DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storyboard:@"DeviceSetting"];
+        wordVc1.title = @"CONTROL";
+        wordVc1.model = self.model;
+        [self addChildViewController:wordVc1];
+    }
     
     // group
-    DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storybroad:@"DeviceSetting"];
-    wordVc2.title = @"GROUP";
-    wordVc2.model = self.model;
-    [self addChildViewController:wordVc2];
+    // 遥控器不需要分组界面
+    if (self.model.isRemote == NO && SigDataSource.share.curMeshIsVisitor == NO) {
+        DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
+        wordVc2.title = @"GROUP";
+        wordVc2.model = self.model;
+        [self addChildViewController:wordVc2];
+    }
     
     // settings
-    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storybroad:@"DeviceSetting"];
+    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
     wordVc3.title = @"SETTINGS";
     wordVc3.model = self.model;
     [self addChildViewController:wordVc3];

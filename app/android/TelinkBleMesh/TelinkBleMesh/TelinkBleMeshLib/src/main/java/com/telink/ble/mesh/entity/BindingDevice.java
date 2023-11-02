@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     BindingDevice.java 
+ * @file BindingDevice.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
@@ -43,6 +44,9 @@ public class BindingDevice implements Parcelable {
      */
     private int meshAddress;
 
+    /**
+     * UUID of the device.
+     */
     private byte[] deviceUUID;
 
     /**
@@ -72,11 +76,24 @@ public class BindingDevice implements Parcelable {
      */
     private boolean defaultBound = false;
 
+    /**
+     * Composition data of the device.
+     */
     private CompositionData compositionData;
 
+    /**
+     * Default constructor.
+     */
     public BindingDevice() {
     }
 
+    /**
+     * Constructor with parameters.
+     *
+     * @param meshAddress The unicast address of the device.
+     * @param deviceUUID  The UUID of the device.
+     * @param appKeyIndex The index of the application key to be used for binding.
+     */
     public BindingDevice(int meshAddress, byte[] deviceUUID, int appKeyIndex) {
         this.meshAddress = meshAddress;
         this.deviceUUID = deviceUUID;
@@ -85,6 +102,15 @@ public class BindingDevice implements Parcelable {
         this.bearer = BindingBearer.GattOnly;
     }
 
+    /**
+     * Constructor with parameters.
+     *
+     * @param meshAddress The unicast address of the device.
+     * @param deviceUUID  The UUID of the device.
+     * @param appKeyIndex The index of the application key to be used for binding.
+     * @param models      Array of model IDs to be bound.
+     * @param bearer      The binding bearer.
+     */
     public BindingDevice(int meshAddress, byte[] deviceUUID, int appKeyIndex, int[] models, BindingBearer bearer) {
         this.meshAddress = meshAddress;
         this.deviceUUID = deviceUUID;
@@ -93,6 +119,11 @@ public class BindingDevice implements Parcelable {
         this.bearer = bearer;
     }
 
+    /**
+     * Constructor for Parcelable implementation.
+     *
+     * @param in The Parcel object from which to read the values.
+     */
     protected BindingDevice(Parcel in) {
         netKeyIndex = in.readInt();
         meshAddress = in.readInt();
@@ -103,6 +134,9 @@ public class BindingDevice implements Parcelable {
         compositionData = in.readParcelable(CompositionData.class.getClassLoader());
     }
 
+    /**
+     * Parcelable creator for creating instances of BindingDevice from a Parcel.
+     */
     public static final Creator<BindingDevice> CREATOR = new Creator<BindingDevice>() {
         @Override
         public BindingDevice createFromParcel(Parcel in) {
@@ -115,75 +149,166 @@ public class BindingDevice implements Parcelable {
         }
     };
 
+    /**
+     * Getter for netKeyIndex.
+     *
+     * @return The network key index.
+     */
     public int getNetKeyIndex() {
         return netKeyIndex;
     }
 
+    /**
+     * Setter for netKeyIndex.
+     *
+     * @param netKeyIndex The network key index to set.
+     */
     public void setNetKeyIndex(int netKeyIndex) {
         this.netKeyIndex = netKeyIndex;
     }
 
+    /**
+     * Getter for meshAddress.
+     *
+     * @return The unicast address of the device.
+     */
     public int getMeshAddress() {
         return meshAddress;
     }
 
+    /**
+     * Setter for meshAddress.
+     *
+     * @param meshAddress The unicast address to set.
+     */
     public void setMeshAddress(int meshAddress) {
         this.meshAddress = meshAddress;
     }
 
+    /**
+     * Getter for deviceUUID.
+     *
+     * @return The UUID of the device.
+     */
     public byte[] getDeviceUUID() {
         return deviceUUID;
     }
 
+    /**
+     * Setter for deviceUUID.
+     *
+     * @param deviceUUID The UUID to set.
+     */
     public void setDeviceUUID(byte[] deviceUUID) {
         this.deviceUUID = deviceUUID;
     }
 
+    /**
+     * Getter for appKeyIndex.
+     *
+     * @return The index of the application key.
+     */
     public int getAppKeyIndex() {
         return appKeyIndex;
     }
 
+    /**
+     * Setter for appKeyIndex.
+     *
+     * @param appKeyIndex The index of the application key to set.
+     */
     public void setAppKeyIndex(int appKeyIndex) {
         this.appKeyIndex = appKeyIndex;
     }
 
+    /**
+     * Getter for models.
+     *
+     * @return The array of model IDs.
+     */
     public int[] getModels() {
         return models;
     }
 
+    /**
+     * Setter for models.
+     *
+     * @param models The array of model IDs to set.
+     */
     public void setModels(int[] models) {
         this.models = models;
     }
 
+    /**
+     * Getter for bearer.
+     *
+     * @return The binding bearer.
+     */
     public BindingBearer getBearer() {
         return bearer;
     }
 
+    /**
+     * Setter for bearer.
+     *
+     * @param bearer The binding bearer to set.
+     */
     public void setBearer(BindingBearer bearer) {
         this.bearer = bearer;
     }
 
+    /**
+     * Getter for defaultBound.
+     *
+     * @return True if default bound, false otherwise.
+     */
     public boolean isDefaultBound() {
         return defaultBound;
     }
 
+    /**
+     * Setter for defaultBound.
+     *
+     * @param defaultBound The value to set for default bound.
+     */
     public void setDefaultBound(boolean defaultBound) {
         this.defaultBound = defaultBound;
     }
 
+    /**
+     * Getter for compositionData.
+     *
+     * @return The composition data of the device.
+     */
     public CompositionData getCompositionData() {
         return compositionData;
     }
 
+    /**
+     * Setter for compositionData.
+     *
+     * @param compositionData The composition data to set.
+     */
     public void setCompositionData(CompositionData compositionData) {
         this.compositionData = compositionData;
     }
 
+    /**
+     * Implementation of describeContents() method of Parcelable interface.
+     *
+     * @return Always returns 0.
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Implementation of writeToParcel() method of Parcelable interface.
+     *
+     * @param dest  The Parcel object to write the values to.
+     * @param flags Additional flags for writing the parcel.
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(netKeyIndex);

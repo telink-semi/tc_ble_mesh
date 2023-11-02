@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigLowerTransportLayer.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigLowerTransportLayer.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigLowerTransportLayer.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -33,6 +27,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigSegmentedMessage,SigUpperTransportPdu,SigNetkeyModel,SigSegmentAcknowledgmentMessage;
 
+/*
+ The lower transport layer defines how upper transport layer messages are segmented and reassembled
+ into multiple Lower Transport PDUs to deliver large upper transport layer messages to other nodes.
+ It also defines a single control message to manage segmentation and reassembly.
+ */
 @interface SigLowerTransportLayer : NSObject
 
 @property (nonatomic,strong) SigNetworkManager *networkManager;
@@ -56,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 缓存APP端向设备端发送Segment Acknowlegment Messages的定时器。(告诉设备端一个Segment长包中哪个包丢失了或者所有包都接收了。)
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*acknowledgmentTimers;
 
+@property (nonatomic,strong) SigLowerTransportPdu *unSegmentLowerTransportPdu;
 
 
 /// The initial TTL values.
@@ -72,28 +72,25 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter networkPdu: The Network PDU received.
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu;
 
-- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
-
 /// This method tries to send the Upper Transport Message.
-///
-/// - parameters:
+/// - Parameters:
 ///   - pdu:        The unsegmented Upper Transport PDU to be sent.
 ///   - initialTtl: The initial TTL (Time To Live) value of the message.
 ///                 If `nil`, the default Node TTL will be used.
 ///   - networkKey: The Network Key to be used to encrypt the message on
 ///                 on Network Layer.
-- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
-
-- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
+///   - ivIndex: The ivIndex of mrdh network.
+- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Upper Transport Message.
-///
-/// - parameter pdu:        The segmented Upper Transport PDU to be sent.
-/// - parameter initialTtl: The initial TTL (Time To Live) value of the message.
+/// - Parameters:
+///   - pdu: The segmented Upper Transport PDU to be sent.
+///   - initialTtl: The initial TTL (Time To Live) value of the message.
 ///                         If `nil`, the default Node TTL will be used.
-/// - parameter networkKey: The Network Key to be used to encrypt the message on
+///   - networkKey: The Network Key to be used to encrypt the message on
 ///                         on Network Layer.
-- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
+///   - ivIndex: The ivIndex of mrdh network.
+- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 - (void)cancelTXSendingSegmentedWithDestination:(UInt16)destination;
 
@@ -101,56 +98,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - parameter pdu: The Upper Transport PDU.
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu;
-
-///// This method handles the Unprovisioned Device Beacon.
-/////
-///// The curernt implementation does nothing, as remote provisioning is
-///// currently not supported.
-/////
-///// - parameter unprovisionedDeviceBeacon: The Unprovisioned Device Beacon received.
-//- (void)handleUnprovisionedDeviceBeacon:(SigUnprovisionedDeviceBeacon *)unprovisionedDeviceBeacon;
-
-///// This method handles the Secure Network Beacon.
-///// It will set the proper IV Index and IV Update Active flag for the Network Key
-///// that matches Network ID and change the Key Refresh Phase based on the
-///// key refresh flag specified in the beacon.
-/////
-///// - parameter secureNetworkBeacon: The Secure Network Beacon received.
-//- (void)handleSecureNetworkBeacon:(SigSecureNetworkBeacon *)secureNetworkBeacon;
-
-
-
-
-
-///// This method tries to send the Upper Transport Message.
-/////
-///// - parameter pdu:         The Upper Transport PDU to be sent.
-///// - parameter isSegmented: `True` if the message should be sent as segmented, `false` otherwise.
-///// - parameter networkKey:  The Network Key to be used to encrypt the message on
-/////                          on Network Layer.
-//- (void)sendUpperTransportPdu:(SigUpperTransportPdu *)pdu asSegmentedMessage:(BOOL)isSegmented usingNetworkKey:(SigNetkeyModel *)networkKey;
-
-///// This method tries to send the Segment Acknowledgment Message to the
-///// given address. It will try to send if the local Provisioner is set and
-///// has the Unicast Address assigned.
-/////
-///// If the `transporter` throws an error during sending, this error will be ignored.
-/////
-///// - parameter segments:   The array of message segments, of which at least one
-/////                         has to be not `nil`.
-///// - parameter networkKey: The Network Key to be used to encrypt the message on
-/////                         on Network Layer.
-///// - parameter ttl:        Initial Time To Live (TTL) value.
-//- (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments usingNetworkKey:(SigNetkeyModel *)networkKey withTtl:(UInt8)ttl;
-
-///// Sends all non-`nil` segments from `outgoingSegments` map from the given
-///// `sequenceZero` key.
-/////
-///// - parameter sequenceZero: The key to get segments from the map.
-//- (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero limit:(int)limit;
-//
-//- (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero;//limit=10
-
 
 @end
 

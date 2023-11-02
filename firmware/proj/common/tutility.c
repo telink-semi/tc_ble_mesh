@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     tutility.c 
+ * @file	tutility.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "tutility.h"
 
@@ -161,6 +163,17 @@ void swap128(u8 dst[16], const u8 src[16])
     swapX(src, dst, 16);
 }
 
+u64 reverse_bit64(u64 src)
+{
+	u64 dst = 0;
+	foreach(i, 64){
+		dst <<= 1;
+		dst += src&0x01;
+		src >>= 1;
+	}
+	return dst;
+}
+
 void net_store_16(u8 *buffer, u16 pos, u16 value)
 {
     buffer[pos++] = (value >> 8) & 0xff;
@@ -221,7 +234,7 @@ int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len)
 	{
 		return -1;
 	}
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	u8 *pd = f->p + (f->wptr & (f->num-1)) * f->size;
 	*pd++ = (n+head_len) & 0xff;
 	*pd++ = (n+head_len) >> 8;
@@ -236,7 +249,7 @@ int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len)
 
 void my_fifo_pop (my_fifo_t *f)
 {
-	//u8 r = irq_disable();
+	//u32 r = irq_disable();
 	f->rptr++;
 	//irq_restore(r);
 }
@@ -245,7 +258,7 @@ u8 * my_fifo_get (my_fifo_t *f)
 {
     u8 *p = 0;
     
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	if (f->rptr != f->wptr)
 	{
 		p = f->p + (f->rptr & (f->num-1)) * f->size;

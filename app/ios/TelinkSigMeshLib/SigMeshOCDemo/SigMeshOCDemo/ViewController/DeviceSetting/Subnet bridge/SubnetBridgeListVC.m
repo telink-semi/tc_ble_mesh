@@ -1,37 +1,25 @@
 /********************************************************************************************************
-* @file     SubnetBridgeListVC.m
-*
-* @brief    Show all NetKey of node.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SubnetBridgeListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2021/1/25.
-//  Copyright © 2021 Telink. All rights reserved.
-//
+ * @file     SubnetBridgeListVC.m
+ *
+ * @brief    Show SubnetBridgeList of node.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2021/1/25
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SubnetBridgeListVC.h"
 #import "UIViewController+Message.h"
@@ -40,6 +28,7 @@
 @interface SubnetBridgeListVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UISwitch *enableSwitch;
+@property (weak, nonatomic) IBOutlet UIButton *addBridgingTableButton;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 
 @end
@@ -69,7 +58,6 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for subnetBridgeSet, address:%d",self.model.address);
-#ifdef kExist
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand subnetBridgeSetWithDestination:self.model.address subnetBridge:sender.on ? SigSubnetBridgeStateValues_enabled : SigSubnetBridgeStateValues_disabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSubnetBridgeStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -78,7 +66,6 @@
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 }];
-#endif
             } else {
                 sender.on = !sender.on;
                 [self showTips:@"The node is offline, app cann`t set subnet bridge."];
@@ -91,7 +78,7 @@
 }
 
 - (void)pushToAddBridgingTableVC {
-    AddBridgeTableVC *vc = (AddBridgeTableVC *)[UIStoryboard initVC:ViewControllerIdentifiers_AddBridgeTableVCID storybroad:@"DeviceSetting"];
+    AddBridgeTableVC *vc = (AddBridgeTableVC *)[UIStoryboard initVC:ViewControllerIdentifiers_AddBridgeTableVCID storyboard:@"DeviceSetting"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -105,7 +92,6 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for bridgeTableRemove, address:%d",self.model.address);
-#ifdef kExist
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridge.netKeyIndex1 netKeyIndex2:subnetBridge.netKeyIndex2 address1:subnetBridge.address1 address2:subnetBridge.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"bridgeTableRemove=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -116,7 +102,6 @@
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 
                 }];
-#endif
             } else {
                 [self showTips:@"The node is offline, app cann`t remove bridge table."];
             }
@@ -143,6 +128,7 @@
 - (void)normalSetting{
     [super normalSetting];
     self.title = @"Subnet Bridge";
+    self.addBridgingTableButton.backgroundColor = UIColor.telinkButtonBlue;
     self.enableSwitch.on  = self.model.subnetBridgeEnable;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     //longpress to delete subnet bridge
@@ -160,12 +146,6 @@
         [_messageHandle cancel];
     }
     NSLog(@"%s",__func__);
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 #pragma mark - UITableView
@@ -214,7 +194,6 @@
 
 - (void)deleteSubnetBridgeOfDevice:(SigSubnetBridgeModel *)subnetBridgeModel {
     [ShowTipsHandle.share show:@"delete Subnet Bridge from node..."];
-#ifdef kExist
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridgeModel.netKeyIndex1 netKeyIndex2:subnetBridgeModel.netKeyIndex2 address1:subnetBridgeModel.address1 address2:subnetBridgeModel.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
         TeLogInfo(@"delete Subnet Bridge responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
@@ -235,7 +214,6 @@
             [ShowTipsHandle.share delayHidden:2.0];
         });
     }];
-#endif
 }
 
 @end

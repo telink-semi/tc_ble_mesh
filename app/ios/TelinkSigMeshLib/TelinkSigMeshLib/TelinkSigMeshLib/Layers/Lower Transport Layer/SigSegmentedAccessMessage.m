@@ -1,46 +1,51 @@
 /********************************************************************************************************
-* @file     SigSegmentedAccessMessage.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigSegmentedAccessMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigSegmentedAccessMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigSegmentedAccessMessage.h"
 #import "SigUpperTransportPdu.h"
 
 @implementation SigSegmentedAccessMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Creates a Segment of an Access Message from a Network PDU that contains
+/// a segmented access message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with segmented
+///                         Upper Transport message.
 - (instancetype)initFromSegmentedPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
@@ -57,7 +62,7 @@
         } else {
             _aid = 0;
         }
-        UInt8 tem1 = 0,tem2=0,tem3=0;
+        UInt16 tem1 = 0,tem2=0,tem3=0;
         memcpy(&tem1, dataByte+1, 1);
         memcpy(&tem2, dataByte+2, 1);
         memcpy(&tem3, dataByte+3, 1);
@@ -83,7 +88,9 @@
 }
 
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex offset:(UInt8)offset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;
@@ -97,10 +104,11 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        
+        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -108,14 +116,14 @@
 
 }
 
-/// Creates a Segment of an Access Message object from the Upper Transport PDU
-/// with given segment offset.
-///
-/// - parameter pdu: The segmented Upper Transport PDU.
-/// - parameter networkKey: The Network Key to encrypt the PCU with.
-/// - parameter offset: The segment offset.
+/// Creates a Segment of an Access Message object from the Upper Transport PDU with given segment offset.
+/// @param pdu The segmented Upper Transport PDU.
+/// @param networkKey The Network Key to encrypt the PCU with.
+/// @param offset The segment offset.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey offset:(UInt8)offset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;
@@ -128,10 +136,11 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        
+        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
@@ -157,7 +166,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) transportMicSize:(0x%X) sequence:(0x%X),sequenceZero:(0x%X), opCode:(0x%X)", self, _aid,_transportMicSize,(unsigned int)_sequence,self.sequenceZero,_opCode];
+    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) szmic:(0x%X), seqZero:(0x%X), segO:(0x%X), segN:(0x%X), data:(0x%@)", self, _aid, _transportMicSize, self.sequenceZero, self.segmentOffset, self.lastSegmentNumber, [LibTools convertDataToHexStr:self.upperTransportPdu]];
 }
 
 @end

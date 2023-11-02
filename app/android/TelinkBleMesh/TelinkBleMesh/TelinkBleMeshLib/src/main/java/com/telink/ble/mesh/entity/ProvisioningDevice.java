@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
@@ -25,7 +26,6 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningCapabilityPDU;
 import com.telink.ble.mesh.util.Arrays;
 
@@ -38,7 +38,6 @@ import java.nio.ByteOrder;
  */
 
 public class ProvisioningDevice implements Parcelable {
-
     /**
      * 16: key
      * 2: key index
@@ -46,12 +45,11 @@ public class ProvisioningDevice implements Parcelable {
      * 4: iv index
      * 2: unicast adr
      */
-    private static final int DATA_PDU_LEN = 16 + 2 + 1 + 4 + 2;
+    private static final int DATA_PDU_LEN = 16 + 2 + 1 + 4 + 2; // Length of the data PDU
 
-    private BluetoothDevice bluetoothDevice;
+    private BluetoothDevice bluetoothDevice; // The Bluetooth device associated with this provisioning device
 
-    protected byte[] deviceUUID;
-
+    protected byte[] deviceUUID; // The UUID of the device
 
     /**
      * OOB Information
@@ -73,24 +71,27 @@ public class ProvisioningDevice implements Parcelable {
      * 14 - Inside manual
      * 15 - On device
      */
-    protected int oobInfo;
+    protected int oobInfo; // Out-of-Band (OOB) information
+    protected byte[] networkKey; // The network key used for provisioning
+    protected int networkKeyIndex; // The index of the network key
 
-    protected byte[] networkKey;
-
-    protected int networkKeyIndex;
 
     /**
      * 1 bit
+     * The key refresh flag
      */
     protected byte keyRefreshFlag;
 
     /**
      * 1 bit
+     * The IV update flag
      */
     protected byte ivUpdateFlag;
 
+
     /**
      * 4 bytes
+     * The IV index
      */
     protected int ivIndex;
 
@@ -108,27 +109,53 @@ public class ProvisioningDevice implements Parcelable {
     protected byte[] authValue = null;
 
     /**
-     * auto use no-OOB if auth value is null
+     * Flag indicating whether to automatically use no-OOB if auth value is null
      */
     protected boolean autoUseNoOOB = false;
 
-//    private ProvisioningParams provisioningParams;
-
+    /**
+     * The current provisioning state of the device
+     */
     protected int provisioningState;
 
     /**
-     * valued when generating provisioning data
+     * The device key
      */
     protected byte[] deviceKey = null;
 
-    protected ProvisioningCapabilityPDU deviceCapability = null;
+    /**
+     * The root certificate
+     */
+    protected byte[] rootCert = null;
 
+    protected ProvisioningCapabilityPDU deviceCapability = null; // The device capability
+
+
+    /**
+     * Constructor for ProvisioningDevice.
+     *
+     * @param bluetoothDevice The Bluetooth device associated with this provisioning device
+     * @param deviceUUID      The UUID of the device
+     * @param unicastAddress  The unicast address of the device
+     */
     public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID, int unicastAddress) {
         this.bluetoothDevice = bluetoothDevice;
         this.deviceUUID = deviceUUID;
         this.unicastAddress = unicastAddress;
     }
 
+    /**
+     * Constructor for ProvisioningDevice.
+     *
+     * @param bluetoothDevice The Bluetooth device associated with this provisioning device
+     * @param deviceUUID      The UUID of the device
+     * @param networkKey      The network key used for provisioning
+     * @param networkKeyIndex The index of the network key
+     * @param keyRefreshFlag  The key refresh flag
+     * @param ivUpdateFlag    The IV update flag
+     * @param ivIndex         The IV index
+     * @param unicastAddress  The unicast address of the device
+     */
     public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID, byte[] networkKey, int networkKeyIndex, byte keyRefreshFlag, byte ivUpdateFlag, int ivIndex, int unicastAddress) {
         this.bluetoothDevice = bluetoothDevice;
         this.deviceUUID = deviceUUID;
@@ -140,10 +167,17 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
-
+    /**
+     * Default constructor for ProvisioningDevice.
+     */
     public ProvisioningDevice() {
     }
 
+    /**
+     * Constructor for ProvisioningDevice that takes a Parcel as input.
+     *
+     * @param in The Parcel object containing the object data
+     */
     protected ProvisioningDevice(Parcel in) {
         bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         deviceUUID = in.createByteArray();
@@ -157,8 +191,12 @@ public class ProvisioningDevice implements Parcelable {
         authValue = in.createByteArray();
         provisioningState = in.readInt();
         deviceKey = in.createByteArray();
+        rootCert = in.createByteArray();
     }
 
+    /**
+     * Creator constant for Parcelable.Creator.
+     */
     public static final Creator<ProvisioningDevice> CREATOR = new Creator<ProvisioningDevice>() {
         @Override
         public ProvisioningDevice createFromParcel(Parcel in) {
@@ -171,6 +209,11 @@ public class ProvisioningDevice implements Parcelable {
         }
     };
 
+    /**
+     * Generates the provisioning data for the device.
+     *
+     * @return The provisioning data as a byte array
+     */
     public byte[] generateProvisioningData() {
         byte flags = (byte) ((keyRefreshFlag & 0b01) | (ivUpdateFlag & 0b10));
         ByteBuffer buffer = ByteBuffer.allocate(DATA_PDU_LEN).order(ByteOrder.BIG_ENDIAN);
@@ -182,6 +225,7 @@ public class ProvisioningDevice implements Parcelable {
         return buffer.array();
     }
 
+    // Getters and setters
 
     public int getOobInfo() {
         return oobInfo;
@@ -287,6 +331,14 @@ public class ProvisioningDevice implements Parcelable {
         this.autoUseNoOOB = autoUseNoOOB;
     }
 
+    public byte[] getRootCert() {
+        return rootCert;
+    }
+
+    public void setRootCert(byte[] rootCert) {
+        this.rootCert = rootCert;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -306,6 +358,7 @@ public class ProvisioningDevice implements Parcelable {
         dest.writeByteArray(authValue);
         dest.writeInt(provisioningState);
         dest.writeByteArray(deviceKey);
+        dest.writeByteArray(rootCert);
     }
 
     @Override
@@ -323,7 +376,6 @@ public class ProvisioningDevice implements Parcelable {
                 ", autoUseNoOOB=" + autoUseNoOOB +
                 ", provisioningState=" + provisioningState +
                 ", deviceKey=" + Arrays.bytesToHexString(deviceKey) +
-
                 '}';
     }
 }

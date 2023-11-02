@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     blt_config.h 
+ * @file	blt_config.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 BLE Group
- * @date     Sep. 18, 2015
+ * @author	BLE Group
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -26,7 +29,7 @@
  *  @brief  Definition for Device info
  */
 #include "drivers.h"
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #define  MAX_DEV_NAME_LEN 				18
 
@@ -45,7 +48,12 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 
 }
 
-
+static inline void check_and_set_1p95v_to_zbit_flash()
+{
+	if(1 == zbit_flash_flag){ // use "== 1"" should be better than "ture"
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | 0x7));//1.95
+	}
+}
 
 
 extern u32 flash_sector_mac_address;
@@ -59,12 +67,28 @@ static inline void blc_app_loadCustomizedParameters(void)
 		 //for 512K Flash, flash_sector_calibration equals to 0x77000
 		 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
 		 if(flash_sector_calibration){
-			 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
-			 if( cap_frqoft != 0xff ){
+			u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
+			if( cap_frqoft != 0xff ){
 				 analog_write(0x8A, (analog_read(0x8A) & 0xc0)|(cap_frqoft & 0x3f));
-			 }
+			}
 		 }
 	 }
+
+	if(!pm_is_MCU_deepRetentionWakeup()){
+		zbit_flash_flag = flash_is_zb();
+	}
+
+	u8 calib_value = *(unsigned char*)(flash_sector_calibration+CALIB_OFFSET_FLASH_VREF);
+
+	if((0xff == calib_value))
+	{
+		check_and_set_1p95v_to_zbit_flash();
+	}
+	else
+	{
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | (calib_value&0x7)));
+	}
+
 }
 
 
@@ -216,6 +240,14 @@ static inline void blc_app_loadCustomizedParameters(void)
 #endif
 
 
+
+#ifndef ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN
+#define ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN					1
+#endif
+
+#ifndef ZBIT_FLASH_BRX4B_WRITE__EN
+#define ZBIT_FLASH_BRX4B_WRITE__EN									0
+#endif
 
 
 ///////////////////////////////////////dbg channels///////////////////////////////////////////

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  HomeItemCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "HomeItemCell.h"
 
@@ -44,12 +38,7 @@
             iconName = @"dengn";
             break;
         case DeviceStateOn:
-            //亮度不为100则图标显示开淡色，已经废弃。
-//            if (btModel.trueBrightness == 100) {
-                iconName = @"dengs";
-//            }else{
-//                iconName = @"dengs_half";
-//            }
+            iconName = @"dengs";
             break;
         default:
             break;
@@ -60,6 +49,10 @@
     //传感器sensor特殊处理
     if (btModel.isSensor) {
         iconName = @"ic_battery-20-bluetooth";
+    }
+    //遥控器remote特殊处理
+    if (btModel.isRemote) {
+        iconName = @"ic_rmt";
     }
 
     self.icon.image = [UIImage imageNamed:iconName];
@@ -86,13 +79,9 @@
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }
     self.address.textColor = [UIColor grayColor];
-    //原做法：直连设备显示蓝色
-//    if ([model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString] && SigBearer.share.getCurrentPeripheral.state == CBPeripheralStateConnected) {
-//        self.address.textColor = kDefultColor;
-//    }
     //新做法：直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
-        self.address.textColor = kDefultColor;
+        self.address.textColor = HEX(#4A87EE);
     }
 }
 

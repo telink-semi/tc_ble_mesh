@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     app_att.c 
+ * @file	app_att.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
@@ -29,6 +32,8 @@
 #include "../common/app_beacon.h"
 #if DU_ENABLE
 #include "vendor/common/user_du.h"
+#elif NMW_ENABLE
+#include "vendor/common/user_nmw.h"
 #endif
 #if(1)
 
@@ -255,16 +260,34 @@ u8 mi_service_change_buf_perm = ATT_PERMISSIONS_READ;
 u8 mi_service_change_ccc_perm = ATT_PERMISSIONS_RDWR;
 
 #if MI_API_ENABLE 
+
+#define BLE_UUID_MI_TOKEN 		0x0001
+#define BLE_UUID_MI_PRODUCT_ID	0x0002
+#define BLE_UUID_MI_VERS     	0x0004                    /**< The UUID of the Mi Service Version Characteristic. */
+#define BLE_UUID_MI_WIFICONFIG	0x0005
+#define BLE_UUID_MI_CTRLP    	0x0010                    /**< The UUID of the Control Point Characteristic. */
+#define BLE_UUID_MI_DEVICE_ID	0x0013
+#define BLE_UUID_BEACON_KEY		0x0014
+#define BLE_UUID_DEVICE_LIST 	0x0015
+#define BLE_UUID_MI_SECURE   	0x0016                    /**< The UUID of the Secure Auth Characteristic. */
+#define BLE_UUID_MI_OTA_CTRL 	0x0017                    /**< The UUID of the OTA Control Point Characteristic. */
+#define BLE_UUID_MI_OTA_DATA 	0x0018                    /**< The UUID of the OTA Data Characteristic. */
+#define BLE_UUID_MI_STANDARD 	0x0019                    /**< The UUID of the Standard Auth Characteristic. */
+#define BLE_UUID_MI_SPEC_RD  	0x001A                    /**< The UUID of the MIOT Spec RX Characteristic. */
+#define BLE_UUID_MI_SPEC_WR  	0x001B                    /**< The UUID of the MIOT Spec TX Characteristic. */
+#define BLE_UUID_MI_SYS_INFO 	0x001C                    /**< The UUID of the System info Characteristic. */
+
+
 const u16 mi_primary_service_uuid = 0xfe95;
 u8 mi_pri_service_perm = ATT_PERMISSIONS_READ_AUTHOR;
 
-const u16 mi_version_uuid = 0x0004;
+const u16 mi_version_uuid = BLE_UUID_MI_VERS;
 static u8 mi_version_prop = CHAR_PROP_READ;
 static u8 mi_version_buf[20]="0.0.1_0000";
 const u8 mi_version_str[]="Version";
 u8 mi_version_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
-const u16 mi_ctrlp_uuid = 0x0010;
+const u16 mi_ctrlp_uuid = BLE_UUID_MI_CTRLP;
 static u8 mi_ctrlp_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
 static u8 mi_ctrlp_buf[4];
 const u8 mi_ctrlp_str[]="contrl point";
@@ -273,7 +296,7 @@ u8 mi_sec_ctrlp_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_sec_ctrlp_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
 
-const u16 mi_sec_auth_uuid = 0x0016;
+const u16 mi_sec_auth_uuid = BLE_UUID_MI_SECURE;
 static u8 mi_sec_auth_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
 static u8 mi_sec_auth_buf[20];
 const u8 mi_sec_auth_str[]="Security Auth";
@@ -281,7 +304,7 @@ u8 mi_sec_auth_ccc[2]=	{0x00,0x00};
 u8 mi_sec_auth_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_sec_auth_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
-const u16 mi_ota_ctrl_uuid = 0x0017;
+const u16 mi_ota_ctrl_uuid = BLE_UUID_MI_OTA_CTRL;
 static u8 mi_ota_ctrl_prop = CHAR_PROP_WRITE|CHAR_PROP_NOTIFY;
 static u8 mi_ota_ctrl_buf[20];
 const u8 mi_ota_ctrl_str[]="Ota ctrl";
@@ -289,13 +312,38 @@ u8 mi_ota_ctrl_ccc[2]=	{0x00,0x00};
 u8 mi_ota_ctrl_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_ota_ctrl_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
-const u16 mi_ota_data_uuid = 0x0018;
+const u16 mi_ota_data_uuid = BLE_UUID_MI_OTA_DATA;
 static u8 mi_ota_data_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
 static u8 mi_ota_data_buf[20];
 const u8 mi_ota_data_str[]="Ota data";
 u8 mi_ota_data_ccc[2]=	{0x00,0x00};
 u8 mi_ota_data_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_ota_data_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
+
+const u16 mi_spec_rd_uuid = BLE_UUID_MI_SPEC_RD;
+static u8 mi_spec_rd_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
+static u8 mi_spec_rd_buf[10];
+const  u8 mi_spec_rd_str[]="spec_rd";
+u8 mi_spec_rd_ccc[2]={0x00,0x00};
+u8 mi_spec_rd_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+u8 mi_spec_rd_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
+const u16 mi_spec_wr_uuid = BLE_UUID_MI_SPEC_WR;
+static u8 mi_spec_wr_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
+static u8 mi_spec_wr_buf[10];
+const  u8 mi_spec_wr_str[]="spec_wr";
+u8 mi_spec_wr_ccc[2]={0x00,0x00};
+u8 mi_spec_wr_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+u8 mi_spec_wr_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
+const u16 mi_sys_info_uuid = BLE_UUID_MI_SYS_INFO;
+static u8 mi_sys_info_prop = CHAR_PROP_WRITE|CHAR_PROP_NOTIFY|CHAR_PROP_WRITE_WITHOUT_RSP;
+static u8 mi_sys_info_buf[10];
+const  u8 mi_sys_info_str[]="sys_info";
+u8 mi_sys_info_wr_ccc[2]={0x00,0x00};
+u8 mi_sys_info_wr_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+u8 mi_sys_info_wr_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
 
 #define BLE_UUID_STDIO_SRV    {0x6D,0x69,0x2E,0x6D,0x69,0x6F,0x74,0x2E,0x62,0x6C,0x65,0x00,0x00,0x01,0x00,0x00}
@@ -331,17 +379,38 @@ int mi_empty_writeback(void * p)
 #endif 
 
 #if (DU_ENABLE)
-const u16 du_pri_service_uuid = 0xffb0;
-const u16 du_ctl_uuid = 0xff00;
+#define BLE_UUID_DU_OTA_SRV    {0xfb,0x34,0x9b,0x5f,0x80,0x00,0x00,0x80,0x00,0x10,0x00,0x00,0xb0,0xff,0x00,0x00}
+#define BLE_UUID_DU_OTA_CTR    {0xfb,0x34,0x9b,0x5f,0x80,0x00,0x00,0x80,0x00,0x10,0x00,0x00,0x00,0xff,0x00,0x00}
+#define BLE_UUID_DU_OTA_DATA   {0xfb,0x34,0x9b,0x5f,0x80,0x00,0x00,0x80,0x00,0x10,0x00,0x00,0x01,0xff,0x00,0x00}
+
+const u8  du_pri_service_uuid[16] = BLE_UUID_DU_OTA_SRV;
+const u16 du_pri_service_uuid_16 = 0xffb0;
+const u8  du_ctl_uuid[16] = BLE_UUID_DU_OTA_CTR;
+//const u16 du_ctl_uuid = 0xff00;
 const u8  du_ctl_prop = CHAR_PROP_WRITE|CHAR_PROP_NOTIFY;
 u8 du_ctl_ccc[2];
 u8 du_ctl_data[8];
-const u16 du_ota_uuid = 0xff01;
+const u8  du_ota_uuid[16] = BLE_UUID_DU_OTA_DATA;
+//const u16 du_ota_uuid = 0xff01;
 const u8  du_ota_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
 u8 du_ota_data[8];
-#endif
 
-#if(AIS_ENABLE)
+#elif (NMW_ENABLE)
+#define BLE_UUID_NMW_OTA_SRV  	{0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x10,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x10,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00}
+#define BLE_UUID_NMW_OTA_CTR    {0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x11,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x11,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00}
+#define BLE_UUID_NMW_OTA_DATA   {0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x12,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x12,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00} 
+
+const u8  nmw_pri_service_uuid[16] = BLE_UUID_NMW_OTA_SRV;
+const u8  nmw_ctl_uuid[16] = BLE_UUID_NMW_OTA_CTR;
+const u8  nmw_ctl_prop = CHAR_PROP_INDICATE|CHAR_PROP_WRITE;
+u8 nmw_ctl_ccc[2];
+u8 nmw_ctl_data[8];
+
+const u8  nmw_ota_uuid[16] = BLE_UUID_NMW_OTA_DATA;
+const u8  nmw_ota_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
+u8 nmw_ota_data[8];
+
+#elif(AIS_ENABLE)
 const u16 ais_pri_service_uuid = 0xfeb3;
 const u16 ais_read_uuid = 0xfed4;
 const u8 ais_read_prop = CHAR_PROP_READ;
@@ -384,17 +453,43 @@ int online_st_att_write(void *pw)
 }
 #endif
 
+#if DUAL_MESH_SIG_PVT_EN
+#define TELINK_MESH_SPP_DATA_PAIR 				{0x14,0x19,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00} 		//!< TELINK_SPP data for ota
+u8 TelinkSppServiceUUID[16]				= TELINK_SPP_UUID_SERVICE;
+u8 TelinkSppDataPairUUID[16]            = TELINK_MESH_SPP_DATA_PAIR;
+static const u8 SppDataPairProp			= CHAR_PROP_READ | CHAR_PROP_WRITE;
+u8 SppDataPairData[20] = {0xe0};
+const u8  spp_pairname[] = {'P', 'a', 'i', 'r'};
+
+int pairWrite(void* pw)
+{
+	dual_mode_mesh_found = DUAL_MODE_NETWORK_PVT_MESH;
+	return 1;
+}
+
+int pairRead(void* p)
+{
+	return 1;
+}
+#endif
+
 #define MAX_SERVICE_GAP                 (7)
 #define MAX_SERVICE_DEVICE_INFO         (5)
 #define MAX_SERVICE_GATT_OTA            (4)
 #define MAX_SERVICE_PROVISION           (9)
 #define MAX_SERVICE_PROXY               (9)
 #define MAX_USER_DEFINE_SET_CCC_ATT_NUM (USER_DEFINE_SET_CCC_ENABLE ? 4 : 0)
-#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 29 : 0)
+#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 41 : 0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
+#define MAX_SERVICE_PRIVATE_MESH		(DUAL_MESH_SIG_PVT_EN ? 4 : 0)
+#if (DU_ENABLE || NMW_ENABLE)
+#define MAX_AIS_ATT_NUM 	            0
+#else
 #define MAX_AIS_ATT_NUM 	            (AIS_ENABLE ? 12 : 0)
+#endif
 #define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 4 : 0)
 #define MAX_DU_ATT_NUM					(DU_ENABLE?6:0)
+#define MAX_NMW_ATT_NUM					(NMW_ENABLE?6:0)
 //---
 #define ATT_NUM_START_GAP                   (1)     // line of ATT, start from 0.
 #define ATT_NUM_START_DEVICE_INFO           (ATT_NUM_START_GAP + MAX_SERVICE_GAP)
@@ -407,13 +502,15 @@ int online_st_att_write(void *pw)
 #define ATT_NUM_START_AIS                   (ATT_NUM_START_SERVICE_CHANGE + MAX_SERVICE_CHANGE_ATT_NUM)
 #define ATT_NUM_START_ONLINE_ST             (ATT_NUM_START_AIS + MAX_AIS_ATT_NUM)
 #define ATT_NUM_START_DU					(ATT_NUM_START_ONLINE_ST+MAX_ONLINE_ST_ATT_NUM)
-#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_DU + MAX_DU_ATT_NUM - 1)
+#define ATT_NUM_START_NMW					(ATT_NUM_START_DU+MAX_DU_ATT_NUM)
+#define ATT_NUM_START_PRIVATE_MESH			(ATT_NUM_START_NMW+MAX_NMW_ATT_NUM)
+#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_PRIVATE_MESH + MAX_SERVICE_PRIVATE_MESH - 1)
 
 /*const */u8 PROVISION_ATT_HANDLE = (ATT_NUM_START_PROVISION + 2);  // slave
 /*const */u8 GATT_PROXY_HANDLE = (ATT_NUM_START_PROXY + 2);  // slave
 const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE = (ATT_NUM_START_SERVICE_CHANGE + 2);
 const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
-
+const u8 NMW_CONTROL_HANDLE = ATT_NUM_START_NMW + 2;
 
 #define MY_ATTRIBUTE_BASE0           \
     {ATTRIBUTE_TOTAL_NUM,0,0,0,0,0}, /* total num of attribute*/   \
@@ -495,6 +592,20 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&att_perm_auth_read, 2,sizeof (mi_ota_data_str),(u8*)(&userdesc_UUID), (u8*)(mi_ota_data_str), 0},	\
 	{0,&mi_ota_data_ccc_perm, 2, sizeof(mi_ota_data_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_ota_data_ccc), 0}, /*value*/ \
 	\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID), 	(u8*)(&mi_spec_rd_prop), 0},\
+	{0,&mi_spec_rd_perm, 2,sizeof(mi_spec_rd_buf),(u8*)(&mi_spec_rd_uuid),	(mi_spec_rd_buf), &mi_empty_writeback, 0},\
+	{0,&att_perm_auth_read, 2,sizeof (mi_spec_rd_str),(u8*)(&userdesc_UUID), (u8*)(mi_spec_rd_str), 0},\
+	{0,&mi_spec_rd_ccc_perm, 2, sizeof(mi_spec_rd_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_spec_rd_ccc), 0},\
+	\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID), 	(u8*)(&mi_spec_wr_prop), 0},\
+	{0,&mi_spec_wr_perm, 2,sizeof(mi_spec_wr_buf),(u8*)(&mi_spec_wr_uuid),	(mi_spec_wr_buf), &mi_empty_writeback, 0},\
+	{0,&att_perm_auth_read, 2,sizeof (mi_spec_wr_str),(u8*)(&userdesc_UUID), (u8*)(mi_spec_wr_str), 0},\
+	{0,&mi_spec_wr_ccc_perm, 2, sizeof(mi_spec_wr_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_spec_wr_ccc), 0},\
+	\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID), 	(u8*)(&mi_sys_info_prop), 0},\
+	{0,&mi_sys_info_wr_perm, 2,sizeof(mi_sys_info_buf),(u8*)(&mi_sys_info_uuid),	(mi_sys_info_buf), &mi_empty_writeback, 0}, \
+	{0,&att_perm_auth_read, 2,sizeof (mi_sys_info_str),(u8*)(&userdesc_UUID), (u8*)(mi_sys_info_str), 0},\
+	{0,&mi_sys_info_wr_ccc_perm, 2, sizeof(mi_sys_info_wr_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_sys_info_wr_ccc), 0},\
 	{MAX_MI_STDIO_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_primary_stdio_uuid), 0},\
 		{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_stdio_rx_prop), 0},				\
 		{0,&mi_stdio_rx_buf_perm, 16,sizeof(mi_stdio_rx_buf),(u8*)(&mi_stdio_rx_uuid),	(mi_stdio_rx_buf), 0, 0},\
@@ -514,6 +625,14 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&mi_service_change_buf_perm, 2,sizeof(mi_service_change_buf),(u8*)(&mi_service_change_uuid), (mi_service_change_buf), 0, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_service_change_str),(u8*)(&userdesc_UUID), (u8*)(mi_service_change_str), 0},	\
 	{0,&mi_service_change_ccc_perm, 2, sizeof(mi_service_change_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_service_change_ccc), 0}, /*value*/   
+
+#if DUAL_MESH_SIG_PVT_EN
+#define MY_ATTRIBUTE_PRIVATE_MESH							\
+	{4,&att_perm_auth_read,2,16,(u8*)(&my_primaryServiceUUID), 	(u8*)(TelinkSppServiceUUID), 0},\
+	{0,&att_perm_auth_read,2,1,(u8*)(&my_characterUUID), 		(u8*)(&SppDataPairProp), 0},\
+	{0,&att_perm_auth_rdwd,16,16,(u8*)(TelinkSppDataPairUUID),	(SppDataPairData), &pairWrite, &pairRead},\
+	{0,&att_perm_auth_rdwd,2,sizeof (spp_pairname),(u8*)(&userdesc_UUID), (u8*)(spp_pairname), 0},
+#endif
 
 #if (AIS_ENABLE)
 #define MY_ATTRIBUTE_AIS                        \
@@ -541,12 +660,22 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 
 #if (DU_ENABLE)
 #define MY_ATTRIBUTE_DU	\
-	{MAX_DU_ATT_NUM,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&du_pri_service_uuid), 0},\
+	{MAX_DU_ATT_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(du_pri_service_uuid), 0},\
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&du_ctl_prop), 0}, /*prop*/   \
-	{0,&att_perm_auth_rdwd, 2,sizeof(du_ctl_data),(u8*)(&du_ctl_uuid),	(du_ctl_data), &du_ctl_Write, 0}, /*value*/   \
+	{0,&att_perm_auth_rdwd, 16,sizeof(du_ctl_data),(u8*)(du_ctl_uuid),	(du_ctl_data), &du_ctl_Write, 0}, /*value*/   \
 	{0,&att_perm_auth_rdwd, 2, sizeof(du_ctl_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(du_ctl_ccc), 0}, /*value*/\
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&du_ota_prop), 0}, /*prop*/   \
-	{0,&att_perm_auth_rdwd, 2,sizeof(du_ota_data),(u8*)(&du_ota_uuid),	(du_ota_data), &du_fw_proc, 0} /*value*/
+	{0,&att_perm_auth_rdwd, 16,sizeof(du_ota_data),(u8*)(du_ota_uuid),	(du_ota_data), &du_fw_proc, 0} /*value*/
+#endif
+
+#if (NMW_ENABLE)
+#define MY_ATTRIBUTE_NMW \
+	{MAX_NMW_ATT_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(nmw_pri_service_uuid), 0},\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&nmw_ctl_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 16,sizeof(nmw_ctl_data),(u8*)(nmw_ctl_uuid),	(nmw_ctl_data), &nmw_ctl_write, 0}, /*value*/   \
+	{0,&att_perm_auth_rdwd, 2, sizeof(nmw_ctl_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(nmw_ctl_ccc), 0}, /*value*/\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&nmw_ota_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 16,sizeof(nmw_ota_data),(u8*)(nmw_ota_uuid),	(nmw_ota_data), &nmw_ota_write, 0} /*value*/
 #endif
 
 const attribute_t my_Attributes[] = {
@@ -573,7 +702,10 @@ const attribute_t my_Attributes[] = {
     
 #if (AIS_ENABLE)
 	// 002c - 0037
+	#if (DU_ENABLE || NMW_ENABLE)
+	#else
 	MY_ATTRIBUTE_AIS
+	#endif
 #endif
 
 #if (ONLINE_STATUS_EN)
@@ -582,13 +714,19 @@ const attribute_t my_Attributes[] = {
 
 #if (DU_ENABLE)
 	MY_ATTRIBUTE_DU
+#elif (NMW_ENABLE)
+	MY_ATTRIBUTE_NMW
+#endif
+
+#if DUAL_MESH_SIG_PVT_EN
+	MY_ATTRIBUTE_PRIVATE_MESH
 #endif
 };
 
 #if DU_ENABLE
 int bls_du_notify_rsp(u8*p_buf,int len)
 {
-	return  bls_att_pushIndicateData(ATT_NUM_START_DU+2,p_buf,len);
+	return  bls_att_pushNotifyData(ATT_NUM_START_DU+2,p_buf,len);
 }
 #endif
 

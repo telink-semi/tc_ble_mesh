@@ -1,47 +1,52 @@
 /********************************************************************************************************
-* @file     SigControlMessage.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigControlMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigControlMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigControlMessage.h"
 #import "SigSegmentedAccessMessage.h"
 
 @implementation SigControlMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
     }
     return self;
 }
 
+/// Creates an Control Message from a Network PDU that contains
+/// an unsegmented control message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with unsegmented
+///                         Upper Transport message.
 - (instancetype)initFromNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
         UInt8 tem = 0;
@@ -59,9 +64,14 @@
     return self;
 }
 
+/// Creates an Control Message object from the given list of segments.
+///
+/// - parameter segments: List of ordered segments.
 - (instancetype)initFromSegments:(NSArray <SigSegmentedAccessMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         // Assuming all segments have the same AID, source and destination addresses and TransMIC.
         SigSegmentedAccessMessage *segment = segments.firstObject;
         _opCode = segment.opCode;
@@ -79,9 +89,20 @@
     return self;
 }
 
+/// Creates a Control Message from the given Proxy Configuration
+/// message. The source should be set to the local Node address.
+/// The given Network Key should be known to the Proxy Node.
+///
+/// - parameter message:    The message to be sent.
+/// - parameter source:     The address of the local Node.
+/// - parameter networkKey: The Network Key to signe the message with.
+///                         The key should be known to the connected
+///                         Proxy Node.
 - (instancetype)initFromProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source usingNetworkKey:(SigNetkeyModel *)networkKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         _opCode = message.opCode;
         self.source = source;
         self.destination = MeshAddress_unassignedAddress;

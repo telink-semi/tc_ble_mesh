@@ -23,105 +23,6 @@
 /* Begin PBXBuildFile section */
 		25151BFA2362F2AC00967668 /* SigMessageHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 25151BF82362F2AC00967668 /* SigMessageHandle.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 25151BF92362F2AC00967668 /* SigMessageHandle.m */; };
-		2528945B2468F13400E590F9 /* SigECCEncryptHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DDE235ED9F0006C79C1 /* SigECCEncryptHelper.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		2528945E2468F13400E590F9 /* SigLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DD7235ED9F0006C79C1 /* SigLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894612468F13400E590F9 /* OpenSSLHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DE1235ED9F0006C79C1 /* OpenSSLHelper.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894652468F13400E590F9 /* SigModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F35235EE2A7006C79C1 /* SigModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894692468F13400E590F9 /* SigBearer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F4C235EEBED006C79C1 /* SigBearer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2528946B2468F13400E590F9 /* SigProvisioningData.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F66235EF339006C79C1 /* SigProvisioningData.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		2528946D2468F13400E590F9 /* GMEllipticCurveCrypto+hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F532446EFDC0084263F /* GMEllipticCurveCrypto+hash.h */; };
-		2528946F2468F13400E590F9 /* SigStruct.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F54235EEC61006C79C1 /* SigStruct.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894702468F13400E590F9 /* SigPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F49235EEB92006C79C1 /* SigPdu.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894732468F13400E590F9 /* SigAddDeviceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F67235EF339006C79C1 /* SigAddDeviceManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894752468F13400E590F9 /* LibTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F41235EE94C006C79C1 /* LibTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894762468F13400E590F9 /* ProxyProtocolHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F4D235EEBED006C79C1 /* ProxyProtocolHandler.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894772468F13400E590F9 /* SigDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F39235EE873006C79C1 /* SigDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894782468F13400E590F9 /* SigProvisioningManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F64235EF339006C79C1 /* SigProvisioningManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894792468F13400E590F9 /* SigAuthenticationModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F63235EF339006C79C1 /* SigAuthenticationModel.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		2528947A2468F13400E590F9 /* SigEnumeration.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F55235EEC61006C79C1 /* SigEnumeration.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2528947F2468F13400E590F9 /* SigKeyBindManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F6A235EF339006C79C1 /* SigKeyBindManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894812468F13400E590F9 /* SDKLibCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F8F235F06D3006C79C1 /* SDKLibCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894842468F13400E590F9 /* SigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF6623605B330096563F /* SigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894882468F13400E590F9 /* GMEllipticCurveCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F512446EFDC0084263F /* GMEllipticCurveCrypto.h */; };
-		252894892468F13400E590F9 /* TelinkHttpManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 256A68B72459129C00131CC4 /* TelinkHttpManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2528948B2468F13400E590F9 /* SigConfigMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF60236057A60096563F /* SigConfigMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2528948C2468F13400E590F9 /* SigMeshMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF5E236057A60096563F /* SigMeshMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894932468F13400E590F9 /* SigNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894942468F13400E590F9 /* SigNetworkLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BE92361455C00D4F0F7 /* SigNetworkLayer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894962468F13400E590F9 /* SigUpperTransportLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894A02468F13400E590F9 /* SigHearbeatMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894A12468F13400E590F9 /* SigLowerTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894A32468F13400E590F9 /* SigLowerTransportLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C042361458400D4F0F7 /* SigLowerTransportLayer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894A42468F13400E590F9 /* SigControlMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFC2361458400D4F0F7 /* SigControlMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894A62468F13400E590F9 /* SigSegmentAcknowledgmentMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFF2361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894A92468F13400E590F9 /* SigSegmentedMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C052361458400D4F0F7 /* SigSegmentedMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894AA2468F13400E590F9 /* SigAccessMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFA2361458400D4F0F7 /* SigAccessMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894AC2468F13400E590F9 /* SigSegmentedControlMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C002361458400D4F0F7 /* SigSegmentedControlMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894AD2468F13400E590F9 /* SigAccessPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BED2361456C00D4F0F7 /* SigAccessPdu.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894AE2468F13400E590F9 /* SigUpperTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894B02468F13400E590F9 /* SigSegmentedAccessMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFE2361458400D4F0F7 /* SigSegmentedAccessMessage.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894B52468F13400E590F9 /* SigAccessLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BEF2361456C00D4F0F7 /* SigAccessLayer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894B62468F13400E590F9 /* SigKeySet.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCA2361392100D4F0F7 /* SigKeySet.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894B82468F13400E590F9 /* SigHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BDA2361443000D4F0F7 /* SigHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894B92468F13400E590F9 /* CBUUID+Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		252894BB2468F13400E590F9 /* SigGenericMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25957EC8237AC6C100816137 /* SigGenericMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894BC2468F13400E590F9 /* SigMessageHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 25151BF82362F2AC00967668 /* SigMessageHandle.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894C32468F13400E590F9 /* SigProxyConfigurationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894C52468F13400E590F9 /* BackgroundTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894C62468F13400E590F9 /* OTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 258A003F23A8BA5A003D2148 /* OTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894CA2468F13400E590F9 /* SigConst.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FEC238E595600244D14 /* SigConst.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894CD2468F13400E590F9 /* SigPublishManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D9E67C23ACD9B6001E4747 /* SigPublishManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894DB2468F13400E590F9 /* SigFastProvisionAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25E60F262435980B00620E29 /* SigFastProvisionAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		252894DF2468F13400E590F9 /* TelinkSigMeshLibPrefixHeader.pch in Headers */ = {isa = PBXBuildFile; fileRef = 25335C6D235EB046006C79C1 /* TelinkSigMeshLibPrefixHeader.pch */; };
-		252894E62468F13400E590F9 /* SigLowerTransportPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BF92361458300D4F0F7 /* SigLowerTransportPdu.m */; };
-		252894E72468F13400E590F9 /* SigAuthenticationModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F5F235EF339006C79C1 /* SigAuthenticationModel.m */; };
-		252894E82468F13400E590F9 /* GMEllipticCurveCrypto+hash.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FF2F4F2446EFDC0084263F /* GMEllipticCurveCrypto+hash.m */; };
-		252894E92468F13400E590F9 /* SigProxyConfigurationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */; };
-		252894EA2468F13400E590F9 /* SigSegmentedAccessMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C022361458400D4F0F7 /* SigSegmentedAccessMessage.m */; };
-		252894EB2468F13400E590F9 /* SigHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BD92361443000D4F0F7 /* SigHelper.m */; };
-		252894ED2468F13400E590F9 /* OTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 258A003E23A8BA5A003D2148 /* OTAManager.m */; };
-		252894EE2468F13400E590F9 /* SigPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F48235EEB92006C79C1 /* SigPdu.m */; };
-		252894EF2468F13400E590F9 /* SigConfigMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF61236057A70096563F /* SigConfigMessage.m */; };
-		252894F02468F13400E590F9 /* SigKeySet.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BC92361392100D4F0F7 /* SigKeySet.m */; };
-		252894F12468F13400E590F9 /* SigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F34235EE2A6006C79C1 /* SigModel.m */; };
-		252894F22468F13400E590F9 /* SigPublishManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D9E67D23ACD9B6001E4747 /* SigPublishManager.m */; };
-		252894F32468F13400E590F9 /* SigBearer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F4E235EEBED006C79C1 /* SigBearer.m */; };
-		252894F42468F13400E590F9 /* SDKLibCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F8E235F06D3006C79C1 /* SDKLibCommand.m */; };
-		252894F62468F13400E590F9 /* SigAccessLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BEE2361456C00D4F0F7 /* SigAccessLayer.m */; };
-		252894F72468F13400E590F9 /* SigControlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C012361458400D4F0F7 /* SigControlMessage.m */; };
-		252894F82468F13400E590F9 /* SigDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F38235EE873006C79C1 /* SigDataSource.m */; };
-		252894F92468F13400E590F9 /* SigConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FED238E595600244D14 /* SigConst.m */; };
-		252894FA2468F13400E590F9 /* SigAccessMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C082361458500D4F0F7 /* SigAccessMessage.m */; };
-		252894FD2468F13400E590F9 /* TelinkHttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 256A68B82459129C00131CC4 /* TelinkHttpManager.m */; };
-		252894FE2468F13400E590F9 /* SigNetworkManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BCC2361392100D4F0F7 /* SigNetworkManager.m */; };
-		252894FF2468F13400E590F9 /* SigSegmentedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BFD2361458400D4F0F7 /* SigSegmentedMessage.m */; };
-		252895002468F13400E590F9 /* SigAccessPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BF02361456C00D4F0F7 /* SigAccessPdu.m */; };
-		252895012468F13400E590F9 /* OpenSSLHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DDC235ED9F0006C79C1 /* OpenSSLHelper.m */; };
-		252895022468F13400E590F9 /* SigAddDeviceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */; };
-		252895042468F13400E590F9 /* SigHearbeatMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */; };
-		252895052468F13400E590F9 /* SigMessageHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 25151BF92362F2AC00967668 /* SigMessageHandle.m */; };
-		252895062468F13400E590F9 /* BackgroundTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */; };
-		252895072468F13400E590F9 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
-		252895082468F13400E590F9 /* SigLowerTransportLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C032361458400D4F0F7 /* SigLowerTransportLayer.m */; };
-		252895092468F13400E590F9 /* SigMeshMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF5F236057A60096563F /* SigMeshMessage.m */; };
-		2528950A2468F13400E590F9 /* SigSegmentedControlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BFB2361458400D4F0F7 /* SigSegmentedControlMessage.m */; };
-		2528950B2468F13400E590F9 /* SigNetworkLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BEA2361455C00D4F0F7 /* SigNetworkLayer.m */; };
-		2528950D2468F13400E590F9 /* LibTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F40235EE94C006C79C1 /* LibTools.m */; };
-		2528950E2468F13400E590F9 /* SigUpperTransportLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */; };
-		2528950F2468F13400E590F9 /* SigKeyBindManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F69235EF339006C79C1 /* SigKeyBindManager.m */; };
-		252895102468F13400E590F9 /* SigMeshLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF6723605B330096563F /* SigMeshLib.m */; };
-		252895132468F13400E590F9 /* SigLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DE0235ED9F0006C79C1 /* SigLogger.m */; };
-		252895142468F13400E590F9 /* CBUUID+Hex.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C2E236148FF00D4F0F7 /* CBUUID+Hex.m */; };
-		252895152468F13400E590F9 /* SigECCEncryptHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DD6235ED9F0006C79C1 /* SigECCEncryptHelper.m */; };
-		252895162468F13400E590F9 /* SigFastProvisionAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25E60F272435980B00620E29 /* SigFastProvisionAddManager.m */; };
-		252895172468F13400E590F9 /* ProxyProtocolHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F4F235EEBED006C79C1 /* ProxyProtocolHandler.m */; };
-		252895182468F13400E590F9 /* SigSegmentAcknowledgmentMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C062361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.m */; };
-		252895192468F13400E590F9 /* GMEllipticCurveCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FF2F562446EFDC0084263F /* GMEllipticCurveCrypto.m */; };
-		2528951B2468F13400E590F9 /* SigUpperTransportPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */; };
-		2528951C2468F13400E590F9 /* SigProvisioningManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F61235EF339006C79C1 /* SigProvisioningManager.m */; };
-		2528951D2468F13400E590F9 /* SigProvisioningData.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F62235EF339006C79C1 /* SigProvisioningData.m */; };
-		252895322468F6F300E590F9 /* SigRemoteAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2528952D2468F6F200E590F9 /* SigRemoteAddManager.m */; };
-		252895352468F6F300E590F9 /* MeshOTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 252895312468F6F200E590F9 /* MeshOTAManager.m */; };
 		252ABF62236057A70096563F /* SigMeshMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF5E236057A60096563F /* SigMeshMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		252ABF63236057A70096563F /* SigMeshMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF5F236057A60096563F /* SigMeshMessage.m */; };
 		252ABF64236057A70096563F /* SigConfigMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF60236057A60096563F /* SigConfigMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -161,202 +62,112 @@
 		25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */; };
 		25335F90235F06D3006C79C1 /* SDKLibCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F8E235F06D3006C79C1 /* SDKLibCommand.m */; };
 		25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F8F235F06D3006C79C1 /* SDKLibCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		254072A925C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */; };
 		255394F924907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
-		255394FA24907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FB24907A9B0095B499 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A424907A9B0095B499 /* pem.h */; };
-		255394FC24907A9B0095B499 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A424907A9B0095B499 /* pem.h */; };
 		255394FD24907A9B0095B499 /* ssl3.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A524907A9B0095B499 /* ssl3.h */; };
-		255394FE24907A9B0095B499 /* ssl3.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A524907A9B0095B499 /* ssl3.h */; };
 		255394FF24907A9B0095B499 /* ossl_typ.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A624907A9B0095B499 /* ossl_typ.h */; };
-		2553950024907A9B0095B499 /* ossl_typ.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A624907A9B0095B499 /* ossl_typ.h */; };
 		2553950124907A9B0095B499 /* dtls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A724907A9B0095B499 /* dtls1.h */; };
-		2553950224907A9C0095B499 /* dtls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A724907A9B0095B499 /* dtls1.h */; };
 		2553950324907A9C0095B499 /* err.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A824907A9B0095B499 /* err.h */; };
-		2553950424907A9C0095B499 /* err.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A824907A9B0095B499 /* err.h */; };
 		2553950524907A9C0095B499 /* bn.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A924907A9B0095B499 /* bn.h */; };
-		2553950624907A9C0095B499 /* bn.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A924907A9B0095B499 /* bn.h */; };
 		2553950724907A9C0095B499 /* blowfish.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AA24907A9B0095B499 /* blowfish.h */; };
-		2553950824907A9C0095B499 /* blowfish.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AA24907A9B0095B499 /* blowfish.h */; };
 		2553950924907A9C0095B499 /* cms.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AB24907A9B0095B499 /* cms.h */; };
-		2553950A24907A9C0095B499 /* cms.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AB24907A9B0095B499 /* cms.h */; };
 		2553950B24907A9C0095B499 /* engine.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AC24907A9B0095B499 /* engine.h */; };
-		2553950C24907A9C0095B499 /* engine.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AC24907A9B0095B499 /* engine.h */; };
 		2553950D24907A9C0095B499 /* conf_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AD24907A9B0095B499 /* conf_api.h */; };
-		2553950E24907A9C0095B499 /* conf_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AD24907A9B0095B499 /* conf_api.h */; };
 		2553950F24907A9C0095B499 /* x509.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AE24907A9B0095B499 /* x509.h */; };
-		2553951024907A9C0095B499 /* x509.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AE24907A9B0095B499 /* x509.h */; };
 		2553951124907A9C0095B499 /* asn1_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AF24907A9B0095B499 /* asn1_mac.h */; };
-		2553951224907A9D0095B499 /* asn1_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394AF24907A9B0095B499 /* asn1_mac.h */; };
 		2553951324907A9D0095B499 /* ui.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B024907A9B0095B499 /* ui.h */; };
-		2553951424907A9D0095B499 /* ui.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B024907A9B0095B499 /* ui.h */; };
 		2553951524907A9D0095B499 /* kssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B124907A9B0095B499 /* kssl.h */; };
-		2553951624907A9D0095B499 /* kssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B124907A9B0095B499 /* kssl.h */; };
 		2553951724907A9D0095B499 /* sha.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B224907A9B0095B499 /* sha.h */; };
-		2553951824907A9D0095B499 /* sha.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B224907A9B0095B499 /* sha.h */; };
 		2553951924907A9D0095B499 /* symhacks.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B324907A9B0095B499 /* symhacks.h */; };
-		2553951A24907A9D0095B499 /* symhacks.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B324907A9B0095B499 /* symhacks.h */; };
 		2553951B24907A9D0095B499 /* asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B424907A9B0095B499 /* asn1.h */; };
-		2553951C24907A9D0095B499 /* asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B424907A9B0095B499 /* asn1.h */; };
 		2553951D24907A9D0095B499 /* opensslconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B524907A9B0095B499 /* opensslconf.h */; };
-		2553951E24907A9D0095B499 /* opensslconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B524907A9B0095B499 /* opensslconf.h */; };
 		2553951F24907A9D0095B499 /* bio.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B624907A9B0095B499 /* bio.h */; };
-		2553952024907A9D0095B499 /* bio.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B624907A9B0095B499 /* bio.h */; };
 		2553952124907A9E0095B499 /* rc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B724907A9B0095B499 /* rc2.h */; };
-		2553952224907A9E0095B499 /* rc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B724907A9B0095B499 /* rc2.h */; };
 		2553952324907A9E0095B499 /* dh.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B824907A9B0095B499 /* dh.h */; };
-		2553952424907A9E0095B499 /* dh.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B824907A9B0095B499 /* dh.h */; };
 		2553952524907A9E0095B499 /* opensslconf-armv7.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B924907A9B0095B499 /* opensslconf-armv7.h */; };
-		2553952624907A9E0095B499 /* opensslconf-armv7.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394B924907A9B0095B499 /* opensslconf-armv7.h */; };
 		2553952724907A9E0095B499 /* ui_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BA24907A9B0095B499 /* ui_compat.h */; };
-		2553952824907A9E0095B499 /* ui_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BA24907A9B0095B499 /* ui_compat.h */; };
 		2553952924907A9E0095B499 /* x509v3.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BB24907A9B0095B499 /* x509v3.h */; };
-		2553952A24907A9E0095B499 /* x509v3.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BB24907A9B0095B499 /* x509v3.h */; };
 		2553952B24907A9E0095B499 /* opensslconf-armv7s.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BC24907A9B0095B499 /* opensslconf-armv7s.h */; };
-		2553952C24907A9E0095B499 /* opensslconf-armv7s.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BC24907A9B0095B499 /* opensslconf-armv7s.h */; };
 		2553952D24907A9E0095B499 /* ssl23.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BD24907A9B0095B499 /* ssl23.h */; };
-		2553952E24907A9E0095B499 /* ssl23.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BD24907A9B0095B499 /* ssl23.h */; };
 		2553952F24907A9E0095B499 /* conf.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BE24907A9B0095B499 /* conf.h */; };
-		2553953024907A9F0095B499 /* conf.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BE24907A9B0095B499 /* conf.h */; };
 		2553953124907A9F0095B499 /* opensslconf-x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BF24907A9B0095B499 /* opensslconf-x86_64.h */; };
-		2553953224907A9F0095B499 /* opensslconf-x86_64.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394BF24907A9B0095B499 /* opensslconf-x86_64.h */; };
 		2553953324907A9F0095B499 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C024907A9B0095B499 /* md5.h */; };
-		2553953424907A9F0095B499 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C024907A9B0095B499 /* md5.h */; };
 		2553953524907A9F0095B499 /* x509_vfy.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C124907A9B0095B499 /* x509_vfy.h */; };
-		2553953624907A9F0095B499 /* x509_vfy.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C124907A9B0095B499 /* x509_vfy.h */; };
 		2553953724907A9F0095B499 /* txt_db.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C224907A9B0095B499 /* txt_db.h */; };
-		2553953824907A9F0095B499 /* txt_db.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C224907A9B0095B499 /* txt_db.h */; };
 		2553953924907A9F0095B499 /* safestack.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C324907A9B0095B499 /* safestack.h */; };
-		2553953A24907A9F0095B499 /* safestack.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C324907A9B0095B499 /* safestack.h */; };
 		2553953B24907A9F0095B499 /* opensslconf-i386.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C424907A9B0095B499 /* opensslconf-i386.h */; };
-		2553953C24907A9F0095B499 /* opensslconf-i386.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C424907A9B0095B499 /* opensslconf-i386.h */; };
 		2553953D24907A9F0095B499 /* opensslconf-arm64.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C524907A9B0095B499 /* opensslconf-arm64.h */; };
-		2553953E24907A9F0095B499 /* opensslconf-arm64.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C524907A9B0095B499 /* opensslconf-arm64.h */; };
 		2553953F24907A9F0095B499 /* ecdsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C624907A9B0095B499 /* ecdsa.h */; };
-		2553954024907A9F0095B499 /* ecdsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C624907A9B0095B499 /* ecdsa.h */; };
 		2553954124907AA00095B499 /* objects.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C724907A9B0095B499 /* objects.h */; };
-		2553954224907AA00095B499 /* objects.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C724907A9B0095B499 /* objects.h */; };
 		2553954324907AA00095B499 /* pkcs12.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C824907A9B0095B499 /* pkcs12.h */; };
-		2553954424907AA00095B499 /* pkcs12.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C824907A9B0095B499 /* pkcs12.h */; };
 		2553954524907AA00095B499 /* crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C924907A9B0095B499 /* crypto.h */; };
-		2553954624907AA00095B499 /* crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394C924907A9B0095B499 /* crypto.h */; };
 		2553954724907AA00095B499 /* opensslv.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CA24907A9B0095B499 /* opensslv.h */; };
-		2553954824907AA00095B499 /* opensslv.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CA24907A9B0095B499 /* opensslv.h */; };
 		2553954924907AA00095B499 /* pkcs7.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CB24907A9B0095B499 /* pkcs7.h */; };
-		2553954A24907AA00095B499 /* pkcs7.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CB24907A9B0095B499 /* pkcs7.h */; };
 		2553954B24907AA00095B499 /* obj_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CC24907A9B0095B499 /* obj_mac.h */; };
-		2553954C24907AA00095B499 /* obj_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CC24907A9B0095B499 /* obj_mac.h */; };
 		2553954D24907AA00095B499 /* buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CD24907A9B0095B499 /* buffer.h */; };
-		2553954E24907AA00095B499 /* buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CD24907A9B0095B499 /* buffer.h */; };
 		2553954F24907AA00095B499 /* ssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CE24907A9B0095B499 /* ssl.h */; };
-		2553955024907AA00095B499 /* ssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CE24907A9B0095B499 /* ssl.h */; };
 		2553955124907AA00095B499 /* srp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CF24907A9B0095B499 /* srp.h */; };
-		2553955224907AA10095B499 /* srp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394CF24907A9B0095B499 /* srp.h */; };
 		2553955324907AA10095B499 /* camellia.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D024907A9B0095B499 /* camellia.h */; };
-		2553955424907AA10095B499 /* camellia.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D024907A9B0095B499 /* camellia.h */; };
 		2553955524907AA10095B499 /* evp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D124907A9B0095B499 /* evp.h */; };
-		2553955624907AA10095B499 /* evp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D124907A9B0095B499 /* evp.h */; };
 		2553955724907AA10095B499 /* e_os2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D224907A9B0095B499 /* e_os2.h */; };
-		2553955824907AA10095B499 /* e_os2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D224907A9B0095B499 /* e_os2.h */; };
 		2553955924907AA10095B499 /* md4.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D324907A9B0095B499 /* md4.h */; };
-		2553955A24907AA10095B499 /* md4.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D324907A9B0095B499 /* md4.h */; };
 		2553955B24907AA10095B499 /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D424907A9B0095B499 /* hmac.h */; };
-		2553955C24907AA10095B499 /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D424907A9B0095B499 /* hmac.h */; };
 		2553955D24907AA10095B499 /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D524907A9B0095B499 /* aes.h */; };
-		2553955E24907AA10095B499 /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D524907A9B0095B499 /* aes.h */; };
 		2553955F24907AA10095B499 /* comp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D624907A9B0095B499 /* comp.h */; };
-		2553956024907AA20095B499 /* comp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D624907A9B0095B499 /* comp.h */; };
 		2553956124907AA20095B499 /* cast.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D724907A9B0095B499 /* cast.h */; };
-		2553956224907AA20095B499 /* cast.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D724907A9B0095B499 /* cast.h */; };
 		2553956324907AA20095B499 /* rc4.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D824907A9B0095B499 /* rc4.h */; };
-		2553956424907AA20095B499 /* rc4.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D824907A9B0095B499 /* rc4.h */; };
 		2553956524907AA20095B499 /* stack.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D924907A9B0095B499 /* stack.h */; };
-		2553956624907AA20095B499 /* stack.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394D924907A9B0095B499 /* stack.h */; };
 		2553956724907AA20095B499 /* des.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DA24907A9B0095B499 /* des.h */; };
-		2553956824907AA20095B499 /* des.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DA24907A9B0095B499 /* des.h */; };
 		2553956924907AA20095B499 /* ocsp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DB24907A9B0095B499 /* ocsp.h */; };
-		2553956A24907AA20095B499 /* ocsp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DB24907A9B0095B499 /* ocsp.h */; };
 		2553956B24907AA20095B499 /* ec.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DC24907A9B0095B499 /* ec.h */; };
-		2553956C24907AA20095B499 /* ec.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DC24907A9B0095B499 /* ec.h */; };
 		2553956D24907AA20095B499 /* ecdh.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DD24907A9B0095B499 /* ecdh.h */; };
-		2553956E24907AA20095B499 /* ecdh.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DD24907A9B0095B499 /* ecdh.h */; };
 		2553956F24907AA20095B499 /* rand.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DE24907A9B0095B499 /* rand.h */; };
-		2553957024907AA20095B499 /* rand.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DE24907A9B0095B499 /* rand.h */; };
 		2553957124907AA20095B499 /* ts.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DF24907A9B0095B499 /* ts.h */; };
-		2553957224907AA30095B499 /* ts.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394DF24907A9B0095B499 /* ts.h */; };
 		2553957324907AA30095B499 /* pqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E024907A9B0095B499 /* pqueue.h */; };
-		2553957424907AA30095B499 /* pqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E024907A9B0095B499 /* pqueue.h */; };
 		2553957524907AA30095B499 /* dso.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E124907A9B0095B499 /* dso.h */; };
-		2553957624907AA30095B499 /* dso.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E124907A9B0095B499 /* dso.h */; };
 		2553957724907AA30095B499 /* seed.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E224907A9B0095B499 /* seed.h */; };
-		2553957824907AA30095B499 /* seed.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E224907A9B0095B499 /* seed.h */; };
 		2553957924907AA30095B499 /* modes.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E324907A9B0095B499 /* modes.h */; };
-		2553957A24907AA30095B499 /* modes.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E324907A9B0095B499 /* modes.h */; };
 		2553957B24907AA30095B499 /* ssl2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E424907A9B0095B499 /* ssl2.h */; };
-		2553957C24907AA30095B499 /* ssl2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E424907A9B0095B499 /* ssl2.h */; };
 		2553957D24907AA30095B499 /* rsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E524907A9B0095B499 /* rsa.h */; };
-		2553957E24907AA30095B499 /* rsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E524907A9B0095B499 /* rsa.h */; };
 		2553957F24907AA30095B499 /* krb5_asn.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E624907A9B0095B499 /* krb5_asn.h */; };
-		2553958024907AA30095B499 /* krb5_asn.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E624907A9B0095B499 /* krb5_asn.h */; };
 		2553958124907AA30095B499 /* des_old.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E724907A9B0095B499 /* des_old.h */; };
-		2553958224907AA40095B499 /* des_old.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E724907A9B0095B499 /* des_old.h */; };
 		2553958324907AA40095B499 /* ripemd.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E824907A9B0095B499 /* ripemd.h */; };
-		2553958424907AA40095B499 /* ripemd.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E824907A9B0095B499 /* ripemd.h */; };
 		2553958524907AA40095B499 /* whrlpool.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E924907A9B0095B499 /* whrlpool.h */; };
-		2553958624907AA40095B499 /* whrlpool.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394E924907A9B0095B499 /* whrlpool.h */; };
 		2553958724907AA40095B499 /* tls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EA24907A9B0095B499 /* tls1.h */; };
-		2553958824907AA40095B499 /* tls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EA24907A9B0095B499 /* tls1.h */; };
 		2553958924907AA40095B499 /* mdc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EB24907A9B0095B499 /* mdc2.h */; };
-		2553958A24907AA40095B499 /* mdc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EB24907A9B0095B499 /* mdc2.h */; };
 		2553958B24907AA40095B499 /* dsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EC24907A9B0095B499 /* dsa.h */; };
-		2553958C24907AA40095B499 /* dsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EC24907A9B0095B499 /* dsa.h */; };
 		2553958D24907AA40095B499 /* srtp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394ED24907A9B0095B499 /* srtp.h */; };
-		2553958E24907AA40095B499 /* srtp.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394ED24907A9B0095B499 /* srtp.h */; };
 		2553958F24907AA40095B499 /* asn1t.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EE24907A9B0095B499 /* asn1t.h */; };
-		2553959024907AA40095B499 /* asn1t.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EE24907A9B0095B499 /* asn1t.h */; };
 		2553959124907AA40095B499 /* cmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EF24907A9B0095B499 /* cmac.h */; };
-		2553959224907AA40095B499 /* cmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394EF24907A9B0095B499 /* cmac.h */; };
 		2553959324907AA50095B499 /* ebcdic.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F024907A9B0095B499 /* ebcdic.h */; };
-		2553959424907AA50095B499 /* ebcdic.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F024907A9B0095B499 /* ebcdic.h */; };
 		2553959524907AA50095B499 /* idea.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F124907A9B0095B499 /* idea.h */; };
-		2553959624907AA50095B499 /* idea.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F124907A9B0095B499 /* idea.h */; };
 		2553959724907AA50095B499 /* lhash.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F224907A9B0095B499 /* lhash.h */; };
-		2553959824907AA50095B499 /* lhash.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F224907A9B0095B499 /* lhash.h */; };
 		2553959924907AA50095B499 /* shim.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F324907A9B0095B499 /* shim.h */; };
-		2553959A24907AA50095B499 /* shim.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394F324907A9B0095B499 /* shim.h */; };
 		2553959B24907AA50095B499 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 255394F424907A9B0095B499 /* README.md */; };
-		2553959C24907AA50095B499 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 255394F424907A9B0095B499 /* README.md */; };
 		2553959D24907AA50095B499 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 255394F624907A9B0095B499 /* libcrypto.a */; };
-		2553959E24907AA50095B499 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 255394F624907A9B0095B499 /* libcrypto.a */; };
 		2553959F24907AA50095B499 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 255394F724907A9B0095B499 /* libssl.a */; };
-		255395A024907AA50095B499 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 255394F724907A9B0095B499 /* libssl.a */; };
 		255395A124907AA50095B499 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 255394F824907A9B0095B499 /* LICENSE.txt */; };
-		255395A224907AA50095B499 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 255394F824907A9B0095B499 /* LICENSE.txt */; };
 		256A68B92459129C00131CC4 /* TelinkHttpManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 256A68B72459129C00131CC4 /* TelinkHttpManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		256A68BA2459129C00131CC4 /* TelinkHttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 256A68B82459129C00131CC4 /* TelinkHttpManager.m */; };
+		25772EB2262EBB3600014699 /* ConnectTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 25772EB0262EBB3500014699 /* ConnectTools.m */; };
+		25772EB4262EBB3600014699 /* ConnectTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 25772EB1262EBB3600014699 /* ConnectTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		258A004023A8BA5A003D2148 /* OTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 258A003E23A8BA5A003D2148 /* OTAManager.m */; };
 		258A004123A8BA5A003D2148 /* OTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 258A003F23A8BA5A003D2148 /* OTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		259020902369390E005649DE /* SigProxyConfigurationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		259020912369390E005649DE /* SigProxyConfigurationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */; };
 		25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25957EC8237AC6C100816137 /* SigGenericMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
+		25A76E9A25FB5CEF00DEF34B /* CheckSampleData.m in Sources */ = {isa = PBXBuildFile; fileRef = 25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */; };
 		25B8764C24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
-		25B8764D24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764E24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		25B8764F24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B95FEA238E4DBD00244D14 /* BackgroundTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B95FEB238E4DBD00244D14 /* BackgroundTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */; };
 		25B95FEE238E595600244D14 /* SigConst.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FEC238E595600244D14 /* SigConst.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B95FEF238E595600244D14 /* SigConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FED238E595600244D14 /* SigConst.m */; };
 		25C0AFDE235D597400846CFB /* TelinkSigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C0AFDC235D597400846CFB /* TelinkSigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		25C30DB52469264A00F06076 /* TelinkSigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C0AFDC235D597400846CFB /* TelinkSigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25C30DBE2469304300F06076 /* SigRemoteAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DBD2469304300F06076 /* SigRemoteAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		25C30DBF2469304300F06076 /* SigRemoteAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DBD2469304300F06076 /* SigRemoteAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25C30DC12469309700F06076 /* MeshOTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DC02469309600F06076 /* MeshOTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		25C30DC22469309700F06076 /* MeshOTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DC02469309600F06076 /* MeshOTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25CE4E5B254A910E004E6F12 /* TelinkSigMeshLibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 25CE4E5A254A910E004E6F12 /* TelinkSigMeshLibTests.m */; };
-		25CE4E5D254A910E004E6F12 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */; };
 		25D88BCD2361392100D4F0F7 /* SigKeySet.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BC92361392100D4F0F7 /* SigKeySet.m */; };
 		25D88BCE2361392100D4F0F7 /* SigKeySet.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCA2361392100D4F0F7 /* SigKeySet.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		25D88BCF2361392100D4F0F7 /* SigNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -401,25 +212,46 @@
 		25FF2F592446EFDD0084263F /* GMEllipticCurveCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F512446EFDC0084263F /* GMEllipticCurveCrypto.h */; };
 		25FF2F5B2446EFDD0084263F /* GMEllipticCurveCrypto+hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F532446EFDC0084263F /* GMEllipticCurveCrypto+hash.h */; };
 		25FF2F5E2446EFDD0084263F /* GMEllipticCurveCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FF2F562446EFDC0084263F /* GMEllipticCurveCrypto.m */; };
+		916964242AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964262AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m in Sources */ = {isa = PBXBuildFile; fileRef = 916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */; };
+		916964282AC56AEC0010D34A /* SDKLibCommand+certificate.m in Sources */ = {isa = PBXBuildFile; fileRef = 916963FE2AC56AEC0010D34A /* SDKLibCommand+certificate.m */; };
+		9169642A2AC56AEC0010D34A /* SDKLibCommand+certificate.h in Headers */ = {isa = PBXBuildFile; fileRef = 916963FF2AC56AEC0010D34A /* SDKLibCommand+certificate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9169642C2AC56AEC0010D34A /* OpenSSLHelper+EPA.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964012AC56AEC0010D34A /* OpenSSLHelper+EPA.m */; };
+		9169642E2AC56AEC0010D34A /* OpenSSLHelper+EPA.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964022AC56AEC0010D34A /* OpenSSLHelper+EPA.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		916964302AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964042AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964322AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964052AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m */; };
+		916964342AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964072AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964362AC56AEC0010D34A /* MeshOTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964082AC56AEC0010D34A /* MeshOTAManager.m */; };
+		916964382AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964092AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m */; };
+		9169643A2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h in Headers */ = {isa = PBXBuildFile; fileRef = 9169640B2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9169643C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m in Sources */ = {isa = PBXBuildFile; fileRef = 9169640C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m */; };
+		9169643E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 9169640E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964402AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 9169640F2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m */; };
+		916964422AC56AEC0010D34A /* SDKLibCommand+directForwarding.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964112AC56AEC0010D34A /* SDKLibCommand+directForwarding.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964442AC56AEC0010D34A /* SDKLibCommand+directForwarding.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964122AC56AEC0010D34A /* SDKLibCommand+directForwarding.m */; };
+		916964462AC56AEC0010D34A /* SigRemoteAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964142AC56AEC0010D34A /* SigRemoteAddManager.m */; };
+		916964482AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964152AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9169644A2AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964162AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m */; };
+		9169644C2AC56AEC0010D34A /* NSData+Compression.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964182AC56AEC0010D34A /* NSData+Compression.m */; };
+		9169644E2AC56AEC0010D34A /* OTSHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964192AC56AEC0010D34A /* OTSHandle.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964502AC56AEC0010D34A /* CDTPServiceModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9169641A2AC56AEC0010D34A /* CDTPServiceModel.m */; };
+		916964522AC56AEC0010D34A /* OTSBaseModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 9169641B2AC56AEC0010D34A /* OTSBaseModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964542AC56AEC0010D34A /* OTSCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 9169641C2AC56AEC0010D34A /* OTSCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916964562AC56AEC0010D34A /* CDTPClientModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9169641D2AC56AEC0010D34A /* CDTPClientModel.m */; };
+		916964582AC56AEC0010D34A /* NSData+Compression.h in Headers */ = {isa = PBXBuildFile; fileRef = 9169641E2AC56AEC0010D34A /* NSData+Compression.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9169645A2AC56AEC0010D34A /* OTSHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 9169641F2AC56AEC0010D34A /* OTSHandle.m */; };
+		9169645C2AC56AEC0010D34A /* CDTPClientModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964202AC56AEC0010D34A /* CDTPClientModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9169645E2AC56AEC0010D34A /* OTSCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964212AC56AEC0010D34A /* OTSCommand.m */; };
+		916964602AC56AEC0010D34A /* OTSBaseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964222AC56AEC0010D34A /* OTSBaseModel.m */; };
+		916964622AC56AEC0010D34A /* CDTPServiceModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964232AC56AEC0010D34A /* CDTPServiceModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		91C5EAE22A37195D0087C814 /* CBCharacteristic+UUID.h in Headers */ = {isa = PBXBuildFile; fileRef = 91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */; };
+		91C5EAE42A37195D0087C814 /* CBCharacteristic+UUID.m in Sources */ = {isa = PBXBuildFile; fileRef = 91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		25CE4E5E254A910E004E6F12 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 25C0AFD0235D597400846CFB /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 25C0AFD8235D597400846CFB;
-			remoteInfo = TelinkSigMeshLib;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		25151BF82362F2AC00967668 /* SigMessageHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigMessageHandle.h; sourceTree = "<group>"; };
 		25151BF92362F2AC00967668 /* SigMessageHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigMessageHandle.m; sourceTree = "<group>"; };
-		252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TelinkSigMeshLibExtensions.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2528952A2468F13400E590F9 /* TelinkSigMeshLib copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "TelinkSigMeshLib copy-Info.plist"; path = "/Users/liangjiazhi/Downloads/源码/私有仓库/TelinkSigMeshLib/TelinkSigMeshLib/TelinkSigMeshLib copy-Info.plist"; sourceTree = "<absolute>"; };
-		2528952D2468F6F200E590F9 /* SigRemoteAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigRemoteAddManager.m; sourceTree = "<group>"; };
-		252895312468F6F200E590F9 /* MeshOTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAManager.m; sourceTree = "<group>"; };
 		252ABF5E236057A60096563F /* SigMeshMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigMeshMessage.h; sourceTree = "<group>"; };
 		252ABF5F236057A60096563F /* SigMeshMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigMeshMessage.m; sourceTree = "<group>"; };
 		252ABF60236057A60096563F /* SigConfigMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigConfigMessage.h; sourceTree = "<group>"; };
@@ -459,8 +291,6 @@
 		25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAddDeviceManager.m; sourceTree = "<group>"; };
 		25335F8E235F06D3006C79C1 /* SDKLibCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDKLibCommand.m; sourceTree = "<group>"; };
 		25335F8F235F06D3006C79C1 /* SDKLibCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDKLibCommand.h; sourceTree = "<group>"; };
-		254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+subnetBridge.h"; sourceTree = "<group>"; };
-		254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+subnetBridge.m"; sourceTree = "<group>"; };
 		255394A324907A9B0095B499 /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
 		255394A424907A9B0095B499 /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
 		255394A524907A9B0095B499 /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
@@ -549,12 +379,15 @@
 		2567D88524B84BD00075E7E8 /* Script.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Script.sh; sourceTree = "<group>"; };
 		256A68B72459129C00131CC4 /* TelinkHttpManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelinkHttpManager.h; sourceTree = "<group>"; };
 		256A68B82459129C00131CC4 /* TelinkHttpManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TelinkHttpManager.m; sourceTree = "<group>"; };
+		25772EB0262EBB3500014699 /* ConnectTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectTools.m; sourceTree = "<group>"; };
+		25772EB1262EBB3600014699 /* ConnectTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectTools.h; sourceTree = "<group>"; };
 		258A003E23A8BA5A003D2148 /* OTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTAManager.m; sourceTree = "<group>"; };
 		258A003F23A8BA5A003D2148 /* OTAManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTAManager.h; sourceTree = "<group>"; };
 		2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigProxyConfigurationMessage.h; sourceTree = "<group>"; };
 		2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigProxyConfigurationMessage.m; sourceTree = "<group>"; };
 		25957EC8237AC6C100816137 /* SigGenericMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigGenericMessage.h; sourceTree = "<group>"; };
 		25957EC9237AC6C100816137 /* SigGenericMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigGenericMessage.m; sourceTree = "<group>"; };
+		25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CheckSampleData.m; sourceTree = "<group>"; };
 		25B8764A24850474006C76CB /* SigBluetooth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigBluetooth.m; sourceTree = "<group>"; };
 		25B8764B24850474006C76CB /* SigBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigBluetooth.h; sourceTree = "<group>"; };
 		25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundTimer.h; sourceTree = "<group>"; };
@@ -613,18 +446,43 @@
 		25FF2F512446EFDC0084263F /* GMEllipticCurveCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GMEllipticCurveCrypto.h; sourceTree = "<group>"; };
 		25FF2F532446EFDC0084263F /* GMEllipticCurveCrypto+hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GMEllipticCurveCrypto+hash.h"; sourceTree = "<group>"; };
 		25FF2F562446EFDC0084263F /* GMEllipticCurveCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GMEllipticCurveCrypto.m; sourceTree = "<group>"; };
+		916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+privateBeacon.h"; sourceTree = "<group>"; };
+		916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+privateBeacon.m"; sourceTree = "<group>"; };
+		916963FE2AC56AEC0010D34A /* SDKLibCommand+certificate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+certificate.m"; sourceTree = "<group>"; };
+		916963FF2AC56AEC0010D34A /* SDKLibCommand+certificate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+certificate.h"; sourceTree = "<group>"; };
+		916964012AC56AEC0010D34A /* OpenSSLHelper+EPA.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OpenSSLHelper+EPA.m"; sourceTree = "<group>"; };
+		916964022AC56AEC0010D34A /* OpenSSLHelper+EPA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OpenSSLHelper+EPA.h"; sourceTree = "<group>"; };
+		916964042AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+minor_ENH.h"; sourceTree = "<group>"; };
+		916964052AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+minor_ENH.m"; sourceTree = "<group>"; };
+		916964072AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+firmwareUpdate.h"; sourceTree = "<group>"; };
+		916964082AC56AEC0010D34A /* MeshOTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAManager.m; sourceTree = "<group>"; };
+		916964092AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+firmwareUpdate.m"; sourceTree = "<group>"; };
+		9169640B2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+opcodesAggregatorSequence.h"; sourceTree = "<group>"; };
+		9169640C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+opcodesAggregatorSequence.m"; sourceTree = "<group>"; };
+		9169640E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+subnetBridge.h"; sourceTree = "<group>"; };
+		9169640F2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+subnetBridge.m"; sourceTree = "<group>"; };
+		916964112AC56AEC0010D34A /* SDKLibCommand+directForwarding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+directForwarding.h"; sourceTree = "<group>"; };
+		916964122AC56AEC0010D34A /* SDKLibCommand+directForwarding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+directForwarding.m"; sourceTree = "<group>"; };
+		916964142AC56AEC0010D34A /* SigRemoteAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigRemoteAddManager.m; sourceTree = "<group>"; };
+		916964152AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+remoteProvision.h"; sourceTree = "<group>"; };
+		916964162AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+remoteProvision.m"; sourceTree = "<group>"; };
+		916964182AC56AEC0010D34A /* NSData+Compression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Compression.m"; sourceTree = "<group>"; };
+		916964192AC56AEC0010D34A /* OTSHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTSHandle.h; sourceTree = "<group>"; };
+		9169641A2AC56AEC0010D34A /* CDTPServiceModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDTPServiceModel.m; sourceTree = "<group>"; };
+		9169641B2AC56AEC0010D34A /* OTSBaseModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTSBaseModel.h; sourceTree = "<group>"; };
+		9169641C2AC56AEC0010D34A /* OTSCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTSCommand.h; sourceTree = "<group>"; };
+		9169641D2AC56AEC0010D34A /* CDTPClientModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDTPClientModel.m; sourceTree = "<group>"; };
+		9169641E2AC56AEC0010D34A /* NSData+Compression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Compression.h"; sourceTree = "<group>"; };
+		9169641F2AC56AEC0010D34A /* OTSHandle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTSHandle.m; sourceTree = "<group>"; };
+		916964202AC56AEC0010D34A /* CDTPClientModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDTPClientModel.h; sourceTree = "<group>"; };
+		916964212AC56AEC0010D34A /* OTSCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTSCommand.m; sourceTree = "<group>"; };
+		916964222AC56AEC0010D34A /* OTSBaseModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTSBaseModel.m; sourceTree = "<group>"; };
+		916964232AC56AEC0010D34A /* CDTPServiceModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDTPServiceModel.h; sourceTree = "<group>"; };
+		91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBCharacteristic+UUID.h"; sourceTree = "<group>"; };
+		91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBCharacteristic+UUID.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		252895202468F13400E590F9 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				255395A024907AA50095B499 /* libssl.a in Frameworks */,
-				2553959E24907AA50095B499 /* libcrypto.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		25C0AFD6235D597400846CFB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -638,38 +496,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25CE4E5D254A910E004E6F12 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2528952B2468F6F200E590F9 /* Extensions */ = {
+		251E273925E795AD004D96C2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				254072A625C8E37100D0FF8B /* subnet bridge */,
-				2528952C2468F6F200E590F9 /* remote provision */,
-				2528952F2468F6F200E590F9 /* MeshOTA */,
 			);
-			name = Extensions;
-			path = ../../Extensions;
-			sourceTree = "<group>";
-		};
-		2528952C2468F6F200E590F9 /* remote provision */ = {
-			isa = PBXGroup;
-			children = (
-				2528952D2468F6F200E590F9 /* SigRemoteAddManager.m */,
-			);
-			path = "remote provision";
-			sourceTree = "<group>";
-		};
-		2528952F2468F6F200E590F9 /* MeshOTA */ = {
-			isa = PBXGroup;
-			children = (
-				252895312468F6F200E590F9 /* MeshOTAManager.m */,
-			);
-			path = MeshOTA;
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		25335CB3235ED9EE006C79C1 /* Layers */ = {
@@ -682,9 +519,9 @@
 				25151BF82362F2AC00967668 /* SigMessageHandle.h */,
 				25151BF92362F2AC00967668 /* SigMessageHandle.m */,
 				25335CB4235ED9EE006C79C1 /* Access Layer */,
-				25335CBD235ED9EE006C79C1 /* Network Layer */,
-				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
 				25335CCE235ED9EE006C79C1 /* Upper Transport Layer */,
+				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
+				25335CBD235ED9EE006C79C1 /* Network Layer */,
 			);
 			path = Layers;
 			sourceTree = "<group>";
@@ -795,6 +632,8 @@
 			children = (
 				25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */,
 				25D88C2E236148FF00D4F0F7 /* CBUUID+Hex.m */,
+				91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */,
+				91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */,
 			);
 			path = "Type Extensions";
 			sourceTree = "<group>";
@@ -813,6 +652,18 @@
 		25335DD4235ED9F0006C79C1 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				916964172AC56AEC0010D34A /* CDTP */,
+				916963FD2AC56AEC0010D34A /* Cert-Base Provision */,
+				916964102AC56AEC0010D34A /* Direct Forwarding */,
+				916964002AC56AEC0010D34A /* EPA */,
+				916964062AC56AEC0010D34A /* MeshOTA */,
+				916964032AC56AEC0010D34A /* Minor ENH */,
+				9169640A2AC56AEC0010D34A /* Opcodes Aggregator */,
+				916963FA2AC56AEC0010D34A /* Private Beacon */,
+				916964132AC56AEC0010D34A /* Remote Provision */,
+				9169640D2AC56AEC0010D34A /* Subnet Bridge */,
+				25772EB1262EBB3600014699 /* ConnectTools.h */,
+				25772EB0262EBB3500014699 /* ConnectTools.m */,
 				25335DD7235ED9F0006C79C1 /* SigLogger.h */,
 				25335DE0235ED9F0006C79C1 /* SigLogger.m */,
 				25335F39235EE873006C79C1 /* SigDataSource.h */,
@@ -876,15 +727,6 @@
 				25335F69235EF339006C79C1 /* SigKeyBindManager.m */,
 			);
 			path = KeyBind;
-			sourceTree = "<group>";
-		};
-		254072A625C8E37100D0FF8B /* subnet bridge */ = {
-			isa = PBXGroup;
-			children = (
-				254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */,
-				254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */,
-			);
-			path = "subnet bridge";
 			sourceTree = "<group>";
 		};
 		255394A024907A9B0095B499 /* OpenSSL */ = {
@@ -1011,6 +853,7 @@
 				25CE4E59254A910E004E6F12 /* TelinkSigMeshLibTests */,
 				25C0AFDA235D597400846CFB /* Products */,
 				2528952A2468F13400E590F9 /* TelinkSigMeshLib copy-Info.plist */,
+				251E273925E795AD004D96C2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1018,7 +861,6 @@
 			isa = PBXGroup;
 			children = (
 				25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */,
-				252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */,
 				25CE4E58254A910E004E6F12 /* TelinkSigMeshLibTests.xctest */,
 			);
 			name = Products;
@@ -1032,7 +874,6 @@
 				25335F54235EEC61006C79C1 /* SigStruct.h */,
 				252ABF6623605B330096563F /* SigMeshLib.h */,
 				252ABF6723605B330096563F /* SigMeshLib.m */,
-				2528952B2468F6F200E590F9 /* Extensions */,
 				25335F5D235EF339006C79C1 /* Add devices Module */,
 				25335D42235ED9EF006C79C1 /* Bearer */,
 				25335CB3235ED9EE006C79C1 /* Layers */,
@@ -1051,6 +892,7 @@
 			isa = PBXGroup;
 			children = (
 				25CE4E5A254A910E004E6F12 /* TelinkSigMeshLibTests.m */,
+				25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */,
 				25CE4E5C254A910E004E6F12 /* Info.plist */,
 			);
 			path = TelinkSigMeshLibTests;
@@ -1067,175 +909,138 @@
 			path = GMEllipticCurveCrypto;
 			sourceTree = "<group>";
 		};
+		916963FA2AC56AEC0010D34A /* Private Beacon */ = {
+			isa = PBXGroup;
+			children = (
+				916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */,
+				916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */,
+			);
+			path = "Private Beacon";
+			sourceTree = "<group>";
+		};
+		916963FD2AC56AEC0010D34A /* Cert-Base Provision */ = {
+			isa = PBXGroup;
+			children = (
+				916963FF2AC56AEC0010D34A /* SDKLibCommand+certificate.h */,
+				916963FE2AC56AEC0010D34A /* SDKLibCommand+certificate.m */,
+			);
+			path = "Cert-Base Provision";
+			sourceTree = "<group>";
+		};
+		916964002AC56AEC0010D34A /* EPA */ = {
+			isa = PBXGroup;
+			children = (
+				916964022AC56AEC0010D34A /* OpenSSLHelper+EPA.h */,
+				916964012AC56AEC0010D34A /* OpenSSLHelper+EPA.m */,
+			);
+			path = EPA;
+			sourceTree = "<group>";
+		};
+		916964032AC56AEC0010D34A /* Minor ENH */ = {
+			isa = PBXGroup;
+			children = (
+				916964042AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h */,
+				916964052AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m */,
+			);
+			path = "Minor ENH";
+			sourceTree = "<group>";
+		};
+		916964062AC56AEC0010D34A /* MeshOTA */ = {
+			isa = PBXGroup;
+			children = (
+				916964072AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h */,
+				916964082AC56AEC0010D34A /* MeshOTAManager.m */,
+				916964092AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m */,
+			);
+			path = MeshOTA;
+			sourceTree = "<group>";
+		};
+		9169640A2AC56AEC0010D34A /* Opcodes Aggregator */ = {
+			isa = PBXGroup;
+			children = (
+				9169640B2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h */,
+				9169640C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m */,
+			);
+			path = "Opcodes Aggregator";
+			sourceTree = "<group>";
+		};
+		9169640D2AC56AEC0010D34A /* Subnet Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				9169640E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h */,
+				9169640F2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m */,
+			);
+			path = "Subnet Bridge";
+			sourceTree = "<group>";
+		};
+		916964102AC56AEC0010D34A /* Direct Forwarding */ = {
+			isa = PBXGroup;
+			children = (
+				916964112AC56AEC0010D34A /* SDKLibCommand+directForwarding.h */,
+				916964122AC56AEC0010D34A /* SDKLibCommand+directForwarding.m */,
+			);
+			path = "Direct Forwarding";
+			sourceTree = "<group>";
+		};
+		916964132AC56AEC0010D34A /* Remote Provision */ = {
+			isa = PBXGroup;
+			children = (
+				916964142AC56AEC0010D34A /* SigRemoteAddManager.m */,
+				916964152AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h */,
+				916964162AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m */,
+			);
+			path = "Remote Provision";
+			sourceTree = "<group>";
+		};
+		916964172AC56AEC0010D34A /* CDTP */ = {
+			isa = PBXGroup;
+			children = (
+				916964192AC56AEC0010D34A /* OTSHandle.h */,
+				9169641F2AC56AEC0010D34A /* OTSHandle.m */,
+				9169641B2AC56AEC0010D34A /* OTSBaseModel.h */,
+				916964222AC56AEC0010D34A /* OTSBaseModel.m */,
+				9169641C2AC56AEC0010D34A /* OTSCommand.h */,
+				916964212AC56AEC0010D34A /* OTSCommand.m */,
+				916964232AC56AEC0010D34A /* CDTPServiceModel.h */,
+				9169641A2AC56AEC0010D34A /* CDTPServiceModel.m */,
+				916964202AC56AEC0010D34A /* CDTPClientModel.h */,
+				9169641D2AC56AEC0010D34A /* CDTPClientModel.m */,
+				9169641E2AC56AEC0010D34A /* NSData+Compression.h */,
+				916964182AC56AEC0010D34A /* NSData+Compression.m */,
+			);
+			path = CDTP;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		252894552468F13400E590F9 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				25B8764F24850474006C76CB /* SigBluetooth.h in Headers */,
-				2553957C24907AA30095B499 /* ssl2.h in Headers */,
-				2553955224907AA10095B499 /* srp.h in Headers */,
-				2553951424907A9D0095B499 /* ui.h in Headers */,
-				2553956A24907AA20095B499 /* ocsp.h in Headers */,
-				2553953224907A9F0095B499 /* opensslconf-x86_64.h in Headers */,
-				2553951024907A9C0095B499 /* x509.h in Headers */,
-				2553950424907A9C0095B499 /* err.h in Headers */,
-				2553958424907AA40095B499 /* ripemd.h in Headers */,
-				2553956024907AA20095B499 /* comp.h in Headers */,
-				2528945E2468F13400E590F9 /* SigLogger.h in Headers */,
-				252894652468F13400E590F9 /* SigModel.h in Headers */,
-				2553956224907AA20095B499 /* cast.h in Headers */,
-				252894692468F13400E590F9 /* SigBearer.h in Headers */,
-				2528946D2468F13400E590F9 /* GMEllipticCurveCrypto+hash.h in Headers */,
-				2553955824907AA10095B499 /* e_os2.h in Headers */,
-				2553957224907AA30095B499 /* ts.h in Headers */,
-				2553956424907AA20095B499 /* rc4.h in Headers */,
-				2553954624907AA00095B499 /* crypto.h in Headers */,
-				2528946F2468F13400E590F9 /* SigStruct.h in Headers */,
-				2553954C24907AA00095B499 /* obj_mac.h in Headers */,
-				2553955C24907AA10095B499 /* hmac.h in Headers */,
-				2553955024907AA00095B499 /* ssl.h in Headers */,
-				2553950824907A9C0095B499 /* blowfish.h in Headers */,
-				252894752468F13400E590F9 /* LibTools.h in Headers */,
-				252894772468F13400E590F9 /* SigDataSource.h in Headers */,
-				252894732468F13400E590F9 /* SigAddDeviceManager.h in Headers */,
-				252894702468F13400E590F9 /* SigPdu.h in Headers */,
-				254072A925C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h in Headers */,
-				2528947A2468F13400E590F9 /* SigEnumeration.h in Headers */,
-				2528948B2468F13400E590F9 /* SigConfigMessage.h in Headers */,
-				252894812468F13400E590F9 /* SDKLibCommand.h in Headers */,
-				255394FA24907A9B0095B499 /* pem2.h in Headers */,
-				2553950024907A9B0095B499 /* ossl_typ.h in Headers */,
-				252894B92468F13400E590F9 /* CBUUID+Hex.h in Headers */,
-				252894842468F13400E590F9 /* SigMeshLib.h in Headers */,
-				2553953A24907A9F0095B499 /* safestack.h in Headers */,
-				252894B62468F13400E590F9 /* SigKeySet.h in Headers */,
-				252894B52468F13400E590F9 /* SigAccessLayer.h in Headers */,
-				252894AE2468F13400E590F9 /* SigUpperTransportPdu.h in Headers */,
-				2553959424907AA50095B499 /* ebcdic.h in Headers */,
-				2553959224907AA40095B499 /* cmac.h in Headers */,
-				2553953624907A9F0095B499 /* x509_vfy.h in Headers */,
-				252894AD2468F13400E590F9 /* SigAccessPdu.h in Headers */,
-				2553957024907AA20095B499 /* rand.h in Headers */,
-				2553954E24907AA00095B499 /* buffer.h in Headers */,
-				2553950C24907A9C0095B499 /* engine.h in Headers */,
-				252894882468F13400E590F9 /* GMEllipticCurveCrypto.h in Headers */,
-				252894B02468F13400E590F9 /* SigSegmentedAccessMessage.h in Headers */,
-				252894892468F13400E590F9 /* TelinkHttpManager.h in Headers */,
-				2553954824907AA00095B499 /* opensslv.h in Headers */,
-				2553953024907A9F0095B499 /* conf.h in Headers */,
-				2553958E24907AA40095B499 /* srtp.h in Headers */,
-				252894AC2468F13400E590F9 /* SigSegmentedControlMessage.h in Headers */,
-				2553952024907A9D0095B499 /* bio.h in Headers */,
-				25C30DB52469264A00F06076 /* TelinkSigMeshLib.h in Headers */,
-				252894A92468F13400E590F9 /* SigSegmentedMessage.h in Headers */,
-				2553953E24907A9F0095B499 /* opensslconf-arm64.h in Headers */,
-				2553958C24907AA40095B499 /* dsa.h in Headers */,
-				2553957824907AA30095B499 /* seed.h in Headers */,
-				2553952A24907A9E0095B499 /* x509v3.h in Headers */,
-				2553952424907A9E0095B499 /* dh.h in Headers */,
-				25C30DC22469309700F06076 /* MeshOTAManager.h in Headers */,
-				2553956C24907AA20095B499 /* ec.h in Headers */,
-				2553958224907AA40095B499 /* des_old.h in Headers */,
-				252894AA2468F13400E590F9 /* SigAccessMessage.h in Headers */,
-				2553959624907AA50095B499 /* idea.h in Headers */,
-				2553959024907AA40095B499 /* asn1t.h in Headers */,
-				2553956624907AA20095B499 /* stack.h in Headers */,
-				2553954024907A9F0095B499 /* ecdsa.h in Headers */,
-				2553955E24907AA10095B499 /* aes.h in Headers */,
-				2553951624907A9D0095B499 /* kssl.h in Headers */,
-				2553951224907A9D0095B499 /* asn1_mac.h in Headers */,
-				2553954424907AA00095B499 /* pkcs12.h in Headers */,
-				252894A62468F13400E590F9 /* SigSegmentAcknowledgmentMessage.h in Headers */,
-				252894A42468F13400E590F9 /* SigControlMessage.h in Headers */,
-				25C30DBF2469304300F06076 /* SigRemoteAddManager.h in Headers */,
-				2553951A24907A9D0095B499 /* symhacks.h in Headers */,
-				2553953824907A9F0095B499 /* txt_db.h in Headers */,
-				2553959824907AA50095B499 /* lhash.h in Headers */,
-				252894962468F13400E590F9 /* SigUpperTransportLayer.h in Headers */,
-				255394FC24907A9B0095B499 /* pem.h in Headers */,
-				2553955624907AA10095B499 /* evp.h in Headers */,
-				2553951C24907A9D0095B499 /* asn1.h in Headers */,
-				252894A12468F13400E590F9 /* SigLowerTransportPdu.h in Headers */,
-				2528948C2468F13400E590F9 /* SigMeshMessage.h in Headers */,
-				2528945B2468F13400E590F9 /* SigECCEncryptHelper.h in Headers */,
-				252894612468F13400E590F9 /* OpenSSLHelper.h in Headers */,
-				2553955A24907AA10095B499 /* md4.h in Headers */,
-				2553958624907AA40095B499 /* whrlpool.h in Headers */,
-				252894A32468F13400E590F9 /* SigLowerTransportLayer.h in Headers */,
-				252894932468F13400E590F9 /* SigNetworkManager.h in Headers */,
-				2553956E24907AA20095B499 /* ecdh.h in Headers */,
-				2553952C24907A9E0095B499 /* opensslconf-armv7s.h in Headers */,
-				2553959A24907AA50095B499 /* shim.h in Headers */,
-				2553955424907AA10095B499 /* camellia.h in Headers */,
-				2528947F2468F13400E590F9 /* SigKeyBindManager.h in Headers */,
-				252894792468F13400E590F9 /* SigAuthenticationModel.h in Headers */,
-				252894942468F13400E590F9 /* SigNetworkLayer.h in Headers */,
-				2553956824907AA20095B499 /* des.h in Headers */,
-				2553958024907AA30095B499 /* krb5_asn.h in Headers */,
-				2553950A24907A9C0095B499 /* cms.h in Headers */,
-				2553958A24907AA40095B499 /* mdc2.h in Headers */,
-				2553952224907A9E0095B499 /* rc2.h in Headers */,
-				2553950E24907A9C0095B499 /* conf_api.h in Headers */,
-				2553952824907A9E0095B499 /* ui_compat.h in Headers */,
-				2553957624907AA30095B499 /* dso.h in Headers */,
-				252894782468F13400E590F9 /* SigProvisioningManager.h in Headers */,
-				252894762468F13400E590F9 /* ProxyProtocolHandler.h in Headers */,
-				2553957A24907AA30095B499 /* modes.h in Headers */,
-				2553953C24907A9F0095B499 /* opensslconf-i386.h in Headers */,
-				2553957424907AA30095B499 /* pqueue.h in Headers */,
-				2553950624907A9C0095B499 /* bn.h in Headers */,
-				2553952624907A9E0095B499 /* opensslconf-armv7.h in Headers */,
-				2553954A24907AA00095B499 /* pkcs7.h in Headers */,
-				2528946B2468F13400E590F9 /* SigProvisioningData.h in Headers */,
-				255394FE24907A9B0095B499 /* ssl3.h in Headers */,
-				2553951E24907A9D0095B499 /* opensslconf.h in Headers */,
-				252894A02468F13400E590F9 /* SigHearbeatMessage.h in Headers */,
-				252894B82468F13400E590F9 /* SigHelper.h in Headers */,
-				252894BB2468F13400E590F9 /* SigGenericMessage.h in Headers */,
-				252894BC2468F13400E590F9 /* SigMessageHandle.h in Headers */,
-				252894C32468F13400E590F9 /* SigProxyConfigurationMessage.h in Headers */,
-				2553958824907AA40095B499 /* tls1.h in Headers */,
-				252894C52468F13400E590F9 /* BackgroundTimer.h in Headers */,
-				252894C62468F13400E590F9 /* OTAManager.h in Headers */,
-				2553957E24907AA30095B499 /* rsa.h in Headers */,
-				2553951824907A9D0095B499 /* sha.h in Headers */,
-				2553954224907AA00095B499 /* objects.h in Headers */,
-				252894CA2468F13400E590F9 /* SigConst.h in Headers */,
-				2553950224907A9C0095B499 /* dtls1.h in Headers */,
-				252894CD2468F13400E590F9 /* SigPublishManager.h in Headers */,
-				252894DB2468F13400E590F9 /* SigFastProvisionAddManager.h in Headers */,
-				2553952E24907A9E0095B499 /* ssl23.h in Headers */,
-				2553953424907A9F0095B499 /* md5.h in Headers */,
-				252894DF2468F13400E590F9 /* TelinkSigMeshLibPrefixHeader.pch in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		25C0AFD4235D597400846CFB /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
+				916964242AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h in Headers */,
+				25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */,
+				25335F37235EE2A7006C79C1 /* SigModel.h in Headers */,
 				2553957B24907AA30095B499 /* ssl2.h in Headers */,
+				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
+				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
+				916964342AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h in Headers */,
 				2553955124907AA00095B499 /* srp.h in Headers */,
 				2553951324907A9D0095B499 /* ui.h in Headers */,
-				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
 				2553956924907AA20095B499 /* ocsp.h in Headers */,
 				2553953124907A9F0095B499 /* opensslconf-x86_64.h in Headers */,
 				2553950F24907A9C0095B499 /* x509.h in Headers */,
 				2553950324907A9C0095B499 /* err.h in Headers */,
 				2553958324907AA40095B499 /* ripemd.h in Headers */,
 				2553955F24907AA10095B499 /* comp.h in Headers */,
-				25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */,
-				25335F37235EE2A7006C79C1 /* SigModel.h in Headers */,
 				2553956124907AA20095B499 /* cast.h in Headers */,
-				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
 				25FF2F5B2446EFDD0084263F /* GMEllipticCurveCrypto+hash.h in Headers */,
 				2553955724907AA10095B499 /* e_os2.h in Headers */,
 				2553957124907AA20095B499 /* ts.h in Headers */,
 				2553956324907AA20095B499 /* rc4.h in Headers */,
 				2553954524907AA00095B499 /* crypto.h in Headers */,
+				9169643A2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h in Headers */,
 				25335F56235EEC61006C79C1 /* SigStruct.h in Headers */,
 				2553954B24907AA00095B499 /* obj_mac.h in Headers */,
 				2553955B24907AA10095B499 /* hmac.h in Headers */,
@@ -1243,33 +1048,39 @@
 				2553950724907A9C0095B499 /* blowfish.h in Headers */,
 				25335F43235EE94C006C79C1 /* LibTools.h in Headers */,
 				25335F3B235EE873006C79C1 /* SigDataSource.h in Headers */,
-				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
 				25335F74235EF339006C79C1 /* SigAddDeviceManager.h in Headers */,
 				25335F57235EEC61006C79C1 /* SigEnumeration.h in Headers */,
 				25D88C0C2361458500D4F0F7 /* SigControlMessage.h in Headers */,
 				252ABF64236057A70096563F /* SigConfigMessage.h in Headers */,
+				916964522AC56AEC0010D34A /* OTSBaseModel.h in Headers */,
 				255394F924907A9B0095B499 /* pem2.h in Headers */,
+				9169643E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h in Headers */,
 				255394FF24907A9B0095B499 /* ossl_typ.h in Headers */,
 				25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */,
 				25D88C2F236148FF00D4F0F7 /* CBUUID+Hex.h in Headers */,
 				2553953924907A9F0095B499 /* safestack.h in Headers */,
 				25D88BCE2361392100D4F0F7 /* SigKeySet.h in Headers */,
 				252ABF6823605B330096563F /* SigMeshLib.h in Headers */,
+				91C5EAE22A37195D0087C814 /* CBCharacteristic+UUID.h in Headers */,
 				25D88BF32361456C00D4F0F7 /* SigAccessLayer.h in Headers */,
 				2553959324907AA50095B499 /* ebcdic.h in Headers */,
 				2553959124907AA40095B499 /* cmac.h in Headers */,
 				2553953524907A9F0095B499 /* x509_vfy.h in Headers */,
 				25D88C232361459100D4F0F7 /* SigUpperTransportPdu.h in Headers */,
 				2553956F24907AA20095B499 /* rand.h in Headers */,
+				9169642A2AC56AEC0010D34A /* SDKLibCommand+certificate.h in Headers */,
 				2553954D24907AA00095B499 /* buffer.h in Headers */,
 				2553950B24907A9C0095B499 /* engine.h in Headers */,
 				25D88BF12361456C00D4F0F7 /* SigAccessPdu.h in Headers */,
+				9169642E2AC56AEC0010D34A /* OpenSSLHelper+EPA.h in Headers */,
 				25FF2F592446EFDD0084263F /* GMEllipticCurveCrypto.h in Headers */,
+				916964582AC56AEC0010D34A /* NSData+Compression.h in Headers */,
 				25D88C0E2361458500D4F0F7 /* SigSegmentedAccessMessage.h in Headers */,
 				2553954724907AA00095B499 /* opensslv.h in Headers */,
 				2553952F24907A9E0095B499 /* conf.h in Headers */,
 				2553958D24907AA40095B499 /* srtp.h in Headers */,
 				256A68B92459129C00131CC4 /* TelinkHttpManager.h in Headers */,
+				916964542AC56AEC0010D34A /* OTSCommand.h in Headers */,
 				2553951F24907A9D0095B499 /* bio.h in Headers */,
 				25D88C102361458500D4F0F7 /* SigSegmentedControlMessage.h in Headers */,
 				25D88C152361458500D4F0F7 /* SigSegmentedMessage.h in Headers */,
@@ -1281,14 +1092,17 @@
 				252ABF62236057A70096563F /* SigMeshMessage.h in Headers */,
 				2553956B24907AA20095B499 /* ec.h in Headers */,
 				2553958124907AA30095B499 /* des_old.h in Headers */,
+				916964302AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h in Headers */,
 				25C30DC12469309700F06076 /* MeshOTAManager.h in Headers */,
 				2553959524907AA50095B499 /* idea.h in Headers */,
 				2553958F24907AA40095B499 /* asn1t.h in Headers */,
 				2553956524907AA20095B499 /* stack.h in Headers */,
 				2553953F24907A9F0095B499 /* ecdsa.h in Headers */,
 				2553955D24907AA10095B499 /* aes.h in Headers */,
+				9169644E2AC56AEC0010D34A /* OTSHandle.h in Headers */,
 				2553951524907A9D0095B499 /* kssl.h in Headers */,
 				2553951124907A9C0095B499 /* asn1_mac.h in Headers */,
+				25772EB4262EBB3600014699 /* ConnectTools.h in Headers */,
 				2553954324907AA00095B499 /* pkcs12.h in Headers */,
 				25D88C0A2361458500D4F0F7 /* SigAccessMessage.h in Headers */,
 				25D88C0F2361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.h in Headers */,
@@ -1305,6 +1119,8 @@
 				25335F13235ED9F2006C79C1 /* SigECCEncryptHelper.h in Headers */,
 				25D88BEB2361455C00D4F0F7 /* SigNetworkLayer.h in Headers */,
 				2553955924907AA10095B499 /* md4.h in Headers */,
+				916964622AC56AEC0010D34A /* CDTPServiceModel.h in Headers */,
+				9169645C2AC56AEC0010D34A /* CDTPClientModel.h in Headers */,
 				2553958524907AA40095B499 /* whrlpool.h in Headers */,
 				25D88BCF2361392100D4F0F7 /* SigNetworkManager.h in Headers */,
 				25335F71235EF339006C79C1 /* SigProvisioningManager.h in Headers */,
@@ -1334,6 +1150,7 @@
 				25D88C222361459100D4F0F7 /* SigHearbeatMessage.h in Headers */,
 				255394FD24907A9B0095B499 /* ssl3.h in Headers */,
 				2553951D24907A9D0095B499 /* opensslconf.h in Headers */,
+				916964422AC56AEC0010D34A /* SDKLibCommand+directForwarding.h in Headers */,
 				25D88BDC2361443000D4F0F7 /* SigHelper.h in Headers */,
 				25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */,
 				25151BFA2362F2AC00967668 /* SigMessageHandle.h in Headers */,
@@ -1348,6 +1165,7 @@
 				25D9E67E23ACD9B6001E4747 /* SigPublishManager.h in Headers */,
 				2553950124907A9B0095B499 /* dtls1.h in Headers */,
 				25E60F282435980B00620E29 /* SigFastProvisionAddManager.h in Headers */,
+				916964482AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h in Headers */,
 				25C0AFDE235D597400846CFB /* TelinkSigMeshLib.h in Headers */,
 				2553952D24907A9E0095B499 /* ssl23.h in Headers */,
 				2553953324907A9F0095B499 /* md5.h in Headers */,
@@ -1358,24 +1176,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibExtensions" */;
-			buildPhases = (
-				252894552468F13400E590F9 /* Headers */,
-				252894E52468F13400E590F9 /* Sources */,
-				252895202468F13400E590F9 /* Frameworks */,
-				252895232468F13400E590F9 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = TelinkSigMeshLibExtensions;
-			productName = TelinkSigMeshLib;
-			productReference = 252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */;
-			productType = "com.apple.product-type.framework";
-		};
 		25C0AFD8235D597400846CFB /* TelinkSigMeshLib */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 25C0AFE1235D597400846CFB /* Build configuration list for PBXNativeTarget "TelinkSigMeshLib" */;
@@ -1405,7 +1205,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				25CE4E5F254A910E004E6F12 /* PBXTargetDependency */,
 			);
 			name = TelinkSigMeshLibTests;
 			productName = TelinkSigMeshLibTests;
@@ -1447,7 +1246,6 @@
 			projectRoot = "";
 			targets = (
 				25C0AFD8235D597400846CFB /* TelinkSigMeshLib */,
-				252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */,
 				2567D7A324B849B60075E7E8 /* Release_TelinkSigMeshLib */,
 				25CE4E57254A910E004E6F12 /* TelinkSigMeshLibTests */,
 			);
@@ -1455,15 +1253,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		252895232468F13400E590F9 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				255395A224907AA50095B499 /* LICENSE.txt in Resources */,
-				2553959C24907AA50095B499 /* README.md in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		25C0AFD7235D597400846CFB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1503,64 +1292,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		252894E52468F13400E590F9 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				252894E62468F13400E590F9 /* SigLowerTransportPdu.m in Sources */,
-				252894E72468F13400E590F9 /* SigAuthenticationModel.m in Sources */,
-				252894E82468F13400E590F9 /* GMEllipticCurveCrypto+hash.m in Sources */,
-				252894E92468F13400E590F9 /* SigProxyConfigurationMessage.m in Sources */,
-				252894EA2468F13400E590F9 /* SigSegmentedAccessMessage.m in Sources */,
-				252894EB2468F13400E590F9 /* SigHelper.m in Sources */,
-				252894ED2468F13400E590F9 /* OTAManager.m in Sources */,
-				252894EE2468F13400E590F9 /* SigPdu.m in Sources */,
-				252894EF2468F13400E590F9 /* SigConfigMessage.m in Sources */,
-				252894F02468F13400E590F9 /* SigKeySet.m in Sources */,
-				252894F12468F13400E590F9 /* SigModel.m in Sources */,
-				252894F22468F13400E590F9 /* SigPublishManager.m in Sources */,
-				252894F32468F13400E590F9 /* SigBearer.m in Sources */,
-				252894F42468F13400E590F9 /* SDKLibCommand.m in Sources */,
-				252895322468F6F300E590F9 /* SigRemoteAddManager.m in Sources */,
-				252894F62468F13400E590F9 /* SigAccessLayer.m in Sources */,
-				252894F72468F13400E590F9 /* SigControlMessage.m in Sources */,
-				252894F82468F13400E590F9 /* SigDataSource.m in Sources */,
-				252894F92468F13400E590F9 /* SigConst.m in Sources */,
-				252894FA2468F13400E590F9 /* SigAccessMessage.m in Sources */,
-				252894FD2468F13400E590F9 /* TelinkHttpManager.m in Sources */,
-				252894FE2468F13400E590F9 /* SigNetworkManager.m in Sources */,
-				252894FF2468F13400E590F9 /* SigSegmentedMessage.m in Sources */,
-				25B8764D24850474006C76CB /* SigBluetooth.m in Sources */,
-				252895002468F13400E590F9 /* SigAccessPdu.m in Sources */,
-				252895012468F13400E590F9 /* OpenSSLHelper.m in Sources */,
-				252895022468F13400E590F9 /* SigAddDeviceManager.m in Sources */,
-				252895042468F13400E590F9 /* SigHearbeatMessage.m in Sources */,
-				252895052468F13400E590F9 /* SigMessageHandle.m in Sources */,
-				252895062468F13400E590F9 /* BackgroundTimer.m in Sources */,
-				252895072468F13400E590F9 /* SigGenericMessage.m in Sources */,
-				252895082468F13400E590F9 /* SigLowerTransportLayer.m in Sources */,
-				252895092468F13400E590F9 /* SigMeshMessage.m in Sources */,
-				254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */,
-				2528950A2468F13400E590F9 /* SigSegmentedControlMessage.m in Sources */,
-				2528950B2468F13400E590F9 /* SigNetworkLayer.m in Sources */,
-				2528950D2468F13400E590F9 /* LibTools.m in Sources */,
-				2528950E2468F13400E590F9 /* SigUpperTransportLayer.m in Sources */,
-				2528950F2468F13400E590F9 /* SigKeyBindManager.m in Sources */,
-				252895102468F13400E590F9 /* SigMeshLib.m in Sources */,
-				252895352468F6F300E590F9 /* MeshOTAManager.m in Sources */,
-				252895132468F13400E590F9 /* SigLogger.m in Sources */,
-				252895142468F13400E590F9 /* CBUUID+Hex.m in Sources */,
-				252895152468F13400E590F9 /* SigECCEncryptHelper.m in Sources */,
-				252895162468F13400E590F9 /* SigFastProvisionAddManager.m in Sources */,
-				252895172468F13400E590F9 /* ProxyProtocolHandler.m in Sources */,
-				252895182468F13400E590F9 /* SigSegmentAcknowledgmentMessage.m in Sources */,
-				252895192468F13400E590F9 /* GMEllipticCurveCrypto.m in Sources */,
-				2528951B2468F13400E590F9 /* SigUpperTransportPdu.m in Sources */,
-				2528951C2468F13400E590F9 /* SigProvisioningManager.m in Sources */,
-				2528951D2468F13400E590F9 /* SigProvisioningData.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		25C0AFD5235D597400846CFB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1571,13 +1302,16 @@
 				259020912369390E005649DE /* SigProxyConfigurationMessage.m in Sources */,
 				25D88C122361458500D4F0F7 /* SigSegmentedAccessMessage.m in Sources */,
 				25D88BDB2361443000D4F0F7 /* SigHelper.m in Sources */,
+				9169645E2AC56AEC0010D34A /* OTSCommand.m in Sources */,
 				258A004023A8BA5A003D2148 /* OTAManager.m in Sources */,
+				916964502AC56AEC0010D34A /* CDTPServiceModel.m in Sources */,
 				25335F4A235EEB93006C79C1 /* SigPdu.m in Sources */,
 				252ABF65236057A70096563F /* SigConfigMessage.m in Sources */,
 				25D88BCD2361392100D4F0F7 /* SigKeySet.m in Sources */,
 				25335F36235EE2A7006C79C1 /* SigModel.m in Sources */,
 				25D9E67F23ACD9B6001E4747 /* SigPublishManager.m in Sources */,
 				25335F52235EEBEE006C79C1 /* SigBearer.m in Sources */,
+				916964602AC56AEC0010D34A /* OTSBaseModel.m in Sources */,
 				25335F90235F06D3006C79C1 /* SDKLibCommand.m in Sources */,
 				25D88BF22361456C00D4F0F7 /* SigAccessLayer.m in Sources */,
 				25D88C112361458500D4F0F7 /* SigControlMessage.m in Sources */,
@@ -1585,29 +1319,45 @@
 				25B95FEF238E595600244D14 /* SigConst.m in Sources */,
 				25D88C182361458500D4F0F7 /* SigAccessMessage.m in Sources */,
 				256A68BA2459129C00131CC4 /* TelinkHttpManager.m in Sources */,
+				916964442AC56AEC0010D34A /* SDKLibCommand+directForwarding.m in Sources */,
+				916964322AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m in Sources */,
+				9169645A2AC56AEC0010D34A /* OTSHandle.m in Sources */,
 				25D88BD02361392100D4F0F7 /* SigNetworkManager.m in Sources */,
+				916964462AC56AEC0010D34A /* SigRemoteAddManager.m in Sources */,
 				25D88C0D2361458500D4F0F7 /* SigSegmentedMessage.m in Sources */,
 				25D88BF42361456C00D4F0F7 /* SigAccessPdu.m in Sources */,
 				25335F11235ED9F2006C79C1 /* OpenSSLHelper.m in Sources */,
 				25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */,
 				25D88C202361459100D4F0F7 /* SigHearbeatMessage.m in Sources */,
+				91C5EAE42A37195D0087C814 /* CBCharacteristic+UUID.m in Sources */,
 				25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */,
+				916964362AC56AEC0010D34A /* MeshOTAManager.m in Sources */,
 				25B95FEB238E4DBD00244D14 /* BackgroundTimer.m in Sources */,
 				25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */,
+				9169643C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m in Sources */,
 				25D88C132361458500D4F0F7 /* SigLowerTransportLayer.m in Sources */,
+				916964402AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m in Sources */,
+				916964262AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m in Sources */,
+				916964562AC56AEC0010D34A /* CDTPClientModel.m in Sources */,
 				252ABF63236057A70096563F /* SigMeshMessage.m in Sources */,
 				25D88C0B2361458500D4F0F7 /* SigSegmentedControlMessage.m in Sources */,
+				916964382AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m in Sources */,
 				25D88BEC2361455C00D4F0F7 /* SigNetworkLayer.m in Sources */,
 				25335F42235EE94C006C79C1 /* LibTools.m in Sources */,
+				916964282AC56AEC0010D34A /* SDKLibCommand+certificate.m in Sources */,
 				25D88C212361459100D4F0F7 /* SigUpperTransportLayer.m in Sources */,
 				25335F75235EF339006C79C1 /* SigKeyBindManager.m in Sources */,
 				252ABF6923605B330096563F /* SigMeshLib.m in Sources */,
+				9169644A2AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m in Sources */,
 				25335F15235ED9F2006C79C1 /* SigLogger.m in Sources */,
 				25D88C30236148FF00D4F0F7 /* CBUUID+Hex.m in Sources */,
 				25335F0B235ED9F2006C79C1 /* SigECCEncryptHelper.m in Sources */,
+				9169644C2AC56AEC0010D34A /* NSData+Compression.m in Sources */,
 				25E60F292435980B00620E29 /* SigFastProvisionAddManager.m in Sources */,
 				25335F53235EEBEE006C79C1 /* ProxyProtocolHandler.m in Sources */,
+				25772EB2262EBB3600014699 /* ConnectTools.m in Sources */,
 				25D88C162361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.m in Sources */,
+				9169642C2AC56AEC0010D34A /* OpenSSLHelper+EPA.m in Sources */,
 				25FF2F5E2446EFDD0084263F /* GMEllipticCurveCrypto.m in Sources */,
 				25D88C1F2361459100D4F0F7 /* SigUpperTransportPdu.m in Sources */,
 				25B8764C24850474006C76CB /* SigBluetooth.m in Sources */,
@@ -1620,106 +1370,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25A76E9A25FB5CEF00DEF34B /* CheckSampleData.m in Sources */,
 				25CE4E5B254A910E004E6F12 /* TelinkSigMeshLibTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		25CE4E5F254A910E004E6F12 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 25C0AFD8235D597400846CFB /* TelinkSigMeshLib */;
-			targetProxy = 25CE4E5E254A910E004E6F12 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		252895272468F13400E590F9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = J3AJAYU5N6;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
-				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-				);
-				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		252895282468F13400E590F9 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = J3AJAYU5N6;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm62;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=0";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
-				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-				);
-				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		2567D7A424B849B60075E7E8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1730,6 +1398,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1760,7 +1429,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1772,7 +1441,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_C_LANGUAGE_STANDARD = gnu89;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1791,6 +1460,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1824,7 +1494,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1836,7 +1506,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_C_LANGUAGE_STANDARD = gnu89;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1848,6 +1518,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
@@ -1859,6 +1530,7 @@
 		25C0AFE2235D597400846CFB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -1868,13 +1540,18 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
 				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1882,14 +1559,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1902,6 +1575,7 @@
 		25C0AFE3235D597400846CFB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -1910,15 +1584,15 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=0";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
 				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1926,14 +1600,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1945,9 +1615,15 @@
 		25CE4E60254A910E004E6F12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"TESTMODE=1",
+				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = TelinkSigMeshLibTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1956,6 +1632,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLibTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1965,9 +1642,11 @@
 		25CE4E61254A910E004E6F12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "TESTMODE=1";
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = TelinkSigMeshLibTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1976,6 +1655,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLibTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1985,15 +1665,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibExtensions" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				252895272468F13400E590F9 /* Debug */,
-				252895282468F13400E590F9 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		2567D7A624B849B60075E7E8 /* Build configuration list for PBXAggregateTarget "Release_TelinkSigMeshLib" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

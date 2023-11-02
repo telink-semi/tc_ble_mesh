@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigKeySet.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigKeySet.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/28.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigKeySet.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/28
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigKeySet.h"
 
@@ -36,7 +30,9 @@
 
 @implementation SigAccessKeySet
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _applicationKey = applicationKey;
     }
     return self;
@@ -47,24 +43,10 @@
 }
 
 - (NSData *)accessKey {
-    if (self.networkKey.phase == distributingKeys) {
-        NSData *oldkey = self.applicationKey.getDataOldKey;
-        if (oldkey != nil && oldkey.length != 0) {
-            return oldkey;
-        }
-        return _applicationKey.getDataKey;
-    }
     return _applicationKey.getDataKey;
 }
 
 - (UInt8)aid {
-    if (self.networkKey.phase == distributingKeys) {
-        UInt8 aid = self.applicationKey.oldAid;
-        if (aid != 0) {
-            return aid;
-        }
-        return _applicationKey.aid;
-    }
     return _applicationKey.aid;
 }
 
@@ -77,8 +59,11 @@
 
 @implementation SigDeviceKeySet
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isInitAid = NO;
     }
     return self;
@@ -89,7 +74,9 @@
 }
 
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey node:(SigNodeModel *)node {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.networkKey = networkKey;
         _node = node;
         _isInitAid = NO;

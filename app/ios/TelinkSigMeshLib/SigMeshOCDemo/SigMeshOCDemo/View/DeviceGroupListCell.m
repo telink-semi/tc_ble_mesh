@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  DeviceGroupListCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "DeviceGroupListCell.h"
 
@@ -38,6 +32,7 @@
 @property (strong, nonatomic) NSMutableArray <NSNumber *>*temOptions;
 @property (assign, nonatomic) BOOL isEditing;
 @property (strong, nonatomic) NSError *editSubscribeListError;
+@property (nonatomic,strong) SigMessageHandle *messageHandle;
 
 @end
 
@@ -54,25 +49,117 @@
 //归属group
 - (IBAction)ChangeSubStatus:(UIButton *)sender {
     sender.selected = !sender.isSelected;
-    //标准做法，配置多项。
-    self.temOptions = [[NSMutableArray alloc] init];
-    NSArray *options = [NSArray arrayWithArray:self.options];
-    for (NSNumber *option in options) {
-        NSArray *addresses = [self.model getAddressesWithModelID:option];
-        if (addresses && addresses.count > 0) {
-            [self.temOptions addObject:option];
+    BOOL isAdd = sender.isSelected;
+    self.isEditing = YES;
+    [ShowTipsHandle.share show:Tip_EditGroup];
+    self.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:sender];
+        [self performSelector:@selector(editGroupFail:) withObject:sender afterDelay:10.0];
+    });
+    __weak typeof(self) weakSelf = self;
+    //子线程执行Subscribe
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        for (NSNumber *modelIdNumber in weakSelf.options) {
+            UInt16 modelIdentifier = 0,companyIdentifier = 0;
+            if (modelIdNumber.intValue >= 0x1000 && modelIdNumber.intValue <= 0x13ff) {
+                //sig model
+                modelIdentifier = modelIdNumber.intValue;
+            } else {
+                //vendor model
+                modelIdentifier = (modelIdNumber.intValue >> 16) & 0xFFFF;
+                companyIdentifier = modelIdNumber.intValue & 0xFFFF;
+            }
+            UInt16 destination = weakSelf.model.address;
+            UInt16 retryCount = SigDataSource.share.defaultRetryCount;
+            UInt16 responseMaxCount = 1;
+            NSArray *elementAddresses = [weakSelf.model getAddressesWithModelID:modelIdNumber];
+            __block int i = 0;
+            for ( ; i<elementAddresses.count; i++) {
+                __block BOOL isFail = NO;
+                __block BOOL isSuccess = NO;
+                NSNumber *elementNumber = elementAddresses[i];
+                UInt16 groupAddress = weakSelf.groupAddress;
+                UInt16 elementAddress = self.model.address;
+                elementAddress = elementNumber.intValue;
+                if (modelIdNumber.intValue == kSigModel_GenericLevelServer_ID) {
+                    SigElementModel *elementModel = weakSelf.model.elements[elementAddress-destination];
+                    if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                        groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
+                        groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLHueServer_ID]]) {
+                        groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 2;
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLSaturationServer_ID]]) {
+                        groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 3;
+                    }
+                }
+                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                if (isAdd) {
+                    self.messageHandle = [SDKLibCommand configModelSubscriptionAddWithDestination:destination toGroupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+                        if (weakSelf.isEditing && responseMessage.elementAddress == elementAddress && responseMessage.address == groupAddress) {
+                            if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
+                                if (responseMessage.status == SigConfigMessageStatus_success) {
+                                    isSuccess = YES;
+                                } else {
+                                    isFail = YES;
+                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
+                                        //资源不足，设备的组号已经添加满了。
+                                        weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
+                                    } else {
+                                        weakSelf.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
+                                    }
+                                }
+                            }
+                        }
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                        if (error) {
+                            weakSelf.editSubscribeListError = error;
+                        } else if (!isSuccess && !isFail) {
+                            i--;
+                        }
+                        dispatch_semaphore_signal(semaphore);
+                    }];
+                } else {
+                    self.messageHandle = [SDKLibCommand configModelSubscriptionDeleteWithDestination:destination groupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+                        if (weakSelf.isEditing && responseMessage.elementAddress == elementAddress && responseMessage.address == groupAddress) {
+                            if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
+                                if (responseMessage.status == SigConfigMessageStatus_success) {
+                                    isSuccess = YES;
+                                } else {
+                                    isFail = YES;
+                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
+                                        //资源不足，设备的组号已经添加满了。
+                                        weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
+                                    } else {
+                                        weakSelf.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
+                                    }
+                                }
+                            }
+                        }
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                        if (error) {
+                            weakSelf.editSubscribeListError = error;
+                        } else if (!isSuccess && !isFail) {
+                            i--;
+                        }
+                        dispatch_semaphore_signal(semaphore);
+                    }];
+                }
+                if (weakSelf.messageHandle == nil) {
+                    isFail = YES;
+                    [weakSelf editGroupFail:weakSelf.subToGroup];
+                    return;
+                } else {
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+                }
+            }
         }
-    }
-    if (self.temOptions.count > 0) {
-        self.isEditing = YES;
-        [ShowTipsHandle.share show:Tip_EditGroup];
-        self.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:sender];
-            [self performSelector:@selector(editGroupFail:) withObject:sender afterDelay:10.0];
-        });
-        [self editionNextOption:sender];
-    }
+        [weakSelf editSuccessful];
+    }];
 }
 
 - (void)contentWithGroupAddress:(NSNumber *)groupAddress groupName:(NSString *)groupName model:(SigNodeModel *)model{
@@ -100,6 +187,9 @@
         return;
     }
     self.isEditing = NO;
+    if (self.messageHandle) {
+        [self.messageHandle cancel];
+    }
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         sender.selected = !sender.isSelected;
@@ -108,95 +198,16 @@
     });
 }
 
-- (void)editingOption:(UInt32)option button:(UIButton *)button{
-    if (!self.isEditing) {
-        return;
-    }
-    if (self.model && self.groupAddress) {
-        __weak typeof(self) weakSelf = self;
-        //注意：多个element的情况，色温在第二个element。
-        UInt16 eleAddress = self.model.address;
-        
-        NSMutableArray *temAddress = [self.model getAddressesWithModelID:@(option)];
-        if (temAddress.count > 0) {
-            eleAddress = [temAddress.firstObject intValue];
-        } else {
-            [self editOneOptionSuccessWithAddress:self.model.address];
-            return;
-        }
-        __block BOOL editSubSuccess = NO;
-        UInt16 modelIdentifier = 0,companyIdentifier = 0;
-        if (option >= 0x1000 && option <= 0x13ff) {
-            //sig model
-            modelIdentifier = option;
-        } else {
-            //vendor model
-            modelIdentifier = (option >> 16) & 0xFFFF;
-            companyIdentifier = option & 0xFFFF;
-        }
-        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
-            if (weakSelf.isEditing && responseMessage.elementAddress == eleAddress && responseMessage.address == weakSelf.groupAddress) {
-                if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
-                    if (responseMessage.status == SigConfigMessageStatus_success) {
-                        editSubSuccess = YES;
-                    } else {
-                        editSubSuccess = NO;
-                        TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
-                        if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
-                            //资源不足，设备的组号已经添加满了。
-                            weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
-                        } else {
-                            weakSelf.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
-                        }
-                    }
-                }
-            }
-        } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            TeLogDebug(@"edit SubscribeList finish.")
-            __strong __typeof(weakSelf)strongSelf = weakSelf;
-            if (editSubSuccess && error == nil) {
-                [strongSelf editOneOptionSuccessWithAddress:strongSelf.model.address];
-            } else {
-                [strongSelf editGroupFail:button];
-            }
-        }];
-    }
-}
-
-- (void)editOneOptionSuccessWithAddress:(int)address{
-    if (self.temOptions.count > 0 && address == self.model.address) {
-        [self.temOptions removeObjectAtIndex:0];
-    }
-    if (self.temOptions.count > 0) {
-        
-        //配置多项，每项之间延时200ms
-//        [self performSelector:@selector(editionNextOption:) withObject:self.subToGroup afterDelay:0.2];
-        
-        //无需延时
-        [self editionNextOption:self.subToGroup];
-        
-    }else{
-        //所有配置已经完成
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:self.subToGroup];
-            [self performSelector:@selector(editSuccessful) withObject:nil afterDelay:1.0];
-        });
-    }
-}
-
 - (void)editSuccessful{
     if (!self.isEditing) {
         return;
     }
     self.isEditing = NO;
-    [ShowTipsHandle.share hidden];
-    [SigDataSource.share editGroupIDsOfDevice:self.subToGroup.isSelected unicastAddress:@(self.model.address) groupAddress:@(self.groupAddress)];
-    self.subToGroup.selected = self.subToGroup.isSelected;
-}
-
-- (void)editionNextOption:(UIButton *)sender{
-    UInt32 option = [self.temOptions.firstObject intValue];
-    [self editingOption:option button:sender];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:self.subToGroup];
+        [ShowTipsHandle.share hidden];
+        [SigDataSource.share editGroupIDsOfDevice:self.subToGroup.isSelected unicastAddress:@(self.model.address) groupAddress:@(self.groupAddress)];
+    });
 }
 
 @end

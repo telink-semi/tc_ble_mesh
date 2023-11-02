@@ -3,38 +3,33 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigMeshMessage.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+
 @interface SigBaseMeshMessage : NSObject
 
 /// Message parameters as Data.
-@property (nonatomic,strong) NSData *parameters;
+@property (nonatomic,strong,nullable) NSData *parameters;
 
 @end
 
@@ -136,17 +131,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt32 responseOpCode;
 @end
 
+
 @interface SigStaticMeshMessage : SigMeshMessage
 @end
 
-@interface SigUnknownMessage : SigMeshMessage
 
+@interface SigUnknownMessage : SigMeshMessage
 @end
+
 
 @interface SigIniMeshMessage : SigMeshMessage
 @property (nonatomic,assign) UInt32 responseOpCode;
 @end
-
 
 
 NS_ASSUME_NONNULL_END

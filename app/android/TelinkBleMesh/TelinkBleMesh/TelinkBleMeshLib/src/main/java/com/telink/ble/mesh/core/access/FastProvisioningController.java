@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     FastProvisioningController.java 
+ * @file FastProvisioningController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
@@ -56,7 +57,7 @@ import java.util.ArrayList;
  * 5. send VD_MESH_ADDR_SET command to default unicast address one by one
  * 6. send VD_MESH_PROV_DATA_SET to 0xFFFF: setting network info
  * 7. send VD_MESH_PROV_CONFIRM : if receive device response VD_MESH_PROV_CONFIRM_STS when it do not received network info,
- *  resend VD_MESH_PROV_DATA_SET
+ * resend VD_MESH_PROV_DATA_SET
  * 8. if no device response, send VD_MESH_PROV_COMPLETE to set network back
  *
  * <p>
@@ -180,6 +181,8 @@ public class FastProvisioningController {
 
     public void begin() {
         log("begin");
+        this.settingIndex = 0;
+        this.provisioningDeviceList.clear();
         delayHandler.removeCallbacks(flowTimeoutTask);
         delayHandler.postDelayed(flowTimeoutTask, FLOW_TIMEOUT);
         resetNetwork();
@@ -187,6 +190,7 @@ public class FastProvisioningController {
 
     public void clear() {
         this.state = STATE_IDLE;
+        this.settingIndex = 0;
         if (delayHandler != null) {
             delayHandler.removeCallbacksAndMessages(null);
         }
@@ -230,14 +234,17 @@ public class FastProvisioningController {
         @Override
         public void run() {
             restartScanningTimeoutTask();
-            startFastScanning();
+            startFastScanning(0);
         }
     };
 
     // get address
-    private void startFastScanning() {
+    private void startFastScanning(int address) {
         onStateUpdate(STATE_GET_ADDR, "mesh get address", null);
         MeshGetAddressMessage getAddressMessage = MeshGetAddressMessage.getSimple(0xFFFF, configuration.getDefaultAppKeyIndex(), ROUND_MAX, configuration.getScanningPid());
+        getAddressMessage.setAddress(address);
+        byte[] params = getAddressMessage.getParams();
+        log(("get address params : " + Arrays.bytesToHexString(params)));
         onMeshMessagePrepared(getAddressMessage);
     }
 
@@ -250,8 +257,15 @@ public class FastProvisioningController {
         @Override
         public void run() {
             if (provisioningDeviceList.size() > 0) {
-                settingIndex = -1;
-                setNextMeshAddress();
+                if (provisioningDeviceList.size() > settingIndex) {
+                    log("set next mesh address when scan timeout");
+                    setNextMeshAddress();
+                } else {
+                    log("all device set address complete no other device found");
+                    confirmRetryCnt = 0;
+                    setMeshNetInfo();
+                }
+//                settingIndex = -1;
             } else {
                 onFastProvisionComplete(false, "no device found");
             }
@@ -259,9 +273,10 @@ public class FastProvisioningController {
     };
 
     private void setNextMeshAddress() {
-        settingIndex++;
+        log("set next -- " + provisioningDeviceList.size() + " -- " + settingIndex);
         if (provisioningDeviceList.size() > settingIndex) {
             FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex);
+            settingIndex++;
             if (provisioningDevice != null) {
                 log(String.format("mesh set next address: mac -- %s originAddress -- %04X newAddress -- %04X index -- %02d",
                         Arrays.bytesToHexString(provisioningDevice.getMac()),
@@ -281,12 +296,16 @@ public class FastProvisioningController {
             }
 
         } else {
-            log("all device set address complete");
-            confirmRetryCnt = 0;
-            setMeshNetInfo();
+            log("round complete -> start next scanning action ");
+            restartScanningTimeoutTask();
+            startFastScanning(configuration.getProvisioningIndex());
         }
     }
 
+
+    /**
+     * set mesh info after no device can be found by scanning
+     */
     private void setMeshNetInfo() {
         onStateUpdate(STATE_SET_NET_INFO, "mesh set net info", null);
         byte[] netInfoData = getNetInfoData();
@@ -384,7 +403,6 @@ public class FastProvisioningController {
                 setNextMeshAddress();
             }
         }
-
     }
 
 
@@ -398,7 +416,7 @@ public class FastProvisioningController {
 
                     MeshAddressStatusMessage statusMessage = (MeshAddressStatusMessage) message.getStatusMessage();
                     int originAddress = message.getSrc();
-                    int pid = statusMessage.getPid();
+                    int pid = statusMessage.getPid() & 0x0FFF;
                     log("device address notify: " + Arrays.bytesToHexString(statusMessage.getMac()));
                     int newAddress = getProvisioningMeshAddress(pid);
                     if (newAddress != 0) {

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  DemoCommand.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "DemoCommand.h"
 
@@ -160,7 +154,7 @@
         }
 
         TeLogInfo(@"send request for edit publish list");
-        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:2];
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:0];
         SigPublish *publish = [[SigPublish alloc] initWithDestination:publishAddress withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];//ttl=0xFF(表示采用节点默认参数)
         [SDKLibCommand configModelPublicationSetWithDestination:nodeAddress publish:publish elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
@@ -220,7 +214,7 @@
         }
         return NO;
     } else {
-        UInt16 lightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
+        UInt16 lightness = [LibTools lumToLightness:brightness100];
         TeLogInfo(@"send request for change brightness100 value:%d,UInt16 lightness=%d",brightness100,lightness);
         [SDKLibCommand lightLightnessSetWithDestination:address lightness:lightness retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
@@ -237,7 +231,7 @@
         }
         return NO;
     } else {
-        UInt16 temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:temprature100];
+        UInt16 temperature = [LibTools temp100ToTemp:temprature100];
         TeLogInfo(@"send request for change temprature100 value:%d,UInt16 temperature=%d",temprature100,temperature);
         [SDKLibCommand lightCTLTemperatureSetWithDestination:address temperature:temperature deltaUV:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV comfirm later
         return YES;

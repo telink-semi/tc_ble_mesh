@@ -3,70 +3,46 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigAccessPdu.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SigAccessPdu.h"
 #import "SigUpperTransportPdu.h"
 
 @implementation SigAccessPdu
 
-- (BOOL)isSegmented {
-    if (_message == nil) {
-        return NO;
-    }
-    return _accessPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
-}
-
-- (int)segmentsCount {
-    if (_message == nil) {
-        return 0;
-    }
-    if (![self isSegmented]) {
-        return 1;
-    }
-    switch (_message.security) {
-        case SigMeshMessageSecurityLow:
-            return 1 + (int)((_accessPdu.length + 3) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            break;
-        case SigMeshMessageSecurityHigh:
-            return 1 + (int)((_accessPdu.length + 7) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            break;
-        default:
-            break;
-    }
-}
-
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Initialize SigAccessPdu object.
+/// @param pdu The SigUpperTransportPdu object.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = nil;
         _localElement = nil;
@@ -75,57 +51,28 @@
         _destination = [[SigMeshAddress alloc] initWithAddress:pdu.destination];
         _accessPdu = pdu.accessPdu;
         
-        // At least 1 octet is required.
-        if (pdu.accessPdu == nil || pdu.accessPdu.length == 0) {
-            TeLogError(@"pdu.accessPdu has not data.");
+        SigOpCodeAndParametersModel *model = [[SigOpCodeAndParametersModel alloc] initWithOpCodeAndParameters:pdu.accessPdu];
+        if (model == nil) {
             return nil;
         }
-        UInt8 octet0 = 0;
-        Byte *dataByte = (Byte *)pdu.accessPdu.bytes;
-        memcpy(&octet0, dataByte, 1);
-
-        if (octet0 == 0b01111111) {
-            TeLogError(@"Opcode 0b01111111 is reseved for future use.");
-            return nil;
-        }
-
-        // 1-octet Opcodes.
-        if ((octet0 & 0x80) == 0) {
-            _opCode = (UInt32)octet0;
-            _parameters = [pdu.accessPdu subdataWithRange:NSMakeRange(1, pdu.accessPdu.length - 1)];
-            return self;
-        }
-        // 2-octet Opcodes.
-        if ((octet0 & 0x40) == 0) {
-            // At least 2 octets are required.
-            if (pdu.accessPdu.length < 2) {
-                TeLogError(@"pdu.accessPdu is error.");
-                return nil;
-            }
-            UInt8 octet1 = 0;
-            memcpy(&octet1, dataByte+1, 1);
-            _opCode = (UInt32)octet0 << 8 | (UInt32)octet1;
-            _parameters = [pdu.accessPdu subdataWithRange:NSMakeRange(2, pdu.accessPdu.length - 2)];
-            return self;
-        }
-        // 3-octet Opcodes.
-        // At least 3 octets are required.
-        if (pdu.accessPdu.length < 3) {
-            TeLogError(@"pdu.accessPdu is error.");
-            return nil;
-        }
-        UInt8 octet1 = 0;
-        UInt8 octet2 = 0;
-        memcpy(&octet1, dataByte+1, 1);
-        memcpy(&octet2, dataByte+2, 1);
-        _opCode = (UInt32)octet0 << 16 | (UInt32)octet1 << 8 | (UInt32)octet2;
-        _parameters = [pdu.accessPdu subdataWithRange:NSMakeRange(3, pdu.accessPdu.length - 3)];
+        _opCode = model.opCode;
+        _parameters = model.parameters;        
     }
     return self;
 }
 
+/// Initialize SigAccessPdu object.
+/// @param message The Mesh Message that is being sent, or `nil`, when the message
+/// was received.
+/// @param localElement The local Element that is sending the message, or `nil` when the
+/// message was received.
+/// @param destination Destination Address.
+/// @param userInitiated Whether sending this message has been initiated by the user.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromMeshMessage:(SigMeshMessage *)message sentFromLocalElement:(SigElementModel *)localElement toDestination:(SigMeshAddress *)destination userInitiated:(BOOL)userInitiated {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = message;
         _localElement = localElement;
@@ -140,38 +87,15 @@
             _parameters = [NSData data];
         }
         
-        // Op Code 0b01111111 is invalid. We will ignore this case here
-        // for now and send as a single byte OpCode.
-        // TODO: Handle 0b0111111 opcode correctly.
-        UInt8 tem = 0;
-        if (_opCode < 0x80) {//1-octet Opcodes
-            tem = (UInt8)_opCode&0xFF;
-            NSMutableData *data1 = [NSMutableData dataWithBytes:&tem length:1];
-            [data1 appendData:_parameters];
-            _accessPdu = data1;
-        }else if (_opCode < 0x4000 || (_opCode & 0xFFFC00) == 0x8000 || (_opCode & 0xFFB600) == 0xB600) {//2-octet Opcodes
-            tem = (UInt8)(0x80 | ((_opCode >> 8) & 0x3F));
-            NSMutableData *data1 = [NSMutableData dataWithBytes:&tem length:1];
-            tem = (UInt8)(_opCode & 0xFF);
-            [data1 appendData:[NSData dataWithBytes:&tem length:1]];
-            [data1 appendData:_parameters];
-            _accessPdu = data1;
-        }else{//3-octet Opcodes
-            tem = (UInt8)(0xC0 | ((_opCode >> 16) & 0x3F));
-            NSMutableData *data1 = [NSMutableData dataWithBytes:&tem length:1];
-            tem = (UInt8)((_opCode >> 8) & 0xFF);
-            [data1 appendData:[NSData dataWithBytes:&tem length:1]];
-            tem = (UInt8)(_opCode & 0xFF);
-            [data1 appendData:[NSData dataWithBytes:&tem length:1]];
-            [data1 appendData:_parameters];
-            _accessPdu = data1;
-        }
+        NSMutableData *mData = [NSMutableData dataWithData:[SigHelper.share getOpCodeDataWithUInt32Opcode:_opCode]];
+        [mData appendData:_parameters];
+        _accessPdu = mData;        
     }
     return self;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
+    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@ len=%lu", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu], (unsigned long)_accessPdu.length];
 }
 
 @end

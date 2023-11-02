@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -34,6 +33,7 @@
                 android:inputType="none"
                 android:text="vendor-on"
                 android:textColor="@color/colorPrimary"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -56,11 +56,18 @@
                     android:textSize="@dimen/info_text_size" />
 
                 <EditText
+                    android:id="@+id/et_ac_type"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
-                    android:text="Application"
-                    android:textSize="@dimen/msg_input_size" />
+                    android:drawableEnd="@drawable/ic_arrow_down"
+                    android:drawableTint="@color/colorPrimary"
+                    android:focusable="false"
+                    android:gravity="center"
+                    android:inputType="none"
+                    android:text="Application(App Key)"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -262,7 +269,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:background="?attr/selectableItemBackground"
-            android:padding="8dp"
+            android:padding="4dp"
             android:src="@drawable/ic_arrow_up"
             android:tint="@color/grey" />
 
@@ -275,7 +282,8 @@
                 android:id="@+id/tv_log"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                android:textSize="12sp" />
         </ScrollView>
     </LinearLayout>
 

@@ -1,37 +1,41 @@
 /********************************************************************************************************
- * @file     mesh_fn.h 
+ * @file	mesh_fn.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#include "tl_common.h"
 
 enum{
     FS_DISCONNECT_TYPE_POLL_TIMEOUT = 1,
     FS_DISCONNECT_TYPE_CLEAR        = 2,
     FS_DISCONNECT_TYPE_RX_REQUEST   = 3, // receive request when being keeping friend ship.
+};
+
+enum{
+    FN_CACHE_REPLACE_NONE           = 0,
+    FN_CACHE_REPLACE_FINISH	        = 1,
+    FN_CACHE_REPLACE_AND_OVERWRITE  = 2,
 };
 
 void mesh_feature_set_fn();
@@ -49,6 +53,7 @@ int mesh_tx_cmd_layer_upper_ctl_FN(u8 op, u8 *par, u32 len_par, u16 adr_dst);
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag);
 u16 mesh_group_match_friend(u16 adr);
 int fn_cache_get_extend_adv_short_unseg(u32 ctl, u8 len_ut_max_single_seg_rx);
+int is_in_mesh_friend_st_fn_all();
 
 
 extern u8 g_max_lpn_num;

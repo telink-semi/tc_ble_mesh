@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigAccessMessage.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigAccessMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigAccessMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigAccessMessage.h"
 #import "SigSegmentedAccessMessage.h"
@@ -33,15 +27,26 @@
 
 @implementation SigAccessMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Creates an Access Message from a Network PDU that contains
+/// an unsegmented access message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with unsegmented
+///                         Upper Transport message.
 - (instancetype)initFromUnsegmentedPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
@@ -70,8 +75,13 @@
     return self;
 }
 
+/// Creates an Access Message object from the given list of segments.
+///
+/// - parameter segments: List of ordered segments.
 - (instancetype)initFromSegments:(NSArray <SigSegmentedAccessMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         // Assuming all segments have the same AID, source and destination addresses and TransMIC.
         SigSegmentedAccessMessage *segment = segments.firstObject;
@@ -93,8 +103,14 @@
     return self;
 }
 
+/// Creates an Access Message object from the Upper Transport PDU.
+///
+/// - parameter pdu: The Upper Transport PDU.
+/// - parameter networkKey: The Network Key to encrypt the PCU with.
 - (instancetype)initFromUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         _AKF = pdu.AKF;
         _aid = pdu.aid;

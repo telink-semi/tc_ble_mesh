@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/22
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigProvisioningData.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/22.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -42,31 +36,27 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 @property (nonatomic, strong) SigNetkeyModel *networkKey;
 @property (nonatomic, strong) SigIvIndex *ivIndex;
 @property (nonatomic, assign) UInt16 unicastAddress;
+@property (nonatomic, assign) Algorithm algorithm;
 @property (nonatomic, strong) NSData *deviceKey;
 @property (nonatomic, strong) NSData *provisionerRandom;
 @property (nonatomic, strong) NSData *provisionerPublicKey;
 @property (nonatomic, strong) NSData *sharedSecret;
 
+@property (nonatomic, strong) NSData *provisioningInvitePDUValue;
+@property (nonatomic, strong) NSData *provisioningCapabilitiesPDUValue;
+@property (nonatomic, strong) NSData *provisioningStartPDUValue;
+@property (nonatomic, strong) NSData *devicePublicKey;
+
 - (instancetype)initWithAlgorithm:(Algorithm)algorithm;
 
 - (void)prepareWithNetwork:(SigDataSource *)network networkKey:(SigNetkeyModel *)networkKey unicastAddress:(UInt16)unicastAddress;
-
-/// This method adds the given PDU to the Provisioning Inputs. Provisioning Inputs are used for authenticating the Provisioner and the Unprovisioned Device.
-///
-/// This method must be called (in order) for:
-/// * Provisioning Invite
-/// * Provisioning Capabilities
-/// * Provisioning Start
-/// * Provisioner Public Key
-/// * Device Public Key
-- (void)accumulatePduData:(NSData *)data;
 
 /// Call this method when the device Public Key has been obtained. This must be called after generating keys.
 /// @param data The device Public Key.
 - (void)provisionerDidObtainWithDevicePublicKey:(NSData *)data;
 
 /// Call this method when the Auth Value has been obtained.
-- (void)provisionerDidObtainAuthValue:(NSData *)data;
+- (void)provisionerDidObtainAuthValue:(nullable NSData *)data;
 
 /// Call this method when the device Provisioning Confirmation has been obtained.
 - (void)provisionerDidObtainWithDeviceConfirmation:(NSData *)data;
@@ -78,11 +68,11 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 - (BOOL)validateConfirmation;
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData *)provisionerConfirmation;
+- (NSData * _Nullable)provisionerConfirmation;
 
-/// Returns the encrypted Provisioning Data together with MIC. Data will be encrypted using Session Key and Session Nonce. For that, all properties should be set when this method is called.
-/// Returned value is 25 + 8 bytes long, where the MIC is the last 8 bytes.
-- (NSData *)encryptedProvisioningDataWithMic;
+- (NSData *)getProvisioningData;
+
+- (NSData *)getEncryptedProvisioningDataAndMicWithProvisioningData:(NSData *)provisioningData;
 
 #pragma mark - Helper methods
 

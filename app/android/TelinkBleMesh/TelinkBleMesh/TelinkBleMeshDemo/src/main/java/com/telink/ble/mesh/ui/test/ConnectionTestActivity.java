@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file ConnectionTestActivity.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.ui.test;
 
 import android.os.Bundle;
@@ -7,7 +29,6 @@ import android.view.View;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
-import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.ConnectionFilter;
 import com.telink.ble.mesh.foundation.Event;
@@ -17,13 +38,13 @@ import com.telink.ble.mesh.foundation.event.GattConnectionEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.GattConnectionParameters;
 import com.telink.ble.mesh.ui.BaseActivity;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.UUID;
 
 public class ConnectionTestActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
     private Handler handler = new Handler();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +95,7 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
         }
     }
 
-    private void getVersion(){
+    private void getVersion() {
         GattRequest write = GattRequest.newInstance();
         write.serviceUUID = UUIDInfo.SERVICE_DEVICE_INFO;
         write.characteristicUUID = UUIDInfo.CHARACTERISTIC_FW_VERSION;
@@ -84,7 +105,7 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
         MeshService.getInstance().sendGattRequest(write);
     }
 
-    private void sendTestRequest(){
+    private void sendTestRequest() {
 
         GattRequest enableNotify = GattRequest.newInstance();
         enableNotify.serviceUUID = UUID.fromString("ae5d1e47-5c13-43a0-8635-82ad38a1381f");
@@ -135,9 +156,9 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
 
     @Override
     public void performed(Event<String> event) {
-        if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)){
+        if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             MeshLogger.d(TAG + " disconnected");
-        }else if (event.getType().equals(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS)){
+        } else if (event.getType().equals(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS)) {
             MeshLogger.d(TAG + " gatt connect");
         }
     }

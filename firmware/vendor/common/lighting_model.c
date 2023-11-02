@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     lighting_model.c 
+ * @file	lighting_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -240,13 +243,6 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
 	    model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_xyl.srv[light_idx])), SIG_MD_LIGHT_XYL_S == p_res->id);    
     }
 #endif
-
-#if MI_API_ENABLE
-	if(pub_list->st[ST_TRANS_MI_VENDOR_STS]){
-		model_pub_check_set(pub_list->st[ST_TRANS_MI_VENDOR_STS], (u8 *)(&(model_vd_light.srv[0])), MIOT_SEPC_VENDOR_MODEL_SER == p_res->id);    
-	}
-#endif
-
 }
 
 /**
@@ -380,7 +376,7 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
     }
 #endif
     if(level_target < min){
-        // lightness would be set to 0 for PTS, whicd is like to OFF command, and 0 will not permit to set to lightness->last.
+        // lightness would be set to 0 for PTS, which is like to OFF command, and 0 will not be allowed to set to lightness->last.
         if(!((ST_TRANS_LIGHTNESS == st_trans_type) && (LEVEL_OFF == level_target))){
             level_target = min;
         }
@@ -607,15 +603,6 @@ int mesh_cmd_sig_lightness_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	if(err){
 		return 0;
 	}
-	#if MI_API_ENABLE
-	// have transmit and delay 
-	mesh_cmd_lightness_set_t *p_set = (mesh_cmd_lightness_set_t *)par;
-	if(par_len == sizeof(mesh_cmd_lightness_set_t)){
-		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-	}else{
-		mi_pub_sigmodel_inter(0,0,0);
-	}
-	#endif
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_lightness_st_rsp(cb_par);
 	}else{
@@ -941,14 +928,6 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if(err){
         return err;
     }
-    #if MI_API_ENABLE
-	// have transmit and delay 
-	if(par_len == sizeof(mesh_cmd_light_ctl_set_t)){
-		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-	}else{
-		mi_pub_sigmodel_inter(0,0,0);
-	}
-	#endif
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_light_ctl_st_rsp(cb_par);
 	}else{
@@ -1373,7 +1352,7 @@ int access_cmd_get_lightness_range(u16 adr,u32 rsp_max)
 }
 
 // light ctl
-#if (LIGHT_TYPE_CT_EN)
+#if 1 // (LIGHT_TYPE_CT_EN)
 int access_cmd_get_light_ctl(u16 adr,u32 rsp_max)
 {
 	u8 par[1];

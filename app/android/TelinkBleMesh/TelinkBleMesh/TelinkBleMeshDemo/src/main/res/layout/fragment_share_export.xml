@@ -15,7 +15,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:orientation="vertical">
 
             <TextView
@@ -54,7 +53,7 @@
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
-            <RadioGroup
+            <!--<RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -74,6 +73,56 @@
                     android:layout_weight="1"
                     android:text="QRCode" />
 
+            </RadioGroup>-->
+
+
+            <RadioGroup
+                android:id="@+id/rg_share_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_cdtp_to_phone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:checked="true"
+                    android:drawableRight="@drawable/ic_tip"
+                    android:drawablePadding="12dp"
+                    android:drawableTint="@color/colorPrimary"
+                    android:text="Export to other phone(CDTP)" />
+
+                <RadioButton
+                    android:id="@+id/rb_cdtp_to_gw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:drawableRight="@drawable/ic_tip"
+                    android:drawablePadding="12dp"
+                    android:drawableTint="@color/colorPrimary"
+                    android:text="Export to gateway(CDTP)" />
+
+                <RadioButton
+                    android:id="@+id/rb_file"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:drawableRight="@drawable/ic_tip"
+                    android:drawablePadding="12dp"
+                    android:drawableTint="@color/colorPrimary"
+                    android:text="JSON File" />
+
+                <RadioButton
+                    android:id="@+id/rb_qrcode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:drawableRight="@drawable/ic_tip"
+                    android:drawablePadding="12dp"
+                    android:drawableTint="@color/colorPrimary"
+                    android:text="QRCode" />
+
             </RadioGroup>
 
 
@@ -83,13 +132,13 @@
 
     <TextView
         android:id="@+id/tv_log"
-        android:textSize="12sp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textSize="12sp" />
 
     <Button
         android:id="@+id/btn_export"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Export" />
 

@@ -1,45 +1,43 @@
 /********************************************************************************************************
- * @file     app.h 
+ * @file	app.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
+
+enum{
+    SWITCH_MODE_NORMAL      = 0,
+    SWITCH_MODE_GATT	   	= 1,
+};
 
 
-typedef struct{
-	u8 kb_pressed;
-	u8 adv_send_enable;
-	u8 rc_deep_flag;
-	u8 rc_sending_flag;
-	u32 adv_send_tick;
-	u32 adv_timeout_def_ms;
-	u32 rc_start_tick;
-}rc_para_mag;
+extern u32 switch_mode_tick;
 
-extern rc_para_mag rc_mag;
-
-
-void set_rc_flag_when_send_pkt(int is_sending);
+void user_init_deepRetn(void);
+void switch_mode_set(int mode);
 void mesh_proc_keyboard ();
 void global_reset_new_key_wakeup();
+int mesh_switch_send_mesh_adv();
 
 

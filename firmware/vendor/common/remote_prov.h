@@ -1,33 +1,31 @@
 /********************************************************************************************************
- * @file     remote_prov.h 
+ * @file	remote_prov.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef _REMOTE_PROV_H
 #define _REMOTE_PROV_H
 
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#include "tl_common.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"
@@ -92,6 +90,7 @@ typedef enum{
 	AD_TYPE_SIMPLE_PAIR_RAND,
 	AD_TYPE_TK_VALUE,
 	AD_TYPE_URI = 0x24,
+	AD_TYPE_BEACON = 0x2b,
 }AD_TYPE_ENUM;
 
 enum{
@@ -179,7 +178,7 @@ typedef struct{
 			u8 uuid[16];
 			u8 timeout;
 		};
-		u8 dkri;
+		u8 dkri;//nppi procedure
 	};
 }remote_prov_link_open;
 
@@ -238,11 +237,10 @@ typedef struct{
     model_rp_client_common_t client[1];
     #endif
 }model_remote_prov_t;
-extern model_remote_prov_t model_remote_prov;
 extern u8 node_devkey_candi[16];
 
 #define MAX_SCAN_ITEMS_UUID_CNT 4
-#define ACTIVE_SCAN_ENABLE  0
+
 typedef struct{
     u8 status ;
     u8 PRScanningState;
@@ -279,6 +277,7 @@ typedef struct{
 typedef struct{
 	// different extend scan security para
 	u8 mac_adr[6];
+	u8 uri_hash[4];
 	u16 nid;
 	u16 src_adr;
 	// extend scan para
@@ -286,10 +285,11 @@ typedef struct{
     u8 ADTypeFilter[MAX_ADTYPE_FILTER_CNT];
     u8 uuid[16];
     u8 time_s;
-    u32 tick_s;
+    u32 tick_100ms;
 	// extend result and end condition 
 	u8 end_flag;
 	u8 active_scan;
+	u8 uuid_flag;
     rp_extend_scan_report_str report;
 }remote_prov_extend_scan_str;
 
@@ -302,7 +302,8 @@ typedef struct{
 #define REMOTE_PROV_SERVER_CMD_FLAG         0x80
 #define REMOTE_PROV_SERVER_OUTBOUND_FLAG    0x40
 
-#define REMOTE_PROV_SERVER_RETRY_INTER  100*1000
+#define REMOTE_PROV_SERVER_RETRY_INTER  3000*1000
+
 typedef struct{
     u8 retry_flag;
     u32 tick;
@@ -332,13 +333,15 @@ typedef struct{
 	u32 rp_now_s;
 	u8 link_timeout;
 	u8 link_dkri;
+	u8 link_uuid[16];
     // rp link adr 
     u16 link_adr;
+	u8 net_id;
     // remote prov sts 
     remote_proc_pdu_sts_str rp_pdu;
 	//extend scan sts part , the extend feature is independent
     remote_prov_extend_scan_str rp_extend[MAX_EXTEND_SCAN_CNT];
-	#if WIN32 
+	#if __PROJECT_MESH_PRO__ 
 	u8 dkri_cli;
 	u16 adr_src;
 	u8 dev_candi[16];
@@ -395,6 +398,10 @@ void mesh_cmd_sig_rp_loop_proc();
 u8 mesh_pr_sts_work_or_not();
 int mesh_cmd_sig_send_rp_pdu_send(u8 *par,int par_len);
 void mesh_prov_pdu_send_retry_clear();
+void mesh_rp_netkey_del_cb(u8 idx,u16 op);
+void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
+int mesh_prov_server_to_client_cmd(u8 *prov_dat,u8 len);
+void mesh_rp_server_set_link_rp_sts(u8 sts);
 
 // remote prov client part 
 typedef struct{
@@ -406,7 +413,7 @@ typedef struct{
     u8 retry_flag;
     u32 tick;
 }rp_mag_cli_str;
-extern rp_mag_cli_str rp_client;
+extern _align_4_ rp_mag_cli_str rp_client;
 typedef enum{
     RP_PROV_IDLE_STS =0,
     RP_PROV_INVITE_CMD  = 1,
@@ -452,7 +459,6 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len);
 void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv);
 int mesh_cmd_sig_rp_pdu_outbound_send();
 void remote_prov_scan_report_cb(u8 *par,u8 len);
-extern model_remote_prov_t model_remote_prov;
 extern u32 mesh_md_rp_addr ;
 extern rp_mag_str rp_mag;
 void mesh_rp_start_settings(u16 adr,u8 *p_uuid,u8 dkri);
@@ -470,17 +476,31 @@ void mesh_rp_pdu_retry_send();
 void mesh_rp_client_para_reset();
 void mesh_rp_dkri_end_cb();
 int mesh_cmd_extend_loop_cb(event_adv_report_t *report);
-u8 conn_adv_type_is_valid_in_extend(u8* p_adv);
 u8 mesh_extend_scan_proc_is_valid();
+int send_rp_scan_start(u16 adr,u8 limit,u8 timeout);
+int send_rp_extend_scan_start(u16 adr,u8* p_adtype,u8 cnt);
+void mesh_rp_server_set_link_sts(u8 sts);
+int mesh_cmd_conn_prov_adv_cb(event_adv_report_t *report);
+void mesh_layer_link_close_rsp(u8 reason);
+int mesh_tx_send_extend_scan_limit_report(u8 sts,u8 *p_uuid,u16 dst);
 
 #if WIN32
 void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
-
-
 #endif
+u8  is_rp_working();
+
+void gw_get_rp_mode(u8 en);
+extern u16 seg_filter_adr;
+void gw_rp_send_invite();
+extern u8 rp_dev_mac[6];
+extern u8 rp_dev_uuid[16];
+void gw_rp_timeout_proc();
+
+void gw_rp_scan_start();
+
 
 #endif
 

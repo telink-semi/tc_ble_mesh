@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigFastProvisionAddManager.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigFastProvisionAddManager.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2020/4/2.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     SigFastProvisionAddManager.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/4/2
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -42,10 +36,15 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigFastProvisionAddManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 
-/// start FastProvision
+/// start FastProvision with only one PID
 /// @param provisionAddress  new unicastAddress for unprovision device.
 /// @param productId  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api.
 /// @param compositionData compositionData of node in this productId.
@@ -55,6 +54,17 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 /// @param singleSuccess callback when SDK add single devcie successful.
 /// @param finish callback when fast provision finish, fast provision successful when error is nil.
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
+
+
+/// start FastProvision with some PIDs
+/// @param provisionAddress  new unicastAddress for unprovision device.
+/// @param productIds  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api. Develop need input a list of product id of unprovision device, this api will check the composition data of them, if any composition data is non-existent in SigDataSource.share.defaultNodeInfos, this api will callback finish with error immediately.
+/// @param unprovisioned current Connected Node Is Unprovisioned?
+/// @param scanResponseBlock callback when SDK scaned unprovision devcie successful.
+/// @param startProvisionBlock callback when SDK start provision devcie.
+/// @param singleSuccess callback when SDK add single devcie successful.
+/// @param finish callback when fast provision finish, fast provision successful when error is nil.
+- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productIds:(NSArray <NSNumber *>*)productIds currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 
 #pragma mark - command
 

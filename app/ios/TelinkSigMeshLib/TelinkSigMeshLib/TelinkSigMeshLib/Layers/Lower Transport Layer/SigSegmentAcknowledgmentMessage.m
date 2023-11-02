@@ -1,47 +1,73 @@
 /********************************************************************************************************
-* @file     SigSegmentAcknowledgmentMessage.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigSegmentAcknowledgmentMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigSegmentAcknowledgmentMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigSegmentAcknowledgmentMessage.h"
 #import "SigSegmentedMessage.h"
 
 @implementation SigSegmentAcknowledgmentMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
     }
     return self;
 }
 
-- (instancetype)initFromNetworkPdu:(SigNetworkPdu *)networkPdu {
+- (instancetype)initBusySegmentAcknowledgmentMessageWithNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
+        _opCode = 0x00;
+        _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
+        NSData *data = networkPdu.transportPdu;
+        Byte *dataByte = (Byte *)data.bytes;
+        UInt8 tem1 = 0,tem2=0;
+        memcpy(&tem1, dataByte+1, 1);
+        memcpy(&tem2, dataByte+2, 1);
+        _sequenceZero = (UInt16)(((tem1 & 0x7F) << 6) | (UInt16)tem2 >> 2);
+        _blockAck = 0;
+        UInt32 bigAck = 0;
+        self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
+        self.source = networkPdu.destination;
+        self.destination = networkPdu.source;
+        self.networkKey = networkPdu.networkKey;
+    }
+    return self;
+}
+
+/// Creates the Segmented Acknowledgement Message from the given Network PDU.
+/// If the PDU is not valid, it will return `nil`.
+///
+/// - parameter networkPdu: The Network PDU received.
+- (instancetype)initFromNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
         UInt8 tem = 0;
@@ -72,13 +98,19 @@
     return self;
 }
 
+/// Creates the ACK for given array of segments. At least one of
+/// segments must not be `nil`.
+///
+/// - parameter segments: The list of segments to be acknowledged.
 - (instancetype)initForSegments:(NSArray <SigSegmentedMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         _opCode = 0x00;
         _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
         SigSegmentedMessage *segment = segments.firstObject;
-        if (segments == nil || ![segment isKindOfClass:SigSegmentedMessage.class]) {
+        if (segment == nil || ![segment isKindOfClass:SigSegmentedMessage.class]) {
             for (SigSegmentedMessage *tem in segments) {
                 if (tem != nil && ![tem isEqual:[NSNull null]] && [tem isKindOfClass:SigSegmentedMessage.class]) {
                     segment = tem;
@@ -97,7 +129,7 @@
         _blockAck = ack;
         UInt32 bigAck = CFSwapInt32HostToBig(ack);
         self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
-        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,sequenceZero=0x%X,upperTransportPdu=%@",ack,_sequenceZero,self.upperTransportPdu);
+//        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,sequenceZero=0x%X,upperTransportPdu=%@",ack,_sequenceZero,self.upperTransportPdu);
         // Assuming all segments have the same source and destination addresses and network key.
         // Swaping source with destination. Destination here is guaranteed to be a Unicast Address.
         self.source = segment.destination;
@@ -107,18 +139,33 @@
     return self;
 }
 
+/// Returns whether the segment with given index has been received.
+///
+/// - parameter m: The segment number.
+/// - returns: `True`, if the segment of the given number has been
+///            acknowledged, `false` otherwise.
 - (BOOL)isSegmentReceived:(int)m {
     return (_blockAck & (1<<m)) != 0;
 }
 
+/// Returns whether all segments have been received.
+///
+/// - parameter segments: The array of segments received and expected.
+/// - returns: `True` if all segments were received, `false` otherwise.
 - (BOOL)areAllSegmentsReceivedOfSegments:(NSArray <SigSegmentedMessage *>*)segments {
     return [self areAllSegmentsReceivedLastSegmentNumber:segments.count - 1];
 }
 
+/// Returns whether all segments have been received.
+///
+/// - parameter lastSegmentNumber: The number of the last expected
+///             segments (segN).
+/// - returns: `True` if all segments were received, `false` otherwise.
 - (BOOL)areAllSegmentsReceivedLastSegmentNumber:(UInt8)lastSegmentNumber {
     return _blockAck == ((1 << (_lastSegmentNumber + 1)) - 1);
 }
 
+/// Whether the source Node is busy and the message should be cancelled, or not.
 - (BOOL)isBusy {
     return _blockAck == 0;
 }

@@ -3,67 +3,79 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/9/26
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SceneDetailViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/9/26.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SceneDetailViewController.h"
 #import "ActionViewController.h"
-#import "ActionItemCell.h"
+#import "UIButton+extension.h"
+#import "DeviceElementItemView.h"
 
 @interface SceneDetailViewController ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *allButton;
+@property (nonatomic, strong) NSMutableArray <SigNodeModel *>*allNodes;
 @property (nonatomic, strong) NSMutableArray <ActionModel *>*selectActions;
-@property (nonatomic, strong) NSMutableArray <ActionModel *>*allActions;
-
 @end
 
 @implementation SceneDetailViewController
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    ActionItemCell *cell = (ActionItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ActionItemCellID forIndexPath:indexPath];
-    ActionModel *model = self.allActions[indexPath.row];
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:model.address];
-    [cell updateContent:model];
-    cell.selectButton.selected = [self.selectActions containsObject:model];
-    __weak typeof(self) weakSelf = self;
-    [cell setClickSelectBlock:^{
-        if (model.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
-            if ([weakSelf.selectActions containsObject:model]) {
-                [weakSelf.selectActions removeObject:model];
-            } else {
-                [weakSelf.selectActions addObject:model];
+    static NSString *cellID = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellID];
+    if (!cell) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellID];
+    }
+    SigNodeModel *node = self.allNodes[indexPath.row];
+    NSArray *actionList = [self getActionListOfNode:node];
+    if (actionList.count > 0) {
+        for (UIView *view in cell.contentView.subviews) {
+            if ([view isMemberOfClass:[DeviceElementItemView class]]) {
+                [view removeFromSuperview];
             }
-            [weakSelf reloadView];
         }
-    }];
+        for (int i=0; i<actionList.count; i++) {
+            ActionModel *a = actionList[i];
+            DeviceElementItemView *view = [[NSBundle mainBundle] loadNibNamed:@"DeviceElementItemView" owner:self options:nil].firstObject;
+            view.frame = CGRectMake(0, 45.0*i, [UIScreen mainScreen].bounds.size.width, 45.0);
+            [view updateContent:a];
+            view.selectButton.selected = [self.selectActions containsObject:a];
+            __weak typeof(self) weakSelf = self;
+            [view.selectButton addAction:^(UIButton *button) {
+                if (a.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
+                    if ([weakSelf.selectActions containsObject:a]) {
+                        [weakSelf.selectActions removeObject:a];
+                    } else {
+                        [weakSelf.selectActions addObject:a];
+                    }
+                    [weakSelf reloadView];
+                }
+            }];
+            [cell.contentView addSubview:view];
+        }
+    }
+    
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     //为了跟安卓同步，暂时屏蔽情景详情界面的实时修改设备状态功能
-    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storybroad:@"Setting"];
+    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storyboard:@"Setting"];
     //    vc.model = self.allActions[indexPath.row];
     //    __weak typeof(self) weakSelf = self;
     //    [vc setBackAction:^(ActionModel *action) {
@@ -88,11 +100,13 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return self.allActions.count;
+    return self.allNodes.count;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 45.0;
+    SigNodeModel *node = self.allNodes[indexPath.row];
+    NSArray *actionList = [self getActionListOfNode:node];
+    return 45.0 * actionList.count;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -104,14 +118,9 @@
     [super normalSetting];
     self.title = @"Scene Setting";
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ActionItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ActionItemCellID];
     
     self.selectActions = [NSMutableArray arrayWithArray:self.model.actionList];
-    self.allActions = [NSMutableArray array];
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-    for (SigNodeModel *device in curNodes) {
-        [self.allActions addObject:[[ActionModel alloc] initWithNode:device]];
-    }
+    self.allNodes = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
     
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
@@ -119,11 +128,26 @@
 }
 
 - (void)reloadView{
-    [self.allActions sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-        return [(ActionModel *)obj1 address] > [(ActionModel *)obj2 address];
+    [self.allNodes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+        return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
     }];
     [self.tableView reloadData];
     [self reloadAllButton];
+}
+
+- (NSArray <ActionModel *>*)getActionListOfNode:(SigNodeModel *)node {
+    NSMutableArray *mArray = [NSMutableArray array];
+    NSArray *sceneElementAddresses = [NSArray arrayWithArray:node.sceneAddress];
+    if (sceneElementAddresses.count == 0) {
+        ActionModel *action = [[ActionModel alloc] initWithNode:node];
+        [mArray addObject:action];
+    } else {
+        for (NSNumber *elementAddress in sceneElementAddresses) {
+            ActionModel *action = [[ActionModel alloc] initWithNode:node elementAddress:elementAddress.intValue];
+            [mArray addObject:action];
+        }
+    }
+    return mArray;
 }
 
 - (void)clickSave{
@@ -141,27 +165,36 @@
     //Attention: Offline node needn't send packet. Offline node keep old status.
     NSMutableArray *curArray = [[NSMutableArray alloc] init];
     //Attention: node of choose action those has new add or change will send packet.
+//    NSMutableArray *saveArray = [[NSMutableArray alloc] init];
+//    for(ActionModel *action in self.selectActions){
+//        SigNodeModel *device = [[SigDataSource share] getNodeWithAddress:action.address];
+//        if(device && device.state != DeviceStateOutOfLine){
+//            if ([self.model.actionList containsObject:action]) {
+//                //address of change action't node
+//                NSArray *actionList = [NSArray arrayWithArray:self.model.actionList];
+//                for (ActionModel *oldAction in actionList) {
+//                    if (oldAction.address == action.address) {
+//                        if (![action isSameActionWithAction:oldAction]) {
+//                            [saveArray addObject:action];
+//                        }
+//                        [curArray addObject:action];
+//                        break;
+//                    }
+//                }
+//            } else {
+//                //address of new add action't node
+//                [saveArray addObject:action];
+//                [curArray addObject:action];
+//            }
+//        }
+//    }
+    //选中设备都保存到curArray，选中的在线设备保存到saveArray
+    [curArray addObjectsFromArray:self.selectActions];
     NSMutableArray *saveArray = [[NSMutableArray alloc] init];
     for(ActionModel *action in self.selectActions){
         SigNodeModel *device = [[SigDataSource share] getNodeWithAddress:action.address];
         if(device && device.state != DeviceStateOutOfLine){
-            if ([self.model.actionList containsObject:action]) {
-                //address of change action't node
-                NSArray *actionList = [NSArray arrayWithArray:self.model.actionList];
-                for (ActionModel *oldAction in actionList) {
-                    if (oldAction.address == action.address) {
-                        if (![action isSameActionWithAction:oldAction]) {
-                            [saveArray addObject:action];
-                        }
-                        [curArray addObject:action];
-                        break;
-                    }
-                }
-            } else {
-                //address of new add action't node
-                [saveArray addObject:action];
-                [curArray addObject:action];
-            }
+            [saveArray addObject:action];
         }
     }
     
@@ -172,8 +205,6 @@
         if(![self.selectActions containsObject:action]){
             if(device.state != DeviceStateOutOfLine){
                 [delArray addObject:action];
-            }else{
-                [curArray addObject:action];
             }
         }
     }
@@ -186,40 +217,92 @@
     [ShowTipsHandle.share show:Tip_SaveScene];
 
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        __block BOOL hasFail = NO;
         while (saveArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = saveArray.firstObject;
-            [DemoCommand getSceneRegisterStatusWithAddress:curAction.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
+//            [DemoCommand getSceneRegisterStatusWithAddress:curAction.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+//                TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//                if (error == nil) {
+//
+//                }
+//            }];
+            __block SigSceneRegisterStatus *response = nil;
+            [DemoCommand saveSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
+                response = responseMessage;
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                if (error == nil) {
-                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                        TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
-                    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                        if (error == nil) {
-                            [saveArray removeObject:curAction];
-                            dispatch_semaphore_signal(semaphore);
+                if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
+                } else {
+                    hasFail = YES;
+                    if (error) {
+                        [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
+                    } else {
+                        if (response && response.statusCode == SigSceneResponseStatus_sceneRegisterFull) {
+                            [weakSelf showTips:@"Scene Register Full"];
+                        } else if (response && response.statusCode == SigSceneResponseStatus_sceneNotFound) {
+                            [weakSelf showTips:@"Scene Not Found"];
+                        } else {
+                            [weakSelf showTips:[NSString stringWithFormat:@"SigSceneRegisterStatus error code=0x%X", response.statusCode]];
                         }
-                    }];
+                    }
                 }
+                [saveArray removeObject:curAction];
+                dispatch_semaphore_signal(semaphore);
             }];
             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+            if (hasFail) {
+                break;
+            }
+        }
+        if (hasFail) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share show:Tip_SaveSceneFail];
+                [ShowTipsHandle.share delayHidden:0.5];
+            });
+            return;
         }
         TeLogDebug(@"add finish");
         while (delArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = delArray.firstObject;
-            [DemoCommand delSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+            __block SigSceneRegisterStatus *response = nil;
+            [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
+                response = responseMessage;
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                if (error == nil) {
-                    [delArray removeObject:curAction];
-                    dispatch_semaphore_signal(semaphore);
+                if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
+                } else {
+                    hasFail = YES;
+                    if (error) {
+                        [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
+                    } else {
+                        if (response && response.statusCode == SigSceneResponseStatus_sceneRegisterFull) {
+                            [weakSelf showTips:@"Scene Register Full"];
+                        } else if (response && response.statusCode == SigSceneResponseStatus_sceneNotFound) {
+                            [weakSelf showTips:@"Scene Not Found"];
+                        } else {
+                            [weakSelf showTips:[NSString stringWithFormat:@"SigSceneRegisterStatus error code=0x%X", response.statusCode]];
+                        }
+                    }
                 }
+                [delArray removeObject:curAction];
+                dispatch_semaphore_signal(semaphore);
             }];
             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+            if (hasFail) {
+                break;
+            }
+        }
+        if (hasFail) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share show:Tip_SaveSceneFail];
+                [ShowTipsHandle.share delayHidden:0.5];
+            });
+            return;
         }
         TeLogDebug(@"del finish");
         TeLogDebug(@"save success");
@@ -239,16 +322,18 @@
 
 - (IBAction)clickAllButton:(UIButton *)sender {
     sender.selected = !sender.isSelected;
-    NSArray *allActions = [NSArray arrayWithArray:self.allActions];
-    for (ActionModel *action in allActions) {
-        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:action.address];
-        if (action.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
-            if (sender.isSelected) {
-                if (![self.selectActions containsObject:action]) {
-                    [self.selectActions addObject:action];
+    NSArray *nodes = [NSArray arrayWithArray:self.allNodes];
+    for (SigNodeModel *node in nodes) {
+        NSArray *nodeActions = [self getActionListOfNode:node];
+        for (ActionModel *action in nodeActions) {
+            if (action.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
+                if (sender.isSelected) {
+                    if (![self.selectActions containsObject:action]) {
+                        [self.selectActions addObject:action];
+                    }
+                } else {
+                    [self.selectActions removeObject:action];
                 }
-            } else {
-                [self.selectActions removeObject:action];
             }
         }
     }
@@ -257,22 +342,18 @@
 
 - (void)reloadAllButton{
     NSInteger hasOnlineCount = 0;
-    NSArray *allActions = [NSArray arrayWithArray:self.allActions];
-    for (ActionModel *action in allActions) {
-        if (action.state != DeviceStateOutOfLine) {
-            hasOnlineCount ++;
+    NSArray *nodes = [NSArray arrayWithArray:self.allNodes];
+    for (SigNodeModel *node in nodes) {
+        NSArray *nodeActions = [self getActionListOfNode:node];
+        for (ActionModel *action in nodeActions) {
+            if (action.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
+                hasOnlineCount ++;
+            }
         }
-    }
+    }    
     if (hasOnlineCount > 0) {
         self.allButton.selected = self.selectActions.count == hasOnlineCount;
     }
-}
-
-- (void)showTips:(NSString *)message{
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:message preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *revoke = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil];
-    [alert addAction:revoke];
-    [self presentViewController:alert animated:YES completion:nil];
 }
 
 -(void)dealloc{
