@@ -24,7 +24,6 @@ package com.telink.ble.mesh.ui;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +37,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.message.MeshSigModel;
@@ -249,6 +249,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.meshAddress = -1;
         nodeInfo.deviceUUID = deviceUUID;
         MeshLogger.d("device mac - " + advertisingDevice.device.getAddress());
+//        MeshLogger.d("device uuid calc by md5  - " + Arrays.bytesToHexString(Encipher.calcUuidByMac(advertisingDevice.device.getAddress())));
         MeshLogger.d("device found -> device uuid : " + Arrays.bytesToHexString(deviceUUID) + " -- oobInfo: " + oobInfo + " -- certSupported?" + MeshUtils.isCertSupported(oobInfo));
         nodeInfo.macAddress = advertisingDevice.device.getAddress();
 

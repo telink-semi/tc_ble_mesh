@@ -2000,7 +2000,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 byte[] advertisingNetworkId = new byte[networkIdLen];
                 System.arraycopy(serviceData, 1, advertisingNetworkId, 0, networkIdLen);
                 boolean networkIdCheck = Arrays.equals(networkId, advertisingNetworkId);
-                log("check network id pass - normal ? " + networkIdCheck);
+                log("check network id pass (normal) ? " + networkIdCheck);
                 return networkIdCheck;
             } else if (type == PROXY_ADV_TYPE_PRIVATE_NETWORK_ID) {
                 // validate network id matches
@@ -2016,7 +2016,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 byte[] hashRe = new byte[hashLen];
                 System.arraycopy(calcHash, 8, hashRe, 0, hashLen);
                 boolean networkIdCheck = Arrays.equals(hash, hashRe);
-                log("check network id pass - private ? " + networkIdCheck);
+                log("check network id pass (private) ? " + networkIdCheck);
                 return networkIdCheck;
             } else {
                 log("check network id error: not broadcasting network id type");

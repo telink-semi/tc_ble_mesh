@@ -52,6 +52,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -632,7 +633,11 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         }
     }
 
-
+    /**
+     * check certificate by CA
+     *
+     * @param cerData certificate data formatted by x509 der
+     */
     public static X509Certificate checkCertificateByCa(byte[] cerData, byte[] caData) {
         CertificateFactory factory = null;
         try {
@@ -683,6 +688,12 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         }
     }
 
+    /**
+     * get public key in cert
+     *
+     * @param certificate certificate
+     * @return public key
+     */
     public static byte[] getPublicKeyInCert(X509Certificate certificate) {
         java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
         byte[] keyX = pk.getW().getAffineX().toByteArray();
@@ -713,6 +724,12 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return pubKeyKey;
     }
 
+    /**
+     * get static oob in cert
+     *
+     * @param certificate certificate
+     * @return static oob data
+     */
     public static byte[] getStaticOOBInCert(X509Certificate certificate) {
 //        Set<String> nces = certificate.getNonCriticalExtensionOIDs();
         final String staticOOBKey = "2.25.234763379998062148653007332685657680359";
@@ -727,6 +744,44 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         System.arraycopy(extension, extension.length - 16, oob, 0, 16);
         MeshLogger.d("static oob in cert: " + Arrays.bytesToHexString(oob));
         return oob;
+    }
+
+    /**
+     * calculate UUID by mac address
+     *
+     * @param mac mac address
+     * @return device UUID
+     */
+    public static byte[] calcUuidByMac(String mac) {
+        byte[] macBytes = Arrays.hexToBytes(mac.replace(":", ""));
+        return calcUuidByMac(macBytes);
+    }
+
+    /**
+     * calculate UUID by mac address
+     *
+     * @param input mac address byte array
+     * @return device UUID
+     */
+    public static byte[] calcUuidByMac(byte[] input) {
+        try {
+            byte[] nameSpace = Arrays.hexToBytes("10b8a76bad9dd11180b400c04fd430c8");
+            input = Arrays.reverse(input);
+            input = ByteBuffer.allocate(15).put(input).array();
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(nameSpace, 0, nameSpace.length);
+            md.update(input, 0, 15);
+            byte[] hashBytes = md.digest();
+            hashBytes[7] &= 0x0F;
+            hashBytes[7] |= 0x30;
+
+            hashBytes[8] &= 0x3F;
+            hashBytes[8] |= 0x80;
+            return hashBytes;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

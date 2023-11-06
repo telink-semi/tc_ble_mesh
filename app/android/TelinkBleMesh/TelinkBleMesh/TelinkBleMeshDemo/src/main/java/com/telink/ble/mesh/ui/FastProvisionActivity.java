@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
@@ -49,6 +50,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +58,6 @@ import java.util.List;
 /**
  * fast provision
  */
-
 public class FastProvisionActivity extends BaseActivity implements EventListener<String> {
 
     private MeshInfo meshInfo;
@@ -136,8 +137,10 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = fastProvisioningDevice.getNewAddress();
 
-        nodeInfo.deviceUUID = new byte[16];
-        System.arraycopy(fastProvisioningDevice.getMac(), 0, nodeInfo.deviceUUID, 0, 6);
+//        nodeInfo.deviceUUID = new byte[16];
+//        System.arraycopy(fastProvisioningDevice.getMac(), 0, nodeInfo.deviceUUID, 0, 6);
+        nodeInfo.deviceUUID = Encipher.calcUuidByMac(fastProvisioningDevice.getMac());
+        MeshLogger.d("device uuid calc by md5(fast)  - " + Arrays.bytesToHexString(nodeInfo.deviceUUID));
         nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":");
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
