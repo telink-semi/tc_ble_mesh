@@ -45,10 +45,19 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 
 @implementation SigECCEncryptHelper
 
-+ (SigECCEncryptHelper *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigECCEncryptHelper *shareHelper = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareHelper = [[SigECCEncryptHelper alloc] init];
         shareHelper.seckeyModel = [[SigSeckeyModel alloc] init];
     });
@@ -111,8 +120,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 
 #pragma mark -  =============苹果自带方法=====================
 
-- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair;
-{
+- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair {
     OSStatus status = noErr;
     if (keySize == 256 || keySize == 512 || keySize == 1024 || keySize == 2048) {
         

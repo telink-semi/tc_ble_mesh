@@ -32,6 +32,11 @@
 #import "SigMeshLib.h"
 #import "SigAccessPdu.h"
 
+/*
+ The upper transport layer encrypts, decrypts, and authenticates application data and is designed
+ to provide confidentiality of access messages. It also defines how transport control messages
+ are used to manage the upper transport layer between nodes, including when used by the Friend feature.
+ */
 @interface SigUpperTransportModel : NSObject
 @property (nonatomic,strong) SigUpperTransportPdu *pdu;
 @property (nonatomic,assign) UInt8 ttl;
@@ -55,8 +60,13 @@
 
 @implementation SigUpperTransportLayer
 
+/// Initialize SigUpperTransportLayer object.
+/// @param networkManager The SigNetworkManager object.
+/// @returns return `nil` when initialize SigUpperTransportLayer object fail.
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _networkManager = networkManager;
         _defaults = [NSUserDefaults standardUserDefaults];
         _queues = [NSMutableDictionary dictionary];
@@ -64,6 +74,9 @@
     return self;
 }
 
+/// Handles received Lower Transport PDU.
+/// Depending on the PDU type, the message will be either propagated to Access Layer, or handled internally.
+/// @param lowerTransportPdu The Lower Trasport PDU received.
 - (void)handleLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu {
     switch (lowerTransportPdu.type) {
         case SigLowerTransportPduType_accessMessage:
@@ -81,7 +94,7 @@
                 }
             }
             break;
-        case SigLowerTransportPduType_controlMessage:
+        case SigLowerTransportPduType_transportControlMessage:
         {
             SigControlMessage *controlMessage = (SigControlMessage *)lowerTransportPdu;
             switch (controlMessage.opCode) {
@@ -108,6 +121,11 @@
     }
 }
 
+/// Encrypts the Access PDU using given key set and sends it down to Lower Transport Layer.
+/// @param accessPdu The Access PDU to be sent.
+/// @param initialTtl The initial TTL (Time To Live) value of the message. If `nil`, the default Node TTL will be used.
+/// @param keySet The set of keys to encrypt the message with.
+/// @param command The command of the message.
 - (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
     UInt32 sequence = [SigMeshLib.share.dataSource getSequenceNumberUInt32];
     SigNetkeyModel *networkKey = command.curNetkey;
@@ -144,6 +162,9 @@
     }
 }
 
+/// Cancels sending all segmented messages matching given handle.
+/// Unsegmented messages are sent almost instantaneously and cannot be cancelled.
+/// @param handle The message handle.
 - (void)cancelHandleSigMessageHandle:(SigMessageHandle *)handle {
     BOOL shouldSendNext = NO;
     // Check if the message that is currently being sent mathes the
@@ -179,6 +200,9 @@
     }
 }
 
+/// A callback called by the lower transport layer when the segmented PDU has been sent to the given destination.
+/// This method removes the sent PDU from the queue and initiates sending a next one, had it been enqueued.
+/// @param destination The destination address.
 - (void)lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:(UInt16)destination {
     if (_queues == nil || _queues.count == 0 || _queues[@(destination)] == nil) {
         TeLogDebug(@"_queues[destination] is empty.");
@@ -219,33 +243,6 @@
         [self sendNextToDestination:pdu.destination];
     }else{
         TeLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
-    }
-}
-
-/// Enqueues the PDU to be sent using the given Network Key.
-///
-/// - parameters:
-///   - pdu: The Upper Transport PDU to be sent.
-///   - initialTtl: The initial TTL (Time To Live) value of the message.
-///                 If `nil`, the default Node TTL will be used.
-///   - networkKey: The Network Key to encrypt the PDU with.
-- (void)enqueueSigUpperTransportPdu:(SigUpperTransportPdu *)pdu initialTtl:(UInt8)initialTtl networkKey:(SigNetkeyModel *)networkKey {
-    NSMutableArray *array = _queues[@(pdu.destination)];
-    if (array == nil) {
-        _queues[@(pdu.destination)] = [NSMutableArray array];
-        array = [NSMutableArray array];
-    }
-    SigUpperTransportModel *model = [[SigUpperTransportModel alloc] init];
-    model.pdu = pdu;
-    model.ttl = initialTtl;
-    model.networkKey = networkKey;
-    model.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
-    [array addObject:model];
-    _queues[@(pdu.destination)] = array;
-    if (array.count == 1) {
-        [self sendNextToDestination:pdu.destination];
-    }else{
-        TeLogWarn(@"==========异常逻辑，待完善。_queues[@(pdu.destination)]=%@",array);
     }
 }
 

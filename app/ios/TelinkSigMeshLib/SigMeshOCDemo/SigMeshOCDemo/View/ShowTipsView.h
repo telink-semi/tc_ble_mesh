@@ -25,12 +25,18 @@
 
 @interface ShowTipsView : UIView
 @property (strong, nonatomic) IBOutlet UILabel *tipLab;
+@property (strong, nonatomic) IBOutlet UIView *bgView;
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *activity;
 @end
 
 @interface ShowTipsHandle : NSObject
 
-+ (ShowTipsHandle *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (void)show:(NSString *)tip;
 

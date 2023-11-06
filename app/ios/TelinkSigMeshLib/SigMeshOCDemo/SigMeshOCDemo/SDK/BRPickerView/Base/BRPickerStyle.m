@@ -15,6 +15,7 @@
 
 @implementation BRPickerStyle
 
+/// Initialize
 - (instancetype)init {
     if (self = [super init]) {
         self.clearPickerNewStyle = YES;

@@ -27,7 +27,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ConnectTools : NSObject
 
-+ (ConnectTools *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 
 /// demo 自定义连接工具类，用于开始连接指定的节点（逻辑：扫描5秒->扫描到则连接setFilter返回成功，扫描不到则连接已经扫描到的任意设备->setFilter->是则返回成功，不是则setNodeIdentity(多个设备则调用多次)->重复扫描5秒流程。）

@@ -26,16 +26,21 @@
 
 @implementation SigSegmentAcknowledgmentMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
     }
     return self;
 }
 
 - (instancetype)initBusySegmentAcknowledgmentMessageWithNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         _opCode = 0x00;
         _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
         NSData *data = networkPdu.transportPdu;
@@ -54,9 +59,15 @@
     return self;
 }
 
+/// Creates the Segmented Acknowledgement Message from the given Network PDU.
+/// If the PDU is not valid, it will return `nil`.
+///
+/// - parameter networkPdu: The Network PDU received.
 - (instancetype)initFromNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
         UInt8 tem = 0;
@@ -87,9 +98,15 @@
     return self;
 }
 
+/// Creates the ACK for given array of segments. At least one of
+/// segments must not be `nil`.
+///
+/// - parameter segments: The list of segments to be acknowledged.
 - (instancetype)initForSegments:(NSArray <SigSegmentedMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         _opCode = 0x00;
         _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
         SigSegmentedMessage *segment = segments.firstObject;
@@ -122,18 +139,33 @@
     return self;
 }
 
+/// Returns whether the segment with given index has been received.
+///
+/// - parameter m: The segment number.
+/// - returns: `True`, if the segment of the given number has been
+///            acknowledged, `false` otherwise.
 - (BOOL)isSegmentReceived:(int)m {
     return (_blockAck & (1<<m)) != 0;
 }
 
+/// Returns whether all segments have been received.
+///
+/// - parameter segments: The array of segments received and expected.
+/// - returns: `True` if all segments were received, `false` otherwise.
 - (BOOL)areAllSegmentsReceivedOfSegments:(NSArray <SigSegmentedMessage *>*)segments {
     return [self areAllSegmentsReceivedLastSegmentNumber:segments.count - 1];
 }
 
+/// Returns whether all segments have been received.
+///
+/// - parameter lastSegmentNumber: The number of the last expected
+///             segments (segN).
+/// - returns: `True` if all segments were received, `false` otherwise.
 - (BOOL)areAllSegmentsReceivedLastSegmentNumber:(UInt8)lastSegmentNumber {
     return _blockAck == ((1 << (_lastSegmentNumber + 1)) - 1);
 }
 
+/// Whether the source Node is busy and the message should be cancelled, or not.
 - (BOOL)isBusy {
     return _blockAck == 0;
 }

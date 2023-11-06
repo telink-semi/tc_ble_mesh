@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSData *)nsstringToHex:(NSString *)string;
 
 /**
- NSData 转  十六进制string
+ NSData 转  十六进制string(大写)
  
  @return NSString类型的十六进制string
  */
@@ -55,28 +55,34 @@ NS_ASSUME_NONNULL_BEGIN
 /// 返回手机当前时间的时区
 + (NSInteger)currentTimeZoon;
 
+/// 返回手机当前时间的时间戳
 + (NSString *)getNowTimeTimestamp;
-
-+ (NSString *)getNowTimeTimestampFrome2000;
 
 /// 返回当前时间字符串格式："yyyy-MM-dd HH:mm:ss"
 + (NSString *)getNowTimeTimeString;
 
-/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssZ"，eg: @"2018-12-23T11:45:22-08:00"
+/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z". 如果要使用该特定格式，则必须将时区设置为UTC.当时北京时间为2021-10-08T16:33:16。
 + (NSString *)getNowTimeStringOfJson;
+
+/// Time string to NSDate
+/// - Parameter timeString: time string of json file, 时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z".
++ (NSDate *)getDateWithTimeStringOfJson:(NSString *)timeString;
 
 /// 返回json中的SigStepResolution对应的毫秒数，只有四种值：100,1000,10000,600000.
 + (NSInteger)getSigStepResolutionInMillisecondsOfJson:(SigStepResolution)resolution;
 
+/// Create 16 bytes hex as network key.
 + (NSData *)createNetworkKey;
 
+/// Create 16 bytes hex as app key.
 + (NSData *)initAppKey;
 
-+ (NSData *)createRandomDataWithLength:(NSInteger)length;
-
+/// Create 16 bytes hex as mesh UUID.
 + (NSData *)initMeshUUID;
 
-+ (long long)NSDataToUInt:(NSData *)data;
+/// Create any length hex data.
+/// - Parameter length: The length value of random data.
++ (NSData *)createRandomDataWithLength:(NSInteger)length;
 
 /// 返回带冒号的mac
 + (NSString *)getMacStringWithMac:(NSString *)mac;
@@ -105,6 +111,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// 16进制NSString转Uint64
 + (UInt64)uint64From16String:(NSString *)string;
 
+/// Get Virtual Address Of LabelUUID
+/// - Parameter string: The LabelUUID string.
 + (UInt16)getVirtualAddressOfLabelUUID:(NSString *)string;
 
 /// D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
@@ -116,21 +124,46 @@ NS_ASSUME_NONNULL_BEGIN
 /// xxxx -> 0000xxxx-0000-1000-8000-008505f9b34fb or xxxxxxxx -> xxxxxxxx-0000-1000-8000-008505f9b34fb
 + (NSString *)change16BitsUUIDTO128Bits:(NSString *)uuid;
 
-/// SDK的版本号
-+ (NSString *)getSDKVersion;
-
-+ (float)floatWithdecimalNumber:(double)num;
-
-+ (double)doubleWithdecimalNumber:(double)num;
-
-+ (NSString *)stringWithDecimalNumber:(double)num;
-
-+ (NSDecimalNumber *)decimalNumber:(double)num;
-
+/// Change Uint16 Lightness to UInt8 Lum.
+/// @param lightness ligheness is the ligheness value that send to node by SDKCommand, range is 0x0000~0xFFFF.
 + (UInt8)lightnessToLum:(UInt16)lightness;
+
+/// Change UInt8 Lum to Uint16 Lightness.
+/// @param lum luminosity is the ligheness value that show in UI, range is 0~100.
 + (UInt16)lumToLightness:(UInt8)lum;
+
+/// Change Uint16 Temperature to UInt8 Temperature100.
+/// @param temp temperature value that send to node by SDKCommand, range is 0x0000~0xFFFF.
 + (UInt8)tempToTemp100:(UInt16)temp;
+
+/// Change UInt8 Temperature100 to Uint16 Temperature.
+/// @param temp100 temperature value that show in UI, range is 0~100.
 + (UInt16)temp100ToTemp:(UInt8)temp100;
+
+/// Change SInt16 Level to UInt8 Lum.
+/// @param level The Generic Level state is a 16-bit signed integer (2’s complement) representing the state of an element. , range is 0x0000–0xFFFF.
++ (UInt8)levelToLum:(SInt16)level;
+
+/// Change UInt8 Lum to SInt16 Level.
+/// @param lum luminosity is the ligheness value that show in UI, range is 0~100.
++ (SInt16)lumToLevel:(UInt8)lum;
+
+/// Change Uint16 Lightness to SInt16 Level.
+/// @param lightness ligheness is the ligheness value that send to node by SDKCommand, range is 0x0000~0xFFFF.
++ (SInt16)lightnessToLevel:(UInt16)lightness;
+
+/// Change SInt16 Level to Uint16 Lightness.
+/// @param level The Generic Level state is a 16-bit signed integer (2’s complement) representing the state of an element. , range is 0x0000–0xFFFF.
++ (UInt16)levelToLightness:(SInt16)level;
+
+/// Change UInt16 value to Sint16 value.
+/// @param val The UInt16 value.
++ (SInt16)uInt16ToSInt16:(UInt16)val;
+
+/// Change Sint16 value to UInt16 value.
+/// @param val The Sint16 value.
++ (SInt16)sint16ToUInt16:(SInt16)val;
+
 ///（四舍五入，保留两位小数）
 + (float)roundFloat:(float)price;
 
@@ -187,10 +220,24 @@ unsigned short crc16 (unsigned char *pD, int len);
 
 #pragma mark - AES相关
 
-//加密
+/**
+ * @brief   128 bit AES ECB encryption on speicified plaintext and keys
+ * @param   inData    Pointer to speicified plaintext.
+ * @param   in_len    The length of speicified plaintext.
+ * @param   key    keys to encrypt the plaintext.
+ * @param   outData    Pointer to binary encrypted data.
+ * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
+ */
 int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
 
-//解密
+/**
+ * @brief   128 bit AES ECB decryption on speicified encrypted data and keys
+ * @param   inData    Pointer to encrypted data.
+ * @param   in_len    The length of encrypted data.
+ * @param   key    keys to decrypt the encrypted data.
+ * @param   outData    Pointer to plain data.
+ * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means decrypt success, other means fail.
+ */
 int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
 
 #pragma mark - 正则表达式相关
@@ -209,6 +256,9 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 + (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType;
 + (NSData *)getDataWithFileName:(NSString *)fileName fileType:(NSString * _Nullable )fileType;
+
+// 获取手机剩余的存储空间大小
++ (long)freeDiskSpaceInBytes;
 
 @end
 

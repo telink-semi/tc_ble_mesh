@@ -28,6 +28,7 @@
 @interface SubnetBridgeListVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UISwitch *enableSwitch;
+@property (weak, nonatomic) IBOutlet UIButton *addBridgingTableButton;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 
 @end
@@ -57,7 +58,6 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for subnetBridgeSet, address:%d",self.model.address);
-#ifdef kExist
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand subnetBridgeSetWithDestination:self.model.address subnetBridge:sender.on ? SigSubnetBridgeStateValues_enabled : SigSubnetBridgeStateValues_disabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSubnetBridgeStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -66,7 +66,6 @@
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 }];
-#endif
             } else {
                 sender.on = !sender.on;
                 [self showTips:@"The node is offline, app cann`t set subnet bridge."];
@@ -93,7 +92,6 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for bridgeTableRemove, address:%d",self.model.address);
-#ifdef kExist
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridge.netKeyIndex1 netKeyIndex2:subnetBridge.netKeyIndex2 address1:subnetBridge.address1 address2:subnetBridge.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"bridgeTableRemove=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -104,7 +102,6 @@
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 
                 }];
-#endif
             } else {
                 [self showTips:@"The node is offline, app cann`t remove bridge table."];
             }
@@ -131,6 +128,7 @@
 - (void)normalSetting{
     [super normalSetting];
     self.title = @"Subnet Bridge";
+    self.addBridgingTableButton.backgroundColor = UIColor.telinkButtonBlue;
     self.enableSwitch.on  = self.model.subnetBridgeEnable;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     //longpress to delete subnet bridge
@@ -148,12 +146,6 @@
         [_messageHandle cancel];
     }
     NSLog(@"%s",__func__);
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 #pragma mark - UITableView
@@ -202,7 +194,6 @@
 
 - (void)deleteSubnetBridgeOfDevice:(SigSubnetBridgeModel *)subnetBridgeModel {
     [ShowTipsHandle.share show:@"delete Subnet Bridge from node..."];
-#ifdef kExist
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridgeModel.netKeyIndex1 netKeyIndex2:subnetBridgeModel.netKeyIndex2 address1:subnetBridgeModel.address1 address2:subnetBridgeModel.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
         TeLogInfo(@"delete Subnet Bridge responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
@@ -223,7 +214,6 @@
             [ShowTipsHandle.share delayHidden:2.0];
         });
     }];
-#endif
 }
 
 @end

@@ -39,21 +39,28 @@
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super initWithFrame:frame]) {
+        /// Initialize self.
         [self initUI];
     }
     return self;
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         [self initUI];
     }
     return self;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super initWithCoder:coder]) {
+        /// Initialize self.
         [self initUI];
     }
     return self;
@@ -240,7 +247,7 @@
             rgb.red = 1;
             rgb.green = 1;
             rgb.blud = 1;
-            rgb.alpha = 1;
+            rgb.alpha = 0;//适配黑夜模式
             if (saturation < 1.0) {
                 // Antialias the edge of the circle.
                 if (saturation > 0.99) {

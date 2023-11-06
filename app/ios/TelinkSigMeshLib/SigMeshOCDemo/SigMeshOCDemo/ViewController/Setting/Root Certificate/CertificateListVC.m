@@ -37,6 +37,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.saveButton.backgroundColor = UIColor.telinkButtonBlue;
     self.title = @"Root Certificate";
     self.dataArray = [NSMutableArray arrayWithArray:[LibTools getAllFileNameWithFileType:@"der"]];
     _selectIndex = -1;
@@ -80,16 +81,6 @@
             [self showTips:[NSString stringWithFormat:@"Change Root Certificate failed! '%@' is read fail!",selectName]];
         }
     }
-}
-
-- (void)showTips:(NSString *)tips{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:tips preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
-        }]];
-        [self presentViewController:alertController animated:YES completion:nil];
-    });
 }
 
 #pragma mark - UITableViewDataSource

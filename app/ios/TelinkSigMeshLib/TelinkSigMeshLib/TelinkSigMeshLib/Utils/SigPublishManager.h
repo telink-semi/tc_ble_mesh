@@ -25,21 +25,34 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// block type for node outline
 typedef void(^DiscoverOutlineNodeBlock)(NSNumber *unicastAddress);
+/// block type for node online
 typedef void(^DiscoverOnlineNodeBlock)(NSNumber *unicastAddress);
 
 @interface SigPublishManager : NSObject
+/// callback for node outline
 @property (nonatomic,copy) DiscoverOutlineNodeBlock discoverOutlineNodeCallback;
+/// callback for node online
 @property (nonatomic,copy) DiscoverOnlineNodeBlock discoverOnlineNodeCallback;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigPublishManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
+/// Start monitoring the online and offline status of node.
+/// - Parameter address: The unicastAddress of node.
 - (void)startCheckOfflineTimerWithAddress:(NSNumber *)address;
 
+/// Stop monitoring the online and offline status of node.
+/// - Parameter address: The unicastAddress of node.
 - (void)stopCheckOfflineTimerWithAddress:(NSNumber *)address;
 
 @end

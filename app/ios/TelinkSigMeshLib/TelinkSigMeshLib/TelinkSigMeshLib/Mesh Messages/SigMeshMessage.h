@@ -25,6 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
 @interface SigBaseMeshMessage : NSObject
 
 /// Message parameters as Data.
@@ -130,17 +131,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt32 responseOpCode;
 @end
 
+
 @interface SigStaticMeshMessage : SigMeshMessage
 @end
 
-@interface SigUnknownMessage : SigMeshMessage
 
+@interface SigUnknownMessage : SigMeshMessage
 @end
+
 
 @interface SigIniMeshMessage : SigMeshMessage
 @property (nonatomic,assign) UInt32 responseOpCode;
 @end
-
 
 
 NS_ASSUME_NONNULL_END

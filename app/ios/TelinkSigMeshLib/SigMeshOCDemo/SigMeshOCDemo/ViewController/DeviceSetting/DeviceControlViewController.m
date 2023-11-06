@@ -128,6 +128,10 @@ typedef enum : NSUInteger {
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_LevelAndSliderCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_LevelAndSliderCellID];
     }
     
+    [self getDeviceState];
+}
+
+- (void)getDeviceState {
     //获取当前设备的详细状态数据(亮度、色温、HSL)
     //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temprature at node detail vc.
     //modelID 0x1303:Light CTL Get
@@ -339,8 +343,20 @@ typedef enum : NSUInteger {
 //    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
     
     //1.不带渐变写法：
-    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:1 ack:YES successCallback:nil resultCallback:nil];
-    
+    __weak typeof(self) weakSelf = self;
+    __block BOOL needGetDeviceState = NO;
+    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+        if ((responseMessage.remainingTime == nil && responseMessage.isOn == YES) || (responseMessage.remainingTime != nil && responseMessage.targetState == YES)) {
+            if (weakSelf.model.trueBrightness == 0) {
+                needGetDeviceState = YES;
+            }
+        }
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        if (needGetDeviceState) {
+            [weakSelf getDeviceState];
+        }
+    }];
+
     //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
 //        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
 //        [SDKLibCommand genericOnOffSetDestination:elementAddress isOn:value transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {

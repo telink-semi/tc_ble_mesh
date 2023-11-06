@@ -469,10 +469,4 @@
     return [strPredicate evaluateWithObject:str];
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 @end

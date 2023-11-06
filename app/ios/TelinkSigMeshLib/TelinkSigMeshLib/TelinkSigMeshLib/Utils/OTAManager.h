@@ -34,7 +34,12 @@ typedef void(^finishCallBack)(NSArray <SigNodeModel *>*successModels,NSArray <Si
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (OTAManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 /**
  OTA，can not call repeat when app is OTAing

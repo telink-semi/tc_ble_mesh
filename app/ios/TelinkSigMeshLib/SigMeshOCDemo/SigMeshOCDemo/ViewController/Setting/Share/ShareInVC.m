@@ -26,10 +26,14 @@
 #import "UIViewController+Message.h"
 #import "ScanCodeVC.h"
 #import "Reachability.h"
+#import "ShareTipsVC.h"
 
 @interface ShareInVC ()
-@property (weak, nonatomic) IBOutlet UIButton *selectJsonButton;
-@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectCDTPButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeAndBLETransferButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeAndCloudButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectJsonFileButton;
+@property (weak, nonatomic) IBOutlet UIButton *importButton;
 @property (strong, nonatomic) ScanCodeVC *scanCodeVC;
 
 @end
@@ -39,29 +43,103 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    self.selectJsonButton.selected = YES;
-    self.selectQRCodeButton.selected = NO;
+    self.selectCDTPButton.selected = YES;
+    self.selectQRCodeAndBLETransferButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
+    self.importButton.backgroundColor = UIColor.telinkButtonBlue;
 }
 
-- (IBAction)clickSelectJsonFile:(UIButton *)sender {
-    self.selectJsonButton.selected = YES;
-    self.selectQRCodeButton.selected = NO;
-
+- (IBAction)clickSelectCDTPButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = YES;
+    self.selectQRCodeAndBLETransferButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
 }
 
-- (IBAction)clickSelectQRCode:(UIButton *)sender {
-    self.selectJsonButton.selected = NO;
-    self.selectQRCodeButton.selected = YES;
+- (IBAction)clickSelectQRCodeAndBLETransferButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndBLETransferButton.selected = YES;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
+}
 
+- (IBAction)clickSelectQRCodeAndCloudButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndBLETransferButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectJsonFileButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndBLETransferButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = YES;
+}
+
+- (IBAction)clickCDTPButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_QRCodeAndBLETransferJSON;
+    vc.tipsMessage = TipsMessage_QRCodeAndBLETransferJSON;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickBLETransferJsonButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_QRCodeAndBLETransferJSON;
+    vc.tipsMessage = TipsMessage_QRCodeAndBLETransferJSON;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickCloudTransferJsonButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_QRCodeAndCloudTransferJSON;
+    vc.tipsMessage = TipsMessage_QRCodeAndCloudTransferJSON;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickJsonFileButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_JSONFile;
+    vc.tipsMessage = TipsMessage_JSONFile;
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (IBAction)clickImportButton:(UIButton *)sender {
-    if (self.selectJsonButton.selected) {
+    if (self.selectCDTPButton.selected) {
+        [SDKLibCommand stopMeshConnectWithComplete:nil];
+        [self importMeshByCDTP];
+    } else if (self.selectQRCodeAndCloudButton.selected) {
+        [SDKLibCommand stopMeshConnectWithComplete:nil];
+        [self importMeshByQRCodeAndBLETransfer];
+    } else if (self.selectQRCodeAndCloudButton.selected) {
+        [self importMeshByQRCodeAndCloud];
+    } else if (self.selectJsonFileButton.selected) {
         [self importMeshByJsonFile];
-    } else if (self.selectQRCodeButton.selected) {
-        [self importMeshByQRCode];
+    }
+}
+
+- (void)importMeshByCDTP {
+    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_CDTPServiceListVCID storyboard:@"Setting"];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)importMeshByQRCodeAndBLETransfer {
+    self.scanCodeVC.title = @"QRCode + BLE Transfer";
+    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
+}
+
+- (void)importMeshByQRCodeAndCloud {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
     }
 
+    self.scanCodeVC.title = @"QRCode + Cloud";
+    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
 }
 
 - (void)importMeshByJsonFile {
@@ -74,17 +152,6 @@
         }];
     }];
     [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)importMeshByQRCode {
-    NSString *remoteHostName = @"www.apple.com";
-    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
-    if (hostReachability.currentReachabilityStatus == NotReachable) {
-        [self showTips:@"The Internet connection appears to be offline."];
-        return;
-    }
-
-    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
 }
 
 ///加载json文件到本地(json data->SigDataSource。)
@@ -105,18 +172,9 @@
             TeLogDebug(@"%@",tipString);
             return;
         }
-
+        [SigDataSource.share removeMeshUUIDFromVisitorListCache:dict[@"meshUUID"]];
         [weakSelf importMeshWithDictionary:dict];
     }];
-}
-
-- (void)showTips:(NSString *)message{
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
 }
 
 - (ScanCodeVC *)scanCodeVC {
@@ -125,14 +183,16 @@
         __weak typeof(self) weakSelf = self;
         [_scanCodeVC scanDataViewControllerBackBlock:^(id content) {
             //AnalysisShareDataVC
-            NSString *uuidString = (NSString *)content;
-            if (uuidString.length && [LibTools validateUUID:uuidString]) {
-                [weakSelf getTelinkJsonWithUUID:uuidString];
-            }else{
-                //hasn't data
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
-                [weakSelf showTips:@"QRCode is error."];
-                return;
+            if (weakSelf.selectQRCodeAndCloudButton.isSelected) {
+                NSString *uuidString = (NSString *)content;
+                if (uuidString.length && [LibTools validateUUID:uuidString]) {
+                    [weakSelf getTelinkJsonWithUUID:uuidString];
+                }else{
+                    //hasn't data
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    [weakSelf showTips:@"QRCode is error."];
+                    return;
+                }
             }
         }];
     }
@@ -167,11 +227,21 @@
 }
 
 - (void)showDownloadJsonSuccess:(NSDictionary *)jsonDict uuid:(NSString *)uuid {
+    NSString *title = @"download success";
+    if (self.selectQRCodeAndBLETransferButton.isSelected) {
+        title = @"transfer success";
+    }
     __weak typeof(self) weakSelf = self;
-    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"download success" message:@"APP will replace locat mesh data." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:title message:@"APP will replace locat mesh data." preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *alertT = [UIAlertAction actionWithTitle:@"replace mesh" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSLog(@"replace mesh");
         [weakSelf replaceMesh:jsonDict uuid:uuid];
+        if (weakSelf.selectQRCodeAndBLETransferButton.isSelected) {
+            //通过BLE Transfer的方式分享才需要定义访客角色，已经废弃。当前demo代码不会进入该流程。
+            [SigDataSource.share addMeshUUIDToVisitorListCache:uuid];
+        } else {
+            [SigDataSource.share removeMeshUUIDFromVisitorListCache:jsonDict[@"meshUUID"]];
+        }
         [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
     }];
     UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
@@ -210,15 +280,13 @@
     [SigDataSource.share setDictionaryToDataSource:dict];
     [SigDataSource.share checkExistLocationProvisioner];
     [SigDataSource.share saveLocationData];
-    UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
-    for (SigNodeModel *node in nodes) {
-        NSInteger curMax = node.address + node.elements.count - 1;
-        if (curMax > maxAddr) {
-            maxAddr = curMax;
-        }
-    }
-    [SigDataSource.share saveLocationProvisionAddress:maxAddr];
+
+    //（可选）注意：调用[SigDataSource.share resetMesh]后，filter的配置将恢复默认的白名单和本地地址+0xFFFF的配置。如果客户需要想要自定义配置，则需要再这下面进行filter相关配置。
+//    NSData *filterData = [[NSUserDefaults standardUserDefaults] valueForKey:kFilter];
+//    NSDictionary *filterDict = [LibTools getDictionaryWithJSONData:filterData];
+//    SigProxyFilterModel *filter = [[SigProxyFilterModel alloc] init];
+//    [filter setDictionaryToSigProxyFilterModel:filterDict];
+    
 }
 
 -(void)dealloc{

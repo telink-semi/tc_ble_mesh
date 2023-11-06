@@ -29,6 +29,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) NSTimeInterval interval;
 
 /// Chedules a timer that can be started from a background DispatchQueue.
+/// - Parameters:
+///   - interval: Time Interval
+///   - repeats: repeats
+///   - block: handle for timer.
 + (BackgroundTimer * _Nonnull)scheduledTimerWithTimeInterval:(NSTimeInterval)interval repeats:(BOOL)repeats block:(void (^ _Nonnull)(BackgroundTimer * _Nonnull t))block;
 
 /// Asynchronously cancels the dispatch source, preventing any further invocation of its event handler block.

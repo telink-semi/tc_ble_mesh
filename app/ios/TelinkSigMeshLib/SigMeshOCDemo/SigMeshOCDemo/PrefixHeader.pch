@@ -35,6 +35,7 @@
 //导入TelinkSigMeshLib.xcodeproj工程
 #import "TelinkSigMeshLib.h"
 
+#import "UIColor+Telink.h"
 #import "BaseViewController.h"
 #import "DemoConst.h"
 #import "ShowTipsView.h"

@@ -25,16 +25,27 @@
 
 @interface OTAFileSource()
 @property (nonatomic, strong) NSMutableArray *fileSource;
+@property (nonatomic, strong) NSMutableArray *filePaths;
 @end
 
 @implementation OTAFileSource
 
-+ (OTAFileSource *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static OTAFileSource *shareFS = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareFS = [[OTAFileSource alloc] init];
         shareFS.fileSource = [[NSMutableArray alloc] init];
+        shareFS.filePaths = [[NSMutableArray alloc] init];
     });
     return shareFS;
 }
@@ -68,6 +79,28 @@
     return _fileSource;
 }
 
+- (NSArray <NSString *>*)getAllBinFilePath {
+    [_filePaths removeAllObjects];
+
+    // 搜索bin文件的目录(工程内部添加的bin文件)
+    NSArray *bins = [[NSBundle mainBundle] pathsForResourcesOfType:@"bin" inDirectory:nil];
+    for (int i = 0; i<bins.count; i++) {
+        [_filePaths addObject:bins[i]];
+    }
+
+    //搜索Documents(通过iTunes File 加入的文件需要在此搜索)
+    NSFileManager *manager = [NSFileManager defaultManager];
+    NSError *error = nil;
+    NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    NSArray *fileNames = [manager contentsOfDirectoryAtPath:fileLocalPath error:&error];
+    for (NSString *path in fileNames) {
+        if ([path containsString:@".bin"]) {
+            [_filePaths addObject:[fileLocalPath stringByAppendingPathComponent:path]];
+        }
+    }
+    return _filePaths;
+}
+
 - (void)addBinFileWithPath:(NSString *)path{
     path = [path stringByReplacingOccurrencesOfString:@".bin" withString:@""];
     [_fileSource addObject:path];
@@ -98,15 +131,28 @@
 }
 
 - (NSData *)getDataWithBinName:(NSString *)binName{
-    NSData *data = [[NSFileHandle fileHandleForReadingAtPath:[[NSBundle mainBundle] pathForResource:binName ofType:@"bin"]] readDataToEndOfFile];
-    if (!data) {
-        //通过iTunes File 加入的文件
-        NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-        fileLocalPath = [NSString stringWithFormat:@"%@/%@.bin",fileLocalPath,binName];
-        NSError *err = nil;
-        NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL URLWithString:fileLocalPath] error:&err];
-        data = fileHandle.readDataToEndOfFile;
+    //可能出现读取失败的情况
+//    NSData *data = [[NSFileHandle fileHandleForReadingAtPath:[[NSBundle mainBundle] pathForResource:binName ofType:@"bin"]] readDataToEndOfFile];
+//    if (!data) {
+//        //通过iTunes File 加入的文件
+//        NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+//        fileLocalPath = [NSString stringWithFormat:@"%@/%@.bin",fileLocalPath,binName];
+//        NSError *err = nil;
+//        NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL URLWithString:fileLocalPath] error:&err];
+//        data = fileHandle.readDataToEndOfFile;
+//    }
+//    return data;
+    
+    //路径中间的UUID可能会改变。所以使用这种写法，解决上面读取失败的问题。
+    NSArray *tem = [NSArray arrayWithArray:self.getAllBinFilePath];
+    NSString *path = nil;
+    for (NSString *filePath in tem) {
+        if ([filePath.lastPathComponent isEqualToString:[NSString stringWithFormat:@"%@.bin", binName]]) {
+            path = filePath;
+            break;
+        }
     }
+    NSData *data = [NSData dataWithContentsOfFile:path];
     return data;
 }
 

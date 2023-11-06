@@ -61,7 +61,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 segmentedMessageLowerTransportPDUMaxLength;
 
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key;
-- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key forVirtualGroup:(nullable SigGroupModel *)virtualGroup;
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key ivIndex:(SigIvIndex *)ivIndex forVirtualGroup:(nullable SigGroupModel *)virtualGroup;
 - (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet ivIndex:(SigIvIndex *)ivIndex sequence:(UInt32)sequence;
 + (nullable NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork;//{@"SigUpperTransportPdu":SigUpperTransportPdu,@"SigKeySet":SigKeySet}

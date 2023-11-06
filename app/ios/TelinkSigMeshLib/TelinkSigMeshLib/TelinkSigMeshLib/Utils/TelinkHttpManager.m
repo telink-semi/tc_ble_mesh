@@ -34,6 +34,7 @@
 
 #define CustomErrorDomain @"cn.telink.httpRequest"
 
+@class TelinkHttpRequest;
 typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullable result, NSError * _Nullable err);
 
 @interface TelinkHttpRequest : NSObject<NSURLConnectionDataDelegate>
@@ -44,8 +45,11 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     NSMutableData *_httpReceiveData;
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _httpReceiveData = [[NSMutableData alloc] init];
     }
     return self;
@@ -171,10 +175,19 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 
 @implementation TelinkHttpManager
 
-+ (TelinkHttpManager *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static TelinkHttpManager *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[TelinkHttpManager alloc] init];
         shareManager.telinkHttpRequests = [NSMutableArray array];
     });

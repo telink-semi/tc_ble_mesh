@@ -29,6 +29,7 @@
 
 @interface AddBridgeTableVC ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UIButton *addBridgingTableButton;
 @property (nonatomic, strong) SigSubnetBridgeModel *bridgeModel;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @property (nonatomic, assign) NSInteger selectRow;
@@ -48,7 +49,6 @@
                 [self performSelector:@selector(addSubnetBridgeTimeOut) withObject:nil afterDelay:10.0];
                 [ShowTipsHandle.share show:Tip_AddSubnetBridge];
             });
-#ifdef kExist
             __weak typeof(self) weakSelf = self;
             __block BOOL hasFail = NO;
             _messageHandle = [SDKLibCommand bridgeTableAddWithDestination:self.model.address subnetBridge:self.bridgeModel retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
@@ -74,7 +74,6 @@
                     }
                 });
             }];
-#endif
         } else {
             [self showTips:@"The node is offline, app cann`t add bridge table."];
         }
@@ -100,6 +99,7 @@
 - (void)normalSetting{
     [super normalSetting];
     self.title = @"Add Subnet Bridge";
+    self.addBridgingTableButton.backgroundColor = UIColor.telinkButtonBlue;
     self.tableView.allowsSelection = NO;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(BridgeTableItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(BridgeTableItemCell.class)];
@@ -122,12 +122,6 @@
         [_messageHandle cancel];
     }
     NSLog(@"%s",__func__);
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 #pragma mark - UITableView

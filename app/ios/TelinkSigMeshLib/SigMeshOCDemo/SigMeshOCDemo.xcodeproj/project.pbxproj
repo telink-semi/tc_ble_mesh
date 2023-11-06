@@ -10,7 +10,6 @@
 		2512BB3B27E41CD7000B353B /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
 		2512BB4327E4207E000B353B /* ForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4227E4207E000B353B /* ForwardingTableVC.m */; };
 		2512BB4627E4284F000B353B /* AddForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4527E4284F000B353B /* AddForwardingTableVC.m */; };
-		252C68D7282BA161009B9061 /* TelinkSigMeshLibExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C61272140CF00F4F880 /* TelinkSigMeshLibExtensions.framework */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		25589A1D272115D700F4F880 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
 		25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1E272115DA00F4F880 /* Assets.xcassets */; };
@@ -43,17 +42,14 @@
 		25589BBB2721403F00F4F880 /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A812721403E00F4F880 /* InfoButtonCell.xib */; };
 		25589BBC2721403F00F4F880 /* SettingItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A822721403E00F4F880 /* SettingItemCell.m */; };
 		25589BBD2721403F00F4F880 /* ModelIDCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A832721403E00F4F880 /* ModelIDCell.xib */; };
-		25589BBE2721403F00F4F880 /* DeviceStateItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A842721403E00F4F880 /* DeviceStateItemView.xib */; };
 		25589BBF2721403F00F4F880 /* RemoteElementCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A862721403E00F4F880 /* RemoteElementCell.xib */; };
 		25589BC02721403F00F4F880 /* ModelIDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A872721403E00F4F880 /* ModelIDCell.m */; };
 		25589BC12721403F00F4F880 /* LevelAndSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A882721403E00F4F880 /* LevelAndSliderCell.m */; };
 		25589BC22721403F00F4F880 /* BridgeTableItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A892721403E00F4F880 /* BridgeTableItemCell.xib */; };
-		25589BC32721403F00F4F880 /* DeviceStateItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A8C2721403E00F4F880 /* DeviceStateItemView.m */; };
 		25589BC42721403F00F4F880 /* OnOffModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A8E2721403E00F4F880 /* OnOffModelCell.xib */; };
 		25589BC52721403F00F4F880 /* DeviceGroupListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */; };
 		25589BC62721403F00F4F880 /* OnOffItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A902721403E00F4F880 /* OnOffItemCell.xib */; };
 		25589BC72721403F00F4F880 /* SchedulerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A912721403E00F4F880 /* SchedulerCell.xib */; };
-		25589BC82721403F00F4F880 /* ActionItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A922721403E00F4F880 /* ActionItemCell.xib */; };
 		25589BC92721403F00F4F880 /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A952721403E00F4F880 /* InfoSwitchCell.xib */; };
 		25589BCA2721403F00F4F880 /* ChooseBinCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A992721403E00F4F880 /* ChooseBinCell.xib */; };
 		25589BCB2721403F00F4F880 /* InfoNextCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A9A2721403E00F4F880 /* InfoNextCell.xib */; };
@@ -62,7 +58,6 @@
 		25589BCE2721403F00F4F880 /* HomeItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA22721403E00F4F880 /* HomeItemCell.m */; };
 		25589BCF2721403F00F4F880 /* InfoButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA52721403E00F4F880 /* InfoButtonCell.m */; };
 		25589BD02721403F00F4F880 /* ColorModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AA62721403E00F4F880 /* ColorModelCell.xib */; };
-		25589BD12721403F00F4F880 /* ActionItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA82721403E00F4F880 /* ActionItemCell.m */; };
 		25589BD22721403F00F4F880 /* OnOffItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA92721403E00F4F880 /* OnOffItemCell.m */; };
 		25589BD32721403F00F4F880 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AAB2721403E00F4F880 /* ColorPickerView.m */; };
 		25589BD42721403F00F4F880 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AAE2721403E00F4F880 /* ColorManager.m */; };
@@ -116,14 +111,11 @@
 		25589C042721403F00F4F880 /* RemoteAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFF2721403E00F4F880 /* RemoteAddVC.m */; };
 		25589C052721403F00F4F880 /* SensorVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B032721403E00F4F880 /* SensorVC.m */; };
 		25589C062721403F00F4F880 /* CMDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B042721403E00F4F880 /* CMDViewController.m */; };
-		25589C072721403F00F4F880 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B072721403E00F4F880 /* ChooseAndAddDeviceVC.m */; };
 		25589C082721403F00F4F880 /* HSLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B092721403E00F4F880 /* HSLViewController.m */; };
-		25589C092721403F00F4F880 /* AddDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B0B2721403E00F4F880 /* AddDeviceViewController.m */; };
 		25589C0A2721403F00F4F880 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B112721403E00F4F880 /* FileChooseVC.m */; };
 		25589C0B2721403F00F4F880 /* SettingsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B122721403E00F4F880 /* SettingsVC.m */; };
 		25589C0C2721403F00F4F880 /* ResponseTestVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B142721403E00F4F880 /* ResponseTestVC.xib */; };
 		25589C0D2721403F00F4F880 /* ResponseTestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B162721403E00F4F880 /* ResponseTestVC.m */; };
-		25589C0E2721403F00F4F880 /* TestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B172721403E00F4F880 /* TestVC.m */; };
 		25589C0F2721403F00F4F880 /* EditModelIDsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1E2721403E00F4F880 /* EditModelIDsViewController.m */; };
 		25589C102721403F00F4F880 /* SceneDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1F2721403E00F4F880 /* SceneDetailViewController.m */; };
 		25589C112721403F00F4F880 /* EditOOBVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B212721403E00F4F880 /* EditOOBVC.m */; };
@@ -163,8 +155,6 @@
 		25589C3E2721403F00F4F880 /* YZFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B782721403E00F4F880 /* YZFlowLayout.m */; };
 		25589C3F2721403F00F4F880 /* UIView+Frame.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B792721403E00F4F880 /* UIView+Frame.m */; };
 		25589C402721403F00F4F880 /* YZDisplayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B7D2721403E00F4F880 /* YZDisplayViewController.m */; };
-		25589C412721403F00F4F880 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25589B7F2721403E00F4F880 /* 8269_mesh.bin */; };
-		25589C422721403F00F4F880 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25589B802721403E00F4F880 /* 8258_mesh.bin */; };
 		25589C432721403F00F4F880 /* IQTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B842721403E00F4F880 /* IQTextView.m */; };
 		25589C442721403F00F4F880 /* IQToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B882721403E00F4F880 /* IQToolbar.m */; };
 		25589C452721403F00F4F880 /* IQTitleBarButtonItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B8A2721403E00F4F880 /* IQTitleBarButtonItem.m */; };
@@ -181,7 +171,6 @@
 		25589C502721403F00F4F880 /* IQKeyboardReturnKeyHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589BA42721403E00F4F880 /* IQKeyboardReturnKeyHandler.m */; };
 		25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
 		25589C562721408B00F4F880 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
-		2587998B289CAFC4002893FC /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		258B6296282CAB6500AE9B35 /* PTSViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 258B6294282CAB6500AE9B35 /* PTSViewController.m */; };
 		258B6297282CAB6500AE9B35 /* PTSViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258B6295282CAB6500AE9B35 /* PTSViewController.xib */; };
 		2590C4ED285C287D00E19DE9 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
@@ -190,7 +179,6 @@
 		2590C4F0285C287D00E19DE9 /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABD2721403E00F4F880 /* InfoSwitchCell.m */; };
 		2590C4F1285C287D00E19DE9 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F627293FDE0046CEB1 /* BRAddressPickerView.m */; };
 		2590C4F2285C287D00E19DE9 /* SensorVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B032721403E00F4F880 /* SensorVC.m */; };
-		2590C4F3285C287D00E19DE9 /* TestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B172721403E00F4F880 /* TestVC.m */; };
 		2590C4F4285C287D00E19DE9 /* DeviceGroupListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */; };
 		2590C4F5285C287D00E19DE9 /* BRPickerStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1ED27293FDE0046CEB1 /* BRPickerStyle.m */; };
 		2590C4F6285C287D00E19DE9 /* SingleOTAViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B572721403E00F4F880 /* SingleOTAViewController.m */; };
@@ -241,8 +229,6 @@
 		2590C523285C287D00E19DE9 /* MeshOTAVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFA2721403E00F4F880 /* MeshOTAVC.m */; };
 		2590C524285C287D00E19DE9 /* ShareInVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4A2721403E00F4F880 /* ShareInVC.m */; };
 		2590C525285C287D00E19DE9 /* AddDeviceItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB12721403E00F4F880 /* AddDeviceItemCell.m */; };
-		2590C526285C287D00E19DE9 /* DeviceStateItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A8C2721403E00F4F880 /* DeviceStateItemView.m */; };
-		2590C527285C287D00E19DE9 /* ActionItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA82721403E00F4F880 /* ActionItemCell.m */; };
 		2590C528285C287D00E19DE9 /* DeviceKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ACD2721403E00F4F880 /* DeviceKeyCell.m */; };
 		2590C529285C287D00E19DE9 /* IQUIViewController+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589BA22721403E00F4F880 /* IQUIViewController+Additions.m */; };
 		2590C52A285C287D00E19DE9 /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ACA2721403E00F4F880 /* HomeViewController.m */; };
@@ -250,7 +236,6 @@
 		2590C52C285C287D00E19DE9 /* GroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC92721403E00F4F880 /* GroupViewController.m */; };
 		2590C52D285C287D00E19DE9 /* IQUITextFieldView+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B9C2721403E00F4F880 /* IQUITextFieldView+Additions.m */; };
 		2590C52E285C287D00E19DE9 /* ShareOutVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4B2721403E00F4F880 /* ShareOutVC.m */; };
-		2590C52F285C287D00E19DE9 /* AddDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B0B2721403E00F4F880 /* AddDeviceViewController.m */; };
 		2590C530285C287D00E19DE9 /* SingleDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AF12721403E00F4F880 /* SingleDeviceViewController.m */; };
 		2590C531285C287D00E19DE9 /* DeviceGroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE22721403E00F4F880 /* DeviceGroupViewController.m */; };
 		2590C532285C287D00E19DE9 /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
@@ -280,7 +265,6 @@
 		2590C54A285C287D00E19DE9 /* BaseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A6C2721403D00F4F880 /* BaseViewController.m */; };
 		2590C54B285C287D00E19DE9 /* IQUIView+IQKeyboardToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B8C2721403E00F4F880 /* IQUIView+IQKeyboardToolbar.m */; };
 		2590C54C285C287D00E19DE9 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AAE2721403E00F4F880 /* ColorManager.m */; };
-		2590C54D285C287D00E19DE9 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B072721403E00F4F880 /* ChooseAndAddDeviceVC.m */; };
 		2590C54E285C287D00E19DE9 /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC12721403E00F4F880 /* InfoNextCell.m */; };
 		2590C54F285C287D00E19DE9 /* OOBListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B272721403E00F4F880 /* OOBListVC.m */; };
 		2590C550285C287D00E19DE9 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B112721403E00F4F880 /* FileChooseVC.m */; };
@@ -322,7 +306,6 @@
 		2590C574285C287D00E19DE9 /* DeviceConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AEB2721403E00F4F880 /* DeviceConfigVC.m */; };
 		2590C575285C287D00E19DE9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A24272115DA00F4F880 /* main.m */; };
 		2590C579285C287D00E19DE9 /* LevelAndSliderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AC02721403E00F4F880 /* LevelAndSliderCell.xib */; };
-		2590C57A285C287D00E19DE9 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25589B802721403E00F4F880 /* 8258_mesh.bin */; };
 		2590C57B285C287D00E19DE9 /* ChooseBinCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A992721403E00F4F880 /* ChooseBinCell.xib */; };
 		2590C57C285C287D00E19DE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A20272115DA00F4F880 /* LaunchScreen.storyboard */; };
 		2590C57D285C287D00E19DE9 /* PTSViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258B6295282CAB6500AE9B35 /* PTSViewController.xib */; };
@@ -344,7 +327,6 @@
 		2590C58D285C287D00E19DE9 /* ChooseOOBFileVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B292721403E00F4F880 /* ChooseOOBFileVC.xib */; };
 		2590C58E285C287D00E19DE9 /* ExtendBearerModeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AB32721403E00F4F880 /* ExtendBearerModeCell.xib */; };
 		2590C58F285C287D00E19DE9 /* OnOffItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A902721403E00F4F880 /* OnOffItemCell.xib */; };
-		2590C590285C287D00E19DE9 /* ActionItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A922721403E00F4F880 /* ActionItemCell.xib */; };
 		2590C591285C287D00E19DE9 /* AddDeviceItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AB22721403E00F4F880 /* AddDeviceItemCell.xib */; };
 		2590C592285C287D00E19DE9 /* ColorModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AA62721403E00F4F880 /* ColorModelCell.xib */; };
 		2590C593285C287D00E19DE9 /* DeviceNetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AD62721403E00F4F880 /* DeviceNetKeyListVC.xib */; };
@@ -356,11 +338,9 @@
 		2590C599285C287D00E19DE9 /* DeviceConfigCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE82721403E00F4F880 /* DeviceConfigCell.xib */; };
 		2590C59A285C287D00E19DE9 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
 		2590C59B285C287D00E19DE9 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
-		2590C59C285C287D00E19DE9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25589B7F2721403E00F4F880 /* 8269_mesh.bin */; };
 		2590C59D285C287D00E19DE9 /* DeviceAppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589ACE2721403E00F4F880 /* DeviceAppKeyListVC.xib */; };
 		2590C59E285C287D00E19DE9 /* OnOffModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A8E2721403E00F4F880 /* OnOffModelCell.xib */; };
 		2590C59F285C287D00E19DE9 /* KeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B352721403E00F4F880 /* KeyCell.xib */; };
-		2590C5A0285C287D00E19DE9 /* DeviceStateItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A842721403E00F4F880 /* DeviceStateItemView.xib */; };
 		2590C5A1285C287D00E19DE9 /* ResponseTestVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B142721403E00F4F880 /* ResponseTestVC.xib */; };
 		2590C5A2285C287D00E19DE9 /* NetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B3D2721403E00F4F880 /* NetKeyListVC.xib */; };
 		2590C5A3285C287D00E19DE9 /* InfoNextCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A9A2721403E00F4F880 /* InfoNextCell.xib */; };
@@ -394,6 +374,25 @@
 		25FE6CCA27EC024C009F7626 /* ChooseEntryVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CC927EC024C009F7626 /* ChooseEntryVC.m */; };
 		25FE6CD227EC14D5009F7626 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
 		25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
+		912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */; };
+		914CCE142AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin in Resources */ = {isa = PBXBuildFile; fileRef = 914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */; };
+		9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
+		9161956E290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
+		916963492AC51D300010D34A /* AutoAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 916963482AC51D300010D34A /* AutoAddDeviceVC.m */; };
+		916964682AC570450010D34A /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
+		916FEF2C29E654F800206FE6 /* ProxyFilterCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 916FEF2A29E654F800206FE6 /* ProxyFilterCell.m */; };
+		916FEF2D29E654F800206FE6 /* ProxyFilterCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 916FEF2B29E654F800206FE6 /* ProxyFilterCell.xib */; };
+		916FEF3529E6840200206FE6 /* FilterAddressCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 916FEF3329E6840200206FE6 /* FilterAddressCell.m */; };
+		916FEF3629E6840200206FE6 /* FilterAddressCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 916FEF3429E6840200206FE6 /* FilterAddressCell.xib */; };
+		9175845629E535B7008FE98A /* ProxyFilterVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9175845429E535B7008FE98A /* ProxyFilterVC.m */; };
+		9175845729E535B7008FE98A /* ProxyFilterVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9175845529E535B7008FE98A /* ProxyFilterVC.xib */; };
+		91D999EC2A94595E00E66929 /* AddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91D999EB2A94595E00E66929 /* AddDeviceVC.m */; };
+		91D999F42A945B3100E66929 /* AddDeviceCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91D999F12A945B3100E66929 /* AddDeviceCell.m */; };
+		91D999F52A945B3100E66929 /* AddDeviceCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91D999F32A945B3100E66929 /* AddDeviceCell.xib */; };
+		91ED317F29236CAC003263D1 /* TipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91ED317E29236CAC003263D1 /* TipsVC.m */; };
+		91F21BCE2A6E496600CCE24C /* CDTPServiceListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */; };
+		91FC2AC92A68FAA4003A956C /* DeviceElementItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FC2AC82A68FAA4003A956C /* DeviceElementItemView.m */; };
+		91FC2ACB2A68FAB4003A956C /* DeviceElementItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91FC2ACA2A68FAB4003A956C /* DeviceElementItemView.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -417,13 +416,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 25C0AFD9235D597400846CFB;
 			remoteInfo = TelinkSigMeshLib;
-		};
-		25589C60272140CF00F4F880 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 25589C57272140CF00F4F880 /* TelinkSigMeshLib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 252895292468F13400E590F9;
-			remoteInfo = TelinkSigMeshLibExtensions;
 		};
 		25589C62272140CF00F4F880 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -498,21 +490,17 @@
 		25589A812721403E00F4F880 /* InfoButtonCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = InfoButtonCell.xib; sourceTree = "<group>"; };
 		25589A822721403E00F4F880 /* SettingItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingItemCell.m; sourceTree = "<group>"; };
 		25589A832721403E00F4F880 /* ModelIDCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ModelIDCell.xib; sourceTree = "<group>"; };
-		25589A842721403E00F4F880 /* DeviceStateItemView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DeviceStateItemView.xib; sourceTree = "<group>"; };
 		25589A852721403E00F4F880 /* AddDeviceItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddDeviceItemCell.h; sourceTree = "<group>"; };
 		25589A862721403E00F4F880 /* RemoteElementCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = RemoteElementCell.xib; sourceTree = "<group>"; };
 		25589A872721403E00F4F880 /* ModelIDCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelIDCell.m; sourceTree = "<group>"; };
 		25589A882721403E00F4F880 /* LevelAndSliderCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LevelAndSliderCell.m; sourceTree = "<group>"; };
 		25589A892721403E00F4F880 /* BridgeTableItemCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BridgeTableItemCell.xib; sourceTree = "<group>"; };
 		25589A8A2721403E00F4F880 /* OnOffItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OnOffItemCell.h; sourceTree = "<group>"; };
-		25589A8B2721403E00F4F880 /* ActionItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActionItemCell.h; sourceTree = "<group>"; };
-		25589A8C2721403E00F4F880 /* DeviceStateItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceStateItemView.m; sourceTree = "<group>"; };
 		25589A8D2721403E00F4F880 /* ExtendBearerModeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExtendBearerModeCell.h; sourceTree = "<group>"; };
 		25589A8E2721403E00F4F880 /* OnOffModelCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = OnOffModelCell.xib; sourceTree = "<group>"; };
 		25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceGroupListCell.m; sourceTree = "<group>"; };
 		25589A902721403E00F4F880 /* OnOffItemCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = OnOffItemCell.xib; sourceTree = "<group>"; };
 		25589A912721403E00F4F880 /* SchedulerCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SchedulerCell.xib; sourceTree = "<group>"; };
-		25589A922721403E00F4F880 /* ActionItemCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ActionItemCell.xib; sourceTree = "<group>"; };
 		25589A932721403E00F4F880 /* RemoteElementCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteElementCell.h; sourceTree = "<group>"; };
 		25589A942721403E00F4F880 /* ChooseBinCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChooseBinCell.h; sourceTree = "<group>"; };
 		25589A952721403E00F4F880 /* InfoSwitchCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = InfoSwitchCell.xib; sourceTree = "<group>"; };
@@ -533,8 +521,6 @@
 		25589AA42721403E00F4F880 /* SceneItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneItemCell.h; sourceTree = "<group>"; };
 		25589AA52721403E00F4F880 /* InfoButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InfoButtonCell.m; sourceTree = "<group>"; };
 		25589AA62721403E00F4F880 /* ColorModelCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ColorModelCell.xib; sourceTree = "<group>"; };
-		25589AA72721403E00F4F880 /* DeviceStateItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceStateItemView.h; sourceTree = "<group>"; };
-		25589AA82721403E00F4F880 /* ActionItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ActionItemCell.m; sourceTree = "<group>"; };
 		25589AA92721403E00F4F880 /* OnOffItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OnOffItemCell.m; sourceTree = "<group>"; };
 		25589AAB2721403E00F4F880 /* ColorPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorPickerView.m; sourceTree = "<group>"; };
 		25589AAC2721403E00F4F880 /* ColorManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
@@ -562,7 +548,6 @@
 		25589AC22721403E00F4F880 /* ShowTipsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShowTipsView.m; sourceTree = "<group>"; };
 		25589AC42721403E00F4F880 /* DemoCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoCommand.m; sourceTree = "<group>"; };
 		25589AC52721403E00F4F880 /* DemoCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoCommand.h; sourceTree = "<group>"; };
-		25589AC72721403E00F4F880 /* ChooseAndAddDeviceVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChooseAndAddDeviceVC.h; sourceTree = "<group>"; };
 		25589AC82721403E00F4F880 /* FastProvisionAddVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FastProvisionAddVC.m; sourceTree = "<group>"; };
 		25589AC92721403E00F4F880 /* GroupViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupViewController.m; sourceTree = "<group>"; };
 		25589ACA2721403E00F4F880 /* HomeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HomeViewController.m; sourceTree = "<group>"; };
@@ -610,7 +595,6 @@
 		25589AF92721403E00F4F880 /* MeshOTAItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAItemCell.m; sourceTree = "<group>"; };
 		25589AFA2721403E00F4F880 /* MeshOTAVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAVC.m; sourceTree = "<group>"; };
 		25589AFB2721403E00F4F880 /* UIButton+extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIButton+extension.m"; sourceTree = "<group>"; };
-		25589AFC2721403E00F4F880 /* AddDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddDeviceViewController.h; sourceTree = "<group>"; };
 		25589AFD2721403E00F4F880 /* HSLViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HSLViewController.h; sourceTree = "<group>"; };
 		25589AFE2721403E00F4F880 /* ReKeyBindViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReKeyBindViewController.m; sourceTree = "<group>"; };
 		25589AFF2721403E00F4F880 /* RemoteAddVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RemoteAddVC.m; sourceTree = "<group>"; };
@@ -621,11 +605,9 @@
 		25589B042721403E00F4F880 /* CMDViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CMDViewController.m; sourceTree = "<group>"; };
 		25589B052721403E00F4F880 /* GroupViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupViewController.h; sourceTree = "<group>"; };
 		25589B062721403E00F4F880 /* FastProvisionAddVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FastProvisionAddVC.h; sourceTree = "<group>"; };
-		25589B072721403E00F4F880 /* ChooseAndAddDeviceVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ChooseAndAddDeviceVC.m; sourceTree = "<group>"; };
 		25589B082721403E00F4F880 /* RemoteAddVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteAddVC.h; sourceTree = "<group>"; };
 		25589B092721403E00F4F880 /* HSLViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HSLViewController.m; sourceTree = "<group>"; };
 		25589B0A2721403E00F4F880 /* ReKeyBindViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReKeyBindViewController.h; sourceTree = "<group>"; };
-		25589B0B2721403E00F4F880 /* AddDeviceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AddDeviceViewController.m; sourceTree = "<group>"; };
 		25589B0C2721403E00F4F880 /* HomeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HomeViewController.h; sourceTree = "<group>"; };
 		25589B0E2721403E00F4F880 /* SceneDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneDetailViewController.h; sourceTree = "<group>"; };
 		25589B0F2721403E00F4F880 /* EditModelIDsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditModelIDsViewController.h; sourceTree = "<group>"; };
@@ -633,9 +615,7 @@
 		25589B112721403E00F4F880 /* FileChooseVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileChooseVC.m; sourceTree = "<group>"; };
 		25589B122721403E00F4F880 /* SettingsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsVC.m; sourceTree = "<group>"; };
 		25589B142721403E00F4F880 /* ResponseTestVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ResponseTestVC.xib; sourceTree = "<group>"; };
-		25589B152721403E00F4F880 /* TestVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestVC.h; sourceTree = "<group>"; };
 		25589B162721403E00F4F880 /* ResponseTestVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ResponseTestVC.m; sourceTree = "<group>"; };
-		25589B172721403E00F4F880 /* TestVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestVC.m; sourceTree = "<group>"; };
 		25589B182721403E00F4F880 /* ResponseTestVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResponseTestVC.h; sourceTree = "<group>"; };
 		25589B192721403E00F4F880 /* ModelIDListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelIDListViewController.h; sourceTree = "<group>"; };
 		25589B1A2721403E00F4F880 /* SchedulerDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SchedulerDetailViewController.h; sourceTree = "<group>"; };
@@ -705,8 +685,6 @@
 		25589B7C2721403E00F4F880 /* YZFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YZFlowLayout.h; sourceTree = "<group>"; };
 		25589B7D2721403E00F4F880 /* YZDisplayViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YZDisplayViewController.m; sourceTree = "<group>"; };
 		25589B7E2721403E00F4F880 /* UIView+Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Frame.h"; sourceTree = "<group>"; };
-		25589B7F2721403E00F4F880 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
-		25589B802721403E00F4F880 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		25589B842721403E00F4F880 /* IQTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IQTextView.m; sourceTree = "<group>"; };
 		25589B852721403E00F4F880 /* IQTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IQTextView.h; sourceTree = "<group>"; };
 		25589B872721403E00F4F880 /* IQUIView+IQKeyboardToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IQUIView+IQKeyboardToolbar.h"; sourceTree = "<group>"; };
@@ -782,6 +760,34 @@
 		25FE6CCF27EC14D5009F7626 /* EntryCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EntryCell.h; sourceTree = "<group>"; };
 		25FE6CD027EC14D5009F7626 /* EntryCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EntryCell.m; sourceTree = "<group>"; };
 		25FE6CD127EC14D5009F7626 /* EntryCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EntryCell.xib; sourceTree = "<group>"; };
+		912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPExportVC.h; sourceTree = "<group>"; };
+		912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPExportVC.m; sourceTree = "<group>"; };
+		914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_V4.1.0.0_20230926.bin; sourceTree = "<group>"; };
+		9161956B290A17CE00BCF0A6 /* UIColor+Telink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+Telink.h"; sourceTree = "<group>"; };
+		9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+Telink.m"; sourceTree = "<group>"; };
+		916963472AC51D300010D34A /* AutoAddDeviceVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoAddDeviceVC.h; sourceTree = "<group>"; };
+		916963482AC51D300010D34A /* AutoAddDeviceVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoAddDeviceVC.m; sourceTree = "<group>"; };
+		916FEF2929E654F800206FE6 /* ProxyFilterCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProxyFilterCell.h; sourceTree = "<group>"; };
+		916FEF2A29E654F800206FE6 /* ProxyFilterCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProxyFilterCell.m; sourceTree = "<group>"; };
+		916FEF2B29E654F800206FE6 /* ProxyFilterCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProxyFilterCell.xib; sourceTree = "<group>"; };
+		916FEF3229E6840200206FE6 /* FilterAddressCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilterAddressCell.h; sourceTree = "<group>"; };
+		916FEF3329E6840200206FE6 /* FilterAddressCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilterAddressCell.m; sourceTree = "<group>"; };
+		916FEF3429E6840200206FE6 /* FilterAddressCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FilterAddressCell.xib; sourceTree = "<group>"; };
+		9175845329E535B7008FE98A /* ProxyFilterVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProxyFilterVC.h; sourceTree = "<group>"; };
+		9175845429E535B7008FE98A /* ProxyFilterVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProxyFilterVC.m; sourceTree = "<group>"; };
+		9175845529E535B7008FE98A /* ProxyFilterVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProxyFilterVC.xib; sourceTree = "<group>"; };
+		91D999EA2A94595E00E66929 /* AddDeviceVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddDeviceVC.h; sourceTree = "<group>"; };
+		91D999EB2A94595E00E66929 /* AddDeviceVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddDeviceVC.m; sourceTree = "<group>"; };
+		91D999F12A945B3100E66929 /* AddDeviceCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AddDeviceCell.m; sourceTree = "<group>"; };
+		91D999F22A945B3100E66929 /* AddDeviceCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddDeviceCell.h; sourceTree = "<group>"; };
+		91D999F32A945B3100E66929 /* AddDeviceCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AddDeviceCell.xib; sourceTree = "<group>"; };
+		91ED317929236CAC003263D1 /* TipsVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TipsVC.h; sourceTree = "<group>"; };
+		91ED317E29236CAC003263D1 /* TipsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TipsVC.m; sourceTree = "<group>"; };
+		91F21BCC2A6E496600CCE24C /* CDTPServiceListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPServiceListVC.h; sourceTree = "<group>"; };
+		91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPServiceListVC.m; sourceTree = "<group>"; };
+		91FC2AC72A68FAA4003A956C /* DeviceElementItemView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceElementItemView.h; sourceTree = "<group>"; };
+		91FC2AC82A68FAA4003A956C /* DeviceElementItemView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceElementItemView.m; sourceTree = "<group>"; };
+		91FC2ACA2A68FAB4003A956C /* DeviceElementItemView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceElementItemView.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -789,7 +795,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				252C68D7282BA161009B9061 /* TelinkSigMeshLibExtensions.framework in Frameworks */,
+				916964682AC570450010D34A /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -811,7 +817,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2587998B289CAFC4002893FC /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -905,6 +910,8 @@
 			children = (
 				25589A562721403D00F4F880 /* OTAFileSource.h */,
 				25589A672721403D00F4F880 /* OTAFileSource.m */,
+				9161956B290A17CE00BCF0A6 /* UIColor+Telink.h */,
+				9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */,
 				25589A532721403D00F4F880 /* NSString+extension.h */,
 				25589A662721403D00F4F880 /* NSString+extension.m */,
 				25589A582721403D00F4F880 /* NSString+calculate.h */,
@@ -981,12 +988,9 @@
 				25589AAF2721403E00F4F880 /* LevelAndSliderCell.h */,
 				25589A882721403E00F4F880 /* LevelAndSliderCell.m */,
 				25589AC02721403E00F4F880 /* LevelAndSliderCell.xib */,
-				25589A8B2721403E00F4F880 /* ActionItemCell.h */,
-				25589AA82721403E00F4F880 /* ActionItemCell.m */,
-				25589A922721403E00F4F880 /* ActionItemCell.xib */,
-				25589AA72721403E00F4F880 /* DeviceStateItemView.h */,
-				25589A8C2721403E00F4F880 /* DeviceStateItemView.m */,
-				25589A842721403E00F4F880 /* DeviceStateItemView.xib */,
+				91FC2AC72A68FAA4003A956C /* DeviceElementItemView.h */,
+				91FC2AC82A68FAA4003A956C /* DeviceElementItemView.m */,
+				91FC2ACA2A68FAB4003A956C /* DeviceElementItemView.xib */,
 				25589A8D2721403E00F4F880 /* ExtendBearerModeCell.h */,
 				25589ABA2721403E00F4F880 /* ExtendBearerModeCell.m */,
 				25589AB32721403E00F4F880 /* ExtendBearerModeCell.xib */,
@@ -1022,6 +1026,15 @@
 				25589A9F2721403E00F4F880 /* ChooseModelIDCell.h */,
 				25589ABB2721403E00F4F880 /* ChooseModelIDCell.m */,
 				25589AA12721403E00F4F880 /* ChooseModelIDCell.xib */,
+				916FEF2929E654F800206FE6 /* ProxyFilterCell.h */,
+				916FEF2A29E654F800206FE6 /* ProxyFilterCell.m */,
+				916FEF2B29E654F800206FE6 /* ProxyFilterCell.xib */,
+				916FEF3229E6840200206FE6 /* FilterAddressCell.h */,
+				916FEF3329E6840200206FE6 /* FilterAddressCell.m */,
+				916FEF3429E6840200206FE6 /* FilterAddressCell.xib */,
+				91D999F22A945B3100E66929 /* AddDeviceCell.h */,
+				91D999F12A945B3100E66929 /* AddDeviceCell.m */,
+				91D999F32A945B3100E66929 /* AddDeviceCell.xib */,
 				25589A722721403E00F4F880 /* CustomAlert */,
 				25589AAA2721403E00F4F880 /* ColorPicker */,
 			);
@@ -1071,10 +1084,10 @@
 			children = (
 				25589B0C2721403E00F4F880 /* HomeViewController.h */,
 				25589ACA2721403E00F4F880 /* HomeViewController.m */,
-				25589AFC2721403E00F4F880 /* AddDeviceViewController.h */,
-				25589B0B2721403E00F4F880 /* AddDeviceViewController.m */,
-				25589AC72721403E00F4F880 /* ChooseAndAddDeviceVC.h */,
-				25589B072721403E00F4F880 /* ChooseAndAddDeviceVC.m */,
+				91D999EA2A94595E00E66929 /* AddDeviceVC.h */,
+				91D999EB2A94595E00E66929 /* AddDeviceVC.m */,
+				916963472AC51D300010D34A /* AutoAddDeviceVC.h */,
+				916963482AC51D300010D34A /* AutoAddDeviceVC.m */,
 				25589B062721403E00F4F880 /* FastProvisionAddVC.h */,
 				25589AC82721403E00F4F880 /* FastProvisionAddVC.m */,
 				25589B082721403E00F4F880 /* RemoteAddVC.h */,
@@ -1208,6 +1221,9 @@
 				25589B4E2721403E00F4F880 /* SchedulerListViewController.m */,
 				25589B1A2721403E00F4F880 /* SchedulerDetailViewController.h */,
 				25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */,
+				91ED317929236CAC003263D1 /* TipsVC.h */,
+				91ED317E29236CAC003263D1 /* TipsVC.m */,
+				9175844E29E53586008FE98A /* Proxy Filter */,
 				2541A38027E07D2B00CEA402 /* DirectForwarding */,
 				25DD7D032728E5420029037A /* Root Certificate */,
 				25589B132721403E00F4F880 /* Test */,
@@ -1221,8 +1237,6 @@
 		25589B132721403E00F4F880 /* Test */ = {
 			isa = PBXGroup;
 			children = (
-				25589B152721403E00F4F880 /* TestVC.h */,
-				25589B172721403E00F4F880 /* TestVC.m */,
 				25589B182721403E00F4F880 /* ResponseTestVC.h */,
 				25589B162721403E00F4F880 /* ResponseTestVC.m */,
 				25589B142721403E00F4F880 /* ResponseTestVC.xib */,
@@ -1287,6 +1301,10 @@
 				25589B492721403E00F4F880 /* ShareTipsVC.m */,
 				25589B4D2721403E00F4F880 /* ShowQRCodeViewController.h */,
 				25589B482721403E00F4F880 /* ShowQRCodeViewController.m */,
+				912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */,
+				912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */,
+				91F21BCC2A6E496600CCE24C /* CDTPServiceListVC.h */,
+				91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */,
 			);
 			path = Share;
 			sourceTree = "<group>";
@@ -1307,8 +1325,7 @@
 				259AA1DB27293FDE0046CEB1 /* BRPickerView */,
 				25589C57272140CF00F4F880 /* TelinkSigMeshLib.xcodeproj */,
 				25589B752721403E00F4F880 /* YZDisplayViewController */,
-				25589B7F2721403E00F4F880 /* 8269_mesh.bin */,
-				25589B802721403E00F4F880 /* 8258_mesh.bin */,
+				914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */,
 				25589B812721403E00F4F880 /* IQKeyboardManager-master */,
 			);
 			path = SDK;
@@ -1418,7 +1435,6 @@
 			isa = PBXGroup;
 			children = (
 				25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */,
-				25589C61272140CF00F4F880 /* TelinkSigMeshLibExtensions.framework */,
 				25589C63272140CF00F4F880 /* TelinkSigMeshLibTests.xctest */,
 			);
 			name = Products;
@@ -1523,6 +1539,16 @@
 				25E05CCB27EB0D5700E10E1B /* Reachability.h */,
 			);
 			path = Reachability;
+			sourceTree = "<group>";
+		};
+		9175844E29E53586008FE98A /* Proxy Filter */ = {
+			isa = PBXGroup;
+			children = (
+				9175845329E535B7008FE98A /* ProxyFilterVC.h */,
+				9175845429E535B7008FE98A /* ProxyFilterVC.m */,
+				9175845529E535B7008FE98A /* ProxyFilterVC.xib */,
+			);
+			path = "Proxy Filter";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1654,13 +1680,6 @@
 			remoteRef = 25589C5E272140CF00F4F880 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		25589C61272140CF00F4F880 /* TelinkSigMeshLibExtensions.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = TelinkSigMeshLibExtensions.framework;
-			remoteRef = 25589C60272140CF00F4F880 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		25589C63272140CF00F4F880 /* TelinkSigMeshLibTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
@@ -1676,11 +1695,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				25589BE22721403F00F4F880 /* LevelAndSliderCell.xib in Resources */,
-				25589C422721403F00F4F880 /* 8258_mesh.bin in Resources */,
 				25589BCA2721403F00F4F880 /* ChooseBinCell.xib in Resources */,
 				25589A22272115DA00F4F880 /* LaunchScreen.storyboard in Resources */,
 				258B6297282CAB6500AE9B35 /* PTSViewController.xib in Resources */,
 				25589BFF2721403F00F4F880 /* MeshOTAItemCell.xib in Resources */,
+				91D999F52A945B3100E66929 /* AddDeviceCell.xib in Resources */,
 				25589BF02721403F00F4F880 /* DeviceChooseKeyVC.xib in Resources */,
 				25589BC92721403F00F4F880 /* InfoSwitchCell.xib in Resources */,
 				25589BE02721403F00F4F880 /* ShowTipsView.xib in Resources */,
@@ -1689,20 +1708,23 @@
 				25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */,
 				25589C1C2721403F00F4F880 /* AppKeyListVC.xib in Resources */,
 				259AA1FC27293FDE0046CEB1 /* BRPickerView.bundle in Resources */,
+				91FC2ACB2A68FAB4003A956C /* DeviceElementItemView.xib in Resources */,
 				25589BFE2721403F00F4F880 /* MeshOTAVC.xib in Resources */,
 				25589A1D272115D700F4F880 /* Main.storyboard in Resources */,
 				25589BC22721403F00F4F880 /* BridgeTableItemCell.xib in Resources */,
 				25589BCD2721403F00F4F880 /* ChooseModelIDCell.xib in Resources */,
+				914CCE142AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin in Resources */,
+				916FEF3629E6840200206FE6 /* FilterAddressCell.xib in Resources */,
 				25589BB82721403F00F4F880 /* InputItemCell.xib in Resources */,
 				25589BBF2721403F00F4F880 /* RemoteElementCell.xib in Resources */,
 				25589C162721403F00F4F880 /* ChooseOOBFileVC.xib in Resources */,
 				25589BD72721403F00F4F880 /* ExtendBearerModeCell.xib in Resources */,
 				25589BC62721403F00F4F880 /* OnOffItemCell.xib in Resources */,
-				25589BC82721403F00F4F880 /* ActionItemCell.xib in Resources */,
 				25589BD62721403F00F4F880 /* AddDeviceItemCell.xib in Resources */,
 				25589BD02721403F00F4F880 /* ColorModelCell.xib in Resources */,
 				25589BEF2721403F00F4F880 /* DeviceNetKeyListVC.xib in Resources */,
 				25589BB32721403F00F4F880 /* ChooseItemCell.xib in Resources */,
+				916FEF2D29E654F800206FE6 /* ProxyFilterCell.xib in Resources */,
 				25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */,
 				25589C492721403F00F4F880 /* IQKeyboardManager.bundle in Resources */,
 				25589BBB2721403F00F4F880 /* InfoButtonCell.xib in Resources */,
@@ -1710,11 +1732,9 @@
 				25589BF92721403F00F4F880 /* DeviceConfigCell.xib in Resources */,
 				25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */,
 				25589C562721408B00F4F880 /* Setting.storyboard in Resources */,
-				25589C412721403F00F4F880 /* 8269_mesh.bin in Resources */,
 				25589BEA2721403F00F4F880 /* DeviceAppKeyListVC.xib in Resources */,
 				25589BC42721403F00F4F880 /* OnOffModelCell.xib in Resources */,
 				25589C1D2721403F00F4F880 /* KeyCell.xib in Resources */,
-				25589BBE2721403F00F4F880 /* DeviceStateItemView.xib in Resources */,
 				25589C0C2721403F00F4F880 /* ResponseTestVC.xib in Resources */,
 				25589C232721403F00F4F880 /* NetKeyListVC.xib in Resources */,
 				25589BCB2721403F00F4F880 /* InfoNextCell.xib in Resources */,
@@ -1726,6 +1746,7 @@
 				25589BED2721403F00F4F880 /* DeviceKeyCell.xib in Resources */,
 				25589BB62721403F00F4F880 /* CustomAlert.xib in Resources */,
 				25589BC72721403F00F4F880 /* SchedulerCell.xib in Resources */,
+				9175845729E535B7008FE98A /* ProxyFilterVC.xib in Resources */,
 				25589BE12721403F00F4F880 /* SceneItemCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1749,7 +1770,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2590C579285C287D00E19DE9 /* LevelAndSliderCell.xib in Resources */,
-				2590C57A285C287D00E19DE9 /* 8258_mesh.bin in Resources */,
 				2590C57B285C287D00E19DE9 /* ChooseBinCell.xib in Resources */,
 				2590C57C285C287D00E19DE9 /* LaunchScreen.storyboard in Resources */,
 				2590C57D285C287D00E19DE9 /* PTSViewController.xib in Resources */,
@@ -1772,7 +1792,6 @@
 				2590C58D285C287D00E19DE9 /* ChooseOOBFileVC.xib in Resources */,
 				2590C58E285C287D00E19DE9 /* ExtendBearerModeCell.xib in Resources */,
 				2590C58F285C287D00E19DE9 /* OnOffItemCell.xib in Resources */,
-				2590C590285C287D00E19DE9 /* ActionItemCell.xib in Resources */,
 				2590C591285C287D00E19DE9 /* AddDeviceItemCell.xib in Resources */,
 				2590C592285C287D00E19DE9 /* ColorModelCell.xib in Resources */,
 				2590C593285C287D00E19DE9 /* DeviceNetKeyListVC.xib in Resources */,
@@ -1785,11 +1804,9 @@
 				2590C599285C287D00E19DE9 /* DeviceConfigCell.xib in Resources */,
 				2590C59A285C287D00E19DE9 /* DeviceSetting.storyboard in Resources */,
 				2590C59B285C287D00E19DE9 /* Setting.storyboard in Resources */,
-				2590C59C285C287D00E19DE9 /* 8269_mesh.bin in Resources */,
 				2590C59D285C287D00E19DE9 /* DeviceAppKeyListVC.xib in Resources */,
 				2590C59E285C287D00E19DE9 /* OnOffModelCell.xib in Resources */,
 				2590C59F285C287D00E19DE9 /* KeyCell.xib in Resources */,
-				2590C5A0285C287D00E19DE9 /* DeviceStateItemView.xib in Resources */,
 				2590C5A1285C287D00E19DE9 /* ResponseTestVC.xib in Resources */,
 				2590C5A2285C287D00E19DE9 /* NetKeyListVC.xib in Resources */,
 				2590C5A3285C287D00E19DE9 /* InfoNextCell.xib in Resources */,
@@ -1818,7 +1835,6 @@
 				25589BDF2721403F00F4F880 /* InfoSwitchCell.m in Sources */,
 				259AA20127293FDE0046CEB1 /* BRAddressPickerView.m in Sources */,
 				25589C052721403F00F4F880 /* SensorVC.m in Sources */,
-				25589C0E2721403F00F4F880 /* TestVC.m in Sources */,
 				25589BC52721403F00F4F880 /* DeviceGroupListCell.m in Sources */,
 				259AA1FD27293FDE0046CEB1 /* BRPickerStyle.m in Sources */,
 				25589C312721403F00F4F880 /* SingleOTAViewController.m in Sources */,
@@ -1868,19 +1884,19 @@
 				258B6296282CAB6500AE9B35 /* PTSViewController.m in Sources */,
 				25589C012721403F00F4F880 /* MeshOTAVC.m in Sources */,
 				25589C292721403F00F4F880 /* ShareInVC.m in Sources */,
+				9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */,
 				25589BD52721403F00F4F880 /* AddDeviceItemCell.m in Sources */,
-				25589BC32721403F00F4F880 /* DeviceStateItemView.m in Sources */,
-				25589BD12721403F00F4F880 /* ActionItemCell.m in Sources */,
 				25589BE92721403F00F4F880 /* DeviceKeyCell.m in Sources */,
 				25589C4F2721403F00F4F880 /* IQUIViewController+Additions.m in Sources */,
 				25589BE82721403F00F4F880 /* HomeViewController.m in Sources */,
 				259AA1F827293FDE0046CEB1 /* BRStringPickerView.m in Sources */,
 				25589BE72721403F00F4F880 /* GroupViewController.m in Sources */,
+				916FEF2C29E654F800206FE6 /* ProxyFilterCell.m in Sources */,
 				25589C4C2721403F00F4F880 /* IQUITextFieldView+Additions.m in Sources */,
 				25589C2A2721403F00F4F880 /* ShareOutVC.m in Sources */,
-				25589C092721403F00F4F880 /* AddDeviceViewController.m in Sources */,
 				25589BFC2721403F00F4F880 /* SingleDeviceViewController.m in Sources */,
 				25589BF52721403F00F4F880 /* DeviceGroupViewController.m in Sources */,
+				91FC2AC92A68FAA4003A956C /* DeviceElementItemView.m in Sources */,
 				2512BB3B27E41CD7000B353B /* DirectControlListVC.m in Sources */,
 				259AA1FA27293FDE0046CEB1 /* NSDate+BRPickerView.m in Sources */,
 				25589C082721403F00F4F880 /* HSLViewController.m in Sources */,
@@ -1895,7 +1911,9 @@
 				25589C262721403F00F4F880 /* ActionViewController.m in Sources */,
 				25589C122721403F00F4F880 /* ChooseOOBFileVC.m in Sources */,
 				25589BF32721403F00F4F880 /* SubnetBridgeListVC.m in Sources */,
+				91D999F42A945B3100E66929 /* AddDeviceCell.m in Sources */,
 				25589C4E2721403F00F4F880 /* IQUIView+Hierarchy.m in Sources */,
+				91ED317F29236CAC003263D1 /* TipsVC.m in Sources */,
 				25589BE52721403F00F4F880 /* DemoCommand.m in Sources */,
 				25589BA82721403F00F4F880 /* ScanView.m in Sources */,
 				25589BA92721403F00F4F880 /* ScanCodeVC.m in Sources */,
@@ -1905,10 +1923,11 @@
 				25589C1B2721403F00F4F880 /* MeshInfoVC.m in Sources */,
 				25589C502721403F00F4F880 /* IQKeyboardReturnKeyHandler.m in Sources */,
 				25589C462721403F00F4F880 /* IQBarButtonItem.m in Sources */,
+				91F21BCE2A6E496600CCE24C /* CDTPServiceListVC.m in Sources */,
 				25589BB02721403F00F4F880 /* BaseViewController.m in Sources */,
 				25589C472721403F00F4F880 /* IQUIView+IQKeyboardToolbar.m in Sources */,
 				25589BD42721403F00F4F880 /* ColorManager.m in Sources */,
-				25589C072721403F00F4F880 /* ChooseAndAddDeviceVC.m in Sources */,
+				916FEF3529E6840200206FE6 /* FilterAddressCell.m in Sources */,
 				25589BE32721403F00F4F880 /* InfoNextCell.m in Sources */,
 				25589C152721403F00F4F880 /* OOBListVC.m in Sources */,
 				25589C0A2721403F00F4F880 /* FileChooseVC.m in Sources */,
@@ -1934,6 +1953,7 @@
 				259AA1FF27293FDE0046CEB1 /* NSBundle+BRPickerView.m in Sources */,
 				25589BD92721403F00F4F880 /* BridgeTableItemCell.m in Sources */,
 				25589C252721403F00F4F880 /* AppKeyListVC.m in Sources */,
+				91D999EC2A94595E00E66929 /* AddDeviceVC.m in Sources */,
 				25589BAC2721403F00F4F880 /* NSString+extension.m in Sources */,
 				25589C1F2721403F00F4F880 /* AppKeyAddVC.m in Sources */,
 				25589C2B2721403F00F4F880 /* ShareVC.m in Sources */,
@@ -1943,10 +1963,13 @@
 				25589BD22721403F00F4F880 /* OnOffItemCell.m in Sources */,
 				25589C182721403F00F4F880 /* OOBItemCell.m in Sources */,
 				25589BA62721403F00F4F880 /* UIViewController+Message.m in Sources */,
+				916963492AC51D300010D34A /* AutoAddDeviceVC.m in Sources */,
 				25589BEE2721403F00F4F880 /* DeviceChooseKeyVC.m in Sources */,
+				9175845629E535B7008FE98A /* ProxyFilterVC.m in Sources */,
 				25589C442721403F00F4F880 /* IQToolbar.m in Sources */,
 				25589BDC2721403F00F4F880 /* RemoteElementCell.m in Sources */,
 				25589BF22721403F00F4F880 /* AddBridgeTableVC.m in Sources */,
+				912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */,
 				25589BFA2721403F00F4F880 /* DeviceConfigVC.m in Sources */,
 				25589A25272115DA00F4F880 /* main.m in Sources */,
 			);
@@ -1979,7 +2002,6 @@
 				2590C4F0285C287D00E19DE9 /* InfoSwitchCell.m in Sources */,
 				2590C4F1285C287D00E19DE9 /* BRAddressPickerView.m in Sources */,
 				2590C4F2285C287D00E19DE9 /* SensorVC.m in Sources */,
-				2590C4F3285C287D00E19DE9 /* TestVC.m in Sources */,
 				2590C4F4285C287D00E19DE9 /* DeviceGroupListCell.m in Sources */,
 				2590C4F5285C287D00E19DE9 /* BRPickerStyle.m in Sources */,
 				2590C4F6285C287D00E19DE9 /* SingleOTAViewController.m in Sources */,
@@ -2031,8 +2053,6 @@
 				2590C523285C287D00E19DE9 /* MeshOTAVC.m in Sources */,
 				2590C524285C287D00E19DE9 /* ShareInVC.m in Sources */,
 				2590C525285C287D00E19DE9 /* AddDeviceItemCell.m in Sources */,
-				2590C526285C287D00E19DE9 /* DeviceStateItemView.m in Sources */,
-				2590C527285C287D00E19DE9 /* ActionItemCell.m in Sources */,
 				2590C528285C287D00E19DE9 /* DeviceKeyCell.m in Sources */,
 				2590C529285C287D00E19DE9 /* IQUIViewController+Additions.m in Sources */,
 				2590C52A285C287D00E19DE9 /* HomeViewController.m in Sources */,
@@ -2040,9 +2060,9 @@
 				2590C52C285C287D00E19DE9 /* GroupViewController.m in Sources */,
 				2590C52D285C287D00E19DE9 /* IQUITextFieldView+Additions.m in Sources */,
 				2590C52E285C287D00E19DE9 /* ShareOutVC.m in Sources */,
-				2590C52F285C287D00E19DE9 /* AddDeviceViewController.m in Sources */,
 				2590C530285C287D00E19DE9 /* SingleDeviceViewController.m in Sources */,
 				2590C531285C287D00E19DE9 /* DeviceGroupViewController.m in Sources */,
+				9161956E290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */,
 				2590C532285C287D00E19DE9 /* DirectControlListVC.m in Sources */,
 				2590C533285C287D00E19DE9 /* NSDate+BRPickerView.m in Sources */,
 				2590C534285C287D00E19DE9 /* HSLViewController.m in Sources */,
@@ -2070,7 +2090,6 @@
 				2590C54A285C287D00E19DE9 /* BaseViewController.m in Sources */,
 				2590C54B285C287D00E19DE9 /* IQUIView+IQKeyboardToolbar.m in Sources */,
 				2590C54C285C287D00E19DE9 /* ColorManager.m in Sources */,
-				2590C54D285C287D00E19DE9 /* ChooseAndAddDeviceVC.m in Sources */,
 				2590C54E285C287D00E19DE9 /* InfoNextCell.m in Sources */,
 				2590C54F285C287D00E19DE9 /* OOBListVC.m in Sources */,
 				2590C550285C287D00E19DE9 /* FileChooseVC.m in Sources */,
@@ -2281,6 +2300,7 @@
 		25589A3F272115DB00F4F880 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
@@ -2295,6 +2315,7 @@
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TelinkSigMesh;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "APP需要打开蓝牙进行设备连接。";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "APP需要打开蓝牙外设功能进行Mesh数据共享。";
 				INFOPLIST_KEY_NSCameraUsageDescription = "APP需要调用照相机进行二维码扫描。";
@@ -2307,12 +2328,13 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.36;
+				MARKETING_VERSION = 4.1.00;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2338,6 +2360,7 @@
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TelinkSigMesh;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "APP需要打开蓝牙进行设备连接。";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "APP需要打开蓝牙外设功能进行Mesh数据共享。";
 				INFOPLIST_KEY_NSCameraUsageDescription = "APP需要调用照相机进行二维码扫描。";
@@ -2350,12 +2373,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.36;
+				MARKETING_VERSION = 4.1.00;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2482,11 +2505,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.36;
+				MARKETING_VERSION = 4.1.00;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2525,11 +2549,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.36;
+				MARKETING_VERSION = 4.1.00;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";

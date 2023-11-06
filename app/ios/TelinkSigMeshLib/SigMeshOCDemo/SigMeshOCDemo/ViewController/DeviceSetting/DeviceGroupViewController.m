@@ -26,7 +26,7 @@
 
 @interface DeviceGroupViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*source;
+@property (nonatomic,strong) NSMutableArray <SigGroupModel *>*source;
 @end
 
 @implementation DeviceGroupViewController
@@ -35,24 +35,17 @@
 - (void)normalSetting{
     [super normalSetting];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-
-    self.source = [[NSMutableArray alloc] init];
-    if (self.model.getGroupIDs) {
-        NSArray *getGroupIDs = [NSArray arrayWithArray:self.model.getGroupIDs];
-        for (NSNumber *groupID in getGroupIDs) {
-            [self.source addObject:groupID];
-        }
-    }
+    self.source = [NSMutableArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
 }
 
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return SigDataSource.share.groups.count;
+    return self.source.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     DeviceGroupListCell *cell = (DeviceGroupListCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_DeviceGroupListCellID forIndexPath:indexPath];
-    SigGroupModel *gModel = SigDataSource.share.groups[indexPath.row];
+    SigGroupModel *gModel = self.source[indexPath.row];
     [cell contentWithGroupAddress:@(gModel.intAddress) groupName:gModel.name model:self.model];
     return cell;
 }

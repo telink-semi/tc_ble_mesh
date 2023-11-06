@@ -25,70 +25,139 @@
 
 @implementation SigHelper
 
-+ (SigHelper *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigHelper *shareHelper = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareHelper = [[SigHelper alloc] init];
     });
     return shareHelper;
 }
 
-- (BOOL)isValidAddress:(UInt16)address{
-    return address < 0xFF00 || address > 0xFFFB;
+/**
+ * @brief   Determine whether the address is a valid address.(inVaild address range is 0xFF00~0xFFF8)
+ * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
+ * @return  YES means address is valid address, NO means address is invalid.
+ * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
+ */
+- (BOOL)isValidAddress:(UInt16)address {
+    return address < 0xFF00 || address > 0xFFF8;
 }
 
-- (BOOL)isUnassignedAddress:(UInt16)address{
+/**
+ * @brief   Determine whether the address is a unassigned address.(unassigned address is 0)
+ * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
+ * @return  YES means address is unassigned address, NO means address is not unassigned address.
+ * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
+ */
+- (BOOL)isUnassignedAddress:(UInt16)address {
     return address == MeshAddress_unassignedAddress;
 }
 
-- (BOOL)isUnicastAddress:(UInt16)address{
+/**
+ * @brief   Determine whether the address is a unicast address.(The range of unicast address is 0x0001~0x7FFF)
+ * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
+ * @return  YES means address is unicast address, NO means address is not unicast address.
+ * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
+ */
+- (BOOL)isUnicastAddress:(UInt16)address {
     return (address & 0x8000) == 0x0000 && ![self isUnassignedAddress:address];
 }
 
-- (BOOL)isVirtualAddress:(UInt16)address{
+/**
+ * @brief   Determine whether the address is a virtual address.(The range of virtual address is 0x8000~0xBFFF)
+ * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
+ * @return  YES means address is virtual address, NO means address is not virtual address.
+ * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
+ */
+- (BOOL)isVirtualAddress:(UInt16)address {
     return (address & 0xC000) == 0x8000;
 }
 
-- (BOOL)isGroupAddress:(UInt16)address{
+/**
+ * @brief   Determine whether the address is a group address.(The range of group address is 0xC000~0xEFFF)
+ * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
+ * @return  YES means address is group address, NO means address is not group address.
+ * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
+ */
+- (BOOL)isGroupAddress:(UInt16)address {
     return (address & 0xC000) == 0xC000 && [self isValidAddress:address];
 }
 
-- (int)getPeriodFromSteps:(SigStepResolution)steps {
-    switch (steps) {
+/// Get Milliseconds Of Transition Interval.
+/// @param periodSteps The Default Transition Number of Steps field is a 6-bit value representing the number of transition steps. The field values represent the states defined in the following table.
+/// Value               Description
+/// 0x00                The Generic Default Transition Time is immediate.
+/// 0x01–0x3E      The number of steps.
+/// 0x3E               The value is unknown. The state cannot be set to this value, but an element 0x3F may report an unknown value if a transition is higher than or not determined.
+/// @param periodResolution The Default Transition Step Resolution field is a 2-bit bit field that determines the resolution of the Generic Default Transition Time state.
+- (int)getMillisecondsOfTransitionIntervalWithPeriodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution {
+    switch (periodResolution) {
         case SigStepResolution_hundredsOfMilliseconds:
-            return (int)steps * 100;
+            return (int)periodSteps * 100;
             break;
         case SigStepResolution_seconds:
-            return (int)steps * 1000;
+            return (int)periodSteps * 1000;
             break;
         case SigStepResolution_tensOfSeconds:
-            return (int)steps * 10000;
+            return (int)periodSteps * 10000;
             break;
         case SigStepResolution_tensOfMinutes:
-            return (int)steps * 600000;
+            return (int)periodSteps * 600000;
             break;
         default:
             break;
     }
 }
 
+/**
+ * @brief   Change UInt16 node address to hexadecimal string.
+ * @param   address    The unicastAddress of node.
+ * @return  The hexadecimal string of node address.
+ */
 - (NSString *)getNodeAddressString:(UInt16)address {
     return [self getUint16String:address];
 }
 
+/**
+ * @brief   Change UInt16 number to hexadecimal string.
+ * @param   address    The UInt16 number address.
+ * @return  The hexadecimal string of UInt16 number address.
+ */
 - (NSString *)getUint16String:(UInt16)address {
     return [NSString stringWithFormat:@"%04X",address];
 }
 
+/**
+ * @brief   Change UInt32 number to hexadecimal string.
+ * @param   address    The UInt32 number address.
+ * @return  The hexadecimal string of UInt32 number address.
+ */
 - (NSString *)getUint32String:(UInt32)address {
     return [NSString stringWithFormat:@"%08X",(unsigned int)address];
 }
 
+/**
+ * @brief   Change UInt64 number to hexadecimal string.
+ * @param   address    The UInt64 number address.
+ * @return  The hexadecimal string of UInt64 number address.
+ */
 - (NSString *)getUint64String:(UInt64)address {
     return [NSString stringWithFormat:@"%016llX",address];
 }
 
+/// Randomly generate floating point numbers directly from float number A and float number B, retaining 3 valid decimal places.
+/// @param a float number A
+/// @param b float number B
 - (float)getRandomfromA:(float)a toB:(float)b {
     int aInt = a * 1000;
     int bInt = b * 1000;
@@ -126,82 +195,8 @@
     return NO;
 }
 
-- (UInt16)getUint16LightnessFromUInt8Lum:(UInt8)lum {
-    return [self getUInt16LightnessFromSInt16Level:[self getSInt16LevelFromUInt8Lum:lum]];
-}
-
-- (UInt8)getUInt8LumFromUint16Lightness:(UInt16)lightness {
-    return [self getUInt8LumFromSInt16Level:[self getSInt16LevelFromUInt16Lightness:lightness]];
-}
-
-- (SInt16)getSInt16LevelFromUInt8Lum:(UInt8)lum {
-    if(lum > 100){
-        lum  = 100;
-    }
-    return -32768 + [self getDivisionRoundWithValue:65535*lum dividend:100];
-}
-
-- (UInt8)getUInt8LumFromSInt16Level:(SInt16)level {
-    UInt32 lightness = level + 32768;
-    UInt32 fix_1p2 = 0;
-    if(lightness){    // fix decimals
-        #define LEVEL_UNIT_1P2    (65535/100/2)
-        if(lightness < LEVEL_UNIT_1P2 + 2){     // +2 to fix accuracy missing
-            lightness = LEVEL_UNIT_1P2 * 2;        // make sure lum is not zero when light on.
-        }
-        fix_1p2 = LEVEL_UNIT_1P2;
-    }
-    return (((lightness + fix_1p2)*100)/65535);
-}
-
-- (UInt16)getUint16TemperatureFromUInt8Temperature100:(UInt8)temperature100 {
-    if(temperature100 > 100){
-        temperature100  = 100;
-    }
-    return (CTL_TEMP_MIN + ((CTL_TEMP_MAX - CTL_TEMP_MIN)*temperature100)/100);
-}
-
-/// use for driver pwm, 0--100 is absolute value, not related to temp range
-- (UInt8)getUInt8Temperature100HWFromUint16Temperature:(UInt16)temperature {
-    if(temperature < CTL_TEMP_MIN){
-        temperature = CTL_TEMP_MIN;
-    }
-    if(temperature > CTL_TEMP_MAX){
-        temperature = CTL_TEMP_MAX;
-    }
-    UInt32 fix_1p2 = (CTL_TEMP_MAX - CTL_TEMP_MIN)/100/2;    // fix decimals
-    return (((temperature - CTL_TEMP_MIN + fix_1p2)*100)/(CTL_TEMP_MAX - CTL_TEMP_MIN));   // temp100 can be zero.
-}
-
-- (UInt8)getUInt8Temperature100FromUint16Temperature:(UInt16)temperature {
-    return [self getUInt8Temperature100HWFromUint16Temperature:temperature];// comfirm later, related with temp range
-}
-
-- (UInt32)getDivisionRoundWithValue:(UInt32)value dividend:(UInt32)dividend {
-    return (value + dividend/2)/dividend;
-}
-
-- (UInt16)getUInt16FromSInt16:(SInt16)s16 {
-    return s16 + 32768;
-}
-
-- (SInt16)getSInt16FromUInt16:(UInt16)u16 {
-    return u16 - 32768;
-}
-
-- (UInt8)getOnOffFromeSInt16Level:(SInt16)level {
-    return (level != LEVEL_OFF) ? 1 : 0;
-}
-
-- (UInt16)getUInt16LightnessFromSInt16Level:(SInt16)level {
-    return [self getUInt16FromSInt16:level];
-}
-
-- (SInt16)getSInt16LevelFromUInt16Lightness:(UInt16)lightness {
-    return [self getSInt16FromUInt16:lightness];
-}
-
-//SigOpCode_configAppKeyGet:0x8001->SigOpCode_configAppKeyList:0x8002
+/// Get response opcode with send opcode, eg://SigOpCode_configAppKeyGet:0x8001->SigOpCode_configAppKeyList:0x8002
+/// @param sendOpcode opcode of send command.
 - (int)getResponseOpcodeWithSendOpcode:(int)sendOpcode {
     int responseOpcode = 0;
     switch (sendOpcode) {
@@ -562,8 +557,6 @@
             responseOpcode = SigOpCode_BLOBTransferStatus;
             break;
         case SigOpCode_BLOBBlockStart:
-            responseOpcode = SigOpCode_ObjectBlockTransferStatus;
-            break;
         case SigOpCode_BLOBBlockGet:
             responseOpcode = SigOpCode_BLOBBlockStatus;
             break;
@@ -607,8 +600,8 @@
             break;
             
             // subnet bridge Messages
-        case SigOpCode_BridgeCapabilityGet:
-            responseOpcode = SigOpCode_BridgeCapabilityStatus;
+        case SigOpCode_BridgingTableSizeGet:
+            responseOpcode = SigOpCode_BridgingTableSizeStatus;
             break;
         case SigOpCode_BridgeTableGet:
             responseOpcode = SigOpCode_BridgeTableList;
@@ -642,6 +635,8 @@
     return responseOpcode;
 }
 
+/// Get mesh message class with opcode
+/// @param opCode opcode of send command.
 - (_Nullable Class)getMeshMessageWithOpCode:(SigOpCode)opCode {
     Class messageType = nil;
 //    TeLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
@@ -1601,9 +1596,6 @@
             case SigOpCode_BLOBBlockStart:
                 messageType = [SigBLOBBlockStart class];
                 break;
-            case SigOpCode_ObjectBlockTransferStatus:
-                messageType = [SigObjectBlockTransferStatus class];
-                break;
             case SigOpCode_BLOBChunkTransfer:
                 messageType = [SigBLOBChunkTransfer class];
                 break;
@@ -1623,7 +1615,6 @@
                 messageType = [SigBLOBPartialBlockReport class];
                 break;
                 
-#if SUPPORTEXTENDSIONS
                 // On-demand proxy
             case SigOpCode_OnDemandPrivateProxyGet:
                 messageType = [NSClassFromString(@"SigOnDemandPrivateProxyGet") class];
@@ -1690,11 +1681,11 @@
                 break;
                 
                 // subnet bridge Messages
-            case SigOpCode_BridgeCapabilityGet:
-                messageType = [NSClassFromString(@"SigBridgeCapabilityGet") class];
+            case SigOpCode_BridgingTableSizeGet:
+                messageType = [NSClassFromString(@"SigBridgingTableSizeGet") class];
                 break;
-            case SigOpCode_BridgeCapabilityStatus:
-                messageType = [NSClassFromString(@"SigBridgeCapabilityStatus") class];
+            case SigOpCode_BridgingTableSizeStatus:
+                messageType = [NSClassFromString(@"SigBridgingTableSizeStatus") class];
                 break;
             case SigOpCode_BridgeTableAdd:
                 messageType = [NSClassFromString(@"SigBridgeTableAdd") class];
@@ -1746,7 +1737,6 @@
             case SigOpCode_ForwardingTableStatus:
                 messageType = [NSClassFromString(@"SigForwardingTableStatus") class];
                 break;
-#endif
             default:
                 break;
         }
@@ -1755,6 +1745,8 @@
     return messageType;
 }
 
+/// Get SigOpCodeType with hight byte opcode
+/// @param opCode opcode of mesh message.
 - (SigOpCodeType)getOpCodeTypeWithOpcode:(UInt8)opCode {
     if (opCode == SigOpCodeType_RFU) {
         return SigOpCodeType_RFU;
@@ -1770,7 +1762,7 @@
     return SigOpCodeType_vendor3;
 }
 
-/// get UInt8 OpCode Type
+/// Get UInt8 OpCode Type
 /// @param opCode 1-octet Opcodes,eg:0x00; 2-octet Opcodes,eg:0x8201; 3-octet Opcodes,eg:0xC11102
 - (SigOpCodeType)getOpCodeTypeWithUInt32Opcode:(UInt32)opCode {
     if (opCode < 0x7F) {//1-octet Opcodes,Opcode Format:0xxxxxxx (excluding 01111111),eg:0x00
@@ -1783,7 +1775,7 @@
     return SigOpCodeType_RFU;
 }
 
-/// get OpCode Data
+/// Get OpCode Data
 /// @param opCode 1-octet Opcodes,eg:0x00; 2-octet Opcodes,eg:0x8201; 3-octet Opcodes,eg:0xC11102
 - (NSData *)getOpCodeDataWithUInt32Opcode:(UInt32)opCode {
     UInt8 tem = 0;
@@ -1815,7 +1807,7 @@
 - (BOOL)isDeviceKeyOpCode:(UInt32)opCode {
     BOOL isDeviceKey = NO;
     //0x00~0x06 || 0x8000~0x805F
-    if ((opCode >= SigOpCode_configAppKeyAdd && opCode <= SigOpCode_configHeartbeatPublicationStatus) || (opCode >= SigOpCode_configAppKeyDelete && opCode <= SigOpCode_remoteProvisioningPDUReport) || (opCode >= SigOpCode_SubnetBridgeGet && opCode <= SigOpCode_BridgeCapabilityStatus)) {
+    if ((opCode >= SigOpCode_configAppKeyAdd && opCode <= SigOpCode_configHeartbeatPublicationStatus) || (opCode >= SigOpCode_configAppKeyDelete && opCode <= SigOpCode_remoteProvisioningPDUReport) || (opCode >= SigOpCode_SubnetBridgeGet && opCode <= SigOpCode_BridgingTableSizeStatus)) {
         isDeviceKey = YES;
     }
     return isDeviceKey;
@@ -1832,6 +1824,8 @@
     }
 }
 
+/// Get Detail Of SigFirmwareUpdatePhaseType
+/// @param phaseType The SigFirmwareUpdatePhaseType value.
 - (NSString *)getDetailOfSigFirmwareUpdatePhaseType:(SigFirmwareUpdatePhaseType)phaseType {
     NSString *tem = @"";
     switch (phaseType) {
@@ -1865,6 +1859,8 @@
     return tem;
 }
 
+/// Get Detail Of SigFirmwareUpdateServerAndClientModelStatusType
+/// @param statusType The SigFirmwareUpdateServerAndClientModelStatusType value.
 - (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType {
     NSString *tem = @"";
     switch (statusType) {
@@ -1898,6 +1894,8 @@
     return tem;
 }
 
+/// Get Detail Of SigBLOBTransferStatusType
+/// @param statusType The SigBLOBTransferStatusType value.
 - (NSString *)getDetailOfSigBLOBTransferStatusType:(SigBLOBTransferStatusType)statusType {
     NSString *tem = @"prohibited";
     switch (statusType) {
@@ -1940,6 +1938,8 @@
     return tem;
 }
 
+/// Get Detail Of SigDirectionsFieldValues
+/// @param directions The SigDirectionsFieldValues value.
 - (NSString *)getDetailOfSigDirectionsFieldValues:(SigDirectionsFieldValues)directions {
     NSString *tem = @"prohibited";
     switch (directions) {
@@ -1958,6 +1958,8 @@
     return tem;
 }
 
+/// Get Detail Of SigNodeFeaturesState
+/// @param state The SigNodeFeaturesState value.
 - (NSString *)getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)state {
     NSString *tem = @"not fount";
     switch (state) {
@@ -1976,6 +1978,8 @@
     return tem;
 }
 
+/// Get Detail Of KeyRefreshPhase
+/// @param phase The KeyRefreshPhase value.
 - (NSString *)getDetailOfKeyRefreshPhase:(KeyRefreshPhase)phase {
     NSString *tem = @"unknown";
     switch (phase) {
@@ -1994,6 +1998,8 @@
     return tem;
 }
 
+/// Get Detail Of SigNodeIdentityState
+/// @param state The SigNodeIdentityState value.
 - (NSString *)getDetailOfSigNodeIdentityState:(SigNodeIdentityState)state {
     NSString *tem = @"not fount";
     switch (state) {

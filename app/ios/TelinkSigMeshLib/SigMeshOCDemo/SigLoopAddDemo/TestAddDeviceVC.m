@@ -189,7 +189,9 @@ static NSUInteger provisionAddress;
                         [weakSelf refreshShowLabel];
                         [weakSelf showAndSaveLog:@"[Start] provisioning"];
                         NSData *staticOOBData = nil;
-                        [SDKLibCommand startProvisionWithPeripheral:peripheral unicastAddress:provisionAddress networkKey:[SigDataSource.share curNetKey] netkeyIndex:SigDataSource.share.curNetkeyModel.index provisionType:ProvisionType_NoOOB staticOOBData:staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                        [SDKLibCommand startProvisionWithPeripheral:peripheral networkKey:[SigDataSource.share curNetKey] netkeyIndex:SigDataSource.share.curNetkeyModel.index staticOOBData:staticOOBData capabilitiesResponse:^UInt16(SigProvisioningCapabilitiesPdu * _Nonnull capabilitiesPdu) {
+                            return [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
+                        } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                             weakSelf.currentProvisionTime = [[NSDate date] timeIntervalSince1970] - weakSelf.time;
                             [weakSelf showAndSaveLog:[NSString stringWithFormat:@"[End] provision success, provisionT:%0.2f",weakSelf.currentProvisionTime]];
                             weakSelf.time = [[NSDate date] timeIntervalSince1970];

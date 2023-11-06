@@ -81,7 +81,7 @@
     self.address.textColor = [UIColor grayColor];
     //新做法：直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
-        self.address.textColor = kDefultColor;
+        self.address.textColor = HEX(#4A87EE);
     }
 }
 

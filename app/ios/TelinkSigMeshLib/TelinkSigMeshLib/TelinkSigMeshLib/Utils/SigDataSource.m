@@ -23,9 +23,9 @@
 
 #import "SigDataSource.h"
 #import "OpenSSLHelper.h"
-#if SUPPORTEXTENDSIONS
 #import "SDKLibCommand+directForwarding.h"
-#endif
+
+#define kVisitorMeshUUIDList    @"kVisitorMeshUUIDList"
 
 @interface SigDataSource ()<SigDataSourceDelegate>
 @property (nonatomic,assign) UInt32 sequenceNumberOnDelegate;//通过SigDataSourceDelegate回调的sequenceNumber值。
@@ -33,17 +33,58 @@
 
 @implementation SigDataSource
 
-+ (SigDataSource *)share{
+///nodes should show in HomeViewController
+- (NSMutableArray<SigNodeModel *> *)curNodes {
+    @synchronized(self) {
+        if (_curNodes != nil) {
+            return _curNodes;
+        } else {
+            _curNodes = [NSMutableArray array];
+            NSArray *nodes = [NSArray arrayWithArray:_nodes];
+            for (SigNodeModel *node in nodes) {
+                if (node.excluded) {
+                    continue;
+                }
+                BOOL isProvisioner = NO;
+                NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+                for (SigProvisionerModel *provisioner in provisioners) {
+                    if (node.UUID && [node.UUID isEqualToString:provisioner.UUID]) {
+                        isProvisioner = YES;
+                        break;
+                    }
+                }
+                if (isProvisioner) {
+                    continue;
+                }
+                [_curNodes addObject:node];
+            }
+            return _curNodes;
+        }
+    }
+}
+
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigDataSource *shareDS = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareDS = [[SigDataSource alloc] init];        
     });
     return shareDS;
 }
 
-- (instancetype)init{
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         [self initData];
     }
     return self;
@@ -58,16 +99,17 @@
     _appKeys = [NSMutableArray array];
     _scanList = [NSMutableArray array];
     _networkExclusions = [NSMutableArray array];
+    _nodeSequenceNumberCacheList = [NSMutableArray array];
     [self setIvIndexUInt32:kDefaultIvIndex];
     [self setSequenceNumberUInt32:0];
     _partial = false;
     _encryptedArray = [NSMutableArray array];
     _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID)]];
     _defaultNodeInfos = [NSMutableArray array];
-    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_Panel];
-    DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT];
-    DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_HSL];
-    DeviceTypeModel *model4 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_LPN];
+    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_Panel compositionData:nil];
+    DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT compositionData:nil];
+    DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_HSL compositionData:nil];
+    DeviceTypeModel *model4 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_LPN compositionData:nil];
     [_defaultNodeInfos addObject:model1];
     [_defaultNodeInfos addObject:model2];
     [_defaultNodeInfos addObject:model3];
@@ -120,8 +162,212 @@
 //    _defaultRootCertificateData = [LibTools getDataWithFileName:@"root" fileType:@"der"];
 //    _defaultRootCertificateData =[LibTools getDataWithFileName:@"root_error" fileType:@"der"];
     _forwardingTableModelList = [NSMutableArray array];
+    _filterModel = [[SigProxyFilterModel alloc] init];
 }
 
+- (SigAppkeyModel *)curAppkeyModel {
+    if (_curAppkeyModel == nil) {
+        //The default use first appkey temporarily
+        if (_appKeys && _appKeys.count > 0) {
+            _curAppkeyModel = _appKeys.firstObject;
+        }
+    }
+    return _curAppkeyModel;
+}
+
+- (SigNetkeyModel *)curNetkeyModel {
+    if (_curNetkeyModel == nil) {
+        //The default use first netkey temporarily
+        if (_netKeys && _netKeys.count > 0) {
+            _curNetkeyModel = _netKeys.firstObject;
+        }
+    }
+    return _curNetkeyModel;
+}
+
+- (NSData *)getLocationMeshData {
+    return [NSUserDefaults.standardUserDefaults objectForKey:kSaveLocationDataKey];
+}
+
+- (void)saveLocationMeshData:(NSData *)data {
+    [NSUserDefaults.standardUserDefaults setObject:data forKey:kSaveLocationDataKey];
+    [NSUserDefaults.standardUserDefaults synchronize];
+}
+
+- (void)initMeshData {
+    NSString *timestamp = [LibTools getNowTimeStringOfJson];
+    //1.netKeys
+    SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
+    netkey.index = 0;
+    netkey.phase = 0;
+    netkey.timestamp = timestamp;
+    netkey.oldKey = @"00000000000000000000000000000000";
+    netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
+    netkey.name = @"Default NetKey";
+    netkey.minSecurity = @"secure";
+    _curNetkeyModel = nil;
+    [_netKeys removeAllObjects];
+    [_netKeys addObject:netkey];
+
+    //2.appKeys
+    SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
+    appkey.oldKey = @"00000000000000000000000000000000";
+    appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
+    appkey.name = @"Default AppKey";
+    appkey.boundNetKey = 0;
+    appkey.index = 0;
+    _curAppkeyModel = nil;
+    [_appKeys removeAllObjects];
+    [_appKeys addObject:appkey];
+
+    //3.provisioners
+    SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:0 andProvisionerUUID:[self getCurrentProvisionerUUID]];
+    [_provisioners removeAllObjects];
+    [_provisioners addObject:provisioner];
+
+    //4.add new provisioner to nodes
+    _curNodes = nil;
+    [_nodes removeAllObjects];
+    [self addLocationNodeWithProvisioner:provisioner];
+
+    //5.add default group
+    Groups *defultGroup = [[Groups alloc] init];
+    [_groups removeAllObjects];
+    for (int i=0; i<defultGroup.groupCount; i++) {
+        SigGroupModel *group = [[SigGroupModel alloc] init];
+        group.address = [NSString stringWithFormat:@"%04X",0xc000+i];
+        group.parentAddress = [NSString stringWithFormat:@"%04X",0];
+        group.name = defultGroup.names[i];
+        [_groups addObject: group];
+    }
+
+    [_scenes removeAllObjects];
+    [_networkExclusions removeAllObjects];
+    [_encryptedArray removeAllObjects];
+    [_forwardingTableModelList removeAllObjects];
+    
+    _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
+    _schema = @"http://json-schema.org/draft-04/schema#";
+    _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
+    _meshName = @"Telink-Sig-Mesh";
+    _version = @"1.0.0";
+    _timestamp = timestamp;
+    [self setIvIndexUInt32:kDefaultIvIndex];
+    [self setSequenceNumberUInt32:0];
+    [self saveCurrentIvIndex:kDefaultIvIndex sequenceNumber:0];
+    _filterModel = [[SigProxyFilterModel alloc] init];
+    [self addExtendGroupList];
+}
+
+/// every provisioner has at most one node that blacklisted is set to YES.
+- (void)optimizationDataOfBlacklisted {
+    NSArray *provisioners = [NSArray arrayWithArray:self.provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
+        NSMutableArray *nodes = [NSMutableArray arrayWithArray:[self getNodesOfProvisioner:provisioner]];
+        if (nodes && nodes.count > 0) {
+            [nodes removeLastObject];
+            for (SigNodeModel *node in nodes) {
+                if (node.excluded) {
+                    [self.nodes removeObject:node];
+                }
+            }
+        }
+    }
+    _curNodes = nil;
+}
+
+- (NSArray <SigNodeModel *>*)getNodesOfProvisioner:(SigProvisionerModel *)provisioner {
+    NSMutableArray *mArray = [NSMutableArray array];
+    NSArray *allNodes = [NSArray arrayWithArray:self.nodes];
+    for (SigNodeModel *node in allNodes) {
+        if ([self checkTheNode:node isBelongToProvisioner:provisioner]) {
+            [mArray addObject:node];
+        }
+    }
+    [mArray sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+        return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+    }];
+    return mArray;
+}
+
+- (BOOL)checkTheNode:(SigNodeModel *)node isBelongToProvisioner:(SigProvisionerModel *)provisioner {
+    BOOL tem = NO;
+    NSMutableArray <SigRangeModel *>*mArray = [NSMutableArray arrayWithArray:provisioner.allocatedUnicastRange];
+    for (SigRangeModel *range in mArray) {
+        if (range.lowIntAddress <= node.address && range.hightIntAddress >= node.address) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (NSInteger)getProvisionerCount {
+    NSInteger max = 0;
+    NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
+        if (max < provisioner.allocatedUnicastRange.firstObject.hightIntAddress) {
+            max = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
+        }
+    }
+    NSInteger count = (max >> 8) + 1;
+    return count;
+}
+
+///Special handling: store the uuid and MAC mapping relationship.
+- (void)saveScanList {
+    NSMutableArray *tem = [NSMutableArray array];
+    NSArray *nodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *node in nodes) {
+        SigScanRspModel *rsp = [self getScanRspModelWithUnicastAddress:node.address];
+        if (rsp) {
+            [tem addObject:rsp];
+        }
+    }
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:tem];
+    [[NSUserDefaults standardUserDefaults] setObject:data forKey:kScanList_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+///Special handling: load the uuid and MAC mapping relationship.
+- (void)loadScanList {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSData *data = [defaults objectForKey:kScanList_key];
+    if (data) {
+        NSArray *array = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        if (array && array.count) {
+            [self.scanList addObjectsFromArray:array];
+        }
+    }
+}
+
+///Special handling: clean the uuid and MAC mapping relationship.
+- (void)cleanScanList {
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kScanList_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (SigNodeModel *)getDeviceWithAddress:(UInt16)address {
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *model in curNodes) {
+        if (model.getElementCount > 1) {
+            if (model.address <= address && model.address + model.getElementCount - 1 >= address) {
+                return model;
+            }
+        } else {
+            if (model.address == address) {
+                return model;
+            }
+        }
+    }
+    return nil;
+}
+
+/**
+ * @brief   Get dictionary for save local.
+ * @return  mesh dictionary
+ * @note    Developer need use this API to get mesh data save locally.
+ */
 - (NSDictionary *)getDictionaryFromDataSource {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
@@ -147,15 +393,6 @@
         dict[@"timestamp"] = _timestamp;
     }
     dict[@"partial"] = [NSNumber numberWithBool:_partial];
-    if (_networkExclusions) {
-        NSMutableArray *array = [NSMutableArray array];
-        NSArray *netKeys = [NSArray arrayWithArray:_networkExclusions];
-        for (SigExclusionModel *model in netKeys) {
-            NSDictionary *exclusionDict = [model getDictionaryOfSigExclusionModel];
-            [array addObject:exclusionDict];
-        }
-        dict[@"networkExclusions"] = array;
-    }
     if (_netKeys) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
@@ -210,7 +447,15 @@
         }
         dict[@"scenes"] = array;
     }
-#if SUPPORTEXTENDSIONS
+    if (_networkExclusions) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *networkExclusions = [NSArray arrayWithArray:_networkExclusions];
+        for (SigExclusionListObjectModel *model in networkExclusions) {
+            NSDictionary *networkExclusionDict = [model getDictionaryOfSigExclusionListObjectModel];
+            [array addObject:networkExclusionDict];
+        }
+        dict[@"networkExclusions"] = array;
+    }
     if (_forwardingTableModelList) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *forwardingTableModelList = [NSArray arrayWithArray:_forwardingTableModelList];
@@ -220,10 +465,13 @@
         }
         dict[@"forwardingTableModelList"] = array;
     }
-#endif
     return dict;
 }
 
+/**
+ * @brief   Set mesh dictionary to SDK DataSource.
+ * @param   dictionary    mesh dictionary.
+ */
 - (void)setDictionaryToDataSource:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -231,7 +479,7 @@
     _curNodes = nil;
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"meshUUID"]) {
-        NSString *str = dictionary[@"meshUUID"];
+        NSString *str = [dictionary[@"meshUUID"] uppercaseString];
         if (str.length == 32) {
             _meshUUID = [LibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
@@ -255,16 +503,6 @@
     }
     if ([allKeys containsObject:@"partial"]) {
         _partial = [dictionary[@"partial"] boolValue];
-    }
-    if ([allKeys containsObject:@"networkExclusions"]) {
-        NSMutableArray *netKeys = [NSMutableArray array];
-        NSArray *array = dictionary[@"networkExclusions"];
-        for (NSDictionary *netkeyDict in array) {
-            SigExclusionModel *model = [[SigExclusionModel alloc] init];
-            [model setDictionaryToSigExclusionModel:netkeyDict];
-            [netKeys addObject:model];
-        }
-        _networkExclusions = netKeys;
     }
     if ([allKeys containsObject:@"netKeys"]) {
         NSMutableArray *netKeys = [NSMutableArray array];
@@ -326,7 +564,16 @@
         }
         _scenes = scenes;
     }
-#if SUPPORTEXTENDSIONS
+    if ([allKeys containsObject:@"networkExclusions"]) {
+        NSMutableArray *networkExclusions = [NSMutableArray array];
+        NSArray *array = dictionary[@"networkExclusions"];
+        for (NSDictionary *networkExclusionDict in array) {
+            SigExclusionListObjectModel *model = [[SigExclusionListObjectModel alloc] init];
+            [model setDictionaryToSigExclusionListObjectModel:networkExclusionDict];
+            [networkExclusions addObject:model];
+        }
+        _networkExclusions = networkExclusions;
+    }
     if ([allKeys containsObject:@"forwardingTableModelList"]) {
         NSMutableArray *forwardingTableModelList = [NSMutableArray array];
         NSArray *array = dictionary[@"forwardingTableModelList"];
@@ -337,11 +584,17 @@
         }
         _forwardingTableModelList = forwardingTableModelList;
     }
-#endif
     _curNetkeyModel = nil;
     _curAppkeyModel = nil;
+    [self addExtendGroupList];
+    [self optimizationDataOfBlacklisted];
 }
 
+/**
+ * @brief   Get formatDictionary for Export mesh.
+ * @return  mesh formatDictionary
+ * @note    Developer need use this API to export mesh data.
+ */
 - (NSDictionary *)getFormatDictionaryFromDataSource {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
@@ -367,15 +620,6 @@
         dict[@"timestamp"] = _timestamp;
     }
     dict[@"partial"] = [NSNumber numberWithBool:_partial];
-    if (_networkExclusions) {
-        NSMutableArray *array = [NSMutableArray array];
-        NSArray *netKeys = [NSArray arrayWithArray:_networkExclusions];
-        for (SigExclusionModel *model in netKeys) {
-            NSDictionary *exclusionDict = [model getDictionaryOfSigExclusionModel];
-            [array addObject:exclusionDict];
-        }
-        dict[@"networkExclusions"] = array;
-    }
     if (_netKeys) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
@@ -430,80 +674,113 @@
         }
         dict[@"scenes"] = array;
     }
+    if (_networkExclusions) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *networkExclusions = [NSArray arrayWithArray:_networkExclusions];
+        for (SigExclusionListObjectModel *model in networkExclusions) {
+            NSDictionary *networkExclusionDict = [model getDictionaryOfSigExclusionListObjectModel];
+            [array addObject:networkExclusionDict];
+        }
+        dict[@"networkExclusions"] = array;
+    }
     dict[@"id"] = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
     return dict;
 }
 
-- (UInt16)provisionAddress{
+/**
+ * @brief   Get the unicastAddress for provision in add device process.
+ * @return  unicastAddress for provision
+ * @note    The address of the last node may be out of range..
+ */
+- (UInt16)provisionAddress {
     if (!self.curProvisionerModel) {
         TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
         return kLocationAddress;
     } else {
-        UInt16 maxAddr = self.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        NSArray *nodes = [NSArray arrayWithArray:_nodes];
-        for (SigNodeModel *node in nodes) {
-            NSInteger curMax = node.address + node.elements.count - 1;
-            if (curMax > maxAddr) {
-                maxAddr = curMax;
-            }
-        }
-
-        NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-        if (dict) {
-            NSString *key = [self getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:self.meshUUID provisionerUUID:self.getCurrentProvisionerUUID];
-            if ([dict.allKeys containsObject:key]) {
-                UInt16 localMaxAddr = [dict[key] intValue];
-                if (maxAddr > localMaxAddr) {
-                    [self saveLocationProvisionAddress:maxAddr];
-                } else {
-                    maxAddr = localMaxAddr;
-                }
+        //2023年07月25日15:31:42
+        //the address of add device is get from the node of this provisioner, max address of node add one.
+        //if allocatedUnicastRange of provisioner is depleted, need add a new SigRangeModel to allocatedUnicastRange.
+        NSMutableArray <SigRangeModel *>*allocatedUnicastRange = [NSMutableArray arrayWithArray:self.curProvisionerModel.allocatedUnicastRange];
+        [allocatedUnicastRange sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigRangeModel *)obj1 lowIntAddress] > [(SigRangeModel *)obj2 lowIntAddress];
+        }];
+        SigRangeModel *range = allocatedUnicastRange.lastObject;
+        UInt16 maxAddr = range.lowIntAddress;
+        NSMutableArray <SigNodeModel *>*nodeList = [NSMutableArray arrayWithArray:[self getNodesOfProvisioner:self.curProvisionerModel]];
+        if (nodeList && nodeList.count > 0) {
+            SigNodeModel *node = nodeList.lastObject;
+            if (node.address + node.elements.count <= range.hightIntAddress) {
+                maxAddr = node.address + node.elements.count;
             } else {
-                [self saveLocationProvisionAddress:maxAddr];
+                // allocatedUnicastRange of provisioner is depleted
+                BOOL result = [self addNewUnicastRangeToCurrentProvisioner];
+                if (result) {
+                    return self.curProvisionerModel.allocatedUnicastRange.lastObject.lowIntAddress;
+                } else {
+                    return 0;
+                }
             }
-        } else {
-            [self saveLocationProvisionAddress:maxAddr];
         }
-
-        //限制短地址的做法：
-//        if (maxAddr + 1 <= self.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress) {
-//            //Attention: location address is the smallest address of allocatedUnicastRange, app can add new node by use address from smallest address+1.
-//            return maxAddr + 1;
-//        } else {
-//            TeLogInfo(@"warning: Abnormal situation, there is no more address can be use.");
-//            return 0;
-//        }
-        //不限制短地址的做法：
-        return maxAddr + 1;
+        return maxAddr;
     }
 }
 
-- (SigAppkeyModel *)curAppkeyModel{
-    if (_curAppkeyModel == nil) {
-        //The default use first appkey temporarily
-        if (_appKeys && _appKeys.count > 0) {
-            _curAppkeyModel = _appKeys.firstObject;
+/**
+ * @brief   Get the unicastAddress for provision in add device process.
+ * @param   elementCount    the element count of node.
+ * @return  unicastAddress for provision
+ * @note    If the allocatedUnicastRange of provision has been exhausted, SDK will add a new allocatedUnicastRange. 0 means all allocatedUnicastRange is exhausted.
+ */
+- (UInt16)getProvisionAddressWithElementCount:(UInt8)elementCount {
+    SigRangeModel *rangeModel = self.curProvisionerModel.allocatedUnicastRange.lastObject;
+    UInt16 maxUnicastAddress = rangeModel.lowIntAddress;
+    NSArray *array = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *node in array) {
+        if (node.address >= rangeModel.lowIntAddress && node.lastUnicastAddress <= rangeModel.hightIntAddress) {
+            if ((node.lastUnicastAddress + elementCount) <= rangeModel.hightIntAddress) {
+                maxUnicastAddress = node.lastUnicastAddress + 1;
+            } else {
+                // The allocatedUnicastRange of provision has been exhausted, need add a new allocatedUnicastRange.
+                // if can not allocated a new UnicastRange, return 0.
+                BOOL result = [self addNewUnicastRangeToCurrentProvisioner];
+                if (result) {
+                    return [self getProvisionAddressWithElementCount:elementCount];
+                } else {
+                    return 0;
+                }
+            }
         }
     }
-    return _curAppkeyModel;
+    return maxUnicastAddress;
 }
 
-- (SigNetkeyModel *)curNetkeyModel{
-    if (_curNetkeyModel == nil) {
-        //The default use first netkey temporarily
-        if (_netKeys && _netKeys.count > 0) {
-            _curNetkeyModel = _netKeys.firstObject;
-        }
+/**
+ * @brief   Get current netKey hex data of current mesh.
+ * @return  netKey hex data
+ */
+- (NSData *)curNetKey {
+    if (self.curNetkeyModel) {
+        return [LibTools nsstringToHex:self.curNetkeyModel.key];
     }
-    return _curNetkeyModel;
+    return nil;
 }
 
-- (SigProvisionerModel *)curProvisionerModel{
-    //Practice 1. Temporary default to the first provisioner
-//    if (self.provisioners.count > 0) {
-//        return self.provisioners.firstObject;
-//    }
-    //Practice 2. get provisioner by location node's uuid.
+/**
+ * @brief   Get current appKey hex data of current mesh.
+ * @return  appKey hex data
+ */
+- (NSData *)curAppKey {
+    if (self.curAppkeyModel) {
+        return [LibTools nsstringToHex:self.curAppkeyModel.key];
+    }
+    return nil;
+}
+
+/**
+ * @brief   Get local provisioner of current mesh.
+ * @return  local provisioner
+ */
+- (SigProvisionerModel *)curProvisionerModel {
     NSString *curUUID = [self getCurrentProvisionerUUID];
     NSArray *provisioners = [NSArray arrayWithArray: _provisioners];
     for (SigProvisionerModel *provisioner in provisioners) {
@@ -514,21 +791,11 @@
     return nil;
 }
 
-- (NSData *)curNetKey{
-    if (self.curNetkeyModel) {
-        return [LibTools nsstringToHex:self.curNetkeyModel.key];
-    }
-    return nil;
-}
-
-- (NSData *)curAppKey{
-    if (self.curAppkeyModel) {
-        return [LibTools nsstringToHex:self.curAppkeyModel.key];
-    }
-    return nil;
-}
-
-- (SigNodeModel *)curLocationNodeModel{
+/**
+ * @brief   Get local provisioner node of current mesh.
+ * @return  local provisioner node
+ */
+- (SigNodeModel *)curLocationNodeModel {
     if (self.curProvisionerModel) {
         NSArray *nodes = [NSArray arrayWithArray: self.nodes];
         for (SigNodeModel *model in nodes) {
@@ -540,7 +807,11 @@
     return nil;
 }
 
-- (NSInteger)getOnlineDevicesNumber{
+/**
+ * @brief   Get online node count of current mesh.
+ * @return  online node count
+ */
+- (NSInteger)getOnlineDevicesNumber {
     NSInteger count = 0;
     NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
     for (SigNodeModel *model in curNodes) {
@@ -551,6 +822,10 @@
     return count;
 }
 
+/**
+ * @brief   Determine whether there is a node containing the time modelID.
+ * @return  `YES` means exist, `NO` means not exist.
+ */
 - (BOOL)hasNodeExistTimeModelID {
     BOOL tem = NO;
     NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
@@ -565,127 +840,71 @@
     return tem;
 }
 
-/// Special handling: store the uuid of current provisioner.
-- (void)saveCurrentProvisionerUUID:(NSString *)uuid {
-    if (uuid.length == 32) {
-        uuid = [LibTools UUIDToMeshUUID:uuid];
-    }
-    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-/// Special handling: get the uuid of current provisioner.
-- (NSString *)getCurrentProvisionerUUID{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *uuid = [defaults objectForKey:kCurrenProvisionerUUID_key];
-    if (uuid.length == 32) {
-        uuid = [LibTools UUIDToMeshUUID:uuid];
-    }
-    return uuid;
-}
-
-/// Special handling: store the ivIndex+sequenceNumber of current meshUUID+provisionerUUID+unicastAddress.
-- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
-    if (dict == nil) {
-        dict = @{};
-    }
-    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
-    NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
-    NSString *value = [NSString stringWithFormat:@"%@+%@", self.ivIndex, self.sequenceNumber];
-    [mDict setValue:value forKey:key];
-    [defaults setObject:mDict forKey:kLocationIvIndexAndSequenceNumberDictionary_key];
-    [defaults synchronize];
-}
-
-- (NSString *)getLocationIvIndexString {
-    NSString *tem = 0;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
-    if (dict != nil) {
-        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
-        NSString *value = [dict valueForKey:key];
-        if (value) {
-            NSArray *array = [value componentsSeparatedByString:@"+"];
-            if (array && array.count > 0) {
-                tem = array.firstObject;
-            }
-        }
-    }
-    return tem;
-}
-
-- (UInt32)getLocationIvIndexUInt32 {
-    NSString *ivIndexStr = [self getLocationIvIndexString];
-    return [LibTools uint32From16String:ivIndexStr];
-}
-
-- (NSString *)getLocationSequenceNumberString {
-    NSString *tem = 0;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
-    if (dict != nil) {
-        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
-        NSString *value = [dict valueForKey:key];
-        if (value) {
-            NSArray *array = [value componentsSeparatedByString:@"+"];
-            if (array && array.count > 1) {
-                tem = array.lastObject;
-            }
-        }
-    }
-    return tem;
-}
-
-- (UInt32)getLocationSequenceNumberUInt32 {
-    NSString *sequenceNumberStr = [self getLocationSequenceNumberString];
-    return [LibTools uint32From16String:sequenceNumberStr];
-}
-
-- (BOOL)existLocationIvIndexAndLocationSequenceNumber {
-    BOOL tem = 0;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
-    if (dict != nil) {
-        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
-        NSString *value = [dict valueForKey:key];
-        if (value && value.length > 0) {
-            tem = YES;
-        }
-    }
-    return tem;
-}
-
+/**
+ * @brief   Get the ivIndex of current mesh.
+ * @return  ivIndex
+ */
 - (UInt32)getIvIndexUInt32 {
     return [LibTools uint32From16String:_ivIndex];
 }
 
+/**
+ * @brief   Set the ivIndex to current mesh.
+ * @param   ivIndexUInt32    the ivIndex of mesh.
+ * @note    Developer can set ivIndex by this API if ivIndex is save in other place. Range is 0~0xFFFFFFFF, SDK will trigger ivUpdate process when sequenceNumber is greater than 0xC00000.
+ */
 - (void)setIvIndexUInt32:(UInt32)ivIndexUInt32 {
     _ivIndex = [NSString stringWithFormat:@"%08X", ivIndexUInt32];
 }
 
+/**
+ * @brief   Get the SequenceNumber of current mesh.
+ * @return  SequenceNumber
+ */
 - (UInt32)getSequenceNumberUInt32 {
     return [LibTools uint32From16String:_sequenceNumber];
 }
 
+/**
+ * @brief   Set the sequenceNumber to current mesh.
+ * @param   sequenceNumberUInt32    the sequenceNumber of mesh.
+ * @note    Developer can set sequenceNumber by this API if sequenceNumber is save in other place. Range is 0~0xFFFFFF, SDK will trigger ivUpdate process when sequenceNumber is greater than 0xC00000.
+ */
 - (void)setSequenceNumberUInt32:(UInt32)sequenceNumberUInt32 {
     _sequenceNumber = [NSString stringWithFormat:@"%06X", sequenceNumberUInt32];
 }
 
-- (NSData *)getIvIndexData{
-    return [LibTools nsstringToHex:_ivIndex];
+/**
+ * @brief   Get the SigNodeSequenceNumberCacheModel from the match SequenceNumberCache through the unicastAddress of node..
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  A SigNodeSequenceNumberCacheModel that save NodeSequenceNumber infomation. nil means there are no SigNodeSequenceNumberCacheModel match this unicastAddress had been receive.
+ * @note    SDK will clean all SigNodeSequenceNumberCacheModel when connect mesh success, then SDK add SigNodeSequenceNumberCacheModel by all mesh message notify on current mesh.
+ */
+- (SigNodeSequenceNumberCacheModel *)getSigNodeSequenceNumberCacheModelWithUnicastAddress:(UInt16)unicastAddress {
+    SigNodeSequenceNumberCacheModel *tem = nil;
+    NSArray *array = [NSArray arrayWithArray:_nodeSequenceNumberCacheList];
+    for (SigNodeSequenceNumberCacheModel *model in array) {
+        if (model.unicastAddress == unicastAddress) {
+            tem = model;
+            break;
+        }
+    }
+    return tem;
 }
 
+/**
+ * @brief   Update ivIndex in local after SDK receivce a new vaild beacon.
+ * @param   ivIndexUInt32    the new ivIndexUInt32.
+ * @note    Callback this API when SDK receivce a new vaild beacon.
+ */
 - (void)updateIvIndexUInt32FromBeacon:(UInt32)ivIndexUInt32 {
     if ([self getIvIndexUInt32] != ivIndexUInt32) {
         [self setIvIndexUInt32:ivIndexUInt32];
         UInt32 newSequenceNumber = 0;
         _sequenceNumberOnDelegate = newSequenceNumber;
         [self setSequenceNumberUInt32:newSequenceNumber];
-        //v3.3.3之后。(因为ivIndex更新后，所有设备端的sequenceNumber会归零。)
-        [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigMeshLib.share.dataSource.meshUUID];
-        [[NSUserDefaults standardUserDefaults] synchronize];// save sequenceNumber
+        // since v3.3.3, Because after the ivIndex is updated, the sequenceNumber of all nodes will be reset to zero.
+        [self.nodeSequenceNumberCacheList removeAllObjects];
         [self saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:newSequenceNumber];
         __block NSString *blockIv = _ivIndex;
         __weak typeof(self) weakSelf = self;
@@ -697,6 +916,11 @@
     }
 }
 
+/**
+ * @brief   Update sequenceNumber after SDK send a mesh message.
+ * @param   sequenceNumberUInt32    the sequenceNumberUInt32 for next networkPDU.
+ * @note    Callback this API when SDK send a networkPDU in SigNetworkLayer.
+ */
 - (void)updateSequenceNumberUInt32WhenSendMessage:(UInt32)sequenceNumberUInt32 {
     _sequenceNumber = [NSString stringWithFormat:@"%06X", sequenceNumberUInt32];
     if ((sequenceNumberUInt32 - _sequenceNumberOnDelegate >= self.defaultSequenceNumberIncrement) || (sequenceNumberUInt32 < _sequenceNumberOnDelegate)) {
@@ -711,18 +935,12 @@
     [self saveCurrentIvIndex:[self getIvIndexUInt32] sequenceNumber:sequenceNumberUInt32];
 }
 
-- (NSData *)getLocationMeshData {
-    return [NSUserDefaults.standardUserDefaults objectForKey:kSaveLocationDataKey];
-}
-
-- (void)saveLocationMeshData:(NSData *)data {
-    [NSUserDefaults.standardUserDefaults setObject:data forKey:kSaveLocationDataKey];
-    [NSUserDefaults.standardUserDefaults synchronize];
-}
-
-/// Init SDK location Data(include create mesh.json, check provisioner, provisionLocation)
-- (void)configData{
-    //初始化当前手机的唯一标识UUID，卸载重新安装才会重新生成。
+/**
+ * @brief   Loading local mesh data
+ * @note    1.create provisionerUUID if need. 2.create mesh if need. 3.check provisioner. 4.load SigScanRspModel cache list.
+ */
+- (void)configData {
+    // Initialize the unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
     NSString *provisionerUUID = [self getCurrentProvisionerUUID];
     if (provisionerUUID == nil) {
         [self saveCurrentProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
@@ -745,77 +963,91 @@
     [self checkExistLocationProvisioner];
     //init SigScanRspModel list
     [self loadScanList];
-    //init Bluetooth
-    [SigBluetooth share];
 }
 
-- (void)initMeshData {
-    NSString *timestamp = [LibTools getNowTimeStringOfJson];
-    //1.netKeys
-    SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
-    netkey.index = 0;
-    netkey.phase = 0;
-    netkey.timestamp = timestamp;
-    netkey.oldKey = @"00000000000000000000000000000000";
-    netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
-    netkey.name = @"Default NetKey";
-    netkey.minSecurity = @"secure";
-    _curNetkeyModel = nil;
-    [_netKeys removeAllObjects];
-    [_netKeys addObject:netkey];
-
-    //2.appKeys
-    SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
-    appkey.oldKey = @"00000000000000000000000000000000";
-    appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
-    appkey.name = @"Default AppKey";
-    appkey.boundNetKey = 0;
-    appkey.index = 0;
-    _curAppkeyModel = nil;
-    [_appKeys removeAllObjects];
-    [_appKeys addObject:appkey];
-
-    //3.provisioners
-    SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:0 andProvisionerUUID:[self getCurrentProvisionerUUID]];
-    [_provisioners removeAllObjects];
-    [_provisioners addObject:provisioner];
-
-    //4.add new provisioner to nodes
-    _curNodes = nil;
-    [_nodes removeAllObjects];
-    [self addLocationNodeWithProvisioner:provisioner];
-
-    //5.add default group
-    Groups *defultGroup = [[Groups alloc] init];
-    [_groups removeAllObjects];
-    for (int i=0; i<defultGroup.groupCount; i++) {
-        SigGroupModel *group = [[SigGroupModel alloc] init];
-        group.address = [NSString stringWithFormat:@"%04X",0xc000+i];
-        group.parentAddress = [NSString stringWithFormat:@"%04X",0];
-        group.name = defultGroup.names[i];
-        [_groups addObject: group];
+/**
+ * @brief   Check SigDataSource.provisioners.
+ * @note    This api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
+ */
+- (void)checkExistLocationProvisioner {
+    //1.clean the match advertisementDataServiceData cache.
+    if (_encryptedArray) {
+        [_encryptedArray removeAllObjects];
     }
-
-    [_scenes removeAllObjects];
-    [_encryptedArray removeAllObjects];
-    [_forwardingTableModelList removeAllObjects];
     
-    _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
-    _schema = @"http://json-schema.org/draft-04/schema#";
-    _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
-    _meshName = @"Telink-Sig-Mesh";
-//    _version = LibTools.getSDKVersion;
-    _version = @"1.0.0";
-    _timestamp = timestamp;
-    [self setIvIndexUInt32:kDefaultIvIndex];
-    [self setSequenceNumberUInt32:0];
-    [self saveCurrentIvIndex:kDefaultIvIndex sequenceNumber:0];
+    //2.Check if _curProvisionerModel exists?
+    if (self.curProvisionerModel) {
+        TeLogInfo(@"exist local provisioner, needn't create");
+    }else{
+        //don't exist local provisioner, create and add to SIGDataSource.provisioners, then save location.
+        //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
+        if (self.provisioners.count <= 0x7f) {
+            SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:[self getMaxHighAllocatedUnicastAddress] andProvisionerUUID:[self getCurrentProvisionerUUID]];
+            [_provisioners addObject:provisioner];
+            [self addLocationNodeWithProvisioner:provisioner];
+            _timestamp = [LibTools getNowTimeStringOfJson];
+            [self saveLocationData];
+        }else{
+            TeLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
+            return;
+        }
+    }
+    
+    // 3.config _filterModel.addressList
+    // addresses is unicastAddress of curLocationNodeModel.
+    SigNodeModel *node = self.curLocationNodeModel;
+    NSMutableArray *addresses = [NSMutableArray array];
+    if (node.elements && node.elements.count > 0) {
+        NSArray *elements = [NSArray arrayWithArray:node.elements];
+        for (SigElementModel *element in elements) {
+            element.parentNodeAddress = node.address;
+            // Add Unicast Addresses of all Elements of the Provisioner's Node.
+            [addresses addObject:@(element.unicastAddress)];
+            // Add all addresses that the Node's Models are subscribed to.
+            NSArray *models = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *model in models) {
+                if (model.subscribe && model.subscribe.count > 0) {
+                    NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
+                    for (NSString *addr in subscribe) {
+                        UInt16 indAddr = [LibTools uint16From16String:addr];
+                        [addresses addObject:@(indAddr)];
+                    }
+                }
+            }
+        }
+    } else {
+        [addresses addObject:@(node.address)];
+    }
+    // If _filterModel.filterType is a SigProxyFilerType_whitelist, the local address must exist and cannot be deleted, if it does not exist, add it here. If _filterModel.filterType is a SigProxyFilerType_blacklist, the local address cannot exist, and if it exists, it will be deleted here.
+    for (NSNumber *localAddressNumber in addresses) {
+        if (_filterModel.filterType == SigProxyFilerType_whitelist) {
+            if (![_filterModel.addressList containsObject:localAddressNumber]) {
+                [_filterModel.addressList addObject:localAddressNumber];
+            }
+        } else {
+            if ([_filterModel.addressList containsObject:localAddressNumber]) {
+                [_filterModel.addressList removeObject:localAddressNumber];
+            }
+        }
+    }
+    
+    if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
+        //SequenceNumber add defaultSequenceNumberIncrement.
+        SigDataSource.share.ivIndex = SigDataSource.share.getLocalIvIndexString;
+        [SigDataSource.share setSequenceNumberUInt32:SigDataSource.share.getLocalSequenceNumberUInt32 + SigDataSource.share.defaultSequenceNumberIncrement];
+        [SigDataSource.share saveCurrentIvIndex:SigDataSource.share.getIvIndexUInt32 sequenceNumber:SigDataSource.share.getSequenceNumberUInt32];
+    }
 }
 
-- (void)addLocationNodeWithProvisioner:(SigProvisionerModel *)provisioner{
+/**
+ * @brief   Add node of provisioner to mesh network.
+ * @param   provisioner    the SigProvisionerModel object.
+ * @note    Callback this API when add a new provisioner to the mesh network.
+ */
+- (void)addLocationNodeWithProvisioner:(SigProvisionerModel *)provisioner {
     SigNodeModel *node = [[SigNodeModel alloc] init];
 
-    //init defoult data
+    // init defoult data
     node.UUID = provisioner.UUID;
     node.secureNetworkBeacon = YES;
     node.defaultTTL = TTL_DEFAULT;
@@ -831,7 +1063,7 @@
     node.vid = @"0100";
     node.crpl = @"0100";
     
-    //添加本地节点的element
+    // add elements
     NSMutableArray *elements = [NSMutableArray array];
     SigElementModel *element = [[SigElementModel alloc] init];
     element.name = @"Primary Element";
@@ -869,24 +1101,44 @@
     [_nodes addObject:node];
 }
 
-- (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress{
+/**
+ * @brief   Add node to mesh network.
+ * @param   model    the SigNodeModel object.
+ * @note    Callback this API when provision success.
+ */
+- (void)addAndSaveNodeToMeshNetworkWithDeviceModel:(SigNodeModel *)model {
+    @synchronized(self) {
+        if ([_nodes containsObject:model]) {
+            NSInteger index = [_nodes indexOfObject:model];
+            _nodes[index] = model;
+        } else {
+            [_nodes addObject:model];
+        }
+        _curNodes = nil;
+        [self optimizationDataOfBlacklisted];
+        [self saveLocationData];
+    }
+}
+
+/**
+ * @brief   Delete node from mesh network.
+ * @param   deviceAddress    the unicastAddress of node.
+ * @note    Callback this API when APP delete node complete. 1.SDK will set this node to blacklisted, then optimization Data Of Blacklisted.  2.Delete action with this unicasetAddress in scene. 3.Delete ScanRspModel of this unicastAddress. 4.Delete SigEncryptedModel of this unicastAddress.
+ */
+- (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress {
     @synchronized(self) {
         NSArray *nodes = [NSArray arrayWithArray:_nodes];
         for (int i=0; i<nodes.count; i++) {
             SigNodeModel *model = nodes[i];
             if (model.address == deviceAddress) {
-                [_nodes removeObjectAtIndex:i];
+//                [_nodes removeObjectAtIndex:i];
+                // use the `excluded` to flag the node of delete, need not remove node.
+                model.excluded = YES;
                 break;
             }
         }
         NSArray *scenes = [NSArray arrayWithArray:_scenes];
         for (SigSceneModel *scene in scenes) {
-//            for (NSString *actionAddress in scene.addresses) {
-//                if (actionAddress.intValue == deviceAddress) {
-//                    [scene.addresses removeObject:actionAddress];
-//                    break;
-//                }
-//            }
             NSArray *actionList = [NSArray arrayWithArray:scene.actionList];
             for (ActionModel *action in actionList) {
                 if (action.address == deviceAddress) {
@@ -895,59 +1147,19 @@
                 }
             }
         }
+        [self optimizationDataOfBlacklisted];
         [self saveLocationData];
-        [self deleteScanRspModelWithAddress:deviceAddress];
-        [self deleteSigEncryptedModelWithAddress:deviceAddress];
+        [self deleteScanRspModelWithUnicastAddress:deviceAddress];
+        [self deleteSigEncryptedModelWithUnicastAddress:deviceAddress];
     }
 }
 
-/// check SigDataSource.provisioners, this api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
-- (void)checkExistLocationProvisioner{
-    if (_encryptedArray) {
-        [_encryptedArray removeAllObjects];
-    }
-    if (self.curProvisionerModel) {
-        TeLogInfo(@"exist location provisioner, needn't create");
-    }else{
-        //don't exist location provisioner, create and add to SIGDataSource.provisioners, then save location.
-        //Attention: the max location address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
-        if (self.provisioners.count <= 0x7f) {
-            SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:[self getMaxHighAddressUnicast] andProvisionerUUID:[self getCurrentProvisionerUUID]];
-            [_provisioners addObject:provisioner];
-            [self addLocationNodeWithProvisioner:provisioner];
-            _timestamp = [LibTools getNowTimeStringOfJson];
-            [self saveLocationData];
-        }else{
-            TeLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
-            return;
-        }
-    }
-    if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
-        //sno添加增量
-        [SigDataSource.share setIvIndex:SigDataSource.share.getLocationIvIndexString];
-        [SigDataSource.share setSequenceNumberUInt32:SigDataSource.share.getLocationSequenceNumberUInt32 + SigDataSource.share.defaultSequenceNumberIncrement];
-        [SigDataSource.share saveCurrentIvIndex:SigDataSource.share.getIvIndexUInt32 sequenceNumber:SigDataSource.share.getSequenceNumberUInt32];
-    }
-}
-
-- (void)changeLocationProvisionerNodeAddressToAddress:(UInt16)address {
-    SigNodeModel *node = self.curLocationNodeModel;
-    node.unicastAddress = [NSString stringWithFormat:@"%04X",address];
-}
-
-- (NSInteger)getProvisionerCount{
-    NSInteger max = 0;
-    NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
-    for (SigProvisionerModel *provisioner in provisioners) {
-        if (max < provisioner.allocatedUnicastRange.firstObject.hightIntAddress) {
-            max = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
-        }
-    }
-    NSInteger count = (max >> 8) + 1;
-    return count;
-}
-
-- (UInt16)getMaxHighAddressUnicast {
+/**
+ * @brief   Get max unicast address of all provisioner.allocatedUnicastRange.
+ * @return  new scene address, min address is 1.
+ * @note    new scene address = exist scene address + 1, min address is 1.
+ */
+- (UInt16)getMaxHighAllocatedUnicastAddress {
     UInt16 max = 0;
     NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
     for (SigProvisionerModel *provisioner in provisioners) {
@@ -960,7 +1172,13 @@
     return max;
 }
 
-- (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress{
+/**
+ * @brief   add or delete the groupID of node.
+ * @param   add    `YES` means add groupID to node, `NO` means delete groupID from node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @param   groupAddress    the groupAddress of group.
+ */
+- (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress {
     @synchronized(self) {
         SigNodeModel *model = [self getDeviceWithAddress:[unicastAddress intValue]];
         if (model) {
@@ -969,36 +1187,27 @@
                     [model addGroupID:groupAddress];
                     [self saveLocationData];
                 } else {
-                    TeLogInfo(@"add group model fail.");
+                    TeLogInfo(@"groupID is exist, add group model fail.");
                 }
             } else {
                 if (![model.getGroupIDs containsObject:groupAddress]) {
-                    TeLogInfo(@"delete group model fail.");
+                    TeLogInfo(@"groupID is not exist, delete group model fail.");
                 } else {
                     [model deleteGroupID:groupAddress];
                     [self saveLocationData];
                 }
             }
         } else {
-            TeLogInfo(@"edit group model fail, node no found.");
+            TeLogInfo(@"node no found, edit group model fail.");
         }
     }
 }
 
-- (void)addAndSaveNodeToMeshNetworkWithDeviceModel:(SigNodeModel *)model{
-    @synchronized(self) {
-        if ([_nodes containsObject:model]) {
-            NSInteger index = [_nodes indexOfObject:model];
-            _nodes[index] = model;
-        } else {
-            [_nodes addObject:model];
-        }
-        _curNodes = nil;
-        [self saveLocationData];
-    }
-}
-
-- (void)setAllDevicesOutline{
+/**
+ * @brief   Update the state of all nodes to DeviceStateOutOfLine.
+ * @note    1.set _curNodes to nil. 2.set node of _nodes to DeviceStateOutOfLine.
+ */
+- (void)setAllDevicesOutline {
     @synchronized(self) {
         _curNodes = nil;
         NSArray *nodes = [NSArray arrayWithArray:_nodes];
@@ -1008,10 +1217,12 @@
     }
 }
 
-- (void)saveLocationData{
-//    TeLogDebug(@"");
+/**
+ * @brief   Save Current SigDataSource to local by NSUserDefaults.
+ * @note    1.sort _nodes, sort _groups, sort _scene. 2.change SigDataSource to data, and save by NSUserDefaults. 3. save encrypt json data to file `TelinkSDKMeshJsonData`.
+ */
+- (void)saveLocationData {
     @synchronized(self) {
-        //sort
         [self.nodes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
             return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
         }];
@@ -1019,7 +1230,7 @@
             return [(SigGroupModel *)obj1 intAddress] > [(SigGroupModel *)obj2 intAddress];
         }];
         [self.scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-            return [(SigSceneModel *)obj1 number] > [(SigSceneModel *)obj2 number];
+            return [LibTools uint16From16String:[(SigSceneModel *)obj1 number]] > [LibTools uint16From16String:[(SigSceneModel *)obj2 number]];
         }];
 
         NSDictionary *meshDict = [self getDictionaryFromDataSource];
@@ -1029,95 +1240,11 @@
     }
 }
 
-///Special handling: store the uuid and MAC mapping relationship.
-- (void)saveScanList {
-    NSMutableArray *tem = [NSMutableArray array];
-    NSArray *nodes = [NSArray arrayWithArray:self.curNodes];
-    for (SigNodeModel *node in nodes) {
-        SigScanRspModel *rsp = [self getScanRspModelWithAddress:node.address];
-        if (rsp) {
-            [tem addObject:rsp];
-        }
-    }
-    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:tem];
-    [[NSUserDefaults standardUserDefaults] setObject:data forKey:kScanList_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-///Special handling: load the uuid and MAC mapping relationship.
-- (void)loadScanList {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSData *data = [defaults objectForKey:kScanList_key];
-    if (data) {
-        NSArray *array = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-        if (array && array.count) {
-            [self.scanList addObjectsFromArray:array];
-        }
-    }
-}
-
-///Special handling: clean the uuid and MAC mapping relationship.
-- (void)cleanScanList {
-    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kScanList_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-- (SigNodeModel *)getDeviceWithAddress:(UInt16)address{
-    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
-    for (SigNodeModel *model in curNodes) {
-        if (model.getElementCount > 1) {
-            if (model.address <= address && model.address + model.getElementCount - 1 >= address) {
-                return model;
-            }
-        } else {
-            if (model.address == address) {
-                return model;
-            }
-        }
-    }
-    return nil;
-}
-
-///nodes should show in HomeViewController
-- (NSMutableArray<SigNodeModel *> *)curNodes{
-    @synchronized(self) {
-        if (_curNodes && _curNodes.count == _nodes.count - _provisioners.count) {
-            return _curNodes;
-        } else {
-            _curNodes = [NSMutableArray array];
-            NSArray *nodes = [NSArray arrayWithArray:_nodes];
-            for (SigNodeModel *node in nodes) {
-                BOOL isProvisioner = NO;
-                NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
-                for (SigProvisionerModel *provisioner in provisioners) {
-                    if (node.UUID && [node.UUID isEqualToString:provisioner.UUID]) {
-                        isProvisioner = YES;
-                        break;
-                    }
-                }
-                if (isProvisioner) {
-                    continue;
-                }
-                [_curNodes addObject:node];
-            }
-            return _curNodes;
-        }
-    }
-}
-
-- (void)saveLocationProvisionAddress:(NSInteger)address{
-    NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-    if (dict == nil) {
-        dict = [NSMutableDictionary dictionary];
-    }else{
-        dict = [NSMutableDictionary dictionaryWithDictionary:dict];
-    }
-    NSString *key = [self getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:self.meshUUID provisionerUUID:self.getCurrentProvisionerUUID];
-    [dict setObject:[NSNumber numberWithInteger:address] forKey:key];
-    [[NSUserDefaults standardUserDefaults] setObject:dict forKey:kCurrentMeshProvisionAddress_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
+/**
+ * @brief   update the state of node.
+ * @param   responseMessage    the state responseMessage of node.
+ * @param   source    the unicastAddress of responseMessage.
+ */
 - (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source {
     SigNodeModel *node = [self getDeviceWithAddress:source];
     if (responseMessage && node) {
@@ -1125,7 +1252,12 @@
     }
 }
 
-- (UInt16)getNewSceneAddress{
+/**
+ * @brief   Get the new scene address for add a new scene object.
+ * @return  new scene address, min address is 1.
+ * @note    new scene address = exist scene address + 1, min address is 1.
+ */
+- (UInt16)getNewSceneAddress {
     UInt16 address = 1;
     if (_scenes.count > 0) {
         [_scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
@@ -1136,12 +1268,19 @@
     return address;
 }
 
-- (void)saveSceneModelWithModel:(SigSceneModel *)model{
+/**
+ * @brief   Add or Update the infomation of  SigSceneModel to _scenes..
+ * @param   model    the SigSceneModel object.
+ */
+- (void)saveSceneModelWithModel:(SigSceneModel *)model {
     @synchronized(self) {
         SigSceneModel *scene = [[SigSceneModel alloc] init];
         scene.number = model.number;
         scene.name = model.name;
         scene.actionList = [[NSMutableArray alloc] initWithArray:model.actionList];
+        [scene.actionList sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(ActionModel *)obj1 address] > [(ActionModel *)obj2 address];
+        }];
 
         if ([self.scenes containsObject:scene]) {
             NSInteger index = [self.scenes indexOfObject:scene];
@@ -1153,7 +1292,11 @@
     }
 }
 
-- (void)deleteSceneModelWithModel:(SigSceneModel *)model{
+/**
+ * @brief   Delete SigSceneModel from _scenes..
+ * @param   model    the SigSceneModel object.
+ */
+- (void)deleteSceneModelWithModel:(SigSceneModel *)model {
     @synchronized(self) {
         if ([self.scenes containsObject:model]) {
             [self.scenes removeObject:model];
@@ -1162,6 +1305,12 @@
     }
 }
 
+/**
+ * @brief   Get the SigEncryptedModel from the match advertisementDataServiceData cache through the unicastAddress of node..
+ * @param   address    the unicastAddress of node.
+ * @return  A SigEncryptedModel that save advertisementDataServiceData infomation. nil means there are no SigEncryptedModel match this unicastAddress had been scaned.
+ * @note    SDK will cache the SigEncryptedModel when SDK scaned the nodeIdentity broadcast data of provisioned node or when SDK scaned the nodeIdentity broadcast data of provisioned node.
+ */
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {
     SigEncryptedModel *tem = nil;
     NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
@@ -1173,11 +1322,16 @@
     return tem;
 }
 
-- (void)deleteSigEncryptedModelWithAddress:(UInt16)address {
+/**
+ * @brief   Delete the SigEncryptedModel from the match advertisementDataServiceData cache.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    SDK need to delete the SigEncryptedModel of the node when kickout the node or scan the newer nodeIdentity broadcast data of this unicastAddress.
+ */
+- (void)deleteSigEncryptedModelWithUnicastAddress:(UInt16)unicastAddress {
     @synchronized(self) {
         NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
         for (SigEncryptedModel *model in encryptedArray) {
-            if (model.address == address) {
+            if (model.address == unicastAddress) {
                 [_encryptedArray removeObject:model];
                 break;
             }
@@ -1185,8 +1339,13 @@
     }
 }
 
-///Special handling: determine model whether exist current meshNetwork
-- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model{
+/**
+ * @brief   Determine whether the SigScanRspModel is in current mesh network.
+ * @param   model    the ScanRspModel object.
+ * @return  `YES` means model belong to the network, `NO` means model does not belong to the network.
+ * @note    The SigScanRspModel has all infomation of peripheral in Apple System.
+ */
+- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model {
     if (model && model.advertisementDataServiceData && model.advertisementDataServiceData.length) {
         SigIdentificationType advType = [model getIdentificationType];
         switch (advType) {
@@ -1241,18 +1400,35 @@
     return NO;
 }
 
-///Special handling: determine peripheralUUIDString whether exist current meshNetwork
-- (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString{
-    SigNodeModel *node = [self getNodeWithUUID:peripheralUUIDString];
+/**
+ * @brief   Determine whether the peripheralUUIDString is in current mesh network.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @return  `YES` means peripheralUUIDString belong to the network, `NO` means peripheralUUIDString does not belong to the network.
+ * @note    The peripheralUUIDString is the peripheral identify in Apple System.
+ */
+- (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString {
+    SigNodeModel *node = [self getNodeWithPeripheralUUIDString:peripheralUUIDString];
     return node != nil;
 }
 
+/**
+ * @brief   Determine whether the advertisementDataServiceData is exist in the match advertisementDataServiceData cache of current mesh network. (the match advertisementDataServiceData cache can avoid repeated calculations of advertisementDataServiceData.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)existEncryptedWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData {
     SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
     tem.advertisementDataServiceData = advertisementDataServiceData;
     return [_encryptedArray containsObject:tem];
 }
 
+/**
+ * @brief   Determine whether the networkID is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is networkID.)
+ * @param   networkID    the networkID in ScanRspModel object.
+ * @return  `YES` means networkID belong to the network, `NO` means networkID does not belong to the network.
+ * @note    The networkID is the broadcast data of provisioned node.
+ */
 - (BOOL)matchWithNetworkID:(NSData *)networkID {
     if (self.curNetkeyModel.phase == distributingKeys) {
         if (self.curNetkeyModel.oldNetworkId && self.curNetkeyModel.oldNetworkId.length > 0) {
@@ -1266,52 +1442,31 @@
     return NO;
 }
 
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is nodeIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   nodes    the node list of mesh network.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey {
-    NSData *hash = [advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
-    NSData *random = [advertisementDataServiceData subdataWithRange:NSMakeRange(9, 8)];
-    NSArray *curNodes = [NSArray arrayWithArray:nodes];
-    for (SigNodeModel *node in curNodes) {
-        // Data are: 48 bits of Padding (0s), 64 bit Random and Unicast Address.
-        Byte byte[6];
-        memset(byte, 0, 6);
-        NSData *data = [NSData dataWithBytes:byte length:6];
-        NSMutableData *mData = [NSMutableData dataWithData:data];
-        [mData appendData:random];
-        // 把大端模式的数字Number转为本机数据存放模式
-        UInt16 address = CFSwapInt16BigToHost(node.address);;
-        data = [NSData dataWithBytes:&address length:2];
-        [mData appendData:data];
-//        NSLog(@"mdata=%@",mData);
-        NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.keys.identityKey];
-        BOOL isExist = NO;
-        if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
-            isExist = YES;
-        }
-        // If the Key refresh procedure is in place, the identity might have been generated with the old key.
-        if (!isExist && networkKey.oldKey && networkKey.oldKey.length > 0 && ![networkKey.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.oldKeys.identityKey];
-            if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
-                isExist = YES;
-            }
-        }
-        if (isExist) {
-            NSMutableData *mData = [NSMutableData dataWithData:hash];
-            [mData appendData:random];
-            SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
-            tem.advertisementDataServiceData = advertisementDataServiceData;
-            tem.hashData = hash;
-            tem.randomData = random;
-            tem.peripheralUUID = peripheralUUIDString;
-            tem.encryptedData = encryptedData;
-            tem.address = node.address;
-            [self deleteSigEncryptedModelWithAddress:node.address];
-            [self.encryptedArray addObject:tem];
-            return YES;
-        }
-    }
-    return NO;
+    // Data are: 48 bits of Padding (0s), 64 bit Random and Unicast Address.
+    Byte byte[6];
+    memset(byte, 0, 6);
+    NSData *paddingData = [NSData dataWithBytes:byte length:6];
+    return [self matchNodeIdentityWithAdvertisementDataServiceData:advertisementDataServiceData peripheralUUIDString:peripheralUUIDString nodes:nodes networkKey:networkKey paddingData:paddingData];
 }
 
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is privateNetworkIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchPrivateNetworkIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString networkKey:(SigNetkeyModel *)networkKey {
     NSData *networkID = networkKey.networkId;
     NSData *netKey = [LibTools nsstringToHex:networkKey.key];
@@ -1369,23 +1524,45 @@
     return NO;
 }
 
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is privateNodeIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   nodes    the node list of mesh network.
+ * @param   networkKey    the network key of mesh network.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
 - (BOOL)matchPrivateNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey {
+    // Data are: 40 bits of Padding (0s), 8bits is 0x03, 64 bits Random and 16 bits Unicast Address.
+    Byte byte[6];
+    memset(byte, 0, 6);
+    byte[5] = SigIdentificationType_privateNodeIdentity;
+    NSData *paddingData = [NSData dataWithBytes:byte length:6];
+    return [self matchNodeIdentityWithAdvertisementDataServiceData:advertisementDataServiceData peripheralUUIDString:peripheralUUIDString nodes:nodes networkKey:networkKey paddingData:paddingData];
+}
+
+/**
+ * @brief   Determine whether the advertisementDataServiceData is the node in the mesh network with this networkKey. (The type of advertisementDataServiceData is privateNodeIdentity of nodeIdentity.)
+ * @param   advertisementDataServiceData    the advertisementDataServiceData in ScanRspModel object.
+ * @param   peripheralUUIDString    the peripheralUUIDString in ScanRspModel object.
+ * @param   nodes    the node list of mesh network.
+ * @param   networkKey    the network key of mesh network.
+ * @param   paddingData    the length of paddingData is 8 bytes, paddingData of nodeIdentity is 0x000000000000, paddingData of privateNodeIdentity is 0x000000000003.
+ * @return  `YES` means advertisementDataServiceData belong to the network, `NO` means advertisementDataServiceData does not belong to the network.
+ * @note    The advertisementDataServiceData is the broadcast data of provisioned node.
+ */
+- (BOOL)matchNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey paddingData:(NSData *)paddingData {
     NSData *hash = [advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
     NSData *random = [advertisementDataServiceData subdataWithRange:NSMakeRange(9, 8)];
     NSArray *curNodes = [NSArray arrayWithArray:nodes];
     for (SigNodeModel *node in curNodes) {
-        // Data are: 40 bits of Padding (0s), 8bits is 0x03, 64 bits Random and 16 bits Unicast Address.
-        Byte byte[6];
-        memset(byte, 0, 6);
-        byte[5] = SigIdentificationType_privateNodeIdentity;
-        NSData *data = [NSData dataWithBytes:byte length:6];
-        NSMutableData *mData = [NSMutableData dataWithData:data];
+        NSMutableData *mData = [NSMutableData dataWithData:paddingData];
         [mData appendData:random];
-        // 把大端模式的数字Number转为本机数据存放模式
+        // Convert the digital Number in big-endian mode to the local data storage mode
         UInt16 address = CFSwapInt16BigToHost(node.address);;
-        data = [NSData dataWithBytes:&address length:2];
+        NSData *data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];
-//        NSLog(@"mdata=%@",mData);
         NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.keys.identityKey];
         BOOL isExist = NO;
         if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
@@ -1408,7 +1585,7 @@
             tem.peripheralUUID = peripheralUUIDString;
             tem.encryptedData = encryptedData;
             tem.address = node.address;
-            [self deleteSigEncryptedModelWithAddress:node.address];
+            [self deleteSigEncryptedModelWithUnicastAddress:node.address];
             [self.encryptedArray addObject:tem];
             return YES;
         }
@@ -1416,7 +1593,12 @@
     return NO;
 }
 
-- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model{
+/**
+ * @brief   update the ScanRspModel object infomation to dataSource.
+ * @param   model    the ScanRspModel object.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model {
     @synchronized(self) {
         if (model.uuid) {
             if ([self.scanList containsObject:model]) {
@@ -1430,15 +1612,9 @@
                 if (oldModel.address != model.address && model.address == 0) {
                     model.address = oldModel.address;
                 }
-//                if (model.provisioned) {
-//                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
-//                        model.networkIDData = oldModel.networkIDData;
-//                    }
-//                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
-//                        model.nodeIdentityData = oldModel.nodeIdentityData;
-//                    }
-//                }
-//                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
+                if (oldModel.advUuid && oldModel.advUuid.length > 0 && model.advUuid == nil) {
+                    model.advUuid = oldModel.advUuid;
+                }
                 if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.advertisementDataServiceData isEqualToData:model.advertisementDataServiceData]) {
                     [self.scanList replaceObjectAtIndex:index withObject:model];
                     [self saveScanList];
@@ -1451,41 +1627,61 @@
     }
 }
 
-- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)uuid{
+/**
+ * @brief   Get the ScanRspModel object through the peripheral UUIDString of node.
+ * @param   peripheralUUIDString    the peripheral UUIDString of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)peripheralUUIDString {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
     for (SigScanRspModel *model in scanList) {
-        if ([model.uuid isEqualToString:uuid]) {
+        if ([model.uuid isEqualToString:peripheralUUIDString]) {
             return model;
         }
     }
     return nil;
 }
 
-- (SigScanRspModel *)getScanRspModelWithMac:(NSString *)mac{
+/**
+ * @brief   Get the ScanRspModel object through the macAddress of node.
+ * @param   macAddress    the macAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithMacAddress:(NSString *)macAddress {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
     for (SigScanRspModel *model in scanList) {
-        if ([model.macAddress isEqualToString:mac]) {
+        if ([model.macAddress isEqualToString:macAddress]) {
             return model;
         }
     }
     return nil;
 }
 
-- (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address{
+/**
+ * @brief   Get the ScanRspModel object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (SigScanRspModel *)getScanRspModelWithUnicastAddress:(UInt16)unicastAddress {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
     for (SigScanRspModel *model in scanList) {
-        if (model.address == address) {
+        if (model.provisioned == YES && model.address == unicastAddress) {
             return model;
         }
     }
     return nil;
 }
 
-- (void)deleteScanRspModelWithAddress:(UInt16)address{
+/**
+ * @brief   Delete the ScanRspModel object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ */
+- (void)deleteScanRspModelWithUnicastAddress:(UInt16)unicastAddress {
     @synchronized(self) {
         NSArray *scanList = [NSArray arrayWithArray:_scanList];
         for (SigScanRspModel *model in scanList) {
-            if (model.address == address) {
+            if (model.address == unicastAddress) {
                 [_scanList removeObject:model];
                 break;
             }
@@ -1494,7 +1690,12 @@
     }
 }
 
-- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId {
+/**
+ * @brief   Get the netKey object through the networkId of netKey.
+ * @param   networkId    the networkId of netKey.
+ * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this networkId in mesh network.
+ */
+- (SigNetkeyModel * _Nullable)getNetkeyModelWithNetworkId:(NSData *)networkId {
     SigNetkeyModel *tem = nil;
     NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
     for (SigNetkeyModel *model in netKeys) {
@@ -1509,11 +1710,16 @@
     return tem;
 }
 
-- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index {
+/**
+ * @brief   Get the netKey object through the netKeyIndex of netKey.
+ * @param   netKeyIndex    the netKeyIndex of netKey.
+ * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this netKeyIndex in mesh network.
+ */
+- (SigNetkeyModel * _Nullable)getNetkeyModelWithNetkeyIndex:(NSInteger)netKeyIndex {
     SigNetkeyModel *tem = nil;
     NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
     for (SigNetkeyModel *model in netKeys) {
-        if (model.index == index) {
+        if (model.index == netKeyIndex) {
             tem = model;
             break;
         }
@@ -1521,7 +1727,12 @@
     return tem;
 }
 
-- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
+/**
+ * @brief   Get the appKey object through the appKeyIndex of appKey.
+ * @param   appkeyIndex    the appKeyIndex of appKey.
+ * @return  A SigAppkeyModel that save appKey infomation. nil means there are no appKey with this appKeyIndex in mesh network.
+ */
+- (SigAppkeyModel * _Nullable)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
     SigAppkeyModel *model = nil;
     NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
     for (SigAppkeyModel *tem in appKeys) {
@@ -1533,25 +1744,37 @@
     return model;
 }
 
-- (SigNodeModel *)getNodeWithUUID:(NSString *)uuid{
+/**
+ * @brief   Get the node object through the bluetooth PeripheralUUID of node.
+ * @param   peripheralUUIDString    the bluetooth PeripheralUUID of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network. The bluetooth PeripheralUUID is the unique identifier of Apple System.
+ */
+- (SigNodeModel * _Nullable)getNodeWithPeripheralUUIDString:(NSString *)peripheralUUIDString {
     NSArray *nodes = [NSArray arrayWithArray:_nodes];
     for (SigNodeModel *model in nodes) {
-        if ([model.peripheralUUID isEqualToString:uuid]) {
+        if ([model.peripheralUUID isEqualToString:peripheralUUIDString]) {
             return model;
         }
     }
     return nil;
 }
 
-- (SigNodeModel *)getNodeWithAddress:(UInt16)address{
+/**
+ * @brief   Get the node object through the unicastAddress of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network.
+ */
+- (SigNodeModel * _Nullable)getNodeWithAddress:(UInt16)unicastAddress {
     NSArray *nodes = [NSArray arrayWithArray:_nodes];
     for (SigNodeModel *model in nodes) {
         if (model.elements.count > 1) {
-            if (model.address <= address && model.address + model.elements.count - 1 >= address) {
+            if (model.address <= unicastAddress && model.address + model.elements.count - 1 >= unicastAddress) {
                 return model;
             }
         } else {
-            if (model.address == address) {
+            if (model.address == unicastAddress) {
                 return model;
             }
         }
@@ -1559,22 +1782,20 @@
     return nil;
 }
 
-- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress{
-    NSArray *nodes = [NSArray arrayWithArray:_nodes];
-    for (SigNodeModel *model in nodes) {
-        //peripheralUUID || location node's uuid
-        if (macAddress && model.macAddress && [model.macAddress.uppercaseString isEqualToString:macAddress.uppercaseString]) {
-            return model;
-        }
-    }
-    return nil;
-}
-
-- (SigNodeModel *)getCurrentConnectedNode{
+/**
+ * @brief   Get current connected node object.
+ * @return  A SigNodeModel that save node infomation. nil means there are no connected node in the mesh network.
+ */
+- (SigNodeModel * _Nullable)getCurrentConnectedNode {
     SigNodeModel *node = [self getNodeWithAddress:self.unicastAddressOfConnected];
     return node;
 }
 
+/**
+ * @brief   Get the provisioner object through the provisioner node address.
+ * @param   address    the unicastAddress of provisioner node.
+ * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this unicastAddress.
+ */
 - (SigProvisionerModel * _Nullable)getProvisionerModelWithAddress:(UInt16)address {
     SigProvisionerModel *tem = nil;
     NSArray *array = [NSArray arrayWithArray:_provisioners];
@@ -1587,7 +1808,29 @@
     return tem;
 }
 
-- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID{
+/**
+ * @brief   Get the provisioner object through the provisionerUUID.
+ * @param   provisionerUUIDString    The UUID String of provisioner.
+ * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this UUID.
+ */
+- (SigProvisionerModel * _Nullable)getProvisionerModelWithProvisionerUUIDString:(NSString *)provisionerUUIDString {
+    SigProvisionerModel *tem = nil;
+    NSArray *array = [NSArray arrayWithArray:_provisioners];
+    for (SigProvisionerModel *model in array) {
+        if ([model.UUID isEqualToString:provisionerUUIDString]) {
+            tem = model;
+            break;
+        }
+    }
+    return tem;
+}
+
+/**
+ * @brief   Get the modelID object through the modelID
+ * @param   modelID    The id of model.
+ * @return  A ModelIDModel that save model infomation. nil means no model infomation of this modelID.
+ */
+- (ModelIDModel * _Nullable)getModelIDModel:(NSNumber *)modelID{
     ModelIDs *modelIDs = [[ModelIDs alloc] init];
     NSArray *all = [NSArray arrayWithArray:modelIDs.modelIDs];
     for (ModelIDModel *model in all) {
@@ -1598,7 +1841,12 @@
     return nil;
 }
 
-- (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress {
+/**
+ * @brief   Get the group object through the group address
+ * @param   groupAddress    The address of group.
+ * @return  A SigGroupModel that save group infomation. nil means no group infomation of this groupAddress.
+ */
+- (SigGroupModel * _Nullable)getGroupModelWithGroupAddress:(UInt16)groupAddress {
     SigGroupModel *tem = nil;
     NSArray *groups = [NSArray arrayWithArray:_groups];
     for (SigGroupModel *model in groups) {
@@ -1610,7 +1858,14 @@
     return tem;
 }
 
-- (DeviceTypeModel *)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID {
+/**
+ * @brief   Obtain the DeviceTypeModel through the PID and CID of the node.
+ * @param   CID    The company id of node.
+ * @param   PID    The product id of node.
+ * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
+ * @note    This API is using to get the DeviceTypeModel through the PID and CID of the node, DeviceTypeModel has default composition data of node.
+ */
+- (DeviceTypeModel * _Nullable)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID {
     DeviceTypeModel *model = nil;
     NSArray *defaultNodeInfos = [NSArray arrayWithArray:_defaultNodeInfos];
     for (DeviceTypeModel *tem in defaultNodeInfos) {
@@ -1624,6 +1879,11 @@
 
 #pragma mark - OOB存取相关
 
+/**
+ * @brief   Add a oobModel cached by the SDK.
+ * @param   oobModel    an oob object.
+ * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ */
 - (void)addAndUpdateSigOOBModel:(SigOOBModel *)oobModel {
     if ([self.OOBList containsObject:oobModel]) {
         NSInteger index = [self.OOBList indexOfObject:oobModel];
@@ -1634,6 +1894,11 @@
     [self saveCurrentOobList];
 }
 
+/**
+ * @brief   Add a list of oobModel cached by the SDK.
+ * @param   oobModelList    a list of oob object.
+ * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ */
 - (void)addAndUpdateSigOOBModelList:(NSArray <SigOOBModel *>*)oobModelList {
     for (SigOOBModel *oobModel in oobModelList) {
         if ([self.OOBList containsObject:oobModel]) {
@@ -1646,6 +1911,11 @@
     [self saveCurrentOobList];
 }
 
+/**
+ * @brief   Delete one oobModel cached by the SDK.
+ * @param   oobModel    The oob object.
+ * @note    This API is using to delete oob infomation of node, oob infomation is use for OOB provision.
+ */
 - (void)deleteSigOOBModel:(SigOOBModel *)oobModel {
     if ([self.OOBList containsObject:oobModel]) {
         [self.OOBList removeObject:oobModel];
@@ -1653,11 +1923,21 @@
     }
 }
 
+/**
+ * @brief   Remove all OOB data cached by the SDK.
+ * @note    This API is using to delete oob infomation of all nodes, oob infomation is use for OOB provision.
+ */
 - (void)deleteAllSigOOBModel {
     [self.OOBList removeAllObjects];
     [self saveCurrentOobList];
 }
 
+/**
+ * @brief   Obtaining OOB information of node based on UUID of unprovision node.
+ * @param   UUIDString    The UUID of unprovision node, app get UUID from scan unprovision node.
+ * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
+ * @note    This API is using to get oob infomation of node, oob infomation is use for OOB provision.
+ */
 - (SigOOBModel *)getSigOOBModelWithUUID:(NSString *)UUIDString {
     SigOOBModel *tem = nil;
     NSArray *OOBList = [NSArray arrayWithArray:self.OOBList];
@@ -1670,6 +1950,9 @@
     return tem;
 }
 
+/**
+ * @brief   Save current OOB List to NSUserDefaults.
+ */
 - (void)saveCurrentOobList {
     NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.OOBList];
     [[NSUserDefaults standardUserDefaults] setObject:data forKey:kOOBStoreKey];
@@ -1677,180 +1960,17 @@
 }
 
 #pragma mark - new api since v3.3.3
-- (UInt16)getMaxUsedUnicastAddressOfJson {
-    UInt16 maxUsedUnicastAddress = 0;
-    for (SigNodeModel *node in self.nodes) {
-        UInt16 usedUnicastAddress = node.address + node.elements.count - 1;
-        if (maxUsedUnicastAddress < usedUnicastAddress) {
-            maxUsedUnicastAddress = usedUnicastAddress;
-            TeLogInfo(@"update maxUsedUnicastAddress to 0x%X",maxUsedUnicastAddress);
-        }
-    }
-    return maxUsedUnicastAddress;
-}
 
-- (UInt16)getMaxUsedUnicastAddressOfJsonWithProvisioner:(SigProvisionerModel *)provisioner {
-    UInt16 maxUsedUnicastAddress = 0;
-    for (SigNodeModel *node in self.nodes) {
-        BOOL belongToProvisioner = NO;
-        for (SigRangeModel *unicastRange in provisioner.allocatedUnicastRange) {
-            if (node.address >= unicastRange.lowIntAddress && node.address <= unicastRange.hightIntAddress) {
-                belongToProvisioner = YES;
-                TeLogInfo(@"Provisioner.UUID:%@ Range:%@~%@ Used Unicast Address:0x%X",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress,node.address);
-                break;
-            }
-        }
-        if (belongToProvisioner) {
-            UInt16 usedUnicastAddress = node.address + node.elements.count - 1;
-            if (maxUsedUnicastAddress < usedUnicastAddress) {
-                maxUsedUnicastAddress = usedUnicastAddress;
-                TeLogInfo(@"update maxUsedUnicastAddress to 0x%X",maxUsedUnicastAddress);
-            }
-        }
-    }
-    return maxUsedUnicastAddress;
-}
-
-- (UInt16)getMaxUsedUnicastAddressOfJsonWithUnicastRange:(SigRangeModel *)unicastRange {
-    UInt16 maxUsedUnicastAddress = 0;
-    for (SigNodeModel *node in self.nodes) {
-        if (node.address >= unicastRange.lowIntAddress && node.address <= unicastRange.hightIntAddress) {
-            TeLogInfo(@"Range:%@~%@ Used Unicast Address:0x%X",unicastRange.lowAddress,unicastRange.highAddress,node.address);
-            UInt16 usedUnicastAddress = node.address + node.elements.count - 1;
-            if (maxUsedUnicastAddress < usedUnicastAddress) {
-                maxUsedUnicastAddress = usedUnicastAddress;
-                TeLogInfo(@"update maxUsedUnicastAddress to 0x%X",maxUsedUnicastAddress);
-            }
-        }
-    }
-    return maxUsedUnicastAddress;
-}
-
-/// 修正下一次添加设备使用的短地址到当前provisioner的地址范围，剩余地址个数小于10时给当前provisioner再申请一个地址区间
-- (void)fixUnicastAddressOfAddDeviceOnAllocatedUnicastRange {
-    UInt16 maxUsedUnicastAddressOfJson = [self getMaxUsedUnicastAddressOfJsonWithProvisioner:self.curProvisionerModel];
-    UInt16 maxUsedUnicastAddressOfLocation = maxUsedUnicastAddressOfJson;
-    NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-    if (dict) {
-        NSString *key = [self getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:self.meshUUID provisionerUUID:self.getCurrentProvisionerUUID];
-        if ([dict.allKeys containsObject:key]) {
-            maxUsedUnicastAddressOfLocation = [dict[key] intValue];
-        }
-    }
-    UInt16 maxUsedUnicastAddress = MAX(maxUsedUnicastAddressOfJson, maxUsedUnicastAddressOfLocation);
-    [self saveLocationProvisionAddress:maxUsedUnicastAddress];
-    UInt16 maxRangeHightAddress = 0;
-    for (SigRangeModel *unicastRange in self.curProvisionerModel.allocatedUnicastRange) {
-        if (maxRangeHightAddress < unicastRange.hightIntAddress) {
-            maxRangeHightAddress = unicastRange.hightIntAddress;
-        }
-    }
-    if (maxUsedUnicastAddress >= (maxRangeHightAddress - 10)) {
-        //剩余地址个数小于10时给当前provisioner再申请一个地址区间
-        [self addNewUnicastRangeToCurrentProvisioner];
-    }
-}
-
-/// 地址范围是1~0x7FFF,其它值为地址耗尽，分配地址失败。返回用于添加设备的地址，如果APP未实现代理方法`onUpdateAllocatedUnicastRange:ofProvisioner:`则本Provisioner地址耗尽时会超界分配地址，如果APP实现了代理方法`onUpdateAllocatedUnicastRange:ofProvisioner:`则本Provisioner地址耗尽时会重新分配地址区间并通过该代理方法回调给APP，如果所有地址区间都已经分配完成则会超界分配地址且不新增区间也不回调区间更新方法。
-- (UInt16)getNextUnicastAddressOfProvision {
-    if (!self.curProvisionerModel) {
-        TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
-        return kLocationAddress;
-    } else {
-        UInt16 maxUsedUnicastAddressOfLocation = 0;
-        UInt16 maxUsedUnicastAddressOfJson = 0;
-        UInt16 maxUsedUnicastAddress = 0;
-        NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-        if (dict) {
-            NSString *key = [self getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:self.meshUUID provisionerUUID:self.getCurrentProvisionerUUID];
-            if ([dict.allKeys containsObject:key]) {
-                maxUsedUnicastAddressOfLocation = [dict[key] intValue];
-            }
-        }
-        if (maxUsedUnicastAddressOfLocation >= [self getMaxUsedUnicastAddressOfJsonWithProvisioner:self.curProvisionerModel]) {
-            //地址用尽，超界或者重新多分配一个区间
-            if ([self.delegate respondsToSelector:@selector(onUpdateAllocatedUnicastRange:ofProvisioner:)]) {
-                //v3.3.3及之后版本做法：重新多分配一个区间
-                BOOL result = [self addNewUnicastRangeToCurrentProvisioner];
-                if (result == NO) {
-                    //地址分配完成，不得已只能超界分配地址
-                    maxUsedUnicastAddress = [self getMaxUsedUnicastAddressOfJson];
-                } else {
-                    return [self getNextUnicastAddressOfProvision];
-                }
-            } else {
-                //v3.3.2及之前版本做法：超界分配地址
-                maxUsedUnicastAddress = [self getMaxUsedUnicastAddressOfJson];
-            }
-        } else {
-            //地址未用尽
-            maxUsedUnicastAddressOfJson = [self getMaxUsedUnicastAddressOfJsonWithProvisioner:self.curProvisionerModel];
-            maxUsedUnicastAddress = MAX(maxUsedUnicastAddressOfJson, maxUsedUnicastAddressOfLocation);
-        }
-        
-        //如果刚好耗尽的是hightIntAddress，需要从下一个unicastRange取lowIntAddress。
-        BOOL nextRangeReturn = NO;
-        for (SigRangeModel *unicastRange in self.curProvisionerModel.allocatedUnicastRange) {
-            if (nextRangeReturn) {
-                return unicastRange.lowIntAddress;
-            }
-            if (maxUsedUnicastAddress == unicastRange.hightIntAddress) {
-                nextRangeReturn = YES;
-            }
-        }
-        return maxUsedUnicastAddress + 1;
-    }
-}
-
-/// 地址范围是1~0x7FFF,其它值为地址耗尽，分配地址失败。返回经过设备端返回的参数ElementCount进行修正后的添加设备地址。如区间1~0xFF已经使用到了0xFE，只剩下一个地址0xFF未使用，则当前provisioner添加的下一个设备的地址为0xFF，如果当前需要添加的设备的elementCount大于1，则需要重新修正添加的地址。
-- (UInt16)getNextUnicastAddressOfProvisionWithElementCount:(UInt8)elementCount {
-    if (!self.curProvisionerModel) {
-        TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
-        return kLocationAddress;
-    } else {
-        UInt16 maxUsedUnicastAddress = [self getNextUnicastAddressOfProvision];
-        BOOL existRange = NO;
-        for (SigRangeModel *unicastRange in self.curProvisionerModel.allocatedUnicastRange) {
-            if (existRange == NO) {
-                if (unicastRange.lowIntAddress <= maxUsedUnicastAddress && unicastRange.hightIntAddress >= maxUsedUnicastAddress) {
-                    existRange = YES;
-                    if (maxUsedUnicastAddress + elementCount - 1 <= unicastRange.hightIntAddress) {
-                        //该地址合法，剩余地址区间满足elementCount使用。
-                        return maxUsedUnicastAddress;
-                    } else {
-                        //该地址不合法，剩余地址区间不满足elementCount使用。到一下区间分配地址，如果没有下一区间，则分配失败返回0。
-                        if ([self.curProvisionerModel.allocatedUnicastRange indexOfObject:unicastRange] < (self.curProvisionerModel.allocatedUnicastRange.count - 1)) {
-                            //存在下一区间
-                            continue;
-                        } else {
-                            //不存在下一区间
-                            BOOL result = [self addNewUnicastRangeToCurrentProvisioner];
-                            if (result) {
-                                return [self getNextUnicastAddressOfProvisionWithElementCount:elementCount];
-                            } else {
-                                return 0;
-                            }
-                        }
-                    }
-                }
-            } else {
-                //已经找到maxUsedUnicastAddress的区间，但剩余区间不足。需要另外寻找区间和地址。
-                if (unicastRange.lowIntAddress >= maxUsedUnicastAddress && unicastRange.hightIntAddress >= (maxUsedUnicastAddress + elementCount - 1)) {
-                    //在剩余区间找到合法地址且elementcount足够
-                    return unicastRange.lowIntAddress;
-                }
-            }
-        }
-        //在剩余区间未找到合法地址或者elementcount长度不足。
-        return 0;
-    }
-}
-
+/**
+ * @brief   Assign a new address range to the current provisioner. The SDK will automatically call this method internally, without the need for users to actively call it.
+ * @return  `YES` means add success, `NO` means add fail.
+ * @note    This API is using to add a new UnicastRange to  current provisioner.
+ */
 - (BOOL)addNewUnicastRangeToCurrentProvisioner {
-    UInt16 maxAddress = [self getMaxHighAddressUnicast];
+    UInt16 maxAddress = [self getMaxHighAllocatedUnicastAddress];
     if (maxAddress >= 0x7FFF) {
-        //所有地址都已经分配完毕
-        TeLogError(@"警告！所有地址区间都已经分配完毕！");
+        //All addresses have been assigned.
+        TeLogError(@"All addresses have been assigned.");
         return NO;
     } else {
         SigRangeModel *rangeModel = [[SigRangeModel alloc] initWithMaxHighAddressUnicast:maxAddress];
@@ -1866,23 +1986,26 @@
     }
 }
 
-- (NSString *)getKeyOfMaxUsedUnicastAddressOfLocationWithMeshUUID:(NSString *)meshUUID provisionerUUID:(NSString *)provisionerUUID {
-    return [NSString stringWithFormat:@"%@-%@",meshUUID,provisionerUUID];
-}
-
-/// 初始化一个mesh网络的数据。默认所有参数随机生成。不会清除SigDataSource.share里面的数据（包括scanList、sequenceNumber、sequenceNumberOnDelegate）。
+/**
+ * @brief   Initialize data for a mesh network. By default, all parameters are randomly generated. The data in SigDataSource.share (including scanList, sequenceNumber, and sequenceNumberOnDelegate) will not be cleared.
+ * @note    This API is using to create a new mesh network.
+ */
 - (instancetype)initDefaultMesh {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         [self initData];
         [self initMeshData];
     }
     return self;
 }
 
-/// 清除SigDataSource.share里面的所有参数（包括scanList、sequenceNumber、sequenceNumberOnDelegate），并随机生成新的默认参数。
+/**
+ * @brief   Clear all parameters in SigDataSource.share (including scanList, sequenceNumber, sequenceNumberOnDelegate) and randomly generate new default parameters.
+ * @note    This API is using to clear all paramter of SigDataSource. The sequenceNumber of current provisioner of current mesh will save in NSUserDefaults for use next time.
+ */
 - (void)resetMesh {
     [self initMeshData];
-    [self saveLocationProvisionAddress:1];//重置已经使用的address为1.
     [self cleanScanList];
     [self.scanList removeAllObjects];
     _sequenceNumberOnDelegate = 0;
@@ -1891,14 +2014,336 @@
     [self saveLocationData];
 }
 
+/**
+ * @brief   Update and save the vid of node to SigDataSource.
+ * @param   address    the unicastAddress of node.
+ * @param   vid    the versionID of node.
+ * @note    This API is using to update and save the vid of node when meshOTA success.
+ */
 - (void)updateNodeModelVidWithAddress:(UInt16)address vid:(UInt16)vid {
     SigNodeModel *node = [self getNodeWithAddress:address];
     if (node) {
         if ([LibTools uint16From16String:node.vid] != vid) {
-            node.vid = [NSString stringWithFormat:@"%04X",vid];
+            node.vid = [SigHelper.share getUint16String:vid];
             [self saveLocationData];
         }
     }
+}
+
+#pragma mark - new api since v4.1.0.0
+
+/**
+ * @brief   Method for add extend group information.
+ * @note    This API is using to fix the bug about level control of group.(When customers export Mesh, if they do not want to export extension group information, they can call this method to remove the extension group information and then export Mesh.)
+ */
+-(void)addExtendGroupList {
+    NSArray *baseGroupList = [self getAllBaseGroupList];
+    NSMutableArray *createExtendGroupList = [NSMutableArray array];
+    for (SigGroupModel *group in baseGroupList) {
+        [createExtendGroupList addObjectsFromArray:[self createExtendGroupListOfGroupModel:group]];
+    }
+    NSArray *invalidGroupList = [self getAllInvalidGroupList];
+    NSMutableArray *groups = [NSMutableArray array];
+    [groups addObjectsFromArray:baseGroupList];
+    [groups addObjectsFromArray:createExtendGroupList];
+    [groups addObjectsFromArray:invalidGroupList];
+    _groups = groups;
+}
+
+/**
+ * @brief   Method for deleting extend group information.
+ * @note    This API is using to fix the bug about level control of group.(When customers export Mesh, if they do not want to export extension group information, they can call this method to remove the extension group information and then export Mesh.)
+ */
+-(void)removeExtendGroupList {
+    NSArray *baseGroupList = [self getAllBaseGroupList];
+    NSArray *invalidGroupList = [self getAllInvalidGroupList];
+    NSMutableArray *groups = [NSMutableArray array];
+    [groups addObjectsFromArray:baseGroupList];
+    [groups addObjectsFromArray:invalidGroupList];
+    _groups = groups;
+}
+
+/**
+ * @brief   Create an array of all extend groups for a single base group.
+ * @param   groupModel    the base SigGroupModel.
+ * @return  A list of SigGroupModel that is base group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)createExtendGroupListOfGroupModel:(SigGroupModel *)groupModel {
+    //(((基础 GroupAddress&0xFF)<<8)|0xD000 ~ ((基础GroupAddress&0xFF)<<8)| 0xD000+0xF)
+    NSMutableArray *mArray = [NSMutableArray array];
+    if (groupModel.intAddress >= 0xC000 && groupModel.intAddress <= 0xC0FF) {
+        NSArray *subgroupNames = @[@"lightness", @"temperature", @"Hue", @"Saturation"];
+        UInt16 extendAddress = [self getExtendGroupAddressWithBaseGroupAddress:groupModel.intAddress];
+        for (int i=0; i<subgroupNames.count; i++) {
+            SigGroupModel *group = [[SigGroupModel alloc] init];
+            group.address = [NSString stringWithFormat:@"%04X", extendAddress + i];
+            group.parentAddress = @"0000";
+            group.name = [NSString stringWithFormat:@"%@ subgroup level %@", groupModel.name, subgroupNames[i]];
+            [mArray addObject:group];
+        }
+    }
+    return mArray;
+}
+
+/**
+ * @brief   Get all base group arrays for the current Mesh, the base group addresses ranging from 0xC000 to 0xC0FF.
+ * @return  A list of SigGroupModel that is base group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllBaseGroupList {
+    NSMutableArray *mArray = [NSMutableArray array];
+    NSArray *groups = [NSArray arrayWithArray:_groups];
+    for (SigGroupModel *model in groups) {
+        if (model.intAddress >= 0xC000 && model.intAddress <= 0xC0FF) {
+            [mArray addObject:model];
+        }
+    }
+    return mArray;
+}
+
+/**
+ * @brief   Get all extend group arrays for the current Mesh, the extend group addresses ranging from 0xD000 to 0xDFFF.
+ * @return  A list of SigGroupModel that is extend group.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllExtendGroupList {
+    NSMutableArray *mArray = [NSMutableArray array];
+    NSArray *groups = [NSArray arrayWithArray:_groups];
+    for (SigGroupModel *model in groups) {
+//        if (model.intAddress >= 0xD000 && model.intAddress <= 0xDFFF) {
+//            [mArray addObject:model];
+//        }
+        if ([model.name rangeOfString:@"subgroup"].location != NSNotFound) {
+            [mArray addObject:model];
+        }
+    }
+    return mArray;
+}
+
+/**
+ * @brief   Get all invalid group arrays for the current Mesh, the invalid group addresses ranging from 0xE000 to 0xFEFF.
+ * @return  A list of SigGroupModel that is invalid.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllInvalidGroupList {
+    NSMutableArray *mArray = [NSMutableArray array];
+    NSArray *groups = [NSArray arrayWithArray:_groups];
+    for (SigGroupModel *model in groups) {
+        if (model.intAddress >= 0xE000 && model.intAddress <= 0xFEFF) {
+            [mArray addObject:model];
+        }
+    }
+    return mArray;
+}
+
+/**
+ * @brief   Get a list of all UI displayed groups for the current Mesh, including a basic group list and an invalid group list.
+ * @return  A list of SigGroupModel that show on APP.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (NSArray <SigGroupModel *>*)getAllShowGroupList {
+    NSMutableArray *mArray = [NSMutableArray array];
+    [mArray addObjectsFromArray:self.getAllBaseGroupList];
+    [mArray addObjectsFromArray:self.getAllInvalidGroupList];
+    return mArray;
+}
+
+/**
+ * @brief   Calculate the extrnd group address based on the base group address.
+ * @param   baseGroupAddress    the base group address.
+ * @return  Extend group address is UInt16.
+ * @note    This API is using to fix the bug about level control of group.
+ */
+- (UInt16)getExtendGroupAddressWithBaseGroupAddress:(UInt16)baseGroupAddress {
+    return ((baseGroupAddress & 0xFF) << 4) | 0xD000;
+}
+
+#pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
+
+/**
+ * @brief   Use the key meshUUID+provisionerUUID+unicastAddress to store ivIndex+sequenceNumber locally.
+ * @param   ivIndex    the ivIndex of mesh.
+ * @param   sequenceNumber    the sequenceNumber of mesh.
+ */
+- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
+    if (dict == nil) {
+        dict = @{};
+    }
+    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+    NSString *value = [NSString stringWithFormat:@"%@+%@", self.ivIndex, self.sequenceNumber];
+    [mDict setValue:value forKey:key];
+    [defaults setObject:mDict forKey:kLocationIvIndexAndSequenceNumberDictionary_key];
+    [defaults synchronize];
+}
+
+/**
+ * @brief   Get local ivIndex.
+ * @return  the ivIndex of mesh.
+ * @note    This API is used to get the value of ivIndex stored locally.
+ */
+- (NSString *)getLocalIvIndexString {
+    NSString *tem = 0;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
+    if (dict != nil) {
+        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+        NSString *value = [dict valueForKey:key];
+        if (value) {
+            NSArray *array = [value componentsSeparatedByString:@"+"];
+            if (array && array.count > 0) {
+                tem = array.firstObject;
+            }
+        }
+    }
+    return tem;
+}
+
+/**
+ * @brief   Get local sequenceNumber.
+ * @return  the sequenceNumber of mesh.
+ * @note    This API is used to get the value of sequenceNumber stored locally.
+ */
+- (NSString *)getLocalSequenceNumberString {
+    NSString *tem = 0;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
+    if (dict != nil) {
+        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+        NSString *value = [dict valueForKey:key];
+        if (value) {
+            NSArray *array = [value componentsSeparatedByString:@"+"];
+            if (array && array.count > 1) {
+                tem = array.lastObject;
+            }
+        }
+    }
+    return tem;
+}
+
+/**
+ * @brief   Get local sequenceNumber.
+ * @return  the sequenceNumber of mesh.
+ * @note    This API is used to get the value of sequenceNumber stored locally.
+ */
+- (UInt32)getLocalSequenceNumberUInt32 {
+    NSString *sequenceNumberStr = [self getLocalSequenceNumberString];
+    return [LibTools uint32From16String:sequenceNumberStr];
+}
+
+/**
+ * @brief   Get whether local had store IvIndexAndLocalSequenceNumber.
+ * @return  `YES` means store, `NO` means no store.
+ */
+- (BOOL)existLocationIvIndexAndLocationSequenceNumber {
+    BOOL tem = 0;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocationIvIndexAndSequenceNumberDictionary_key];
+    if (dict != nil) {
+        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+        NSString *value = [dict valueForKey:key];
+        if (value && value.length > 0) {
+            tem = YES;
+        }
+    }
+    return tem;
+}
+
+#pragma mark - provisioner UUID API
+
+/**
+ * @brief   Save the unique identifier UUID of the current phone, it also the unique identifier UUID of current provisioner.
+ * @param   uuid    The unique identifier UUID of the current phone.
+ * @note    The unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
+ */
+- (void)saveCurrentProvisionerUUID:(NSString *)uuid {
+    if (uuid.length == 32) {
+        uuid = [LibTools UUIDToMeshUUID:uuid];
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/**
+ * @brief   Get the unique identifier UUID of the current phone, it also the unique identifier UUID of current provisioner.
+ * @return  The unique identifier UUID of the current phone.
+ * @note    The unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
+ */
+- (NSString *)getCurrentProvisionerUUID{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *uuid = [defaults objectForKey:kCurrenProvisionerUUID_key];
+    if (uuid.length == 32) {
+        uuid = [LibTools UUIDToMeshUUID:uuid];
+    }
+    return uuid;
+}
+
+#pragma mark - deprecated API
+
+/**
+ * @brief   Add the meshUUID to the cache of visitor meshUUID List.
+ * @param   meshUUID    the identifier of mesh.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (void)addMeshUUIDToVisitorListCache:(NSString *_Nonnull)meshUUID {
+    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey:kVisitorMeshUUIDList];
+    if (array == nil) {
+        array = @[];
+    }
+    NSMutableArray *visitorMeshUUIDList = [NSMutableArray arrayWithArray:array];
+    if (![visitorMeshUUIDList containsObject:meshUUID]) {
+        [visitorMeshUUIDList addObject:meshUUID];
+    }
+    [NSUserDefaults.standardUserDefaults setValue:visitorMeshUUIDList forKey:kVisitorMeshUUIDList];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/**
+ * @brief   Remove the meshUUID from the cache of visitor meshUUID List.
+ * @param   meshUUID    the identifier of mesh.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (void)removeMeshUUIDFromVisitorListCache:(NSString *_Nonnull)meshUUID {
+    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey:kVisitorMeshUUIDList];
+    if (array == nil) {
+        array = @[];
+    }
+    NSMutableArray *visitorMeshUUIDList = [NSMutableArray arrayWithArray:array];
+    if ([visitorMeshUUIDList containsObject:meshUUID]) {
+        [visitorMeshUUIDList removeObject:meshUUID];
+    }
+    [NSUserDefaults.standardUserDefaults setValue:visitorMeshUUIDList forKey:kVisitorMeshUUIDList];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/**
+ * @brief   Get whether the current provisioner is an administrator of current Mesh.
+ * @return  `YES` means visitor, `NO` means administrator.
+ * @note    This API is using for share mesh by BLE Transfer.
+ */
+- (BOOL)curMeshIsVisitor {
+    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey: kVisitorMeshUUIDList];
+    return [array containsObject: self.meshUUID];
+}
+
+/**
+ * @brief   Get the node object through the bluetooth macAddress of node.
+ * @param   macAddress    the bluetooth macAddress of node.
+ * @return  A SigNodeModel that save node infomation. nil means there are no node with this macAddress in mesh network.
+ * @note    The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.
+ */
+- (SigNodeModel * _Nullable)getDeviceWithMacAddress:(NSString *)macAddress {
+    NSArray *nodes = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *model in nodes) {
+        //peripheralUUID || local node's uuid
+        if (macAddress && model.macAddress && [model.macAddress.uppercaseString isEqualToString:macAddress.uppercaseString]) {
+            return model;
+        }
+    }
+    return nil;
 }
 
 @end

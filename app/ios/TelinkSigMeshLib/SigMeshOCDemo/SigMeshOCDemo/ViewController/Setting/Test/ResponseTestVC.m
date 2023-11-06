@@ -56,6 +56,8 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    self.clearLogButtom.backgroundColor = UIColor.telinkButtonBlue;
+    self.startButtom.backgroundColor = UIColor.telinkButtonBlue;
     _commands = [NSMutableArray array];
     if (_isResponseTest) {
         self.title = @"Response Test";
@@ -87,7 +89,7 @@
     [self refreshFirstCommandUI];
     self.autoScrollButtom.selected = YES;
     self.commandButtom.layer.borderWidth = 1;
-    self.commandButtom.layer.borderColor = kDefultColor.CGColor;
+    self.commandButtom.layer.borderColor = UIColor.telinkButtonBlue.CGColor;
     self.logString = @"";
     _allList = [NSMutableArray array];
     _lostList = [NSMutableArray array];
@@ -216,7 +218,7 @@
     _intervalTimeTF.enabled = enable;
     _totalCountTF.enabled = enable;
     _startButtom.enabled = enable;
-    [_startButtom setBackgroundColor:enable?kDefultColor:[UIColor lightGrayColor]];
+    [_startButtom setBackgroundColor:enable?UIColor.telinkButtonBlue:[UIColor lightGrayColor]];
 }
 
 - (void)refreshFirstCommandUI {
@@ -241,14 +243,6 @@
     NSString *strRegex = @"^[0-9]{0,}$";
     NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
     return [strPredicate evaluateWithObject:str];
-}
-
-- (void)showTips:(NSString *)message{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
 }
 
 - (void)dealloc {

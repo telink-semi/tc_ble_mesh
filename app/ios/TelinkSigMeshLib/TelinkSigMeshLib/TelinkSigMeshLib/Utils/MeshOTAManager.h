@@ -30,24 +30,6 @@ typedef void(^CompleteBlock)(BOOL isSuccess);
 typedef void(^PeripheralStateChangeBlock)(CBPeripheral *peripheral);
 
 typedef enum : UInt8 {
-    SigMeshOTAProgressIdle                                = 0,
-    SigMeshOTAProgressFirmwareDistributionStart           = 1,
-    SigMeshOTAProgressSubscriptionAdd                     = 2,
-    SigMeshOTAProgressFirmwareUpdateInformationGet        = 3,
-    SigMeshOTAProgressFirmwareUpdateFirmwareMetadataCheck = 4,
-    SigMeshOTAProgressFirmwareUpdateStart                 = 5,
-    SigMeshOTAProgressBLOBTransferGet                     = 6,
-    SigMeshOTAProgressBLOBInformationGet                  = 7,
-    SigMeshOTAProgressBLOBTransferStart                   = 8,
-    SigMeshOTAProgressBLOBBlockStart                      = 9,
-    SigMeshOTAProgressBLOBChunkTransfer                   = 10,
-    SigMeshOTAProgressBLOBBlockGet                        = 11,
-    SigMeshOTAProgressFirmwareUpdateGet                   = 12,
-    SigMeshOTAProgressFirmwareUpdateApply                 = 13,
-    SigMeshOTAProgressFirmwareDistributionCancel          = 14,
-} SigMeshOTAProgress;
-
-typedef enum : UInt8 {
     SigFirmwareUpdateProgressIdle                                         = 0,
     SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue                = 1,
     SigFirmwareUpdateProgressFirmwareDistributionCapabilitiesGet          = 2,
@@ -115,16 +97,16 @@ typedef enum : UInt8 {
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (MeshOTAManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
-/// developer call this api to start mesh ota.
-- (void)startMeshOTAWithLocationAddress:(int)locationAddress deviceAddresses:(NSArray <NSNumber *>*)deviceAddresses otaData:(NSData *)otaData incomingFirmwareMetadata:(NSData *)incomingFirmwareMetadata progressHandle:(ProgressBlock)progressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock;
+/// Check whether the SDK is currently in the meshOTA process.
+- (BOOL)isMeshOTAing;//查询当前是否处在meshOTA
 
-/// stop meshOTA, developer needn't call this api but midway stop mesh ota procress.
-- (void)stopMeshOTA;
-
-/// 查询当前是否处在meshOTA
-- (BOOL)isMeshOTAing;
 
 - (void)saveIsMeshOTAing:(BOOL)isMeshOTAing;
 
@@ -147,6 +129,8 @@ typedef enum : UInt8 {
 /// @param errorBlock 升级失败的回调
 - (void)continueFirmwareUpdateWithDeviceAddresses:(NSArray <NSNumber *>*)deviceAddresses advDistributionProgressHandle:(ProgressReceiversListBlock)advDistributionProgressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock;
 
+/// Stop Firmware Update
+/// @param completeBlock The handle of stop Firmware Update finish.
 - (void)stopFirmwareUpdateWithCompleteHandle:(CompleteBlock)completeBlock;
 
 @end

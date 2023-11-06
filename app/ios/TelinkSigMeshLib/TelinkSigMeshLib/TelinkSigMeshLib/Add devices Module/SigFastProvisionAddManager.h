@@ -36,7 +36,12 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigFastProvisionAddManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 
 /// start FastProvision with only one PID

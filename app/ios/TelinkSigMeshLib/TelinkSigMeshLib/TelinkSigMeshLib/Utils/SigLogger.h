@@ -139,7 +139,12 @@ typedef enum : UInt8 {
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigLogger *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 /// 设置log等级，debug模式设置为SigLogLevelDebug即可，上架推荐使用SigLogLevelOff。
 - (void)setSDKLogLevel:(SigLogLevel)logLevel;
@@ -152,8 +157,11 @@ typedef enum : UInt8 {
 
 /// 缓存加密的json数据于iTunes中
 void saveMeshJsonData(id data);
+
 /// 解密iTunes中缓存的加密的json数据
 - (NSString *)getDecryptTelinkSDKMeshJsonData;
+
+/// 使用秘钥解密iTunes中缓存的加密的json数据
 - (NSString *)getDecryptTelinkSDKMeshJsonDataWithPassword:(NSString *)password;
 
 /**

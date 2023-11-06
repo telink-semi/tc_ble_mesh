@@ -26,15 +26,26 @@
 
 @implementation SigSegmentedAccessMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Creates a Segment of an Access Message from a Network PDU that contains
+/// a segmented access message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with segmented
+///                         Upper Transport message.
 - (instancetype)initFromSegmentedPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
@@ -77,7 +88,9 @@
 }
 
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex offset:(UInt8)offset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;
@@ -108,7 +121,9 @@
 /// @param networkKey The Network Key to encrypt the PCU with.
 /// @param offset The segment offset.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey offset:(UInt8)offset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;

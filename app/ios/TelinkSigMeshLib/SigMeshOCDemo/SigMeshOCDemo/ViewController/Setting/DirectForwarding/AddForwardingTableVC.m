@@ -47,7 +47,6 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share show:self.isNew ? Tip_AddFrowardingTable : Tip_EditFrowardingTable];
         });
-#ifdef kExist
         __weak typeof(self) weakSelf = self;
         __block BOOL hasFail = NO;
         __block BOOL hasSuccess = NO;
@@ -139,10 +138,13 @@
                     [ShowTipsHandle.share show:weakSelf.isNew ? Tip_AddFrowardingTableSuccess : Tip_EditFrowardingTableSuccess];
                     [ShowTipsHandle.share delayHidden:2.0];
                     [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:2.0];
+                } else {
+                    //不发送指令
+                    [ShowTipsHandle.share show:@"not send command!"];
+                    [ShowTipsHandle.share delayHidden:2.0];
                 }
             });
         }];
-#endif
     } else {
         [self showTips:[NSString stringWithFormat:@"The mesh is offline, app cann`t %@ forwarding table.", self.isNew ? @"add" : @"edit"]];
     }
@@ -175,7 +177,7 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-#ifdef kExist
+    self.addButton.backgroundColor = UIColor.telinkButtonBlue;
     if (self.isNew) {
         self.title = @"Add Forwarding Table";
         [self.addButton setTitle:@"Add Forwarding Table" forState:UIControlStateNormal];
@@ -190,7 +192,6 @@
         [self.addButton setTitle:@"Edit Forwarding Table" forState:UIControlStateNormal];
         self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithOldSigForwardingTableModel:self.oldTable];
     }
-#endif
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(BridgeTableItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(BridgeTableItemCell.class)];
     //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
@@ -220,12 +221,6 @@
     NSLog(@"%s",__func__);
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.titleArr.count;
@@ -239,7 +234,6 @@
     cell.inputTF.hidden = NO;
     cell.accessoryType = UITableViewCellAccessoryNone;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-#ifdef kExist
     switch (indexPath.row) {
         case 0:
         {
@@ -313,7 +307,6 @@
         default:
             break;
     }
-#endif
     return cell;
 }
 
@@ -321,7 +314,6 @@
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
     ChooseEntryVC *vc = (ChooseEntryVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ChooseEntryVCID storyboard:@"Setting"];
-#ifdef kExist
     __weak typeof(self) weakSelf = self;
     if (indexPath.row == 2) {
         // Source
@@ -379,7 +371,6 @@
             [weakSelf reloadUI];
         }];
     }
-#endif
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -417,7 +408,6 @@
 
 #pragma mark - 处理编辑事件
 - (void)handlerTextFieldEndEdit:(UITextField *)textField {
-#ifdef kExist
     switch (textField.tag) {
         case 4:
         {
@@ -440,7 +430,6 @@
         default:
             break;
     }
-#endif
 }
 
 - (BOOL)validateString:(NSString *)str{
@@ -451,7 +440,6 @@
 
 #pragma mark - 处理点击事件
 - (void)handlerTextFieldSelect:(UITextField *)textField {
-#ifdef kExist
     __weak typeof(self) weakSelf = self;
     switch (textField.tag) {
         case 0:
@@ -630,7 +618,6 @@
         default:
             break;
     }
-#endif
 }
 
 @end

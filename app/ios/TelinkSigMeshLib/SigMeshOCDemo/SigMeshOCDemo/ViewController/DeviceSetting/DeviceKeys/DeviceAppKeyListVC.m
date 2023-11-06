@@ -67,15 +67,6 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)showTips:(NSString *)message{
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
-}
-
 - (void)clickRefresh:(UIButton *)button {
     [ShowTipsHandle.share show:@"get node AppKey list..."];
 

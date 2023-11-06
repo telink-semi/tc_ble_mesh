@@ -26,16 +26,27 @@
 
 @implementation SigControlMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
     }
     return self;
 }
 
+/// Creates an Control Message from a Network PDU that contains
+/// an unsegmented control message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with unsegmented
+///                         Upper Transport message.
 - (instancetype)initFromNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
         UInt8 tem = 0;
@@ -53,9 +64,14 @@
     return self;
 }
 
+/// Creates an Control Message object from the given list of segments.
+///
+/// - parameter segments: List of ordered segments.
 - (instancetype)initFromSegments:(NSArray <SigSegmentedAccessMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         // Assuming all segments have the same AID, source and destination addresses and TransMIC.
         SigSegmentedAccessMessage *segment = segments.firstObject;
         _opCode = segment.opCode;
@@ -73,9 +89,20 @@
     return self;
 }
 
+/// Creates a Control Message from the given Proxy Configuration
+/// message. The source should be set to the local Node address.
+/// The given Network Key should be known to the Proxy Node.
+///
+/// - parameter message:    The message to be sent.
+/// - parameter source:     The address of the local Node.
+/// - parameter networkKey: The Network Key to signe the message with.
+///                         The key should be known to the connected
+///                         Proxy Node.
 - (instancetype)initFromProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source usingNetworkKey:(SigNetkeyModel *)networkKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         _opCode = message.opCode;
         self.source = source;
         self.destination = MeshAddress_unassignedAddress;

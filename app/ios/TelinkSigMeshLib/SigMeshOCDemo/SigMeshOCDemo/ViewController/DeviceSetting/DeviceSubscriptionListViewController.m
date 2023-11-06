@@ -41,7 +41,7 @@
 }
 
 - (void)reloadSelectModelID{
-    NSArray *options = @[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID)];
+    NSArray *options = SigDataSource.share.defaultGroupSubscriptionModels;
     [self.source removeAllObjects];
     for (NSNumber *modelID in options) {
         ModelIDModel *model = [SigDataSource.share getModelIDModel:modelID];

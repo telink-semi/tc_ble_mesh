@@ -89,14 +89,7 @@
     return 51.0;
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 - (void)largeCompositionDataGet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_GetComposition];
     __weak typeof(self) weakSelf = self;
     //largeCompositionDataGet
@@ -121,11 +114,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)modelsMetadataGet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_GetModelsMetadata];
     __weak typeof(self) weakSelf = self;
     //modelsMetadataGet
@@ -149,11 +140,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)SARTransmitterGet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_GetSARTransmitter];
     __weak typeof(self) weakSelf = self;
     //SARTransmitterGet
@@ -169,11 +158,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)SARTransmitterSet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_SetSARTransmitter];
     __weak typeof(self) weakSelf = self;
     //SARTransmitterSet
@@ -191,11 +178,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)SARReceiverGet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_GetSARReceiver];
     __weak typeof(self) weakSelf = self;
     //SARReceiverGet
@@ -211,11 +196,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)SARReceiverSet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_SetSARReceiver];
     __weak typeof(self) weakSelf = self;
     //SARReceiverSet
@@ -233,11 +216,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)solicitationPduRplItemsClear {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_ClearSolicitationPduRplItems];
     __weak typeof(self) weakSelf = self;
     //solicitationPduRplItemsClear
@@ -255,11 +236,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)solicitationPduRplItemsClearUnacknowledged {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_ClearSolicitationPduRplItemsUnacknowledged];
     __weak typeof(self) weakSelf = self;
     //solicitationPduRplItemsClearUnacknowledged
@@ -275,11 +254,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)onDemandPrivateProxyGet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_GetOnDemandPrivateProxy];
     __weak typeof(self) weakSelf = self;
     //onDemandPrivateProxyGet
@@ -295,11 +272,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)onDemandPrivateProxySet {
-#ifdef kExist
     [ShowTipsHandle.share show:Tip_SetOnDemandPrivateProxy];
     __weak typeof(self) weakSelf = self;
     //onDemandPrivateProxySet
@@ -315,11 +290,9 @@
             }
         });
     }];
-#endif
 }
 
 - (void)aggOnOffGet100 {
-#ifdef kExist
     NSMutableArray *items = [NSMutableArray array];
     for (int i=0; i<100; i++) {
         SigOpcodesAggregatorItemModel *modelResponse = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigGenericOnOffGet alloc] init]];
@@ -331,7 +304,6 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
-#endif
 }
 
 @end

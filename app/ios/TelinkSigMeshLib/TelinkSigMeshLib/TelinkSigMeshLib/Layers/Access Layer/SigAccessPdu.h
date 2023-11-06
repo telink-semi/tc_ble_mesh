@@ -34,22 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt32 opCode;
 /// Application Parameters. Size is 0 ~ 379.
 @property (nonatomic,strong) NSData *parameters;
-/// Number of packets for this PDU.
-///
-/// Number of Packets | Maximum useful access payload size (octets)
-///            | 32 bit TransMIC    | 64 bit TransMIC
-/// -----------------+---------------------+-------------------------
-/// 1                      | 11 (unsegmented) | n/a
-/// 1                      | 8 (segmented)       | 4 (segmented)
-/// 2                      | 20                          | 16
-/// 3                      | 32                          | 28
-/// n                      | (n×12)-4                 | (n×12)-8
-/// 32                    | 380                        | 376
-//- (int)segmentsCount;
-
-
-
-
 /// The Mesh Message that is being sent, or `nil`, when the message
 /// was received.
 @property (nonatomic,strong,nullable) SigMeshMessage *message;
@@ -66,11 +50,20 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *accessPdu;
 
 @property (nonatomic,assign) SigLowerTransportPduType isAccessMessage;
-/// Whether the outgoind message will be sent as segmented, or not.
-//- (BOOL)isSegmented;
 
+/// Initialize SigAccessPdu object.
+/// @param pdu The SigUpperTransportPdu object.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu;
 
+/// Initialize SigAccessPdu object.
+/// @param message The Mesh Message that is being sent, or `nil`, when the message
+/// was received.
+/// @param localElement The local Element that is sending the message, or `nil` when the
+/// message was received.
+/// @param destination Destination Address.
+/// @param userInitiated Whether sending this message has been initiated by the user.
+/// @returns return `nil` when initialize SigAccessPdu object fail.
 - (instancetype)initFromMeshMessage:(SigMeshMessage *)message sentFromLocalElement:(SigElementModel *)localElement toDestination:(SigMeshAddress *)destination userInitiated:(BOOL)userInitiated;
 
 @end

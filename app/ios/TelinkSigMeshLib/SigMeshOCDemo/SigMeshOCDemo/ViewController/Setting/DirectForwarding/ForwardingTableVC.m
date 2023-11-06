@@ -27,6 +27,7 @@
 
 @interface ForwardingTableVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (strong, nonatomic) IBOutlet UIButton *addForwardingTableButton;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @end
 
@@ -54,7 +55,6 @@
         [self showTips:@"app is busy now, try again later."];
     } else {
         if (SigBearer.share.isOpen) {
-#ifdef kExist
             [ShowTipsHandle.share show:@"delete forwarding table..."];
             UInt16 pathOrigin = forwardingTable.pathOriginUnicastAddrRange.rangeStart;
             UInt16 pathDestination = forwardingTable.pathTargetUnicastAddrRange.rangeStart;
@@ -80,7 +80,6 @@
                 }
                 [weakSelf removeForwardingTableFromDataSource:forwardingTable];
             }];
-#endif
         } else {
             [self showTips:@"The mesh is offline, app cann`t remove forwarding table."];
         }
@@ -88,7 +87,6 @@
 }
 
 - (void)removeForwardingTableFromDataSource:(SigForwardingTableModel *)forwardingTable {
-#ifdef kExist
     NSArray *array = [NSArray arrayWithArray:SigDataSource.share.forwardingTableModelList];
     for (SigForwardingTableModel *model in array) {
         if ([model isEqual:forwardingTable]) {
@@ -102,13 +100,13 @@
         [ShowTipsHandle.share show:@"delete forwarding table from node success!"];
         [ShowTipsHandle.share delayHidden:2.0];
     });
-#endif
 }
 
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
     self.title = @"Forwarding Table List";
+    self.addForwardingTableButton.backgroundColor = UIColor.telinkButtonBlue;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
@@ -148,12 +146,6 @@
     NSLog(@"%s",__func__);
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return SigDataSource.share.forwardingTableModelList.count;
@@ -167,10 +159,8 @@
     }
     cell.textLabel.numberOfLines = 0;
     cell.textLabel.font = [UIFont systemFontOfSize:13.0];
-#ifdef kExist
     SigForwardingTableModel *model = SigDataSource.share.forwardingTableModelList[indexPath.row];
     cell.textLabel.text = model.getDescription;
-#endif
     return cell;
 }
 

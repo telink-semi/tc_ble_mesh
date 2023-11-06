@@ -34,10 +34,19 @@
 
 @implementation ShowTipsHandle
 
-+ (ShowTipsHandle *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static ShowTipsHandle *shareHandle = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareHandle = [[ShowTipsHandle alloc] init];
         [shareHandle configShowTipsView];
     });
@@ -48,6 +57,8 @@
     _showTipView = (ShowTipsView *)[[[NSBundle mainBundle] loadNibNamed:@"ShowTipsView" owner:nil options:nil] firstObject];
     _showTipView.bounds = [UIScreen mainScreen].bounds;
     _showTipView.center = [UIApplication sharedApplication].windows.firstObject.center;
+    _showTipView.bgView.backgroundColor = [UIColor dynamicColorWithLight:[UIColor colorWithWhite:1.0 alpha:0.9] dark:[UIColor colorWithWhite:0.5 alpha:0.9]];
+    _showTipView.tipLab.textColor = UIColor.telinkTitleBlack;
 }
 
 - (void)show:(NSString *)tip{

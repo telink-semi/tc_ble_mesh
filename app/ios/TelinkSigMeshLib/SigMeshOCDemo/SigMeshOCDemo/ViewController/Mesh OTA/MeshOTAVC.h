@@ -21,10 +21,14 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseViewController.h"
 
-@interface MeshOTAVC : UIViewController
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MeshOTAVC : BaseViewController
 
 @property (nonatomic, assign) BOOL isContinue;//是否是继续meshOTA流程
 
 @end
+
+NS_ASSUME_NONNULL_END

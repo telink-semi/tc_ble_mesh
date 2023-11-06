@@ -27,6 +27,7 @@
 
 @interface ChooseOOBFileVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UIButton *importButton;
 @property (nonatomic, assign) int selectIndex;
 @property (nonatomic,strong) NSMutableArray <NSString *>*source;
 
@@ -53,17 +54,9 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-- (void)showTips:(NSString *)message{
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
-}
-
 - (void)normalSetting{
     [super normalSetting];
+    self.importButton.backgroundColor = UIColor.telinkButtonBlue;
     self.title = @"File Selector";
     self.selectIndex = -1;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];

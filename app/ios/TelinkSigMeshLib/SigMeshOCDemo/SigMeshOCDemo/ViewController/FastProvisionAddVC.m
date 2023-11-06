@@ -74,10 +74,10 @@
                 });
                 [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                         if (unprovisioned) {
-                            //RSSI太弱会容易出现连接失败。
-                            if (RSSI.intValue <= -70) {
-                                return;
-                            }
+//                            //RSSI太弱会容易出现连接失败。
+//                            if (RSSI.intValue <= -70) {
+//                                return;
+//                            }
                         TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
@@ -141,7 +141,12 @@
 //        weakSelf.isAdding = NO;
 //    }];
     //注意：如果客户的compositionData不是默认的数据，需要开发者新增或者修改SigDataSource.share.defaultNodeInfos里面的数据。
-    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:@[@(SigNodePID_CT),@(SigNodePID_HSL),@(SigNodePID_Panel),@(SigNodePID_LPN)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+    //添加所有已经存在cpsData的pid的设备
+    NSMutableArray *productIds = [NSMutableArray array];
+    for (DeviceTypeModel *model in SigDataSource.share.defaultNodeInfos) {
+        [productIds addObject:@(model.PID)];
+    }
+    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:productIds currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
         [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } startProvisionCallback:^{
         [weakSelf updateStartProvision];
@@ -164,15 +169,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         self.refreshItem.enabled = able;
         self.goBackButton.enabled = able;
-        [self.goBackButton setBackgroundColor:able ? kDefultColor : kDefultUnableColor];
-    });
-}
-
-- (void)showTips:(NSString *)message{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-
-        }];
+        [self.goBackButton setBackgroundColor:able ? UIColor.telinkButtonBlue : UIColor.telinkButtonUnableBlue];
     });
 }
 

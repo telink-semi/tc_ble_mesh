@@ -59,10 +59,19 @@
 
 #pragma  mark - Computed properties
 
-+ (SigBearer *)share {
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigBearer *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[SigBearer alloc] init];
         shareManager.ble = [SigBluetooth share];
         shareManager.queue = [NSMutableArray array];
@@ -307,7 +316,7 @@
         }
         return;
     } else {
-        TeLogDebug(@"")
+        TeLogDebug(@"");
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
             [self performSelector:@selector(shouldSendNextPacketData) withObject:nil afterDelay:0.5];
@@ -325,6 +334,7 @@
         TeLogInfo(@"---> to:GATT, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_In_CharacteristicsID]) {
         TeLogInfo(@"---> to:PROXY, length:%d",data.length);
+//        TeLogInfo(@"---> to:PROXY, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
         TeLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
@@ -341,7 +351,7 @@
 - (void)openWithResult:(bearerOperationResultCallback)block {
     self.bearerOpenCallback = block;
     __weak typeof(self) weakSelf = self;
-    SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithUUID:self.peripheral.identifier.UUIDString];
+    SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithPeripheralUUIDString:self.peripheral.identifier.UUIDString];
     if (node == nil) {
         SigScanRspModel *scanModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:self.peripheral.identifier.UUIDString];
         TeLogDebug(@"start connected scanModel.macAddress=%@",scanModel.macAddress);
@@ -573,6 +583,11 @@
 }
 
 #pragma  mark - delegate
+
+/// Callback called when a packet has been received using the SigBearer. Data longer than MTU will automatically be reassembled using the bearer protocol if bearer implements segmentation.
+/// @param bearer The SigBearer on which the data were received.
+/// @param data The data received.
+/// @param type The type of the received data.
 - (void)bearer:(SigBearer *)bearer didDeliverData:(NSData *)data ofType:(SigPduType)type {
     if (type == SigPduType_provisioningPdu) {
         if (data.length < 1) {
@@ -602,7 +617,11 @@
 
 #pragma  mark - auto reconnect
 
-/// 开始连接SigDataSource这个单例的mesh网络。
+/**
+ * @brief   Start connecting to the single column mesh network of SigDataSource.
+ * @param   complete callback of connect mesh complete.
+ * @note    Internally, it will retry every 10 seconds until the connection is successful or the 'stopMeshConnectWithComplete' call is made to stop the connection:`
+ */
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {
     if (complete) {
         self.startMeshConnectCallback = complete;
@@ -623,7 +642,11 @@
     }
 }
 
-/// 断开一个mesh网络的连接，切换不同的mesh网络时使用。
+/**
+ * @brief   Disconnect mesh connect.
+ * @param   complete callback of connect mesh complete.
+ * @note    It will use in switch mesh network.
+ */
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete {
     self.isAutoReconnect = NO;
     self.stopMeshConnectCallback = complete;
@@ -747,13 +770,14 @@
                     TeLogDebug(@"connected and read gatt list success.");
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                            TeLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
-                            [weakSelf startMeshConnectSuccess];
                         } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                             if (error) {
                                 TeLogDebug(@"set filter:%@ fail.",peripheral.identifier.UUIDString);
                                 [weakSelf startMeshConnectFail];
         //                        [weakSelf startAutoConnect];
+                            } else {
+                                TeLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
+                                [weakSelf startMeshConnectSuccess];
                             }
                         }];
                     });

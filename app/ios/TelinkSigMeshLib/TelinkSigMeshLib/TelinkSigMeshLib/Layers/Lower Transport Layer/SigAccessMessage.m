@@ -27,15 +27,26 @@
 
 @implementation SigAccessMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
     }
     return self;
 }
 
+/// Creates an Access Message from a Network PDU that contains
+/// an unsegmented access message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with unsegmented
+///                         Upper Transport message.
 - (instancetype)initFromUnsegmentedPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
@@ -64,8 +75,13 @@
     return self;
 }
 
+/// Creates an Access Message object from the given list of segments.
+///
+/// - parameter segments: List of ordered segments.
 - (instancetype)initFromSegments:(NSArray <SigSegmentedAccessMessage *>*)segments {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         // Assuming all segments have the same AID, source and destination addresses and TransMIC.
         SigSegmentedAccessMessage *segment = segments.firstObject;
@@ -87,8 +103,14 @@
     return self;
 }
 
+/// Creates an Access Message object from the Upper Transport PDU.
+///
+/// - parameter pdu: The Upper Transport PDU.
+/// - parameter networkKey: The Network Key to encrypt the PCU with.
 - (instancetype)initFromUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.type = SigLowerTransportPduType_accessMessage;
         _AKF = pdu.AKF;
         _aid = pdu.aid;

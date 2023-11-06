@@ -52,10 +52,6 @@
     self.hasClickKeyBind = YES;
     [self blockState];
     [ShowTipsHandle.share show:Tip_ReKeyBindDevice];
-//    [self.ble setKeyBindState];
-    
-//    [self tryConnectDevice];
-    
     __weak typeof(self) weakSelf = self;
     if (SigBearer.share.isOpen) {
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
@@ -98,7 +94,6 @@
             [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:120.0];//非直连设备进行keybind，多跳的情况下速度会很慢，修改超时时间。
         });
     }
-    
 }
 
 - (void)showKeyBindSuccess {
@@ -167,13 +162,6 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
         [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
     });
-
-//    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-//        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
-//    } else {
-//        //if node isn't Bluetooth.share.currentPeripheral, delay 5s and pop.
-//        [self performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutConnectedDelayResponseTime];
-//    }
 }
 
 - (void)resetNodeTimeout {
@@ -183,58 +171,23 @@
 }
 
 - (void)pop{
-//    self.ble.commandHandle.delectDeviceCallBack = nil;
     dispatch_async(dispatch_get_main_queue(), ^{
         [ShowTipsHandle.share hidden];
         [self.navigationController popViewControllerAnimated:YES];
     });
 }
 
-- (void)blockState{
-    [super blockState];
-    
-//    __weak typeof(self) weakSelf = self;
-//    [self.ble bleFinishScanedCharachteristic:^(CBPeripheral *peripheral) {
-//        if (weakSelf.ble.state == StateAddDevice_keyBind && [peripheral.identifier.UUIDString isEqualToString:weakSelf.model.peripheralUUID]) {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(connectPeripheralWithUUIDTimeout) object:nil];
-//            });
-//            [weakSelf dalayToSetFilter];
-//        }else if (weakSelf.ble.state == StateNormal && [peripheral.identifier.UUIDString isEqualToString:weakSelf.model.peripheralUUID] && weakSelf.hasClickKickout){
-//            weakSelf.hasClickKickout = NO;
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(kickoutConnectPeripheralWithUUIDTimeout) object:nil];
-//            });
-//            [weakSelf kickoutAction];
-//        }
-//    }];
-//    [self.ble bleDisconnectOrConnectFail:^(CBPeripheral *peripheral) {
-//        if (weakSelf.hasClickKickout) {
-//            [ShowTipsHandle.share show:Tip_DisconnectOrConnectFail];
-//            [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutDelayResponseTime];
-//        }
-//        if (weakSelf.hasClickKeyBind) {
-//            [weakSelf showKeyBindFail];
-//        }
-//    }];
-//    [self.ble bleScanNewDevice:^(CBPeripheral *peripheral, BOOL provisioned) {
-//        if (!provisioned && ![SigDataSource.share getScanRspModelWithAddress:self.model.address]) {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanPeripheralTimeout) object:nil];
-//            });
-//            [weakSelf.ble stopScan];
-//            [weakSelf.ble connectPeripheral:peripheral];
-//            [weakSelf performSelector:@selector(connectPeripheralWithUUIDTimeout) withObject:nil afterDelay:kConnectWithUUIDTimeout];
-//        }
-//    }];
+- (void)normalSetting {
+    [super normalSetting];
+    self.title = @"Key Bind";
+    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nUUID:%@",self.model.address,self.model.UUID];
+    self.kickOutButton.backgroundColor = UIColor.telinkButtonRed;
+    self.keindyButton.backgroundColor = UIColor.telinkButtonBlue;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    self.title = @"Key Bind";
-//    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nmac:%@",self.model.address,[LibTools getMacStringWithMac:self.model.macAddress]];
-    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nUUID:%@",self.model.address,self.model.UUID];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{

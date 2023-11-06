@@ -27,10 +27,10 @@
 /// Table 3.43: Opcode formats
 /// - seeAlso: Mesh_v1.0.pdf  (page.93)
 typedef enum : UInt8 {
-    SigOpCodeType_sig1 = 1,//1-octet Opcodes,Opcode Format:0xxxxxxx (excluding 01111111)
-    SigOpCodeType_sig2 = 2,//2-octet Opcodes,Opcode Format:10xxxxxx xxxxxxxx
+    SigOpCodeType_sig1    = 1,//1-octet Opcodes,Opcode Format:0xxxxxxx (excluding 01111111)
+    SigOpCodeType_sig2    = 2,//2-octet Opcodes,Opcode Format:10xxxxxx xxxxxxxx
     SigOpCodeType_vendor3 = 3,//3-octet Opcodes,Opcode Format:11xxxxxx zzzzzzzz
-    SigOpCodeType_RFU = 0b01111111,
+    SigOpCodeType_RFU     = 0b01111111,
 } SigOpCodeType;
 
 /// Table 5.14: Provisioning PDU types.
@@ -69,24 +69,82 @@ typedef enum : UInt8 {
     /// RFU, Reserved for Future Use, 0x0E–0xFF.
 } SigProvisioningPduType;
 
+/// 3.4.2 Addresses.
+/// - seeAlso: MshPRT_v1.1.pdf  (page.54)
 typedef enum : UInt16 {
-    MeshAddress_unassignedAddress = 0x0000,
-    MeshAddress_minUnicastAddress = 0x0001,
-    MeshAddress_maxUnicastAddress = 0x7FFF,
-    MeshAddress_minVirtualAddress = 0x8000,
-    MeshAddress_maxVirtualAddress = 0xBFFF,
-    MeshAddress_minGroupAddress   = 0xC000,
-    MeshAddress_maxGroupAddress   = 0xFEFF,
-    MeshAddress_allProxies        = 0xFFFC,
-    MeshAddress_allFriends        = 0xFFFD,
-    MeshAddress_allRelays         = 0xFFFE,
-    MeshAddress_allNodes          = 0xFFFF,
+    /// 3.4.2.1 Unassigned address
+    /// An unassigned address is an address in which the element of a node has not been configured yet or no address
+    /// has been allocated. The unassigned address shall have the value 0x0000 as shown in Figure 3.4 below. This may
+    /// be used, for example, to disable message publishing of a model by setting the publish address of a model to the
+    /// unassigned address.
+    /// An unassigned address shall not be used in the SRC field or the DST field of a Network PDU.
+    MeshAddress_unassignedAddress                                                            = 0x0000,
+    /// 3.4.2.2 Unicast address
+    /// A unicast address is a unique address allocated to each element. A unicast address has bit 15 set to 0. The unicast
+    /// address shall not have the value 0x0000, and therefore can have any value from 0x0001 to 0x7FFF inclusive as
+    /// shown in Figure 3.5 below.
+    /// A unicast address is allocated to each element of a node for a term of the node on the network. The address
+    /// allocation for the initial term is performed by a Provisioner during provisioning as described in Section 5.4.2.5. The
+    /// address may be changed by executing the Node Address Refresh procedure (see Section 3.11.8.5) or the Node
+    /// Composition Refresh procedure (see Section 3.11.8.6). The address may be unallocated by a Provisioner to allow
+    /// the address to be reused using the procedure defined in Section 3.11.7.
+    /// A unicast address shall be used in the SRC field of a Network PDU and may be used in the DST field of a Network
+    /// PDU. A Network PDU sent to a unicast address shall be processed by at most one element.
+    MeshAddress_minUnicastAddress                                                            = 0x0001,
+    MeshAddress_maxUnicastAddress                                                            = 0x7FFF,
+    /// 3.4.2.3 Virtual address
+    /// A virtual address represents a set of destination addresses. Each virtual address logically represents a Label UUID,
+    /// which is a 128-bit value that does not have to be managed centrally. One or more elements may be programmed to
+    /// publish or subscribe to a Label UUID. The Label UUID is not transmitted and shall be used as the Additional Data field
+    /// of the message integrity check value in the upper transport layer (see Section 3.9.7.1).
+    /// The virtual address is a 16-bit value that has bit 15 set to 1, bit 14 set to 0, and bits 13 to 0 set to the value of a hash.
+    /// This hash is a derivation of the Label UUID such that each hash represents many Label UUIDs.
+    /// SALT                                                                                 =s1("vtad")
+    /// hash                                                                                 =AES‐CMACSALT (Label UUID) mod 214
+    /// When an Access message is received to a virtual address that has a matching hash, each corresponding Label UUID is
+    /// used by the upper transport layer as additional data as part of the authentication of the message until a match is found.
+    /// Transport Control messages cannot use virtual addresses.
+    /// Label UUIDs may be generated randomly as defined in [6]. A Configuration Manager may assign and track virtual
+    /// addresses; however, two devices can also create a virtual address using some out-of-band (OOB) mechanism. Unlike
+    /// group addresses, these could be agreed upon by the devices involved and would not need to be registered in the
+    /// centralized provisioning database, as they are unlikely to be duplicated.
+    /// A disadvantage of virtual addresses is that a multi-segment message is required to transfer a Label UUID to a publishing
+    /// or subscribing node during configuration.
+    /// A virtual address can have any value from 0x8000 to 0xBFFF as shown in Figure 3.7 below.
+    /// Note: When factoring in a 32-bit MIC and the size of the hash, there is only a 1⁄246 =1.42×10‐14 likelihood that two
+    /// matching virtual addresses using the same application key but different Label UUIDs will collide.
+    MeshAddress_minVirtualAddress                                                            = 0x8000,
+    MeshAddress_maxVirtualAddress                                                            = 0xBFFF,
+    /// A group address is an address that is programmed into zero or more elements. A group address has bit 15 set to 1 and bit 14 set to 1,
+    /// as shown in Figure 3.8 below. Group addresses in the range 0xFF00 through 0xFFFF are reserved for Fixed Group addresses
+    /// (see Table 3.7), and addresses in the range 0xC000 through 0xFEFF are generally available for other usage.
+    /// A group address shall only be used in the DST field of a Network PDU. A Network PDU sent to a group address shall be
+    /// delivered to all the instances of models that subscribe to this group address.
+    MeshAddress_minGroupAddress                                                              = 0xC000,
+    MeshAddress_maxGroupAddress                                                              = 0xFEFF,
+    
+    //0xFF00–0xFFF8 RFU
+    
+    /// all-ipt-border-routers(Add in mesh spec v1.1)
+    MeshAddress_allIptBorderRouters                                                          = 0xFFF9,
+    /// all-ipt-nodes(Add in mesh spec v1.1)
+    MeshAddress_allIptNodes                                                                  = 0xFFFA,
+    /// all-directed-forwarding-nodes(Add in mesh spec v1.1)
+    MeshAddress_allDirectedForwardingNodes                                                   = 0xFFFB,
+    /// A message sent to the all-proxies address shall be processed by the primary element of all nodes that have the proxy functionality enabled.
+    MeshAddress_allProxies                                                                   = 0xFFFC,
+    /// A message sent to the all-friends address shall be processed by the primary element of all nodes that have the friend functionality enabled.
+    MeshAddress_allFriends                                                                   = 0xFFFD,
+    /// A message sent to the all-relays address shall be processed by the primary element of all nodes that have the relay functionality enabled.
+    MeshAddress_allRelays                                                                    = 0xFFFE,
+    /// A message sent to the all-nodes address shall be processed by the primary element of all nodes.
+    MeshAddress_allNodes                                                                     = 0xFFFF,
 } MeshAddress;
 
 typedef enum : UInt8 {
-    DeviceStateOn,
-    DeviceStateOff,
-    DeviceStateOutOfLine,
+    DeviceStateOn,//on
+    DeviceStateOff,//off
+    DeviceStateOutOfLine,//outline
 } DeviceState;//设备状态
 
 typedef enum : NSUInteger {
@@ -130,7 +188,7 @@ typedef enum : UInt8 {
 /// - seeAlso: Mesh_v1.0.pdf  (page.239)
 typedef enum : UInt8 {
     /// FIPS P-256 Elliptic Curve algorithm will be used to calculate the shared secret.
-    Algorithm_fipsP256EllipticCurve = 0,
+    Algorithm_fipsP256EllipticCurve             = 0,
     /// BTM_ECDH_P256_HMAC_SHA256_AES_CCM
     Algorithm_fipsP256EllipticCurve_HMAC_SHA256 = 1,
     /// Reserved for Future Use: 2~15
@@ -161,7 +219,9 @@ typedef enum : UInt8 {
     /// Prohibited, 0x04–0xFF.
 } AuthenticationMethod;
 
-/// The output action will be displayed on the device. For example, the device may use its LED to blink number of times. The number of blinks will then have to be entered to the Provisioner Manager.
+/// The output action will be displayed on the device. For example,
+/// the device may use its LED to blink number of times. The number of blinks
+/// will then have to be entered to the Provisioner Manager.
 /// Table 5.22: Output OOB Action field values
 /// - seeAlso: Mesh_v1.0.pdf  (page.240)
 typedef enum : UInt8 {
@@ -173,7 +233,9 @@ typedef enum : UInt8 {
     /// Reserved for Future Use, 5–15.
 } OutputAction;
 
-/// The user will have to enter the input action on the device. For example, if the device supports `.push`, user will be asked to press a button on the device required number of times.
+/// The user will have to enter the input action on the device. For example,
+/// if the device supports `.push`, user will be asked to press a button on the
+/// device required number of times.
 /// Table 5.24: Input OOB Action field values
 /// - seeAlso: Mesh_v1.0.pdf  (page.240)
 typedef enum : UInt8 {
@@ -249,123 +311,414 @@ typedef enum : UInt8 {
     SigConfigMessageStatus_cannotSet                      = 0x0F,
     SigConfigMessageStatus_unspecifiedError               = 0x10,
     SigConfigMessageStatus_invalidBinding                 = 0x11,
-    /// 0x12-0xFF, RFU
+    /// - seeAlso: MshPRTd1.1r20_PRr00.pdf  (page.420)
+    SigConfigMessageStatus_invalidPathEntry               = 0x12,
+    SigConfigMessageStatus_cannotGet                      = 0x13,
+    SigConfigMessageStatus_obsoleteInformation            = 0x14,
+    SigConfigMessageStatus_invalidBearer                  = 0x15,
+    /// 0x16-0xFF, RFU
 } SigConfigMessageStatus;
+
+#pragma mark - 4.2 Mesh Model Message Opcodes
+
+/// 4.2.1 Mesh Model Message Opcodes by Value
+/// - seeAlso: Assigned_Numbers.pdf (page.137),
 
 typedef enum      : UInt32 {
 
     /// 4.3.4 Messages summary
     /// - seeAlso : Mesh_v1.0.pdf  (page.188)
 
+    /// 0x00 Config AppKey Add
     SigOpCode_configAppKeyAdd                                = 0x00,
-    SigOpCode_configAppKeyDelete                             = 0x8000,
-    SigOpCode_configAppKeyGet                                = 0x8001,
-    SigOpCode_configAppKeyList                               = 0x8002,
-    SigOpCode_configAppKeyStatus                             = 0x8003,
+    /// 0x01 Config AppKey Update
     SigOpCode_configAppKeyUpdate                             = 0x01,
-
-    SigOpCode_configBeaconGet                                = 0x8009,
-    SigOpCode_configBeaconSet                                = 0x800A,
-    SigOpCode_configBeaconStatus                             = 0x800B,
-
-    SigOpCode_configCompositionDataGet                       = 0x8008,
+    /// 0x02 Config Composition Data Status
     SigOpCode_configCompositionDataStatus                    = 0x02,
-
-    SigOpCode_configDefaultTtlGet                            = 0x800C,
-    SigOpCode_configDefaultTtlSet                            = 0x800D,
-    SigOpCode_configDefaultTtlStatus                         = 0x800E,
-
-    SigOpCode_configFriendGet                                = 0x800F,
-    SigOpCode_configFriendSet                                = 0x8010,
-    SigOpCode_configFriendStatus                             = 0x8011,
-
-    SigOpCode_configGATTProxyGet                             = 0x8012,
-    SigOpCode_configGATTProxySet                             = 0x8013,
-    SigOpCode_configGATTProxyStatus                          = 0x8014,
-
-    SigOpCode_configKeyRefreshPhaseGet                       = 0x8015,
-    SigOpCode_configKeyRefreshPhaseSet                       = 0x8016,
-    SigOpCode_configKeyRefreshPhaseStatus                    = 0x8017,
-
-    SigOpCode_configModelPublicationGet                      = 0x8018,
+    /// 0x03 Config Model Publication Set
     SigOpCode_configModelPublicationSet                      = 0x03,
-    SigOpCode_configModelPublicationStatus                   = 0x8019,
-    SigOpCode_configModelPublicationVirtualAddressSet        = 0x801A,
-
-    SigOpCode_configModelSubscriptionAdd                     = 0x801B,
-    SigOpCode_configModelSubscriptionDelete                  = 0x801C,
-    SigOpCode_configModelSubscriptionDeleteAll               = 0x801D,
-    SigOpCode_configModelSubscriptionOverwrite               = 0x801E,
-    SigOpCode_configModelSubscriptionStatus                  = 0x801F,
-    SigOpCode_configModelSubscriptionVirtualAddressAdd       = 0x8020,
-    SigOpCode_configModelSubscriptionVirtualAddressDelete    = 0x8021,
-    SigOpCode_configModelSubscriptionVirtualAddressOverwrite = 0x8022,
-
-    SigOpCode_configNetworkTransmitGet                       = 0x8023,
-    SigOpCode_configNetworkTransmitSet                       = 0x8024,
-    SigOpCode_configNetworkTransmitStatus                    = 0x8025,
-
-    SigOpCode_configRelayGet                                 = 0x8026,
-    SigOpCode_configRelaySet                                 = 0x8027,
-    SigOpCode_configRelayStatus                              = 0x8028,
-
-    SigOpCode_configSIGModelSubscriptionGet                  = 0x8029,
-    SigOpCode_configSIGModelSubscriptionList                 = 0x802A,
-    SigOpCode_configVendorModelSubscriptionGet               = 0x802B,
-    SigOpCode_configVendorModelSubscriptionList              = 0x802C,
-
-    SigOpCode_configLowPowerNodePollTimeoutGet               = 0x802D,
-    SigOpCode_configLowPowerNodePollTimeoutStatus            = 0x802E,
-
-    SigOpCode_configHeartbeatPublicationGet                  = 0x8038,
-    SigOpCode_configHeartbeatPublicationSet                  = 0x8039,
+    /// 0x04 Health Current Status
+    SigOpCode_healthCurrentStatus                            = 0x04,
+    /// 0x05 Health Fault Status
+    SigOpCode_healthFaultStatus                              = 0x05,
+    /// 0x06 Config Heartbeat Publication Status
     SigOpCode_configHeartbeatPublicationStatus               = 0x06,
+    /// 0x40 Generic Location Global Status
+    SigOpCode_genericLocationGlobalStatus                    = 0x40,
+    /// 0x41 Generic Location Global Set
+    SigOpCode_genericLocationGlobalSet                       = 0x41,
+    /// 0x42 Generic Location Global Set Unacknowledged
+    SigOpCode_genericLocationGlobalSetUnacknowledged         = 0x42,
+    /// 0x43 Generic Manufacturer Properties Status
+    SigOpCode_genericManufacturerPropertiesStatus            = 0x43,
+    /// 0x44 Generic Manufacturer Property Set
+    SigOpCode_genericManufacturerPropertySet                 = 0x44,
+    /// 0x45 Generic Manufacturer Property Set Unacknowledged
+    SigOpCode_genericManufacturerPropertySetUnacknowledged   = 0x45,
+    /// 0x46 Generic Manufacturer Property Status
+    SigOpCode_genericManufacturerPropertyStatus              = 0x46,
+    /// 0x47 Generic Admin Properties Status
+    SigOpCode_genericAdminPropertiesStatus                   = 0x47,
+    /// 0x48 Generic Admin Property Set
+    SigOpCode_genericAdminPropertySet                        = 0x48,
+    /// 0x49 Generic Admin Property Set Unacknowledged
+    SigOpCode_genericAdminPropertySetUnacknowledged          = 0x49,
+    /// 0x4A Generic Admin Property Status
+    SigOpCode_genericAdminPropertyStatus                     = 0x4A,
+    /// 0x4B Generic User Properties Status
+    SigOpCode_genericUserPropertiesStatus                    = 0x4B,
+    /// 0x4C Generic User Property Set
+    SigOpCode_genericUserPropertySet                         = 0x4C,
+    /// 0x4D Generic User Property Set Unacknowledged
+    SigOpCode_genericUserPropertySetUnacknowledged           = 0x4D,
+    /// 0x4E Generic User Property Status
+    SigOpCode_genericUserPropertyStatus                      = 0x4E,
+    /// 0x4F Generic Client Properties Get
+    SigOpCode_genericClientPropertiesGet                     = 0x4F,
+    /// 0x50 Generic Client Properties Status
+    SigOpCode_genericClientPropertiesStatus                  = 0x50,
+    /// 0x51 Sensor Descriptor Status
+    SigOpCode_sensorDescriptorStatus                         = 0x51,
+    /// 0x52 Sensor Status
+    SigOpCode_sensorStatus                                   = 0x52,
+    /// 0x53 Sensor Column Status
+    SigOpCode_sensorColumnStatus                             = 0x53,
+    /// 0x54 Sensor Series Status
+    SigOpCode_sensorSeriesStatus                             = 0x54,
+    /// 0x55 Sensor Cadence Set
+    SigOpCode_sensorCadenceSet                               = 0x55,
+    /// 0x56 Sensor Cadence Set Unacknowledged
+    SigOpCode_sensorCadenceSetUnacknowledged                 = 0x56,
+    /// 0x57 Sensor Cadence Status
+    SigOpCode_sensorCadenceStatus                            = 0x57,
+    /// 0x58 Sensor Settings Status
+    SigOpCode_sensorSettingsStatus                           = 0x58,
+    /// 0x59 Sensor Setting Set
+    SigOpCode_sensorSettingSet                               = 0x59,
+    /// 0x5A Sensor Setting Set Unacknowledged
+    SigOpCode_sensorSettingSetUnacknowledged                 = 0x5A,
+    /// 0x5B Sensor Setting Status
+    SigOpCode_sensorSettingStatus                            = 0x5B,
+    /// 0x5C Time Set
+    SigOpCode_timeSet                                        = 0x5C,
+    /// 0x5D Time Status
+    SigOpCode_timeStatus                                     = 0x5D,
+    /// 0x5E Scene Status
+    SigOpCode_sceneStatus                                    = 0x5E,
+    /// 0x5F Scheduler Action Status
+    SigOpCode_schedulerActionStatus                          = 0x5F,
+    /// 0x60 Scheduler Action Set
+    SigOpCode_schedulerActionSet                             = 0x60,
+    /// 0x61 Scheduler Action Set Unacknowledged
+    SigOpCode_schedulerActionSetUnacknowledged               = 0x61,
+    /// 0x62 Light LC Property Set
+    SigOpCode_LightLCPropertySet                             = 0x62,
+    /// 0x63 Light LC Property Set Unacknowledged
+    SigOpCode_LightLCPropertySetUnacknowledged               = 0x63,
+    /// 0x64 Light LC Property Status
+    SigOpCode_LightLCPropertyStatus                          = 0x64,
+    /// 0x65 IEC 62386-104 Frame
+    SigOpCode_IEC62386_104Frame                              = 0x65,
+    /// 0x66 BLOB Chunk Transfer
+    SigOpCode_BLOBChunkTransfer                              = 0x66,
+    /// 0x67 BLOB Block Status
+    SigOpCode_BLOBBlockStatus                                = 0x67,
+    /// 0x68 BLOB Partial Block Report
+    SigOpCode_BLOBPartialBlockReport                         = 0x68,
+    /// 0x8000 config AppKey Delete
+    SigOpCode_configAppKeyDelete                             = 0x8000,
+    /// 0x8001 config AppKey Get
+    SigOpCode_configAppKeyGet                                = 0x8001,
+    /// 0x8002 config AppKey List
+    SigOpCode_configAppKeyList                               = 0x8002,
+    /// 0x8003 config AppKey Status
+    SigOpCode_configAppKeyStatus                             = 0x8003,
+    /// 0x80 0x04 Health Attention Get
+    SigOpCode_healthAttentionGet                             = 0x8004,
+    /// 0x80 0x05 Health Attention Set
+    SigOpCode_healthAttentionSet                             = 0x8005,
+    /// 0x80 0x06 Health Attention Set Unacknowledged
+    SigOpCode_healthAttentionSetUnacknowledged               = 0x8006,
+    /// 0x80 0x07 Health Attention Status
+    SigOpCode_healthAttentionStatus                          = 0x8007,
+    /// 0x8008 config Composition Data Get
+    SigOpCode_configCompositionDataGet                       = 0x8008,
+    /// 0x8009 config Beacon Get
+    SigOpCode_configBeaconGet                                = 0x8009,
+    /// 0x800A config Beacon Set
+    SigOpCode_configBeaconSet                                = 0x800A,
+    /// 0x800B config Beacon Status
+    SigOpCode_configBeaconStatus                             = 0x800B,
+    /// 0x800C config Default Ttl Get
+    SigOpCode_configDefaultTtlGet                            = 0x800C,
+    /// 0x800D config Default Ttl Set
+    SigOpCode_configDefaultTtlSet                            = 0x800D,
+    /// 0x800E config Default Ttl Status
+    SigOpCode_configDefaultTtlStatus                         = 0x800E,
+    /// 0x800F config Friend Get
+    SigOpCode_configFriendGet                                = 0x800F,
+    /// 0x8010 config Friend Set
+    SigOpCode_configFriendSet                                = 0x8010,
+    /// 0x8011 config Friend Status
+    SigOpCode_configFriendStatus                             = 0x8011,
+    /// 0x8012 config GATT Proxy Get
+    SigOpCode_configGATTProxyGet                             = 0x8012,
+    /// 0x8013 config GATT Proxy Set
+    SigOpCode_configGATTProxySet                             = 0x8013,
+    /// 0x8014 config GATT Proxy Status
+    SigOpCode_configGATTProxyStatus                          = 0x8014,
+    /// 0x8015 config Key Refresh Phase Get
+    SigOpCode_configKeyRefreshPhaseGet                       = 0x8015,
+    /// 0x8016 config Key Refresh Phase Set
+    SigOpCode_configKeyRefreshPhaseSet                       = 0x8016,
+    /// 0x8017 config Key Refresh Phase Status
+    SigOpCode_configKeyRefreshPhaseStatus                    = 0x8017,
+    /// 0x8018 config Model Publication Get
+    SigOpCode_configModelPublicationGet                      = 0x8018,
+    /// 0x8019 config Model Publication Set
+    SigOpCode_configModelPublicationStatus                   = 0x8019,
+    /// 0x801A config Model Publication Virtual Address Set
+    SigOpCode_configModelPublicationVirtualAddressSet        = 0x801A,
+    /// 0x801B config Model Subscription Add
+    SigOpCode_configModelSubscriptionAdd                     = 0x801B,
+    /// 0x801C config Model Subscription Delete
+    SigOpCode_configModelSubscriptionDelete                  = 0x801C,
+    /// 0x801D config Model Subscription Delete All
+    SigOpCode_configModelSubscriptionDeleteAll               = 0x801D,
+    /// 0x801E config Model Subscription Overwrite
+    SigOpCode_configModelSubscriptionOverwrite               = 0x801E,
+    /// 0x801F config Model Subscription Status
+    SigOpCode_configModelSubscriptionStatus                  = 0x801F,
+    /// 0x8020 config Model Subscription Virtual Address Add
+    SigOpCode_configModelSubscriptionVirtualAddressAdd       = 0x8020,
+    /// 0x8021 config Model Subscription Virtual Address Delete
+    SigOpCode_configModelSubscriptionVirtualAddressDelete    = 0x8021,
+    /// 0x8022 config Model Subscription Virtual Address Overwrite
+    SigOpCode_configModelSubscriptionVirtualAddressOverwrite = 0x8022,
+    /// 0x8023 config Network Transmit Get
+    SigOpCode_configNetworkTransmitGet                       = 0x8023,
+    /// 0x8024 config Network Transmit Set
+    SigOpCode_configNetworkTransmitSet                       = 0x8024,
+    /// 0x8025 config Network Transmit Status
+    SigOpCode_configNetworkTransmitStatus                    = 0x8025,
+    /// 0x8026 config Relay Get
+    SigOpCode_configRelayGet                                 = 0x8026,
+    /// 0x8027 config Relay Set
+    SigOpCode_configRelaySet                                 = 0x8027,
+    /// 0x8028 config Relay Status
+    SigOpCode_configRelayStatus                              = 0x8028,
+    /// 0x8029 config SIG Model Subscription Get
+    SigOpCode_configSIGModelSubscriptionGet                  = 0x8029,
+    /// 0x802A config SIG Model Subscription List
+    SigOpCode_configSIGModelSubscriptionList                 = 0x802A,
+    /// 0x802B config Vendor Model Subscription Get
+    SigOpCode_configVendorModelSubscriptionGet               = 0x802B,
+    /// 0x802C config Vendor Model Subscription List
+    SigOpCode_configVendorModelSubscriptionList              = 0x802C,
+    /// 0x802D config Low Power Node Poll Timeout Get
+    SigOpCode_configLowPowerNodePollTimeoutGet               = 0x802D,
+    /// 0x802E config Low Power Node Poll Timeout Status
+    SigOpCode_configLowPowerNodePollTimeoutStatus            = 0x802E,
+    /// 0x80 0x2F Health Fault Clear
+    SigOpCode_healthFaultClear                               = 0x802F,
+    /// 0x80 0x30 Health Fault Clear Unacknowledged
+    SigOpCode_healthFaultClearUnacknowledged                 = 0x8030,
+    /// 0x80 0x31 Health Fault Get
+    SigOpCode_healthFaultGet                                 = 0x8031,
+    /// 0x80 0x32 Health Fault Test
+    SigOpCode_healthFaultTest                                = 0x8032,
+    /// 0x80 0x33 Health Fault Test Unacknowledged
+    SigOpCode_healthFaultTestUnacknowledged                  = 0x8033,
+    /// 0x80 0x34 Health Period Get
+    SigOpCode_healthPeriodGet                                = 0x8034,
+    /// 0x80 0x35 Health Period Set
+    SigOpCode_healthPeriodSet                                = 0x8035,
+    /// 0x80 0x36 Health Period Set Unacknowledged
+    SigOpCode_healthPeriodSetUnacknowledged                  = 0x8036,
+    /// 0x80 0x37 Health Period Status
+    SigOpCode_healthPeriodStatus                             = 0x8037,
+    /// 0x8038 config Heartbeat Publication Get
+    SigOpCode_configHeartbeatPublicationGet                  = 0x8038,
+    /// 0x8039 config Heartbeat Publication Set
+    SigOpCode_configHeartbeatPublicationSet                  = 0x8039,
+    /// 0x803A config Heartbeat Subscription Get
     SigOpCode_configHeartbeatSubscriptionGet                 = 0x803A,
+    /// 0x803B config Heartbeat Subscription Set
     SigOpCode_configHeartbeatSubscriptionSet                 = 0x803B,
+    /// 0x803C config Heartbeat Subscription Status
     SigOpCode_configHeartbeatSubscriptionStatus              = 0x803C,
-    
+    /// 0x803D config Model App Bind
     SigOpCode_configModelAppBind                             = 0x803D,
+    /// 0x803E config Model App Status
     SigOpCode_configModelAppStatus                           = 0x803E,
+    /// 0x803F config Model App Unbind
     SigOpCode_configModelAppUnbind                           = 0x803F,
-
+    /// 0x8040 config NetKey Add
     SigOpCode_configNetKeyAdd                                = 0x8040,
+    /// 0x8041 config NetKey Delete
     SigOpCode_configNetKeyDelete                             = 0x8041,
+    /// 0x8042 config NetKey Get
     SigOpCode_configNetKeyGet                                = 0x8042,
+    /// 0x8043 config NetKey List
     SigOpCode_configNetKeyList                               = 0x8043,
+    /// 0x8044 config NetKey Status
     SigOpCode_configNetKeyStatus                             = 0x8044,
+    /// 0x8045 config NetKey Update
     SigOpCode_configNetKeyUpdate                             = 0x8045,
-
+    /// 0x8046 config Node Identity Get
     SigOpCode_configNodeIdentityGet                          = 0x8046,
+    /// 0x8047 config Node Identity Set
     SigOpCode_configNodeIdentitySet                          = 0x8047,
+    /// 0x8048 config Node Identity Status
     SigOpCode_configNodeIdentityStatus                       = 0x8048,
-
+    /// 0x8049 config Node Reset
     SigOpCode_configNodeReset                                = 0x8049,
+    /// 0x804A config Node Reset Status
     SigOpCode_configNodeResetStatus                          = 0x804A,
+    /// 0x804B config SIG Model App Get
     SigOpCode_configSIGModelAppGet                           = 0x804B,
+    /// 0x804C config SIG Model App List
     SigOpCode_configSIGModelAppList                          = 0x804C,
+    /// 0x804D config Vendor Model App Get
     SigOpCode_configVendorModelAppGet                        = 0x804D,
+    /// 0x804E config Vendor Model App List
     SigOpCode_configVendorModelAppList                       = 0x804E,
-
-    /// 4.3.5.2 Numerical summary of opcodes
-    /// - seeAlso : MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.26)
-
+    /// 0x804F remote Provisioning Scan Capabilities Get
     SigOpCode_remoteProvisioningScanCapabilitiesGet          = 0x804F,
+    /// 0x8050 remote Provisioning Scan Capabilities Status
     SigOpCode_remoteProvisioningScanCapabilitiesStatus       = 0x8050,
+    /// 0x8051 remote Provisioning Scan Get
     SigOpCode_remoteProvisioningScanGet                      = 0x8051,
+    /// 0x8052 remote Provisioning Scan Start
     SigOpCode_remoteProvisioningScanStart                    = 0x8052,
+    /// 0x8053 remote Provisioning Scan Stop
     SigOpCode_remoteProvisioningScanStop                     = 0x8053,
+    /// 0x8054 remote Provisioning Scan Status
     SigOpCode_remoteProvisioningScanStatus                   = 0x8054,
+    /// 0x8055 remote Provisioning Scan Report
     SigOpCode_remoteProvisioningScanReport                   = 0x8055,
+    /// 0x8056 remote Provisioning Extended Scan Start
     SigOpCode_remoteProvisioningExtendedScanStart            = 0x8056,
+    /// 0x8057 remote Provisioning Extended Scan Report
     SigOpCode_remoteProvisioningExtendedScanReport           = 0x8057,
+    /// 0x8058 remote Provisioning Link Get
     SigOpCode_remoteProvisioningLinkGet                      = 0x8058,
+    /// 0x8059 remote Provisioning Link Open
     SigOpCode_remoteProvisioningLinkOpen                     = 0x8059,
+    /// 0x805A remote Provisioning Link Close
     SigOpCode_remoteProvisioningLinkClose                    = 0x805A,
+    /// 0x805B remote Provisioning Link Status
     SigOpCode_remoteProvisioningLinkStatus                   = 0x805B,
+    /// 0x805C remote Provisioning Link Report
     SigOpCode_remoteProvisioningLinkReport                   = 0x805C,
+    /// 0x805D remote Provisioning PDU Send
     SigOpCode_remoteProvisioningPDUSend                      = 0x805D,
+    /// 0x805E remote Provisioning PDU Outbound Report
     SigOpCode_remoteProvisioningPDUOutboundReport            = 0x805E,
+    /// 0x805F remote Provisioning PDU Report
     SigOpCode_remoteProvisioningPDUReport                    = 0x805F,
+    /// 0x8060 Private Beacon Get
+    SigOpCode_PrivateBeaconGet                               = 0x8060,
+    /// 0x8061 Private Beacon Set
+    SigOpCode_PrivateBeaconSet                               = 0x8061,
+    /// 0x8062 Private Beacon Status
+    SigOpCode_PrivateBeaconStatus                            = 0x8062,
+    /// 0x8063 Private Gatt Proxy Get
+    SigOpCode_PrivateGattProxyGet                            = 0x8063,
+    /// 0x8064 Private Gatt Proxy Set
+    SigOpCode_PrivateGattProxySet                            = 0x8064,
+    /// 0x8065 Private Gatt Proxy Status
+    SigOpCode_PrivateGattProxyStatus                         = 0x8065,
+    /// 0x8066 Private Node Identity Get
+    SigOpCode_PrivateNodeIdentityGet                         = 0x8066,
+    /// 0x8067 Private Node Identity Set
+    SigOpCode_PrivateNodeIdentitySet                         = 0x8067,
+    /// 0x8068 Private Node Identity Status
+    SigOpCode_PrivateNodeIdentityStatus                      = 0x8068,
+    /// 0x8069 On-Demand Private Proxy Get
+    SigOpCode_OnDemandPrivateProxyGet                        = 0x8069,
+    /// 0x806A On-Demand Private Proxy Set
+    SigOpCode_OnDemandPrivateProxySet                        = 0x806A,
+    /// 0x806B On-Demand Private Proxy Status
+    SigOpCode_OnDemandPrivateProxyStatus                     = 0x806B,
+    /// 0x806C SAR Transmitter Get
+    SigOpCode_SARTransmitterGet                              = 0x806C,
+    /// 0x806D SAR Transmitter Set
+    SigOpCode_SARTransmitterSet                              = 0x806D,
+    /// 0x806E SAR Transmitter Status
+    SigOpCode_SARTransmitterStatus                           = 0x806E,
+    /// 0x806F SAR Receiver Get
+    SigOpCode_SARReceiverGet                                 = 0x806F,
+    /// 0x8070 SAR Receiver Set
+    SigOpCode_SARReceiverSet                                 = 0x8070,
+    /// 0x8071 SAR Receiver Status
+    SigOpCode_SARReceiverStatus                              = 0x8071,
+    /// 0x8072 Opcodes Aggregator Sequence
+    SigOpCode_OpcodesAggregatorSequence                      = 0x8072,
+    /// 0x8073 Opcodes Aggregator Status
+    SigOpCode_OpcodesAggregatorStatus                        = 0x8073,
+    /// 0x8074 Large Composition Data Get
+    SigOpCode_LargeCompositionDataGet                        = 0x8074,
+    /// 0x8075 Large Composition Data Status
+    SigOpCode_LargeCompositionDataStatus                     = 0x8075,
+    /// 0x8076 Models Metadata Get
+    SigOpCode_ModelsMetadataGet                              = 0x8076,
+    /// 0x8077 Models Metadata Status
+    SigOpCode_ModelsMetadataStatus                           = 0x8077,
+    /// 0x8078 Solicitation Pdu RplItems Clear
+    SigOpCode_SolicitationPduRplItemsClear                   = 0x8078,
+    /// 0x8079 Solicitation Pdu RplItems Clear Unacknowledged
+    SigOpCode_SolicitationPduRplItemsClearUnacknowledged     = 0x8079,
+    /// 0x807A Solicitation Pdu RplItems Status
+    SigOpCode_SolicitationPduRplItemsStatus                  = 0x807A,
+    /// 0x807B Direct Control Get
+    SigOpCode_DirectControlGet                               = 0x807B,
+    /// 0x807C Direct Control Set
+    SigOpCode_DirectControlSet                               = 0x807C,
+    /// 0x807D Direct Control Status
+    SigOpCode_DirectControlStatus                            = 0x807D,
+    /// 0x80 0x7E PATH_METRIC_GET
+    SigOpCode_pathMetricGet                                  = 0x807E,
+    /// 0x80 0x7E PATH_METRIC_SET
+    SigOpCode_pathMetricSet                                  = 0x807F,
+    /// 0x80 0x7E PATH_METRIC_STATUS
+    SigOpCode_pathMetricStatus                               = 0x8080,
+    /// 0x80 0x81 DISCOVERY_TABLE_CAPABILITIES_GET
+    SigOpCode_discoveryTableCapabilitiesGet                  = 0x8081,
+    /// 0x80 0x82 DISCOVERY_TABLE_CAPABILITIES_SET
+    SigOpCode_discoveryTableCapabilitiesSet                  = 0x8082,
+    /// 0x80 0x83 DISCOVERY_TABLE_CAPABILITIES_STATUS
+    SigOpCode_discoveryTableCapabilitiesStatus               = 0x8083,
+    /// 0x80 0x84 ForwardingTableAdd
+    SigOpCode_ForwardingTableAdd                             = 0x8084,
+    /// 0x80 0x85 ForwardingTableDelete
+    SigOpCode_ForwardingTableDelete                          = 0x8085,
+    /// 0x80 0x86 ForwardingTableStatus
+    SigOpCode_ForwardingTableStatus                          = 0x8086,
+    /// 0x80B1 Subnet Bridge Get
+    SigOpCode_SubnetBridgeGet                                = 0x80B1,
+    /// 0x80B2 Subnet Bridge Set
+    SigOpCode_SubnetBridgeSet                                = 0x80B2,
+    /// 0x80B3 Subnet Bridge Status
+    SigOpCode_SubnetBridgeStatus                             = 0x80B3,
+    /// 0x80B4 Bridge Table Add
+    SigOpCode_BridgeTableAdd                                 = 0x80B4,
+    /// 0x80B5 Bridge Table Remove
+    SigOpCode_BridgeTableRemove                              = 0x80B5,
+    /// 0x80B6 Bridge Table Status
+    SigOpCode_BridgeTableStatus                              = 0x80B6,
+    /// 0x80B7 Bridge Subnets Get
+    SigOpCode_BridgeSubnetsGet                               = 0x80B7,
+    /// 0x80B8 Bridge Subnets List
+    SigOpCode_BridgeSubnetsList                              = 0x80B8,
+    /// 0x80B9 Bridge Table Get
+    SigOpCode_BridgeTableGet                                 = 0x80B9,
+    /// 0x80BA Bridge Table List
+    SigOpCode_BridgeTableList                                = 0x80BA,
+    /// 0x80BB Bridging Table Size Get
+    SigOpCode_BridgingTableSizeGet                           = 0x80BB,
+    /// 0x80BC Bridging Table Size Status
+    SigOpCode_BridgingTableSizeStatus                        = 0x80BC,
 
     /// 7.1 Messages summary
     /// - seeAlso : Mesh_Model_Specification v1.0.pdf  (page.298)
@@ -422,29 +775,16 @@ typedef enum      : UInt32 {
 
     //Sensor
     SigOpCode_sensorDescriptorGet                            = 0x8230,
-    SigOpCode_sensorDescriptorStatus                         = 0x51,
     SigOpCode_sensorGet                                      = 0x8231,
-    SigOpCode_sensorStatus                                   = 0x52,
     SigOpCode_sensorColumnGet                                = 0x8232,
-    SigOpCode_sensorColumnStatus                             = 0x53,
     SigOpCode_sensorSeriesGet                                = 0x8233,
-    SigOpCode_sensorSeriesStatus                             = 0x54,
     //Sensor Setup
     SigOpCode_sensorCadenceGet                               = 0x8234,
-    SigOpCode_sensorCadenceSet                               = 0x55,
-    SigOpCode_sensorCadenceSetUnacknowledged                 = 0x56,
-    SigOpCode_sensorCadenceStatus                            = 0x57,
     SigOpCode_sensorSettingsGet                              = 0x8235,
-    SigOpCode_sensorSettingsStatus                           = 0x58,
     SigOpCode_sensorSettingGet                               = 0x8236,
-    SigOpCode_sensorSettingSet                               = 0x59,
-    SigOpCode_sensorSettingSetUnacknowledged                 = 0x5A,
-    SigOpCode_sensorSettingStatus                            = 0x5B,
 
     //Time
     SigOpCode_timeGet                                        = 0x8237,
-    SigOpCode_timeSet                                        = 0x5C,
-    SigOpCode_timeStatus                                     = 0x5D,
     SigOpCode_timeRoleGet                                    = 0x8238,
     SigOpCode_timeRoleSet                                    = 0x8239,
     SigOpCode_timeRoleStatus                                 = 0x823A,
@@ -459,7 +799,6 @@ typedef enum      : UInt32 {
     SigOpCode_sceneGet                                       = 0x8241,
     SigOpCode_sceneRecall                                    = 0x8242,
     SigOpCode_sceneRecallUnacknowledged                      = 0x8243,
-    SigOpCode_sceneStatus                                    = 0x5E,
     SigOpCode_sceneRegisterGet                               = 0x8244,
     SigOpCode_sceneRegisterStatus                            = 0x8245,
     //Scene Setup
@@ -470,12 +809,9 @@ typedef enum      : UInt32 {
 
     //Scheduler
     SigOpCode_schedulerActionGet                             = 0x8248,
-    SigOpCode_schedulerActionStatus                          = 0x5F,
     SigOpCode_schedulerGet                                   = 0x8249,
     SigOpCode_schedulerStatus                                = 0x824A,
     //Scheduler Setup
-    SigOpCode_schedulerActionSet                             = 0x60,
-    SigOpCode_schedulerActionSetUnacknowledged               = 0x61,
 
     //Light Lightness
     SigOpCode_lightLightnessGet                              = 0x824B,
@@ -573,9 +909,28 @@ typedef enum      : UInt32 {
     SigOpCode_LightLCLightOnOffSetUnacknowledged             = 0x829B,
     SigOpCode_LightLCLightOnOffStatus                        = 0x829C,
     SigOpCode_LightLCPropertyGet                             = 0x829D,
-    SigOpCode_LightLCPropertySet                             = 0x62,
-    SigOpCode_LightLCPropertySetUnacknowledged               = 0x63,
-    SigOpCode_LightLCPropertyStatus                          = 0x64,
+
+
+    /// 3.1.3.1 BLOB Transfer messages
+    /// - seeAlso : MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.35)
+
+    //BLOB Transfer Messages
+    /// 0x83 0x00 BLOB Transfer Get
+    SigOpCode_BLOBTransferGet                                = 0x8300,
+    /// 0x83 0x01 BLOB Transfer Start
+    SigOpCode_BLOBTransferStart                              = 0x8301,
+    /// 0x83 0x02 BLOB Transfer Cancel
+    SigOpCode_BLOBTransferCancel                             = 0x8302,
+    /// 0x83 0x03 BLOB Transfer Status
+    SigOpCode_BLOBTransferStatus                             = 0x8303,
+    /// 0x83 0x04 BLOB Block Start
+    SigOpCode_BLOBBlockStart                                 = 0x8304,
+    /// 0x83 0x05 BLOB Block Get
+    SigOpCode_BLOBBlockGet                                   = 0x8305,
+    /// 0x83 0x06 BLOB Information Get
+    SigOpCode_BLOBInformationGet                             = 0x8306,
+    /// 0x83 0x07 BLOB Information Status
+    SigOpCode_BLOBInformationStatus                          = 0x8307,
 
     /// 3.1.1 Firmware Update Model Messages
     /// - seeAlso : pre-spec OTA model opcode details.pdf  (page.2)
@@ -583,126 +938,72 @@ typedef enum      : UInt32 {
     /// - seeAlso : MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.80)
 
     //8.4.1 Firmware Update model messages
-    SigOpCode_FirmwareUpdateInformationGet                   = 0xB601,
-    SigOpCode_FirmwareUpdateInformationStatus                = 0xB602,
-    SigOpCode_FirmwareUpdateFirmwareMetadataCheck            = 0xB603,
-    SigOpCode_FirmwareUpdateFirmwareMetadataStatus           = 0xB604,
-    SigOpCode_FirmwareUpdateGet                              = 0xB605,
-    SigOpCode_FirmwareUpdateStart                            = 0xB606,
-    SigOpCode_FirmwareUpdateCancel                           = 0xB607,
-    SigOpCode_FirmwareUpdateApply                            = 0xB608,
-    SigOpCode_FirmwareUpdateStatus                           = 0xB609,
-
+    /// 0x83 0x08 Firmware Update Information Get
+    SigOpCode_FirmwareUpdateInformationGet                   = 0x8308,
+    /// 0x83 0x09 Firmware Update Information Status
+    SigOpCode_FirmwareUpdateInformationStatus                = 0x8309,
+    /// 0x83 0x0A Firmware Update Firmware Metadata Check
+    SigOpCode_FirmwareUpdateFirmwareMetadataCheck            = 0x830A,
+    /// 0x83 0x0B Firmware Update Firmware Metadata Status
+    SigOpCode_FirmwareUpdateFirmwareMetadataStatus           = 0x830B,
+    /// 0x83 0x0C Firmware Update Get
+    SigOpCode_FirmwareUpdateGet                              = 0x830C,
+    /// 0x83 0x0D Firmware Update Start
+    SigOpCode_FirmwareUpdateStart                            = 0x830D,
+    /// 0x83 0x0E Firmware Update Cancel
+    SigOpCode_FirmwareUpdateCancel                           = 0x830E,
+    /// 0x83 0x0F Firmware Update Apply
+    SigOpCode_FirmwareUpdateApply                            = 0x830F,
+    /// 0x83 0x10 Firmware Update Status
+    SigOpCode_FirmwareUpdateStatus                           = 0x8310,
     //8.4.2 Firmware Distribution model messages
-    SigOpCode_FirmwareDistributionGet                        = 0xB60A,
-    SigOpCode_FirmwareDistributionStart                      = 0xB60B,
-    SigOpCode_FirmwareDistributionCancel                     = 0xB60C,
-    SigOpCode_FirmwareDistributionApply                      = 0xB60D,
-    SigOpCode_FirmwareDistributionStatus                     = 0xB60E,
-    SigOpCode_FirmwareDistributionReceiversGet               = 0xB60F,
-    SigOpCode_FirmwareDistributionReceiversList              = 0xB610,
-    SigOpCode_FirmwareDistributionReceiversAdd               = 0xB611,
-    SigOpCode_FirmwareDistributionReceiversDeleteAll         = 0xB612,
-    SigOpCode_FirmwareDistributionReceiversStatus            = 0xB613,
-    SigOpCode_FirmwareDistributionCapabilitiesGet            = 0xB614,
-    SigOpCode_FirmwareDistributionCapabilitiesStatus         = 0xB615,
-    SigOpCode_FirmwareDistributionUploadGet                  = 0xB616,
-    SigOpCode_FirmwareDistributionUploadStart                = 0xB617,
-    SigOpCode_FirmwareDistributionUploadOOBStart             = 0xB618,
-    SigOpCode_FirmwareDistributionUploadCancel               = 0xB619,
-    SigOpCode_FirmwareDistributionUploadStatus               = 0xB61A,
-    SigOpCode_FirmwareDistributionFirmwareGet                = 0xB61B,
-    SigOpCode_FirmwareDistributionFirmwareStatus             = 0xB61C,
-    SigOpCode_FirmwareDistributionFirmwareGetByIndex         = 0xB61D,
-    SigOpCode_FirmwareDistributionFirmwareDelete             = 0xB61E,
-    SigOpCode_FirmwareDistributionFirmwareDeleteAll          = 0xB61F,
+    /// 0x83 0x11 Firmware Distribution Receivers Get
+    SigOpCode_FirmwareDistributionReceiversGet               = 0x8311,
+    /// 0x83 0x12 Firmware Distribution Receivers List
+    SigOpCode_FirmwareDistributionReceiversList              = 0x8312,
+    /// 0x83 0x13 Firmware Distribution Receivers Add
+    SigOpCode_FirmwareDistributionReceiversAdd               = 0x8313,
+    /// 0x83 0x14 Firmware Distribution Receivers Delete All
+    SigOpCode_FirmwareDistributionReceiversDeleteAll         = 0x8314,
+    /// 0x83 0x15 Firmware Distribution Receivers Status
+    SigOpCode_FirmwareDistributionReceiversStatus            = 0x8315,
+    /// 0x83 0x16 Firmware Distribution Capabilities Get
+    SigOpCode_FirmwareDistributionCapabilitiesGet            = 0x8316,
+    /// 0x83 0x17 Firmware Distribution Capabilities Status
+    SigOpCode_FirmwareDistributionCapabilitiesStatus         = 0x8317,
+    /// 0x83 0x18 Firmware Distribution Get
+    SigOpCode_FirmwareDistributionGet                        = 0x8318,
+    /// 0x83 0x19 Firmware Distribution Start
+    SigOpCode_FirmwareDistributionStart                      = 0x8319,
+    /// 0x83 0x1A Firmware Distribution Suspend
+    SigOpCode_FirmwareDistributionSuspend                    = 0x831A,
+    /// 0x83 0x1B Firmware Distribution Cancel
+    SigOpCode_FirmwareDistributionCancel                     = 0x831B,
+    /// 0x83 0x1C Firmware Distribution Apply
+    SigOpCode_FirmwareDistributionApply                      = 0x831C,
+    /// 0x83 0x1D Firmware Distribution Status
+    SigOpCode_FirmwareDistributionStatus                     = 0x831D,
+    /// 0x83 0x1E Firmware Distribution Upload Get
+    SigOpCode_FirmwareDistributionUploadGet                  = 0x831E,
+    /// 0x83 0x1F Firmware Distribution Upload Start
+    SigOpCode_FirmwareDistributionUploadStart                = 0x831F,
+    /// 0x83 0x20 Firmware Distribution Upload OOB Start
+    SigOpCode_FirmwareDistributionUploadOOBStart             = 0x8320,
+    /// 0x83 0x21 Firmware Distribution Upload Cancel
+    SigOpCode_FirmwareDistributionUploadCancel               = 0x8321,
+    /// 0x83 0x22 Firmware Distribution Upload Status
+    SigOpCode_FirmwareDistributionUploadStatus               = 0x8322,
+    /// 0x83 0x23 Firmware Distribution Firmware Get
+    SigOpCode_FirmwareDistributionFirmwareGet                = 0x8323,
+    /// 0x83 0x24 Firmware Distribution Firmware Get By Index
+    SigOpCode_FirmwareDistributionFirmwareGetByIndex         = 0x8324,
+    /// 0x83 0x25 Firmware Distribution Firmware Delete
+    SigOpCode_FirmwareDistributionFirmwareDelete             = 0x8325,
+    /// 0x83 0x26 Firmware Distribution Firmware Delete All
+    SigOpCode_FirmwareDistributionFirmwareDeleteAll          = 0x8326,
+    /// 0x83 0x27 Firmware Distribution Firmware Status
+    SigOpCode_FirmwareDistributionFirmwareStatus             = 0x8327,
 
-    /// 3.1.3.1 BLOB Transfer messages
-    /// - seeAlso : MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.35)
-
-    //BLOB Transfer Messages
-    SigOpCode_BLOBTransferGet                                = 0xB701,
-    SigOpCode_BLOBTransferStart                              = 0xB702,
-    SigOpCode_BLOBTransferCancel                             = 0xB703,
-    SigOpCode_BLOBTransferStatus                             = 0xB704,
-    SigOpCode_BLOBBlockStart                                 = 0xB705,
-    SigOpCode_ObjectBlockTransferStatus                      = 0xB706,
-    SigOpCode_BLOBBlockGet                                   = 0xB707,
-    SigOpCode_BLOBInformationGet                             = 0xB70A,
-    SigOpCode_BLOBInformationStatus                          = 0xB70B,
-    SigOpCode_BLOBPartialBlockReport                         = 0x7C,
-    SigOpCode_BLOBChunkTransfer                              = 0x7D,
-    SigOpCode_BLOBBlockStatus                                = 0x7E,
-
-    /// Private Beacons
-    /// - seeAlso : message_opcode_sizes_R01.docx  (page.5)
-    SigOpCode_PrivateBeaconGet                               = 0xB711,
-    SigOpCode_PrivateBeaconSet                               = 0xB712,
-    SigOpCode_PrivateBeaconStatus                            = 0xB713,
-    SigOpCode_PrivateGattProxyGet                            = 0xB714,
-    SigOpCode_PrivateGattProxySet                            = 0xB715,
-    SigOpCode_PrivateGattProxyStatus                         = 0xB716,
-    SigOpCode_PrivateNodeIdentityGet                         = 0xB718,
-    SigOpCode_PrivateNodeIdentitySet                         = 0xB719,
-    SigOpCode_PrivateNodeIdentityStatus                      = 0xB71A,
-
-    /// - seeAlso : message_opcode_sizes_R01.docx  (page.5)
-    
-    /// On-demand proxy
-    SigOpCode_OnDemandPrivateProxyGet                        = 0xB800,
-    SigOpCode_OnDemandPrivateProxySet                        = 0xB801,
-    SigOpCode_OnDemandPrivateProxyStatus                     = 0xB802,
-
-    /// SAR configuration
-    SigOpCode_SARTransmitterGet                              = 0xB803,
-    SigOpCode_SARTransmitterSet                              = 0xB804,
-    SigOpCode_SARTransmitterStatus                           = 0xB805,
-    SigOpCode_SARReceiverGet                                 = 0xB806,
-    SigOpCode_SARReceiverSet                                 = 0xB807,
-    SigOpCode_SARReceiverStatus                              = 0xB808,
-    
-    /// Opcodes aggregator
-    SigOpCode_OpcodesAggregatorSequence                      = 0xB809,
-    SigOpCode_OpcodesAggregatorStatus                        = 0xB810,
-
-    /// Large Composition Data
-    SigOpCode_LargeCompositionDataGet                        = 0xB811,
-    SigOpCode_LargeCompositionDataStatus                     = 0xB812,
-    SigOpCode_ModelsMetadataGet                              = 0xB813,
-    SigOpCode_ModelsMetadataStatus                           = 0xB814,
-    
-    /// 4.3.7 Solicitation PDU RPL Configuration messages
-    /// 以下3个opcode未定，未找到文档。
-    SigOpCode_SolicitationPduRplItemsClear = 0xB815,
-    SigOpCode_SolicitationPduRplItemsClearUnacknowledged = 0xB816,
-    SigOpCode_SolicitationPduRplItemsStatus = 0xB817,
-    
-    
-    /// - seeAlso : MshPRF_SBR_CR_r03.pdf  (page.16)
-    /// Subnet Bridge
-    /// 4.3.4.1 Alphabetical summary of opcodes
-    SigOpCode_BridgeCapabilityGet                            = 0xBF7A,
-    SigOpCode_BridgeCapabilityStatus                         = 0xBF7B,
-    SigOpCode_BridgeTableAdd                                 = 0xBF73,
-    SigOpCode_BridgeTableGet                                 = 0xBF78,
-    SigOpCode_BridgeTableList                                = 0xBF79,
-    SigOpCode_BridgeTableRemove                              = 0xBF74,
-    SigOpCode_BridgeTableStatus                              = 0xBF75,
-    SigOpCode_BridgeSubnetsGet                               = 0xBF76,
-    SigOpCode_BridgeSubnetsList                              = 0xBF77,
-    SigOpCode_SubnetBridgeGet                                = 0xBF70,
-    SigOpCode_SubnetBridgeSet                                = 0xBF71,
-    SigOpCode_SubnetBridgeStatus                             = 0xBF72,
-
-    /// Direct Forwarding
-    SigOpCode_DirectControlGet                               = 0xBF30,
-    SigOpCode_DirectControlSet                               = 0xBF31,
-    SigOpCode_DirectControlStatus                            = 0xBF32,
-    SigOpCode_ForwardingTableAdd                             = 0xBF39,
-    SigOpCode_ForwardingTableDelete                          = 0xBF3A,
-    SigOpCode_ForwardingTableStatus                          = 0xBF3B,
-
-    
     /// - seeAlso : fast provision流程简介.pdf  (page.1)
 
     /// fast provision
@@ -725,9 +1026,11 @@ typedef enum : UInt8 {
     SigLowerTransportError_busy    = 1,
 } SigLowerTransportError;
 
+/// Table 3.11: CTL field message types and NetMIC sizes
+/// - seeAlso: MshPRT_v1.1.pdf (page.61)
 typedef enum : UInt8 {
-    SigLowerTransportPduType_accessMessage  = 0,
-    SigLowerTransportPduType_controlMessage = 1,
+    SigLowerTransportPduType_accessMessage           = 0,
+    SigLowerTransportPduType_transportControlMessage = 1,
 } SigLowerTransportPduType;
 
 typedef enum : UInt8 {
@@ -774,7 +1077,9 @@ typedef enum : UInt8 {
     ProvisioningError_unexpectedError       = 7,
     /// The device cannot assign consecutive unicast addresses to all elements.
     ProvisioningError_cannotAssignAddresses = 8,
-    /// RFU, Reserved for Future Use, 0x09–0xFF.
+    /// The Data block contains values that cannot be accepted because of general constraints.
+    ProvisioningError_invalidData           = 9,//add in mesh v1.1
+    /// RFU, Reserved for Future Use, 0x0A–0xFF.
 } ProvisioningError;
 
 typedef enum : NSUInteger {
@@ -1091,7 +1396,9 @@ typedef enum : UInt8 {
     SigOnPowerUpOff     = 0x00,
     /// Default. After being powered up, the element is in an On state and uses default state values.
     SigOnPowerUpDefault = 0x01,
-    /// Restore. If a transition was in progress when powered down, the element restores the target state when powered up. Otherwise the element restores the state it was in when powered down.
+    /// Restore. If a transition was in progress when powered down,
+    /// the element restores the target state when powered up.
+    /// Otherwise the element restores the state it was in when powered down.
     SigOnPowerUpRestore = 0x02,
 } SigOnPowerUp;
 
@@ -1126,11 +1433,11 @@ typedef enum : UInt8 {
     /// The battery charge is Critically Low Level.
     SigBatteryIndicatorCriticallyLow = 0b00,
     /// The battery charge is Low Level.
-    SigBatteryIndicatorLow          = 0b01,
+    SigBatteryIndicatorLow           = 0b01,
     /// The battery charge is Good Level.
-    SigBatteryIndicatorGood         = 0b10,
+    SigBatteryIndicatorGood          = 0b10,
     /// The battery charge is unknown.
-    SigBatteryIndicatorUnknown      = 0b11,
+    SigBatteryIndicatorUnknown       = 0b11,
 } SigBatteryIndicator;
 
 /// Table 3.17: Generic Battery Flags Charging states.
@@ -1139,11 +1446,11 @@ typedef enum : UInt8 {
     /// The battery is not chargeable.
     SigBatteryChargingStateNotChargeable = 0b00,
     /// The battery is chargeable and is not charging.
-    SigBatteryChargingStateNotCharging  = 0b01,
+    SigBatteryChargingStateNotCharging   = 0b01,
     /// The battery is chargeable and is charging.
-    SigBatteryChargingStateCharging     = 0b10,
+    SigBatteryChargingStateCharging      = 0b10,
     /// The battery charging state is unknown.
-    SigBatteryChargingStateUnknown      = 0b11,
+    SigBatteryChargingStateUnknown       = 0b11,
 } SigBatteryChargingState;
 
 /// Table 3.18: Generic Battery Flags Serviceability states.
@@ -1223,7 +1530,7 @@ typedef enum : UInt8 {
     //The node is broadcasting a Secure Network beacon.
     SigSecureNetworkBeaconState_close = 0,
     //The node is not broadcasting a Secure Network beacon.
-    SigSecureNetworkBeaconState_open = 1,
+    SigSecureNetworkBeaconState_open  = 1,
 } SigSecureNetworkBeaconState;
 
 /// 4.2.11 GATTProxy
@@ -1276,26 +1583,33 @@ typedef enum : UInt8 {
 /// Table 6.5: Proxy Configuration message opcodes
 /// - seeAlso: Mesh_v1.0.pdf  (page.263)
 typedef enum : UInt8 {
-    //Sent by a Proxy Client to set the proxy filter type.
-    SigProxyFilerOpcode_setFilterType             = 0x00,
-    //Sent by a Proxy Client to add addresses to the proxy filter list.
-    SigProxyFilerOpcode_addAddressesToFilter      = 0x01,
-    //Sent by a Proxy Client to remove addresses from the proxy filter list.
-    SigProxyFilerOpcode_removeAddressesFromFilter = 0x02,
-    //Acknowledgment by a Proxy Server to a Proxy Client to report the status of the proxy filter list.
-    SigProxyFilerOpcode_filterStatus              = 0x03,
-    //Acknowledgment by a Directed Proxy Server to report current Directed Proxy capabilities in a subnet.
-    SigProxyFilerOpcode_directedProxyCapabilitiesStatus              = 0x04,
-    //sent by a Directed Proxy Client to set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified range of unicast addresses.
-    SigProxyFilerOpcode_directedProxyControl              = 0x05,
+    /// Sent by a Proxy Client to set the proxy filter type.
+    SigProxyFilerOpcode_setFilterType                   = 0x00,
+    /// Sent by a Proxy Client to add addresses to the proxy filter list.
+    SigProxyFilerOpcode_addAddressesToFilter            = 0x01,
+    /// Sent by a Proxy Client to remove addresses from the proxy filter list.
+    SigProxyFilerOpcode_removeAddressesFromFilter       = 0x02,
+    /// Acknowledgment by a Proxy Server to a Proxy Client to report
+    /// the status of the proxy filter list.
+    SigProxyFilerOpcode_filterStatus                    = 0x03,
+    /// Acknowledgment by a Directed Proxy Server to report current
+    /// Directed Proxy capabilities in a subnet.
+    SigProxyFilerOpcode_directedProxyCapabilitiesStatus = 0x04,
+    /// sent by a Directed Proxy Client to set whether or not the Directed Proxy Server uses
+    /// directed forwarding for Directed Proxy Client messages for a specified range of unicast addresses.
+    SigProxyFilerOpcode_directedProxyControl            = 0x05,
 } SigProxyFilerOpcode;
 
 /// Table 6.7: FilterType Values
 /// - seeAlso: Mesh_v1.0.pdf  (page.263)
 typedef enum : UInt8 {
-    /// A white list filter has an associated white list, which is a list of destination addresses that are of interest for the Proxy Client. The white list filter blocks all destination addresses except those that have been added to the white list.
+    /// A white list filter has an associated white list, which is a list of destination addresses that are
+    /// of interest for the Proxy Client. The white list filter blocks all destination addresses except
+    /// those that have been added to the white list.
     SigProxyFilerType_whitelist = 0x00,
-    /// A black list filter has an associated black list, which is a list of destination addresses that the Proxy Client does not want to receive. The black list filter accepts all destination addresses except those that have been added to the black list.
+    /// A black list filter has an associated black list, which is a list of destination addresses that the
+    /// Proxy Client does not want to receive. The black list filter accepts all destination addresses
+    /// except those that have been added to the black list.
     SigProxyFilerType_blacklist = 0x01,
 } SigProxyFilerType;
 
@@ -1328,9 +1642,12 @@ typedef enum : UInt8 {
 /// Table 8.17: Update Policy state values
 /// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.87)
 typedef enum : UInt8 {
-    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully but does not apply the update. The Initiator (the Firmware Distribution Client) initiates firmware image application.
-    SigUpdatePolicyType_verifyOnly       = 0x00,
-    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully and then applies the firmware update.
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully
+    /// but does not apply the update. The Initiator (the Firmware Distribution Client) initiates firmware
+    /// image application.
+    SigUpdatePolicyType_verifyOnly     = 0x00,
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully
+    /// and then applies the firmware update.
     SigUpdatePolicyType_verifyAndApply = 0x01,
 } SigUpdatePolicyType;
 
@@ -1358,25 +1675,6 @@ typedef enum : UInt8 {
     SigBlockChecksumAlgorithmType_CRC32 = 0x00,
     /// Reserved for Future Use, 0x01-0xFF
 } SigBlockChecksumAlgorithmType;
-
-/// Object Block Transfer Status values
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.32)
-typedef enum : UInt8 {
-    /// block transfer accepted
-    SigObjectBlockTransferStatusType_accepted                 = 0x00,
-    /// block already transferred
-    SigObjectBlockTransferStatusType_alreadyRX                = 0x01,
-    /// invalid block number, no previous block
-    SigObjectBlockTransferStatusType_invalidBlockNumber       = 0x02,
-    /// wrong current block size - bigger then Block Size Log [Object Transfer Start]
-    SigObjectBlockTransferStatusType_wrongCurrentBlockSize    = 0x03,
-    /// wrong Chunk Size - bigger then Block Size divided by Max Chunks Number [Object Information Status]
-    SigObjectBlockTransferStatusType_wrongChunkSize           = 0x04,
-    /// unknown checksum algorithm
-    SigObjectBlockTransferStatusType_unknownChecksumAlgorithm = 0x05,
-    /// block transfer rejected
-    SigObjectBlockTransferStatusType_rejected                 = 0x0F,
-} SigObjectBlockTransferStatusType;
 
 /// Table 8.22: Status codes for the Firmware Update Server model and Firmware Update Client model
 /// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.80)
@@ -1450,7 +1748,8 @@ typedef enum                    : UInt8 {
     SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData              = 0x00,
     /// Node composition data changed. The node does not support remote provisioning.
     SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataUnSupportRemote = 0x01,
-    /// Node composition data changed, and remote provisioning is supported. The node supports remote provisioning and composition data page 0x80. Page 0x80 contains different composition data than page 0x0.
+    /// Node composition data changed, and remote provisioning is supported. The node supports remote provisioning
+    /// and composition data page 0x80. Page 0x80 contains different composition data than page 0x0.
     SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataSupportRemote   = 0x02,
     /// Node unprovisioned. The node is unprovisioned after successful application of a verified firmware image.
     SigFirmwareUpdateAdditionalInformationStatusType_nodeUnprovisioned                    = 0x03,
@@ -1485,9 +1784,11 @@ typedef enum : UInt8 {
     SigBLOBBlockStatusType_success                 = 0x00,
     /// The Block Number field value is not within range.
     SigBLOBBlockStatusType_invalidBlockNumber      = 0x01,
-    /// The block size is lower than the size represented by Min Block Size Log, or the block size is higher than the size represented by Max Block Size Log.
+    /// The block size is lower than the size represented by Min Block Size Log,
+    /// or the block size is higher than the size represented by Max Block Size Log.
     SigBLOBBlockStatusType_wrongBlockSize          = 0x02,
-    /// Chunk size exceeds the size represented by Max Chunk Size, or the number of chunks exceeds the number specified by Max Chunks Number.
+    /// Chunk size exceeds the size represented by Max Chunk Size,
+    /// or the number of chunks exceeds the number specified by Max Chunks Number.
     SigBLOBBlockStatusType_wrongChunkSize          = 0x03,
     /// The model is in a state where it cannot process the message.
     SigBLOBBlockStatusType_invalidState            = 0x04,
@@ -1524,9 +1825,11 @@ typedef enum       : UInt8 {
     SigBLOBTransferStatusType_success                 = 0x00,
     /// The Block Number field value is not within the range of blocks being transferred.
     SigBLOBTransferStatusType_invalidBlockNumber      = 0x01,
-    /// The block size is smaller than the size indicated by the Min Block Size Log state or is larger than the size indicated by the Max Block Size Log state.
+    /// The block size is smaller than the size indicated by the Min Block Size Log state
+    /// or is larger than the size indicated by the Max Block Size Log state.
     SigBLOBTransferStatusType_invalidBlockSize        = 0x02,
-    /// The chunk size exceeds the size indicated by the Max Chunk Size state, or the number of chunks exceeds the number specified by the Max Total Chunks state.
+    /// The chunk size exceeds the size indicated by the Max Chunk Size state,
+    /// or the number of chunks exceeds the number specified by the Max Total Chunks state.
     SigBLOBTransferStatusType_invalidChunkSize        = 0x03,
     /// The operation cannot be performed while the server is in the current phase.
     SigBLOBTransferStatusType_wrongPhase              = 0x04,
@@ -1665,9 +1968,12 @@ typedef enum : UInt8 {
 typedef enum : UInt8 {
     /// Prohibited.
     SigDirectionsFieldValues_prohibited     = 0x00,
-    /// Bridging is allowed only for messages with Address1 as the source address and Address2 as the destination address. (单向)
+    /// Bridging is allowed only for messages with Address1 as the source address
+    /// and Address2 as the destination address. (单向)
     SigDirectionsFieldValues_unidirectional = 0x01,
-    /// Bridging is allowed for messages with Address1 as the source address and Address2 as the destination address, and messages with Address2 as the source address and Address1 as the destination address. (双向)
+    /// Bridging is allowed for messages with Address1 as the source address and
+    /// Address2 as the destination address, and messages with Address2 as
+    /// the source address and Address1 as the destination address. (双向)
     SigDirectionsFieldValues_bidirectional  = 0x02,
     /// Prohibited, 0x03–0xFF.
 } SigDirectionsFieldValues;
@@ -1677,11 +1983,14 @@ typedef enum : UInt8 {
 typedef enum : UInt8 {
     /// Report all pairs of NetKey Indexes extracted from the Bridging Table state entries.
     SigFilterFieldValues_all                   = 0b00,
-    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries with the NetKey Index of the first subnet that matches the NetKeyIndex field value.
+    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries
+    /// with the NetKey Index of the first subnet that matches the NetKeyIndex field value.
     SigFilterFieldValues_first                 = 0b01,
-    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries with the NetKey Index of the second subnet that matches the NetKeyIndex field value.
+    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries
+    /// with the NetKey Index of the second subnet that matches the NetKeyIndex field value.
     SigFilterFieldValues_second                = 0b10,
-    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries with one of the NetKey Indexes that matches the NetKeyIndex field.
+    /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries
+    /// with one of the NetKey Indexes that matches the NetKeyIndex field.
     SigFilterFieldValues_oneOfTheNetKeyIndexes = 0b11,
 } SigFilterFieldValues;
 
@@ -1689,41 +1998,48 @@ typedef enum : UInt8 {
 /// - seeAlso: MshPRFd1.1r11_clean.pdf.pdf  (page.496)
 typedef enum : UInt8 {
     /// Success.
-    SigProvisioningRecordResponseStatus_success                   = 0x00,
+    SigProvisioningRecordResponseStatus_success                      = 0x00,
     /// Requested Record Is Not Present.
-    SigProvisioningRecordResponseStatus_requestedRecordIsNotPresent                 = 0x01,
+    SigProvisioningRecordResponseStatus_requestedRecordIsNotPresent  = 0x01,
     /// Requested Offset Is Out Of Bounds.
-    SigProvisioningRecordResponseStatus_requestedOffsetIsOutOfBounds                = 0x02,
+    SigProvisioningRecordResponseStatus_requestedOffsetIsOutOfBounds = 0x02,
     /// 0x03–0xFF Reserved for Future Use.
 } SigProvisioningRecordResponseStatus;
 
 typedef enum : UInt8 {
-    SigFipsP256EllipticCurve_CMAC_AES128 = 0x01,//BTM_ECDH_P256_CMAC_AES128_AES_CCM，如果设备端不支持该算法就会出现provision失败。
-    SigFipsP256EllipticCurve_HMAC_SHA256 = 0x02,//BTM_ECDH_P256_HMAC_SHA256_AES_CCM，如果设备端不支持该算法就会出现provision失败。
-    SigFipsP256EllipticCurve_auto = 0xFF,//APP端根据从设备端实时读取数据来判定使用哪一种算法进行provision流程，如果设备端同时支持多种算法，默认使用value最大的算法进行provision。
+    /// BTM_ECDH_P256_CMAC_AES128_AES_CCM，如果设备端不支持该算法就会出现provision失败。
+    SigFipsP256EllipticCurve_CMAC_AES128 = 0x01,
+    /// BTM_ECDH_P256_HMAC_SHA256_AES_CCM，如果设备端不支持该算法就会出现provision失败。
+    SigFipsP256EllipticCurve_HMAC_SHA256 = 0x02,
+    /// APP端根据从设备端实时读取数据来判定使用哪一种算法进行provision流程，如果设备端同时支持多种算法，默认使用value最大的算法进行provision。
+    SigFipsP256EllipticCurve_auto        = 0xFF,
 } SigFipsP256EllipticCurve;
 
 /// telink私有定义的Extend Bearer Mode，SDK默认是使用0，特殊用户需要用到2。
 typedef enum : UInt8 {
-    SigTelinkExtendBearerMode_noExtend = 0x00,//segment发包中的单个分包的UpperTransportPDU最大长度都是标准sig定义的12字节。
-    SigTelinkExtendBearerMode_extendGATTOnly = 0x01,//非直连节点使用的是上述标准sig定义的12字节。直连节点使用SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength最为单个分包的UpperTransportPDU最大长度。
-    SigTelinkExtendBearerMode_extendGATTAndAdv = 0x02,//segment发包中的单个分包的UpperTransportPDU最大长度都是telink自定义的SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength。
+    /// segment发包中的单个分包的UpperTransportPDU最大长度都是标准sig定义的12字节。
+    SigTelinkExtendBearerMode_noExtend         = 0x00,
+    /// 非直连节点使用的是上述标准sig定义的12字节。直连节点使用SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength最为单个分包的UpperTransportPDU最大长度。
+    SigTelinkExtendBearerMode_extendGATTOnly   = 0x01,
+    /// segment发包中的单个分包的UpperTransportPDU最大长度都是telink自定义的SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength。
+    SigTelinkExtendBearerMode_extendGATTAndAdv = 0x02,
 } SigTelinkExtendBearerMode;
 
 /// Table 4.295: Summary of status codes for Opcodes Aggregator messages
 /// - seeAlso: MshPRFd1.1r13_clean.pdf  (page.418)
 typedef enum : UInt8 {
     /// Success
-    SigOpcodesAggregatorMessagesStatus_success = 0,
+    SigOpcodesAggregatorMessagesStatus_success              = 0,
     /// The unicast address provided in the Element_Address field is not known to the node.
-    SigOpcodesAggregatorMessagesStatus_invalidAddress = 1,
+    SigOpcodesAggregatorMessagesStatus_invalidAddress       = 1,
     /// The model identified by the Element_Address field and Item #0 opcode is not found in the identified element.
-    SigOpcodesAggregatorMessagesStatus_invalidModel = 2,
-    /// 1.The message is encrypted with an application key, and the identified model is not bound to the message’s application key, or the identified model’s access layer security is not using application keys.
+    SigOpcodesAggregatorMessagesStatus_invalidModel         = 2,
+    /// 1.The message is encrypted with an application key, and the identified model is not bound to the message’s
+    /// application key, or the identified model’s access layer security is not using application keys.
     /// 2.The message is encrypted with a device key, and the identified model’s access layer security is not using a device key.
-    SigOpcodesAggregatorMessagesStatus_wrongAccessKey = 3,
+    SigOpcodesAggregatorMessagesStatus_wrongAccessKey       = 3,
     /// At least one of the items from the message request list contains an opcode that is not supported by the identified model.
-    SigOpcodesAggregatorMessagesStatus_wrongOpCode = 4,
+    SigOpcodesAggregatorMessagesStatus_wrongOpCode          = 4,
     /// An access message has a valid opcode but is not understood by the identified model (see Section 3.7.4.4)
     SigOpcodesAggregatorMessagesStatus_messageNotUnderstood = 5,
     /// Reserved for Future Use, 0x06–0xFF.
@@ -1732,24 +2048,24 @@ typedef enum : UInt8 {
 /// Table 3.109: Day of Week field
 /// - seeAlso: GATT_Specification_Supplement_v5.pdf  (page.105)
 typedef enum : UInt8 {
-    GattDayOfWeek_Unknown = 0,
-    GattDayOfWeek_Monday = 1,
-    GattDayOfWeek_Tuesday = 2,
+    GattDayOfWeek_Unknown   = 0,
+    GattDayOfWeek_Monday    = 1,
+    GattDayOfWeek_Tuesday   = 2,
     GattDayOfWeek_Wednesday = 3,
-    GattDayOfWeek_Thursday = 4,
-    GattDayOfWeek_Friday = 5,
-    GattDayOfWeek_Saturday = 6,
-    GattDayOfWeek_Sunday = 7,
+    GattDayOfWeek_Thursday  = 4,
+    GattDayOfWeek_Friday    = 5,
+    GattDayOfWeek_Saturday  = 6,
+    GattDayOfWeek_Sunday    = 7,
     //Reserved for Future Use 8–255
 } GattDayOfWeek;
 
 /// Table 7.8: Identification Type values
 /// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.634)
 typedef enum : UInt8 {
-    SigIdentificationType_networkID = 0,
-    SigIdentificationType_nodeIdentity = 1,
+    SigIdentificationType_networkID              = 0,
+    SigIdentificationType_nodeIdentity           = 1,
     SigIdentificationType_privateNetworkIdentity = 2,
-    SigIdentificationType_privateNodeIdentity = 3,
+    SigIdentificationType_privateNodeIdentity    = 3,
     //Reserved for Future Use 0x04–0xFF
 } SigIdentificationType;
 
@@ -1757,15 +2073,15 @@ typedef enum : UInt8 {
 /// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.276)
 typedef enum : UInt8 {
     SigPrivateBeaconState_disable = 0,
-    SigPrivateBeaconState_enable = 1,
+    SigPrivateBeaconState_enable  = 1,
     //Prohibited 0x02–0xFF
 } SigPrivateBeaconState;
 
 /// Table 4.67: Private GATT Proxy state values
 /// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.280)
 typedef enum : UInt8 {
-    SigPrivateGattProxyState_disable = 0,
-    SigPrivateGattProxyState_enable = 1,
+    SigPrivateGattProxyState_disable      = 0,
+    SigPrivateGattProxyState_enable       = 1,
     SigPrivateGattProxyState_notSupported = 2,
     //Prohibited 0x03–0xFF
 } SigPrivateGattProxyState;
@@ -1797,13 +2113,14 @@ typedef enum : UInt8 {
     CHIP_TYPE_9518 = 3,
 } CHIP_TYPE;
 typedef enum : UInt8 {
-    MajorProductType_light = 0,
-    MajorProductType_gateway = 1,
-    MajorProductType_LPN = 2,
-    MajorProductType_switch = 3,
+    MajorProductType_light     = 0,
+    MajorProductType_gateway   = 1,
+    MajorProductType_LPN       = 2,
+    MajorProductType_switch    = 3,
     MajorProductType_spiritLPN = 4,
 } MajorProductType;
 
 
 
 #endif /* SigEnumeration_h */
+/// 0x83 0x08 Firmware Update Information Get

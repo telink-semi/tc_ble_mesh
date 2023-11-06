@@ -58,8 +58,10 @@
     [array addObject:[NSString stringWithFormat:@"IV Index: 0x%08X",(unsigned int)_ivIndex]];
     [array addObject:[NSString stringWithFormat:@"Sequence Number: 0x%06X",(unsigned int)SigDataSource.share.getSequenceNumberUInt32]];
     [array addObject:[NSString stringWithFormat:@"Local Address: 0x%04X",(unsigned int)SigDataSource.share.curLocationNodeModel.address]];
-    [array addObject:@"NetKey List"];
-    [array addObject:@"AppKey List"];
+    if (SigDataSource.share.curMeshIsVisitor == NO) {
+        [array addObject:@"NetKey List"];
+        [array addObject:@"AppKey List"];
+    }
     //==========test==========//
 //    [array addObject:@"IvUpdate"];
     //==========test==========//
@@ -120,17 +122,6 @@
         [self showTips:@"ivUpdate fail."];
     });
 }
-
-- (void)showTips:(NSString *)tips{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:tips preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
-        }]];
-        [self presentViewController:alertController animated:YES completion:nil];
-    });
-}
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     if (indexPath.row == 0 || indexPath.row == 1 || indexPath.row == 2 || indexPath.row == 3) {

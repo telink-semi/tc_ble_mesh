@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface InfoSwitchCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UILabel *showLabel;
+@property (weak, nonatomic) IBOutlet UIButton *tipsButton;
 @property (weak, nonatomic) IBOutlet UISwitch *showSwitch;
 
 @end

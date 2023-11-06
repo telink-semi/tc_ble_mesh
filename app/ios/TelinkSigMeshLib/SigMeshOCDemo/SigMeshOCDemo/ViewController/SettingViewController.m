@@ -25,8 +25,10 @@
 #import "SettingItemCell.h"
 #import "MeshOTAVC.h"
 #import "ResponseTestVC.h"
+#import <StoreKit/StoreKit.h>
+#import "UIViewController+Message.h"
 
-@interface SettingViewController()<UITableViewDataSource,UITableViewDelegate>
+@interface SettingViewController()<UITableViewDataSource,UITableViewDelegate,SKStoreProductViewControllerDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray <NSString *>*source;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconSource;
@@ -46,63 +48,27 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     NSString *titleString = self.source[indexPath.row];
-    if ([titleString isEqualToString:@"Choose Add Devices"]) {
-        if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
-            [self pushToAddDeviceVC];
-        } else {
-            __weak typeof(self) weakSelf = self;
-            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
-            [alertController addAction:[UIAlertAction actionWithTitle:@"Input IV index" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"点击输入ivIndex");
-                UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
-                [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
-                    textField.placeholder = @"Please input IV index in input box";
-                    textField.text = @"0";
-                }];
-                [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"输入ivIndex完成");
-                    UITextField *ivIndex = inputAlertController.textFields.firstObject;
-                    UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
-                    [SigDataSource.share setIvIndexUInt32:ivIndexUInt32];
-                    [SigDataSource.share setSequenceNumberUInt32:0];
-                    [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
-                    TeLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
-                    UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
-                    [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Add Devices" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                        [weakSelf pushToAddDeviceVC];
-                    }]];
-                    [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
-                }]];
-                [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击取消");
-                }]];
-                [weakSelf presentViewController:inputAlertController animated:YES completion:nil];
-            }]];
-            [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"点击取消");
-            }]];
-            [self presentViewController:alertController animated:YES completion:nil];
-        }
+    if ([titleString isEqualToString:@"How to import bin file?"]) {
+        [self pushToTipsVC];
+        return;
+    }
+    if ([titleString isEqualToString:@"Get More Telink Apps"]) {
+        [self pushToTelinkApps];
         return;
     }
     NSString *sb = @"Setting";
     UIViewController *vc = nil;
-    if ([titleString isEqualToString:@"Log"] || [titleString isEqualToString:@"Choose Add Devices"]) {
+    if ([titleString isEqualToString:@"Log"]) {
         sb = @"Main";
     }
 
     if ([titleString isEqualToString:@"Mesh OTA"]) {
         vc = [[MeshOTAVC alloc] init];
     } else if ([titleString isEqualToString:@"Test"]) {
-//        vc = [[ResponseTestVC alloc] init];
-//        ((ResponseTestVC *)vc).isResponseTest = YES;
         [self clickTest];
         return;
     } else {
         vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:sb];
-    }
-    if ([titleString isEqualToString:@"Choose Add Devices"]) {
-        [SigDataSource.share setAllDevicesOutline];
     }
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -137,40 +103,65 @@
     [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
-- (void)pushToAddDeviceVC {
-    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID storyboard:@"Main"];
+- (void)pushToTipsVC {
+    UIViewController *vc = [UIStoryboard initVC:@"TipsVC" storyboard:@"Setting"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    self.tabBarController.tabBar.hidden = NO;
+- (void)pushToTelinkApps {
+    //实现代理SKStoreProductViewControllerDelegate
+    SKStoreProductViewController *storeProductViewContorller = [[SKStoreProductViewController alloc] init];
+    storeProductViewContorller.delegate = self;
+    //加载一个新的视图展示
+    [storeProductViewContorller loadProductWithParameters: @{SKStoreProductParameterITunesItemIdentifier : @"1637594591"} completionBlock:^(BOOL result, NSError *error) {
+        //回调
+        if(error){
+//            NSLog(@"错误%@",error);
+//            [self showTips:@"Push to `Telink Apps` of App Store fail, please check the network!"];
+            if (error.localizedDescription) {
+                [self showTips:error.localizedDescription];
+            } else {
+                [self showTips:[NSString stringWithFormat:@"%@", error]];
+            }
+        }else{
+            //AS应用界面
+            if (@available(iOS 10.0, *)) {
+            } else {
+                [[UINavigationBar appearance] setTintColor:[UIColor blueColor]];
+            }
+            [self presentViewController:storeProductViewContorller animated:YES completion:nil];
+        }
+    }];
 }
 
-- (void)normalSetting{
-    [super normalSetting];
-    self.title = @"Setting";
-    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.tabBarController.tabBar.hidden = NO;
+    [self initData];
+    [self.tableView reloadData];
+}
+
+- (void)initData {
     self.source = [NSMutableArray array];
     self.iconSource = [NSMutableArray array];
     self.vcIdentifiers = [NSMutableArray array];
-    if (kShowScenes) {
-        [self.source addObject:@"Scenes"];
-        [self.iconSource addObject:@"scene"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_SceneListViewControllerID];
+    if (SigDataSource.share.curMeshIsVisitor == NO) {
+        if (kShowScenes) {
+            [self.source addObject:@"Scenes"];
+            [self.iconSource addObject:@"scene"];
+            [self.vcIdentifiers addObject:ViewControllerIdentifiers_SceneListViewControllerID];
+        }
     }
     if (kshowShare) {
         [self.source addObject:@"Share"];
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_ShareViewControllerID];
     }
-    #ifdef kExist
-    if (kExistMeshOTA) {
+    if (SigDataSource.share.curMeshIsVisitor == NO) {
         [self.source addObject:@"Mesh OTA"];
         [self.iconSource addObject:@"ic_mesh_ota"];
         [self.vcIdentifiers addObject:@"no found"];
     }
-    #endif
     if (kshowLog) {
         [self.source addObject:@"Log"];
         [self.iconSource addObject:@"ic_model"];
@@ -186,20 +177,12 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsVCID];
     }
-    if (kshowChooseAdd) {
-        [self.source addObject:@"Choose Add Devices"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID];
-    }
-#ifdef kExist
-    if (kshowTest) {
-        [self.source addObject:@"Test"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_TestVCID];
-    }
-#endif
-#ifdef kExist
-    if (kExistForwardingTableEntry) {
+    if (SigDataSource.share.curMeshIsVisitor == NO) {
+        if (kshowTest) {
+            [self.source addObject:@"Test"];
+            [self.iconSource addObject:@"ic_model"];
+            [self.vcIdentifiers addObject:ViewControllerIdentifiers_TestVCID];
+        }
         [self.source addObject:@"Direct Control List"];
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_DirectControlListVCID];
@@ -207,18 +190,43 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_ForwardingTableVCID];
     }
-#endif
+    
+    //v3.3.3.6新增 How to import bin file?
+    [self.source addObject:@"How to import bin file?"];
+    [self.iconSource addObject:@"ic_model"];
+    [self.vcIdentifiers addObject:@""];
+    //v3.3.3.6新增 Get More Telink Apps
+    [self.source addObject:@"Get More Telink Apps"];
+    [self.iconSource addObject:@"ic_model"];
+    [self.vcIdentifiers addObject:@""];
+}
 
+- (void)normalSetting{
+    [super normalSetting];
+    self.title = @"Setting";
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    
 //    NSString *app_Version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     NSString *app_Version = kTelinkSigMeshLibVersion;
     
-#ifdef DEBUG
-    NSString *appBundleVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
-    self.versionLabel.text = [NSString stringWithFormat:@"%@ Bulid:%@",app_Version,appBundleVersion];
-#else
+//#ifdef DEBUG
+//    NSString *appBundleVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+//    self.versionLabel.text = [NSString stringWithFormat:@"%@ Bulid:%@",app_Version,appBundleVersion];
+//#else
     self.versionLabel.text = [NSString stringWithFormat:@"%@",app_Version];
-#endif
+//#endif
 
+}
+
+#pragma mark - SKStoreProductViewControllerDelegate
+
+//取消按钮监听
+- (void)productViewControllerDidFinish:(SKStoreProductViewController *)viewController {
+    if (@available(iOS 10.0, *)) {
+    } else {
+        [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
+    }
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

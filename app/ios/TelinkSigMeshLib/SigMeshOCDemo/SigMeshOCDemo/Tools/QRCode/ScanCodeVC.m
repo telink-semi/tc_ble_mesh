@@ -60,7 +60,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"Scan";
+    if (self.title.length == 0) {
+        self.title = @"Scan";
+    }
     self.view.backgroundColor = [UIColor whiteColor];
     if (self.isCanUseCamera) {
         [self.view addSubview: self.scanView];

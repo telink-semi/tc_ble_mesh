@@ -27,6 +27,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigSegmentedMessage,SigUpperTransportPdu,SigNetkeyModel,SigSegmentAcknowledgmentMessage;
 
+/*
+ The lower transport layer defines how upper transport layer messages are segmented and reassembled
+ into multiple Lower Transport PDUs to deliver large upper transport layer messages to other nodes.
+ It also defines a single control message to manage segmentation and reassembly.
+ */
 @interface SigLowerTransportLayer : NSObject
 
 @property (nonatomic,strong) SigNetworkManager *networkManager;
@@ -67,28 +72,25 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter networkPdu: The Network PDU received.
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu;
 
-- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
-
 /// This method tries to send the Upper Transport Message.
-///
-/// - parameters:
+/// - Parameters:
 ///   - pdu:        The unsegmented Upper Transport PDU to be sent.
 ///   - initialTtl: The initial TTL (Time To Live) value of the message.
 ///                 If `nil`, the default Node TTL will be used.
 ///   - networkKey: The Network Key to be used to encrypt the message on
 ///                 on Network Layer.
-- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
-
-- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
+///   - ivIndex: The ivIndex of mrdh network.
+- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Upper Transport Message.
-///
-/// - parameter pdu:        The segmented Upper Transport PDU to be sent.
-/// - parameter initialTtl: The initial TTL (Time To Live) value of the message.
+/// - Parameters:
+///   - pdu: The segmented Upper Transport PDU to be sent.
+///   - initialTtl: The initial TTL (Time To Live) value of the message.
 ///                         If `nil`, the default Node TTL will be used.
-/// - parameter networkKey: The Network Key to be used to encrypt the message on
+///   - networkKey: The Network Key to be used to encrypt the message on
 ///                         on Network Layer.
-- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
+///   - ivIndex: The ivIndex of mrdh network.
+- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 - (void)cancelTXSendingSegmentedWithDestination:(UInt16)destination;
 

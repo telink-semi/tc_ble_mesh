@@ -28,6 +28,7 @@
 
 @interface ChooseEntryVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UIButton *addEntryButton;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*allAddresses;
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*selectAddresses;
 @end
@@ -46,6 +47,7 @@
 - (void)normalSetting{
     [super normalSetting];
     self.title = @"Choose Table Entry";
+    self.addEntryButton.backgroundColor = UIColor.telinkButtonBlue;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_EntryCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_EntryCellID];
     self.allAddresses = [NSMutableArray array];
@@ -76,7 +78,7 @@
         }
         [self.allAddresses addObjectsFromArray:allNodes];
         NSMutableArray *allGroups = [NSMutableArray array];
-        arr = [NSArray arrayWithArray:SigDataSource.share.groups];
+        arr = [NSArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
         for (SigGroupModel *group in arr) {
             [allGroups addObject:@(group.intAddress)];
         }
@@ -88,12 +90,6 @@
     TeLogDebug(@"%s",__func__);
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.allAddresses.count + (self.entryType == EntryType_tableEntry ? 1 : 0);
@@ -102,6 +98,8 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     EntryCell *cell = (EntryCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_EntryCellID forIndexPath:indexPath];
     cell.selectionStyle = UITableViewCellSelectionStyleDefault;
+    cell.onButton.backgroundColor = UIColor.telinkButtonBlue;
+    cell.offButton.backgroundColor = UIColor.telinkButtonBlue;
     [cell.chooseButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
     [cell.chooseButton setImage:[UIImage imageNamed:@"xuan"] forState:UIControlStateSelected];
     if (self.entryType == EntryType_tableEntry && indexPath.row == 0) {

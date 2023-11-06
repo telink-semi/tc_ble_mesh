@@ -39,7 +39,7 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 @interface SigRemoteAddManager : NSObject
 @property (nonatomic, assign) AuthenticationMethod authenticationMethod;
 @property (nonatomic, strong, nullable) SigAuthenticationModel *authenticationModel;
-@property (nonatomic, strong) SigProvisioningData *provisioningData;
+@property (nonatomic, strong, nullable) SigProvisioningData *provisioningData;
 
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
 /// Attention Timer state (See Section 4.2.9), default is 0.
@@ -61,9 +61,27 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigRemoteAddManager *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback;
+
+/// founcation4: remote provision (SDK need connected provisioned node.)
+/// @param reportNodeAddress address of node that report this uuid
+/// @param reportNodeUUID identify node that need to provision.
+/// @param networkKey networkKey
+/// @param netkeyIndex netkeyIndex
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
+/// @param capabilitiesResponse callback when capabilities response.
+/// @param provisionSuccess callback when provision success.
+/// @param fail callback when provision fail.
+- (void)remoteProvisionWithNReportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData capabilitiesResponse:(nullable addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+
 
 /// founcation4: remote provision (SDK need connected provisioned node.)
 /// @param provisionAddress address of new device.
@@ -75,7 +93,7 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail DEPRECATED_MSG_ATTRIBUTE("Use 'remoteProvisionWithNReportNodeAddress:reportNodeUUID:networkKey:netkeyIndex:provisionType:staticOOBData:capabilitiesResponse:provisionSuccess:fail:' instead");
 
 @end
 

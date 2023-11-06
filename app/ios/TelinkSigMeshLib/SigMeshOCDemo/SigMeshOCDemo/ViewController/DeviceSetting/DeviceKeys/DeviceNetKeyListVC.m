@@ -64,15 +64,6 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)showTips:(NSString *)message{
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
-}
-
 - (void)clickRefresh:(UIButton *)button {
     [ShowTipsHandle.share show:@"get node NetKey list..."];
 
@@ -103,7 +94,7 @@
     [ShowTipsHandle.share show:@"add NetKey to node..."];
 
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand configNetKeyAddWithDestination:self.model.address NetworkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
+    [SDKLibCommand configNetKeyAddWithDestination:self.model.address networkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
         TeLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
@@ -132,11 +123,11 @@
     [ShowTipsHandle.share show:@"delete NetKey from node..."];
 
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand configNetKeyDeleteWithDestination:self.model.address NetworkKeyIndex:netKey.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
+    [SDKLibCommand configNetKeyDeleteWithDestination:self.model.address networkKeyIndex:netKey.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
         TeLogInfo(@"NetKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
-            [weakSelf.model.netKeys removeObject:nodeKeyModel];
+            [weakSelf.model deleteNetKeyDataFromNode:nodeKeyModel];
             [SigDataSource.share saveLocationData];
             [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
             [ShowTipsHandle.share show:@"delete NetKey to node success!"];

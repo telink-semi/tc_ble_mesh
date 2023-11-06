@@ -24,8 +24,11 @@
 #import "ColorManager.h"
 
 @implementation HSVModel
-- (instancetype)init{
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         
     }
     return self;
@@ -33,12 +36,16 @@
 
 - (void)dealloc {
 }
+
 @end
 
 
 @implementation HSLModel
-- (instancetype)init{
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         
     }
     return self;
@@ -46,12 +53,16 @@
 
 - (void)dealloc {
 }
+
 @end
 
 
 @implementation RGBModel
-- (instancetype)init{
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         
     }
     return self;
@@ -59,6 +70,7 @@
 
 - (void)dealloc {
 }
+
 @end
 
 @implementation ColorManager

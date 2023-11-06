@@ -50,6 +50,7 @@ UIKIT_EXTERN NSString * const AccessError_timeout;
 
 
 //service
+UIKIT_EXTERN NSString * const kObjectTransferService;
 UIKIT_EXTERN NSString * const kPBGATTService;
 UIKIT_EXTERN NSString * const kPROXYService;
 //SIGCharacteristicsIDs
@@ -71,8 +72,6 @@ UIKIT_EXTERN NSString * const kJsonMeshUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerSno_key;
 UIKIT_EXTERN NSString * const kLocationIvIndexAndSequenceNumberDictionary_key;//缓存当前首页的所有mesh的provisioner与ivIndex+sequenceNumber的映射字典。
-//homes
-UIKIT_EXTERN NSString * const kCurrentMeshProvisionAddress_key;
 //SigScanRspModel
 UIKIT_EXTERN NSString * const kSigScanRspModel_uuid_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_address_key;
@@ -99,111 +98,202 @@ UIKIT_EXTERN NSString * const kFeatureString_proxy;
 UIKIT_EXTERN NSString * const kFeatureString_friend;
 UIKIT_EXTERN NSString * const kFeatureString_lowPower;
 
+/// Generic
 UIKIT_EXTERN NSString * const kSigModelGroup_Generic_Describe;
+/// Sensors
 UIKIT_EXTERN NSString * const kSigModelGroup_Sensors_Describe;
+/// Time Server
 UIKIT_EXTERN NSString * const kSigModelGroup_TimeServer_Describe;
+/// Lighting
 UIKIT_EXTERN NSString * const kSigModelGroup_Lighting_Describe;
+/// Configuration
 UIKIT_EXTERN NSString * const kSigModelGroup_Configuration_Describe;
+/// Health
 UIKIT_EXTERN NSString * const kSigModelGroup_Health_Describe;
+/// Remote Provision
 UIKIT_EXTERN NSString * const kSigModelGroup_RemoteProvision_Describe;
-
+/// Firmware Update
 UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareUpdate_Describe;
+/// Firmware Distribution
 UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareDistribution_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_ObjectTransfer_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_DF_CFG_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_SubnetBridge_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_PrivateBeacon_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_ON_DEMAND_PROXY_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_SAR_CFG_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_OP_AGG_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_LARGE_CPS_Describe;
-UIKIT_EXTERN NSString * const kSigModelGroup_SOLI_PDU_RPL_CFG_Describe;
-
+/// BLOB Transfer
+UIKIT_EXTERN NSString * const kSigModelGroup_BLOBTransfer_Describe;
+/// Directed Forwarding Configuration
+UIKIT_EXTERN NSString * const kSigModelGroup_DirectedForwardingConfiguration_Describe;
+/// Bridge Configuration
+UIKIT_EXTERN NSString * const kSigModelGroup_BridgeConfiguration_Describe;
+/// Mesh Private Beacon
+UIKIT_EXTERN NSString * const kSigModelGroup_MeshPrivateBeacon_Describe;
+/// On-Demand Private Proxy
+UIKIT_EXTERN NSString * const kSigModelGroup_OnDemandPrivateProxy_Describe;
+/// SAR Configuration
+UIKIT_EXTERN NSString * const kSigModelGroup_SARConfiguration_Describe;
+/// Opcodes Aggregator
+UIKIT_EXTERN NSString * const kSigModelGroup_OpcodesAggregator_Describe;
+/// Large Composition Data
+UIKIT_EXTERN NSString * const kSigModelGroup_LargeCompositionData_Describe;
+/// Solicitation PDU RPL Configuration
+UIKIT_EXTERN NSString * const kSigModelGroup_SolicitationPDURPLConfiguration_Describe;
+/// Configuration Server
 UIKIT_EXTERN NSString * const kSigModel_ConfigurationServer_Describe;
+/// Configuration Client
 UIKIT_EXTERN NSString * const kSigModel_ConfigurationClient_Describe;
+/// Health Server
 UIKIT_EXTERN NSString * const kSigModel_HealthServer_Describe;
+/// Health Client
 UIKIT_EXTERN NSString * const kSigModel_HealthClient_Describe;
+/// Remote Provision Server
 UIKIT_EXTERN NSString * const kSigModel_RemoteProvisionServer_Describe;
+/// Remote Provision Client
 UIKIT_EXTERN NSString * const kSigModel_RemoteProvisionClient_Describe;
-
+/// Generic OnOff Server
 UIKIT_EXTERN NSString * const kSigModel_GenericOnOffServer_Describe;
+/// Generic OnOff Client
 UIKIT_EXTERN NSString * const kSigModel_GenericOnOffClient_Describe;
+/// Generic Level Server
 UIKIT_EXTERN NSString * const kSigModel_GenericLevelServer_Describe;
+/// Generic Level Client
 UIKIT_EXTERN NSString * const kSigModel_GenericLevelClient_Describe;
+/// Generic Default Transition Time Server
 UIKIT_EXTERN NSString * const kSigModel_GenericDefaultTransitionTimeServer_Describe;
+/// Generic Default Transition Time Client
 UIKIT_EXTERN NSString * const kSigModel_GenericDefaultTransitionTimeClient_Describe;
+/// Generic Power OnOff Server
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffServer_Describe;
+/// Generic Power OnOff Setup Server
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffSetupServer_Describe;
+/// Generic Power OnOff Client
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffClient_Describe;
+/// Generic Power Level Server
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelServer_Describe;
+/// Generic Power Level Setup Server
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelSetupServer_Describe;
+/// Generic Power Level Client
 UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelClient_Describe;
+/// Generic Battery Server
 UIKIT_EXTERN NSString * const kSigModel_GenericBatteryServer_Describe;
+/// Generic Battery Client
 UIKIT_EXTERN NSString * const kSigModel_GenericBatteryClient_Describe;
+/// Generic Location Server
 UIKIT_EXTERN NSString * const kSigModel_GenericLocationServer_Describe;
+/// Generic Location Setup Server
 UIKIT_EXTERN NSString * const kSigModel_GenericLocationSetupServer_Describe;
+/// Generic Location Client
 UIKIT_EXTERN NSString * const kSigModel_GenericLocationClient_Describe;
+/// Generic Admin Property Server
 UIKIT_EXTERN NSString * const kSigModel_GenericAdminPropertyServer_Describe;
+/// Generic Manufacturer Property Server
 UIKIT_EXTERN NSString * const kSigModel_GenericManufacturerPropertyServer_Describe;
+/// Generic User Property Server
 UIKIT_EXTERN NSString * const kSigModel_GenericUserPropertyServer_Describe;
+/// Generic Client Property Server
 UIKIT_EXTERN NSString * const kSigModel_GenericClientPropertyServer_Describe;
+/// Generic Property Client
 UIKIT_EXTERN NSString * const kSigModel_GenericPropertyClient_Describe;
-// --------
+/// Sensor Server
 UIKIT_EXTERN NSString * const kSigModel_SensorServer_Describe;
+/// Sensor Setup Server
 UIKIT_EXTERN NSString * const kSigModel_SensorSetupServer_Describe;
+/// Sensor Client
 UIKIT_EXTERN NSString * const kSigModel_SensorClient_Describe;
-// --------
+/// Time Server
 UIKIT_EXTERN NSString * const kSigModel_TimeServer_Describe;
+/// Time Setup Server
 UIKIT_EXTERN NSString * const kSigModel_TimeSetupServer_Describe;
+/// Time Client
 UIKIT_EXTERN NSString * const kSigModel_TimeClient_Describe;
+/// Scene Server
 UIKIT_EXTERN NSString * const kSigModel_SceneServer_Describe;
+/// Scene Setup Server
 UIKIT_EXTERN NSString * const kSigModel_SceneSetupServer_Describe;
+/// Scene Client
 UIKIT_EXTERN NSString * const kSigModel_SceneClient_Describe;
+/// Scheduler
 UIKIT_EXTERN NSString * const kSigModel_SchedulerServer_Describe;
+/// Scheduler Setup Server
 UIKIT_EXTERN NSString * const kSigModel_SchedulerSetupServer_Describe;
+/// Scheduler Client
 UIKIT_EXTERN NSString * const kSigModel_SchedulerClient_Describe;
-// --------
+/// Light Lightness Server
 UIKIT_EXTERN NSString * const kSigModel_LightLightnessServer_Describe;
+/// Light Lightness Setup Server
 UIKIT_EXTERN NSString * const kSigModel_LightLightnessSetupServer_Describe;
+/// Light Lightness Client
 UIKIT_EXTERN NSString * const kSigModel_LightLightnessClient_Describe;
+/// Light CTL Server
 UIKIT_EXTERN NSString * const kSigModel_LightCTLServer_Describe;
+/// Light CTL Setup Server
 UIKIT_EXTERN NSString * const kSigModel_LightCTLSetupServer_Describe;
+/// Light CTL Client
 UIKIT_EXTERN NSString * const kSigModel_LightCTLClient_Describe;
+/// Light CTL Temperature Server
 UIKIT_EXTERN NSString * const kSigModel_LightCTLTemperatureServer_Describe;
+/// Light HSL Server
 UIKIT_EXTERN NSString * const kSigModel_LightHSLServer_Describe;
+/// Light HSL Setup Server
 UIKIT_EXTERN NSString * const kSigModel_LightHSLSetupServer_Describe;
+/// Light HSL Client
 UIKIT_EXTERN NSString * const kSigModel_LightHSLClient_Describe;
+/// Light HSL Hue Server
 UIKIT_EXTERN NSString * const kSigModel_LightHSLHueServer_Describe;
+/// Light HSL Saturation Server
 UIKIT_EXTERN NSString * const kSigModel_LightHSLSaturationServer_Describe;
+/// Light xyL Server
 UIKIT_EXTERN NSString * const kSigModel_LightxyLServer_Describe;
+/// Light xyL Setup Server
 UIKIT_EXTERN NSString * const kSigModel_LightxyLSetupServer_Describe;
+/// Light xyL Client
 UIKIT_EXTERN NSString * const kSigModel_LightxyLClient_Describe;
+/// Light LC Server
 UIKIT_EXTERN NSString * const kSigModel_LightLCServer_Describe;
+/// Light LC Setup Server
 UIKIT_EXTERN NSString * const kSigModel_LightLCSetupServer_Describe;
+/// Light LC Client
 UIKIT_EXTERN NSString * const kSigModel_LightLCClient_Describe;
-// --------
+/// Firmware Update Server
 UIKIT_EXTERN NSString * const kSigModel_FirmwareUpdateServer_Describe;
+/// Firmware Update Client
 UIKIT_EXTERN NSString * const kSigModel_FirmwareUpdateClient_Describe;
+/// Firmware Distribution Server
 UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionServer_Describe;
+/// Firmware Distribution Client
 UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionClient_Describe;
-UIKIT_EXTERN NSString * const kSigModel_ObjectTransferServer_Describe;
-UIKIT_EXTERN NSString * const kSigModel_ObjectTransferClient_Describe;
-UIKIT_EXTERN NSString * const kSigModel_DF_CFG_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_DF_CFG_C_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SubnetBridgeServer_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SubnetBridgeClient_Describe;
-UIKIT_EXTERN NSString * const kSigModel_PrivateBeaconServer_Describe;
-UIKIT_EXTERN NSString * const kSigModel_PrivateBeaconClient_Describe;
-UIKIT_EXTERN NSString * const kSigModel_ON_DEMAND_PROXY_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_ON_DEMAND_PROXY_C_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SAR_CFG_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SAR_CFG_C_Describe;
-UIKIT_EXTERN NSString * const kSigModel_OP_AGG_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_OP_AGG_C_Describe;
-UIKIT_EXTERN NSString * const kSigModel_LARGE_CPS_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_LARGE_CPS_C_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SOLI_PDU_RPL_CFG_S_Describe;
-UIKIT_EXTERN NSString * const kSigModel_SOLI_PDU_RPL_CFG_C_Describe;
+/// BLOB Transfer Server
+UIKIT_EXTERN NSString * const kSigModel_BLOBTransferServer_Describe;
+/// BLOB Transfer Client
+UIKIT_EXTERN NSString * const kSigModel_BLOBTransferClient_Describe;
+/// Directed Forwarding Configuration Server
+UIKIT_EXTERN NSString * const kSigModel_DirectedForwardingConfigurationServer_Describe;
+/// Directed Forwarding Configuration Client
+UIKIT_EXTERN NSString * const kSigModel_DirectedForwardingConfigurationClient_Describe;
+/// Bridge Configuration Server
+UIKIT_EXTERN NSString * const kSigModel_BridgeConfigurationServer_Describe;
+/// Bridge Configuration Client
+UIKIT_EXTERN NSString * const kSigModel_BridgeConfigurationClient_Describe;
+/// Mesh Private Beacon Server
+UIKIT_EXTERN NSString * const kSigModel_MeshPrivateBeaconServer_Describe;
+/// Mesh Private Beacon Client
+UIKIT_EXTERN NSString * const kSigModel_MeshPrivateBeaconClient_Describe;
+/// On-Demand Private Proxy Server
+UIKIT_EXTERN NSString * const kSigModel_OnDemandPrivateProxyServer_Describe;
+/// On-Demand Private Proxy Client
+UIKIT_EXTERN NSString * const kSigModel_OnDemandPrivateProxyClient_Describe;
+/// SAR Configuration Server
+UIKIT_EXTERN NSString * const kSigModel_SARConfigurationServer_Describe;
+/// SAR Configuration Client
+UIKIT_EXTERN NSString * const kSigModel_SARConfigurationClient_Describe;
+/// Opcodes Aggregator Server
+UIKIT_EXTERN NSString * const kSigModel_OpcodesAggregatorServer_Describe;
+/// Opcodes Aggregator Client
+UIKIT_EXTERN NSString * const kSigModel_OpcodesAggregatorClient_Describe;
+/// Large Composition Data Server
+UIKIT_EXTERN NSString * const kSigModel_LargeCompositionDataServer_Describe;
+/// Large Composition Data Client
+UIKIT_EXTERN NSString * const kSigModel_LargeCompositionDataClient_Describe;
+/// Solicitation PDU RPL Configuration Server
+UIKIT_EXTERN NSString * const kSigModel_SolicitationPDURPLConfigurationServer_Describe;
+/// Solicitation PDU RPL Configuration Client
+UIKIT_EXTERN NSString * const kSigModel_SolicitationPDURPLConfigurationClient_Describe;
 
 #pragma mark - Const bool
 
@@ -221,104 +311,173 @@ UIKIT_EXTERN UInt8 const TTL_DEFAULT;// 10, max relay count = TTL_DEFAULT - 1
 UIKIT_EXTERN UInt16 const LEVEL_OFF;// -32768
 UIKIT_EXTERN UInt16 const LUM_OFF;// 0
 
-//sig model
+#pragma mark - 4.1 Mesh Model Identifiers
+
+/// 4.1.1 Mesh Model Identifiers by Value
+/// - seeAlso: Assigned_Numbers.pdf (page.132),
+
+/// Configuration Server
 UIKIT_EXTERN UInt16 const kSigModel_ConfigurationServer_ID;//               = 0x0000
+/// Configuration Client
 UIKIT_EXTERN UInt16 const kSigModel_ConfigurationClient_ID;//               = 0x0001
+/// Health Server
 UIKIT_EXTERN UInt16 const kSigModel_HealthServer_ID;//                      = 0x0002;
+/// Health Client
 UIKIT_EXTERN UInt16 const kSigModel_HealthClient_ID;//                      = 0x0003;
+/// Remote Provisioning Server
 UIKIT_EXTERN UInt16 const kSigModel_RemoteProvisionServer_ID;//             = 0x0004;
+/// Remote Provisioning Client
 UIKIT_EXTERN UInt16 const kSigModel_RemoteProvisionClient_ID;//             = 0x0005;
-// --------
+/// Directed Forwarding Configuration Server
+UIKIT_EXTERN UInt16 const kSigModel_DirectedForwardingConfigurationServer_ID;//= 0x0006;
+/// Directed Forwarding Configuration Client
+UIKIT_EXTERN UInt16 const kSigModel_DirectedForwardingConfigurationClient_ID;//= 0x0007;
+/// Bridge Configuration Server
+UIKIT_EXTERN UInt16 const kSigModel_BridgeConfigurationServer_ID;//= 0x0008;
+/// Bridge Configuration Client
+UIKIT_EXTERN UInt16 const kSigModel_BridgeConfigurationClient_ID;//= 0x0009;
+/// Mesh Private Beacon Server
+UIKIT_EXTERN UInt16 const kSigModel_MeshPrivateBeaconServer_ID;//= 0x000A;
+/// Mesh Private Beacon Client
+UIKIT_EXTERN UInt16 const kSigModel_MeshPrivateBeaconClient_ID;//= 0x000B;
+/// On-Demand Private Proxy Server
+UIKIT_EXTERN UInt16 const kSigModel_OnDemandPrivateProxyServer_ID;//= 0x000C;
+/// On-Demand Private Proxy Client
+UIKIT_EXTERN UInt16 const kSigModel_OnDemandPrivateProxyClient_ID;//= 0x000D;
+/// SAR Configuration Server
+UIKIT_EXTERN UInt16 const kSigModel_SARConfigurationServer_ID;//= 0x000E;
+/// SAR Configuration Client
+UIKIT_EXTERN UInt16 const kSigModel_SARConfigurationClient_ID;//= 0x000F;
+/// Opcodes Aggregator Server
+UIKIT_EXTERN UInt16 const kSigModel_OpcodesAggregatorServer_ID;//= 0x0010;
+/// Opcodes Aggregator Client
+UIKIT_EXTERN UInt16 const kSigModel_OpcodesAggregatorClient_ID;//= 0x0011;
+/// Large Composition Data Server
+UIKIT_EXTERN UInt16 const kSigModel_LargeCompositionDataServer_ID;//= 0x0012;
+/// Large Composition Data Client
+UIKIT_EXTERN UInt16 const kSigModel_LargeCompositionDataClient_ID;//= 0x0013;
+/// Solicitation PDU RPL Configuration Server
+UIKIT_EXTERN UInt16 const kSigModel_SolicitationPDURPLConfigurationServer_ID;//= 0x0014;
+/// Solicitation PDU RPL Configuration Client
+UIKIT_EXTERN UInt16 const kSigModel_SolicitationPDURPLConfigurationClient_ID;//= 0x0015;
+/// Generic OnOff Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericOnOffServer_ID;//                = 0x1000;
+/// Generic OnOff Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericOnOffClient_ID;//                = 0x1001;
+/// Generic Level Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericLevelServer_ID;//                = 0x1002;
+/// Generic Level Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericLevelClient_ID;//                = 0x1003;
+/// Generic Default Transition Time Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericDefaultTransitionTimeServer_ID;//= 0x1004;
+/// Generic Default Transition Time Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericDefaultTransitionTimeClient_ID;//= 0x1005;
+/// Generic Power OnOff Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffServer_ID;//           = 0x1006;
+/// Generic Power OnOff Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffSetupServer_ID;//      = 0x1007;
+/// Generic Power OnOff Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffClient_ID;//           = 0x1008;
+/// Generic Power Level Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelServer_ID;//           = 0x1009;
+/// Generic Power Level Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelSetupServer_ID;//      = 0x100A;
+/// Generic Power Level Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelClient_ID;//           = 0x100B;
+/// Generic Battery Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericBatteryServer_ID;//              = 0x100C;
+/// Generic Battery Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericBatteryClient_ID;//              = 0x100D;
+/// Generic Location Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericLocationServer_ID;//             = 0x100E;
+/// Generic Location Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericLocationSetupServer_ID;//        = 0x100F;
+/// Generic Location Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericLocationClient_ID;//             = 0x1010;
+/// Generic Admin Property Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericAdminPropertyServer_ID;//        = 0x1011;
+/// Generic Manufacturer Property Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericManufacturerPropertyServer_ID;// = 0x1012;
+/// Generic User Property Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericUserPropertyServer_ID;//         = 0x1013;
+/// Generic Client Property Server
 UIKIT_EXTERN UInt16 const kSigModel_GenericClientPropertyServer_ID;//       = 0x1014;
+/// Generic Property Client
 UIKIT_EXTERN UInt16 const kSigModel_GenericPropertyClient_ID;//             = 0x1015;
-// --------
+/// Sensor Server
 UIKIT_EXTERN UInt16 const kSigModel_SensorServer_ID;//                      = 0x1100;
+/// Sensor Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_SensorSetupServer_ID;//                 = 0x1101;
+/// Sensor Client
 UIKIT_EXTERN UInt16 const kSigModel_SensorClient_ID;//                      = 0x1102;
-// --------
+/// Time Server
 UIKIT_EXTERN UInt16 const kSigModel_TimeServer_ID;//                        = 0x1200;
+/// Time Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_TimeSetupServer_ID;//                   = 0x1201;
+/// Time Client
 UIKIT_EXTERN UInt16 const kSigModel_TimeClient_ID;//                        = 0x1202;
+/// Scene Server
 UIKIT_EXTERN UInt16 const kSigModel_SceneServer_ID;//                       = 0x1203;
+/// Scene Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_SceneSetupServer_ID;//                  = 0x1204;
+/// Scene Client
 UIKIT_EXTERN UInt16 const kSigModel_SceneClient_ID;//                       = 0x1205;
+/// Scheduler Server
 UIKIT_EXTERN UInt16 const kSigModel_SchedulerServer_ID;//                   = 0x1206;
+/// Scheduler Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_SchedulerSetupServer_ID;//              = 0x1207;
+/// Scheduler Client
 UIKIT_EXTERN UInt16 const kSigModel_SchedulerClient_ID;//                   = 0x1208;
-// --------
+/// Light Lightness Server
 UIKIT_EXTERN UInt16 const kSigModel_LightLightnessServer_ID;//              = 0x1300;
+/// Light Lightness Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_LightLightnessSetupServer_ID;//         = 0x1301;
+/// Light Lightness Client
 UIKIT_EXTERN UInt16 const kSigModel_LightLightnessClient_ID;//              = 0x1302;
+/// Light CTL Server
 UIKIT_EXTERN UInt16 const kSigModel_LightCTLServer_ID;//                    = 0x1303;
+/// Light CTL Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_LightCTLSetupServer_ID;//               = 0x1304;
+/// Light CTL Client
 UIKIT_EXTERN UInt16 const kSigModel_LightCTLClient_ID;//                    = 0x1305;
+/// Light CTL Temperature Server
 UIKIT_EXTERN UInt16 const kSigModel_LightCTLTemperatureServer_ID;//         = 0x1306;
+/// Light HSL Server
 UIKIT_EXTERN UInt16 const kSigModel_LightHSLServer_ID;//                    = 0x1307;
+/// Light HSL Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_LightHSLSetupServer_ID;//               = 0x1308;
+/// Light HSL Client
 UIKIT_EXTERN UInt16 const kSigModel_LightHSLClient_ID;//                    = 0x1309;
+/// Light HSL Hue Server
 UIKIT_EXTERN UInt16 const kSigModel_LightHSLHueServer_ID;//                 = 0x130A;
+/// Light HSL Saturation Server
 UIKIT_EXTERN UInt16 const kSigModel_LightHSLSaturationServer_ID;//          = 0x130B;
+/// Light xyL Server
 UIKIT_EXTERN UInt16 const kSigModel_LightxyLServer_ID;//                    = 0x130C;
+/// Light xyL Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_LightxyLSetupServer_ID;//               = 0x130D;
+/// Light xyL Client
 UIKIT_EXTERN UInt16 const kSigModel_LightxyLClient_ID;//                    = 0x130E;
+/// Light LC Server
 UIKIT_EXTERN UInt16 const kSigModel_LightLCServer_ID;//                     = 0x130F;
+/// Light LC Setup Server
 UIKIT_EXTERN UInt16 const kSigModel_LightLCSetupServer_ID;//                = 0x1310;
+/// Light LC Client
 UIKIT_EXTERN UInt16 const kSigModel_LightLCClient_ID;//                     = 0x1311;
-// --------
-/// - seeAlso: pre-spec OTA model opcode details.pdf  (page.2)
-UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateServer_ID;//              = 0xFE00;
-UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateClient_ID;//              = 0xFE01;
-UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionServer_ID;//        = 0xFE02;
-UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionClient_ID;//        = 0xFE03;
-UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferServer_ID;//              = 0xFF00;
-UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferClient_ID;//              = 0xFF01;
-UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeServer_ID;//                = 0xBF32;
-
-UIKIT_EXTERN UInt16 const kSigModel_DF_CFG_S_ID;//                = 0xBF30;
-UIKIT_EXTERN UInt16 const kSigModel_DF_CFG_C_ID;//                = 0xBF31;
-UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeServer_ID;//                = 0xBF32;
-UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeClient_ID;//                = 0xBF33;
-UIKIT_EXTERN UInt16 const kSigModel_PrivateBeaconServer_ID;//                = 0xBF40;
-UIKIT_EXTERN UInt16 const kSigModel_PrivateBeaconClient_ID;//                = 0xBF41;
-UIKIT_EXTERN UInt16 const kSigModel_ON_DEMAND_PROXY_S_ID;//                = 0xBF50;
-UIKIT_EXTERN UInt16 const kSigModel_ON_DEMAND_PROXY_C_ID;//                = 0xBF51;
-UIKIT_EXTERN UInt16 const kSigModel_SAR_CFG_S_ID;//                = 0xBF52;
-UIKIT_EXTERN UInt16 const kSigModel_SAR_CFG_C_ID;//                = 0xBF53;
-UIKIT_EXTERN UInt16 const kSigModel_OP_AGG_S_ID;//                = 0xBF54;
-UIKIT_EXTERN UInt16 const kSigModel_OP_AGG_C_ID;//                = 0xBF55;
-UIKIT_EXTERN UInt16 const kSigModel_LARGE_CPS_S_ID;//                = 0xBF56;
-UIKIT_EXTERN UInt16 const kSigModel_LARGE_CPS_C_ID;//                = 0xBF57;
-UIKIT_EXTERN UInt16 const kSigModel_SOLI_PDU_RPL_CFG_S_ID;//                = 0xBF58;
-UIKIT_EXTERN UInt16 const kSigModel_SOLI_PDU_RPL_CFG_C_ID;//                = 0xBF59;
-
-//旧版本使用的key start
-UIKIT_EXTERN UInt16 const SIG_MD_G_ONOFF_S;// 0x1000
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHTNESS_S;// 0x1300
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_S;// 0x1303
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_TEMP_S;// 0x1306
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_S;// 0x1307
-//旧版本使用的key end
-
+/// IEC 62386-104 Model
+UIKIT_EXTERN UInt16 const kSigModel_IEC62386_104Model_ID;//= 0x1312;
+/// BLOB Transfer Server
+UIKIT_EXTERN UInt16 const kSigModel_BLOBTransferServer_ID;//= 0x1400;
+/// BLOB Transfer Client
+UIKIT_EXTERN UInt16 const kSigModel_BLOBTransferClient_ID;//= 0x1401;
+/// Firmware Update Server
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateServer_ID;//= 0x1402;
+/// Firmware Update Client
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateClient_ID;//= 0x1403;
+/// Firmware Distribution Server
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionServer_ID;//= 0x1404;
+/// Firmware Distribution Client
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionClient_ID;//= 0x1405;
 
 UIKIT_EXTERN UInt16 const kMeshAddress_unassignedAddress;// 0x0000
 UIKIT_EXTERN UInt16 const kMeshAddress_minUnicastAddress;// 0x0001

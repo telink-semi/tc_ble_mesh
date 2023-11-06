@@ -37,11 +37,13 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 @protocol SigBearerDelegate <NSObject>
 @optional
+
 /// Callback called when a packet has been received using the SigBearer. Data longer than MTU will automatically be reassembled using the bearer protocol if bearer implements segmentation.
 /// @param bearer The SigBearer on which the data were received.
 /// @param data The data received.
 /// @param type The type of the received data.
 - (void)bearer:(SigBearer *)bearer didDeliverData:(NSData *)data ofType:(SigPduType)type;
+
 @end
 
 
@@ -82,7 +84,12 @@ typedef void(^SendPacketsFinishCallback)(void);
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (SigBearer *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 - (BOOL)isOpen;
 - (BOOL)isProvisioned;
@@ -110,10 +117,18 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 - (void)setBearerProvisioned:(BOOL)provisioned;
 
-/// 开始连接SigDataSource这个单列的mesh网络。内部会10秒重试一次，直到连接成功或者调用了停止连接`stopMeshConnectWithComplete:`
+/**
+ * @brief   Start connecting to the single column mesh network of SigDataSource.
+ * @param   complete callback of connect mesh complete.
+ * @note    Internally, it will retry every 10 seconds until the connection is successful or the 'stopMeshConnectWithComplete' call is made to stop the connection:`
+ */
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete;
 
-/// 断开一个mesh网络的连接，切换不同的mesh网络时使用。
+/**
+ * @brief   Disconnect mesh connect.
+ * @param   complete callback of connect mesh complete.
+ * @note    It will use in switch mesh network.
+ */
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete;
 
 @end

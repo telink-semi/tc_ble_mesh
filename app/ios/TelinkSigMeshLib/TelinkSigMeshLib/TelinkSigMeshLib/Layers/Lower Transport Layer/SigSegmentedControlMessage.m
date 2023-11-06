@@ -25,16 +25,27 @@
 
 @implementation SigSegmentedControlMessage
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
     }
     return self;
 }
 
+/// Creates a Segment of an Control Message from a Network PDU that contains
+/// a segmented control message. If the PDU is invalid, the
+/// init returns `nil`.
+///
+/// - parameter networkPdu: The received Network PDU with segmented
+///                         Upper Transport message.
 - (instancetype)initFromSegmentedPdu:(SigNetworkPdu *)networkPdu {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        self.type = SigLowerTransportPduType_controlMessage;
+        /// Initialize self.
+        self.type = SigLowerTransportPduType_transportControlMessage;
         NSData *data = networkPdu.transportPdu;
         Byte *dataByte = (Byte *)data.bytes;
         UInt8 tem = 0;

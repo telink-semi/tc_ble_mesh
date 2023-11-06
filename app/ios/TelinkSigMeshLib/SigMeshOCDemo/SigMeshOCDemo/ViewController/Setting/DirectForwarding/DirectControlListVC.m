@@ -38,7 +38,6 @@
     SigNodeModel *node = self.source[indexPath.row];
     cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
     cell.nameLabel.text = [NSString stringWithFormat:@"Adr:0x%X", node.address];
-#ifdef kExist
     cell.stateSwitch.on = node.directControlStatus.directedForwardingState;
     [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {
         [ShowTipsHandle.share show:Tip_SetDirectControl];
@@ -87,7 +86,6 @@
             }
         }];
     }];
-#endif
     return cell;
 }
 

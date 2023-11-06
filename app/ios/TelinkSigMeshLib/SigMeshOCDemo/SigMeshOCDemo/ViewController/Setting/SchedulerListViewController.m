@@ -109,10 +109,4 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
-}
-
 @end

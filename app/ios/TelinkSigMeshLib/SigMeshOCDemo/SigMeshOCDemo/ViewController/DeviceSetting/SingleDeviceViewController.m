@@ -76,9 +76,10 @@
     }];
     
     [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
-        *norColor = [UIColor lightGrayColor];
+        *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
         *selColor = [UIColor blackColor];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / (weakSelf.model.isRemote ? 2 : 3);
+        *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
+        *titleWidth = [UIScreen mainScreen].bounds.size.width / ((weakSelf.model.isRemote || SigDataSource.share.curMeshIsVisitor) ? 2 : 3);
     }];
     
     // 标题渐变
@@ -88,7 +89,7 @@
     }];
     
     [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
-        *underLineColor = kDefultColor;
+        *underLineColor = UIColor.telinkButtonBlue;
         *isUnderLineEqualTitleWidth = YES;
     }];
 
@@ -114,7 +115,7 @@
     
     // group
     // 遥控器不需要分组界面
-    if (self.model.isRemote == NO) {
+    if (self.model.isRemote == NO && SigDataSource.share.curMeshIsVisitor == NO) {
         DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
         wordVc2.title = @"GROUP";
         wordVc2.model = self.model;

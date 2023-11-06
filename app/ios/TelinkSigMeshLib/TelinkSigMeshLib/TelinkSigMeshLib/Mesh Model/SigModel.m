@@ -24,10 +24,9 @@
 #import "SigModel.h"
 #import "CBUUID+Hex.h"
 #import "OpenSSLHelper.h"
-#if SUPPORTEXTENDSIONS
 #import "SDKLibCommand+directForwarding.h"
-#endif
 
+/// base model of SigLib.
 @implementation SigModel
 
 @end
@@ -35,8 +34,15 @@
 
 @implementation ModelIDModel
 
--(instancetype)initWithModelGroup:(NSString *)modelGroup modelName:(NSString *)modelName sigModelID:(NSInteger)sigModelID{
+/// Initialize ModelIDModel object.
+/// @param modelGroup Group name of model ID.
+/// @param modelName the Model ID name.
+/// @param sigModelID The value of model ID.
+/// @returns return `nil` when initialize ModelIDModel object fail.
+-(instancetype)initWithModelGroup:(NSString *)modelGroup modelName:(NSString *)modelName sigModelID:(NSInteger)sigModelID {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _modelGroup = modelGroup;
         _modelName = modelName;
         _sigModelID = sigModelID;
@@ -50,7 +56,9 @@
 @implementation ModelIDs
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         //Generic
         ModelIDModel *model1 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericOnOffServer_Describe sigModelID:kSigModel_GenericOnOffServer_ID];
         ModelIDModel *model2 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericOnOffClient_Describe sigModelID:kSigModel_GenericOnOffClient_ID];
@@ -114,29 +122,29 @@
         ModelIDModel *model56 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Health_Describe modelName:kSigModel_HealthClient_Describe sigModelID:kSigModel_HealthClient_ID];
         ModelIDModel *model57 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_RemoteProvision_Describe modelName:kSigModel_RemoteProvisionServer_Describe sigModelID:kSigModel_RemoteProvisionServer_ID];
         ModelIDModel *model58 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_RemoteProvision_Describe modelName:kSigModel_RemoteProvisionClient_Describe sigModelID:kSigModel_RemoteProvisionClient_ID];
-        ModelIDModel *model59 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateServer_Describe sigModelID:kSigModel_FirmwareUpdateServer_ID];
-        ModelIDModel *model60 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateClient_Describe sigModelID:kSigModel_FirmwareUpdateClient_ID];
-        ModelIDModel *model61 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionServer_Describe sigModelID:kSigModel_FirmwareDistributionServer_ID];
-        ModelIDModel *model62 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionClient_Describe sigModelID:kSigModel_FirmwareDistributionClient_ID];
-        ModelIDModel *model63 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferServer_Describe sigModelID:kSigModel_ObjectTransferServer_ID];
-        ModelIDModel *model64 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferClient_Describe sigModelID:kSigModel_ObjectTransferClient_ID];
+        ModelIDModel *model59 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DirectedForwardingConfiguration_Describe modelName:kSigModel_DirectedForwardingConfigurationServer_Describe sigModelID:kSigModel_DirectedForwardingConfigurationServer_ID];
+        ModelIDModel *model60 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DirectedForwardingConfiguration_Describe modelName:kSigModel_DirectedForwardingConfigurationClient_Describe sigModelID:kSigModel_DirectedForwardingConfigurationClient_ID];
+        ModelIDModel *model61 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_BridgeConfiguration_Describe modelName:kSigModel_BridgeConfigurationServer_Describe sigModelID:kSigModel_BridgeConfigurationServer_ID];
+        ModelIDModel *model62 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_BridgeConfiguration_Describe modelName:kSigModel_BridgeConfigurationClient_Describe sigModelID:kSigModel_BridgeConfigurationClient_ID];
+        ModelIDModel *model63 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_MeshPrivateBeacon_Describe modelName:kSigModel_MeshPrivateBeaconServer_Describe sigModelID:kSigModel_MeshPrivateBeaconServer_ID];
+        ModelIDModel *model64 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_MeshPrivateBeacon_Describe modelName:kSigModel_MeshPrivateBeaconClient_Describe sigModelID:kSigModel_MeshPrivateBeaconClient_ID];
+        ModelIDModel *model65 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OnDemandPrivateProxy_Describe modelName:kSigModel_OnDemandPrivateProxyServer_Describe sigModelID:kSigModel_OnDemandPrivateProxyServer_ID];
+        ModelIDModel *model66 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OnDemandPrivateProxy_Describe modelName:kSigModel_OnDemandPrivateProxyClient_Describe sigModelID:kSigModel_OnDemandPrivateProxyClient_ID];
+        ModelIDModel *model67 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SARConfiguration_Describe modelName:kSigModel_SARConfigurationServer_Describe sigModelID:kSigModel_SARConfigurationServer_ID];
+        ModelIDModel *model68 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SARConfiguration_Describe modelName:kSigModel_SARConfigurationClient_Describe sigModelID:kSigModel_SARConfigurationClient_ID];
+        ModelIDModel *model69 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OpcodesAggregator_Describe modelName:kSigModel_OpcodesAggregatorServer_Describe sigModelID:kSigModel_OpcodesAggregatorServer_ID];
+        ModelIDModel *model70 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OpcodesAggregator_Describe modelName:kSigModel_OpcodesAggregatorClient_Describe sigModelID:kSigModel_OpcodesAggregatorClient_ID];
+        ModelIDModel *model71 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LargeCompositionData_Describe modelName:kSigModel_LargeCompositionDataServer_Describe sigModelID:kSigModel_LargeCompositionDataServer_ID];
+        ModelIDModel *model72 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LargeCompositionData_Describe modelName:kSigModel_LargeCompositionDataClient_Describe sigModelID:kSigModel_LargeCompositionDataClient_ID];
+        ModelIDModel *model73 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SolicitationPDURPLConfiguration_Describe modelName:kSigModel_SolicitationPDURPLConfigurationServer_Describe sigModelID:kSigModel_SolicitationPDURPLConfigurationServer_ID];
+        ModelIDModel *model74 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SolicitationPDURPLConfiguration_Describe modelName:kSigModel_SolicitationPDURPLConfigurationClient_Describe sigModelID:kSigModel_SolicitationPDURPLConfigurationClient_ID];
+        ModelIDModel *model75 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_BLOBTransfer_Describe modelName:kSigModel_BLOBTransferServer_Describe sigModelID:kSigModel_BLOBTransferServer_ID];
+        ModelIDModel *model76 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_BLOBTransfer_Describe modelName:kSigModel_BLOBTransferClient_Describe sigModelID:kSigModel_BLOBTransferClient_ID];
+        ModelIDModel *model77 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateServer_Describe sigModelID:kSigModel_FirmwareUpdateServer_ID];
+        ModelIDModel *model78 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateClient_Describe sigModelID:kSigModel_FirmwareUpdateClient_ID];
+        ModelIDModel *model79 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionServer_Describe sigModelID:kSigModel_FirmwareDistributionServer_ID];
+        ModelIDModel *model80 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionClient_Describe sigModelID:kSigModel_FirmwareDistributionClient_ID];
         
-        ModelIDModel *model65 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DF_CFG_Describe modelName:kSigModel_DF_CFG_S_Describe sigModelID:kSigModel_DF_CFG_S_ID];
-        ModelIDModel *model66 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DF_CFG_Describe modelName:kSigModel_DF_CFG_C_Describe sigModelID:kSigModel_DF_CFG_C_ID];
-        ModelIDModel *model67 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeServer_Describe sigModelID:kSigModel_SubnetBridgeServer_ID];
-        ModelIDModel *model68 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeClient_Describe sigModelID:kSigModel_SubnetBridgeClient_ID];
-        ModelIDModel *model69 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_PrivateBeacon_Describe modelName:kSigModel_PrivateBeaconServer_Describe sigModelID:kSigModel_PrivateBeaconServer_ID];
-        ModelIDModel *model70 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_PrivateBeacon_Describe modelName:kSigModel_PrivateBeaconClient_Describe sigModelID:kSigModel_PrivateBeaconClient_ID];
-        ModelIDModel *model71 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ON_DEMAND_PROXY_Describe modelName:kSigModel_ON_DEMAND_PROXY_S_Describe sigModelID:kSigModel_ON_DEMAND_PROXY_S_ID];
-        ModelIDModel *model72 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ON_DEMAND_PROXY_Describe modelName:kSigModel_ON_DEMAND_PROXY_C_Describe sigModelID:kSigModel_ON_DEMAND_PROXY_C_ID];
-        ModelIDModel *model73 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SAR_CFG_Describe modelName:kSigModel_SAR_CFG_S_Describe sigModelID:kSigModel_SAR_CFG_S_ID];
-        ModelIDModel *model74 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SAR_CFG_Describe modelName:kSigModel_SAR_CFG_C_Describe sigModelID:kSigModel_SAR_CFG_C_ID];
-        ModelIDModel *model75 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_S_Describe sigModelID:kSigModel_OP_AGG_S_ID];
-        ModelIDModel *model76 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_C_Describe sigModelID:kSigModel_OP_AGG_C_ID];
-        ModelIDModel *model77 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_S_Describe sigModelID:kSigModel_LARGE_CPS_S_ID];
-        ModelIDModel *model78 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_C_Describe sigModelID:kSigModel_LARGE_CPS_C_ID];
-        ModelIDModel *model79 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_S_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_S_ID];
-        ModelIDModel *model80 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_C_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_C_ID];
 
         _modelIDs = @[model1,model2,model3,model4,model5,model6,model7,model8,model9,model10,model11,model12,model13,model14,model15,model16,model17,model18,model19,model20,model21,model22,model23,model24,model25,model26,model27,model28,model29,model30,model31,model32,model33,model34,model35,model36,model37,model38,model39,model40,model41,model42,model43,model44,model45,model46,model47,model48,model49,model50,model51,model52,model53,model54,model55,model56,model57,model58,model59,model60,model61,model62,model63,model64,model65,model66,model67,model68,model69,model70,model71,model72,model73,model74,model75,model76,model77,model78,model79,model80];
         //        _defaultModelIDs = @[model1,model3,model4,model35,model36,model38,model39,model41,model50,model51];//默认选中10个
@@ -149,10 +157,13 @@
 @end
 
 
+/// Default group information
 @implementation Groups
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _groupCount = 8;
         _name1 = @"Living room";
         _name2 = @"Kitchen";
@@ -170,8 +181,49 @@
 @end
 
 
+/*
+ 5.1.4 Scheduler
+ 5.1.4.1 Scheduler overview
+ Scheduler provides a means of autonomous change of states of a
+ device based on the notion of UTC time and the ISO 8601 calendar
+ [15] and a register of defined time points with associated state-
+ changing actions. For example, a lamp may automatically turn off
+ every day at 2AM, or a coffee machine may make coffee at 6:30AM.
+ The scheduler is based on a register (see Section 5.1.4.2) that
+ is capable of storing up to sixteen scheduled entries, each
+ containing a starting point in local time, that may include values
+ that represent multiple values, and an associated action to perform.
+ */
+/// The Schedule Register state is a 16-entry, zero-based, indexed array of 76-bit values
+/// formatted as Scheduled Time. Each entry represents a state-changing event. Time and
+/// date fields represent local time.
+/// @note   - seeAlso: Mesh_Model_Specification v1.0.pdf (page.139),
+/// 5.1.4.2 Schedule Register.
+/// @note   The Year, Month, Day, Hour, Minute, and Second fields represent local time (i.e.,
+/// after the TAI-UTC Delta and Time Zone Offset have been applied). The fields have the
+/// meaning defined in ISO 8601 [15] (which replicates the "Gregorian" calendar in common
+/// use). Some of these values can either represent an exact value or a range of values when
+/// the scheduled action is performed.
+/// @note   The minute and second field values have an enumerated value that represents ‘at
+/// a random’ value. This scheduled action shall be triggered once within the corresponding
+/// hour or minute.
+/// @note   5.1.4.2.1 Schedule Register behavior
+/// When the current time is known to the device, which is indicated by a value of the TAI
+/// Seconds state (see Section 5.1.1.1) that is greater than zero, the entries in the Schedule
+/// Register are tracked. If there is a match between the Time state (see Section 5.1.1) and
+/// an entry in the Schedule Register, a corresponding Action indicated by the values in the
+/// Action and Scene fields shall be executed.
+/// @note   Note:A recommended implementation of the Scheduler should calculate the value
+/// of the TAI Seconds (see Section 5.1.1.1) of the next scheduled event and put it in a queue
+/// of scheduled events sorted by time. Every second, the first event in the queue is compared
+/// with the value of the Time state (see Section 5.1.1). The first event is executed if it is less than
+/// or equal to the Time state and then removed from the queue. After execution, the Repeat Flag
+/// shall be checked, and the next occurrence of the scheduled event is calculated and put in the
+/// queue.
 @implementation SchedulerModel
 
+/// get dictionary from SchedulerModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSchedulerModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"schedulerID"] = @(self.schedulerID);
@@ -180,6 +232,8 @@
     return dict;
 }
 
+/// Set dictionary to SchedulerModel object.
+/// @param dictionary SchedulerModel dictionary object.
 - (void)setDictionaryToSchedulerModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -196,8 +250,11 @@
     }
 }
 
-- (instancetype)init{
+/// Initialize SchedulerModel object.
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _schedulerData = 0;
         _sceneId = 0;
         //set scheduler default time
@@ -213,14 +270,18 @@
     return self;
 }
 
-- (BOOL)isEqual:(id)object{
+/// Determine if the data of two SchedulerModel is the same
+- (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SchedulerModel class]]) {
+        //schedulerID is the unique identifier of SchedulerModel.
         return self.schedulerID == ((SchedulerModel *)object).schedulerID;
     } else {
+        //Two schedulerModel object is different.
         return NO;
     }
 }
 
+/// Serialization SchedulerModel Object
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
     SchedulerModel *model = [[[self class] alloc] init];
     model.schedulerID = self.schedulerID;
@@ -229,93 +290,123 @@
     return model;
 }
 
-- (UInt64)schedulerID{
+/// get schedulerID from _schedulerData.
+- (UInt64)schedulerID {
     return (_schedulerData) & 0xF;
 }
 
-- (void)setSchedulerID:(UInt64)schedulerID{
+/// set schedulerID to _schedulerData.
+/// @param schedulerID schedulerID of SchedulerModel Object.
+- (void)setSchedulerID:(UInt64)schedulerID {
     UInt64 tem = 0xF;
     _schedulerData = (_schedulerData & (~(tem))) | ((schedulerID & tem));
 }
 
-- (UInt64)year{
+/// get year value from _schedulerData.
+- (UInt64)year {
     return (_schedulerData >> 4) & 0x7F;
 }
 
-- (void)setYear:(UInt64)year{
+/// set value of year to _schedulerData.
+/// @param year year value of SchedulerModel Object.
+- (void)setYear:(UInt64)year {
     UInt64 tem = 0x7F;
     _schedulerData = (_schedulerData & (~(tem<<4))) | ((year & tem) << 4);
     
 }
 
-- (UInt64)month{
+/// get month value from _schedulerData.
+- (UInt64)month {
     return (_schedulerData >> 11) & 0xFFF;
 }
 
-- (void)setMonth:(UInt64)month{
+/// set value of month to _schedulerData.
+/// @param month month value of SchedulerModel Object.
+- (void)setMonth:(UInt64)month {
     UInt64 tem = 0xFFF;
     _schedulerData = (_schedulerData & (~(tem<<11))) | ((month & tem) << 11);
 }
 
-- (UInt64)day{
+/// get day value from _schedulerData.
+- (UInt64)day {
     return (_schedulerData >> 23) & 0x1F;
 }
 
-- (void)setDay:(UInt64)day{
+/// set value of day to _schedulerData.
+/// @param day day value of SchedulerModel Object.
+- (void)setDay:(UInt64)day {
     UInt64 tem = 0x1F;
     _schedulerData = (_schedulerData & (~(tem<<23))) | ((day & tem) << 23);
 }
 
-- (UInt64)hour{
+/// get hour value from _schedulerData.
+- (UInt64)hour {
     return (_schedulerData >> 28) & 0x1F;
 }
 
-- (void)setHour:(UInt64)hour{
+/// set value of hour to _schedulerData.
+/// @param hour hour value of SchedulerModel Object.
+- (void)setHour:(UInt64)hour {
     UInt64 tem = 0x1F;
     _schedulerData = (_schedulerData & (~(tem<<28))) | ((hour & tem) << 28);
 }
 
-- (UInt64)minute{
+/// get minute value from _schedulerData.
+- (UInt64)minute {
     return (_schedulerData >> 33) & 0x3F;
 }
 
-- (void)setMinute:(UInt64)minute{
+/// set value of minute to _schedulerData.
+/// @param minute minute value of SchedulerModel Object.
+- (void)setMinute:(UInt64)minute {
     UInt64 tem = 0x3F;
     _schedulerData = (_schedulerData & (~(tem<<33))) | ((minute & tem) << 33);
 }
 
-- (UInt64)second{
+/// get second value from _schedulerData.
+- (UInt64)second {
     return (_schedulerData >> 39) & 0x3F;
 }
 
-- (void)setSecond:(UInt64)second{
+/// set value of second to _schedulerData.
+/// @param second second value of SchedulerModel Object.
+- (void)setSecond:(UInt64)second {
     UInt64 tem = 0x3F;
     _schedulerData = (_schedulerData & (~(tem<<39))) | ((second & tem) << 39);
 }
 
-- (UInt64)week{
+/// get week value from _schedulerData.
+- (UInt64)week {
     return (_schedulerData >> 45) & 0x7F;
 }
 
-- (void)setWeek:(UInt64)week{
+/// set value of week to _schedulerData.
+/// @param week week value of SchedulerModel Object.
+- (void)setWeek:(UInt64)week {
     UInt64 tem = 0x7F;
     _schedulerData = (_schedulerData & (~(tem<<45))) | ((week & tem) << 45);
 }
 
-- (SchedulerType)action{
+/// get action value from _schedulerData.
+- (SchedulerType)action {
     return (_schedulerData >> 52) & 0xF;
 }
 
-- (void)setAction:(SchedulerType)action{
+/// set value of action to _schedulerData.
+/// @param action action value of SchedulerModel Object.
+- (void)setAction:(SchedulerType)action {
     UInt64 tem = 0xF;
     _schedulerData = (_schedulerData & (~(tem<<52))) | ((action & tem) << 52);
 }
 
-- (UInt64)transitionTime{
+/// get transitionTime value from _schedulerData.
+- (UInt64)transitionTime {
     return (_schedulerData >> 56) & 0xFF;
 }
 
-- (void)setTransitionTime:(UInt64)transitionTime{
+/// set value of transitionTime to _schedulerData.
+/// @param transitionTime transitionTime value of SchedulerModel Object.
+- (void)setTransitionTime:(UInt64)transitionTime {
     UInt64 tem = 0xFF;
     _schedulerData = (_schedulerData & (~tem<<56)) | ((transitionTime & tem) << 56);
 }
@@ -323,13 +414,14 @@
 @end
 
 
+/// The model for caching Bluetooth scan callbacks, with uuid (peripheral. identifier. UUIDString) as the unique identifier.
 @implementation SigScanRspModel
 
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-//        _nodeIdentityData = [coder decodeObjectForKey:kSigScanRspModel_nodeIdentityData_key];
-//        _networkIDData = [coder decodeObjectForKey:kSigScanRspModel_networkIDData_key];
+        /// Initialize self.
         _advertisementDataServiceData = [coder decodeObjectForKey:kSigScanRspModel_advertisementDataServiceData_key];
         _uuid = [coder decodeObjectForKey:kSigScanRspModel_uuid_key];
         _address = [coder decodeIntegerForKey:kSigScanRspModel_address_key];
@@ -340,8 +432,6 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-//    [coder encodeObject:_nodeIdentityData forKey:kSigScanRspModel_nodeIdentityData_key];
-//    [coder encodeObject:_networkIDData forKey:kSigScanRspModel_networkIDData_key];
     [coder encodeObject:_advertisementDataServiceData forKey:kSigScanRspModel_advertisementDataServiceData_key];
     [coder encodeObject:_uuid forKey:kSigScanRspModel_uuid_key];
     [coder encodeInteger:_address forKey:kSigScanRspModel_address_key];
@@ -415,9 +505,15 @@
  }
 
  */
-- (instancetype)initWithPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData{
-    self = [super init];
-    if (self) {
+/// Initialize SigScanRspModel object.
+/// @param peripheral the CBPeripheral object of BLE device.
+/// @param advertisementData Complete data of Bluetooth broadcast package.
+/// @returns return `nil` when initialize SigScanRspModel object fail.
+- (instancetype)initWithPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _peripheral = peripheral;
         _advertisementData = advertisementData;
         _uuid = peripheral.identifier.UUIDString;
         _advName = advertisementData[CBAdvertisementDataLocalNameKey];
@@ -454,6 +550,7 @@
                     _provisioned = !provisionAble;
                     if (provisionAble) {
                         // 未入网
+                        _address = 0;//this address of unprovision node is invalid.
                         //且还需要支持fast bind的功能才有CID、PID。普通固件不广播该参数。
                         if (advDataServiceData.length >= 2) {
                             _CID = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(0, 2)]];
@@ -491,6 +588,7 @@
     return self;
 }
 
+/// return the identification type of provisioned node.
 - (SigIdentificationType)getIdentificationType {
     SigIdentificationType advType = 0xFF;
     if (_advertisementDataServiceData && _advertisementDataServiceData.length) {
@@ -499,15 +597,14 @@
     return advType;
 }
 
-- (BOOL)isEqual:(id)object{
+/// Determine if the data of two SigScanRspModel is the same
+- (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SigScanRspModel class]]) {
         SigScanRspModel *tem = (SigScanRspModel *)object;
-//        if (tem.nodeIdentityData && tem.nodeIdentityData.length == 16 && _nodeIdentityData && _nodeIdentityData.length == 16) {
-//            return tem.address == _address;
-//        } else {
-            return [_uuid isEqualToString:tem.uuid];
-//        }
+        //uuid is the unique identifier of SigScanRspModel.
+        return [_uuid isEqualToString:tem.uuid];
     } else {
+        //Two SigScanRspModel object is different.
         return NO;
     }
 }
@@ -515,10 +612,16 @@
 @end
 
 
+/// The model for caching Remote scan callbacks, with reportNodeUUID as the unique identifier.
 @implementation SigRemoteScanRspModel
 
+/// Initialize SigRemoteScanRspModel object.
+/// @param parameters Complete data of SigRemoteScanRspModel object.
+/// @returns return `nil` when initialize SigRemoteScanRspModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters == nil || parameters.length <19) {
             return nil;
         }
@@ -540,6 +643,7 @@
     return self;
 }
 
+/// get MacAddress from _reportNodeUUID.
 - (NSString *)macAddress {
     NSString *tem = @"";
     if (_reportNodeUUID && _reportNodeUUID.length >= 6) {
@@ -548,25 +652,35 @@
     return tem;
 }
 
-- (BOOL)isEqual:(id)object{
+/// Determine if the data of two SigRemoteScanRspModel is the same
+- (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SigRemoteScanRspModel class]]) {
+        //reportNodeUUID is the unique identifier of SigRemoteScanRspModel.
         return [_reportNodeUUID isEqualToData:[(SigRemoteScanRspModel *)object reportNodeUUID]];
     } else {
+        //Two SigRemoteScanRspModel object is different.
         return NO;
     }
 }
 
-- (NSString *)description{
+/// change the log string of SigRemoteScanRspModel.
+- (NSString *)description {
     return [NSString stringWithFormat:@"unicastAddress=%@,uuid=%@,macAddress=%@,RSSI=%@,OOB=%@",@(self.reportNodeAddress),_reportNodeUUID,self.macAddress,@(_RSSI),@(_oob.value)];
 }
 
 @end
 
 
+/// the model use for add device VC
 @implementation AddDeviceModel
 
+/// Initialize AddDeviceModel object.
+/// @param scanRemoteModel SigRemoteScanRspModel object.
+/// @returns return `nil` when initialize AddDeviceModel object fail.
 - (instancetype)initWithRemoteScanRspModel:(SigRemoteScanRspModel *)scanRemoteModel {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _state = AddDeviceModelStateScanned;
         SigScanRspModel *model = [[SigScanRspModel alloc] init];
         model.address = scanRemoteModel.reportNodeAddress;
@@ -578,10 +692,13 @@
     return self;
 }
 
+/// Determine if the data of two AddDeviceModel is the same
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[AddDeviceModel class]]) {
-        return [_scanRspModel.macAddress isEqualToString:[(AddDeviceModel *)object scanRspModel].macAddress];
+        //advUuid is the unique identifier of AddDeviceModel.
+        return [_scanRspModel.advUuid isEqualToString:[(AddDeviceModel *)object scanRspModel].advUuid];
     } else {
+        //Two AddDeviceModel object is different.
         return NO;
     }
 }
@@ -589,45 +706,53 @@
 @end
 
 
-@implementation PublishResponseModel
+/// the action model of scene
+@implementation ActionModel
 
-- (instancetype)initWithResponseData:(NSData *)rspData{
+/// Initialize ActionModel object.
+/// @param node SigNodeModel object.
+/// @returns return `nil` when initialize ActionModel object fail.
+- (instancetype)initWithNode:(SigNodeModel *)node{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        Byte *pu = (Byte *)rspData.bytes;
-        unsigned int temp = 0;
-        
-        memcpy(&temp, pu + 8+1, 1);
-        _status = temp;
-        memcpy(&temp, pu + 9+1, 2);
-        _elementAddress = temp;
-        memcpy(&temp, pu + 11+1, 2);
-        _publishAddress = temp;
-        memcpy(&temp, pu + 13+1, 2);
-        _appKeyIndex = temp>>4;
-        memcpy(&temp, pu + 14+1, 1);
-        _credentialFlag = (temp>>3)&0b1;
-        memcpy(&temp, pu + 14+1, 1);
-        _RFU = temp&0b111;
-        memcpy(&temp, pu + 15+1, 1);
-        _publishTTL = temp;
-        memcpy(&temp, pu + 16+1, 1);
-        _publishPeriod = temp;
-        memcpy(&temp, pu + 17+1, 1);
-        _publishRetransmitCount = (temp>>5)&0b111;
-        memcpy(&temp, pu + 17+1, 1);
-        _publishRetransmitIntervalSteps = temp&0b11111;
-        _isVendorModelID = rspData.length > 20;
-        memcpy(&temp, pu + 18+1, _isVendorModelID?4:2);
-        _modelIdentifier = temp;
+        /// Initialize self.
+        _address = node.address;
+        _state = node.state;
+        _trueBrightness = node.trueBrightness;
+        _trueTemperature = node.trueTemperature;
     }
     return self;
 }
 
-@end
+/// Initialize ActionModel object.
+/// @param node SigNodeModel object.
+/// @param elementAddress elementAddress of node.
+/// @returns return `nil` when initialize ActionModel object fail.
+- (instancetype)initWithNode:(SigNodeModel *)node elementAddress:(UInt16)elementAddress {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _address = elementAddress;
+        _state = node.state;
+        _trueBrightness = node.trueBrightness;
+        _trueTemperature = node.trueTemperature;
+    }
+    return self;
+}
 
+/// Compare two actions to see if they are the same.
+/// @param action ActionModel object
+/// @returns YES means same, NO means different.
+- (BOOL)isSameActionWithAction:(ActionModel *)action{
+    if (self.state == action.state && self.trueBrightness == action.trueBrightness && self.trueTemperature == action.trueTemperature) {
+        return YES;
+    }else{
+        return NO;
+    }
+}
 
-@implementation ActionModel
-
+/// get dictionary from ActionModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfActionModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"address"] = @(_address);
@@ -637,6 +762,8 @@
     return dict;
 }
 
+/// Set dictionary to ActionModel object.
+/// @param dictionary ActionModel dictionary object.
 - (void)setDictionaryToActionModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -656,28 +783,13 @@
     }
 }
 
-- (instancetype)initWithNode:(SigNodeModel *)node{
-    if (self = [super init]) {
-        _address = node.address;
-        _state = node.state;
-        _trueBrightness = node.trueBrightness;
-        _trueTemperature = node.trueTemperature;
-    }
-    return self;
-}
-
-- (BOOL)isSameActionWithAction:(ActionModel *)action{
-    if (self.state == action.state && self.trueBrightness == action.trueBrightness && self.trueTemperature == action.trueTemperature) {
-        return YES;
-    }else{
-        return NO;
-    }
-}
-
+/// Determine if the data of two ActionModel is the same.
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[ActionModel class]]) {
+        //address is the unique identifier of ActionModel.
         return _address == ((ActionModel *)object).address;
     } else {
+        //Two SigRemoteScanRspModel object is different.
         return NO;
     }
 }
@@ -685,80 +797,61 @@
 @end
 
 
+/// The DeviceTypeModel caching CID、PID and defaultCompositionData, use for fast provision and default bound.
 @implementation DeviceTypeModel
 
-- (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid{
+/// Initialize DeviceTypeModel object.
+/// @param cid company ID
+/// @param pid product ID
+/// @param cpsData composition data
+/// @returns return `nil` when initialize DeviceTypeModel object fail.
+- (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid compositionData:(nullable NSData *)cpsData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _CID = cid;
         _PID = pid;
-        if (cid == kCompanyID) {
-            SigPage0 *compositionData = [[SigPage0 alloc] init];
-            UInt8 temPage = 0;
-            NSData *pageData = [NSData dataWithBytes:&temPage length:1];
-            NSMutableData *mData = [NSMutableData dataWithData:pageData];
-            if (pid == SigNodePID_Panel) {
-                //set default compositionData of panel
-                NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-                [mData appendData:data];
-                compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            }else if (pid == SigNodePID_HSL) {
-                //set default compositionData of HSL
-                NSData *data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
-                [mData appendData:data];
-                compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            }else if (pid == SigNodePID_CT) {
-                //set default compositionData of CT
-                NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-                [mData appendData:data];
-                compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            }else if (pid == SigNodePID_LPN) {
-                //set default compositionData of LPN
-                NSData *data = [NSData dataWithBytes:LPNByte length:sizeof(LPNByte)];
+        SigPage0 *compositionData = [[SigPage0 alloc] init];
+        UInt8 temPage = 0;
+        NSData *pageData = [NSData dataWithBytes:&temPage length:1];
+        NSMutableData *mData = [NSMutableData dataWithData:pageData];
+        if (cpsData && cpsData.length > 0) {
+            [mData appendData:cpsData];
+            compositionData = [[SigPage0 alloc] initWithParameters:mData];
+        } else {
+            NSData *data = [self getDefaultCompositionDataWithPid:pid];
+            if (data && data.length > 0) {
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }
-            _defaultCompositionData = compositionData;
         }
+        _defaultCompositionData = compositionData;
     }
     return self;
 }
 
-- (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid compositionData:(NSData *)cpsData {
-    if (self = [super init]) {
-        _CID = cid;
-        _PID = pid;
-        if (cid == kCompanyID) {
-            SigPage0 *compositionData = [[SigPage0 alloc] init];
-            UInt8 temPage = 0;
-            NSData *pageData = [NSData dataWithBytes:&temPage length:1];
-            NSMutableData *mData = [NSMutableData dataWithData:pageData];
-            if (cpsData && cpsData.length > 0) {
-                [mData appendData:cpsData];
-                compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            } else {
-                if (pid == SigNodePID_Panel) {
-                    //set default compositionData of panel
-                    NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-                    [mData appendData:data];
-                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
-                } else if (pid == SigNodePID_HSL) {
-                    //set default compositionData of CT
-                    NSData *data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
-                    [mData appendData:data];
-                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
-                } else if (pid == SigNodePID_CT) {
-                    //set default compositionData of CT
-                    NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-                    [mData appendData:data];
-                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
-                }
-            }
-            _defaultCompositionData = compositionData;
-        }
+/// Get Default Composition Data With Pid.
+/// @param pid product ID.
+- (NSData *)getDefaultCompositionDataWithPid:(UInt16)pid {
+    NSData *data = nil;
+    if (pid == SigNodePID_Panel) {
+        //set default compositionData of panel
+        data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
+    }else if (pid == SigNodePID_HSL) {
+        //set default compositionData of HSL
+        data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
+    }else if (pid == SigNodePID_CT) {
+        //set default compositionData of CT
+        data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
+    }else if (pid == SigNodePID_LPN) {
+        //set default compositionData of LPN
+        data = [NSData dataWithBytes:LPNByte length:sizeof(LPNByte)];
     }
-    return self;
+    return data;
 }
 
+/// Set composition Data to DeviceTypeModel.
+/// @param compositionData composition data
 - (void)setCompositionData:(NSData *)compositionData {
     UInt8 temPage = 0;
     NSData *pageData = [NSData dataWithBytes:&temPage length:1];
@@ -770,22 +863,78 @@
 @end
 
 
-@implementation IniCommandModel
+/// The config parameters of add device.
+@implementation SigAddConfigModel
 
-- (instancetype)init {
+/// Initialize SigAddConfigModel object.
+/// - Parameters:
+///   - peripheral: The CBPeripheral object of BLE device.
+///   - networkKey: The mesh network key.
+///   - netkeyIndex: The mesh network index.
+///   - appKey: The mesh application key.
+///   - appkeyIndex: The mesh application index.
+///   - staticOOBData: The static OOB data for static OOB provision.
+///   - keyBindType: The type of keybind, KeyBindType_Normal or KeyBindType_Fast.
+///   - productID: The product ID of unprovision node.
+///   - cpsData: The composition data of unprovision node.
+/// - returns:
+/// return `nil` when initialize SigAddConfigModel object fail.
+- (instancetype)initWithCBPeripheral:(CBPeripheral *)peripheral networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appKey:(NSData *)appKey appkeyIndex:(UInt16)appkeyIndex staticOOBData:(NSData * _Nullable)staticOOBData keyBindType:(KeyBindType)keyBindType productID:(UInt16)productID cpsData:(NSData * _Nullable)cpsData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        _hasReceiveResponse = NO;
-        _isEncryptByDeviceKey = NO;
-        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+        /// Initialize self.
+        _peripheral = peripheral;
+        _networkKey = networkKey;
+        _netkeyIndex = netkeyIndex;
+        _appKey = appKey;
+        _appkeyIndex = appkeyIndex;
+        _staticOOBData = staticOOBData;
+        _keyBindType = keyBindType;
+        _productID = productID;
+        _cpsData = cpsData;
     }
     return self;
 }
 
-- (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData {
+@end
+
+
+/// The ini command for developer.
+/// sig model struct of firmware: mesh_bulk_cmd_par_t.
+/// vendor model struct of firmware: mesh_vendor_par_ini_t.
+/// It is sig model command when vendorId is 0, and It is vendor model command when vendorId isn't 0.
+/// sig model config: netkeyIndex, appkeyIndex, retryCount, responseMax, address, opcode, commandData.
+@implementation IniCommandModel
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        _hasReceiveResponse = NO;
+        /// Initialize self.
+        [self setDefaultEncryptKey];
+    }
+    return self;
+}
+
+/// Initialize sig model IniCommandModel object.
+/// - Parameters:
+///   - netkeyIndex: The mesh network index.
+///   - appkeyIndex: The mesh application index.
+///   - retryCount: The retry count of command, only for reliable command.
+///   - responseMax: The response max count of command, only for reliable command.
+///   - address: The destination address.
+///   - opcode: The opcode of command.
+/// SigGenericOnOffSet:0x8202. SigGenericOnOffSetUnacknowledged:0x8203.
+/// VendorOnOffSet:0xC4, VendorOnOffSetUnacknowledged:0xC3.
+///   - commandData: The Hex command data.
+///   eg: SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}.
+///   eg: SigGenericOnOffSet: commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
+/// - returns:
+/// return `nil` when initialize sig model IniCommandModel object fail.
+- (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _netkeyIndex = netkeyIndex;
         _appkeyIndex = appkeyIndex;
         _retryCount = retryCount;
@@ -793,17 +942,38 @@
         _address = address;
         _opcode = opcode;
         _commandData = commandData;
-        _isEncryptByDeviceKey = NO;
-        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+        [self setDefaultEncryptKey];
     }
     return self;
 }
 
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData {
+/// Initialize vendor model IniCommandModel object.
+/// - Parameters:
+///   - netkeyIndex: The mesh network index.
+///   - appkeyIndex: The mesh application index.
+///   - retryCount: The retry count of command, only for reliable command.
+///   - responseMax: The response max count of command, only for reliable command.
+///   - address: The destination address.
+///   - opcode: The opcode of command.
+/// SigGenericOnOffSet:0x8202. SigGenericOnOffSetUnacknowledged:0x8203.
+/// VendorOnOffSet:0xC4, VendorOnOffSetUnacknowledged:0xC3.
+///   - vendorId: The vendor ID of command.
+/// 0 means sig model command, other means vendor model command.
+///   - responseOpcode: The response opcode of command, only for reliable command.
+/// eg: The response opcode of VendorOnOffSet is 0xC4.
+///   - needTid: The position of tid in the ini command.
+///   when needTid is NO, parameter tidPosition and tid is invalid.
+///   - tidPosition: The position of tid in the ini command.
+///   - tid: The value of tid in the ini command.
+///   - commandData: The Hex command data.
+///   eg: SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}.
+///   eg: SigGenericOnOffSet: commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
+/// - returns:
+/// return `nil` when initialize vendor model IniCommandModel object fail.
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
-        _hasReceiveResponse = NO;
+        /// Initialize self.
         _netkeyIndex = netkeyIndex;
         _appkeyIndex = appkeyIndex;
         _retryCount = retryCount;
@@ -812,84 +982,58 @@
         _opcode = opcode;
         _vendorId = vendorId;
         _responseOpcode = responseOpcode;
+        _needTid = needTid;
         _tidPosition = tidPosition;
         _tid = tid;
         _commandData = commandData;
-        _isEncryptByDeviceKey = NO;
-        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+        [self setDefaultEncryptKey];
     }
     return self;
 }
 
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(nullable NSData *)commandData {
-    if (self = [super init]) {
-        _hasReceiveResponse = NO;
-        _netkeyIndex = netkeyIndex;
-        _appkeyIndex = appkeyIndex;
-        _retryCount = retryCount;
-        _responseMax = responseMax;
-        _address = address;
-        _opcode = opcode;
-        _vendorId = vendorId;
-        _responseOpcode = responseOpcode;
-        _tidPosition = 0;
-        _needTid = needTid;
-        _tid = tid;
-        _commandData = commandData;
-        _isEncryptByDeviceKey = NO;
-        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
-    }
-    return self;
-}
-
+/// Initialize IniCommandModel object with complete Hex iniCommand data.
+/// - Parameter iniCommandData: complete Hex iniCommand data.
+/// eg: "a3ff000000000200ffffc21102c4020100"
+/// - returns:
+/// return `nil` when initialize IniCommandModel object fail.
 - (instancetype)initWithIniCommandData:(NSData *)iniCommandData {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (iniCommandData.length < 11) {
             return nil;
         }
-        _isEncryptByDeviceKey = NO;
+        [self setDefaultEncryptKey];
         Byte *pu = (Byte *)[iniCommandData bytes];
-        unsigned int temp = 0;
-        memcpy(&temp, pu+2, 2);
-        _netkeyIndex = temp;
-        temp = 0;
-        memcpy(&temp, pu+4, 2);
-        _appkeyIndex = temp;
-        temp = 0;
-        memcpy(&temp, pu+6, 1);
-        _retryCount = temp;
-        temp = 0;
-        memcpy(&temp, pu+7, 1);
-        _responseMax = temp;
-        temp = 0;
-        memcpy(&temp, pu+8, 2);
-        _address = temp;
-        temp = 0;
-        temp = [self getOpcodeFromIniCommandData:iniCommandData opcodeIndex:10];
-        _opcode = temp;
+        UInt16 tem16 = 0;
+        UInt8 tem8 = 0;
+        memcpy(&tem16, pu+2, 2);
+        _netkeyIndex = tem16;
+        memcpy(&tem16, pu+4, 2);
+        _appkeyIndex = tem16;
+        memcpy(&tem8, pu+6, 1);
+        _retryCount = tem8;
+        memcpy(&tem8, pu+7, 1);
+        _responseMax = tem8;
+        memcpy(&tem16, pu+8, 2);
+        _address = tem16;
+        _opcode = [self getOpcodeFromIniCommandData:iniCommandData opcodeIndex:10];
         UInt32 size_op = [self getOpcodeLengthFromIniCommandData:iniCommandData opcodeIndex:10];
         if (size_op > 2) {
-            _opcode = temp & 0xFF;
             //vendor model
-            temp = 0;
-            memcpy(&temp, pu+11, 2);
-            _vendorId = temp;
-            temp = 0;
-            memcpy(&temp, pu+13, 1);
-            _responseOpcode = temp;
-            temp = 0;
-            memcpy(&temp, pu+14, 1);
-            _needTid = temp != 0;
-            _tidPosition = temp;
-            if (temp != 0) {
-                if (iniCommandData.length >= 15+temp) {
+            _opcode = _opcode & 0xFF;
+            memcpy(&tem16, pu+11, 2);
+            _vendorId = tem16;
+            memcpy(&tem8, pu+13, 1);
+            _responseOpcode = tem8;
+            memcpy(&tem8, pu+14, 1);
+            _needTid = tem8 != 0;
+            _tidPosition = tem8;
+            if (tem8 != 0) {
+                if (iniCommandData.length >= 15+tem8) {
                     _commandData = [iniCommandData subdataWithRange:NSMakeRange(15, iniCommandData.length-15)];
-                    memcpy(&temp, pu+15+temp-1, 1);
-                    _tid = temp;
+                    memcpy(&tem8, pu+15+tem8-1, 1);
+                    _tid = tem8;
                 }
             }else{
                 if (iniCommandData.length > 15) {
@@ -914,13 +1058,16 @@
                 }
             }
         }
-        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     }
     return self;
 }
 
+/// Get Opcode Length
+/// - Parameters:
+///   - iniCommandData: iniCommand Hex Data
+///   - opcodeIndex: opcode Index
+/// - returns:
+/// return Opcode Length. length is SigOpCodeType_sig1、SigOpCodeType_sig2 or SigOpCodeType_vendor3.
 - (UInt8)getOpcodeLengthFromIniCommandData:(NSData *)iniCommandData opcodeIndex:(int)opcodeIndex {
     Byte *pu = (Byte *)[iniCommandData bytes];
     UInt8 temp = 0;
@@ -929,6 +1076,12 @@
     return op_type;
 }
 
+/// Get opcode
+/// - Parameters:
+///   - iniCommandData: iniCommand Hex Data
+///   - opcodeIndex: opcode Index
+/// - returns:
+/// return Opcode value.
 - (int)getOpcodeFromIniCommandData:(NSData *)iniCommandData opcodeIndex:(int)opcodeIndex {
     int opcode = 0;
     Byte *pu = (Byte *)[iniCommandData bytes];
@@ -937,13 +1090,52 @@
     return opcode;
 }
 
+/// Set Default Encrypt Key.
+- (void)setDefaultEncryptKey {
+    _isEncryptByDeviceKey = NO;
+    _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+    _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+    _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+}
+
 @end
 
 
+/// The Receivers List field shall contain entries from the Distribution Receivers List state.
+/// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.98),
+/// 8.4.2.5 Firmware Distribution Receivers List.
 @implementation SigUpdatingNodeEntryModel
 
+/// Initialize SigUpdatingNodeEntryModel object.
+/// - Parameters:
+///   - address: least significant bits of the unicast address of the Updating node. Size is 15 bits.
+/// The Address field shall indicate the address of the Updating node.
+///   - retrievedUpdatePhase: Retrieved Update Phase state of the Updating node. Size is 4 bits.
+/// The Retrieved Update Phase field shall indicate the Update Phase state of the Firmware
+/// Update Server identified by the Address field. The values for this field are defined in Table 8.8.
+///   - updateStatus: Status of the last operation with the Firmware Update Server. Size is 3 bits.
+/// The Update Status field shall indicate the status of the last operation between the Firmware
+/// Update Client and the Firmware Update Server identified by the Address field. The values
+/// for this field are defined in Table 8.23.
+///   - transferStatus: Status of the last operation with the BLOB Transfer Server. Size is 4 bits.
+/// The Transfer Status field shall indicate the status of the last operation between the BLOB
+/// Transfer Client and the BLOB Transfer Server identified by the Address field. The values
+/// for this field are defined in Table 7.17.
+///   - transferProgress: Progress of the BLOB transfer in 2 percent increments. Size is 6 bits.
+/// The Transfer Progress field shall indicate the progress of the firmware image transfer.
+/// The value is multiplied by 2 to calculate the percentage of the firmware image that has
+/// been delivered and confirmed. The range of allowed values for the Transfer Progress
+/// field is 0x0 to 0x32. The values 0x33 to 0x3F are prohibited.
+///   - updateFirmwareImageIndex: Index of the firmware image on the Firmware Information List state that is being
+/// updated. Size is 8 bits.
+/// The Update Firmware Image Index field shall identify the index of the firmware
+/// image on the Firmware Information List state of the Updating node that is being updated.
+/// - returns:
+/// return `nil` when initialize SigUpdatingNodeEntryModel object fail.
 - (instancetype)initWithAddress:(UInt16)address retrievedUpdatePhase:(SigFirmwareUpdatePhaseType)retrievedUpdatePhase updateStatus:(SigFirmwareUpdateServerAndClientModelStatusType)updateStatus transferStatus:(SigBLOBTransferStatusType)transferStatus transferProgress:(UInt8)transferProgress updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _address = address;
         _retrievedUpdatePhase = retrievedUpdatePhase;
         _updateStatus = updateStatus;
@@ -963,8 +1155,14 @@
     return self;
 }
 
+/// Initialize SigUpdatingNodeEntryModel object with Hex data.
+/// - Parameter parameters: Hex data of SigUpdatingNodeEntryModel object.
+/// - returns:
+/// return `nil` when initialize SigUpdatingNodeEntryModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length == 5) {
             UInt64 tem64 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -981,18 +1179,40 @@
     return self;
 }
 
+/// Get SigUpdatingNodeEntryModel object describe string.
 - (NSString *)getDetailString {
     NSString *tem = [NSString stringWithFormat:@"Address:(0x%X),Phase:(0x%X,\"%@\"),update:(0x%X,\"%@\"),transfer:(0x%X,\"%@\"),Progress:(%d%%),index:(0x%X)",_address,_retrievedUpdatePhase,[SigHelper.share getDetailOfSigFirmwareUpdatePhaseType:_retrievedUpdatePhase],_updateStatus,[SigHelper.share getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:_updateStatus],_transferStatus,[SigHelper.share getDetailOfSigBLOBTransferStatusType:_transferStatus],_transferProgress,_updateFirmwareImageIndex];
     return tem;
 }
 
+/// Determine if the data of two SigUpdatingNodeEntryModel is the same
+- (BOOL)isEqual:(id)object {
+    if ([object isKindOfClass:[SigUpdatingNodeEntryModel class]]) {
+        //address is the unique identifier of SigUpdatingNodeEntryModel.
+        return _address == ((SigUpdatingNodeEntryModel *)object).address;
+    } else {
+        //Two SigUpdatingNodeEntryModel object is different.
+        return NO;
+    }
+}
+
 @end
 
 
+/// The Firmware Information Entry field shall identify the information for a
+/// firmware subsystem on the node from the Firmware Information List state.
+/// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.92),
+/// 8.4.1.2 Firmware Update Information Status.
 @implementation SigFirmwareInformationEntryModel
 
+/// Initialize SigFirmwareInformationEntryModel object with Hex data.
+/// - Parameter parameters: Hex data of SigFirmwareInformationEntryModel object.
+/// - returns:
+/// return `nil` when initialize SigFirmwareInformationEntryModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length >= 3) {
             UInt8 tem8 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -1022,6 +1242,7 @@
     return self;
 }
 
+/// Get FirmwareID String
 - (NSString *)getFirmwareIDString {
     NSString *tem = @"";
     if (_currentFirmwareID && _currentFirmwareID.length > 0) {
@@ -1030,6 +1251,7 @@
     return tem;
 }
 
+/// Get UpdateURI String
 - (NSString *)getUpdateURIString {
     NSString *tem = @"";
     if (_updateURL && _updateURL.length > 0) {
@@ -1041,10 +1263,25 @@
 @end
 
 
+/// The Receiver Entry field
+/// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.97),
+/// 8.4.2.1 Firmware Distribution Receivers Add.
+/// Table 8.34: The format of the Receiver Entry field
 @implementation SigReceiverEntryModel
 
+/// Initialize SigReceiverEntryModel object.
+/// - Parameters:
+///     - address: The unicast address of the Updating node.
+/// The Address field shall contain the unicast address of an Updating node.
+///     - updateFirmwareImageIndex: The index of the firmware image in the Firmware Information List state to be updated.
+/// The Update Firmware Image Index field shall identify the index of a firmware image in
+/// the Firmware Information List state of the Updating node to be updated.
+/// - returns:
+/// return `nil` when initialize SigReceiverEntryModel object fail.
 - (instancetype)initWithAddress:(UInt16)address updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _address = address;
         _updateFirmwareImageIndex = updateFirmwareImageIndex;
         UInt16 tem16 = _address;
@@ -1057,8 +1294,15 @@
     return self;
 }
 
+/// Initialize SigReceiverEntryModel object with hex data.
+/// - Parameters:
+///     - parameters: The Hex data of SigReceiverEntryModel.
+/// - returns:
+/// return `nil` when initialize SigReceiverEntryModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length >= 3) {
             _parameters = parameters;
             UInt8 tem8 = 0;
@@ -1078,40 +1322,77 @@
 @end
 
 
+/// The Generic Default Transition Time state determines how long an element shall take to transition
+/// from a present state to a new state (see Section 1.4.1.1). This is a 1-octet value that consists of two
+/// fields: a 2-bit bit field representing the step resolution and a 6-bit bit field representing the number
+/// of transition steps.
+/// @note   This mechanism covers a wide range of times that may be required by different applications:
+/// • For 100 millisecond step resolution, the range is 0 through 6.2 seconds.
+/// • For 1 second step resolution, the range is 0 through 62 seconds.
+/// • For 10 seconds step resolution, the range is 0 through 620 seconds (10.5 minutes).
+/// • For 10 minutes step resolution, the range is 0 through 620 minutes (10.5 hours). The Generic Default
+/// Transition Time is calculated using the following formula:
+/// Generic Default Transition Time = Default Transition Step Resolution * Default Transition Number of Steps.
+/// Default values for the Generic Default Transition Step Resolution and the Default Transition Number of
+/// Steps are implementation-specific and are defined by a device manufacturer.
+/// @note   - seeAlso: Mesh_Model_Specification v1.0.pdf (page.29),
+/// 3.1.3 Generic Default Transition Time.
+/// Table 3.3: Generic Default Transition Time state format
 @implementation SigTransitionTime
 
+/// Initialize SigTransitionTime object.
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
+        // The value = 0x3F is unknown. The state cannot be set to this value,
+        // but an element may report an unknown value if a transition is higher than 0x3E or not determined.
         _steps = 0x3F;
         _stepResolution = SigStepResolution_hundredsOfMilliseconds;
     }
     return self;
 }
 
+/// Initialize SigTransitionTime object.
+/// @param rawValue The hex data of SigTransitionTime.
 - (instancetype)initWithRawValue:(UInt8)rawValue {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _steps = rawValue & 0x3F;
         _stepResolution = (SigStepResolution)rawValue >> 6;
     }
     return self;
 }
 
+/// Initialize SigTransitionTime object.
+/// - parameter steps: The number of Steps, 6-bit value.
+/// The Default Transition Number of Steps field is a 6-bit value representing the number of transition steps.
+/// The field values represent the states defined in the following table.
+/// - parameter stepResolution: The resolution of the Default Transition Number of Steps field.
+/// The Default Transition Step Resolution field is a 2-bit bit field that determines the resolution of the Generic
+/// Default Transition Time state. The field values represent the states defined in the following table.
 - (instancetype)initWithSetps:(UInt8)steps stepResolution:(SigStepResolution)stepResolution {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _steps = MIN(steps, 0x3E);
         _stepResolution = stepResolution;
     }
     return self;
 }
 
+/// The transition time in milliseconds.
 - (int)milliseconds {
-    return [SigHelper.share getPeriodFromSteps:_steps & 0x3F];
+    return [SigHelper.share getMillisecondsOfTransitionIntervalWithPeriodSteps:_steps & 0x3F periodResolution:_stepResolution];
 }
 
+/// The transition time as `TimeInterval` in seconds.
 - (NSTimeInterval)interval {
     return (NSTimeInterval)[self milliseconds]/1000.0;
 }
 
+/// The hex data of SigTransitionTime.
 - (UInt8)rawValue {
     return (_steps & 0x3F) | (_stepResolution << 6);
 }
@@ -1141,7 +1422,9 @@
 /// Creates a Mesh Address. For virtual addresses use `initWithVirtualLabel:` instead.
 /// @param address address
 -(instancetype)initWithAddress:(UInt16)address {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _address = address;
         _virtualLabel = nil;
     }
@@ -1151,7 +1434,9 @@
 /// 3.4.2.3 Virtual address
 /// Creates a Mesh Address based on the virtual label.
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _virtualLabel = virtualLabel;
         
         // Calculate the 16-bit virtual address based on the 128-bit label.
@@ -1172,10 +1457,13 @@
     return [NSString stringWithFormat:@"%04d",_address];
 }
 
+/// Determine if the data of two SigMeshAddress is the same
 - (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SigMeshAddress class]]) {
+        //address is the unique identifier of SigMeshAddress.
         return _address == ((SigMeshAddress *)object).address;
     } else {
+        //Two SigMeshAddress object is different.
         return NO;
     }
 }
@@ -1183,18 +1471,31 @@
 @end
 
 
+/// The object is used to describe the number of times a message is published and the interval between
+/// retransmissions of the published message.
 @implementation SigRetransmit
 
+/// Initialize SigRetransmit object.
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _count = 0;
         _interval = 50;
     }
     return self;
 }
 
+/// Initialize SigRetransmit object.
+/// - Parameters:
+///   - publishRetransmitCount: Number of retransmissions for network messages. The value is in range from 0 to 7, where 0 means no retransmissions.
+///   - intervalSteps: The interval (in milliseconds) between retransmissions (50...3200 with step 50).
+/// - returns:
+/// return `nil` when initialize SigRetransmit object fail.
 - (instancetype)initWithPublishRetransmitCount:(UInt8)publishRetransmitCount intervalSteps:(UInt8)intervalSteps {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _count = publishRetransmitCount;
         // Interval is in 50 ms steps.
         _interval = (UInt16)(intervalSteps + 1) * 50;// ms
@@ -1202,6 +1503,7 @@
     return self;
 }
 
+/// Retransmission steps, from 0 to 31. Use `interval` to get the interval in ms.
 - (UInt8)steps {
     return (UInt8)((_interval / 50) - 1);
 }
@@ -1209,6 +1511,7 @@
 @end
 
 
+/// @note   - seeAlso: Mesh_v1.0.pdf (page.158), 4.3.2.16 Config Model Publication Set.
 @implementation SigPublish
 
 /// Creates an instance of Publish object.
@@ -1220,14 +1523,16 @@
 /// @param periodResolution The period resolution, used to calculate interval. Use `._100_milliseconds` when periodic publishing is disabled.
 /// @param retransmit The retransmission data. See `Retransmit` for details.
 - (instancetype)initWithStringDestination:(NSString *)stringDestination withKeyIndex:(UInt16)keyIndex friendshipCredentialsFlag:(int)friendshipCredentialsFlag ttl:(UInt8)ttl periodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution retransmit:(SigRetransmit *)retransmit {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _address = stringDestination;
         _index = keyIndex;
         _credentials = friendshipCredentialsFlag ? 1 : 0;
         _ttl = ttl;
         _periodSteps = periodSteps;
         _periodResolution = periodResolution;
-        _period = [SigHelper.share getPeriodFromSteps:periodResolution];
+        _period = [SigHelper.share getMillisecondsOfTransitionIntervalWithPeriodSteps:_periodSteps periodResolution:_periodResolution];
         _retransmit = retransmit;
     }
     return self;
@@ -1235,8 +1540,9 @@
 
 /// This initializer should be used to remove the publication from a Model.
 - (instancetype)init {
-    self = [super init];
-    if (self) {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _address = @"0000";
         _index = 0;
         _credentials = 0;
@@ -1258,32 +1564,37 @@
 /// @param periodResolution The period resolution, used to calculate interval. Use `._100_milliseconds` when periodic publishing is disabled.
 /// @param retransmit The retransmission data. See `Retransmit` for details.
 - (instancetype)initWithDestination:(UInt16)destination withKeyIndex:(UInt16)keyIndex friendshipCredentialsFlag:(int)friendshipCredentialsFlag ttl:(UInt8)ttl periodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution retransmit:(SigRetransmit *)retransmit {
-    self = [super init];
-    if (self) {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _address = [SigHelper.share getUint16String:destination];
         _index = keyIndex;
         _credentials = friendshipCredentialsFlag;
         _ttl = ttl;
         _periodSteps = periodSteps;
         _periodResolution = periodResolution;
-        _period = [SigHelper.share getPeriodFromSteps:periodResolution];
+        _period = [SigHelper.share getMillisecondsOfTransitionIntervalWithPeriodSteps:_periodSteps periodResolution:_periodResolution];
         _retransmit = retransmit;
     }
     return self;
 }
 
+/// Returns the interval between subsequent publications in seconds.
 - (NSTimeInterval)publicationInterval {
     return (NSTimeInterval)_period / 1000.0;
 }
 
+/// Returns the interval between subsequent publications in seconds.
 - (BOOL)isUsingMasterSecurityMaterial {
     return _credentials == 0;
 }
 
+/// Returns whether friendship security materials are used.
 - (BOOL)isUsingFriendshipSecurityMaterial {
     return _credentials == 1;
 }
 
+/// Publication address for the model.
 - (SigMeshAddress *)publicationAddress {
     return [[SigMeshAddress alloc] initWithHex:_address];
 }
@@ -1291,10 +1602,55 @@
 @end
 
 
+/// 5.2.1.2 Time Set
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.143)
 @implementation SigTimeModel
 
+/// Initialize SigTimeModel object.
+/// - Parameters:
+///   - TAISeconds: 40 bits, The current TAI time in seconds.
+/// The TAI Seconds field identifies the TAI Seconds state (see Section 5.1.1.1).
+/// The TAI Seconds state is the current TAI time in seconds after the epoch
+/// 2000-01-01T00:00:00 TAI (1999-12-31T23:59:28 UTC).
+/// For example, the value 0x20E5369D represents the 2017-06-27T15:30:37 TAI (15:30:00 UTC).
+/// When an element does not know the time, a special value of 0x0000000000 is used.
+///   - subSeconds: The sub-second time in units of 1/256th second.
+/// The Subsecond field identifies the Subsecond state (see Section 5.1.1.2).
+/// The Subsecond is a fractional part of the TAI time, in units of 1/256th seconds. An implementation
+/// may increment this field by more than one unit (i.e. the mechanism it uses may have a larger
+/// granularity) and/or by different amounts at each increment.
+///   - uncertainty: The estimated uncertainty in 10 millisecond steps.
+/// The Uncertainty field identifies the Time Uncertainty state (see Section 5.1.1.3).
+/// The Uncertainty field represents the accumulated uncertainty of the Mesh Timestamp in 10- millisecond steps.
+/// It includes the Uncertainty of the time source and the accumulated uncertainty resulting from the local clock drift
+/// since the last update. Value 255 represents uncertainty of 2.55 seconds or more.
+///   - timeAuthority: 1 bit, 0 = NO Time Authority, 1 = Time Authority.
+/// The Time Authority field identifies the Time Authority state (see Section 5.1.1.4).
+/// The Time Authority bit represents whether the element has a reliable source of TAI, such as a GPS receiver or an
+/// NTP-synchronized clock. Time Authority = 1 is when the device itself has access to a reliable and trusted time
+/// source, such as NTP or GPS, or has been given the TAI time by a Provisioner (using the Time Setup Server model
+/// and a DevKey – see Section 5.3.2).
+/// Note: Many time sources do not provide TAI directly, but it can be derived from UTC (if the current TAI-UTC Delta
+/// is known) or from GPS time (which is always 19 seconds behind TAI).
+///   - TAI_UTC_Delta: 15 bits, Current difference between TAI and UTC in seconds.
+/// The TAI-UTC Delta field identifies the TAI-UTC Delta Current state (see Section 5.1.1.8).
+/// The TAI-UTC Delta Current state represents the value: current_TAI minus current_UTC. For example, on 2017-01-19,
+/// this value equals +37. The valid range is -255 through +32512 (i.e., 0x00FF represents a value of 0 and 0x7FFF
+/// represents a value of 32512).
+///   - timeZoneOffset: The local time zone offset in 15-minute increments.
+/// The Time Zone Offset field shall be set to the Time Zone Offset Current state (see Section 5.1.1.5).
+/// The Time Zone Offset Current field represents the current zone offset in 15-minute increments. The value is the number
+/// of 15-minute increments from UTC. Positive numbers are eastwards. The state is a uint8 value representing the valid
+/// range of -64 through +191 (i.e., 0x40 represents a value of 0 and 0xFF represents a value of 191).
+/// Note: The offset representation with a range -64 through +191 (-16 through +47.75 hours) is in anticipation of proposals
+/// dealing with the leap seconds issue by replacing the leap seconds with local zone changes, which means that by the
+/// year 5000 the UK will be in zone +8 in the winter while New Zealand will be +21 in the summer with some places +22 or more.
+/// - returns:
+/// return `nil` when initialize SigTimeModel object fail.
 - (instancetype)initWithTAISeconds:(UInt64)TAISeconds subSeconds:(UInt8)subSeconds uncertainty:(UInt8)uncertainty timeAuthority:(UInt8)timeAuthority TAI_UTC_Delta:(UInt16)TAI_UTC_Delta timeZoneOffset:(UInt8)timeZoneOffset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _TAISeconds = TAISeconds;
         _subSeconds = subSeconds;
         _uncertainty = uncertainty;
@@ -1305,8 +1661,14 @@
     return self;
 }
 
+/// Initialize SigTimeModel object.
+/// - Parameter parameters: The hex of SigTimeModel object.
+/// - returns:
+/// return `nil` when initialize SigTimeModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         UInt64 tem64 = 0;
         UInt16 tem16 = 0;
         UInt8 tem8 = 0;
@@ -1336,6 +1698,7 @@
     return self;
 }
 
+/// Get hex data of SigTimeModel object.
 - (NSData *)getTimeParameters {
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0;
@@ -1361,10 +1724,20 @@
 @end
 
 
+/// The Sensor Descriptor state represents the attributes describing the sensor data.
+/// This state does not change throughout the lifetime of an element.
+/// 4.1.1 Sensor Descriptor
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.105)
 @implementation SigSensorDescriptorModel
 
+/// Initialize SigSensorDescriptorModel object.
+/// - Parameter parameters: The hex of SigSensorDescriptorModel object.
+/// - returns:
+/// return `nil` when initialize SigSensorDescriptorModel object fail.
 - (instancetype)initWithDescriptorParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters != nil && (parameters.length == 2 || parameters.length == 8)) {
             UInt16 tem16 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -1390,6 +1763,7 @@
     return self;
 }
 
+/// Get Sensor Descriptor hex data.
 - (NSData *)getDescriptorParameters {
     NSMutableData *mData = [NSMutableData data];
     UInt16 tem16 = _propertyID;
@@ -1419,20 +1793,27 @@
 
 
 @implementation SigEncryptedModel
+
+/// Determine if the data of two SigEncryptedModel is the same
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigEncryptedModel class]]) {
+        //advertisementDataServiceData is the unique identifier of SigEncryptedModel.
         return [_advertisementDataServiceData isEqualToData:((SigEncryptedModel *)object).advertisementDataServiceData];
     } else {
+        //Two SigEncryptedModel object is different.
         return NO;
     }
 }
+
 @end
 
 
 @implementation SigNetkeyDerivaties
 
 - (SigNetkeyDerivaties *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         // Calculate Identity Key and Beacon Key.
         uint8_t byte[6] = {0x69, 0x64, 0x31, 0x32, 0x38, 0x01};//"id128" || 0x01
         NSData *P = [NSData dataWithBytes:&byte length:6];
@@ -1459,8 +1840,14 @@
 
 @end
 
+/// The network key object represents the state of the mesh network key
+/// that is used for securing communication at the network layer [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.10),
+/// 2.1.2 Network key object.
 @implementation SigNetkeyModel
 
+/// Get dictionary from SigNetkeyModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigNetkeyModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -1470,7 +1857,7 @@
     if (_key) {
         dict[@"key"] = _key;
     }
-    if (_oldKey) {
+    if (_oldKey && _phase != normalOperation) {
         dict[@"oldKey"] = _oldKey;
     }
     dict[@"phase"] = @(_phase);
@@ -1483,6 +1870,8 @@
     return dict;
 }
 
+/// Set dictionary to SigNetkeyModel object.
+/// @param dictionary SigNetkeyModel dictionary object.
 - (void)setDictionaryToSigNetkeyModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -1511,8 +1900,11 @@
     }
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         SigIvIndex *ivIndex = [[SigIvIndex alloc] initWithIndex:kDefaultIvIndex updateActive:NO];
         _ivIndex = ivIndex;
     }
@@ -1616,10 +2008,15 @@
     return self.keys;
 }
 
+/// Returns whether the Network Key is the Primary Network Key.
+/// The Primary key is the one which Key Index is equal to 0.
+///
+/// A Primary Network Key may not be removed from the mesh network.
 - (BOOL)isPrimary {
     return _index == 0;
 }
 
+/// Get detail string of SigNetkeyModel object.
 - (NSString *)getNetKeyDetailString {
     return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tkey:0x%@\toldKey:0x%@\tphase:%d\tminSecurity:%@\ttimestamp:%@",_name,(long)_index,_key,_oldKey,_phase,_minSecurity,_timestamp];
 }
@@ -1630,7 +2027,9 @@
 @implementation SigIvIndex
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _index = 0;
         _updateActive = NO;
     }
@@ -1638,7 +2037,9 @@
 }
 
 - (instancetype)initWithIndex:(UInt32)index updateActive:(BOOL)updateActive {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _index = index;
         _updateActive = updateActive;
     }
@@ -1648,8 +2049,15 @@
 @end
 
 
+/// A Provisioner is a mesh node that is capable of provisioning a device to the
+/// mesh network as described in [1], and is represented by a provisioner object
+/// in the Mesh Configuration Database.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.8),
+/// 2.1.1 Provisioner object.
 @implementation SigProvisionerModel
 
+/// Get dictionary from SigProvisionerModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigProvisionerModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_provisionerName) {
@@ -1692,6 +2100,8 @@
     return dict;
 }
 
+/// Set dictionary to SigProvisionerModel object.
+/// @param dictionary SigProvisionerModel dictionary object.
 - (void)setDictionaryToSigProvisionerModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -1701,7 +2111,7 @@
         _provisionerName = dictionary[@"provisionerName"];
     }
     if ([allKeys containsObject:@"UUID"]) {
-        NSString *str = dictionary[@"UUID"];
+        NSString *str = [dictionary[@"UUID"] uppercaseString];
         if (str.length == 32) {
             _UUID = [LibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
@@ -1741,14 +2151,16 @@
 }
 
 /**
- create new provisioner by count of exist provisioners.
- 
+ create new provisioner by count of exist provisioners.（已弃用，请使用'initWithExistProvisionerMaxHighAddressUnicast:andProvisionerUUID:'）
+
  @param count count of exist provisioners
  @param provisionerUUID new provisioner's uuid
  @return SigProvisionerModel model
  */
--(instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID{
+- (instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.allocatedGroupRange = [NSMutableArray array];
         SigRangeModel *range1 = [[SigRangeModel alloc] init];
         //做法1：不同的Provisioner使用不同的组地址范围
@@ -1780,8 +2192,14 @@
     return self;
 }
 
+/// Initialize SigProvisionerModel object.
+/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @param provisionerUUID The UUID of new provisioner.
+/// @returns return `nil` when initialize SigProvisionerModel object fail.
 - (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         self.allocatedGroupRange = [NSMutableArray array];
         SigRangeModel *range1 = [[SigRangeModel alloc] init];
         //做法1：不同的Provisioner使用不同的组地址范围
@@ -1817,6 +2235,7 @@
     return self;
 }
 
+/// Get SigNodeModel object of current provisioner.
 - (nullable SigNodeModel *)node {
     SigNodeModel *tem = nil;
     NSArray *nodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.nodes];
@@ -1832,8 +2251,19 @@
 @end
 
 
+/// The unicast range object represents the range of unicast addresses that the
+/// Provisioner can allocate to new devices when they are provisioned onto the
+/// mesh network, without needing to coordinate the node additions with other
+/// Provisioners. The unicast range object contains the properties defined in Table 2.3.
+/// The group range object represents the range of group addresses that the
+/// Provisioner can allocate to newly created groups, without needing to
+/// coordinate the group additions with other Provisioners.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.9),
+/// 2.1.1.1 Unicast range object and 2.1.1.2 Group range object.
 @implementation SigRangeModel
 
+/// Get dictionary from SigRangeModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigRangeModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_lowAddress) {
@@ -1845,6 +2275,8 @@
     return dict;
 }
 
+/// Set dictionary to SigRangeModel object.
+/// @param dictionary SigRangeModel dictionary object.
 - (void)setDictionaryToSigRangeModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -1858,16 +2290,23 @@
     }
 }
 
+/// Get int number of low address.
 - (NSInteger)lowIntAddress{
     return [LibTools uint16From16String:self.lowAddress];
 }
 
+/// Get int number of hight address.
 - (NSInteger)hightIntAddress{
     return [LibTools uint16From16String:self.highAddress];
 }
 
+/// Initialize SigRangeModel object.
+/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @returns return `nil` when initialize SigRangeModel object fail.
 - (instancetype)initWithMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         //源码版本v3.3.0及以后，间隔0x0400，短地址分配范围：0x0001~0x03FF，0x0400~0x07FF，0x0800~0x0BFF，0x0C00~0x0FFF,...,0x7C00~0x7FFF.
         _lowAddress = [NSString stringWithFormat:@"%04X",maxHighAddressUnicast + 1];
         UInt16 highAddress = maxHighAddressUnicast + SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress - (maxHighAddressUnicast == 0 ? 1 : 0);
@@ -1882,8 +2321,15 @@
 @end
 
 
+/// The scene range object represents the range of scene numbers that the
+/// Provisioner can use to register new scenes in the mesh network, without
+/// needing to coordinate the allocated scene numbers with other Provisioners.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.10),
+/// 2.1.1.3 Scene range object.
 @implementation SigSceneRangeModel
 
+/// Get dictionary from SigSceneRangeModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigSceneRangeModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_firstScene) {
@@ -1895,6 +2341,8 @@
     return dict;
 }
 
+/// Set dictionary to SigSceneRangeModel object.
+/// @param dictionary SigSceneRangeModel dictionary object.
 - (void)setDictionaryToSigSceneRangeModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -1911,8 +2359,14 @@
 @end
 
 
+/// The application key object represents the state of a mesh application key
+/// that is used for securing communication at the access layer [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.11),
+/// 2.1.3 Application key object.
 @implementation SigAppkeyModel
 
+/// Get dictionary from SigAppkeyModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigAppkeyModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -1929,6 +2383,8 @@
     return dict;
 }
 
+/// Set dictionary to SigAppkeyModel object.
+/// @param dictionary SigAppkeyModel dictionary object.
 - (void)setDictionaryToSigAppkeyModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -1973,6 +2429,7 @@
     return _oldAid;
 }
 
+/// Get curent bound network key.
 - (nullable SigNetkeyModel *)getCurrentBoundNetKey {
     SigNetkeyModel *tem = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
@@ -1985,6 +2442,7 @@
     return tem;
 }
 
+/// Get hex data appkey of SigAppkeyModel object.
 - (nullable NSData *)getDataKey {
     if (_key != nil && _key.length > 0 && ![_key isEqualToString:@"00000000000000000000000000000000"]) {
         return [LibTools nsstringToHex:_key];
@@ -1992,6 +2450,7 @@
     return nil;
 }
 
+/// Get hex data old appkey of SigAppkeyModel object.
 - (nullable NSData *)getDataOldKey {
     if (_oldKey != nil && _oldKey.length > 0 && ![_oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         return [LibTools nsstringToHex:_oldKey];
@@ -1999,6 +2458,7 @@
     return nil;
 }
 
+/// Get detail string of SigAppkeyModel object.
 - (NSString *)getAppKeyDetailString {
     return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tboundNetKey:0x%04lX\tkey:0x%@\toldKey:0x%@",_name,(long)_index,(long)_boundNetKey,_key,_oldKey];
 }
@@ -2006,16 +2466,83 @@
 @end
 
 
+@implementation SigExclusionListObjectModel
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _addresses = [NSMutableArray array];
+    }
+    return self;
+}
+
+/// Get dictionary from SigExclusionListObjectModel object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfSigExclusionListObjectModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"ivIndex"] = @(_ivIndex);
+    if (self.addresses) {
+        dict[@"addresses"] = self.addresses;
+    }
+    return dict;
+}
+
+/// Set dictionary to SigExclusionListObjectModel object.
+/// @param dictionary SigExclusionListObjectModel dictionary object.
+- (void)setDictionaryToSigExclusionListObjectModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"ivIndex"]) {
+        _ivIndex = (UInt16)[dictionary[@"ivIndex"] intValue];
+    }
+    if ([allKeys containsObject:@"addresses"]) {
+        _addresses = [NSMutableArray arrayWithArray:dictionary[@"addresses"]];
+    }
+}
+
+/// Determine if the data of two SigExclusionListObjectModel is the same
+- (BOOL)isEqual:(id)object {
+    if ([object isKindOfClass:[SigExclusionListObjectModel class]]) {
+        //ivIndex is the unique identifier of SigExclusionListObjectModel.
+        return _ivIndex == ((SigExclusionListObjectModel *)object).ivIndex;
+    } else {
+        //Two SigExclusionListObjectModel object is different.
+        return NO;
+    }
+}
+
+- (nonnull id)copyWithZone:(nullable NSZone *)zone {
+    SigExclusionListObjectModel *model = [[[self class] alloc] init];
+    model.addresses = [[NSMutableArray alloc] initWithArray:self.addresses];
+    model.ivIndex = self.ivIndex;
+    return model;
+}
+
+@end
+
+
+/// The scene object represents a configured state of a mesh scene.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.22),
+/// 2.1.6 Scene object
 @implementation SigSceneModel
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _addresses = [NSMutableArray array];
         _actionList = [NSMutableArray array];
     }
     return self;
 }
 
+/// Get dictionary from SigSceneModel object.(save local)
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigSceneModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -2024,7 +2551,6 @@
     if (_number) {
         dict[@"number"] = _number;
     }
-//    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
     if (self.addresses) {
         NSMutableArray *array = [NSMutableArray array];
         NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
@@ -2045,6 +2571,8 @@
     return dict;
 }
 
+/// Set dictionary to SigSceneModel object.
+/// @param dictionary SigSceneModel dictionary object.
 - (void)setDictionaryToSigSceneModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -2089,12 +2617,16 @@
     }
 }
 
+/// Get format dictionary from SigSceneModel object.(Mesh Spec format)
+/// @returns return dictionary object.
 - (NSDictionary *)getFormatDictionaryOfSigSceneModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
         dict[@"name"] = _name;
     }
-    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
+    if (_number) {
+        dict[@"number"] = _number;
+    }
     if (self.addresses) {
         NSMutableArray *array = [NSMutableArray array];
         NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
@@ -2106,10 +2638,13 @@
     return dict;
 }
 
+/// Determine if the data of two SigSceneModel is the same
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigSceneModel class]]) {
+        //number is the unique identifier of SigSceneModel.
         return _number == ((SigSceneModel *)object).number;
     } else {
+        //Two SigSceneModel object is different.
         return NO;
     }
 }
@@ -2139,16 +2674,34 @@
 @end
 
 
+/// If a node is part of a Group, at least one model of the node is subscribed
+/// to the Group’s group address.
+/// @note   A Group may have a Parent Group. In this case, all the models
+/// of a node that are subscribed to the Group’s address are also subscribed
+/// to the Parent Group’s address.
+/// @note   For example, the Second-Floor Group is a parent of the Bedroom
+/// Group and the Guest Bedroom Group. In this case, at least one model of all
+/// the nodes of the Bedroom Group is subscribed to a group address or virtual
+/// label of the Bedroom Group and Second-Floor Group; and at least one model
+/// of all the nodes of the Guest Bedroom Group is subscribed to the group
+/// address or virtual label of the Guest Bedroom Group and the Second-Floor Group.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.21),
+/// 2.1.5 Group object.
 @implementation SigGroupModel
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _groupBrightness = 100;
         _groupTempareture = 100;
     }
     return self;
 }
 
+/// Get dictionary from SigGroupModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigGroupModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -2163,6 +2716,8 @@
     return dict;
 }
 
+/// Set dictionary to SigGroupModel object.
+/// @param dictionary SigGroupModel dictionary object.
 - (void)setDictionaryToSigGroupModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -2240,16 +2795,81 @@
     return tem;
 }
 
+- (BOOL)hasLevelCapability {
+    BOOL tem = NO;
+    NSArray *groupNodes = [NSArray arrayWithArray:self.groupDevices];
+    for (SigNodeModel *node in groupNodes) {
+        if (node.hasLevelCapability) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (BOOL)hasLumLevelCapability {
+    BOOL tem = NO;
+    NSArray *groupNodes = [NSArray arrayWithArray:self.groupDevices];
+    for (SigNodeModel *node in groupNodes) {
+        if (node.hasLumLevelCapability) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (BOOL)hasTempLevelCapability {
+    BOOL tem = NO;
+    NSArray *groupNodes = [NSArray arrayWithArray:self.groupDevices];
+    for (SigNodeModel *node in groupNodes) {
+        if (node.hasTempLevelCapability) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (BOOL)hasHueLevelCapability {
+    BOOL tem = NO;
+    NSArray *groupNodes = [NSArray arrayWithArray:self.groupDevices];
+    for (SigNodeModel *node in groupNodes) {
+        if (node.hasHueLevelCapability) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (BOOL)hasSatLevelCapability {
+    BOOL tem = NO;
+    NSArray *groupNodes = [NSArray arrayWithArray:self.groupDevices];
+    for (SigNodeModel *node in groupNodes) {
+        if (node.hasSatLevelCapability) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
 @end
 
 
+/// The node object represents a configured state of a mesh node.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.12),
+/// 2.1.4 Node object
 @implementation SigNodeModel{
     UInt16 _address;
 }
 
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _elements = [NSMutableArray array];
         _netKeys = [NSMutableArray array];
         _appKeys = [NSMutableArray array];
@@ -2268,13 +2888,11 @@
         _defaultTTL = 10;
         _secureNetworkBeacon = YES;
         _configComplete = NO;
-//        _blacklisted = NO;
         _HSL_Hue = 0;
         _HSL_Saturation = 0;
         _HSL_Lightness = 0;
         _heartbeatPub = nil;
         _heartbeatSub = nil;
-//        _sno = @"00000000";
         _subnetBridgeList = [[NSMutableArray alloc] init];
         _subnetBridgeEnable = NO;
         _directControlStatus = nil;
@@ -2284,10 +2902,10 @@
 }
 
 
-- (instancetype)initWithNode:(SigNodeModel *)node
-{
-    self = [super init];
-    if (self) {
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _features = node.features;
         _unicastAddress = node.unicastAddress;
         _secureNetworkBeacon = node.secureNetworkBeacon;
@@ -2296,7 +2914,6 @@
         _configComplete = node.configComplete;
         _vid = node.vid;
         _cid = node.cid;
-//        _blacklisted = node.blacklisted;
         _peripheralUUID = node.peripheralUUID;
         _security = node.security;
         _crpl = node.crpl;
@@ -2316,7 +2933,6 @@
         _schedulerList = [NSMutableArray arrayWithArray:node.schedulerList];
         _heartbeatPub = node.heartbeatPub;
         _heartbeatSub = node.heartbeatSub;
-//        _sno = node.sno;
         _subnetBridgeList = [[NSMutableArray alloc] initWithArray:node.subnetBridgeList];
         _subnetBridgeEnable = node.subnetBridgeEnable;
         _excluded = node.excluded;
@@ -2335,7 +2951,6 @@
     device.configComplete = self.configComplete;
     device.vid = self.vid;
     device.cid = self.cid;
-//    device.blacklisted = self.blacklisted;
     device.peripheralUUID = self.peripheralUUID;
     device.security = self.security;
     device.crpl = self.crpl;
@@ -2355,7 +2970,6 @@
     device.schedulerList = [NSMutableArray arrayWithArray:self.schedulerList];
     device.heartbeatPub = self.heartbeatPub;
     device.heartbeatSub = self.heartbeatSub;
-//    device.sno = self.sno;
     device.subnetBridgeList = [[NSMutableArray alloc] initWithArray:self.subnetBridgeList];
     device.subnetBridgeEnable = self.subnetBridgeEnable;
     device.excluded = self.excluded;
@@ -2417,6 +3031,7 @@
     return [LibTools tempToTemp100:self.temperature];
 }
 
+///update node status from api getOnlineStatusFromUUIDWithCompletation
 - (void)updateOnlineStatusWithDeviceState:(DeviceState)state bright100:(UInt8)bright100 temperature100:(UInt8)temperature100{
     _state = state;
     if (state == DeviceStateOutOfLine) {
@@ -2494,7 +3109,7 @@
 }
 
 - (NSMutableArray<NSNumber *> *)subnetBridgeServerAddress {
-    return [self getAddressesWithModelID:@(kSigModel_SubnetBridgeServer_ID)];
+    return [self getAddressesWithModelID:@(kSigModel_BridgeConfigurationServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)sceneAddress{
@@ -2539,17 +3154,17 @@
 
 - (NSString *)peripheralUUID{
     if (self.address == SigMeshLib.share.dataSource.curLocationNodeModel.address) {
-        //location node's uuid
+        //local node's uuid
         return _UUID;
     }
     //new code:use in v3.0.0 and later
     SigEncryptedModel *model = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:self.address];
     _peripheralUUID = model.peripheralUUID;
     if ((!_peripheralUUID || _peripheralUUID.length == 0) && self.address != 0) {
-        SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithAddress:self.address];
+        SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithUnicastAddress:self.address];
         _peripheralUUID = rspModel.uuid;
         if ((!_peripheralUUID || _peripheralUUID.length == 0) && self.macAddress != nil && self.macAddress.length > 0) {
-            rspModel = [SigMeshLib.share.dataSource getScanRspModelWithMac:self.macAddress];
+            rspModel = [SigMeshLib.share.dataSource getScanRspModelWithMacAddress:self.macAddress];
             _peripheralUUID = rspModel.uuid;
         }
     }
@@ -2572,7 +3187,7 @@
     }
     if (tem == nil) {
         if (self.address != 0) {
-            SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithAddress:self.address];
+            SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithUnicastAddress:self.address];
             if (model) {
                 tem = model.macAddress;
             }
@@ -2602,12 +3217,22 @@
     return tem;
 }
 
+/// The last unicast address allocated to this node. Each node's element
+/// uses its own subsequent unicast address. The first (0th) element is identified
+/// by the node's unicast address. If there are no elements, the last unicast address
+/// is equal to the node's unicast address.
 - (UInt16)lastUnicastAddress {
     // Provisioner may not have any elements
     UInt16 allocatedAddresses = _elements.count > 0 ? _elements.count : 1;
     return self.address + allocatedAddresses - 1;
 }
 
+/// Returns whether the address uses the given unicast address for one
+/// of its elements.
+///
+/// - parameter addr: Address to check.
+/// - returns: `True` if any of node's elements (or the node itself) was assigned
+///            the given address, `false` otherwise.
 - (BOOL)hasAllocatedAddr:(UInt16)addr {
     return addr >= self.address && addr <= self.lastUnicastAddress;
 }
@@ -2679,7 +3304,6 @@
     if (_cid) {
         dict[@"cid"] = _cid;
     }
-//    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
     if (_UUID) {
         if (_UUID.length == 32) {
             dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
@@ -2756,11 +3380,9 @@
         dict[@"subnetBridgeList"] = array;
     }
     dict[@"subnetBridgeEnable"] = [NSNumber numberWithBool:_subnetBridgeEnable];
-#if SUPPORTEXTENDSIONS
     if (_directControlStatus) {
         dict[@"directControlStatus"] = [_directControlStatus getDictionaryOfSigDirectControlStatus];
     }
-#endif
     return dict;
 }
 
@@ -2802,11 +3424,8 @@
     if ([allKeys containsObject:@"cid"]) {
         _cid = dictionary[@"cid"];
     }
-//    if ([allKeys containsObject:@"blacklisted"]) {
-//        _blacklisted = [dictionary[@"blacklisted"] boolValue];
-//    }
     if ([allKeys containsObject:@"UUID"]) {
-        NSString *str = dictionary[@"UUID"];
+        NSString *str = [dictionary[@"UUID"] uppercaseString];
         if (str.length == 32) {
             _UUID = [LibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
@@ -2900,13 +3519,11 @@
     if ([allKeys containsObject:@"subnetBridgeEnable"]) {
         _subnetBridgeEnable = [dictionary[@"subnetBridgeEnable"] boolValue];
     }
-#if SUPPORTEXTENDSIONS
     if ([allKeys containsObject:@"directControlStatus"]) {
         SigDirectControlStatus *tem = [[SigDirectControlStatus alloc] init];
         [tem setDictionaryToSigDirectControlStatus:dictionary[@"directControlStatus"]];
         _directControlStatus = tem;
     }
-#endif
 }
 
 - (NSDictionary *)getFormatDictionaryOfSigNodeModel {
@@ -2931,7 +3548,6 @@
     if (_cid) {
         dict[@"cid"] = _cid;
     }
-//    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
     if (_UUID) {
         if (_UUID.length == 32) {
             dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
@@ -3149,15 +3765,30 @@
                 NSArray *models = [NSArray arrayWithArray:element.models];
                 for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == modelID.intValue) {
-                        //[NSString]->[NSNumber]
+                        //计算组地址
+                        UInt16 groupAddress = groupID.intValue;
+                        if (modelID.intValue == kSigModel_GenericLevelServer_ID) {
+                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLHueServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 2;
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLSaturationServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 3;
+                            }
+                        }
+                        
+                        //[NSString]->[NSNumber]，因为如果存储的组号不是标准的长度为4的字符串，就会出现匹配组号移除的情况。
                         NSMutableArray *tem = [NSMutableArray array];
                         NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
                         for (NSString *groupIDString in subscribe) {
                             [tem addObject:@([LibTools uint16From16String:groupIDString])];
                         }
                         if (![tem containsObject:groupID]) {
-                            [modelIDModel.subscribe addObject:[NSString stringWithFormat:@"%04X",groupID.intValue]];
+                            [modelIDModel.subscribe addObject:[SigHelper.share getUint16String:groupAddress]];
                         }
+                        break;
                     }
                 }
             }
@@ -3175,15 +3806,30 @@
                 NSArray *models = [NSArray arrayWithArray:element.models];
                 for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == modelID.intValue) {
-                        //[NSString]->[NSNumber]
+                        //计算组地址
+                        UInt16 groupAddress = groupID.intValue;
+                        if (modelID.intValue == kSigModel_GenericLevelServer_ID) {
+                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLHueServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 2;
+                            } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLSaturationServer_ID]]) {
+                                groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 3;
+                            }
+                        }
+                        
+                        //[NSString]->[NSNumber]，因为如果存储的组号不是标准的长度为4的字符串，就会出现匹配组号移除的情况。
                         NSMutableArray *tem = [NSMutableArray array];
                         NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
                         for (NSString *groupIDString in subscribe) {
                             [tem addObject:@([LibTools uint16From16String:groupIDString])];
                         }
-                        if ([tem containsObject:groupID]) {
-                            [modelIDModel.subscribe removeObjectAtIndex:[tem indexOfObject:groupID]];
+                        if ([tem containsObject:@(groupAddress)]) {
+                            [modelIDModel.subscribe removeObjectAtIndex:[tem indexOfObject:@(groupAddress)]];
                         }
+                        break;
                     }
                 }
             }
@@ -3257,7 +3903,7 @@
 
 ///返回是否支持Direct Forwarding功能
 - (BOOL)hasDirectForwardingFunction {
-    return [self getAddressesWithModelID:@(kSigModel_DF_CFG_S_ID)].count >= 0;
+    return [self getAddressesWithModelID:@(kSigModel_DirectedForwardingConfigurationServer_ID)].count >= 0;
 }
 
 ///返回是否打开了publish功能
@@ -3353,16 +3999,16 @@
         } else {
             level = message.level;
         }
-        UInt8 lum = [SigHelper.share getUInt8LumFromSInt16Level:level];
+        UInt8 lum = [LibTools levelToLum:level];
         if (source == self.address) {
             //lum
-            UInt16 lightness = [SigHelper.share getUint16LightnessFromUInt8Lum:lum];
+            UInt16 lightness = [LibTools lumToLightness:lum];
             self.brightness = lightness;
             self.HSL_Lightness = lightness;//对于HSL设备，lum改变则HSL_Lightness也需要改变。
             self.state = self.brightness != 0 ? DeviceStateOn : DeviceStateOff;
         } else if (source == self.temperatureAddresses.firstObject.intValue) {
             //temp
-            UInt16 temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:lum];
+            UInt16 temperature = [LibTools temp100ToTemp:lum];
             self.temperature = temperature;
         } else {
             TeLogWarn(@"source address is Undefined.");
@@ -3382,8 +4028,8 @@
     } else if ([responseMessage isMemberOfClass:[SigTelinkOnlineStatusMessage class]]) {
         SigTelinkOnlineStatusMessage *message = (SigTelinkOnlineStatusMessage *)responseMessage;
         self.state = message.state;
-        self.brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:message.brightness];
-        self.temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:message.temperature];
+        self.brightness = [LibTools lumToLightness:message.brightness];
+        self.temperature = [LibTools temp100ToTemp:message.temperature];
     } else if ([responseMessage isMemberOfClass:[SigLightLightnessLastStatus class]]) {
         SigLightLightnessLastStatus *message = (SigLightLightnessLastStatus *)responseMessage;
         self.brightness = message.lightness;
@@ -3430,70 +4076,73 @@
     }
 }
 
+- (BOOL)hasLevelCapability {
+    return [self getModelIDModelWithModelID:kSigModel_GenericLevelServer_ID] != nil;
+}
+
+- (BOOL)hasLumLevelCapability {
+    return [self getElementModelWithModelIds:@[@(kSigModel_LightCTLServer_ID), @(kSigModel_GenericLevelServer_ID)]];
+}
+
+- (BOOL)hasTempLevelCapability {
+    return [self getElementModelWithModelIds:@[@(kSigModel_LightCTLTemperatureServer_ID), @(kSigModel_GenericLevelServer_ID)]];
+}
+
+- (BOOL)hasHueLevelCapability {
+    return [self getElementModelWithModelIds:@[@(kSigModel_LightHSLHueServer_ID), @(kSigModel_GenericLevelServer_ID)]];
+}
+
+- (BOOL)hasSatLevelCapability {
+    return [self getElementModelWithModelIds:@[@(kSigModel_LightHSLSaturationServer_ID), @(kSigModel_GenericLevelServer_ID)]];
+}
+
+- (SigElementModel *)getElementModelWithModelIds:(NSArray <NSNumber *>*)modelIds {
+    SigElementModel *tem = nil;
+    NSArray *elements = [NSArray arrayWithArray:self.elements];
+    for (SigElementModel *ele in elements) {
+        NSMutableArray *mArray = [NSMutableArray array];
+        NSArray *models = [NSArray arrayWithArray:ele.models];
+        for (SigModelIDModel *model in models) {
+            [mArray addObject:@(model.getIntModelID)];
+        }
+        BOOL mate = YES;
+        for (NSNumber *m in modelIds) {
+            if (![mArray containsObject:m]) {
+                mate = NO;
+                break;
+            }
+        }
+        if (mate) {
+            tem = ele;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (void)deleteNetKeyDataFromNode:(SigNodeKeyModel *)netKey {
+    //need delete netkey in _netKeys and delete appkey bound this netkey in _appKeys.
+    [_netKeys removeObject:netKey];
+    NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+    for (SigNodeKeyModel *key in appKeys) {
+        SigAppkeyModel *appkey = [SigDataSource.share getAppkeyModelWithAppkeyIndex:key.index];
+        if (appkey.boundNetKey == netKey.index) {
+            [_appKeys removeObject:key];
+        }
+    }
+}
+
 @end
 
 
-@implementation SigExclusionModel
-
-- (instancetype)init {
-    if (self = [super init]) {
-        _addresses = [NSMutableArray array];
-    }
-    return self;
-}
-
-- (NSDictionary *)getDictionaryOfSigExclusionModel {
-    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"ivIndex"] = [NSNumber numberWithInteger:_ivIndex];
-    if (self.addresses) {
-        NSMutableArray *array = [NSMutableArray array];
-        NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
-        for (NSString *str in addresses) {
-            [array addObject:str];
-        }
-        dict[@"addresses"] = array;
-    }
-    return dict;
-}
-
-- (void)setDictionaryToSigExclusionModel:(NSDictionary *)dictionary {
-    if (dictionary == nil || dictionary.allKeys.count == 0) {
-        return;
-    }
-    NSArray *allKeys = dictionary.allKeys;
-    if ([allKeys containsObject:@"ivIndex"]) {
-        _ivIndex = [dictionary[@"ivIndex"] integerValue];
-    }
-    if ([allKeys containsObject:@"addresses"]) {
-        NSMutableArray *addresses = [NSMutableArray array];
-        NSArray *array = dictionary[@"addresses"];
-        for (NSString *str in array) {
-            [addresses addObject:str];
-        }
-        _addresses = addresses;
-    }
-}
-
-- (BOOL)isEqual:(id)object{
-    if ([object isKindOfClass:[SigExclusionModel class]]) {
-        return _ivIndex == ((SigExclusionModel *)object).ivIndex;
-    } else {
-        return NO;
-    }
-}
-
-- (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    SigExclusionModel *model = [[[self class] alloc] init];
-    model.ivIndex = self.ivIndex;
-    model.addresses = [[NSMutableArray alloc] initWithArray:self.addresses];
-    return model;
-}
-
-@end
-
-
+/// The relay retransmit object represents the parameters of the retransmissions of network layer
+/// messages relayed by a mesh node [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.16),
+/// 2.1.4.4 Relay retransmit object.
 @implementation SigRelayretransmitModel
 
+/// get dictionary from SigRelayretransmitModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigRelayretransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"count"] = @(_relayRetransmitCount);
@@ -3501,6 +4150,8 @@
     return dict;
 }
 
+/// Set dictionary to SigRelayretransmitModel object.
+/// @param dictionary SigRelayretransmitModel dictionary object.
 - (void)setDictionaryToSigRelayretransmitModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -3522,8 +4173,11 @@
     _relayRetransmitIntervalSteps = (UInt8)(intervalOfJsonFile / 10) - 1;
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _relayRetransmitCount = 5;
         _relayRetransmitIntervalSteps = 2;
     }
@@ -3533,8 +4187,14 @@
 @end
 
 
+/// The network transmit object represents the parameters of the transmissions of network
+/// layer messages originating from a mesh node [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.16),
+/// 2.1.4.3 Network transmit object.
 @implementation SigNetworktransmitModel
 
+/// get dictionary from SigNetworktransmitModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigNetworktransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"count"] = @(_networkTransmitCount);
@@ -3542,6 +4202,8 @@
     return dict;
 }
 
+/// Set dictionary to SigNetworktransmitModel object.
+/// @param dictionary SigNetworktransmitModel dictionary object.
 - (void)setDictionaryToSigNetworktransmitModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -3563,13 +4225,11 @@
     _networkTransmitIntervalSteps = (UInt8)(intervalOfJsonFile / 10) - 1;
 }
 
-/// The interval in as `TimeInterval` in seconds.
-//- (NSTimeInterval)timeInterval {
-//    return (NSTimeInterval)_interval / 1000.0;
-//}
-
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _networkTransmitCount = 5;
         _networkTransmitIntervalSteps = 2;
     }
@@ -3579,6 +4239,10 @@
 @end
 
 
+/// The features object represents the functionality of a mesh node that is determined by the set
+/// features that the node supports [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.15),
+/// 2.1.4.2 Features object.
 @implementation SigNodeFeatures
 
 - (UInt16)rawValue {
@@ -3598,8 +4262,11 @@
     return bitField;
 }
 
+/// Initialize
 - (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _relayFeature = 2;
         _proxyFeature = 2;
         _friendFeature = 2;
@@ -3609,7 +4276,9 @@
 }
 
 - (instancetype)initWithRawValue:(UInt16)rawValue {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _relayFeature = (rawValue & 0x01) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
         _proxyFeature = (rawValue & 0x02) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
         _friendFeature = (rawValue & 0x04) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
@@ -3619,7 +4288,9 @@
 }
 
 - (instancetype)initWithRelay:(SigNodeFeaturesState)relayFeature proxy:(SigNodeFeaturesState)proxyFeature friend:(SigNodeFeaturesState)friendFeature lowPower:(SigNodeFeaturesState)lowPowerFeature {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _relayFeature = relayFeature;
         _proxyFeature = proxyFeature;
         _friendFeature = friendFeature;
@@ -3628,6 +4299,8 @@
     return self;
 }
 
+/// get dictionary from SigFeatureModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigFeatureModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"proxy"] = @(_proxyFeature);
@@ -3637,6 +4310,8 @@
     return dict;
 }
 
+/// Set dictionary to SigFeatureModel object.
+/// @param dictionary SigFeatureModel dictionary object.
 - (void)setDictionaryToSigFeatureModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -3659,16 +4334,24 @@
 @end
 
 
+/// The node network key object represents the state of a network key distributed to a mesh
+/// node by a Mesh Manager.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.15),
+/// 2.1.4.1 Node network key object.
 @implementation SigNodeKeyModel
 
 - (instancetype)initWithIndex:(UInt16)index updated:(bool)updated {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _index = index;
         _updated = updated;
     }
     return self;
 }
 
+/// get dictionary from SigNodeKeyModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigNodeKeyModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"index"] = @(_index);
@@ -3676,6 +4359,8 @@
     return dict;
 }
 
+/// Set dictionary to SigNodeKeyModel object.
+/// @param dictionary SigNodeKeyModel dictionary object.
 - (void)setDictionaryToSigNodeKeyModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -3689,10 +4374,13 @@
     }
 }
 
+/// Determine if the data of two SigNodeKeyModel is the same
 - (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SigNodeKeyModel class]]) {
+        //index is the unique identifier of SigNodeKeyModel.
         return _index == ((SigNodeKeyModel *)object).index;
     } else {
+        //Two SigNodeKeyModel object is different.
         return NO;
     }
 }
@@ -3700,17 +4388,25 @@
 @end
 
 
+/// The element object represents a mesh element that is defined as an addressable entity within
+/// a mesh node [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.17),
+/// 2.1.4.6 Element object.
 @implementation SigElementModel
 
 - (instancetype)init{
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _models = [NSMutableArray array];
     }
     return self;
 }
 
 - (instancetype)initWithLocation:(SigLocation)location {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         [self setSigLocation:location];
         _models = [NSMutableArray array];
         
@@ -3722,7 +4418,9 @@
 }
 
 - (instancetype)initWithCompositionData:(NSData *)compositionData offset:(int *)offset {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         // Composition Data must have at least 4 bytes: 2 for Location and one for NumS and NumV.
         if (compositionData && compositionData.length < *offset + 4) {
             TeLogError(@"Composition Data must have at least 4 bytes.");
@@ -3799,6 +4497,8 @@
     self.location = [SigHelper.share getNodeAddressString:sigLocation];
 }
 
+/// get dictionary from SigElementModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigElementModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -3818,6 +4518,8 @@
     return dict;
 }
 
+/// Set dictionary to SigElementModel object.
+/// @param dictionary SigElementModel dictionary object.
 - (void)setDictionaryToSigElementModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -3874,14 +4576,29 @@
     return mData;
 }
 
+- (BOOL)hasModelIdString:(NSString *)modelIdString {
+    BOOL tem = NO;
+    for (SigModelIDModel *model in self.models) {
+        if ([model.modelId isEqualToString:modelIdString]) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
 @end
 
 
+/// The model object represents a configured state of a mesh model.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.17),
+/// 2.1.4.6.1 Model object.
 @implementation SigModelIDModel
 
 - (instancetype)init{
-    self = [super init];
-    if (self) {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _bind = [NSMutableArray array];
         _subscribe = [NSMutableArray array];
     }
@@ -3922,7 +4639,9 @@
 }
 
 - (instancetype)initWithSigModelId:(UInt16)sigModelId {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _modelId = [SigHelper.share getUint16String:sigModelId];
         _subscribe = [NSMutableArray array];
         _bind = [NSMutableArray array];
@@ -3932,7 +4651,9 @@
 }
 
 - (instancetype)initWithVendorModelId:(UInt32)vendorModelId {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _modelId = [SigHelper.share getUint32String:vendorModelId];
         _subscribe = [NSMutableArray array];
         _bind = [NSMutableArray array];
@@ -3977,20 +4698,20 @@
         modelID == kSigModel_ConfigurationClient_ID ||
         modelID == kSigModel_RemoteProvisionServer_ID ||
         modelID == kSigModel_RemoteProvisionClient_ID ||
-        modelID == kSigModel_DF_CFG_S_ID ||
-        modelID == kSigModel_DF_CFG_C_ID ||
-        modelID == kSigModel_SubnetBridgeServer_ID ||
-        modelID == kSigModel_SubnetBridgeClient_ID ||
-        modelID == kSigModel_PrivateBeaconServer_ID ||
-        modelID == kSigModel_PrivateBeaconClient_ID ||
-        modelID == kSigModel_ON_DEMAND_PROXY_S_ID ||
-        modelID == kSigModel_ON_DEMAND_PROXY_C_ID ||
-        modelID == kSigModel_SAR_CFG_S_ID ||
-        modelID == kSigModel_SAR_CFG_C_ID ||
-        modelID == kSigModel_OP_AGG_S_ID ||
-        modelID == kSigModel_OP_AGG_C_ID ||
-        modelID == kSigModel_LARGE_CPS_S_ID ||
-        modelID == kSigModel_LARGE_CPS_C_ID) {
+        modelID == kSigModel_DirectedForwardingConfigurationServer_ID ||
+        modelID == kSigModel_DirectedForwardingConfigurationClient_ID ||
+        modelID == kSigModel_BridgeConfigurationServer_ID ||
+        modelID == kSigModel_BridgeConfigurationClient_ID ||
+        modelID == kSigModel_MeshPrivateBeaconServer_ID ||
+        modelID == kSigModel_MeshPrivateBeaconClient_ID ||
+        modelID == kSigModel_OnDemandPrivateProxyServer_ID ||
+        modelID == kSigModel_OnDemandPrivateProxyClient_ID ||
+        modelID == kSigModel_SARConfigurationServer_ID ||
+        modelID == kSigModel_SARConfigurationClient_ID ||
+        modelID == kSigModel_OpcodesAggregatorServer_ID ||
+        modelID == kSigModel_OpcodesAggregatorClient_ID ||
+        modelID == kSigModel_LargeCompositionDataServer_ID ||
+        modelID == kSigModel_LargeCompositionDataClient_ID) {
         tem = YES;
     }
     return tem;
@@ -4125,6 +4846,8 @@
     return has;
 }
 
+/// get dictionary from SigModelIDModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigModelIDModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_modelId) {
@@ -4152,6 +4875,8 @@
     return dict;
 }
 
+/// Set dictionary to SigModelIDModel object.
+/// @param dictionary SigModelIDModel dictionary object.
 - (void)setDictionaryToSigModelIDModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4186,12 +4911,16 @@
 @end
 
 
+/// The publish object represents parameters that define how the messages are published
+/// by a mesh model [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.18),
+/// 2.1.4.6.1.1 Publish object.
 @implementation SigPublishModel
 
-- (instancetype)init
-{
-    self = [super init];
-    if (self) {
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
         _index = 0;
         _credentials = 0;
         _ttl = 0;
@@ -4205,6 +4934,8 @@
     return self;
 }
 
+/// get dictionary from SigPublishModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigPublishModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_address) {
@@ -4222,6 +4953,8 @@
     return dict;
 }
 
+/// Set dictionary to SigPublishModel object.
+/// @param dictionary SigPublishModel dictionary object.
 - (void)setDictionaryToSigPublishModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4256,8 +4989,14 @@
 @end
 
 
+/// The retransmit object is used to describe the number of times a message is published and the
+/// interval between retransmissions of the published messages.
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.19)x  xXx,
+/// 2.1.4.6.1.3 Retransmit object.
 @implementation SigRetransmitModel
 
+/// get dictionary from SigRetransmitModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigRetransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"count"] = @(_count);
@@ -4265,6 +5004,8 @@
     return dict;
 }
 
+/// Set dictionary to SigRetransmitModel object.
+/// @param dictionary SigRetransmitModel dictionary object.
 - (void)setDictionaryToSigRetransmitModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4281,8 +5022,15 @@
 @end
 
 
+/// The publish period object determines the interval at which messages are published by a
+/// model and is defined by two values: the number of steps and step resolution.
+/// by a mesh model [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.19)x  xXx,
+/// 2.1.4.6.1.2 Publish period object.
 @implementation SigPeriodModel
 
+/// get dictionary from SigPeriodModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigPeriodModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"numberOfSteps"] = @(_numberOfSteps);
@@ -4290,6 +5038,8 @@
     return dict;
 }
 
+/// Set dictionary to SigPeriodModel object.
+/// @param dictionary SigPeriodModel dictionary object.
 - (void)setDictionaryToSigPeriodModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4306,8 +5056,14 @@
 @end
 
 
+/// The heartbeat publication object represents parameters that define the sending of periodic
+/// Heartbeat transport control messages [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.20)x  xXx,
+/// 2.1.4.6.1.3 Retransmit object.
 @implementation SigHeartbeatPubModel
 
+/// get dictionary from SigHeartbeatPubModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigHeartbeatPubModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_address) {
@@ -4322,6 +5078,8 @@
     return dict;
 }
 
+/// Set dictionary to SigHeartbeatPubModel object.
+/// @param dictionary SigHeartbeatPubModel dictionary object.
 - (void)setDictionaryToSigHeartbeatPubModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4347,8 +5105,14 @@
 @end
 
 
+/// The heartbeat subscription object represents parameters that define the receiving of periodical
+/// Heartbeat transport control messages [1].
+/// @note   - seeAlso: MshCDB_1.0.1.pdf (page.21)x  xXx,
+/// 2.1.4.8 Heartbeat subscription object.
 @implementation SigHeartbeatSubModel
 
+/// get dictionary from SigHeartbeatSubModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSigHeartbeatSubModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_source) {
@@ -4361,6 +5125,8 @@
     return dict;
 }
 
+/// Set dictionary to SigHeartbeatSubModel object.
+/// @param dictionary SigHeartbeatSubModel dictionary object.
 - (void)setDictionaryToSigHeartbeatSubModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4383,7 +5149,9 @@
 @implementation SigOOBModel
 
 - (instancetype)initWithSourceType:(OOBSourceType)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _sourceType = sourceType;
         _UUIDString = UUIDString;
         _OOBString = OOBString;
@@ -4398,17 +5166,22 @@
     _lastEditTimeString = [LibTools getNowTimeTimeString];
 }
 
+/// Determine if the data of two SigOOBModel is the same
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigOOBModel class]]) {
+        //UUIDString is the unique identifier of SigOOBModel.
         return [_UUIDString isEqualToString:((SigOOBModel *)object).UUIDString];
     } else {
+        //Two SigOOBModel object is different.
         return NO;
     }
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _sourceType = [coder decodeIntegerForKey:kSigOOBModel_sourceType_key];
         _UUIDString = [coder decodeObjectForKey:kSigOOBModel_UUIDString_key];
         _OOBString = [coder decodeObjectForKey:kSigOOBModel_OOBString_key];
@@ -4430,6 +5203,8 @@
 
 @implementation SigSubnetBridgeModel
 
+/// get dictionary from SubnetBridgeModel object.
+/// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSubnetBridgeModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"directions"] = [NSNumber numberWithBool:self.directions];
@@ -4440,6 +5215,8 @@
     return dict;
 }
 
+/// Set dictionary to SubnetBridgeModel object.
+/// @param dictionary SubnetBridgeModel dictionary object.
 - (void)setDictionaryToSubnetBridgeModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
@@ -4463,7 +5240,9 @@
 }
 
 - (instancetype)initWithDirections:(SigDirectionsFieldValues)directions netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2 {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _directions = directions;
         _netKeyIndex1 = netKeyIndex1;
         _netKeyIndex2 = netKeyIndex2;
@@ -4473,8 +5252,15 @@
     return self;
 }
 
+/**
+ * @brief   Initialize SigSubnetBridgeModel object.
+ * @param   parameters    the hex data of SigSubnetBridgeModel.
+ * @return  return `nil` when initialize SigSubnetBridgeModel object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length >= 8) {
             UInt8 tem8 = 0;
             UInt16 tem16 = 0;
@@ -4494,12 +5280,14 @@
     return self;
 }
 
+/// Get description string.
 - (NSString *)getDescription {
     NSString *tem = [NSString stringWithFormat:@"Direction:%d(%@)\nNetKeyIndex1:0x%04X\nNetKeyIndex2:0x%04X\nAddress1:0x%04X\nAddress2:0x%04X",_directions,[SigHelper.share getDetailOfSigDirectionsFieldValues:_directions],_netKeyIndex1,_netKeyIndex2,_address1,_address2];
     
     return tem;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0;
@@ -4528,15 +5316,24 @@
 @implementation SigBridgeSubnetModel
 
 - (instancetype)initWithNetKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _netKeyIndex1 = netKeyIndex1;
         _netKeyIndex2 = netKeyIndex2;
     }
     return self;
 }
 
+/**
+ * @brief   Initialize SigBridgeSubnetModel object.
+ * @param   parameters    the hex data of SigBridgeSubnetModel.
+ * @return  return `nil` when initialize SigBridgeSubnetModel object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length >= 3) {
             UInt32 tem32 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -4548,6 +5345,7 @@
     return self;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt32 tem32 = 0;
@@ -4564,7 +5362,9 @@
 @implementation SigBridgedAddressesModel
 
 - (instancetype)initWithAddress1:(UInt16)address1 address2:(UInt16)address2 directions:(SigDirectionsFieldValues)directions {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _address1 = address1;
         _address2 = address2;
         _directions = directions;
@@ -4572,8 +5372,15 @@
     return self;
 }
 
+/**
+ * @brief   Initialize SigBridgedAddressesModel object.
+ * @param   parameters    the hex data of SigBridgedAddressesModel.
+ * @return  return `nil` when initialize SigBridgedAddressesModel object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length >= 8) {
             UInt8 tem8 = 0;
             UInt16 tem16 = 0;
@@ -4589,6 +5396,7 @@
     return self;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0;
@@ -4611,7 +5419,9 @@
 @implementation SigOpcodesAggregatorItemModel
 
 - (instancetype)initWithLengthFormat:(BOOL)lengthFormat lengthShort:(UInt8)lengthShort lengthLong:(UInt8)lengthLong opcodeAndParameters:(NSData *)opcodeAndParameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _lengthFormat = lengthFormat;
         _lengthShort = lengthShort;
         _lengthLong = lengthLong;
@@ -4621,7 +5431,9 @@
 }
 
 - (instancetype)initWithSigMeshMessage:(SigMeshMessage *)meshMessage {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         NSInteger parametersLength = meshMessage.parameters.length;
         NSInteger opcodeAndParametersLength = parametersLength;
         if (meshMessage.opCode <= 0xFF) {
@@ -4649,7 +5461,9 @@
 }
 
 - (instancetype)initWithOpcodeAndParameters:(NSData *)opcodeAndParameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (opcodeAndParameters && opcodeAndParameters.length > 0) {
             UInt8 tem8 = 0;
             Byte *dataByte = (Byte *)opcodeAndParameters.bytes;
@@ -4674,6 +5488,7 @@
     return self;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0;
@@ -4702,7 +5517,9 @@
 @implementation SigOpCodeAndParametersModel
 
 - (instancetype)initWithOpCodeAndParameters:(NSData *)opCodeAndParameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         // At least 1 octet is required.
         if (opCodeAndParameters == nil || opCodeAndParameters.length == 0) {
             TeLogError(@"opCodeAndParameters has not data.");
@@ -4770,8 +5587,15 @@
 
 @implementation GattDateTimeModel
 
+/**
+ * @brief   Initialize GattDateTimeModel object.
+ * @param   parameters    the hex data of GattDateTimeModel.
+ * @return  return `nil` when initialize GattDateTimeModel object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length > 0) {
             UInt8 tem8 = 0;
             UInt16 tem16 = 0;
@@ -4806,7 +5630,9 @@
 }
 
 - (instancetype)initWithDate:(NSDate *)date {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateFormat:@"yyyy"];
         NSInteger currentYear = [[formatter stringFromDate:date] integerValue];
@@ -4832,7 +5658,9 @@
 }
 
 - (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _year = year;
         _month = month;
         _day = day;
@@ -4843,6 +5671,7 @@
     return self;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0;
@@ -4872,8 +5701,15 @@
 
 @implementation GattDayDateTimeModel
 
+/**
+ * @brief   Initialize GattDayDateTimeModel object.
+ * @param   parameters    the hex data of GattDayDateTimeModel.
+ * @return  return `nil` when initialize GattDayDateTimeModel object fail.
+ */
 - (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         if (parameters && parameters.length > 0) {
             _dateTime = [[GattDateTimeModel alloc] initWithParameters:parameters];
             if (parameters.length >= 8) {
@@ -4888,7 +5724,9 @@
 }
 
 - (instancetype)initWithDate:(NSDate *)date {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _dateTime = [[GattDateTimeModel alloc] initWithDate:date];
         NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
         NSInteger unitFlags = NSCalendarUnitWeekday ;
@@ -4905,13 +5743,16 @@
 }
 
 - (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds dayOfWeek:(GattDayOfWeek)dayOfWeek {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
+        /// Initialize self.
         _dateTime = [[GattDateTimeModel alloc] initWithYear:year month:month day:day hours:hours minutes:minutes seconds:seconds];
         _dayOfWeek = dayOfWeek;
     }
     return self;
 }
 
+/// Message parameters as Data.
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     if (_dateTime && _dateTime.parameters) {
@@ -4921,6 +5762,87 @@
     NSData *data = [NSData dataWithBytes:&tem8 length:1];
     [mData appendData:data];
     return mData;
+}
+
+@end
+
+
+@implementation SigProxyFilterModel
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _filterType = SigProxyFilerType_whitelist;
+        _addressList = [NSMutableArray arrayWithArray:@[@(0xFFFF)]];
+    }
+    return self;
+}
+
+/// get dictionary from SigProxyFilterModel object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfSigProxyFilterModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"filterType"] = @(_filterType);
+    if (_addressList) {
+        dict[@"addressList"] = _addressList;
+    }
+    return dict;
+}
+
+/// Set dictionary to SigProxyFilterModel object.
+/// @param dictionary SigProxyFilterModel dictionary object.
+- (void)setDictionaryToSigProxyFilterModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"filterType"]) {
+        _filterType = [dictionary[@"filterType"] intValue];
+    }
+    if ([allKeys containsObject:@"addressList"]) {
+        _addressList = [NSMutableArray arrayWithArray:dictionary[@"addressList"]];
+    }
+}
+
+@end
+
+
+@implementation SigNodeSeqZeroModel
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _seqAuths = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (instancetype)initWithValue:(NSNumber *)value seqAuth:(NSNumber *)seqAuth {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        _value = value;
+        _seqAuths = [NSMutableArray arrayWithObject:seqAuth];
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigNodeSequenceNumberCacheModel
+
+/// Initialize
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+    }
+    return self;
 }
 
 @end

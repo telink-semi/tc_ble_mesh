@@ -45,10 +45,19 @@ typedef enum : NSUInteger {
 
 @implementation ConnectTools
 
-+ (ConnectTools *)share{
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static ConnectTools *shareT = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareT = [[ConnectTools alloc] init];
         shareT.peripheral = nil;
         shareT.maxRssi = -127;

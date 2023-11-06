@@ -97,9 +97,12 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"tishi"] style:UIBarButtonItemStylePlain target:self action:@selector(clickPushToTipsVC)];
+    self.navigationItem.rightBarButtonItem = item;
     self.selectIndex = -1;
     self.OTAing = NO;
-    self.normalColor = kDefultColor;
+    self.otaButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.normalColor = UIColor.telinkButtonBlue;
     self.unableColor = [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
     self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid], CFSwapInt16HostToBig([LibTools uint16From16String:self.model.vid])];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
@@ -112,18 +115,17 @@
     [OTAManager.share stopOTA];
 }
 
+- (void)clickPushToTipsVC {
+    UIViewController *vc = [UIStoryboard initVC:@"TipsVC" storyboard:@"Setting"];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
 - (void)showOTAProgress:(float)progress{
     NSString *tips = [NSString stringWithFormat:@"OTA:%.1f%%", progress];
     if (progress == 100) {
         tips = [tips stringByAppendingString:@",reboot..."];
     }
     [self showOTATips:tips];
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 - (void)showOTATips:(NSString *)message{
@@ -157,6 +159,7 @@
     ChooseBinCell *cell = (ChooseBinCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ChooseBinCellID forIndexPath:indexPath];
     NSString *binString = self.source[indexPath.row];
     NSData *data = [OTAFileSource.share getDataWithBinName:binString];
+    cell.nameLabel.numberOfLines = 0;
     if (data && data.length) {
         UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
         vid = CFSwapInt16HostToBig(vid);
