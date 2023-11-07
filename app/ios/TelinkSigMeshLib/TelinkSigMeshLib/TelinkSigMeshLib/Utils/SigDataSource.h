@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigExclusionListObjectModel, SigIvIndex,SigBaseMeshMessage, SigForwardingTableModel;
+@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigExclusionListObjectModel, SigIvIndex,SigBaseMeshMessage, SigForwardingTableModel,SigDataSource;
 
 @protocol SigDataSourceDelegate <NSObject>
 @optional
@@ -45,6 +45,14 @@ NS_ASSUME_NONNULL_BEGIN
  * @note    The address of the last node may be out of range.
  */
 - (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner;
+
+/**
+ * @brief   Callback called when the mesh network JOSN data had been changed.
+ * APP need update the json to cloud at this time!
+ * @param   network new mesh network JSON data.
+ * @note    When the SDK calls `saveLocationData`, it will also notify the APP through this callback method.
+ */
+- (void)onMeshNetworkUpdated:(SigDataSource *)network;
 
 @end
 
@@ -156,8 +164,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
 /// nodes should show in HomeViewController
 @property (nonatomic,strong, nullable) NSMutableArray <SigNodeModel *>*curNodes;
-/// There is the modelID that show in ModelIDListViewController, it is using when app use whiteList at keybind.
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*keyBindModelIDs;
 /// modelID of subscription group
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*defaultGroupSubscriptionModels;
 /// default nodeInfo for fast bind.
@@ -212,7 +218,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *ivIndex;
 /// v3.3.3.6及之后的版本添加，cache属性，不导出分享的JSON，也不缓存于本地的JSON，只单独缓存于kLocationIvIndexAndSequenceNumberDictionary_key这个字典里面。
 @property (nonatomic, copy) NSString *sequenceNumber;
-@property (nonatomic,assign) UInt32 ivIndexUInt32;
+//@property (nonatomic,assign) UInt32 ivIndexUInt32;
 @property (nonatomic,assign) UInt32 sequenceNumberUInt32;
 
 /// v3.3.3.6及之后的版本添加，
@@ -405,6 +411,10 @@ NS_ASSUME_NONNULL_BEGIN
  * @note    1.set _curNodes to nil. 2.set node of _nodes to DeviceStateOutOfLine.
  */
 - (void)setAllDevicesOutline;
+
+/// Manager mesh network, switch new mesh.
+/// @param dict new Mesh Dictionary
+- (void)switchToNewMeshDictionary:(NSDictionary *)dict;
 
 /**
  * @brief   Save Current SigDataSource to local by NSUserDefaults.
@@ -733,6 +743,72 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (UInt16)getExtendGroupAddressWithBaseGroupAddress:(UInt16)baseGroupAddress;
 
+#pragma mark - Special handling: store the PrivateGattProxy+ConfigGattProxy+PrivateBeacon+ConfigBeacon of node in current mesh
+
+/**
+ * @brief   Get loca PrivateGattProxy state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  PrivateGattProxy state.
+ * @note    This API is used to get the value of PrivateGattProxy state stored locally.
+ */
+- (BOOL)getLocalPrivateGattProxyStateOfUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Get loca ConfigGattProxy state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  ConfigGattProxy state.
+ * @note    This API is used to get the value of ConfigGattProxy state stored locally.
+ */
+- (BOOL)getLocalConfigGattProxyStateOfUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Get loca PrivateBeacon state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  PrivateBeacon state.
+ * @note    This API is used to get the value of PrivateBeacon state stored locally.
+ */
+- (BOOL)getLocalPrivateBeaconStateOfUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Get loca ConfigBeacon state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  ConfigBeacon state.
+ * @note    This API is used to get the value of ConfigBeacon state stored locally.
+ */
+- (BOOL)getLocalConfigBeaconStateOfUnicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Set loca PrivateGattProxy state.
+ * @param   state    the PrivateGattProxy state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of PrivateGattProxy state stored locally.
+ */
+- (void)setLocalPrivateGattProxyState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Set loca ConfigGattProxy state.
+ * @param   state    the ConfigGattProxy state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of ConfigGattProxy state stored locally.
+ */
+- (void)setLocalConfigGattProxyState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Set loca PrivateBeacon state.
+ * @param   state    the PrivateBeacon state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of PrivateBeacon state stored locally.
+ */
+- (void)setLocalPrivateBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
+
+/**
+ * @brief   Set loca ConfigBeacon state.
+ * @param   state    the ConfigBeacon state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of ConfigBeacon state stored locally.
+ */
+- (void)setLocalConfigBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
+
 #pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
 
 /**
@@ -786,27 +862,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)getCurrentProvisionerUUID;
 
 #pragma mark - deprecated API
-
-/**
- * @brief   Add the meshUUID to the cache of visitor meshUUID List.
- * @param   meshUUID    the identifier of mesh.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (void)addMeshUUIDToVisitorListCache:(NSString *_Nonnull)meshUUID;
-
-/**
- * @brief   Remove the meshUUID from the cache of visitor meshUUID List.
- * @param   meshUUID    the identifier of mesh.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (void)removeMeshUUIDFromVisitorListCache:(NSString *_Nonnull)meshUUID;
-
-/**
- * @brief   Get whether the current provisioner is an administrator of current Mesh.
- * @return  `YES` means visitor, `NO` means administrator.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (BOOL)curMeshIsVisitor;
 
 /**
  * @brief   Get the node object through the bluetooth macAddress of node.
