@@ -51,11 +51,11 @@
 }
 
 
-#pragma mark 4.3.12.1 PRIVATE_BEACON_GET, opcode:0xB712
+#pragma mark 4.3.12.2 PRIVATE_BEACON_SET, opcode:0xB712
 
 
 /**
- * @brief   PRIVATE_BEACON_GET.
+ * @brief   PRIVATE_BEACON_SET.
  * @param   privateBeacon    New Private Beacon state.
  * The Private_Beacon field shall identify the value of the new Private Beacon
  * state (see Section 4.2.44.1) of a node.
@@ -71,10 +71,31 @@
  * @param   resultCallback    callback when all the response message had response or timeout.
  * @return  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
  * @note    - seeAlso: MshPRTd1.1r20_PRr00.pdf (page.415),
- * 4.3.12.1 PRIVATE_BEACON_GET.
+ * 4.3.12.2 PRIVATE_BEACON_SET.
  */
 + (SigMessageHandle *)privateBeaconSetWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps destination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigPrivateBeaconSet *message = [[SigPrivateBeaconSet alloc] initWithPrivateBeacon:privateBeacon randomUpdateIntervalSteps:randomUpdateIntervalSteps];
+    SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
+    command.responsePrivateBeaconStatusCallBack = successCallback;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
+/**
+ * @brief   PRIVATE_BEACON_SET.
+ * @param   privateBeacon    New Private Beacon state.
+ * The Private_Beacon field shall identify the value of the new Private Beacon
+ * state (see Section 4.2.44.1) of a node.
+ * @param   destination    the unicastAddress of destination.
+ * @param   retryCount    the retryCount of this command.
+ * @param   responseMaxCount    the max response status message count of this command.
+ * @param   successCallback    callback when node response the status message.
+ * @param   resultCallback    callback when all the response message had response or timeout.
+ * @return  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
+ * @note    - seeAlso: MshPRTd1.1r20_PRr00.pdf (page.415),
+ * 4.3.12.2 PRIVATE_BEACON_SET.
+ */
++ (SigMessageHandle *)privateBeaconSetWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon destination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateBeaconSet *message = [[SigPrivateBeaconSet alloc] initWithPrivateBeacon:privateBeacon];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responsePrivateBeaconStatusCallBack = successCallback;
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];

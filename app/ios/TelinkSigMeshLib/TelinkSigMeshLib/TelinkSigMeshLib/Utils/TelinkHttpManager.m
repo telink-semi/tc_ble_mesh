@@ -144,26 +144,26 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 }
 
 /// 3.check firmware
-/// @param firewareIDString current firmware id
+/// @param firmwareIDString current firmware id
 /// @param updateURI update URI from the response of firmwareUpdateInformationGet
 /// @param block result callback
-+ (TelinkHttpRequest *)firmwareCheckRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
++ (TelinkHttpRequest *)firmwareCheckRequestWithFirmwareIDString:(NSString *)firmwareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
     TelinkHttpRequest *req = [[TelinkHttpRequest alloc] init];
     req.httpBlock = block;
     NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
-    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/check?cfwid=%@",updateURI,firewareIDString] withHeader:header withContent:nil];
+    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/check?cfwid=%@",updateURI,firmwareIDString] withHeader:header withContent:nil];
     return req;
 }
 
 /// 4.get firmware
-/// @param firewareIDString current firmware id
+/// @param firmwareIDString current firmware id
 /// @param updateURI update URI from the response of firmwareUpdateInformationGet
 /// @param block result callback
-+ (TelinkHttpRequest *)firmwareGetRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
++ (TelinkHttpRequest *)firmwareGetRequestWithFirmwareIDString:(NSString *)firmwareIDString updateURI:(NSString *)updateURI didLoadData:(TelinkHttpBlock)block {
     TelinkHttpRequest *req = [[TelinkHttpRequest alloc] init];
     req.httpBlock = block;
     NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
-    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/get?cfwid=%@",updateURI,firewareIDString] withHeader:header withContent:nil];
+    [req requestWithRequestType:RequestTypeGet withUrl:[NSString stringWithFormat:@"%@/get?cfwid=%@",updateURI,firmwareIDString] withHeader:header withContent:nil];
     return req;
 }
 
@@ -224,12 +224,12 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 }
 
 /// 3.check firmware
-/// @param firewareIDString current firmware id
+/// @param firmwareIDString current firmware id
 /// @param updateURI update URI from the response of firmwareUpdateInformationGet
 /// @param block result callback
-- (void)firmwareCheckRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
+- (void)firmwareCheckRequestWithFirmwareIDString:(NSString *)firmwareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
     __weak typeof(self) weakSelf = self;
-    TelinkHttpRequest *request = [TelinkHttpRequest firmwareCheckRequestWithFirewareIDString:firewareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
+    TelinkHttpRequest *request = [TelinkHttpRequest firmwareCheckRequestWithFirmwareIDString:firmwareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
         [weakSelf.telinkHttpRequests removeObject:request];
         if (block) {
             block(result,err);
@@ -239,12 +239,12 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
 }
 
 /// 4.get firmware
-/// @param firewareIDString current firmware id
+/// @param firmwareIDString current firmware id
 /// @param updateURI update URI from the response of firmwareUpdateInformationGet
 /// @param block result callback
-- (void)firmwareGetRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
+- (void)firmwareGetRequestWithFirmwareIDString:(NSString *)firmwareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block {
     __weak typeof(self) weakSelf = self;
-    TelinkHttpRequest *request = [TelinkHttpRequest firmwareGetRequestWithFirewareIDString:firewareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
+    TelinkHttpRequest *request = [TelinkHttpRequest firmwareGetRequestWithFirmwareIDString:firmwareIDString updateURI:updateURI didLoadData:^(TelinkHttpRequest * _Nonnull request, id  _Nullable result, NSError * _Nullable err) {
         [weakSelf.telinkHttpRequests removeObject:request];
         if (block) {
             block(result,err);
