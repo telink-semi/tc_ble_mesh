@@ -47,15 +47,17 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self setTitle:@"Share Export" subTitle:self.network.meshName];
     // Do any additional setup after loading the view.
-    self.selectCDTPToOtherPhoneButton.selected = YES;
+    // 由于mesh v1.1并未release CDTP功能，暂时屏蔽CDTP功能。
+    self.selectCDTPToOtherPhoneButton.selected = NO;
     self.selectCDTPToGatewayButton.selected = NO;
-    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
     self.selectJsonFileButton.selected = NO;
     self.exportButton.backgroundColor = UIColor.telinkButtonBlue;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.netKeys];
-    self.selectArray = [NSMutableArray arrayWithObject:SigDataSource.share.curNetkeyModel];
+    self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
+    self.selectArray = [NSMutableArray arrayWithObject:self.network.curNetkeyModel];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
 }
 
@@ -88,17 +90,16 @@
 }
 
 - (IBAction)clickCDTPExportToOtherPhoneTipsButton:(UIButton *)sender {
-#warning need to fix
     ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
-    vc.title = TipsTitle_QRCodeAndBLETransferJSON;
-    vc.tipsMessage = TipsMessage_QRCodeAndBLETransferJSON;
+    vc.title = TipsTitle_CDTPExportToOtherPhone;
+    vc.tipsMessage = TipsMessage_QRCodeAndCDTPTransferJSONToOtherPhone;
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (IBAction)clickCDTPExportToGatewayTipsButton:(UIButton *)sender {
     ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
-    vc.title = TipsTitle_QRCodeAndBLETransferJSON;
-    vc.tipsMessage = TipsMessage_QRCodeAndBLETransferJSON;
+    vc.title = TipsTitle_CDTPExportToGateway;
+    vc.tipsMessage = TipsMessage_QRCodeAndCDTPTransferJSONToGateway;
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -117,11 +118,7 @@
 }
 
 - (IBAction)clickExportButton:(UIButton *)sender {
-    if (SigDataSource.share.curMeshIsVisitor) {
-        [self showTips:@"You are a visitor to this mesh, and you do not have permission to share this mesh!"];
-        return;
-    }
-    if (SigDataSource.share.curNodes.count == 0) {
+    if (self.network.curNodes.count == 0) {
         [self showTips:@"not allow to share empty network!"];
         return;
     }
@@ -132,14 +129,14 @@
     
     //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
     SigDataSource *exportDS = [[SigDataSource alloc] init];
-    [exportDS setDictionaryToDataSource:SigDataSource.share.getFormatDictionaryFromDataSource];
+    [exportDS setDictionaryToDataSource:self.network.getFormatDictionaryFromDataSource];
     exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
     NSMutableArray *netkeyIndexs = [NSMutableArray array];
     for (SigNetkeyModel *model in exportDS.netKeys) {
         [netkeyIndexs addObject:@(model.index)];
     }
     NSMutableArray *apps = [NSMutableArray array];
-    for (SigAppkeyModel *model in SigDataSource.share.appKeys) {
+    for (SigAppkeyModel *model in self.network.appKeys) {
         if ([netkeyIndexs containsObject:@(model.boundNetKey)]) {
             [apps addObject:model];
         }
@@ -186,7 +183,7 @@
         [self.navigationController pushViewController:vc animated:YES];
     } else {
         CDTPExportVC *vc = (CDTPExportVC *)[UIStoryboard initVC:ViewControllerIdentifiers_CDTPExportVCID storyboard:@"Setting"];
-        vc.meshObject = object;
+        vc.meshDictionary = dictionary;
         [self.navigationController pushViewController:vc animated:YES];
     }
 }

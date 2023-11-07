@@ -46,8 +46,11 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    //cornerRadius
     self.currentColorImageView.layer.cornerRadius = 8;
+    //borderWidth
     self.currentColorImageView.layer.borderWidth = 1;
+    //borderColor
     self.currentColorImageView.layer.borderColor = [UIColor lightGrayColor].CGColor;
     self.colorPicker.delegate = self;
     [self setColorModel:[UIColor whiteColor]];

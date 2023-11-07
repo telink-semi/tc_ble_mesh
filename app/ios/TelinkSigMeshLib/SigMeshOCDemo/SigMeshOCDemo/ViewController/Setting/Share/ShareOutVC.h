@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ShareOutVC : BaseViewController
 
+@property (nonatomic, strong) SigDataSource *network;
+
 @end
 
 NS_ASSUME_NONNULL_END

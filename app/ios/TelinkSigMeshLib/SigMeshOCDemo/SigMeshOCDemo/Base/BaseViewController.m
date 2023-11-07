@@ -25,6 +25,7 @@
 #import "ShowTipsView.h"
 #import "UIImage+Extension.h"
 #import "UIViewController+Message.h"
+#import "NetworkListVC.h"
 
 @implementation BaseViewController
 
@@ -185,5 +186,122 @@
 }
 
 - (void)nilBlock{}
+
+/// 设置导航栏标题和副标题，为了显示Mesh名称在导航栏而新增的方法。
+/// - Parameters:
+///   - title: 导航栏标题
+///   - subTitle: 导航栏副标题
+- (void)setTitle:(NSString *)title subTitle:(NSString *)subTitle {
+    //创建一个Label
+    UILabel *titleView = [[UILabel alloc] init];
+    //显示宽高
+    titleView.frame = CGRectMake(0, 0, self.view.frame.size.width - 100, 44);
+    //设置文字居中显示
+    titleView.textAlignment = NSTextAlignmentCenter;
+    //设置titleLabel自动换行
+    titleView.numberOfLines = 0;
+    //设置文本颜色
+    titleView.textColor = [UIColor whiteColor];
+    //获取标题的字符串
+    NSString *str = [NSString stringWithFormat:@"%@\n%@", title, subTitle];
+    //创建一个带有属性的字符串比如说颜色，字体等文字的属性
+    NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc] initWithString:str];
+    //设置title的字体大小
+    [attrStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:16] range:[str rangeOfString:title]];
+    //设置subTitle的字体大小
+    [attrStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:13] range:[str rangeOfString:subTitle]];
+    //设置title的颜色
+//    [attrStr addAttribute:NSForegroundColorAttributeName value:[UIColor whiteColor] range:[str rangeOfString:title]];
+    //设置有属性的text
+    titleView.attributedText = attrStr;
+    //设置导航栏的titleView
+    self.navigationItem.titleView = titleView;
+}
+
+/// 导入mesh后，将Mesh添加到Mesh列表或者更新Mesh信息。
+/// - Parameter dict: 新导入的Mesh数据
+- (void)addOrUpdateMeshDictionaryToMeshList:(NSDictionary *)dict {
+    NSArray *meshList = [[NSUserDefaults standardUserDefaults] valueForKey:kCacheMeshListKey];
+    NSMutableArray *mArray = [NSMutableArray arrayWithArray:meshList];
+    BOOL update = NO;
+    for (int i=0; i<meshList.count; i++) {
+        NSDictionary *d = [LibTools getDictionaryWithJSONData:meshList[i]];
+        if ([[d[@"meshUUID"] uppercaseString] isEqualToString:[dict[@"meshUUID"] uppercaseString]]) {
+            [mArray replaceObjectAtIndex:i withObject:[LibTools getJSONDataWithDictionary:dict]];
+            update = YES;
+            break;
+        }
+    }
+    if (update == NO) {
+        [mArray addObject:[LibTools getJSONDataWithDictionary:dict]];
+    }
+    [[NSUserDefaults standardUserDefaults] setValue:mArray forKey:kCacheMeshListKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/// import mesh
+- (void)handleMeshDictionaryFromShareImport:(NSDictionary *)dict {
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        //提示是否导入Mesh
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Mesh JSON receive complete, import data?" preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击确认");
+            [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
+            NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
+            if (importCompleteAction.intValue == ImportSwitchMode_manual) {
+                //弹框提示用户选择是否切换Mesh
+                __weak typeof(self) weakSelf = self;
+                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Share import success, switch to the new mesh?" preferredStyle:UIAlertControllerStyleAlert];
+                [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    TeLogDebug(@"点击确认");
+                    [weakSelf switchMeshActionWithMeshDictionary:dict];
+                }]];
+                [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                    TeLogDebug(@"点击取消");
+                    
+                }]];
+                [weakSelf presentViewController:alertController animated:YES completion:nil];
+            } else {
+                //自动切换Mesh
+                [weakSelf switchMeshActionWithMeshDictionary:dict];
+            }
+        }]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击取消");
+            
+        }]];
+        [weakSelf presentViewController:alert animated:YES completion:nil];
+    });
+}
+
+/// switch mesh
+- (void)switchMeshActionWithMeshDictionary:(NSDictionary *)dict {
+    [SigDataSource.share switchToNewMeshDictionary:dict];
+    [SDKLibCommand stopMeshConnectWithComplete:nil];
+    [[NSUserDefaults standardUserDefaults] setValue:SigDataSource.share.meshUUID forKey:kCacheCurrentMeshUUIDKey];
+    [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self popVC:[NetworkListVC class]];
+    });
+}
+
+/// pop specific VC
+- (void)popVC:(Class)vcClass {
+    BOOL has = NO;
+    for (UIViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:vcClass]) {
+            has = YES;
+            [self.navigationController popToViewController:controller animated:YES];
+            break;
+        }
+    }
+    if (!has) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+}
 
 @end

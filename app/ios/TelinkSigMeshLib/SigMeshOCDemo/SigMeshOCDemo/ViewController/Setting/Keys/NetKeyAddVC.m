@@ -72,7 +72,7 @@
     [self.keyTF resignFirstResponder];
     if (!self.isAdd) {
         BOOL hadBound = NO;
-        NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        NSArray *temNodes = [NSArray arrayWithArray:self.network.curNodes];
         for (SigNodeModel *node in temNodes) {
             if (node.netKeys && node.netKeys.count > 0) {
                 for (SigNodeKeyModel *nodeKey in node.netKeys) {
@@ -115,7 +115,7 @@
     TeLogInfo(@"appkey input success!");
     if (self.netKeyModel) {
         BOOL hadExist = NO;
-        NSArray *temNetkeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+        NSArray *temNetkeys = [NSArray arrayWithArray:self.network.netKeys];
         for (SigNetkeyModel *tem in temNetkeys) {
             if (tem.index == index) {
                 if (self.isAdd) {

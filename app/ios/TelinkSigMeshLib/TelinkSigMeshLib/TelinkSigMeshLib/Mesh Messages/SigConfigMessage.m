@@ -8008,6 +8008,7 @@
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_PrivateBeaconSet;
+        _needRandomUpdateIntervalSteps = NO;
     }
     return self;
 }
@@ -8019,6 +8020,18 @@
         self.opCode = SigOpCode_PrivateBeaconSet;
         _privateBeacon = privateBeacon;
         _randomUpdateIntervalSteps = randomUpdateIntervalSteps;
+        _needRandomUpdateIntervalSteps = YES;
+    }
+    return self;
+}
+
+- (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = SigOpCode_PrivateBeaconSet;
+        _privateBeacon = privateBeacon;
+        _needRandomUpdateIntervalSteps = NO;
     }
     return self;
 }
@@ -8029,9 +8042,11 @@
     UInt8 tem8 = _privateBeacon;
     NSData *data = [NSData dataWithBytes:&tem8 length:1];
     [mData appendData:data];
-    tem8 = _randomUpdateIntervalSteps;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
+    if (_needRandomUpdateIntervalSteps) {
+        tem8 = _randomUpdateIntervalSteps;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+    }
     return mData;
 }
 

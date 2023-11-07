@@ -164,7 +164,11 @@
     }
     _networkKey = pdu.networkKey;
     if (pdu.ivIndex == nil) {
-        _ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+        if (pdu.networkKey.ivIndex != nil) {
+            _ivIndex = pdu.networkKey.ivIndex;
+        } else {
+            _ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+        }
         pdu.ivIndex = _ivIndex;
     } else {
         _ivIndex = pdu.ivIndex;

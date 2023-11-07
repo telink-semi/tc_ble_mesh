@@ -145,39 +145,31 @@
     self.kickOutButton.backgroundColor = UIColor.telinkButtonRed;
     self.titleArray = [NSMutableArray array];
     self.iconArray = [NSMutableArray array];
-    if (SigDataSource.share.curMeshIsVisitor) {
-        [self.titleArray addObject:kCompositionData];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kSubscriptionModels];
-        [self.iconArray addObject:@"ic_setting"];
-        self.kickOutButton.hidden = YES;
-    } else {
-        [self.titleArray addObject:kDeviceConfig];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kCompositionData];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kNetKeyList];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kAppKeyList];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kSubnetBridgeSetting];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kSchedulerSetting];
-        [self.iconArray addObject:@"ic_alarm"];
-        [self.titleArray addObject:kSubscriptionModels];
-        [self.iconArray addObject:@"ic_setting"];
-        [self.titleArray addObject:kDeviceOTA];
-        [self.iconArray addObject:@"ic_update"];
-        [self.titleArray addObject:kPublication];
-        [self.iconArray addObject:@"ic_pub"];
-        if (self.model.isSensor) {
-            [self.titleArray addObject:kLPN];
-            [self.iconArray addObject:@"ic_battery-20-bluetooth"];
-        }
-        //测试PTS才打开下面注释的代码
+    [self.titleArray addObject:kDeviceConfig];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kCompositionData];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kNetKeyList];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kAppKeyList];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kSubnetBridgeSetting];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kSchedulerSetting];
+    [self.iconArray addObject:@"ic_alarm"];
+    [self.titleArray addObject:kSubscriptionModels];
+    [self.iconArray addObject:@"ic_setting"];
+    [self.titleArray addObject:kDeviceOTA];
+    [self.iconArray addObject:@"ic_update"];
+    [self.titleArray addObject:kPublication];
+    [self.iconArray addObject:@"ic_pub"];
+    if (self.model.isSensor) {
+        [self.titleArray addObject:kLPN];
+        [self.iconArray addObject:@"ic_battery-20-bluetooth"];
+    }
+    //测试PTS才打开下面注释的代码
 //        [self.titleArray addObject:kPTStest];
 //        [self.iconArray addObject:@"ic_setting"];
-    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {

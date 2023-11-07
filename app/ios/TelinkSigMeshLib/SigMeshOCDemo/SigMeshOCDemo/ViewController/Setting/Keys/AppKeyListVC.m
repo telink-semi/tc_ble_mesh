@@ -39,7 +39,7 @@
     [super viewDidLoad];
 
     self.title = @"AppKey List";
-    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.appKeys];
+    self.sourceArray = [NSMutableArray arrayWithArray:self.network.appKeys];
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
@@ -60,15 +60,18 @@
     SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
     appkey.oldKey = @"00000000000000000000000000000000";
     appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
-    appkey.index = SigDataSource.share.appKeys.count;
+    appkey.index = self.network.appKeys.count;
     appkey.name = [NSString stringWithFormat:@"appkey%ld",(long)appkey.index];
-    appkey.boundNetKey = SigDataSource.share.curNetkeyModel.index;
+    appkey.boundNetKey = self.network.curNetkeyModel.index;
     vc.appKeyModel = appkey;
+    vc.network = self.network;
     __weak typeof(self) weakSelf = self;
     [vc setBackAppKeyModel:^(SigAppkeyModel * _Nonnull appKeyModel) {
-        if (![SigDataSource.share.appKeys containsObject:appKeyModel]) {
-            [SigDataSource.share.appKeys addObject:appKeyModel];
-            [SigDataSource.share saveLocationData];
+        if (![weakSelf.network.appKeys containsObject:appKeyModel]) {
+            [weakSelf.network.appKeys addObject:appKeyModel];
+            if (weakSelf.backNetwork) {
+                weakSelf.backNetwork(weakSelf.network);
+            }
         }
         if (![weakSelf.sourceArray containsObject:appKeyModel]) {
             [weakSelf.sourceArray addObject:appKeyModel];
@@ -83,14 +86,14 @@
     if (sender.state == UIGestureRecognizerStateBegan) {
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
-            if (SigDataSource.share.appKeys.count == 1) {
+            if (self.network.appKeys.count == 1) {
                 [self showAlertSureWithTitle:@"Hits" message:@"The mesh network needs at least one appkey!" sure:nil];
                 return;
             }
 
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
             BOOL hadBound = NO;
-            NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+            NSArray *temNodes = [NSArray arrayWithArray:self.network.curNodes];
             for (SigNodeModel *node in temNodes) {
                 if (node.appKeys && node.appKeys.count > 0) {
                     for (SigNodeKeyModel *nodeKey in node.appKeys) {
@@ -113,8 +116,10 @@
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
-                [SigDataSource.share.appKeys removeObject:model];
-                [SigDataSource.share saveLocationData];
+                [weakSelf.network.appKeys removeObject:model];
+                if (weakSelf.backNetwork) {
+                    weakSelf.backNetwork(weakSelf.network);
+                }
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             } cancel:^(UIAlertAction *action) {
@@ -138,9 +143,12 @@
         AppKeyAddVC *vc = [[AppKeyAddVC alloc] init];
         vc.isAdd = NO;
         [vc setAppKeyModel:model];
+        vc.network = weakSelf.network;
         [vc setBackAppKeyModel:^(SigAppkeyModel * _Nonnull appKeyModel) {
-            [SigDataSource.share.appKeys replaceObjectAtIndex:indexPath.row withObject:appKeyModel];
-            [SigDataSource.share saveLocationData];
+            [weakSelf.network.appKeys replaceObjectAtIndex:indexPath.row withObject:appKeyModel];
+            if (weakSelf.backNetwork) {
+                weakSelf.backNetwork(weakSelf.network);
+            }
             [weakSelf.sourceArray replaceObjectAtIndex:indexPath.row withObject:appKeyModel];
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         }];
@@ -152,8 +160,12 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
+    //当前使用的appkey不存储本地
+    if (![self.network.meshUUID isEqualToString:SigDataSource.share.meshUUID]) {
+        return;
+    }
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
-    if (model != SigDataSource.share.curAppkeyModel) {
+    if (model != self.network.curAppkeyModel) {
         NSString *msg = [NSString stringWithFormat:@"Are you sure change current appKey to index:0x%04lX key:%@",(long)model.index,model.key];
         __weak typeof(self) weakSelf = self;
         [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

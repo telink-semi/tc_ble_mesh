@@ -319,6 +319,11 @@
 - (void)cancelAllConnecttionWithComplete:(bleCancelAllConnectCallback)complete{
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (complete) {
+                complete();
+            }
+        });
         return;
     }
     self.bluetoothConnectPeripheralCallback = nil;
@@ -1042,23 +1047,27 @@
  *  @discussion                This method is invoked after a @link readValueForCharacteristic: @/link call, or upon receipt of a notification/indication.
  */
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    TeLogInfo(@"<--- from:uuid:%@, length:%d",characteristic.UUID.UUIDString,characteristic.value.length);
+    // Reduce logs
+    BOOL log = NO;
     if (self.bluetoothDidUpdateValueCallback) {
         self.bluetoothDidUpdateValueCallback(peripheral,characteristic,error);
     }
     if (([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID] && SigBearer.share.isProvisioned) || ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_Out_CharacteristicsID] && !SigBearer.share.isProvisioned)) {
         if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID]) {
+            log = YES;
             TeLogInfo(@"<--- from:PROXY, length:%d",characteristic.value.length);
-//            TeLogInfo(@"<--- from:PROXY, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
+            //            TeLogInfo(@"<--- from:PROXY, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
         } else {
+            log = YES;
             TeLogInfo(@"<--- from:GATT, length:%d",characteristic.value.length);
-//            TeLogInfo(@"<--- from:GATT, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
+            //            TeLogInfo(@"<--- from:GATT, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
         }
         if (self.bluetoothDidUpdateValueForCharacteristicCallback) {
             self.bluetoothDidUpdateValueForCharacteristicCallback(peripheral, characteristic,error);
         }
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
+        log = YES;
         TeLogVerbose(@"<--- from:OTA, %@", characteristic.value);
         if (self.bluetoothReadOTACharachteristicCallback) {
             self.bluetoothReadOTACharachteristicCallback(characteristic,YES);
@@ -1066,18 +1075,24 @@
         }
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
+        log = YES;
         TeLogInfo(@"<--- from:OnlineStatusCharacteristics, length:%d",characteristic.value.length);
         if (self.bluetoothDidUpdateOnlineStatusValueCallback) {
             self.bluetoothDidUpdateOnlineStatusValueCallback(peripheral, characteristic,error);
         }
     }
     if ([characteristic isEqual:self.readCharacteristic]) {
+        log = YES;
         TeLogInfo(@"<--- from:readCharacteristics, value:%@",characteristic.value);
         if (error) {
             [self readCharachteristicTimeout];
         } else {
             [self readCharachteristicFinish:characteristic];
         }
+    }
+    if (log == NO) {
+        // Reduce logs
+        TeLogInfo(@"<--- from:uuid:%@, length:%d",characteristic.UUID.UUIDString,characteristic.value.length);
     }
 }
 

@@ -89,4 +89,12 @@
     }
 }
 
++ (UIColor *)telinkBorderColor {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkBorderColor"];
+    } else {
+        return HEX(#CBCBCB);
+    }
+}
+
 @end

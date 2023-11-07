@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIColor *)telinkBackgroundWhite;
 
++ (UIColor *)telinkBorderColor;
+
 @end
 
 NS_ASSUME_NONNULL_END

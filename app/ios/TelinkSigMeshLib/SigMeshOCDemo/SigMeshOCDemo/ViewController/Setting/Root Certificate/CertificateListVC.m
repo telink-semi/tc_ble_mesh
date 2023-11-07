@@ -37,6 +37,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"tishi"] style:UIBarButtonItemStylePlain target:self action:@selector(showTipsView)];
+    self.navigationItem.rightBarButtonItem = item;
+
     self.saveButton.backgroundColor = UIColor.telinkButtonBlue;
     self.title = @"Root Certificate";
     self.dataArray = [NSMutableArray arrayWithArray:[LibTools getAllFileNameWithFileType:@"der"]];
@@ -58,6 +61,15 @@
     if(@available(iOS 15.0,*)) {
         self.tableView.sectionHeaderTopPadding = 0;
     }
+}
+
+- (void)showTipsView {
+    [self showTips:@"APP will set to default root certificate when user no selete certificate file."];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    self.tabBarController.tabBar.hidden = YES;
 }
 
 - (IBAction)clickSaveButton:(UIButton *)sender {
@@ -112,6 +124,10 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
     NSString *rootCertificateName = [[NSUserDefaults standardUserDefaults] valueForKey:kRootCertificateName];
+    if (rootCertificateName == nil) {
+        //set default
+        rootCertificateName = @"Default Root Certificate";
+    }
     return [NSString stringWithFormat:@"Last select name:%@",rootCertificateName];
 }
 

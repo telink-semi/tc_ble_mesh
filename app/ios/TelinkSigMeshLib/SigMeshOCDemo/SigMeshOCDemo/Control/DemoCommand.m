@@ -27,9 +27,8 @@
 
 /// Is get online status from private uuid, YES main callback onoffCallback、brighrnessCallback、tempratureCallback、HSLCallback、levelCallback from OnlineStatusCharacteristic.
 + (BOOL)isPrivatelyGetOnlineStatus {
-    NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
     BOOL hasOTACharacteristic = [SDKLibCommand getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] != nil;
-    return online.boolValue && hasOTACharacteristic;
+    return hasOTACharacteristic;
 }
 
 /// New API on demo since V2.8.1: Get Online device, publish use SigGenericOnOffGet, private use OnlineStatusCharacteristic

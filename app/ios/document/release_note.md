@@ -3,18 +3,24 @@
 ------------------------------------------------------
 
 ## v4.1.0.0
-release date:	2023/10/?
+release date:	2023/11/10
 
 >更新日志：
-1.feat(ios): 
+1.feat(ios): 添加多网络管理功能。
+2.fix(ios): 修复SDK频繁收发数据低概率导致APP奔溃的bug。
+3.fix(ios): 代码注释率到达40%。
+4.fix(ios): 在获取到未入网节点的capabilities PDU后再给节点分配unicastAddress。
 >
 >release note:
-1.feat(ios): 
+1.feat(ios): add multiple network management features.
+2.fix(ios): Fix the bug where the SDK frequently sends and receives data with a low probability of causing APP crashes.
+3.fix(ios): The code annotation rate has reached 40%.
+4.fix(ios): Assign a unicastAddress to the node after obtaining the capabilities PDU of the unprovision node.
 
 ------------------------------------------------------
 
 ## v3.3.3.6
-release date:	2022/3/18
+release date:	2023/3/18
 
 >更新日志：
 1.fix(ios): 从分享的JSON文件中移除ivIndex字段。

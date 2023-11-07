@@ -85,9 +85,9 @@
     ShowModel *m6 = [[ShowModel alloc] initWithTitle:@"Friend" detail:@"The Friend state indicates support for the Friend feature. If Friend feature is supported, then this also indicates and controls whether Friend feature is enabled or disabled." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.friendFeature]]];
     ShowModel *m7 = [[ShowModel alloc] initWithTitle:@"Key Refresh Phase" detail:@"The Key Refresh Phase state indicates and controls the Key Refresh procedure for each NetKey in the NetKey List." value:[NSString stringWithFormat:@"value: phase: %@",[SigHelper.share getDetailOfKeyRefreshPhase:3]]];
     ShowModel *m8 = [[ShowModel alloc] initWithTitle:@"Network Transmit" detail:@"The Network Transmit state is a composite state that controls the number and timing of the transmissions of Network PDU originating from a node." value:[NSString stringWithFormat:@"value:%@\ntransmit count: 0x%lX\ntransmit interval steps: 0x%lX",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps]];
-    ShowModel *m9 = [[ShowModel alloc] initWithTitle:@"Mesh Private Beacon" detail:@"The Mesh Private Beacon state determines if a node is periodically broadcasting Mesh Private beacon messages." value:[NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps]];
-    ShowModel *m10 = [[ShowModel alloc] initWithTitle:@"Private GATT Proxy" detail:@"The Private GATT Proxy state indicates if the Mesh Private Beacon Service is supported, and if supported, it indicates and controls the status of the Mesh Private Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]]];
-    ShowModel *m11 = [[ShowModel alloc] initWithTitle:@"Private Node Identity" detail:@"The Private Node Identity state determines if a node that supports the Mesh Private Beacon Service is advertising on a subnet using Private Node Identity messages." value:@"value:stopped"];
+//    ShowModel *m9 = [[ShowModel alloc] initWithTitle:@"Mesh Private Beacon" detail:@"The Mesh Private Beacon state determines if a node is periodically broadcasting Mesh Private beacon messages." value:[NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps]];
+//    ShowModel *m10 = [[ShowModel alloc] initWithTitle:@"Private GATT Proxy" detail:@"The Private GATT Proxy state indicates if the Mesh Private Beacon Service is supported, and if supported, it indicates and controls the status of the Mesh Private Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]]];
+//    ShowModel *m11 = [[ShowModel alloc] initWithTitle:@"Private Node Identity" detail:@"The Private Node Identity state determines if a node that supports the Mesh Private Beacon Service is advertising on a subnet using Private Node Identity messages." value:@"value:stopped"];
 
     [self.dataArray addObject:m1];
     [self.dataArray addObject:m2];
@@ -97,9 +97,9 @@
     [self.dataArray addObject:m6];
     [self.dataArray addObject:m7];
     [self.dataArray addObject:m8];
-    [self.dataArray addObject:m9];
-    [self.dataArray addObject:m10];
-    [self.dataArray addObject:m11];
+//    [self.dataArray addObject:m9];
+//    [self.dataArray addObject:m10];
+//    [self.dataArray addObject:m11];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -763,7 +763,7 @@
         item1.chooseItemsArray = mArray;
         AlertItemModel *item2 = [[AlertItemModel alloc] init];
         item2.itemType = ItemType_Input;
-        item2.headerString = @"RelayRetransmit Count(3 bits):0x";
+        item2.headerString = @"RandomUpdateInterval Steps(1 byte):0x";
         item2.defaultString = @"";
         CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Mesh Private Beacon" detail:@"input new value" itemArray:@[item1, item2] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
@@ -785,7 +785,7 @@
                 }
                 
                 [ShowTipsHandle.share show:@"Set Mesh Private Beacon..."];
-                SigPrivateBeaconState privateBeaconState = [alertView getSelectLeftOfRow:0]?SigPrivateBeaconState_enable:SigPrivateBeaconState_disable;
+                SigPrivateBeaconState privateBeaconState = [alertView getSelectLeftOfRow:0]?SigPrivateBeaconState_disable:SigPrivateBeaconState_enable;
                 [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeaconState randomUpdateIntervalSteps:randomUpdateIntervalSteps destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"Mesh Private Beacon Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
@@ -858,7 +858,7 @@
                 //CONFIRM
                 [ShowTipsHandle.share show:@"Set Private Node Identity..."];
                 SigPrivateNodeIdentityState identity = [alertView getSelectLeftOfRow:0]?SigPrivateNodeIdentityState_notEnabled:SigPrivateNodeIdentityState_enabled;
-                [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:weakSelf.model.address privateIdentity:identity destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
+                [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index privateIdentity:identity destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"Private NodeIdentity Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigPrivateNodeIdentityStatus:responseMessage andIndexPath:indexPath];
