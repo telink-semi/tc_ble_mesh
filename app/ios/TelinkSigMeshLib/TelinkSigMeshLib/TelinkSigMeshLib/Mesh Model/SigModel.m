@@ -560,6 +560,14 @@
                         }
                         if (advDataServiceData.length >= 16) {
                             _advUuid = [LibTools convertDataToHexStr:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]];
+                            if (_macAddress == nil) {
+                                //当kCBAdvDataManufacturerData未返回时，暂时使用这个位置的数据作为MacAddress。（只有Telink的支持RP的设备才会在这里包含MacAddress）
+                                NSData *macAddress1 = [LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(10, 6)]];
+                                NSData *uuid1 = [LibTools calcUuidByMac:macAddress1];
+                                if ([uuid1 isEqualToData:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]]) {
+                                    _macAddress = [LibTools convertDataToHexStr:macAddress1];
+                                }
+                            }
                         }
                         if (advDataServiceData.length >= 18) {
                             struct OobInformation oob = {};
@@ -695,8 +703,13 @@
 /// Determine if the data of two AddDeviceModel is the same
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[AddDeviceModel class]]) {
-        //advUuid is the unique identifier of AddDeviceModel.
-        return [_scanRspModel.advUuid isEqualToString:[(AddDeviceModel *)object scanRspModel].advUuid];
+        if (_scanRspModel.advUuid == nil && _scanRspModel.macAddress != nil) {
+            //macAddress is the unique identifier of AddDeviceModel when provision is fastProvision.
+            return [_scanRspModel.macAddress isEqualToString:[(AddDeviceModel *)object scanRspModel].macAddress];
+        } else {
+            //advUuid is the unique identifier of AddDeviceModel.
+            return [_scanRspModel.advUuid isEqualToString:[(AddDeviceModel *)object scanRspModel].advUuid];
+        }
     } else {
         //Two AddDeviceModel object is different.
         return NO;
@@ -1913,9 +1926,7 @@
 
 - (SigIvIndex *)ivIndex {
     if (_ivIndex) {
-        if (_ivIndex.index == [LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex]) {
-            return _ivIndex;
-        }
+        return _ivIndex;
     }
     _ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
     return _ivIndex;
@@ -2875,7 +2886,6 @@
         _appKeys = [NSMutableArray array];
 
         _schedulerList = [[NSMutableArray alloc] init];
-        _keyBindModelIDs = [[NSMutableArray alloc] init];
 
         _state = DeviceStateOutOfLine;
         _macAddress = @"";
@@ -3768,7 +3778,7 @@
                         //计算组地址
                         UInt16 groupAddress = groupID.intValue;
                         if (modelID.intValue == kSigModel_GenericLevelServer_ID) {
-                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]] || [element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightLightnessServer_ID]]) {
                                 groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
                             } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
                                 groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
@@ -3809,7 +3819,7 @@
                         //计算组地址
                         UInt16 groupAddress = groupID.intValue;
                         if (modelID.intValue == kSigModel_GenericLevelServer_ID) {
-                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                            if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]] || [element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightLightnessServer_ID]]) {
                                 groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
                             } else if ([element hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
                                 groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
@@ -4081,7 +4091,7 @@
 }
 
 - (BOOL)hasLumLevelCapability {
-    return [self getElementModelWithModelIds:@[@(kSigModel_LightCTLServer_ID), @(kSigModel_GenericLevelServer_ID)]];
+    return [self getElementModelWithModelIds:@[@(kSigModel_LightCTLServer_ID), @(kSigModel_GenericLevelServer_ID)]] || [self getElementModelWithModelIds:@[@(kSigModel_LightLightnessServer_ID), @(kSigModel_GenericLevelServer_ID)]];
 }
 
 - (BOOL)hasTempLevelCapability {

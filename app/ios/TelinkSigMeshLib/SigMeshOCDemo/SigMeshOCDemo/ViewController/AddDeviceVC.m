@@ -118,9 +118,9 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
         if (successful) {
             TeLogDebug(@"close success.");
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-//                TeLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
                 if (unprovisioned) {
                     SigScanRspModel *m = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+                    TeLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d,advUuid=%@,macAddress=%@,calcUuid=%@",peripheral,advertisementData,RSSI,unprovisioned,m.advUuid,m.macAddress,[LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:m.macAddress]]]);
                     AddDeviceModel *model = [[AddDeviceModel alloc] init];
                     model.scanRspModel = m;
                     model.state = AddDeviceModelStateScanned;
@@ -149,6 +149,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 }
 
 - (void)clickBackButton {
+    //修复添加设备完成后返回首页断开直连设备不会回连的bug.
+    //Fix the bug where disconnecting a directly connected device after adding it and returning to the homepage will not cause it to reconnect.
+    if (SigBearer.share.isOpen) {
+        [SDKLibCommand startMeshConnectWithComplete:nil];
+    }
     [self.navigationController popViewControllerAnimated:YES];
 }
 

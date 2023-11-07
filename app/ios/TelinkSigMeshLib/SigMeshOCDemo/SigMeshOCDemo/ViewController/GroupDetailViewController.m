@@ -46,6 +46,8 @@
 @property (weak, nonatomic) IBOutlet UILabel *satLevelLabel;
 @property (weak, nonatomic) IBOutlet UIButton *satLevelDecreaseButton;
 @property (weak, nonatomic) IBOutlet UIButton *satLevelIncreaseButton;
+//add group level line UI
+@property (weak, nonatomic) IBOutlet UIView *levelBackgroundView;
 @property (nonatomic,strong) NSMutableArray <SigNodeModel *>*source;
 
 @property (assign, nonatomic) BOOL hadChangeBrightness;
@@ -203,6 +205,18 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    //add group level line UI
+    //cornerRadius
+    self.levelBackgroundView.layer.cornerRadius = 10;
+    //borderWidth
+    self.levelBackgroundView.layer.borderWidth = 2;
+    //borderColor
+    self.levelBackgroundView.layer.borderColor = [UIColor telinkButtonBlue].CGColor;
+    //masksToBounds
+    self.levelBackgroundView.layer.masksToBounds = YES;
+    //backgroundColor
+    self.levelBackgroundView.backgroundColor = [UIColor clearColor];
+
     self.hslButton.backgroundColor = UIColor.telinkButtonBlue;
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;

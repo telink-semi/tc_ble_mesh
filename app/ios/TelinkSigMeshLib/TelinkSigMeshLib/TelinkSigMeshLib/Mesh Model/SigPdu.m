@@ -876,17 +876,21 @@
         NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
+            TeLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
         } else if (_nid == networkKey.directedSecurityNid) {
             networkKey.keys.privacyKey = networkKey.keys.directedSecurityPrivacyKey;
             networkKey.keys.encryptionKey = networkKey.keys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.keys];
+            TeLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
             [keySets addObject:networkKey.oldKeys];
+            TeLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
         } else if (networkKey.oldKeys != nil && networkKey.directedSecurityOldNid == _nid) {
             networkKey.oldKeys.privacyKey = networkKey.oldKeys.directedSecurityPrivacyKey;
             networkKey.oldKeys.encryptionKey = networkKey.oldKeys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.oldKeys];
+            TeLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
         }
         if (keySets.count == 0) {
             return nil;
@@ -900,7 +904,7 @@
                 index -= 1;
             }
         }
-//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+        TeLogVerbose(@"Decode IvIndex=0x%x", index);
         for (SigNetkeyDerivaties *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];

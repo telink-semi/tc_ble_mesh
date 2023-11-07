@@ -229,6 +229,11 @@
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
+    //修复添加设备完成后返回首页断开直连设备不会回连的bug.
+    //Fix the bug where disconnecting a directly connected device after adding it and returning to the homepage will not cause it to reconnect.
+    if (SigBearer.share.isOpen) {
+        [SDKLibCommand startMeshConnectWithComplete:nil];
+    }
     [self.navigationController popViewControllerAnimated:YES];
 }
 

@@ -53,10 +53,6 @@
     self.tabBarController.tabBar.hidden = YES;
 }
 
-- (void)viewDidDisappear:(BOOL)animated{
-    [super viewDidDisappear:animated];
-}
-
 - (void)updateContent{
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{
