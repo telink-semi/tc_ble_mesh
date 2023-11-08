@@ -69,14 +69,11 @@ public class GroupFragment extends BaseFragment {
         rv_group.setLayoutManager(new LinearLayoutManager(getActivity()));
         rv_group.setAdapter(mAdapter);
 
-        mAdapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                Intent intent = new Intent(getActivity(), GroupSettingActivity.class);
-                intent.putExtra("group", groups.get(position));
-                startActivity(intent);
-                return false;
-            }
+        mAdapter.setOnItemLongClickListener(position -> {
+            Intent intent = new Intent(getActivity(), GroupSettingActivity.class);
+            intent.putExtra("group", groups.get(position));
+            startActivity(intent);
+            return false;
         });
     }
 

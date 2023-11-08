@@ -267,7 +267,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 Intent otaIntent = new Intent(getActivity(), DeviceOtaActivity.class);
                 otaIntent.putExtra("meshAddress", deviceInfo.meshAddress);
                 startActivity(otaIntent);
-                getActivity().finish();
+//                getActivity().finish();
                 break;
 
             case R.id.btn_kick:

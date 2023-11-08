@@ -4,6 +4,13 @@ version record:
 versionName - version code - date
 
 
+V4.1.0.0 - 7 - 20231108
+
+todo release notes
+
+----------------
+
+
 V3.3.3.7 - 6 - 20221130  暂时只发布在TelinkApps云端
 
 1. update icon
