@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		2512BB3B27E41CD7000B353B /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
-		2512BB4327E4207E000B353B /* ForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4227E4207E000B353B /* ForwardingTableVC.m */; };
 		2512BB4627E4284F000B353B /* AddForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4527E4284F000B353B /* AddForwardingTableVC.m */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		25589A1D272115D700F4F880 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
@@ -113,10 +112,8 @@
 		25589C062721403F00F4F880 /* CMDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B042721403E00F4F880 /* CMDViewController.m */; };
 		25589C082721403F00F4F880 /* HSLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B092721403E00F4F880 /* HSLViewController.m */; };
 		25589C0A2721403F00F4F880 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B112721403E00F4F880 /* FileChooseVC.m */; };
-		25589C0B2721403F00F4F880 /* SettingsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B122721403E00F4F880 /* SettingsVC.m */; };
 		25589C0C2721403F00F4F880 /* ResponseTestVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B142721403E00F4F880 /* ResponseTestVC.xib */; };
 		25589C0D2721403F00F4F880 /* ResponseTestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B162721403E00F4F880 /* ResponseTestVC.m */; };
-		25589C0F2721403F00F4F880 /* EditModelIDsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1E2721403E00F4F880 /* EditModelIDsViewController.m */; };
 		25589C102721403F00F4F880 /* SceneDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1F2721403E00F4F880 /* SceneDetailViewController.m */; };
 		25589C112721403F00F4F880 /* EditOOBVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B212721403E00F4F880 /* EditOOBVC.m */; };
 		25589C122721403F00F4F880 /* ChooseOOBFileVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B242721403E00F4F880 /* ChooseOOBFileVC.m */; };
@@ -127,7 +124,6 @@
 		25589C172721403F00F4F880 /* EditOOBVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B2A2721403E00F4F880 /* EditOOBVC.xib */; };
 		25589C182721403F00F4F880 /* OOBItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2C2721403E00F4F880 /* OOBItemCell.m */; };
 		25589C192721403F00F4F880 /* SchedulerDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */; };
-		25589C1A2721403F00F4F880 /* ModelIDListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2E2721403E00F4F880 /* ModelIDListViewController.m */; };
 		25589C1B2721403F00F4F880 /* MeshInfoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2F2721403E00F4F880 /* MeshInfoVC.m */; };
 		25589C1C2721403F00F4F880 /* AppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B332721403E00F4F880 /* AppKeyListVC.xib */; };
 		25589C1D2721403F00F4F880 /* KeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B352721403E00F4F880 /* KeyCell.xib */; };
@@ -193,7 +189,6 @@
 		2590C4FF285C287D00E19DE9 /* DeviceNetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AD12721403E00F4F880 /* DeviceNetKeyListVC.m */; };
 		2590C500285C287D00E19DE9 /* ExtendBearerModeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABA2721403E00F4F880 /* ExtendBearerModeCell.m */; };
 		2590C501285C287D00E19DE9 /* ResponseTestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B162721403E00F4F880 /* ResponseTestVC.m */; };
-		2590C502285C287D00E19DE9 /* SettingsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B122721403E00F4F880 /* SettingsVC.m */; };
 		2590C503285C287D00E19DE9 /* ReKeyBindViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFE2721403E00F4F880 /* ReKeyBindViewController.m */; };
 		2590C504285C287D00E19DE9 /* SchedulerDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */; };
 		2590C505285C287D00E19DE9 /* ChooseModelIDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABB2721403E00F4F880 /* ChooseModelIDCell.m */; };
@@ -213,14 +208,12 @@
 		2590C513285C287D00E19DE9 /* YZFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B782721403E00F4F880 /* YZFlowLayout.m */; };
 		2590C514285C287D00E19DE9 /* IQPreviousNextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B8D2721403E00F4F880 /* IQPreviousNextView.m */; };
 		2590C515285C287D00E19DE9 /* YZDisplayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B7D2721403E00F4F880 /* YZDisplayViewController.m */; };
-		2590C516285C287D00E19DE9 /* ForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4227E4207E000B353B /* ForwardingTableVC.m */; };
 		2590C517285C287D00E19DE9 /* NetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B3B2721403E00F4F880 /* NetKeyListVC.m */; };
 		2590C518285C287D00E19DE9 /* SettingItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A822721403E00F4F880 /* SettingItemCell.m */; };
 		2590C519285C287D00E19DE9 /* zipAndUnzip+zipString.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A642721403D00F4F880 /* zipAndUnzip+zipString.m */; };
 		2590C51A285C287D00E19DE9 /* ChooseBinCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB72721403E00F4F880 /* ChooseBinCell.m */; };
 		2590C51B285C287D00E19DE9 /* HomeItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA22721403E00F4F880 /* HomeItemCell.m */; };
 		2590C51C285C287D00E19DE9 /* SchedulerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A9E2721403E00F4F880 /* SchedulerCell.m */; };
-		2590C51D285C287D00E19DE9 /* EditModelIDsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1E2721403E00F4F880 /* EditModelIDsViewController.m */; };
 		2590C51E285C287D00E19DE9 /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A6D2721403D00F4F880 /* BaseTableView.m */; };
 		2590C51F285C287D00E19DE9 /* ColorModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB42721403E00F4F880 /* ColorModelCell.m */; };
 		2590C520285C287D00E19DE9 /* KeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B362721403E00F4F880 /* KeyCell.m */; };
@@ -248,7 +241,6 @@
 		2590C539285C287D00E19DE9 /* ChooseEntryVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CC927EC024C009F7626 /* ChooseEntryVC.m */; };
 		2590C53A285C287D00E19DE9 /* UIButton+extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFB2721403E00F4F880 /* UIButton+extension.m */; };
 		2590C53B285C287D00E19DE9 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B532721403E00F4F880 /* SettingViewController.m */; };
-		2590C53C285C287D00E19DE9 /* ModelIDListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2E2721403E00F4F880 /* ModelIDListViewController.m */; };
 		2590C53D285C287D00E19DE9 /* ActionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B422721403E00F4F880 /* ActionViewController.m */; };
 		2590C53E285C287D00E19DE9 /* ChooseOOBFileVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B242721403E00F4F880 /* ChooseOOBFileVC.m */; };
 		2590C53F285C287D00E19DE9 /* SubnetBridgeListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ADD2721403E00F4F880 /* SubnetBridgeListVC.m */; };
@@ -376,6 +368,14 @@
 		25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
 		912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */; };
 		914CCE142AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin in Resources */ = {isa = PBXBuildFile; fileRef = 914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */; };
+		9152A18F2AD8E9B500186969 /* SettingsItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9152A18D2AD8E9B500186969 /* SettingsItemCell.m */; };
+		9152A1902AD8E9B500186969 /* SettingsItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */; };
+		915958BE2AD521F500D85CA4 /* NetworkVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958BD2AD521F500D85CA4 /* NetworkVC.m */; };
+		915958C52AD5286D00D85CA4 /* SettingDetailItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958C32AD5286D00D85CA4 /* SettingDetailItemCell.m */; };
+		915958C62AD5286D00D85CA4 /* SettingDetailItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 915958C42AD5286D00D85CA4 /* SettingDetailItemCell.xib */; };
+		915958CA2AD5391F00D85CA4 /* SettingTitleItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958C82AD5391F00D85CA4 /* SettingTitleItemCell.m */; };
+		915958CB2AD5391F00D85CA4 /* SettingTitleItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 915958C92AD5391F00D85CA4 /* SettingTitleItemCell.xib */; };
+		915958CE2AD545BC00D85CA4 /* DirectForwardingVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958CD2AD545BC00D85CA4 /* DirectForwardingVC.m */; };
 		9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
 		9161956E290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
 		916963492AC51D300010D34A /* AutoAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 916963482AC51D300010D34A /* AutoAddDeviceVC.m */; };
@@ -386,11 +386,26 @@
 		916FEF3629E6840200206FE6 /* FilterAddressCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 916FEF3429E6840200206FE6 /* FilterAddressCell.xib */; };
 		9175845629E535B7008FE98A /* ProxyFilterVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9175845429E535B7008FE98A /* ProxyFilterVC.m */; };
 		9175845729E535B7008FE98A /* ProxyFilterVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9175845529E535B7008FE98A /* ProxyFilterVC.xib */; };
+		917BE4AB2AD66E150073FC35 /* NetworkListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4AA2AD66E150073FC35 /* NetworkListVC.m */; };
+		917BE4B42AD684F30073FC35 /* NetworkCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4B12AD684F30073FC35 /* NetworkCell.m */; };
+		917BE4B52AD684F30073FC35 /* NetworkCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4B22AD684F30073FC35 /* NetworkCell.xib */; };
+		917BE4BF2AD689B10073FC35 /* ShareButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4B62AD689B00073FC35 /* ShareButtonCell.m */; };
+		917BE4C02AD689B10073FC35 /* CustomShareAlert.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4B82AD689B10073FC35 /* CustomShareAlert.xib */; };
+		917BE4C12AD689B10073FC35 /* CustomShareAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4B92AD689B10073FC35 /* CustomShareAlert.m */; };
+		917BE4C22AD689B10073FC35 /* ShareItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4BA2AD689B10073FC35 /* ShareItemCell.m */; };
+		917BE4C32AD689B10073FC35 /* ShareItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4BD2AD689B10073FC35 /* ShareItemCell.xib */; };
+		917BE4C42AD689B10073FC35 /* ShareButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */; };
+		917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */; };
+		91D769C82AEB897F00A07E45 /* PrivateBeaconVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91D769C62AEB897F00A07E45 /* PrivateBeaconVC.m */; };
+		91D769C92AEB897F00A07E45 /* PrivateBeaconVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91D769C72AEB897F00A07E45 /* PrivateBeaconVC.xib */; };
 		91D999EC2A94595E00E66929 /* AddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91D999EB2A94595E00E66929 /* AddDeviceVC.m */; };
 		91D999F42A945B3100E66929 /* AddDeviceCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91D999F12A945B3100E66929 /* AddDeviceCell.m */; };
 		91D999F52A945B3100E66929 /* AddDeviceCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91D999F32A945B3100E66929 /* AddDeviceCell.xib */; };
 		91ED317F29236CAC003263D1 /* TipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91ED317E29236CAC003263D1 /* TipsVC.m */; };
 		91F21BCE2A6E496600CCE24C /* CDTPServiceListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */; };
+		91F6A93F2AEFB0E50076E54B /* PrivateBeaconCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */; };
+		91F6A9402AEFB0E50076E54B /* PrivateBeaconCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91F6A93E2AEFB0E50076E54B /* PrivateBeaconCell.xib */; };
+		91FAEB192AD7D2AE00F951CE /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FAEB182AD7D2AE00F951CE /* SettingsViewController.m */; };
 		91FC2AC92A68FAA4003A956C /* DeviceElementItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FC2AC82A68FAA4003A956C /* DeviceElementItemView.m */; };
 		91FC2ACB2A68FAB4003A956C /* DeviceElementItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91FC2ACA2A68FAB4003A956C /* DeviceElementItemView.xib */; };
 /* End PBXBuildFile section */
@@ -429,8 +444,6 @@
 /* Begin PBXFileReference section */
 		2512BB3927E41CD7000B353B /* DirectControlListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectControlListVC.h; sourceTree = "<group>"; };
 		2512BB3A27E41CD7000B353B /* DirectControlListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DirectControlListVC.m; sourceTree = "<group>"; };
-		2512BB4127E4207E000B353B /* ForwardingTableVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForwardingTableVC.h; sourceTree = "<group>"; };
-		2512BB4227E4207E000B353B /* ForwardingTableVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ForwardingTableVC.m; sourceTree = "<group>"; };
 		2512BB4427E4284F000B353B /* AddForwardingTableVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddForwardingTableVC.h; sourceTree = "<group>"; };
 		2512BB4527E4284F000B353B /* AddForwardingTableVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddForwardingTableVC.m; sourceTree = "<group>"; };
 		25589A0F272115D700F4F880 /* SigMeshOCDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SigMeshOCDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -610,19 +623,15 @@
 		25589B0A2721403E00F4F880 /* ReKeyBindViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReKeyBindViewController.h; sourceTree = "<group>"; };
 		25589B0C2721403E00F4F880 /* HomeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HomeViewController.h; sourceTree = "<group>"; };
 		25589B0E2721403E00F4F880 /* SceneDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneDetailViewController.h; sourceTree = "<group>"; };
-		25589B0F2721403E00F4F880 /* EditModelIDsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditModelIDsViewController.h; sourceTree = "<group>"; };
 		25589B102721403E00F4F880 /* MeshInfoVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeshInfoVC.h; sourceTree = "<group>"; };
 		25589B112721403E00F4F880 /* FileChooseVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileChooseVC.m; sourceTree = "<group>"; };
-		25589B122721403E00F4F880 /* SettingsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsVC.m; sourceTree = "<group>"; };
 		25589B142721403E00F4F880 /* ResponseTestVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ResponseTestVC.xib; sourceTree = "<group>"; };
 		25589B162721403E00F4F880 /* ResponseTestVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ResponseTestVC.m; sourceTree = "<group>"; };
 		25589B182721403E00F4F880 /* ResponseTestVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResponseTestVC.h; sourceTree = "<group>"; };
-		25589B192721403E00F4F880 /* ModelIDListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelIDListViewController.h; sourceTree = "<group>"; };
 		25589B1A2721403E00F4F880 /* SchedulerDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SchedulerDetailViewController.h; sourceTree = "<group>"; };
 		25589B1B2721403E00F4F880 /* SceneListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneListViewController.h; sourceTree = "<group>"; };
 		25589B1C2721403E00F4F880 /* SchedulerListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SchedulerListViewController.h; sourceTree = "<group>"; };
 		25589B1D2721403E00F4F880 /* ActionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActionViewController.h; sourceTree = "<group>"; };
-		25589B1E2721403E00F4F880 /* EditModelIDsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditModelIDsViewController.m; sourceTree = "<group>"; };
 		25589B1F2721403E00F4F880 /* SceneDetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SceneDetailViewController.m; sourceTree = "<group>"; };
 		25589B212721403E00F4F880 /* EditOOBVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditOOBVC.m; sourceTree = "<group>"; };
 		25589B222721403E00F4F880 /* OOBListVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OOBListVC.h; sourceTree = "<group>"; };
@@ -637,9 +646,7 @@
 		25589B2B2721403E00F4F880 /* ChooseOOBFileVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChooseOOBFileVC.h; sourceTree = "<group>"; };
 		25589B2C2721403E00F4F880 /* OOBItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OOBItemCell.m; sourceTree = "<group>"; };
 		25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SchedulerDetailViewController.m; sourceTree = "<group>"; };
-		25589B2E2721403E00F4F880 /* ModelIDListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelIDListViewController.m; sourceTree = "<group>"; };
 		25589B2F2721403E00F4F880 /* MeshInfoVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshInfoVC.m; sourceTree = "<group>"; };
-		25589B302721403E00F4F880 /* SettingsVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsVC.h; sourceTree = "<group>"; };
 		25589B312721403E00F4F880 /* FileChooseVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
 		25589B332721403E00F4F880 /* AppKeyListVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AppKeyListVC.xib; sourceTree = "<group>"; };
 		25589B342721403E00F4F880 /* NetKeyListVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetKeyListVC.h; sourceTree = "<group>"; };
@@ -763,6 +770,19 @@
 		912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPExportVC.h; sourceTree = "<group>"; };
 		912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPExportVC.m; sourceTree = "<group>"; };
 		914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_V4.1.0.0_20230926.bin; sourceTree = "<group>"; };
+		9152A18C2AD8E9B500186969 /* SettingsItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsItemCell.h; sourceTree = "<group>"; };
+		9152A18D2AD8E9B500186969 /* SettingsItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsItemCell.m; sourceTree = "<group>"; };
+		9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingsItemCell.xib; sourceTree = "<group>"; };
+		915958BC2AD521F500D85CA4 /* NetworkVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetworkVC.h; sourceTree = "<group>"; };
+		915958BD2AD521F500D85CA4 /* NetworkVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NetworkVC.m; sourceTree = "<group>"; };
+		915958C22AD5286D00D85CA4 /* SettingDetailItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingDetailItemCell.h; sourceTree = "<group>"; };
+		915958C32AD5286D00D85CA4 /* SettingDetailItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingDetailItemCell.m; sourceTree = "<group>"; };
+		915958C42AD5286D00D85CA4 /* SettingDetailItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingDetailItemCell.xib; sourceTree = "<group>"; };
+		915958C72AD5391F00D85CA4 /* SettingTitleItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingTitleItemCell.h; sourceTree = "<group>"; };
+		915958C82AD5391F00D85CA4 /* SettingTitleItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingTitleItemCell.m; sourceTree = "<group>"; };
+		915958C92AD5391F00D85CA4 /* SettingTitleItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingTitleItemCell.xib; sourceTree = "<group>"; };
+		915958CC2AD545BC00D85CA4 /* DirectForwardingVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectForwardingVC.h; sourceTree = "<group>"; };
+		915958CD2AD545BC00D85CA4 /* DirectForwardingVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DirectForwardingVC.m; sourceTree = "<group>"; };
 		9161956B290A17CE00BCF0A6 /* UIColor+Telink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+Telink.h"; sourceTree = "<group>"; };
 		9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+Telink.m"; sourceTree = "<group>"; };
 		916963472AC51D300010D34A /* AutoAddDeviceVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoAddDeviceVC.h; sourceTree = "<group>"; };
@@ -776,6 +796,25 @@
 		9175845329E535B7008FE98A /* ProxyFilterVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProxyFilterVC.h; sourceTree = "<group>"; };
 		9175845429E535B7008FE98A /* ProxyFilterVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProxyFilterVC.m; sourceTree = "<group>"; };
 		9175845529E535B7008FE98A /* ProxyFilterVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProxyFilterVC.xib; sourceTree = "<group>"; };
+		917BE4A92AD66E150073FC35 /* NetworkListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetworkListVC.h; sourceTree = "<group>"; };
+		917BE4AA2AD66E150073FC35 /* NetworkListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NetworkListVC.m; sourceTree = "<group>"; };
+		917BE4B12AD684F30073FC35 /* NetworkCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkCell.m; sourceTree = "<group>"; };
+		917BE4B22AD684F30073FC35 /* NetworkCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NetworkCell.xib; sourceTree = "<group>"; };
+		917BE4B32AD684F30073FC35 /* NetworkCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkCell.h; sourceTree = "<group>"; };
+		917BE4B62AD689B00073FC35 /* ShareButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShareButtonCell.m; sourceTree = "<group>"; };
+		917BE4B72AD689B00073FC35 /* ShareButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShareButtonCell.h; sourceTree = "<group>"; };
+		917BE4B82AD689B10073FC35 /* CustomShareAlert.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CustomShareAlert.xib; sourceTree = "<group>"; };
+		917BE4B92AD689B10073FC35 /* CustomShareAlert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomShareAlert.m; sourceTree = "<group>"; };
+		917BE4BA2AD689B10073FC35 /* ShareItemCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShareItemCell.m; sourceTree = "<group>"; };
+		917BE4BB2AD689B10073FC35 /* CustomShareAlert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomShareAlert.h; sourceTree = "<group>"; };
+		917BE4BC2AD689B10073FC35 /* ShareItemCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShareItemCell.h; sourceTree = "<group>"; };
+		917BE4BD2AD689B10073FC35 /* ShareItemCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShareItemCell.xib; sourceTree = "<group>"; };
+		917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShareButtonCell.xib; sourceTree = "<group>"; };
+		917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomShareAlertView.m; sourceTree = "<group>"; };
+		917BE4C62AD68A2A0073FC35 /* CustomShareAlertView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomShareAlertView.h; sourceTree = "<group>"; };
+		91D769C52AEB897F00A07E45 /* PrivateBeaconVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateBeaconVC.h; sourceTree = "<group>"; };
+		91D769C62AEB897F00A07E45 /* PrivateBeaconVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrivateBeaconVC.m; sourceTree = "<group>"; };
+		91D769C72AEB897F00A07E45 /* PrivateBeaconVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrivateBeaconVC.xib; sourceTree = "<group>"; };
 		91D999EA2A94595E00E66929 /* AddDeviceVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddDeviceVC.h; sourceTree = "<group>"; };
 		91D999EB2A94595E00E66929 /* AddDeviceVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddDeviceVC.m; sourceTree = "<group>"; };
 		91D999F12A945B3100E66929 /* AddDeviceCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AddDeviceCell.m; sourceTree = "<group>"; };
@@ -785,6 +824,11 @@
 		91ED317E29236CAC003263D1 /* TipsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TipsVC.m; sourceTree = "<group>"; };
 		91F21BCC2A6E496600CCE24C /* CDTPServiceListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPServiceListVC.h; sourceTree = "<group>"; };
 		91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPServiceListVC.m; sourceTree = "<group>"; };
+		91F6A93C2AEFB0E50076E54B /* PrivateBeaconCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateBeaconCell.h; sourceTree = "<group>"; };
+		91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrivateBeaconCell.m; sourceTree = "<group>"; };
+		91F6A93E2AEFB0E50076E54B /* PrivateBeaconCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrivateBeaconCell.xib; sourceTree = "<group>"; };
+		91FAEB172AD7D2AE00F951CE /* SettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
+		91FAEB182AD7D2AE00F951CE /* SettingsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		91FC2AC72A68FAA4003A956C /* DeviceElementItemView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceElementItemView.h; sourceTree = "<group>"; };
 		91FC2AC82A68FAA4003A956C /* DeviceElementItemView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceElementItemView.m; sourceTree = "<group>"; };
 		91FC2ACA2A68FAB4003A956C /* DeviceElementItemView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceElementItemView.xib; sourceTree = "<group>"; };
@@ -826,10 +870,10 @@
 		2541A38027E07D2B00CEA402 /* DirectForwarding */ = {
 			isa = PBXGroup;
 			children = (
+				915958CC2AD545BC00D85CA4 /* DirectForwardingVC.h */,
+				915958CD2AD545BC00D85CA4 /* DirectForwardingVC.m */,
 				2512BB3927E41CD7000B353B /* DirectControlListVC.h */,
 				2512BB3A27E41CD7000B353B /* DirectControlListVC.m */,
-				2512BB4127E4207E000B353B /* ForwardingTableVC.h */,
-				2512BB4227E4207E000B353B /* ForwardingTableVC.m */,
 				2512BB4427E4284F000B353B /* AddForwardingTableVC.h */,
 				2512BB4527E4284F000B353B /* AddForwardingTableVC.m */,
 				25FE6CC827EC024C009F7626 /* ChooseEntryVC.h */,
@@ -994,6 +1038,9 @@
 				25589A8D2721403E00F4F880 /* ExtendBearerModeCell.h */,
 				25589ABA2721403E00F4F880 /* ExtendBearerModeCell.m */,
 				25589AB32721403E00F4F880 /* ExtendBearerModeCell.xib */,
+				9152A18C2AD8E9B500186969 /* SettingsItemCell.h */,
+				9152A18D2AD8E9B500186969 /* SettingsItemCell.m */,
+				9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */,
 				25589AB92721403E00F4F880 /* DeviceGroupListCell.h */,
 				25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */,
 				25589A932721403E00F4F880 /* RemoteElementCell.h */,
@@ -1035,6 +1082,26 @@
 				91D999F22A945B3100E66929 /* AddDeviceCell.h */,
 				91D999F12A945B3100E66929 /* AddDeviceCell.m */,
 				91D999F32A945B3100E66929 /* AddDeviceCell.xib */,
+				915958C22AD5286D00D85CA4 /* SettingDetailItemCell.h */,
+				915958C32AD5286D00D85CA4 /* SettingDetailItemCell.m */,
+				915958C42AD5286D00D85CA4 /* SettingDetailItemCell.xib */,
+				915958C72AD5391F00D85CA4 /* SettingTitleItemCell.h */,
+				915958C82AD5391F00D85CA4 /* SettingTitleItemCell.m */,
+				915958C92AD5391F00D85CA4 /* SettingTitleItemCell.xib */,
+				917BE4B32AD684F30073FC35 /* NetworkCell.h */,
+				917BE4B12AD684F30073FC35 /* NetworkCell.m */,
+				917BE4B22AD684F30073FC35 /* NetworkCell.xib */,
+				917BE4C62AD68A2A0073FC35 /* CustomShareAlertView.h */,
+				917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */,
+				917BE4BB2AD689B10073FC35 /* CustomShareAlert.h */,
+				917BE4B92AD689B10073FC35 /* CustomShareAlert.m */,
+				917BE4B82AD689B10073FC35 /* CustomShareAlert.xib */,
+				917BE4B72AD689B00073FC35 /* ShareButtonCell.h */,
+				917BE4B62AD689B00073FC35 /* ShareButtonCell.m */,
+				917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */,
+				917BE4BC2AD689B10073FC35 /* ShareItemCell.h */,
+				917BE4BA2AD689B10073FC35 /* ShareItemCell.m */,
+				917BE4BD2AD689B10073FC35 /* ShareItemCell.xib */,
 				25589A722721403E00F4F880 /* CustomAlert */,
 				25589AAA2721403E00F4F880 /* ColorPicker */,
 			);
@@ -1104,12 +1171,14 @@
 				25589B502721403E00F4F880 /* GroupDetailViewController.m */,
 				25589AFD2721403E00F4F880 /* HSLViewController.h */,
 				25589B092721403E00F4F880 /* HSLViewController.m */,
+				915958BC2AD521F500D85CA4 /* NetworkVC.h */,
+				915958BD2AD521F500D85CA4 /* NetworkVC.m */,
 				25589B022721403E00F4F880 /* SettingViewController.h */,
 				25589B532721403E00F4F880 /* SettingViewController.m */,
 				25589B002721403E00F4F880 /* LogViewController.h */,
 				25589B512721403E00F4F880 /* LogViewController.m */,
+				917BE4AF2AD66E490073FC35 /* Network */,
 				25589ACB2721403E00F4F880 /* DeviceSetting */,
-				25589AF32721403E00F4F880 /* Mesh OTA */,
 				25589B0D2721403E00F4F880 /* Setting */,
 				25589B552721403E00F4F880 /* SingleOTA */,
 			);
@@ -1201,30 +1270,18 @@
 		25589B0D2721403E00F4F880 /* Setting */ = {
 			isa = PBXGroup;
 			children = (
-				25589B302721403E00F4F880 /* SettingsVC.h */,
-				25589B122721403E00F4F880 /* SettingsVC.m */,
-				25589B102721403E00F4F880 /* MeshInfoVC.h */,
-				25589B2F2721403E00F4F880 /* MeshInfoVC.m */,
+				917BE4A92AD66E150073FC35 /* NetworkListVC.h */,
+				917BE4AA2AD66E150073FC35 /* NetworkListVC.m */,
+				91FAEB172AD7D2AE00F951CE /* SettingsViewController.h */,
+				91FAEB182AD7D2AE00F951CE /* SettingsViewController.m */,
 				25589B312721403E00F4F880 /* FileChooseVC.h */,
 				25589B112721403E00F4F880 /* FileChooseVC.m */,
-				25589B1B2721403E00F4F880 /* SceneListViewController.h */,
-				25589B4F2721403E00F4F880 /* SceneListViewController.m */,
-				25589B0E2721403E00F4F880 /* SceneDetailViewController.h */,
-				25589B1F2721403E00F4F880 /* SceneDetailViewController.m */,
-				25589B1D2721403E00F4F880 /* ActionViewController.h */,
-				25589B422721403E00F4F880 /* ActionViewController.m */,
-				25589B192721403E00F4F880 /* ModelIDListViewController.h */,
-				25589B2E2721403E00F4F880 /* ModelIDListViewController.m */,
-				25589B0F2721403E00F4F880 /* EditModelIDsViewController.h */,
-				25589B1E2721403E00F4F880 /* EditModelIDsViewController.m */,
 				25589B1C2721403E00F4F880 /* SchedulerListViewController.h */,
 				25589B4E2721403E00F4F880 /* SchedulerListViewController.m */,
 				25589B1A2721403E00F4F880 /* SchedulerDetailViewController.h */,
 				25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */,
 				91ED317929236CAC003263D1 /* TipsVC.h */,
 				91ED317E29236CAC003263D1 /* TipsVC.m */,
-				9175844E29E53586008FE98A /* Proxy Filter */,
-				2541A38027E07D2B00CEA402 /* DirectForwarding */,
 				25DD7D032728E5420029037A /* Root Certificate */,
 				25589B132721403E00F4F880 /* Test */,
 				25589B202721403E00F4F880 /* OOB Database */,
@@ -1551,6 +1608,46 @@
 			path = "Proxy Filter";
 			sourceTree = "<group>";
 		};
+		917BE4AF2AD66E490073FC35 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				25589B102721403E00F4F880 /* MeshInfoVC.h */,
+				25589B2F2721403E00F4F880 /* MeshInfoVC.m */,
+				91D769C12AEB895500A07E45 /* PrivateBeacon */,
+				917BE4B02AD66EFC0073FC35 /* Scenes */,
+				2541A38027E07D2B00CEA402 /* DirectForwarding */,
+				25589AF32721403E00F4F880 /* Mesh OTA */,
+				9175844E29E53586008FE98A /* Proxy Filter */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		917BE4B02AD66EFC0073FC35 /* Scenes */ = {
+			isa = PBXGroup;
+			children = (
+				25589B1B2721403E00F4F880 /* SceneListViewController.h */,
+				25589B4F2721403E00F4F880 /* SceneListViewController.m */,
+				25589B0E2721403E00F4F880 /* SceneDetailViewController.h */,
+				25589B1F2721403E00F4F880 /* SceneDetailViewController.m */,
+				25589B1D2721403E00F4F880 /* ActionViewController.h */,
+				25589B422721403E00F4F880 /* ActionViewController.m */,
+			);
+			path = Scenes;
+			sourceTree = "<group>";
+		};
+		91D769C12AEB895500A07E45 /* PrivateBeacon */ = {
+			isa = PBXGroup;
+			children = (
+				91D769C52AEB897F00A07E45 /* PrivateBeaconVC.h */,
+				91D769C62AEB897F00A07E45 /* PrivateBeaconVC.m */,
+				91D769C72AEB897F00A07E45 /* PrivateBeaconVC.xib */,
+				91F6A93C2AEFB0E50076E54B /* PrivateBeaconCell.h */,
+				91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */,
+				91F6A93E2AEFB0E50076E54B /* PrivateBeaconCell.xib */,
+			);
+			path = PrivateBeacon;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1704,10 +1801,13 @@
 				25589BC92721403F00F4F880 /* InfoSwitchCell.xib in Resources */,
 				25589BE02721403F00F4F880 /* ShowTipsView.xib in Resources */,
 				25589C172721403F00F4F880 /* EditOOBVC.xib in Resources */,
+				9152A1902AD8E9B500186969 /* SettingsItemCell.xib in Resources */,
 				25589BF72721403F00F4F880 /* DeviceConfigVC.xib in Resources */,
 				25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */,
 				25589C1C2721403F00F4F880 /* AppKeyListVC.xib in Resources */,
+				917BE4C32AD689B10073FC35 /* ShareItemCell.xib in Resources */,
 				259AA1FC27293FDE0046CEB1 /* BRPickerView.bundle in Resources */,
+				91D769C92AEB897F00A07E45 /* PrivateBeaconVC.xib in Resources */,
 				91FC2ACB2A68FAB4003A956C /* DeviceElementItemView.xib in Resources */,
 				25589BFE2721403F00F4F880 /* MeshOTAVC.xib in Resources */,
 				25589A1D272115D700F4F880 /* Main.storyboard in Resources */,
@@ -1718,13 +1818,17 @@
 				25589BB82721403F00F4F880 /* InputItemCell.xib in Resources */,
 				25589BBF2721403F00F4F880 /* RemoteElementCell.xib in Resources */,
 				25589C162721403F00F4F880 /* ChooseOOBFileVC.xib in Resources */,
+				915958CB2AD5391F00D85CA4 /* SettingTitleItemCell.xib in Resources */,
 				25589BD72721403F00F4F880 /* ExtendBearerModeCell.xib in Resources */,
 				25589BC62721403F00F4F880 /* OnOffItemCell.xib in Resources */,
 				25589BD62721403F00F4F880 /* AddDeviceItemCell.xib in Resources */,
 				25589BD02721403F00F4F880 /* ColorModelCell.xib in Resources */,
+				915958C62AD5286D00D85CA4 /* SettingDetailItemCell.xib in Resources */,
+				917BE4B52AD684F30073FC35 /* NetworkCell.xib in Resources */,
 				25589BEF2721403F00F4F880 /* DeviceNetKeyListVC.xib in Resources */,
 				25589BB32721403F00F4F880 /* ChooseItemCell.xib in Resources */,
 				916FEF2D29E654F800206FE6 /* ProxyFilterCell.xib in Resources */,
+				917BE4C42AD689B10073FC35 /* ShareButtonCell.xib in Resources */,
 				25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */,
 				25589C492721403F00F4F880 /* IQKeyboardManager.bundle in Resources */,
 				25589BBB2721403F00F4F880 /* InfoButtonCell.xib in Resources */,
@@ -1736,8 +1840,10 @@
 				25589BC42721403F00F4F880 /* OnOffModelCell.xib in Resources */,
 				25589C1D2721403F00F4F880 /* KeyCell.xib in Resources */,
 				25589C0C2721403F00F4F880 /* ResponseTestVC.xib in Resources */,
+				91F6A9402AEFB0E50076E54B /* PrivateBeaconCell.xib in Resources */,
 				25589C232721403F00F4F880 /* NetKeyListVC.xib in Resources */,
 				25589BCB2721403F00F4F880 /* InfoNextCell.xib in Resources */,
+				917BE4C02AD689B10073FC35 /* CustomShareAlert.xib in Resources */,
 				25589C242721403F00F4F880 /* NetKeyAddVC.xib in Resources */,
 				25589BBD2721403F00F4F880 /* ModelIDCell.xib in Resources */,
 				25589C132721403F00F4F880 /* OOBListVC.xib in Resources */,
@@ -1839,6 +1945,7 @@
 				259AA1FD27293FDE0046CEB1 /* BRPickerStyle.m in Sources */,
 				25589C312721403F00F4F880 /* SingleOTAViewController.m in Sources */,
 				25589C4A2721403F00F4F880 /* IQKeyboardManager.m in Sources */,
+				91FAEB192AD7D2AE00F951CE /* SettingsViewController.m in Sources */,
 				25589C4B2721403F00F4F880 /* IQNSArray+Sort.m in Sources */,
 				25589BB72721403F00F4F880 /* ChooseItemCell.m in Sources */,
 				25589BAD2721403F00F4F880 /* OTAFileSource.m in Sources */,
@@ -1849,7 +1956,6 @@
 				25589BEC2721403F00F4F880 /* DeviceNetKeyListVC.m in Sources */,
 				25589BDD2721403F00F4F880 /* ExtendBearerModeCell.m in Sources */,
 				25589C0D2721403F00F4F880 /* ResponseTestVC.m in Sources */,
-				25589C0B2721403F00F4F880 /* SettingsVC.m in Sources */,
 				25589C032721403F00F4F880 /* ReKeyBindViewController.m in Sources */,
 				25589C192721403F00F4F880 /* SchedulerDetailViewController.m in Sources */,
 				25589BDE2721403F00F4F880 /* ChooseModelIDCell.m in Sources */,
@@ -1861,6 +1967,7 @@
 				25589C3F2721403F00F4F880 /* UIView+Frame.m in Sources */,
 				25589BFD2721403F00F4F880 /* DeviceSubscriptionListViewController.m in Sources */,
 				25589BB42721403F00F4F880 /* CustomAlertView.m in Sources */,
+				915958CA2AD5391F00D85CA4 /* SettingTitleItemCell.m in Sources */,
 				25589BF42721403F00F4F880 /* DeviceSettingViewController.m in Sources */,
 				25589BC12721403F00F4F880 /* LevelAndSliderCell.m in Sources */,
 				259AA1FB27293FDE0046CEB1 /* BRDatePickerView.m in Sources */,
@@ -1869,17 +1976,18 @@
 				25589C3E2721403F00F4F880 /* YZFlowLayout.m in Sources */,
 				25589C482721403F00F4F880 /* IQPreviousNextView.m in Sources */,
 				25589C402721403F00F4F880 /* YZDisplayViewController.m in Sources */,
-				2512BB4327E4207E000B353B /* ForwardingTableVC.m in Sources */,
 				25589C222721403F00F4F880 /* NetKeyListVC.m in Sources */,
+				917BE4C22AD689B10073FC35 /* ShareItemCell.m in Sources */,
 				25589BBC2721403F00F4F880 /* SettingItemCell.m in Sources */,
 				25589BAB2721403F00F4F880 /* zipAndUnzip+zipString.m in Sources */,
+				917BE4B42AD684F30073FC35 /* NetworkCell.m in Sources */,
 				25589BDB2721403F00F4F880 /* ChooseBinCell.m in Sources */,
 				25589BCE2721403F00F4F880 /* HomeItemCell.m in Sources */,
 				25589BCC2721403F00F4F880 /* SchedulerCell.m in Sources */,
-				25589C0F2721403F00F4F880 /* EditModelIDsViewController.m in Sources */,
 				25589BB12721403F00F4F880 /* BaseTableView.m in Sources */,
 				25589BD82721403F00F4F880 /* ColorModelCell.m in Sources */,
 				25589C1E2721403F00F4F880 /* KeyCell.m in Sources */,
+				917BE4C12AD689B10073FC35 /* CustomShareAlert.m in Sources */,
 				25589BFB2721403F00F4F880 /* DeviceRemoteVC.m in Sources */,
 				258B6296282CAB6500AE9B35 /* PTSViewController.m in Sources */,
 				25589C012721403F00F4F880 /* MeshOTAVC.m in Sources */,
@@ -1887,6 +1995,7 @@
 				9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */,
 				25589BD52721403F00F4F880 /* AddDeviceItemCell.m in Sources */,
 				25589BE92721403F00F4F880 /* DeviceKeyCell.m in Sources */,
+				915958C52AD5286D00D85CA4 /* SettingDetailItemCell.m in Sources */,
 				25589C4F2721403F00F4F880 /* IQUIViewController+Additions.m in Sources */,
 				25589BE82721403F00F4F880 /* HomeViewController.m in Sources */,
 				259AA1F827293FDE0046CEB1 /* BRStringPickerView.m in Sources */,
@@ -1900,14 +2009,17 @@
 				2512BB3B27E41CD7000B353B /* DirectControlListVC.m in Sources */,
 				259AA1FA27293FDE0046CEB1 /* NSDate+BRPickerView.m in Sources */,
 				25589C082721403F00F4F880 /* HSLViewController.m in Sources */,
+				91F6A93F2AEFB0E50076E54B /* PrivateBeaconCell.m in Sources */,
 				259AA1F927293FDE0046CEB1 /* BRDatePickerView+BR.m in Sources */,
 				25589BF82721403F00F4F880 /* DeviceConfigCell.m in Sources */,
+				915958BE2AD521F500D85CA4 /* NetworkVC.m in Sources */,
 				25589C062721403F00F4F880 /* CMDViewController.m in Sources */,
+				917BE4AB2AD66E150073FC35 /* NetworkListVC.m in Sources */,
 				25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */,
+				917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */,
 				25FE6CCA27EC024C009F7626 /* ChooseEntryVC.m in Sources */,
 				25589C022721403F00F4F880 /* UIButton+extension.m in Sources */,
 				25589C302721403F00F4F880 /* SettingViewController.m in Sources */,
-				25589C1A2721403F00F4F880 /* ModelIDListViewController.m in Sources */,
 				25589C262721403F00F4F880 /* ActionViewController.m in Sources */,
 				25589C122721403F00F4F880 /* ChooseOOBFileVC.m in Sources */,
 				25589BF32721403F00F4F880 /* SubnetBridgeListVC.m in Sources */,
@@ -1920,10 +2032,12 @@
 				25589C2D2721403F00F4F880 /* SceneListViewController.m in Sources */,
 				25589C272721403F00F4F880 /* ShowQRCodeViewController.m in Sources */,
 				259AA1FE27293FDE0046CEB1 /* BRBaseView.m in Sources */,
+				91D769C82AEB897F00A07E45 /* PrivateBeaconVC.m in Sources */,
 				25589C1B2721403F00F4F880 /* MeshInfoVC.m in Sources */,
 				25589C502721403F00F4F880 /* IQKeyboardReturnKeyHandler.m in Sources */,
 				25589C462721403F00F4F880 /* IQBarButtonItem.m in Sources */,
 				91F21BCE2A6E496600CCE24C /* CDTPServiceListVC.m in Sources */,
+				915958CE2AD545BC00D85CA4 /* DirectForwardingVC.m in Sources */,
 				25589BB02721403F00F4F880 /* BaseViewController.m in Sources */,
 				25589C472721403F00F4F880 /* IQUIView+IQKeyboardToolbar.m in Sources */,
 				25589BD42721403F00F4F880 /* ColorManager.m in Sources */,
@@ -1931,9 +2045,11 @@
 				25589BE32721403F00F4F880 /* InfoNextCell.m in Sources */,
 				25589C152721403F00F4F880 /* OOBListVC.m in Sources */,
 				25589C0A2721403F00F4F880 /* FileChooseVC.m in Sources */,
+				9152A18F2AD8E9B500186969 /* SettingsItemCell.m in Sources */,
 				25589C452721403F00F4F880 /* IQTitleBarButtonItem.m in Sources */,
 				25589BF62721403F00F4F880 /* DeviceCompositionDataVC.m in Sources */,
 				25589BC02721403F00F4F880 /* ModelIDCell.m in Sources */,
+				917BE4BF2AD689B10073FC35 /* ShareButtonCell.m in Sources */,
 				25589BE62721403F00F4F880 /* FastProvisionAddVC.m in Sources */,
 				25589C002721403F00F4F880 /* MeshOTAItemCell.m in Sources */,
 				25589BE42721403F00F4F880 /* ShowTipsView.m in Sources */,
@@ -2016,7 +2132,6 @@
 				2590C4FF285C287D00E19DE9 /* DeviceNetKeyListVC.m in Sources */,
 				2590C500285C287D00E19DE9 /* ExtendBearerModeCell.m in Sources */,
 				2590C501285C287D00E19DE9 /* ResponseTestVC.m in Sources */,
-				2590C502285C287D00E19DE9 /* SettingsVC.m in Sources */,
 				2590C503285C287D00E19DE9 /* ReKeyBindViewController.m in Sources */,
 				2590C504285C287D00E19DE9 /* SchedulerDetailViewController.m in Sources */,
 				2590C505285C287D00E19DE9 /* ChooseModelIDCell.m in Sources */,
@@ -2037,14 +2152,12 @@
 				2590C513285C287D00E19DE9 /* YZFlowLayout.m in Sources */,
 				2590C514285C287D00E19DE9 /* IQPreviousNextView.m in Sources */,
 				2590C515285C287D00E19DE9 /* YZDisplayViewController.m in Sources */,
-				2590C516285C287D00E19DE9 /* ForwardingTableVC.m in Sources */,
 				2590C517285C287D00E19DE9 /* NetKeyListVC.m in Sources */,
 				2590C518285C287D00E19DE9 /* SettingItemCell.m in Sources */,
 				2590C519285C287D00E19DE9 /* zipAndUnzip+zipString.m in Sources */,
 				2590C51A285C287D00E19DE9 /* ChooseBinCell.m in Sources */,
 				2590C51B285C287D00E19DE9 /* HomeItemCell.m in Sources */,
 				2590C51C285C287D00E19DE9 /* SchedulerCell.m in Sources */,
-				2590C51D285C287D00E19DE9 /* EditModelIDsViewController.m in Sources */,
 				2590C51E285C287D00E19DE9 /* BaseTableView.m in Sources */,
 				2590C51F285C287D00E19DE9 /* ColorModelCell.m in Sources */,
 				2590C520285C287D00E19DE9 /* KeyCell.m in Sources */,
@@ -2073,7 +2186,6 @@
 				2590C539285C287D00E19DE9 /* ChooseEntryVC.m in Sources */,
 				2590C53A285C287D00E19DE9 /* UIButton+extension.m in Sources */,
 				2590C53B285C287D00E19DE9 /* SettingViewController.m in Sources */,
-				2590C53C285C287D00E19DE9 /* ModelIDListViewController.m in Sources */,
 				2590C53D285C287D00E19DE9 /* ActionViewController.m in Sources */,
 				2590C53E285C287D00E19DE9 /* ChooseOOBFileVC.m in Sources */,
 				2590C53F285C287D00E19DE9 /* SubnetBridgeListVC.m in Sources */,
@@ -2305,7 +2417,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -2350,7 +2462,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";

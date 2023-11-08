@@ -27,7 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CDTPExportVC : BaseViewController
 
-@property (nonatomic, strong) ObjectModel *meshObject;
+//@property (nonatomic, strong) ObjectModel *meshObject;
+@property (nonatomic, strong) NSDictionary *meshDictionary;
 
 @end
 

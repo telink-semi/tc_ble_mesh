@@ -47,30 +47,6 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
-    //demo v2.8.0新增remote添加模式，demo默认使用普通添加模式。
-    NSNumber *remoteType = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
-    if (remoteType == nil) {
-        remoteType = [NSNumber numberWithBool:NO];
-        [[NSUserDefaults standardUserDefaults] setValue:remoteType forKey:kRemoteAddType];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-
-    //demo v2.8.1新增私有定制getOnlinestatus，demo默认使用私有定制获取状态。
-    NSNumber *onlineType = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
-    if (onlineType == nil) {
-        onlineType = [NSNumber numberWithBool:YES];
-        [[NSUserDefaults standardUserDefaults] setValue:onlineType forKey:kGetOnlineStatusType];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-
-    //demo v3.0.0新增fast provision添加模式，demo默认使用普通添加模式。
-    NSNumber *fastAddType = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
-    if (fastAddType == nil) {
-        fastAddType = [NSNumber numberWithBool:NO];
-        [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kFastAddType];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-
     //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用兼容模式。（兼容模式为staticOOB设备在无OOB数据的情况下通过noOOB provision的方式进行添加;不兼容模式为staticOOB设备必须通过staticOOB provision的方式进行添加）。
     NSNumber *addStaticOOBDeviceByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable];
     if (addStaticOOBDeviceByNoOOBEnable == nil) {
@@ -103,8 +79,8 @@
 
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
 //    [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
-    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
-//    [SigLogger.share setSDKLogLevel:SigLogLevelOff];//上架则关闭Log保存功能
+//    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
+    [SigLogger.share setSDKLogLevel:SigLogLevelOff];//上架则关闭Log保存功能
 
     /*初始化SDK*/
     //1.一个provisioner分配的地址范围，默认为0x400。
@@ -114,7 +90,28 @@
     SigDataSource.share.defaultSequenceNumberIncrement = 16;
     //3.启动SDK。
     [SDKLibCommand startMeshSDK];
-        
+    //(可选)4.v4.1.0.0 APP新增Mesh网络管理功能，SDK内部只存储一个Mesh的数据，Demo可以存储多个Mesh的数据，并通过Import Mesh的方式进行Mesh的切换。
+    //Demo存储一个Mesh的列表，并记录当前使用的Mesh的MeshUUID，如果登录的时候发现列表里面没有这个MeshUUID则默认选中index=0的Mesh。
+    //第一次打开APP时，需要将SDK新建的网络数据存储到Demo端，并记录当前使用的MeshUUID。
+    NSArray *meshList = [[NSUserDefaults standardUserDefaults] valueForKey:kCacheMeshListKey];
+    if (meshList == nil) {
+        NSDictionary *meshDict = [SigDataSource.share getDictionaryFromDataSource];
+        NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
+        meshList = [NSArray arrayWithObject:tempData];
+        [[NSUserDefaults standardUserDefaults] setValue:meshList forKey:kCacheMeshListKey];
+        [[NSUserDefaults standardUserDefaults] setValue:SigDataSource.share.meshUUID forKey:kCacheCurrentMeshUUIDKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    } else {
+        NSString *meshUUID = [[NSUserDefaults standardUserDefaults] valueForKey:kCacheCurrentMeshUUIDKey];
+        for (NSData *data in meshList) {
+            NSDictionary *meshDict = [LibTools getDictionaryWithJSONData:data];
+            if ([[meshDict[@"meshUUID"] uppercaseString] isEqualToString:[meshUUID uppercaseString]]) {
+                [SigDataSource.share switchToNewMeshDictionary:meshDict];
+                break;
+            }
+        }
+    }
+    
 //    //(可选，旧判断)SDK的分组默认绑定5个modelID，可通过以下接口修改分组默认绑定的modelIDs
 //    SigDataSource.share.defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_GenericLevelServer_ID)]];
 ////    [SigDataSource.share.defaultGroupSubscriptionModels addObject:@(0x00000211)];//新增vendorModelID用于测试加组及vendor组控。
@@ -193,16 +190,39 @@
 //    [filter setDictionaryToSigProxyFilterModel:dict];
 //    SigDataSource.share.filterModel = filter;
     
-    // demo v4.1.0.0新增主动添加还是手动添加的配置项，
-    NSNumber *autoProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kAutoProvision];
-    if (autoProvision == nil) {
-        // demo默认使用手动添加模式。
-        autoProvision = [NSNumber numberWithBool:NO];
-        [[NSUserDefaults standardUserDefaults] setValue:autoProvision forKey:kAutoProvision];
+    //demo v4.1.0.0新增Provision模式选择参数，demo默认使用可选设备的普通添加模式。
+    NSNumber *provisionMode = [[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode];
+    if (provisionMode == nil) {
+        // demo默认使用可选设备的普通添加模式。
+        provisionMode = [NSNumber numberWithInt:ProvisionMode_normalSelectable];
+        [[NSUserDefaults standardUserDefaults] setValue:provisionMode forKey:kProvisionMode];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
+    // demo v4.1.0.0新增配置项：导入Mesh后自动切换Mesh还是弹框提示用户选择是否切换Mesh。
+    NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
+    if (importCompleteAction == nil) {
+        // demo默认使用弹框提示用户选择是否切换Mesh
+        importCompleteAction = [NSNumber numberWithInt:ImportSwitchMode_manual];
+        [[NSUserDefaults standardUserDefaults] setValue:importCompleteAction forKey:kImportCompleteAction];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+
+    [self configDefaultRootCertificateData];
+    
     return YES;
+}
+
+/// config Default Root Certificate Data
+- (void)configDefaultRootCertificateData {
+    //demo v3.3.4新增certificate-base Provision使用的默认根证书文件名，demo不重新赋值则默认使用PTS的root.der。
+    NSString *rootCertificateName = [[NSUserDefaults standardUserDefaults] valueForKey:kRootCertificateName];
+    if (rootCertificateName != nil) {
+        NSData *selectData = [LibTools getDataWithFileName:rootCertificateName fileType:nil];
+        if (selectData && selectData.length > 0) {
+            SigDataSource.share.defaultRootCertificateData = selectData;
+        }
+    }
 }
 
 - (void)addMoreCompositionData {

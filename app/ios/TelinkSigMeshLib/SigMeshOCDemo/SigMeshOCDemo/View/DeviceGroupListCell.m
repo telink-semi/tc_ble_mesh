@@ -85,7 +85,7 @@
                 elementAddress = elementNumber.intValue;
                 if (modelIdNumber.intValue == kSigModel_GenericLevelServer_ID) {
                     SigElementModel *elementModel = weakSelf.model.elements[elementAddress-destination];
-                    if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]]) {
+                    if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]] || [elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightLightnessServer_ID]]) {
                         groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
                     } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
                         groupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;

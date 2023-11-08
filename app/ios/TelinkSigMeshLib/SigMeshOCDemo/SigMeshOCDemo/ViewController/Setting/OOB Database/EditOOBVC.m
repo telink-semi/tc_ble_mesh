@@ -40,6 +40,8 @@
 
     if (self.isAdd) {
         self.title = @"Add OOB";
+//        self.uuidTF.text = [@"e39a0c513450f734a585ef5999da9b79" uppercaseString];
+//        self.oobTF.text = [@"000102030405060708090A0B0C0D0E0F000102030405060708090A0B0C0D0E0F" uppercaseString];
     } else {
         self.title = @"Edit OOB";
         self.uuidTF.text = self.oobModel.UUIDString;

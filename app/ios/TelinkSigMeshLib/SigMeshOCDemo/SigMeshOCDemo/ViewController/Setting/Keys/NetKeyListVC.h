@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NetKeyListVC : BaseViewController
 
+@property (nonatomic, strong) SigDataSource *network;
+@property (copy, nonatomic) void(^backNetwork)(SigDataSource *nNetwork);//修改Mesh需要
+
 @end
 
 NS_ASSUME_NONNULL_END

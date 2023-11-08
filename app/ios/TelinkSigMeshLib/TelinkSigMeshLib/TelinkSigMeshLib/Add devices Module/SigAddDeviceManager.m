@@ -291,23 +291,31 @@ typedef enum : NSUInteger {
     }
     [self startAddDeviceWithNetworkKey:configModel.networkKey netkeyIndex:configModel.netkeyIndex appkeyModel:appkeyModel peripheral:configModel.peripheral staticOOBData:configModel.staticOOBData keyBindType:configModel.keyBindType productID:configModel.productID cpsData:configModel.cpsData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
-
+/*
+ //连接前停止扫描修改为添加成功或者失败时停止扫描，可以多扫描一会MacAddress。
+ [SigBluetooth.share stopScan];
+ */
 - (void)startScan {
     self.addStatus = SigAddStatusScanning;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if (unprovisioned && ![weakSelf.tempProvisionFailList containsObject:peripheral.identifier.UUIDString]) {
-            //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
             SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-            weakSelf.addStatus = SigAddStatusConnectFirst;
-            [SigBluetooth.share stopScan];
-            SigOOBModel *oobModel = [SigMeshLib.share.dataSource getSigOOBModelWithUUID:model.advUuid];
-            if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+            if (weakSelf.addStatus == SigAddStatusScanning) {
+                //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
+                weakSelf.addStatus = SigAddStatusConnectFirst;
+                SigOOBModel *oobModel = [SigMeshLib.share.dataSource getSigOOBModelWithUUID:model.advUuid];
+                if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
+                    weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                }
+                weakSelf.isCertificateBasedProvision = model.advOobInformation.supportForCertificateBasedProvisioning;
+                weakSelf.curPeripheral = peripheral;
+                [weakSelf startAddPeripheral:peripheral];
             }
-            weakSelf.isCertificateBasedProvision = model.advOobInformation.supportForCertificateBasedProvisioning;
-            weakSelf.curPeripheral = peripheral;
-            [weakSelf startAddPeripheral:peripheral];
+            if (model.macAddress.length > 0) {
+                //已经扫描到MacAddress，可以提前结束scan
+                [SigBluetooth.share stopScan];
+            }
         }
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -501,6 +509,11 @@ typedef enum : NSUInteger {
 - (void)checkToTryAgain:(CBPeripheral *)peripheral {
     __weak typeof(self) weakSelf = self;
     [SigBearer.share closeWithResult:^(BOOL successful) {
+        // 蓝牙关闭的情况下取消重试流程。
+        // Cancel the retry process when Bluetooth is turned off.
+        if (!SigBluetooth.share.isBLEInitFinish) {
+            weakSelf.retryCount = 0;
+        }
         if (weakSelf.retryCount > 0) {
             TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
             weakSelf.retryCount --;
@@ -576,9 +589,11 @@ typedef enum : NSUInteger {
 - (void)addPeripheralFail:(CBPeripheral *)peripheral {
     TeLogInfo(@"addPeripheralFail,uuid=%@",peripheral.identifier.UUIDString);
     NSString *uuid = peripheral.identifier.UUIDString;
-    if (![self.tempProvisionFailList containsObject:uuid]) {
+    if (uuid && ![self.tempProvisionFailList containsObject:uuid]) {
         [self.tempProvisionFailList addObject:uuid];
     }
+    //连接前停止扫描修改为添加成功或者失败时停止扫描，可以多扫描一会MacAddress。
+    [SigBluetooth.share stopScan];
     if (self.isAutoAddDevice) {
         self.addStatus = SigAddStatusScanning;
         [self startScan];
@@ -591,6 +606,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)addPeripheralSuccess:(CBPeripheral *)peripheral {
+    //连接前停止扫描修改为添加成功或者失败时停止扫描，可以多扫描一会MacAddress。
+    [SigBluetooth.share stopScan];
     if (self.isAutoAddDevice) {
         self.addStatus = SigAddStatusScanning;
         [self startScan];

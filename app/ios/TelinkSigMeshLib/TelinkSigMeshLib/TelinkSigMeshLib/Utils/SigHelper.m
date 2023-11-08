@@ -1806,7 +1806,7 @@
 /// @param opCode 1-octet Opcodes,eg:0x00; 2-octet Opcodes,eg:0x8201; 3-octet Opcodes,eg:0xC11102
 - (BOOL)isDeviceKeyOpCode:(UInt32)opCode {
     BOOL isDeviceKey = NO;
-    //0x00~0x06 || 0x8000~0x805F
+    //0x00~0x06 || 0x8000~0x805F || 0x80B1~0x80BC
     if ((opCode >= SigOpCode_configAppKeyAdd && opCode <= SigOpCode_configHeartbeatPublicationStatus) || (opCode >= SigOpCode_configAppKeyDelete && opCode <= SigOpCode_remoteProvisioningPDUReport) || (opCode >= SigOpCode_SubnetBridgeGet && opCode <= SigOpCode_BridgingTableSizeStatus)) {
         isDeviceKey = YES;
     }
@@ -1850,10 +1850,21 @@
         case SigFirmwareUpdatePhaseType_applyingUpdate:
             tem = @"applying update";
             break;
-        case SigFirmwareUpdatePhaseType_prohibited:
-            tem = @"prohibited";
+        case SigFirmwareUpdatePhaseType_transferCanceled:
+            tem = @"transfer canceled";
+            break;
+        case SigFirmwareUpdatePhaseType_applySuccess:
+            tem = @"apply success";
+            break;
+        case SigFirmwareUpdatePhaseType_applyFailed:
+            tem = @"apply failed";
+            break;
+        case SigFirmwareUpdatePhaseType_unknown:
+            tem = @"unknown";
             break;
         default:
+            //show RFU phase.
+            tem = [NSString stringWithFormat:@"RFU:0xB–0xF, phaseType=0x%X", phaseType];
             break;
     }
     return tem;

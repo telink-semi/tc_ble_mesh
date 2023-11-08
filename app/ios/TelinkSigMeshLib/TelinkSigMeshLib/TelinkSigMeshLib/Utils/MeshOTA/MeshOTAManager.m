@@ -86,6 +86,8 @@
 
 @property (nonatomic, strong) SigNodeModel *connectedNodeModel;//记录本次meshOTA的指令节点
 
+@property (nonatomic, assign) NSInteger firmwareDistributionGetCount;//记录当前Distributor还剩余DistributionGet指令的次数，默认10秒一次，查6次。
+
 @end
 
 @implementation MeshOTAManager
@@ -234,7 +236,7 @@
                     continue;
                 }
                 //待验证实际升级时下面几个参数是否正确。
-                SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithAddress:nodeAddress.intValue retrievedUpdatePhase:SigFirmwareUpdatePhaseType_applyingUpdate updateStatus:SigFirmwareUpdateServerAndClientModelStatusType_success transferStatus:SigBLOBTransferStatusType_success transferProgress:50 updateFirmwareImageIndex:0];
+                SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithAddress:nodeAddress.intValue retrievedUpdatePhase:SigFirmwareUpdatePhaseType_applySuccess updateStatus:SigFirmwareUpdateServerAndClientModelStatusType_success transferStatus:SigBLOBTransferStatusType_success transferProgress:50 updateFirmwareImageIndex:0];
                 [list addObject:model];
             }
             UInt16 firstIndex = 0;
@@ -413,7 +415,7 @@
             }
         }];
         //Most provide 24*60*60 seconds for BLOBChunkTransfer(Distributor->updating node(s)) in every chunk.
-        dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.0));
+        dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
 //        TeLogError(@"=====chunk，完成给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
     }
 //    TeLogError(@"=====chunk，当前一轮chunk发送完成。");
@@ -454,6 +456,7 @@
 - (void)cancelAllAfterDelay {
     //meshOTA逻辑里面的查询版本号先取消掉
     TeLogDebug(@"取消10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGet) object:nil];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGetSuccessAction) object:nil];
     //meshOTA逻辑里面的查询进度先取消掉
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) object:nil];
@@ -567,7 +570,7 @@
         [_meshOTAThread start];
     }
 
-    self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
+//    self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
     self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
     self.advDistributionProgressBlock = advDistributionProgressBlock;
     self.finishBlock = finishBlock;
@@ -635,6 +638,12 @@
         SigMeshLib.share.delegateForDeveloper = self.oldDelegateForDeveloper;
     }
 
+    [self showMeshOTAResult];
+    [self recoveryExtendBearerMode];
+    SigBearer.share.isAutoReconnect = YES;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    });
     [self resetInitiatorMeshOTAData];
     
     [self saveIsMeshOTAing:NO];
@@ -724,6 +733,10 @@
             [self performSelector:@selector(initiatorToDistributorBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
         }
             break;
+        case SigFirmwareUpdateProgressFirmwareDistributionGet:
+        {
+            [self performSelector:@selector(firmwareUpdateFirmwareDistributionGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+        }
         case SigFirmwareUpdateInformationGetCheckVersion:
         {
             [self performSelector:@selector(firmwareUpdateInformationGetCheckVersion) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
@@ -2803,10 +2816,10 @@
                 //B610010000000280010000,B61000000000020000C800
                 //记录：非直连节点0x403返回50%-phase=1,02000000038400C800
                 TeLogVerbose(@"SigUpdatingNodeEntryModel===%@",model.getDetailString);
-                if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferError || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationFailed) {
+                if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferError || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferCanceled || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_unknown) {
                     [self.failAddressArray addObject:@(model.address)];
                     needCheckNextIndex = YES;
-                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate) {
+                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
                     needCheckNextIndex = YES;
                 } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferActive) {
                     needReceiversGetAgain = YES;
@@ -2896,12 +2909,13 @@
     if (self.updatePolicy == SigUpdatePolicyType_verifyAndApply) {
         if (self.firmwareDistributionReceiversList && self.firmwareDistributionReceiversList.receiversList && self.firmwareDistributionReceiversList.receiversList.count) {
             SigUpdatingNodeEntryModel *receiver = self.firmwareDistributionReceiversList.receiversList.firstObject;
-            if ((receiver && receiver.transferProgress == 50 && receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle) || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate) {
+            if ((receiver && receiver.transferProgress == 50 && receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle) || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
                 if (self.phoneIsDistributor) {
                     [self performSelector:@selector(firmwareUpdateFirmwareUpdateGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
                 } else {
 //                    self.checkVersionCount = 6;
 //                    [self firmwareUpdateFirmwareDistributionGetSuccessAction];
+                    self.firmwareDistributionGetCount = 6;
                     [self firmwareUpdateFirmwareUpdateApplySuccessAction];
                 }
                 return;
@@ -3099,7 +3113,7 @@
                 TeLogDebug(@"firmwareUpdateApply(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
-                        if (responseMessage.updatePhase == SigFirmwareUpdatePhaseType_applyingUpdate) {
+                        if (responseMessage.updatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || responseMessage.updatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
                             //if (responseMessage.updatePhase == SigFirmwareUpdatePhaseType_verificationSuccess) {
 //                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
                                 hasSuccess = YES;
@@ -3159,47 +3173,53 @@
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionGet;
     TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     
-    __block BOOL hasSuccess = NO;
-    __weak typeof(self) weakSelf = self;
-    for (int i=0; i<6; i++) {
-        if (![self isMeshOTAing]) {
-            return;
-        }
-        self.semaphore = dispatch_semaphore_create(0);
-        self.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:self.distributorAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"firmwareDistributionGet(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-//            if (responseMessage.distributionPhase == SigDistributionPhaseState_completed) {//Distributor apply完成但未重启
-            if (responseMessage.distributionPhase == SigDistributionPhaseState_completed || (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle)) {//Distributor apply完成但未重启 或者 Distributor apply完成并重启
-                hasSuccess = YES;
-            } else {
-                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareDistributionGet(Initiator->Distributor),SigFirmwareDistributionStatus.distributionPhase=0x%x",responseMessage.distributionPhase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-            }
-        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            dispatch_semaphore_signal(weakSelf.semaphore);
-        }];
-        if (self.phoneIsDistributor) {
-            //手机端既作为initiator，也作为Distributor。
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kCreateSimulatedMessageInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [self createResponseSigFirmwareDistributionStatusWithStatus:SigFirmwareDistributionServerAndClientModelStatusType_success distributionPhase:SigDistributionPhaseState_completed];
-            });
-        }
-        //Most provide 3 seconds to firmwareUpdateInformationGet every node.
-        dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
-        if (hasSuccess) {
-            //获取完成
-            break;
-        } else {
-            //未获取完成，延时10秒后再重新获取一轮，一共6轮。
-            [NSThread sleepForTimeInterval:10];
-        }
+    if (![self isMeshOTAing]) {
+        TeLog(@"NO in meshOTA progress.");
+        return;
     }
-    if (self.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionGet) {
-        if (!hasSuccess) {
-            [self firmwareUpdateFirmwareDistributionGetFailAction];
+    if (!SigBearer.share.isOpen) {
+        TeLog(@"mesh is not connect.");
+        return;
+    }
+    __block BOOL needGetAgain  = YES;
+    __weak typeof(self) weakSelf = self;
+    self.firmwareDistributionGetCount --;
+    self.semaphore = dispatch_semaphore_create(0);
+    self.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:self.distributorAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+        TeLogDebug(@"firmwareDistributionGet(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            if (responseMessage.distributionPhase == SigDistributionPhaseState_completed) {//Distributor apply完成但未重启
+        if (responseMessage.distributionPhase == SigDistributionPhaseState_completed || responseMessage.distributionPhase == SigDistributionPhaseState_applyingUpdate || (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle)) {//Distributor apply完成但未重启 或者 Distributor 正在apply 或者 Distributor apply完成并重启
+            needGetAgain = NO;
         } else {
-            self.checkVersionCount = 6;
-            [self firmwareUpdateFirmwareDistributionGetSuccessAction];
+            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareDistributionGet(Initiator->Distributor),SigFirmwareDistributionStatus.distributionPhase=0x%x",responseMessage.distributionPhase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+        }
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        dispatch_semaphore_signal(weakSelf.semaphore);
+    }];
+    if (self.phoneIsDistributor) {
+        //手机端既作为initiator，也作为Distributor。
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kCreateSimulatedMessageInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self createResponseSigFirmwareDistributionStatusWithStatus:SigFirmwareDistributionServerAndClientModelStatusType_success distributionPhase:SigDistributionPhaseState_completed];
+        });
+    }
+    //Most provide 3 seconds to firmwareUpdateInformationGet every node.
+    dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+    
+    if (self.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionGet) {
+        if (needGetAgain && self.firmwareDistributionGetCount > 0) {
+            //延时10秒重试
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGet) object:nil];
+            [self performSelector:@selector(firmwareUpdateFirmwareDistributionGet) withObject:nil afterDelay:10.0];
+        } else {
+            if (needGetAgain) {
+                //重试完成且都失败
+                [self firmwareUpdateFirmwareDistributionGetFailAction];
+            } else {
+                //成功
+                self.checkVersionCount = 6;
+                [self firmwareUpdateFirmwareDistributionGetSuccessAction];
+            }
         }
     }
 }
@@ -3359,11 +3379,6 @@
 
 #pragma mark - firmware update fail
 - (void)firmwareUpdateFailAction {
-    [self recoveryExtendBearerMode];
-    SigBearer.share.isAutoReconnect = YES;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    });
     if (self.errorBlock) {
         if (!self.failError) {
             self.failError = [NSError errorWithDomain:@"firmware update fail" code:-1 userInfo:nil];

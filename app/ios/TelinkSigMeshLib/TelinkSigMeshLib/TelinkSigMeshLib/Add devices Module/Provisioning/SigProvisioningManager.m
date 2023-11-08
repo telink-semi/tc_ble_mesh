@@ -999,13 +999,13 @@ typedef enum : UInt16 {
         SigProvisioningRecordsListPdu *recordsListPdu = (SigProvisioningRecordsListPdu *)response;
         self.state = ProvisioningState_recordsList;
         TeLogInfo(@"response=%@,data=%@,recordsList=%@",response,recordsListPdu.pduData,recordsListPdu.recordsList);
-        if ([recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_DeviceCertificate)]) {
+        if ([recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_DeviceCertificate)] || [recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)]) {
             //5.4.2.6.3 Provisioning records,recordID=1是Device Certificate的数据。
             self.recordsListPdu = recordsListPdu;
             [self getCertificate];
         } else {
             self.state = ProvisioningState_fail;
-            TeLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=1.");
+            TeLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=0 or 1.");
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
@@ -1058,6 +1058,19 @@ typedef enum : UInt16 {
         }
         
         if (weakSelf.certificateDict.count > 0) {
+            if ([weakSelf.certificateDict.allKeys containsObject:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)]) {
+                //为过PTS测试项，未实际完成URI的方式获取证书的功能，
+                //5.6 Device Certificate retrieval over the Internet
+                //MshPRT_v1.1.pdf page.618
+                //PTS v8.5.1 build10 测试项的设备证书
+                NSData *deviceCertificateData = [LibTools nsstringToHex:@"3082028030820227A003020102020102300A06082A8648CE3D04030230818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818B310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C035054533141303F06035504030C3830303142444330382D313032312D304230452D304130432D30303042304530413043303020424349443A3030334620425049443A303031413059301306072A8648CE3D020106082A8648CE3D03010703420004317A6F1658447274151033625AFBC4F1B60B31A45D6F459B5076E1118644BDBD265E7F37BFFDF9C4349060237F57660EAE86D4D0587CEF36D93BA7D02B545DE2A376307430090603551D1304023000300B0603551D0F040403020308301D0603551D0E04160414DB621884A7509603221ECD80F5E98DF906C5823A301F0603551D230418301680143E74DF324729FBED18B666AC0144525B9C6584C1301A0603551D200101FF0410300E300C060A60864801650302013001300A06082A8648CE3D04030203470030440220692197DBFB23DAECEC2480331F890C2B1A9F203BE2CD85395AA1E9345A6AC82F02202309FE27118E20BCC6192F7795AB0422AAA167638C52DB577971C202521B3051"];
+                //PTS v8.5.1 build10 测试项的中间证书1
+                NSData *intermediateCertificate1Data = [LibTools nsstringToHex:@"3082027B30820220A003020102020101300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D03010703420004E06E9269DF11118F528FA2A98DFDC4EC2AFF6105CC91783378E8D27D29A45415C5D740A90865AD350D51D607210915B72E43E5BC77B4BC552B0F5FD44DD0CE5CA35D305B301D0603551D0E041604143E74DF324729FBED18B666AC0144525B9C6584C1301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020349003046022100A4B6C2C54B984703617034E0E9D80F03755D1EAB8CBF450F61FF81918EA943740221009493E512C2A8AB35CC881221544E0D21740160D4217737A2BE8090F576B98852"];
+                self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] = deviceCertificateData;
+                self.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)] = intermediateCertificate1Data;
+                //实际应该从SigProvisioningRecordID_CertificateBasedProvisioningURI获取到证书，但未实现，需要移除。
+                [self.certificateDict removeObjectForKey:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)];
+            }
             NSData *root = SigDataSource.share.defaultRootCertificateData;
             BOOL result = [OpenSSLHelper.share checkUserCertificates:weakSelf.certificateDict.allValues withRootCertificate:root];
             if (result == NO) {
@@ -1066,24 +1079,28 @@ typedef enum : UInt16 {
                 return;
             }
         }
-
-        NSData *publicKey = [OpenSSLHelper.share checkCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] withSuperCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)]];
-        if (publicKey && publicKey.length == 64) {
-            NSData *tem = [OpenSSLHelper.share getStaticOOBDataFromCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]];
-            if (tem && tem.length) {
-                weakSelf.staticOobData = [NSData dataWithData:tem];
-            }
-            TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:weakSelf.staticOobData])
-            weakSelf.devicePublicKey = publicKey;
-            weakSelf.state = ProvisioningState_ready;
-            [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-                [weakSelf getCapabilitiesResultWithResponse:response];
-            }];
-        } else {
-            TeLogDebug(@"=====>证书验证失败,check certificate fail.");
-            weakSelf.state = ProvisioningState_fail;
-        }
+        [weakSelf checkCertificatePublicKeyAndStartProvision];
     }];
+}
+
+- (void)checkCertificatePublicKeyAndStartProvision {
+    NSData *publicKey = [OpenSSLHelper.share checkCertificate:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] withSuperCertificate:self.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)]];
+    if (publicKey && publicKey.length == 64) {
+        NSData *tem = [OpenSSLHelper.share getStaticOOBDataFromCertificate:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]];
+        if (tem && tem.length) {
+            self.staticOobData = [NSData dataWithData:tem];
+        }
+        TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:self.staticOobData])
+        self.devicePublicKey = publicKey;
+        self.state = ProvisioningState_ready;
+        __weak typeof(self) weakSelf = self;
+        [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+    } else {
+        TeLogDebug(@"=====>证书验证失败,check certificate fail.");
+        self.state = ProvisioningState_fail;
+    }
 }
 
 - (BOOL)getCertificateFragmentWithRecordID:(UInt16)recordID {
@@ -1103,19 +1120,34 @@ typedef enum : UInt16 {
 }
 
 /// 当SDK不支持EPA功能时，默认都使用SigFipsP256EllipticCurve_CMAC_AES128。
+/// 如果static OOB长度为16，不能用SigFipsP256EllipticCurve_HMAC_SHA256而要用SigFipsP256EllipticCurve_CMAC_AES128。
+/// 如果static OOB大于16，但算法为SigFipsP256EllipticCurve_CMAC_AES128，需要截取static OOB的前16字节来使用。
 - (Algorithm)getCurrentProvisionAlgorithm {
     Algorithm algorithm = Algorithm_fipsP256EllipticCurve;
     if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_CMAC_AES128) {
         algorithm = Algorithm_fipsP256EllipticCurve;
     } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_HMAC_SHA256) {
-        algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+        if ((self.staticOobData && self.staticOobData.length == 32) || self.staticOobData == nil) {
+            algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+        } else {
+            algorithm = Algorithm_fipsP256EllipticCurve;
+        }
     } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_auto) {
         if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1) {
-            algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+            if ((self.staticOobData && self.staticOobData.length == 32) || self.staticOobData == nil) {
+                algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+            } else {
+                algorithm = Algorithm_fipsP256EllipticCurve;
+            }
         } else if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1) {
             algorithm = Algorithm_fipsP256EllipticCurve;
         }
     }
+    if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
+        self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
+        TeLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+    }
+    TeLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;
 }
 

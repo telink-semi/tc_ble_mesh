@@ -77,12 +77,20 @@
     if(authStatus == AVAuthorizationStatusRestricted || authStatus == AVAuthorizationStatusDenied){
 //        NSString *errorStr = @"应用相机权限受限,请在设置中启用";
         return NO;
+    } else if (authStatus == AVAuthorizationStatusNotDetermined) {
+        [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
+            if (granted == NO) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+            }
+        }];
     }
     return YES;
 }
 
 - (void)backToMain{
-    [self.navigationController popViewControllerAnimated:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.navigationController popViewControllerAnimated:YES];
+    });
 }
 
 - (void)viewWillAppear:(BOOL)animated

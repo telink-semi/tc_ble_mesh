@@ -312,9 +312,9 @@
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 TeLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
                 if (unprovisioned) {
+                    [SDKLibCommand stopScan];
                     [weakSelf addOneNodeInGATT:peripheral];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [SDKLibCommand stopScan];
                         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanFinish) object:nil];
                     });
                 }
@@ -333,6 +333,11 @@
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
+    //修复添加设备完成后返回首页断开直连设备不会回连的bug.
+    //Fix the bug where disconnecting a directly connected device after adding it and returning to the homepage will not cause it to reconnect.
+    if (SigBearer.share.isOpen) {
+        [SDKLibCommand startMeshConnectWithComplete:nil];
+    }
     [self.navigationController popViewControllerAnimated:YES];
 }
 

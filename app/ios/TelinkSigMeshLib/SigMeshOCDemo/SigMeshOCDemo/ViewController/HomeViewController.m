@@ -29,7 +29,6 @@
 #import "SingleDeviceViewController.h"
 #import "UIViewController+Message.h"
 #import "SensorVC.h"
-#import "RemoteAddVC.h"
 #import "MeshOTAVC.h"
 
 @interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate,SigDataSourceDelegate,SigMessageDelegate,SigBluetoothDelegate>
@@ -38,10 +37,10 @@
 @property (weak, nonatomic) IBOutlet UIButton *allONButton;
 @property (weak, nonatomic) IBOutlet UIButton *allOFFButton;
 @property (weak, nonatomic) IBOutlet UIButton *cmdButton;
+@property (weak, nonatomic) IBOutlet UIButton *logButton;
 @property (assign, nonatomic) BOOL shouldSetAllOffline;//APP will set all nodes offline when user click refresh button.
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
-@property (assign, nonatomic) UInt16 cancelDistributorAddress;
 
 @end
 
@@ -105,43 +104,41 @@
 }
 
 - (void)pushToAddDeviceVC {
-    BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     [SigDataSource.share setAllDevicesOutline];
-    if (isRemoteAdd) {
-        TeLogVerbose(@"click remote add device");
-        RemoteAddVC *vc = (RemoteAddVC *)[UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
+    ProvisionMode mode = [[[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode] intValue];
+    if (mode == ProvisionMode_normalSelectable) {
+        TeLogVerbose(@"click normal selectable add device");
+        //先扫描，用户选择添加设备
+        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceVCID];
         [self.navigationController pushViewController:vc animated:YES];
-    } else {
-        BOOL isFastAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType] boolValue];
-        if (isFastAdd) {
-            UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
-            [self.navigationController pushViewController:vc animated:YES];
-        } else {
-            BOOL isAutoProvision = [[[NSUserDefaults standardUserDefaults] valueForKey:kAutoProvision] boolValue];
-            if (isAutoProvision) {
-                TeLogVerbose(@"click auto add device");
-                //自动添加多个设备
-                UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AutoAddDeviceVCID];
-                [self.navigationController pushViewController:vc animated:YES];
-            } else {
-                TeLogVerbose(@"click normal add device");
-                //先扫描，用户选择添加设备
-                UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceVCID];
-                [self.navigationController pushViewController:vc animated:YES];
-            }
-        }
+    } else if (mode == ProvisionMode_normalAuto) {
+        TeLogVerbose(@"click normal auto add device");
+        //自动添加多个设备
+        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AutoAddDeviceVCID];
+        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_remoteProvision) {
+        //remote Provision
+        TeLogVerbose(@"click remote provision add device");
+        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
+        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_fastProvision) {
+        //fast provision
+        TeLogVerbose(@"click fast provision add device");
+        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
+        [self.navigationController pushViewController:vc animated:YES];
     }
 }
 
 #pragma mark see log entrance
-- (IBAction)clickToLogVC:(UIButton *)sender {
-    LogViewController *vc = (LogViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_LogViewControllerID];
-    [self.navigationController pushViewController:vc animated:YES];
-}
 
 - (IBAction)clickToCMDVC:(UIButton *)sender {
     CMDViewController *vc = (CMDViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_CMDViewControllerID];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickToLogVC:(UIButton *)sender {
+    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_LogViewControllerID];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -165,25 +162,21 @@
         return;
     }
     self.shouldSetAllOffline = YES;
-
     [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogDebug(@"getOnlineStatus finish.");
     }];
 }
 
 - (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
-//    TeLogDebug(@"");
-    
-//    int tem = 0;
-//    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-//    for (SigNodeModel *node in curNodes) {
-//        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess) {
-//            tem++;
-//        }
-//    }
+    __weak typeof(self) weakSelf = self;
     BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
-    } resultCallback:resultCallback];
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        [weakSelf showMeshOTAWarningAlertController];
+        if (resultCallback) {
+            resultCallback(isResponseAll, error);
+        }
+    }];
     if (result && self.shouldSetAllOffline) {
         self.shouldSetAllOffline = NO;
         [SigDataSource.share setAllDevicesOutline];
@@ -260,9 +253,7 @@
         __weak typeof(self) weakSelf = self;
         if (self.source.count > 0) {
             [SDKLibCommand startMeshConnectWithComplete:^(BOOL successful) {
-                if (successful) {
-                    //                    [weakSelf getOnOffAction];
-                } else {
+                if (!successful) {
                     if (SigBearer.share.isAutoReconnect) {
                         [weakSelf workNormal];
                     }
@@ -280,124 +271,88 @@
     }
 }
 
-- (void)showMeshOTAHits {
-    //demo v3.3.3新增meshOTA兼容，存储上一次作为distributor的直连节点的address，为0或者本地节点则默认无meshOTA记录。
-    NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
-    __weak typeof(self) weakSelf = self;
-    if (addressNumber == nil || addressNumber.intValue == 0 || addressNumber.intValue == SigDataSource.share.curLocationNodeModel.address) {
-        //使用startMeshConnectWithComplete连接附近节点即可
-        [self workNormal];
-    } else {
-        //需要兼容meshOTA，直连distributor
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"发现APP存在上一次的MeshOTA记录，是否直连上一次的distributor设备继续MeshOTA？或者取消上一次的MeshOTA记录？" preferredStyle:UIAlertControllerStyleAlert];
-                [alertController addAction:[UIAlertAction actionWithTitle:@"继续" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击继续");
-                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:addressNumber.intValue];
-                    if (node) {
-                        NSString *t = [NSString stringWithFormat:@"mesh ota... connecting distributor"];
-                        [ShowTipsHandle.share show:t];
-                        //无限扫描连接distributor，直到连接成功。（可能会修改）
-                        [ConnectTools.share startConnectToolsWithNodeList:@[node] timeout:0xFFFFFFFF Complete:^(BOOL successful) {
-                            if (successful) {
-                                //查询完状态再弹框，防止MeshOTA界面firmwareUpdateInformationGet按钮计算responseMax异常。
-                                [weakSelf getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                                    TeLogDebug(@"getOnlineStatus finish.");
-                                    //meshOTA逻辑里面的查询进度，无需在此添加查询进度代码。
-                                    [weakSelf continueMeshOTA];
-                                }];
-                            } else {
-                                //连接失败
-                                NSString *t = [NSString stringWithFormat:@"mesh ota... connect distributor fail!"];
-                                [ShowTipsHandle.share show:t];
-                                [ShowTipsHandle.share delayHidden:1.0];
-                                [weakSelf workNormal];
-                            }
-                        }];
-                    } else {
-                        NSString *t = [NSString stringWithFormat:@"mesh ota... connect distributor fail!"];
-                        [ShowTipsHandle.share show:t];
-                        [ShowTipsHandle.share delayHidden:1.0];
-                        weakSelf.cancelDistributorAddress = addressNumber.intValue;
-                        MeshOTAManager.share.distributorAddress = addressNumber.intValue;
-                        [weakSelf workNormal];
-                    }
-                }]];
-                [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击取消");
-                    weakSelf.cancelDistributorAddress = addressNumber.intValue;
-                    MeshOTAManager.share.distributorAddress = addressNumber.intValue;
-                    [weakSelf workNormal];
-                }]];
-                [weakSelf presentViewController:alertController animated:YES completion:nil];
-            });
-        });
-    }
-}
-
-- (void)continueMeshOTA {
+- (void)showMeshOTAWarningAlertController {
+    //demo v4.1.0.0 修改meshOTA弹框逻辑。
+    //key=kDistributorAddress存储上一次作为distributor的直连节点的address.
+    //distributor为0或者本地节点则默认无meshOTA记录。
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [ShowTipsHandle.share delayHidden:0.0];
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"mesh ota... connect distributor success! APP will push to MeshOTA UI." preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
-            MeshOTAVC *vc = [[MeshOTAVC alloc] init];
-            vc.isContinue = YES;
-            [weakSelf.navigationController pushViewController:vc animated:YES];
-        }]];
-        [weakSelf presentViewController:alertController animated:YES completion:nil];
+        UIViewController *vc = weakSelf.currentViewController;
+        if ([vc isMemberOfClass:[weakSelf class]]) {
+            NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
+            if (addressNumber == nil || addressNumber.intValue == 0 || addressNumber.intValue == SigDataSource.share.curLocationNodeModel.address) {
+                //无meshOTA记录
+                //mesh已经连接
+                //且获取online status完成
+                //无需新增其它逻辑
+            } else {
+                //存在meshOTA记录
+                //弹框处理
+                static dispatch_once_t onceToken;
+                dispatch_once(&onceToken, ^{
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning - MeshOTA is still running" message:@"MeshOTA distribution is still running, continue?\nclick GO to enter MeshOTA processing page\nclick STOP to stop distribution" preferredStyle:UIAlertControllerStyleAlert];
+                        [alertController addAction:[UIAlertAction actionWithTitle:@"STOP" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+                            [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
+                                [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
+                                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
+                                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+                                [[NSUserDefaults standardUserDefaults] synchronize];
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [weakSelf showTips:@"Stop Mesh ota finish!"];
+                                });
+                            }];
+                        }]];
+                        [alertController addAction:[UIAlertAction actionWithTitle:@"GO" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                            MeshOTAVC *vc = [[MeshOTAVC alloc] init];
+                            vc.isContinue = YES;
+                            [weakSelf.navigationController pushViewController:vc animated:YES];
+                        }]];
+                        [weakSelf presentViewController:alertController animated:YES completion:nil];
+                    });
+                });
+            }
+        }
     });
 }
 
-- (void)getOnOffAction {
-    //Demo can show Bluetooth.share.currentPeripheral in HomeViewController when CanControl callback.
-    [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    //Attention: some block has change when demo call startWorkNormal API, so when SDK callback CanControl, reset block by call blockState.
-    [self blockState];
-    [self freshOnline:nil];
+#pragma mark - Life method
+
+//将tabBar.hidden移到viewDidAppear，解决下一界面的手势返回动作取消时导致界面下方出现白条的问题。
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    self.tabBarController.tabBar.hidden = NO;
 }
 
-#pragma mark - Life method
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
-    self.tabBarController.tabBar.hidden = NO;
-    if (SigDataSource.share.curMeshIsVisitor) {
-        self.navigationItem.rightBarButtonItem = nil;
-    } else {
-        UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDevice)];
-        self.navigationItem.rightBarButtonItem = item;
-    }
+    [self setTitle:@"Device" subTitle:SigDataSource.share.meshName];
+//    self.tabBarController.tabBar.hidden = NO;
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDevice)];
+    self.navigationItem.rightBarButtonItem = item;
     //get status of node
     SigBearer.share.dataDelegate = self;
     SigMeshLib.share.delegateForDeveloper = self;
-    //demo v3.3.3新增meshOTA兼容，存储上一次作为distributor的直连节点的address，为0或者本地节点则默认无meshOTA记录。
-    NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
-    if (addressNumber == nil || addressNumber.intValue == 0 || addressNumber.intValue == SigDataSource.share.curLocationNodeModel.address) {
-        if (SigBearer.share.isOpen) {
-            if ([LibTools uint16From16String:SigDataSource.share.getCurrentConnectedNode.pid] == SigNodePID_Switch) {
-                [SigDataSource.share setAllDevicesOutline];
-                [self delayReloadCollectionView];
-                __weak typeof(self) weakSelf = self;
-                [ConnectTools.share stopConnectToolsWithComplete:^(BOOL successful) {
-                    [weakSelf workNormal];
-                }];
-            } else {
-                [self delayReloadCollectionView];
-                [self blockState];
-                [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogDebug(@"getOnlineStatus finish.");
-                }];
-            }
-        } else {
+    if (SigBearer.share.isOpen) {
+        if ([LibTools uint16From16String:SigDataSource.share.getCurrentConnectedNode.pid] == SigNodePID_Switch) {
             [SigDataSource.share setAllDevicesOutline];
             [self delayReloadCollectionView];
-            [self workNormal];
+            __weak typeof(self) weakSelf = self;
+            [ConnectTools.share stopConnectToolsWithComplete:^(BOOL successful) {
+                [weakSelf workNormal];
+            }];
+        } else {
+            [self delayReloadCollectionView];
+            [self blockState];
+            [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                TeLogDebug(@"getOnlineStatus finish.");
+            }];
         }
+    } else {
+        [SigDataSource.share setAllDevicesOutline];
+        [self delayReloadCollectionView];
+        [self workNormal];
     }
-    TeLogVerbose(@"当前provisioner的本地地址是0x%X,uuid=%@",SigDataSource.share.curLocationNodeModel.address,SigDataSource.share.getCurrentProvisionerUUID);
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -410,14 +365,13 @@
     self.allONButton.backgroundColor = UIColor.telinkButtonBlue;
     self.allOFFButton.backgroundColor = UIColor.telinkButtonBlue;
     self.cmdButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.logButton.backgroundColor = UIColor.telinkButtonBlue;
     self.needDelayReloadData = NO;
     SigDataSource.share.delegate = self;
-    self.title = @"Device";
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
     self.source = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
     SigBluetooth.share.delegate = self;
-    [self showMeshOTAHits];
 }
 
 //获取手机当前显示的ViewController
@@ -454,11 +408,7 @@
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
         TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
         if (state == CBCentralManagerStatePoweredOn) {
-            //demo v3.3.3新增meshOTA兼容，存储上一次作为distributor的直连节点的address，为0或者本地节点则默认无meshOTA记录。
-            NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
-            if (addressNumber == nil || addressNumber.intValue == 0 || addressNumber.intValue == SigDataSource.share.curLocationNodeModel.address) {
-                [weakSelf workNormal];
-            }
+            [weakSelf workNormal];
         } else {
             weakSelf.shouldSetAllOffline = NO;
             [SigDataSource.share setAllDevicesOutline];
@@ -472,40 +422,18 @@
 #pragma  mark - SigBearerDataDelegate
 - (void)bearerDidConnectedAndDiscoverServices:(SigBearer *)bearer {
 //    TeLogInfo(@"bearer did Connected And Discover Services!");
-//    [self blockState];
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        [self freshOnline:nil];
-//    });
 }
 
 - (void)bearerDidOpen:(SigBearer *)bearer {
-//    TeLogInfo(@"bearer did open!");
-//    [self blockState];
-    if (self.cancelDistributorAddress) {
-        __weak typeof(self) weakSelf = self;
-        [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
-            weakSelf.cancelDistributorAddress = 0;
-            [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
-            [[NSUserDefaults standardUserDefaults] synchronize];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSString *tip = [NSString stringWithFormat:@"cancel Mesh ota finish!"];
-                [weakSelf showTips:tip];
-                [weakSelf freshOnline:nil];
-            });
-        }];
-    } else {
-        //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此次再次修改)
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *vc = self.currentViewController;
-            if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]]) {
-                [self freshOnline:nil];
-            } else {
-                TeLogInfo(@"needn`t get status.%@",vc);
-            }
-        });
-    }
+    //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此次再次修改)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *vc = self.currentViewController;
+        if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]]) {
+            [self freshOnline:nil];
+        } else {
+            TeLogInfo(@"needn`t get status.%@",vc);
+        }
+    });
 }
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
@@ -518,6 +446,16 @@
 #pragma  mark - SigDataSourceDelegate
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
     TeLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
+}
+
+/**
+ * @brief   Callback called when the mesh network JOSN data had been changed.
+ * APP need update the json to cloud at this time!
+ * @param   network new mesh network JSON data.
+ * @note    When the SDK calls `saveLocationData`, it will also notify the APP through this callback method.
+ */
+- (void)onMeshNetworkUpdated:(SigDataSource *)network {
+    [self addOrUpdateMeshDictionaryToMeshList:[network getDictionaryFromDataSource]];
 }
 
 /**

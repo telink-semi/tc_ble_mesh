@@ -25,8 +25,6 @@
 #import "OpenSSLHelper.h"
 #import "SDKLibCommand+directForwarding.h"
 
-#define kVisitorMeshUUIDList    @"kVisitorMeshUUIDList"
-
 @interface SigDataSource ()<SigDataSourceDelegate>
 @property (nonatomic,assign) UInt32 sequenceNumberOnDelegate;//通过SigDataSourceDelegate回调的sequenceNumber值。
 @end
@@ -128,6 +126,7 @@
     appkey.boundNetKey = 0;
     _defaultAppKeyA = appkey;
     _defaultIvIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
+    _defaultNetKeyA.ivIndex = _defaultIvIndexA;
     _needPublishTimeModel = YES;
     _defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
     _telinkExtendBearerMode = SigTelinkExtendBearerMode_noExtend;
@@ -157,10 +156,10 @@
     _security = SigMeshMessageSecurityLow;
     _defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout;
     _defaultReliableIntervalOfLPN = kSDKLibCommandTimeout * 2;
-    //默认为写死的pts的root.der根证书
-    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202873082022EA003020102020101300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3139303731383138353533365A170D3330313030343138353533365A30819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D03010703420004D183194D0257D2141D3C5566639B4F7AF0834945349B7207DDDA730693FD2B56B8A83AC49FD22517D28D0EED9AE3F1D43A221FE37919B66E9418FF9618C2081EA35D305B301D0603551D0E041604142556CB5D177EFA709C7E05CCB7418A3B714C0A77301F0603551D230418301680142556CB5D177EFA709C7E05CCB7418A3B714C0A77300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D040302034700304402207C9696D079CB866BEA5EAAC230FB52EB5BC8EFC72F46E25F7B1E7990401BC74202206B6FD9F0DBAC54D4121045FD0E4AC06D5F3306BF8DCAF32F2D701C1445A62EF8"];
-//    _defaultRootCertificateData = [LibTools getDataWithFileName:@"root" fileType:@"der"];
-//    _defaultRootCertificateData =[LibTools getDataWithFileName:@"root_error" fileType:@"der"];
+    //默认为写死的设备端的root.der根证书
+    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202873082022DA00302010202147FCD3C7C01BD4649E2295D3F04668931FD4E1FA7300A06082A8648CE3D04030230819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D301E170D3233313031313036303034385A170D3333313030383036303034385A30819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D3059301306072A8648CE3D020106082A8648CE3D0301070342000441DBF54A701EFAFC88D34A7233C383A6406F815AE7BA9D52BB4625A12303699595A3B139D35EEDC1E65E33C128A69AB0D037BFFF985AA23A62B3218BAEB17E3FA347304530090603551D2304023000301D0603551D0E041604143C62D196F66D337D40CC7826518C1AF22F425D3B300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100CACF7006A1C0ACC96350D00E716585AEB46B9553538487F43FB411FA56EEB86402201DA19E992E677A93FDC1609E7A8C4706A88777CE41AF626E4A95300918A7762B"];
+    //PTS v8.5.1 build10 测试项的根证书
+//    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202883082022EA003020102020100300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D030107034200046E0844268E1DA5556DA9B85D90A06DE152FB96A1521918B33B8E081F50B0274001E979A03E322BCD83E10CC447FD1124B65E71FDFEBE4BDD43712AFB5FA40D9EA35D305B301D0603551D0E04160414C9C527F8E3D36EC844538CA132C7282C459DDFFF301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100D034154A3ED26CA04402534B3F11CB6D5C9174C5A31274FD06F8F7395456B4FD02203F0B86574C5AAB707573A99DC9ABF815CB7AD8A11ACBE5C8D2D80C31F74E64D7"];
     _forwardingTableModelList = [NSMutableArray array];
     _filterModel = [[SigProxyFilterModel alloc] init];
 }
@@ -249,7 +248,7 @@
     _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
     _schema = @"http://json-schema.org/draft-04/schema#";
     _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
-    _meshName = @"Telink-Sig-Mesh";
+    _meshName = @"Default Mesh";
     _version = @"1.0.0";
     _timestamp = timestamp;
     [self setIvIndexUInt32:kDefaultIvIndex];
@@ -372,9 +371,9 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
         if (_meshUUID.length == 32) {
-            dict[@"meshUUID"] = [LibTools UUIDToMeshUUID:_meshUUID];
+            dict[@"meshUUID"] = [[LibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
         } else if (_meshUUID.length == 36) {
-            dict[@"meshUUID"] = _meshUUID;
+            dict[@"meshUUID"] = [_meshUUID uppercaseString];
         }
     }
     if (_meshName) {
@@ -510,6 +509,9 @@
         for (NSDictionary *netkeyDict in array) {
             SigNetkeyModel *model = [[SigNetkeyModel alloc] init];
             [model setDictionaryToSigNetkeyModel:netkeyDict];
+            if ([self getIvIndexUInt32] != 0) {
+                model.ivIndex = [[SigIvIndex alloc] initWithIndex:[self getIvIndexUInt32] updateActive:NO];
+            }
             [netKeys addObject:model];
         }
         _netKeys = netKeys;
@@ -599,9 +601,9 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
         if (_meshUUID.length == 32) {
-            dict[@"meshUUID"] = [LibTools UUIDToMeshUUID:_meshUUID];
+            dict[@"meshUUID"] = [[LibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
         } else if (_meshUUID.length == 36) {
-            dict[@"meshUUID"] = _meshUUID;
+            dict[@"meshUUID"] = [_meshUUID uppercaseString];
         }
     }
     if (_meshName) {
@@ -1034,6 +1036,11 @@
     if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
         //SequenceNumber add defaultSequenceNumberIncrement.
         SigDataSource.share.ivIndex = SigDataSource.share.getLocalIvIndexString;
+        //fix the ivIndex
+        NSArray *netkeys = [NSArray arrayWithArray:_netKeys];
+        for (SigNetkeyModel *key in netkeys) {
+            key.ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
+        }
         [SigDataSource.share setSequenceNumberUInt32:SigDataSource.share.getLocalSequenceNumberUInt32 + SigDataSource.share.defaultSequenceNumberIncrement];
         [SigDataSource.share saveCurrentIvIndex:SigDataSource.share.getIvIndexUInt32 sequenceNumber:SigDataSource.share.getSequenceNumberUInt32];
     }
@@ -1217,6 +1224,27 @@
     }
 }
 
+/// Manager mesh network, switch new mesh.
+/// @param dict new Mesh Dictionary
+- (void)switchToNewMeshDictionary:(NSDictionary *)dict {
+    //v3.3.3.6及以后新逻辑：
+    //1.当前手机的provisioner只在当前手机使用，且本地地址不变。
+    //2.使用setDictionaryToDataSource接收分享后调用checkExistLocationProvisioner判断provisioner.
+    //3.判断手机本地是否存在ivIndex+sequenceNumber，存在则赋值到SigDataSource且sequenceNumber+128.且立刻缓存一次本地。
+    //4.不存在则需要连接获取到beacon的ivIndex。sequenceNumber从0开始。
+    //5.重新计算下一次添加设备使用的unicastAddress
+    [SigDataSource.share resetMesh];
+    [SigDataSource.share setDictionaryToDataSource:dict];
+    [SigDataSource.share checkExistLocationProvisioner];
+    [SigDataSource.share saveLocationData];
+
+    //（可选）注意：调用[SigDataSource.share resetMesh]后，filter的配置将恢复默认的白名单和本地地址+0xFFFF的配置。如果客户需要想要自定义配置，则需要再这下面进行filter相关配置。
+//    NSData *filterData = [[NSUserDefaults standardUserDefaults] valueForKey:kFilter];
+//    NSDictionary *filterDict = [LibTools getDictionaryWithJSONData:filterData];
+//    SigProxyFilterModel *filter = [[SigProxyFilterModel alloc] init];
+//    [filter setDictionaryToSigProxyFilterModel:filterDict];
+}
+
 /**
  * @brief   Save Current SigDataSource to local by NSUserDefaults.
  * @note    1.sort _nodes, sort _groups, sort _scene. 2.change SigDataSource to data, and save by NSUserDefaults. 3. save encrypt json data to file `TelinkSDKMeshJsonData`.
@@ -1237,6 +1265,11 @@
         NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
         [self saveLocationMeshData:tempData];
         saveMeshJsonData([LibTools getReadableJSONStringWithDictionary:meshDict]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([self.delegate respondsToSelector:@selector(onMeshNetworkUpdated:)]) {
+                [self.delegate onMeshNetworkUpdated:self];
+            }
+        });
     }
 }
 
@@ -1370,7 +1403,7 @@
                 break;
             case SigIdentificationType_privateNetworkIdentity:
             {
-                TeLogDebug(@"receive SigIdentificationType_privateNetworkIdentity");
+//                TeLogDebug(@"receive SigIdentificationType_privateNetworkIdentity");
                 if (model.advertisementDataServiceData.length >= 17) {
                     if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
                         return YES;
@@ -1382,7 +1415,7 @@
                 break;
             case SigIdentificationType_privateNodeIdentity:
             {
-                TeLogDebug(@"receive SigIdentificationType_privateNodeIdentity");
+//                TeLogDebug(@"receive SigIdentificationType_privateNodeIdentity");
                 if (model.advertisementDataServiceData.length >= 17) {
                     if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
                         return YES;
@@ -2159,6 +2192,138 @@
     return ((baseGroupAddress & 0xFF) << 4) | 0xD000;
 }
 
+#pragma mark - Special handling: store the PrivateGattProxy+ConfigGattProxy+PrivateBeacon+ConfigBeacon of node in current mesh
+
+/**
+ * @brief   Get loca PrivateGattProxy state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  PrivateGattProxy state.
+ * @note    This API is used to get the value of PrivateGattProxy state stored locally.
+ */
+- (BOOL)getLocalPrivateGattProxyStateOfUnicastAddress:(UInt16)unicastAddress {
+    return [self getLocalStateWithUnicastAddress:unicastAddress key:kLocalPrivateGattProxy_key];
+}
+
+/**
+ * @brief   Get loca ConfigGattProxy state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  ConfigGattProxy state.
+ * @note    This API is used to get the value of ConfigGattProxy state stored locally.
+ */
+- (BOOL)getLocalConfigGattProxyStateOfUnicastAddress:(UInt16)unicastAddress {
+    return [self getLocalStateWithUnicastAddress:unicastAddress key:kLocalConfigGattProxy_key];
+}
+
+/**
+ * @brief   Get loca PrivateBeacon state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  PrivateBeacon state.
+ * @note    This API is used to get the value of PrivateBeacon state stored locally.
+ */
+- (BOOL)getLocalPrivateBeaconStateOfUnicastAddress:(UInt16)unicastAddress {
+    return [self getLocalStateWithUnicastAddress:unicastAddress key:kLocalPrivateBeacon_key];
+}
+
+/**
+ * @brief   Get loca ConfigBeacon state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @return  ConfigBeacon state.
+ * @note    This API is used to get the value of ConfigBeacon state stored locally.
+ */
+- (BOOL)getLocalConfigBeaconStateOfUnicastAddress:(UInt16)unicastAddress {
+    return [self getLocalStateWithUnicastAddress:unicastAddress key:kLocalConfigBeacon_key];
+}
+
+/**
+ * @brief   Get loca  state.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @param   key    the key of state.
+ * @note    This API is used to get the value of state stored locally.
+ */
+- (BOOL)getLocalStateWithUnicastAddress:(UInt16)unicastAddress key:(NSString *)key {
+    NSDictionary *dict = @{};
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalPrivateBeaconDictionary_key];
+    if (data != nil) {
+        dict = [LibTools getDictionaryWithJSONData:data];
+    }
+    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    if ([mDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
+        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:mDict[[SigHelper.share getUint16String:unicastAddress]]];
+        return [nodeDict[key] boolValue];
+    } else {
+        NSDictionary *nodeDict = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
+        mDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
+        [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:mDict] forKey:kLocalPrivateBeaconDictionary_key];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        return [nodeDict[key] boolValue];
+    }
+}
+
+/**
+ * @brief   Set loca PrivateGattProxy state.
+ * @param   state    the PrivateGattProxy state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of PrivateGattProxy state stored locally.
+ */
+- (void)setLocalPrivateGattProxyState:(BOOL)state unicastAddress:(UInt16)unicastAddress {
+    [self setLocalWithState:state unicastAddress:unicastAddress key:kLocalPrivateGattProxy_key];
+}
+
+/**
+ * @brief   Set loca ConfigGattProxy state.
+ * @param   state    the ConfigGattProxy state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of ConfigGattProxy state stored locally.
+ */
+- (void)setLocalConfigGattProxyState:(BOOL)state unicastAddress:(UInt16)unicastAddress {
+    [self setLocalWithState:state unicastAddress:unicastAddress key:kLocalConfigGattProxy_key];
+}
+
+/**
+ * @brief   Set loca PrivateBeacon state.
+ * @param   state    the PrivateBeacon state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of PrivateBeacon state stored locally.
+ */
+- (void)setLocalPrivateBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress {
+    [self setLocalWithState:state unicastAddress:unicastAddress key:kLocalPrivateBeacon_key];
+}
+
+/**
+ * @brief   Set loca ConfigBeacon state.
+ * @param   state    the ConfigBeacon state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @note    This API is used to get the value of ConfigBeacon state stored locally.
+ */
+- (void)setLocalConfigBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress {
+    [self setLocalWithState:state unicastAddress:unicastAddress key:kLocalConfigBeacon_key];
+}
+
+/**
+ * @brief   Set loca  state.
+ * @param   state    the  state of node.
+ * @param   unicastAddress    the unicastAddress of node.
+ * @param   key    the key of state.
+ * @note    This API is used to get the value of state stored locally.
+ */
+- (void)setLocalWithState:(BOOL)state unicastAddress:(UInt16)unicastAddress key:(NSString *)key {
+    NSDictionary *dict = @{};
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalPrivateBeaconDictionary_key];
+    if (data != nil) {
+        dict = [LibTools getDictionaryWithJSONData:data];
+    }
+    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    if ([mDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
+        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:mDict[[SigHelper.share getUint16String:unicastAddress]]];
+        nodeDict[key] = @(state);
+        mDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
+    } else {
+        mDict[[SigHelper.share getUint16String:unicastAddress]] = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:mDict] forKey:kLocalPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
 #pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
 
 /**
@@ -2282,52 +2447,6 @@
 }
 
 #pragma mark - deprecated API
-
-/**
- * @brief   Add the meshUUID to the cache of visitor meshUUID List.
- * @param   meshUUID    the identifier of mesh.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (void)addMeshUUIDToVisitorListCache:(NSString *_Nonnull)meshUUID {
-    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey:kVisitorMeshUUIDList];
-    if (array == nil) {
-        array = @[];
-    }
-    NSMutableArray *visitorMeshUUIDList = [NSMutableArray arrayWithArray:array];
-    if (![visitorMeshUUIDList containsObject:meshUUID]) {
-        [visitorMeshUUIDList addObject:meshUUID];
-    }
-    [NSUserDefaults.standardUserDefaults setValue:visitorMeshUUIDList forKey:kVisitorMeshUUIDList];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-/**
- * @brief   Remove the meshUUID from the cache of visitor meshUUID List.
- * @param   meshUUID    the identifier of mesh.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (void)removeMeshUUIDFromVisitorListCache:(NSString *_Nonnull)meshUUID {
-    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey:kVisitorMeshUUIDList];
-    if (array == nil) {
-        array = @[];
-    }
-    NSMutableArray *visitorMeshUUIDList = [NSMutableArray arrayWithArray:array];
-    if ([visitorMeshUUIDList containsObject:meshUUID]) {
-        [visitorMeshUUIDList removeObject:meshUUID];
-    }
-    [NSUserDefaults.standardUserDefaults setValue:visitorMeshUUIDList forKey:kVisitorMeshUUIDList];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-/**
- * @brief   Get whether the current provisioner is an administrator of current Mesh.
- * @return  `YES` means visitor, `NO` means administrator.
- * @note    This API is using for share mesh by BLE Transfer.
- */
-- (BOOL)curMeshIsVisitor {
-    NSArray *array = [[NSUserDefaults standardUserDefaults] valueForKey: kVisitorMeshUUIDList];
-    return [array containsObject: self.meshUUID];
-}
 
 /**
  * @brief   Get the node object through the bluetooth macAddress of node.

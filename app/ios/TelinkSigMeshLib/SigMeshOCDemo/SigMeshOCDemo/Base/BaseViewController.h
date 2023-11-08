@@ -38,4 +38,24 @@
 
 - (void)nilBlock;
 
+
+/// 设置导航栏标题和副标题，为了显示Mesh名称在导航栏而新增的方法。
+/// - Parameters:
+///   - title: 导航栏标题
+///   - subTitle: 导航栏副标题
+- (void)setTitle:(NSString *)title subTitle:(NSString *)subTitle;
+
+/// 导入mesh后，将Mesh添加到Mesh列表或者更新Mesh信息。
+/// - Parameter dict: 新导入的Mesh数据
+- (void)addOrUpdateMeshDictionaryToMeshList:(NSDictionary *)dict;
+
+/// import mesh
+- (void)handleMeshDictionaryFromShareImport:(NSDictionary *)dict;
+
+/// switch mesh
+- (void)switchMeshActionWithMeshDictionary:(NSDictionary *)dict;
+
+/// pop specific VC
+- (void)popVC:(Class)vcClass;
+
 @end

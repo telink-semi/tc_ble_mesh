@@ -37,8 +37,11 @@
 
 - (void)awakeFromNib {
     [super awakeFromNib];
+    //cornerRadius
     self.layer.cornerRadius = 7;
+    //masksToBounds
     self.layer.masksToBounds = YES;
+    //separatorStyle
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass([ChooseItemCell class]) bundle:nil] forCellReuseIdentifier:@"ChooseItemCell"];
     [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass([InputItemCell class]) bundle:nil] forCellReuseIdentifier:@"InputItemCell"];

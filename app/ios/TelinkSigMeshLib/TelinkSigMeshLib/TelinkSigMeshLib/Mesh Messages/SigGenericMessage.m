@@ -6079,17 +6079,24 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_schedulerActionStatus;
-        if (parameters == nil || (parameters.length != 10)) {
+        if (parameters == nil || (parameters.length != 10 && parameters.length != 1)) {
             return nil;
-        }else{
+        } else {
             SchedulerModel *model = [[SchedulerModel alloc] init];
             Byte *dataByte = (Byte *)parameters.bytes;
-            UInt64 tem64 = 0;
-            memcpy(&tem64, dataByte, 8);
-            [model setSchedulerData:tem64];
-            UInt16 tem16 = 0;
-            memcpy(&tem16, dataByte+8, 2);
-            model.sceneId = tem16;
+            if (parameters.length == 1) {
+                UInt8 tem8 = 0;
+                memcpy(&tem8, dataByte, 1);
+                model.isInvalidScheduler = YES;
+                [model setSchedulerID:tem8];
+            } else {
+                UInt64 tem64 = 0;
+                memcpy(&tem64, dataByte, 8);
+                [model setSchedulerData:tem64];
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+8, 2);
+                model.sceneId = tem16;
+            }
             _schedulerModel = model;
         }
     }

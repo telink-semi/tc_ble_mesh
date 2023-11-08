@@ -892,7 +892,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigGATTProxyStatus : SigConfigMessage
 /// GATT Proxy state.
 /// The GATTProxy field shall provide the current GATT Proxy state of the node (see Section 4.2.11).
-@property (nonatomic,assign) SigNodeFeaturesState state;
+@property (nonatomic,assign) SigNodeGATTProxyState state;
 
 ///// Creates the Config GATT Proxy Status message.
 /////
@@ -3318,8 +3318,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// If present, the Random_Update_Interval_Steps field shall identify the value of the
 /// new Random Update Interval Steps state (see Section 4.2.44.2) of a node.
 @property (nonatomic,assign) UInt8 randomUpdateIntervalSteps;
+/// default is NO.
+@property (nonatomic,assign) BOOL needRandomUpdateIntervalSteps;
 
 - (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps;
+- (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -3508,7 +3511,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Status Code for the requesting message.
 /// The Status field shall identify the Status Code for the requesting message. The allowed
 /// values for Status codes and their meanings are documented in Section 4.3.14.
-@property (nonatomic,assign) SigOpcodesAggregatorMessagesStatus status;
+@property (nonatomic,assign) SigConfigMessageStatus status;
 /// Index of the NetKey.
 /// The NetKeyIndex field is an index that shall identify the global NetKey Index of the NetKey
 /// of the Node Identity state. The NetKeyIndex field shall be encoded as defined in Section 4.3.1.1.

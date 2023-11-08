@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL isAdd;
 @property (nonatomic, strong) SigAppkeyModel *appKeyModel;
 @property (copy, nonatomic) void(^backAppKeyModel)(SigAppkeyModel *appKeyModel);
+@property (nonatomic, strong) SigDataSource *network;
 
 @end
 

@@ -114,7 +114,7 @@
 //
 //    //6.other
 //    XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
-//    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Telink-Sig-Mesh");
+//    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Default Mesh");
 //    XCTAssertEqualObjects(SigDataSource.share.version, @"1.0.0");
 //    XCTAssertNotNil(SigDataSource.share.timestamp);
 //    XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");
@@ -204,7 +204,7 @@
     
     //6.other
     XCTAssertEqualObjects(defaultMesh.schema, @"http://json-schema.org/draft-04/schema#");
-    XCTAssertEqualObjects(defaultMesh.meshName, @"Telink-Sig-Mesh");
+    XCTAssertEqualObjects(defaultMesh.meshName, @"Default Mesh");
     XCTAssertEqualObjects(defaultMesh.version, @"1.0.0");
     XCTAssertNotNil(defaultMesh.timestamp);
     XCTAssertEqualObjects(defaultMesh.ivIndex, @"00000000");
@@ -278,7 +278,7 @@
     
     //6.other
     XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
-    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Telink-Sig-Mesh");
+    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Default Mesh");
     XCTAssertEqualObjects(SigDataSource.share.version, @"1.0.0");
     XCTAssertNotNil(SigDataSource.share.timestamp);
     XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");

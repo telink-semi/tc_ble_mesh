@@ -20,7 +20,7 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 1. 支持通过GATT的方式添加no OOB的设备和static OOB的设备（SIG协议v1.0.0支持）。
 2. 支持通过远程配网(Remote Provision)的方式添加no OOB的设备和static OOB的设备（SIG协议v1.1.0支持）。
 3. 支持通过Fast provision的方式添加no OOB的设备(需要设备支持Telink私有协议)。
-4. 支持普通KeyBind，流程：连接节点->读取服务->打开notify->设置白名单->获取设备构造数据->添加AppKey->绑定modelID到AppKey（SIG协议v1.0.1）。
+4. 支持普通KeyBind，流程：连接节点->读取服务->打开notify->设置白名单->获取设备构造数据->添加AppKey->绑定modelID到AppKey（SIG协议v1.0.0）。
 5. 支持快速KeyBind，又名Default Bound，流程：连接节点->读取服务->打开notify->设置白名单->添加AppKey（需要设备支持Telink私有协议）。
 6. 支持通过节点地址和组地址进行设备控制，包括：开关、亮度、色温、级别（level）、颜色（HSL）。
 7. 支持public和取消public一个modelID。 

@@ -39,7 +39,7 @@
     [super viewDidLoad];
 
     self.title = @"NetKey List";
-    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.netKeys];
+    self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
@@ -60,7 +60,7 @@
 
     NSString *timestamp = [LibTools getNowTimeStringOfJson];
     SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
-    netkey.index = SigDataSource.share.netKeys.count;
+    netkey.index = self.network.netKeys.count;
     netkey.phase = 0;
     netkey.timestamp = timestamp;
     netkey.oldKey = @"00000000000000000000000000000000";
@@ -68,12 +68,14 @@
     netkey.name = [NSString stringWithFormat:@"netkey%ld",(long)netkey.index];
     netkey.minSecurity = @"secure";
     vc.netKeyModel = netkey;
-    
+    vc.network = self.network;
     __weak typeof(self) weakSelf = self;
     [vc setBackNetKeyModel:^(SigNetkeyModel * _Nonnull netKeyModel) {
-        if (![SigDataSource.share.netKeys containsObject:netKeyModel]) {
-            [SigDataSource.share.netKeys addObject:netKeyModel];
-            [SigDataSource.share saveLocationData];
+        if (![weakSelf.network.netKeys containsObject:netKeyModel]) {
+            [weakSelf.network.netKeys addObject:netKeyModel];
+            if (weakSelf.backNetwork) {
+                weakSelf.backNetwork(weakSelf.network);
+            }
         }
         if (![weakSelf.sourceArray containsObject:netKeyModel]) {
             [weakSelf.sourceArray addObject:netKeyModel];
@@ -88,14 +90,14 @@
     if (sender.state == UIGestureRecognizerStateBegan) {
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
-            if (SigDataSource.share.netKeys.count == 1) {
+            if (self.network.netKeys.count == 1) {
                 [self showAlertSureWithTitle:@"Hits" message:@"The mesh network needs at least one netkey!" sure:nil];
                 return;
             }
 
             SigNetkeyModel *model = self.sourceArray[indexPath.row];
             BOOL hadBound = NO;
-            NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+            NSArray *temNodes = [NSArray arrayWithArray:self.network.curNodes];
             for (SigNodeModel *node in temNodes) {
                 if (node.netKeys && node.netKeys.count > 0) {
                     for (SigNodeKeyModel *nodeKey in node.netKeys) {
@@ -118,8 +120,10 @@
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
-                [SigDataSource.share.netKeys removeObject:model];
-                [SigDataSource.share saveLocationData];
+                [weakSelf.network.netKeys removeObject:model];
+                if (weakSelf.backNetwork) {
+                    weakSelf.backNetwork(weakSelf.network);
+                }
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             } cancel:^(UIAlertAction *action) {
@@ -142,10 +146,13 @@
     [cell.editButton addAction:^(UIButton *button) {        
         NetKeyAddVC *vc = [[NetKeyAddVC alloc] init];
         vc.isAdd = NO;
+        vc.network = weakSelf.network;
         [vc setNetKeyModel:model];
         [vc setBackNetKeyModel:^(SigNetkeyModel * _Nonnull netKeyModel) {
-            [SigDataSource.share.netKeys replaceObjectAtIndex:indexPath.row withObject:netKeyModel];
-            [SigDataSource.share saveLocationData];
+            [weakSelf.network.netKeys replaceObjectAtIndex:indexPath.row withObject:netKeyModel];
+            if (weakSelf.backNetwork) {
+                weakSelf.backNetwork(weakSelf.network);
+            }
             [weakSelf.sourceArray replaceObjectAtIndex:indexPath.row withObject:netKeyModel];
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         }];
@@ -157,8 +164,12 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
+    //当前使用的netkey不存储本地
+    if (![self.network.meshUUID isEqualToString:SigDataSource.share.meshUUID]) {
+        return;
+    }
     SigNetkeyModel *model = self.sourceArray[indexPath.row];
-    if (model != SigDataSource.share.curNetkeyModel) {
+    if (model != self.network.curNetkeyModel) {
         NSString *msg = [NSString stringWithFormat:@"Are you sure change current netKey to index:0x%04lX key:%@",(long)model.index,model.key];
         __weak typeof(self) weakSelf = self;
         [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

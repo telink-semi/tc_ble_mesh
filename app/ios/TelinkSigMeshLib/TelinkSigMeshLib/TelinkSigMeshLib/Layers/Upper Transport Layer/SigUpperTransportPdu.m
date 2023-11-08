@@ -93,7 +93,7 @@
 }
 
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key {
-    return [self initFromLowerTransportAccessMessage:accessMessage key:key ivIndex:accessMessage.ivIndex forVirtualGroup:nil];
+    return [self initFromLowerTransportAccessMessage:accessMessage key:key ivIndex:accessMessage.networkKey.ivIndex forVirtualGroup:nil];
 }
 
 - (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet ivIndex:(SigIvIndex *)ivIndex sequence:(UInt32)sequence {

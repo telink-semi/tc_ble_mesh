@@ -957,16 +957,16 @@ typedef enum      : UInt32 {
     /// 0x83 0x10 Firmware Update Status
     SigOpCode_FirmwareUpdateStatus                           = 0x8310,
     //8.4.2 Firmware Distribution model messages
-    /// 0x83 0x11 Firmware Distribution Receivers Get
-    SigOpCode_FirmwareDistributionReceiversGet               = 0x8311,
+    /// 0x83 0x11 Firmware Distribution Receivers Add
+    SigOpCode_FirmwareDistributionReceiversAdd               = 0x8311,
+    /// 0x83 0x12 Firmware Distribution Receivers Delete All
+    SigOpCode_FirmwareDistributionReceiversDeleteAll         = 0x8312,
+    /// 0x83 0x13 Firmware Distribution Receivers Status
+    SigOpCode_FirmwareDistributionReceiversStatus            = 0x8313,
+    /// 0x83 0x14 Firmware Distribution Receivers Get
+    SigOpCode_FirmwareDistributionReceiversGet               = 0x8314,
     /// 0x83 0x12 Firmware Distribution Receivers List
-    SigOpCode_FirmwareDistributionReceiversList              = 0x8312,
-    /// 0x83 0x13 Firmware Distribution Receivers Add
-    SigOpCode_FirmwareDistributionReceiversAdd               = 0x8313,
-    /// 0x83 0x14 Firmware Distribution Receivers Delete All
-    SigOpCode_FirmwareDistributionReceiversDeleteAll         = 0x8314,
-    /// 0x83 0x15 Firmware Distribution Receivers Status
-    SigOpCode_FirmwareDistributionReceiversStatus            = 0x8315,
+    SigOpCode_FirmwareDistributionReceiversList              = 0x8315,
     /// 0x83 0x16 Firmware Distribution Capabilities Get
     SigOpCode_FirmwareDistributionCapabilitiesGet            = 0x8316,
     /// 0x83 0x17 Firmware Distribution Capabilities Status
@@ -1756,8 +1756,8 @@ typedef enum                    : UInt8 {
     /// Reserved for Future Use : 0x4–0x1F
 } SigFirmwareUpdateAdditionalInformationStatusType;
 
-/// Table 8.7: Update Phase state values
-/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.71)
+/// Table 4.8: Retrieved Update Phase field values
+/// - seeAlso: MshDFU_v1.0.pdf  (page.32)
 typedef enum : UInt8 {
     /// Ready to start a Receive Firmware procedure..
     SigFirmwareUpdatePhaseType_idle                = 0x00,
@@ -1773,8 +1773,15 @@ typedef enum : UInt8 {
     SigFirmwareUpdatePhaseType_verificationFailed  = 0x05,
     /// The Apply New Firmware procedure is being executed.
     SigFirmwareUpdatePhaseType_applyingUpdate      = 0x06,
-    /// Prohibited.
-    SigFirmwareUpdatePhaseType_prohibited          = 0x07,
+    /// Firmware transfer has been canceled.
+    SigFirmwareUpdatePhaseType_transferCanceled    = 0x07,
+    /// Firmware applying succeeded
+    SigFirmwareUpdatePhaseType_applySuccess        = 0x08,
+    /// Firmware applying failed.
+    SigFirmwareUpdatePhaseType_applyFailed         = 0x09,
+    /// Phase of a node was not yet retrieved
+    SigFirmwareUpdatePhaseType_unknown             = 0x0A,
+    /// RFU. 0xB–0xF.
 } SigFirmwareUpdatePhaseType;
 
 /// Table 3.10 Status codes used by the BLOB Transfer models

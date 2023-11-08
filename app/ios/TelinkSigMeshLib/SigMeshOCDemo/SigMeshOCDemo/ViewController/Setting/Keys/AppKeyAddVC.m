@@ -67,7 +67,7 @@
 
 - (void)clickSave {
     BOOL hadBound = NO;
-    NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSArray *temNodes = [NSArray arrayWithArray:self.network.curNodes];
     for (SigNodeModel *node in temNodes) {
         if (node.appKeys && node.appKeys.count > 0) {
             for (SigNodeKeyModel *nodeKey in node.appKeys) {
@@ -122,7 +122,7 @@
     TeLogInfo(@"appkey input success!");
     if (self.appKeyModel) {
         BOOL hadExist = NO;
-        NSArray *temAppkeys = [NSArray arrayWithArray:SigDataSource.share.appKeys];
+        NSArray *temAppkeys = [NSArray arrayWithArray:self.network.appKeys];
         for (SigAppkeyModel *tem in temAppkeys) {
             if (tem.index == index) {
                 if (self.isAdd) {
@@ -141,7 +141,7 @@
             return;
         }
 
-        NSArray *temNetkeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+        NSArray *temNetkeys = [NSArray arrayWithArray:self.network.netKeys];
         for (SigNetkeyModel *tem in temNetkeys) {
             if (tem.index == boundNetKey) {
                 hadExist = YES;

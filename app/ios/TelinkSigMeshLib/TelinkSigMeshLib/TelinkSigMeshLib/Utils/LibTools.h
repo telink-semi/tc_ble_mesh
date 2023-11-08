@@ -260,6 +260,16 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 // 获取手机剩余的存储空间大小
 + (long)freeDiskSpaceInBytes;
 
+#pragma mark - Telink定义的6字节MAC转16字节的UUID算法
+
+/**
+ * calculate UUID by mac address
+ *
+ * @param macAddress mac address, eg: A4C138E3EF05
+ * @return device UUID, eg: D7009091D6B5D93590C8DE0DF7803463
+ */
++ (NSData *)calcUuidByMac:(NSData *)macAddress;
+
 @end
 
 NS_ASSUME_NONNULL_END

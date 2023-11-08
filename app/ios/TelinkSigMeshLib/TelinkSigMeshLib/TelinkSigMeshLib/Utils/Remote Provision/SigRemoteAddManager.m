@@ -829,19 +829,35 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 //    TeLogVerbose(@"didReceiveSigProxyConfigurationMessage=%@,source=0x%x,destination=0x%x",message,source,destination);
 }
 
+/// 当SDK不支持EPA功能时，默认都使用SigFipsP256EllipticCurve_CMAC_AES128。
+/// 如果static OOB长度为16，不能用SigFipsP256EllipticCurve_HMAC_SHA256而要用SigFipsP256EllipticCurve_CMAC_AES128。
+/// 如果static OOB大于16，但算法为SigFipsP256EllipticCurve_CMAC_AES128，需要截取static OOB的前16字节来使用。
 - (Algorithm)getCurrentProvisionAlgorithm {
     Algorithm algorithm = Algorithm_fipsP256EllipticCurve;
     if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_CMAC_AES128) {
         algorithm = Algorithm_fipsP256EllipticCurve;
     } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_HMAC_SHA256) {
-        algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
-    } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_auto) {
-         if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1) {
+        if ((self.staticOobData && self.staticOobData.length == 32) || self.staticOobData == nil) {
             algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+        } else {
+            algorithm = Algorithm_fipsP256EllipticCurve;
+        }
+    } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_auto) {
+        if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1) {
+            if ((self.staticOobData && self.staticOobData.length == 32) || self.staticOobData == nil) {
+                algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+            } else {
+                algorithm = Algorithm_fipsP256EllipticCurve;
+            }
         } else if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1) {
             algorithm = Algorithm_fipsP256EllipticCurve;
         }
     }
+    if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
+        self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
+        TeLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+    }
+    TeLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;
 }
 

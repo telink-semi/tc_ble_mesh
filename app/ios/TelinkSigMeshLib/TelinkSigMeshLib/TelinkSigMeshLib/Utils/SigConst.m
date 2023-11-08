@@ -58,6 +58,11 @@ NSString * const kJsonMeshUUID_key = @"MeshUUID";
 NSString * const kCurrenProvisionerUUID_key = @"currenProvisionerUUID_key";
 NSString * const kCurrenProvisionerSno_key = @"currenProvisionerSno_key";
 NSString * const kLocationIvIndexAndSequenceNumberDictionary_key = @"locationIvIndexAndSequenceNumberDictionary_key";
+NSString * const kLocalPrivateBeaconDictionary_key = @"kLocalPrivateBeaconDictionary_key";//缓存private beacon页面的数据。
+NSString * const kLocalPrivateGattProxy_key = @"kLocalPrivateGattProxy_key";//缓存private beacon页面的数据。
+NSString * const kLocalPrivateBeacon_key = @"kLocalPrivateBeacon_key";//缓存private beacon页面的数据。
+NSString * const kLocalConfigGattProxy_key = @"kLocalConfigGattProxy_key";//缓存private beacon页面的数据。
+NSString * const kLocalConfigBeacon_key = @"kLocalConfigBeacon_key";//缓存private beacon页面的数据。
 
 //SigScanRspModel
 NSString * const kSigScanRspModel_uuid_key = @"sigScanRspModel_uuid_key";

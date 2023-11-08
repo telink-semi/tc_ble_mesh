@@ -315,6 +315,9 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// 4 bits, Enumerates (selects) a Schedule Register entry. The valid values for the Index field are 0x0-0xF.
 @property (nonatomic,assign) UInt64 schedulerID;
 @property (nonatomic,assign) UInt64 schedulerData;
+/// add since v4.1.0.0
+/// when response from 5.2.3.3 Scheduler Action Get, YES means this Scheduler data is Invalid.
+@property (nonatomic,assign) BOOL isInvalidScheduler;
 
 /// get dictionary from SchedulerModel object.
 /// @returns return dictionary object.
@@ -1705,7 +1708,6 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,assign) UInt8 HSL_Lightness100;
 @property (nonatomic,assign) UInt8 HSL_Hue100;
 @property (nonatomic,assign) UInt8 HSL_Saturation100;
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*keyBindModelIDs;//There are modelID that current had key bind.
 @property (nonatomic,strong) SigPage0 *compositionData;//That is composition data get from add device process.APP can get ele_cut in provision_end_callback, app can get detail composition data in App_key_bind_end_callback.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*onoffAddresses;//element addresses of onoff
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*levelAddresses;//element addresses of level

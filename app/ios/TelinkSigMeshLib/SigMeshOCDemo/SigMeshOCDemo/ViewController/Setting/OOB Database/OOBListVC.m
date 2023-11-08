@@ -81,6 +81,11 @@
     [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    self.tabBarController.tabBar.hidden = YES;
+}
+
 - (void)addOobByManualInput {
     EditOOBVC *vc = [[EditOOBVC alloc] init];
     vc.isAdd = YES;
@@ -103,7 +108,7 @@
 }
 
 - (void)handleOobData:(NSData *)oobData oobFileName:(NSString *)oobFileName {
-    NSString *oobString = [NSString stringWithUTF8String:oobData.bytes];
+    NSString *oobString = [[NSString alloc] initWithData:oobData encoding:NSUTF8StringEncoding];
     NSArray *arr = [oobString componentsSeparatedByString:@"\n"];
     NSMutableArray *validArray = [NSMutableArray array];
     for (NSString *str in arr) {
@@ -115,7 +120,7 @@
                     NSString *oobString = array.lastObject;
                     uuidString = uuidString.removeHeadAndTailSpacePro;
                     oobString = oobString.removeHeadAndTailSpacePro;
-                    if (uuidString.length == 32 && oobString.length == 32) {
+                    if (uuidString.length == 32 && (oobString.length == 32 || oobString.length == 64)) {
                         SigOOBModel *oobModel = [[SigOOBModel alloc] initWithSourceType:OOBSourceTypeImportFromFile UUIDString:uuidString OOBString:oobString];
                         [validArray addObject:oobModel];
                     }

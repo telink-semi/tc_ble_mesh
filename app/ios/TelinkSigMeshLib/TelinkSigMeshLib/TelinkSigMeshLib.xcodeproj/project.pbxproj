@@ -680,7 +680,6 @@
 				25335F8E235F06D3006C79C1 /* SDKLibCommand.m */,
 				258A003F23A8BA5A003D2148 /* OTAManager.h */,
 				258A003E23A8BA5A003D2148 /* OTAManager.m */,
-				25C30DC02469309600F06076 /* MeshOTAManager.h */,
 				25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */,
 				25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */,
 				25D9E67C23ACD9B6001E4747 /* SigPublishManager.h */,
@@ -948,8 +947,9 @@
 		916964062AC56AEC0010D34A /* MeshOTA */ = {
 			isa = PBXGroup;
 			children = (
-				916964072AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h */,
+				25C30DC02469309600F06076 /* MeshOTAManager.h */,
 				916964082AC56AEC0010D34A /* MeshOTAManager.m */,
+				916964072AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h */,
 				916964092AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m */,
 			);
 			path = MeshOTA;

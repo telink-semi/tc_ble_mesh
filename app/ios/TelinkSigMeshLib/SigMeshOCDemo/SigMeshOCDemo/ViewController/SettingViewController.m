@@ -22,15 +22,27 @@
  *******************************************************************************************************/
 
 #import "SettingViewController.h"
-#import "SettingItemCell.h"
+#import "SettingDetailItemCell.h"
 #import "MeshOTAVC.h"
 #import "ResponseTestVC.h"
 #import <StoreKit/StoreKit.h>
 #import "UIViewController+Message.h"
+#import "OOBListVC.h"
+#import "CertificateListVC.h"
+
+// define title string
+#define kManagerNetworkTitle @"Manage Network"
+#define kOOBDatabaseTitle @"OOB Database"
+#define kRootCertTitle @"Root Cert"
+#define kSettingsTitle @"Settings"
+#define kTestTitle @"Test"
+#define kHowToImportBinFileTitle    @"How to import bin file?"
+#define kGetMoreTelinkAppsTitle    @"Get More Telink Apps"
 
 @interface SettingViewController()<UITableViewDataSource,UITableViewDelegate,SKStoreProductViewControllerDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic, strong) NSMutableArray <NSString *>*source;
+@property (nonatomic, strong) NSMutableArray <NSString *>*titleSource;
+@property (nonatomic, strong) NSMutableArray <NSString *>*detailSource;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconSource;
 @property (nonatomic, strong) NSMutableArray <NSString *>*vcIdentifiers;
 @property (weak, nonatomic) IBOutlet UILabel *versionLabel;
@@ -39,46 +51,40 @@
 @implementation SettingViewController
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    SettingItemCell *cell = (SettingItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingItemCellID forIndexPath:indexPath];
-    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    cell.nameLabel.text = self.source[indexPath.row];
+    SettingDetailItemCell *cell = (SettingDetailItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingDetailItemCellID forIndexPath:indexPath];
+    cell.accessoryType = UITableViewCellAccessoryNone;
+    cell.nameLabel.text = self.titleSource[indexPath.row];
+    cell.detailLabel.text = self.detailSource[indexPath.row];
     cell.iconImageView.image = [UIImage imageNamed:self.iconSource[indexPath.row]];
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    NSString *titleString = self.source[indexPath.row];
-    if ([titleString isEqualToString:@"How to import bin file?"]) {
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+    NSString *titleString = self.titleSource[indexPath.row];
+    if ([titleString isEqualToString:kHowToImportBinFileTitle]) {
         [self pushToTipsVC];
-        return;
-    }
-    if ([titleString isEqualToString:@"Get More Telink Apps"]) {
+    } else if ([titleString isEqualToString:kGetMoreTelinkAppsTitle]) {
         [self pushToTelinkApps];
-        return;
-    }
-    NSString *sb = @"Setting";
-    UIViewController *vc = nil;
-    if ([titleString isEqualToString:@"Log"]) {
-        sb = @"Main";
-    }
-
-    if ([titleString isEqualToString:@"Mesh OTA"]) {
-        vc = [[MeshOTAVC alloc] init];
-    } else if ([titleString isEqualToString:@"Test"]) {
+    } else if ([titleString isEqualToString:kTestTitle]) {
         [self clickTest];
-        return;
+    } else if ([titleString isEqualToString:kOOBDatabaseTitle]) {
+        [self pushToOOBVC];
+    } else if ([titleString isEqualToString:kRootCertTitle]) {
+        [self pushRootCertificateVC];
     } else {
-        vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:sb];
+        UIViewController *vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:@"Setting"];
+        [self.navigationController pushViewController:vc animated:YES];
     }
-    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return self.source.count;
+    return self.titleSource.count;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 51.0;
+    return 70.0;
 }
 
 - (void)clickTest {
@@ -101,6 +107,16 @@
     }];
     [actionSheet addAction:alertF];
     [self presentViewController:actionSheet animated:YES completion:nil];
+}
+
+- (void)pushToOOBVC {
+    OOBListVC *vc = [[OOBListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushRootCertificateVC {
+    CertificateListVC *vc = [[CertificateListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToTipsVC {
@@ -134,70 +150,58 @@
     }];
 }
 
+//将tabBar.hidden移到viewDidAppear，解决下一界面的手势返回动作取消时导致界面下方出现白条的问题。
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    self.tabBarController.tabBar.hidden = NO;
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    self.tabBarController.tabBar.hidden = NO;
+//    self.tabBarController.tabBar.hidden = NO;
     [self initData];
     [self.tableView reloadData];
 }
 
 - (void)initData {
-    self.source = [NSMutableArray array];
+    self.titleSource = [NSMutableArray array];
+    self.detailSource = [NSMutableArray array];
     self.iconSource = [NSMutableArray array];
     self.vcIdentifiers = [NSMutableArray array];
-    if (SigDataSource.share.curMeshIsVisitor == NO) {
-        if (kShowScenes) {
-            [self.source addObject:@"Scenes"];
-            [self.iconSource addObject:@"scene"];
-            [self.vcIdentifiers addObject:ViewControllerIdentifiers_SceneListViewControllerID];
-        }
-    }
-    if (kshowShare) {
-        [self.source addObject:@"Share"];
+    
+    [self.titleSource addObject:kManagerNetworkTitle];
+    [self.detailSource addObject:@"Switch, Create/Delete, Import/Export..."];
+    [self.iconSource addObject:@"setting_manage"];
+    [self.vcIdentifiers addObject:ViewControllerIdentifiers_NetworkListVCID];
+    [self.titleSource addObject:kOOBDatabaseTitle];
+    [self.detailSource addObject:@"used in static-oob provisioning"];
+    [self.iconSource addObject:@"setting_OOBDatabase"];
+    [self.vcIdentifiers addObject:@""];
+    [self.titleSource addObject:kRootCertTitle];
+    [self.detailSource addObject:@"used in certificate-based provisioning"];
+    [self.iconSource addObject:@"setting_certificate"];
+    [self.vcIdentifiers addObject:@""];
+    [self.titleSource addObject:kSettingsTitle];
+    [self.detailSource addObject:@"other settings..."];
+    [self.iconSource addObject:@"ic_setting"];
+    [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsViewControllerID];
+
+    if (kshowTest) {
+        [self.titleSource addObject:kTestTitle];
+        [self.detailSource addObject:@"stress testing sends and receives Mesh packets."];
         [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_ShareViewControllerID];
-    }
-    if (SigDataSource.share.curMeshIsVisitor == NO) {
-        [self.source addObject:@"Mesh OTA"];
-        [self.iconSource addObject:@"ic_mesh_ota"];
-        [self.vcIdentifiers addObject:@"no found"];
-    }
-    if (kshowLog) {
-        [self.source addObject:@"Log"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_LogViewControllerID];
-    }
-    if (kshowMeshInfo) {
-        [self.source addObject:@"Mesh Info"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_MeshInfoViewControllerID];
-    }
-    if (kshowMeshSettings) {
-        [self.source addObject:@"Settings"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsVCID];
-    }
-    if (SigDataSource.share.curMeshIsVisitor == NO) {
-        if (kshowTest) {
-            [self.source addObject:@"Test"];
-            [self.iconSource addObject:@"ic_model"];
-            [self.vcIdentifiers addObject:ViewControllerIdentifiers_TestVCID];
-        }
-        [self.source addObject:@"Direct Control List"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_DirectControlListVCID];
-        [self.source addObject:@"Forwarding Table List"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_ForwardingTableVCID];
+        [self.vcIdentifiers addObject:@""];
     }
     
     //v3.3.3.6新增 How to import bin file?
-    [self.source addObject:@"How to import bin file?"];
+    [self.titleSource addObject:@"How to import bin file?"];
+    [self.detailSource addObject:@"prompt users on how to import Bin files into the app."];
     [self.iconSource addObject:@"ic_model"];
     [self.vcIdentifiers addObject:@""];
     //v3.3.3.6新增 Get More Telink Apps
-    [self.source addObject:@"Get More Telink Apps"];
-    [self.iconSource addObject:@"ic_model"];
+    [self.titleSource addObject:@"Get More Telink Apps"];
+    [self.detailSource addObject:@"prompt users on how to obtain more Telink tool apps."];
+    [self.iconSource addObject:@"setting_modeAPP"];
     [self.vcIdentifiers addObject:@""];
 }
 
@@ -205,7 +209,9 @@
     [super normalSetting];
     self.title = @"Setting";
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_SettingDetailItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_SettingDetailItemCellID];
+
 //    NSString *app_Version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     NSString *app_Version = kTelinkSigMeshLibVersion;
     

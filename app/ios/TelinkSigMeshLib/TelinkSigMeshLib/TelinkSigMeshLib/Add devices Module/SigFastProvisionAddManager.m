@@ -419,7 +419,7 @@
         DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:fastModel.productId ];
         [model setCompositionData:typeModel.defaultCompositionData];
         model.deviceKey = [LibTools convertDataToHexStr:fastModel.deviceKey];
-        model.UUID = [LibTools convertDataToHexStr:fastModel.deviceKey];
+        model.UUID = [LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools turnOverData:fastModel.macAddress]]];
         model.peripheralUUID = nil;
         model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:fastModel.macAddress]];
         SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
@@ -427,13 +427,7 @@
         if (![model.netKeys containsObject:nodeNetkey]) {
             [model.netKeys addObject:nodeNetkey];
         }
-
-        if ([SigMeshLib.share.dataSource.nodes containsObject:model]) {
-            NSInteger index = [SigMeshLib.share.dataSource.nodes indexOfObject:model];
-            SigMeshLib.share.dataSource.nodes[index] = model;
-        } else {
-            [SigMeshLib.share.dataSource.nodes addObject:model];
-        }
+        [SigMeshLib.share.dataSource addAndSaveNodeToMeshNetworkWithDeviceModel:model];
     }
     [SigMeshLib.share.dataSource saveLocationData];
 

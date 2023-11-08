@@ -23,6 +23,7 @@
 
 #import "LibTools.h"
 #import <CommonCrypto/CommonCryptor.h>
+#import <CommonCrypto/CommonDigest.h>
 
 @implementation LibTools
 
@@ -821,6 +822,39 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
         long long space = [systemAttributes[NSFileSystemFreeSize] longLongValue];
         return space;
     }
+}
+
+#pragma mark - Telink定义的6字节MAC转16字节的UUID算法
+
+/**
+ * calculate UUID by mac address
+ *
+ * @param macAddress mac address, eg: A4C138E3EF05
+ * @return device UUID, eg: D7009091D6B5D93590C8DE0DF7803463
+ */
++ (NSData *)calcUuidByMac:(NSData *)macAddress {
+    NSData *nameSpace = [LibTools nsstringToHex:@"10b8a76bad9dd11180b400c04fd430c8"];
+    macAddress = [LibTools turnOverData:macAddress];
+    UInt8 input[15] = {0};
+    memcpy(input, macAddress.bytes, 6);
+    
+    //1: 创建一个MD5对象
+    CC_MD5_CTX md5;
+    //2: 初始化MD5
+    CC_MD5_Init(&md5);
+    //3: 准备MD5加密
+    CC_MD5_Update(&md5, nameSpace.bytes, (uint32_t)nameSpace.length);
+    CC_MD5_Update(&md5, input, 15);
+    //4: 准备一个字符串数组, 存储MD5加密之后的数据
+    unsigned char result[CC_MD5_DIGEST_LENGTH];
+    //5: 结束MD5加密
+    CC_MD5_Final(result, &md5);
+    result[7] &= 0x0F;
+    result[7] |= 0x30;
+    result[8] &= 0x3F;
+    result[8] |= 0x80;
+    NSData *resultData = [NSData dataWithBytes:result length:CC_MD5_DIGEST_LENGTH];
+    return resultData;
 }
 
 @end

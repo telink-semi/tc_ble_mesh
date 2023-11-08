@@ -236,23 +236,48 @@ static SigMeshLib *shareLib = nil;
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
+        // handle for disconnected
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network is disconnected!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
 #endif
     if (self.dataSource == nil) {
-        TeLogError(@"Send fail! Mesh Network not created");
+        TeLogError(@"Send fail! Mesh Network not created!");
+        // handle for dataSource
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network not created!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
     if (self.dataSource.curLocationNodeModel == nil || self.dataSource.curLocationNodeModel.address == 0) {
-        TeLogError(@"Send fail! Local Provisioner has no Unicast Address assigned.");
+        TeLogError(@"Send fail! Local Provisioner has no Unicast Address assigned!");
+        // handle for curLocationNodeModel
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Local Provisioner has no Unicast Address assigned!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
     if (![SigHelper.share isUnicastAddress:destination]) {
         TeLogError(@"Send fail! Address: 0x%x is not a Unicast Address.",destination);
+        // handle for destination
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:[NSString stringWithFormat:@"Send fail! Address: 0x%x is not a Unicast Address.", destination] code:-1 userInfo:nil]);
+        }
         return nil;
     }
     if (![SigHelper.share isRelayedTTL:initialTtl]) {
         TeLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
+        // handle for ttl
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:[NSString stringWithFormat:@"Send fail! TTL value %d is invalid.", initialTtl] code:-1 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -311,26 +336,51 @@ static SigMeshLib *shareLib = nil;
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
+        // handle for disconnected
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network is disconnected!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
 #endif
 
     if (self.networkManager == nil || self.dataSource == nil) {
         TeLogError(@"Send fail! Mesh Network not created");
+        // handle for dataSource
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network not created!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
     if (self.dataSource.curLocationNodeModel == nil || self.dataSource.curLocationNodeModel.elements.firstObject == nil) {
         TeLogError(@"Send fail! Local Provisioner has no Unicast Address assigned.");
+        // handle for curLocationNodeModel
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Local Provisioner has no Unicast Address assigned!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
     SigNodeModel *localNode = self.dataSource.curLocationNodeModel;
     SigElementModel *source = localNode.elements.firstObject;
     if (source.getParentNode != localNode) {
         TeLogError(@"Send fail! The Element does not belong to the local Node.");
+        // handle for curLocationNodeModel
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! The Element does not belong to the local Node." code:-1 userInfo:nil]);
+        }
         return nil;
     }
     if (![SigHelper.share isRelayedTTL:initialTtl]) {
         TeLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
+        // handle for ttl
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:[NSString stringWithFormat:@"Send fail! TTL value %d is invalid.", initialTtl] code:-1 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -383,11 +433,21 @@ static SigMeshLib *shareLib = nil;
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
+        // handle for disconnected
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network is disconnected!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
 #endif
     if (self.dataSource == nil) {
         TeLogError(@"Send fail! Mesh Network not created");
+        // handle for dataSource
+        if (command.resultCallback) {
+            //handle resultCallback
+            command.resultCallback(NO, [NSError errorWithDomain:@"Send fail! Mesh Network not created!" code:-1 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -665,7 +725,19 @@ static SigMeshLib *shareLib = nil;
         }
     }
     
+    //update status to SigDataSource before callback.
+    [self.dataSource updateNodeStatusWithBaseMeshMessage:message source:source];
+    //非直连设备断电，再上电后设备端会主动上报0x824E。
+    if (message.opCode == SigOpCode_lightLightnessStatus) {
+        if (SigPublishManager.share.discoverOnlineNodeCallback) {
+            SigPublishManager.share.discoverOnlineNodeCallback(@(source));
+        }
+    }
     SDKLibCommand *command = [self getCommandWithReceiveMessage:message fromSource:(UInt16)source];
+    //filter command = nil
+    if (command == nil) {
+        return;
+    }
     BOOL shouldCallback = NO;
     if (command && ![command.responseSourceArray containsObject:@(source)]) {
         shouldCallback = YES;
@@ -674,14 +746,6 @@ static SigMeshLib *shareLib = nil;
             [command.responseSourceArray addObject:@(source)];
         } else if (message.opCode > 0xFFFF) {//vendor model
             [command.responseSourceArray addObject:@(source)];
-        }
-    }
-    //update status to SigDataSource before callback.
-    [self.dataSource updateNodeStatusWithBaseMeshMessage:message source:source];
-    //非直连设备断电，再上电后设备端会主动上报0x824E。
-    if (message.opCode == SigOpCode_lightLightnessStatus) {
-        if (SigPublishManager.share.discoverOnlineNodeCallback) {
-            SigPublishManager.share.discoverOnlineNodeCallback(@(source));
         }
     }
 
@@ -723,6 +787,10 @@ static SigMeshLib *shareLib = nil;
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
     TeLogInfo(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
+    //filter command = nil
+    if (command == nil) {
+        return;
+    }
     if (command.retryCount > 0 || (command.retryCount == 0 && command.responseMaxCount > 0)) {
         // 需要重试或者等待timeout
         [self retrySendSDKLibCommand:command];
@@ -768,6 +836,10 @@ static SigMeshLib *shareLib = nil;
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error {
     TeLogInfo(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
+    //filter command = nil
+    if (command == nil) {
+        return;
+    }
     if (command.retryCount > 0) {
         // 需要重试
         [self retrySendSDKLibCommand:command];
@@ -785,6 +857,10 @@ static SigMeshLib *shareLib = nil;
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
     TeLogInfo(@"didReceiveSigProxyConfigurationMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
     SDKLibCommand *command = [self getCommandWithReceiveMessage:(SigMeshMessage *)message fromSource:source];
+    //filter command = nil
+    if (command == nil) {
+        return;
+    }
     [self commandResponseFinishWithCommand:command];
 
     //callback

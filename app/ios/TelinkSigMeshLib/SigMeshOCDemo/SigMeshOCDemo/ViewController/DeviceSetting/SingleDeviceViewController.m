@@ -79,7 +79,7 @@
         *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
         *selColor = [UIColor blackColor];
         *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / ((weakSelf.model.isRemote || SigDataSource.share.curMeshIsVisitor) ? 2 : 3);
+        *titleWidth = [UIScreen mainScreen].bounds.size.width / (weakSelf.model.isRemote ? 2 : 3);
     }];
     
     // 标题渐变
@@ -115,7 +115,7 @@
     
     // group
     // 遥控器不需要分组界面
-    if (self.model.isRemote == NO && SigDataSource.share.curMeshIsVisitor == NO) {
+    if (self.model.isRemote == NO) {
         DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
         wordVc2.title = @"GROUP";
         wordVc2.model = self.model;

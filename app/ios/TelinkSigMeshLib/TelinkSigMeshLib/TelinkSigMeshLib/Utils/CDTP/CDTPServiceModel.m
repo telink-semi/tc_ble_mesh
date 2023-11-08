@@ -162,6 +162,7 @@
     [self.objectNameCharacteristic setValue:[self getValueOfObjectName]];
     [self.objectTypeCharacteristic setValue:[self getValueOfObjectType]];
     [self.objectSizeCharacteristic setValue:[self getValueOfObjectSize]];
+    TeLogInfo(@"设置ObjectSize=0x%@, 取self.objectSizeCharacteristic.value=%@", [self getValueOfObjectSize], self.objectSizeCharacteristic.value);
     [self.objectFirstCreatedCharacteristic setValue:[self getValueOfObjectFirstCreated]];
     [self.objectLastModifiedCharacteristic setValue:[self getValueOfObjectLastModified]];
     [self.objectPropertiesCharacteristic setValue:[self getValueOfObjectProperties]];
@@ -679,7 +680,7 @@
 
 /// CDTP Service start Advertising.
 - (void)startAdvertising {
-    NSDictionary *dict = @{CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:kObjectTransferService]]};
+    NSDictionary *dict = @{CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:kObjectTransferService]], CBAdvertisementDataLocalNameKey : @"tlk"};
     if (@available(iOS 10.0, *)) {
         if (self.peripheralManager.state == CBManagerStatePoweredOn) {
             [self.peripheralManager startAdvertising:dict];

@@ -49,6 +49,10 @@
 @implementation CMDViewController
 
 - (IBAction)clickDefaultButton:(UIButton *)sender {
+    UInt16 address = 2;
+    if (SigDataSource.share.curNodes.count > 0) {
+        address = SigDataSource.share.curNodes.firstObject.address;
+    }
     switch (sender.tag) {
         case 1:
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c2 11 02 c4 02 01 00";
@@ -74,9 +78,11 @@
             SigOpcodesAggregatorItemModel *model2 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigFriendGet alloc] init]];
             SigOpcodesAggregatorItemModel *model3 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigRelayGet alloc] init]];
             NSArray *items = @[model1,model2,model3];
-            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:0x02 items:items];
+            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:SigDataSource.share.curNodes.firstObject.address items:items];
             NSString *parameters = [LibTools convertDataToHexStr:message.opCodeAndParameters];
-            self.inTextView.text = [@"a3 ff 00 00 00 00 02 00 02 00" stringByAppendingString:parameters];
+            //默认发送给第一个node的地址。
+            NSString *addressString = [NSString stringWithFormat:@"%02X %02X", address & 0xFF, (address >> 8)&0xFF];
+            self.inTextView.text = [NSString stringWithFormat:@"a3 ff 00 00 00 00 02 00 %@%@", addressString, parameters];
         }
             break;
         case 8:
@@ -84,9 +90,11 @@
             SigOpcodesAggregatorItemModel *model1 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightLightnessDefaultGet alloc] init]];
             SigOpcodesAggregatorItemModel *model2 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightLightnessRangeGet alloc] init]];
             NSArray *items = @[model1,model2];
-            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:0x02 items:items];
+            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:address items:items];
             NSString *parameters = [LibTools convertDataToHexStr:message.opCodeAndParameters];
-            self.inTextView.text = [@"a3 ff 00 00 00 00 02 00 02 00" stringByAppendingString:parameters];
+            //默认发送给第一个node的地址。
+            NSString *addressString = [NSString stringWithFormat:@"%02X %02X", address & 0xFF, (address >> 8)&0xFF];
+            self.inTextView.text = [NSString stringWithFormat:@"a3 ff 00 00 00 00 02 00 %@%@", addressString, parameters];
             //==========test==========//
 //            NSData *randomData = [LibTools createRandomDataWithLength:13];
 //            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:SigDataSource.share.curNetkeyModel.ivIndex.updateActive ivUpdateActive:SigDataSource.share.curNetkeyModel.ivIndex.updateActive ivIndex:[LibTools uint32From16String:SigDataSource.share.ivIndex] randomData:randomData usingNetworkKey:SigDataSource.share.curNetkeyModel];
@@ -104,7 +112,9 @@
 
 - (IBAction)clickSend:(UIButton *)sender {
     [self.inTextView resignFirstResponder];
-    if ([self validateString:self.inTextView.text.removeAllSapceAndNewlines]) {
+    //修复不输入点send出现奔溃的问题。
+    NSString *s = self.inTextView.text.removeAllSapceAndNewlines;
+    if (s && s.length > 0 && [self validateString:s]) {
         [self handleInTextView];
         [self handleSendString];
         
@@ -146,6 +156,8 @@
 //            TeLogVerbose(@"finish");
 //        }];
         
+    } else {
+        [self showTips:@"Please enter a valid hexadecimal data."];
     }
 }
 
@@ -183,7 +195,6 @@
     [super normalSetting];
     [self configUI];
     self.logString = @"";
-    self.inTextView.editable = !SigDataSource.share.curMeshIsVisitor;
 }
 
 - (void)configUI{

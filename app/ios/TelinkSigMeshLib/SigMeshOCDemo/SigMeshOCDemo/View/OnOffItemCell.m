@@ -28,9 +28,11 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
-    
+    //cornerRadius
     self.onoffView.layer.cornerRadius = 5;
+    //borderWidth
     self.onoffView.layer.borderWidth = 1;
+    //borderColor
     self.onoffView.layer.borderColor = [UIColor lightGrayColor].CGColor;
 
 }

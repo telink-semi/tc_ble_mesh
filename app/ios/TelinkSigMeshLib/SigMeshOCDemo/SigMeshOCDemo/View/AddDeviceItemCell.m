@@ -34,8 +34,11 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    //borderWidth
     _bgView.layer.borderWidth = 1;
+    //borderColor
     _bgView.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    //cornerRadius
     _bgView.layer.cornerRadius = 5;
 }
 
