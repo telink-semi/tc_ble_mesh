@@ -223,7 +223,7 @@
     } else {
         cell.nameLabel.text = title;
     }
-    cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+    cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
     return cell;
 }
 

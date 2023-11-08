@@ -31,7 +31,7 @@
 #import "CertificateListVC.h"
 
 // define title string
-#define kManagerNetworkTitle @"Manager Network"
+#define kManagerNetworkTitle @"Manage Network"
 #define kOOBDatabaseTitle @"OOB Database"
 #define kRootCertTitle @"Root Cert"
 #define kSettingsTitle @"Settings"
