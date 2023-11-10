@@ -75,7 +75,7 @@ u32 lpn_mode_tick = 0;
 u32 lpn_wakeup_tick = 0;
 
 STATIC_ASSERT(LPN_ADV_INTERVAL_MS > (FRI_ESTABLISH_REC_DELAY_MS + FRI_ESTABLISH_WIN_MS + 10));//FRI_ESTABLISH_PERIOD_MS
-STATIC_ASSERT(FRI_REQ_TIMEOUT_MS > 1100);
+STATIC_ASSERT(FRI_REQ_TIMEOUT_MS > FRI_ESTABLISH_PERIOD_MS);
 STATIC_ASSERT(LPN_POLL_TIMEOUT_100MS * 100 >= FRI_POLL_INTERVAL_MS * 2); // timeout should not be too short.
 STATIC_ASSERT(FRI_POLL_INTERVAL_MS <= 40*1000); // FRI_POLL_INTERVAL_MS max 40s, because intervalMin in bls_ll_setAdvInterval is u16, max is (0xffff*625)us = 40s.
 STATIC_ASSERT(SUB_LIST_MAX_LPN <= SUB_LIST_MAX);    // SUB_LIST_MAX_LPN should be equal to sub_list_max later
@@ -439,7 +439,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
     }else{
         switch(fri_ship_proc_lpn.status){   // Be true only during establishing friend ship.
             case FRI_ST_REQUEST:
-				if(is_mesh_adv_cmd_fifo_empty() && clock_time_exceed(fri_ship_proc_lpn.req_tick, (FRI_POLL_INTERVAL_MS + FRI_ESTABLISH_PERIOD_MS) * 1000)){
+				if(is_mesh_adv_cmd_fifo_empty() && clock_time_exceed(fri_ship_proc_lpn.req_tick, FRI_REQ_TIMEOUT_MS * 1000)){
 	                fri_ship_proc_lpn.req_tick = clock_time();
 					
 	                friend_cmd_send_request();
@@ -1139,7 +1139,7 @@ u32 get_lpn_poll_interval_ms()
 
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh)
 {
-	u16 interval = (LPN_MODE_GATT_OTA == lpn_mode) ? ADV_INTERVAL_MS:(is_lpn_support_and_en?(is_friend_ship_link_ok_lpn() ? get_lpn_poll_interval_ms() : FRI_REQ_TIMEOUT_MS):GET_ADV_INTERVAL_MS(ADV_INTERVAL_UNIT));
+	u16 interval = (LPN_MODE_GATT_OTA == lpn_mode) ? ADV_INTERVAL_MS:(is_lpn_support_and_en?(is_friend_ship_link_ok_lpn() ? get_lpn_poll_interval_ms() : (FRI_REQ_TIMEOUT_MS-FRI_ESTABLISH_PERIOD_MS)):GET_ADV_INTERVAL_MS(ADV_INTERVAL_UNIT));
 	int ret = bls_ll_setAdvParam_interval(interval, 0);
 	if(adv_tick_refresh){
 		extern u32 blt_advExpectTime;
