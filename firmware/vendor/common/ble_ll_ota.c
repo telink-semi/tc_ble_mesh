@@ -40,6 +40,9 @@
 #if NMW_ENABLE
 #include "user_nmw.h"
 #endif
+#if GATEWAY_ENABLE
+#include "../mesh_provision/app.h"
+#endif
 
 _attribute_data_retention_ int ota_adr_index = -1;
 _attribute_data_retention_ u32 blt_ota_start_tick;
@@ -78,7 +81,7 @@ _attribute_data_retention_	ota_resIndicateCb_t otaResIndicateCb = NULL;
 
 
 
-unsigned short crc16 (unsigned char *pD, int len)
+unsigned short crc16 (const unsigned char *pD, int len)
 {
 
     static unsigned short poly[2]={0, 0xa001};              //0x8005 <==> 0xa001
@@ -338,7 +341,7 @@ int otaWrite(void * p)
 					ota_pkt_total = (((req->dat[10]) |( (req->dat[11] << 8) & 0xFF00) | ((req->dat[12] << 16) & 0xFF0000) | ((req->dat[13] << 24) & 0xFF000000)) + 15)/16;
 					if(ota_pkt_total < 3){
 						// invalid fw
-						err_flg = OTA_ERR_STS;
+						err_flg = OTA_FW_SIZE_ERR;
 					}
 				}else if(ota_adr == ota_pkt_total - 1){
 				    u32 crc_bin = ((req->dat[2]) |( (req->dat[3] << 8) & 0xFF00) | ((req->dat[4] << 16) & 0xFF0000) | ((req->dat[5] << 24) & 0xFF000000));
@@ -359,7 +362,7 @@ int otaWrite(void * p)
 				
 				//log_data(TR_24_ota_adr,ota_adr);
 				if((ota_adr<<4)>=(ota_firmware_size_k<<10)){
-					err_flg = OTA_OVERFLOW;
+					err_flg = OTA_FW_SIZE_ERR;
 				}else{
 					ota_save_data (ota_adr<<4, req->dat + 2, 16);
 
@@ -384,7 +387,7 @@ int otaWrite(void * p)
 
 		}
 		else{  //adr index err, missing at least one OTA data
-			err_flg = OTA_PACKET_LOSS;
+			err_flg = OTA_DATA_PACKET_SEQ_ERR;
 		}
 		//log_task_end(TR_T_ota_data);
 
@@ -481,7 +484,7 @@ void bls_ota_procTimeout(void)
 	}
 	
 	if(nmw_ota_state.errno_pending){
-		nmw_ota_err_report(nmw_ota_state.errno);
+		nmw_ota_st_report(nmw_ota_state.op, nmw_ota_state.errno);
 	}
 #endif
 }
@@ -491,7 +494,18 @@ void blt_ota_finished_flag_set(u8 reset_flag)
 	if(blcOta.ota_start_flag && (blt_ota_finished_time == 0)){
 		blt_ota_finished_flag = reset_flag;
 		blt_ota_finished_time = clock_time()|1;
+
+		u8 temp_buffer[sizeof(ota_result_t)];
+		ota_result_t *pResult = (ota_result_t *)temp_buffer;
+		pResult->ota_cmd = CMD_OTA_RESULT;
+		pResult->result = reset_flag;
+		pResult->rsvd = 0;
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "result:%d", pResult->result );
+		bls_att_pushNotifyData(SERVICE_GATT_OTA_HANDLE, temp_buffer, sizeof(temp_buffer));
 	}
+	#if GATEWAY_ENABLE
+	gateway_upload_gatt_ota_sts(reset_flag);
+	#endif
 }
 
 void rf_link_slave_ota_finish_led_and_reboot(u8 st)
@@ -693,12 +707,12 @@ int ais_otaWrite(void * p)
 			
 			if(cur_index == 0){
 				if(memcmp(req->dat+12, company, sizeof(company))){
-					err_flg = OTA_ERR_STS;
+					err_flg = OTA_FIRMWARE_MARK_ERR;
 				}
 			}
 			//log_data(TR_24_ota_adr,ota_adr);
 			if((cur_index*data_len)>=(ota_firmware_size_k<<10)){
-				err_flg = OTA_OVERFLOW;
+				err_flg = OTA_FW_SIZE_ERR;
 			}else{
 				ota_save_data (fw_rcv_total_size, req->dat + 4, data_len);
 

@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -59,7 +59,8 @@ u32 system_time_s = 0;
 u32 system_time_tick;
 
 #ifndef RTC_USE_32K_RC_ENABLE
-#define RTC_USE_32K_RC_ENABLE		0 // enable should be better when pm enable
+/* if PM enable, it is about 120ppm(10s/day) at 25 degrees Celsius after enable RTC_USE_32K_RC_ENABLE.*/
+#define RTC_USE_32K_RC_ENABLE	0		// 1.Don't enable if no sleep application. 2. when there is sleep application, RTC will be more accurate with being enable this function.
 #endif
 
 #if __PROJECT_MESH_SWITCH__
@@ -67,11 +68,11 @@ u32 system_time_tick;
 #elif RTC_USE_32K_RC_ENABLE
 #define CHECK_INTERVAL      (500*CLOCK_16M_SYS_TIMER_CLK_1MS)
 #else
-#define CHECK_INTERVAL      (1 * CLOCK_SYS_CLOCK_1MS)
+#define CHECK_INTERVAL      (1 * CLOCK_SYS_CLOCK_1MS) // must 1ms, because light_transition_proc() need 1ms tick.
 #endif
 
 #define RTC_LEFT_MS 	(system_time_ms%1000+(tick_32k-tick_32k_begin)/32)
-#define LOG_RTC_DEBUG(pbuf,len,format,...)		//LOG_USER_MSG_INFO(pbuf,len,format,__VA_ARGS__)
+#define LOG_RTC_DEBUG(pbuf,len,format,...)		//LOG_MSG_LIB(TL_LOG_NODE_BASIC,pbuf,len,format,__VA_ARGS__)
 
 #if RTC_USE_32K_RC_ENABLE
 u32 cal_unit_32k;
@@ -82,7 +83,7 @@ u32 tick_32k_to_16m = 0;
 u8 rtc_adjust_flag = 0;
 _attribute_ram_code_  void read_tick_32k_16m(u8 *tick_32k, u32 * tick_16m)
 {
-	u8 r=irq_disable();
+	u32 r=irq_disable();
 	u8 pre = analog_read(0x40);
 	while( pre == analog_read(0x40) );
 	(*tick_16m) = clock_time();			
@@ -115,26 +116,18 @@ void rtc_cal_init(u8 tick_start)
 
 void system_timer_handle_ms()
 {
-#if MD_SERVER_EN
-	light_transition_proc();
-#endif
 }
 
 void system_timer_handle_100ms()
 {
-    if(!is_lpn_support_and_en){
-        #if (!__PROJECT_MESH_SWITCH__)
-        mesh_beacon_poll_100ms();
-        #endif
-	}
 	mesh_heartbeat_poll_100ms();
 #if ALI_MD_TIME_EN
 	user_ali_time_proc();
 #endif
-#if !WIN32 && SENSOR_LIGHTING_CTRL_EN
+#if (!WIN32 && SENSOR_LIGHTING_CTRL_USER_MODE_EN && MD_SENSOR_CLIENT_EN)
     sensor_lighting_ctrl_proc();
 #endif
-#if (MD_DF_EN && MD_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
+#if (MD_DF_CFG_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
 	mesh_directed_forwarding_proc(0, 0, 0, MESH_BEAR_ADV);
 #endif
 }
@@ -192,10 +185,14 @@ void system_time_run(){
 			system_time_s += interval_cnt;
 			iv_idx_st.keep_time_s += (interval_cnt-1);
 			mesh_iv_update_st_poll_s();
-			switch_triger_iv_search_mode();
+			switch_triger_iv_search_mode(0);
 			LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d", system_time_s/60/60, (system_time_s/60)%60, system_time_s%60);					
 			#else
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;
+
+            	#if LLSYNC_ENABLE
+			llsync_mesh_timer_period_proc(system_time_ms, interval_cnt); // must before "system_time_ms +="
+            	#endif
 			system_time_ms += interval_cnt;
 						
 			if(!(RTC_USE_32K_RC_ENABLE || FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN ||DU_LPN_EN)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
@@ -203,6 +200,14 @@ void system_time_run(){
                 // no need to run system_timer_handle_ms_,
                 // and it will take too much time to run system_timer_handle_ms_() for low power device which is wakeup after a long time sleep.
                 #else
+					#if MD_SERVER_EN
+			    foreach(i,interval_cnt){
+					if(0 == light_transition_proc()){
+						break; // quick break to save time.
+					}
+				}
+					#endif
+					
 			    foreach(i,interval_cnt){
 			        system_timer_handle_ms();
 			    }
@@ -230,7 +235,6 @@ void system_time_run(){
 					foreach(i,inc_s){
 						system_time_s++;
                         mesh_iv_update_st_poll_s();
-						user_system_time_proc();
 						#if VC_APP_ENABLE
 						void sys_timer_refresh_time_ui();
 						sys_timer_refresh_time_ui();
@@ -243,7 +247,15 @@ void system_time_run(){
 							}
 						}
 						#endif
-				    }					
+				    }				
+
+					user_system_time_proc(); // no need inside foreach to save time.
+				    
+				    //if(!is_lpn_support_and_en){
+				        #if (!__PROJECT_MESH_SWITCH__)
+				        mesh_beacon_poll_1s();
+				        #endif
+					//}
     			}
             }
 			#endif

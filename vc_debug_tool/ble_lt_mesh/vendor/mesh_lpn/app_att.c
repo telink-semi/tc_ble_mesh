@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
@@ -192,7 +192,7 @@ u8 att_perm_auth_rdwd  = ATT_PERMISSIONS_RDWD_AUTHOR;
 const u8 my_OtaServiceUUID[16]		= TELINK_OTA_UUID_SERVICE;
 const u8 my_OtaUUID[16]		= TELINK_SPP_DATA_OTA;
 
-static u8 my_OtaProp		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP;
+static u8 my_OtaProp		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY;
 const u8  my_OtaName[] = {'O', 'T', 'A'};
 u8	 	my_OtaData 		= 0x00;
 // pb-gatt 
@@ -329,6 +329,7 @@ u8 ais_data_buf[2];
 
 /*const */u8 PROVISION_ATT_HANDLE = (ATT_NUM_START_PROVISION + 2);  // slave
 /*const */u8 GATT_PROXY_HANDLE = (ATT_NUM_START_PROXY + 2);  // slave
+const u8 SERVICE_GATT_OTA_HANDLE = (ATT_NUM_START_GATT_OTA + 2);
 const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE = (ATT_NUM_START_SERVICE_CHANGE + 2);
 const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 

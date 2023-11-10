@@ -96,42 +96,4 @@ static inline void kb_set_key_invalid(kb_data_t *p){
 extern u32 kb_key_pressed(u8 * gpio);
 extern u32 kb_scan_key_value (int numlock_status, int read_key,u8 * gpio);
 void global_var_no_ret_init_kb();
-
-extern u32	scan_pin_need;
-
-
-static inline u32 kb_scan_key (int numlock_status, int read_key) {
-	u8 gpio[8];
-
-#if(KEYSCAN_IRQ_TRIGGER_MODE)
-	static u8 key_not_released = 0;
-
-	if(numlock_status & KB_NUMLOCK_STATUS_POWERON){
-		key_not_released = 1;
-	}
-
-	if(reg_irq_src & FLD_IRQ_GPIO_EN){  //FLD_IRQ_GPIO_RISC2_EN
-		key_not_released = 1;
-		reg_irq_src = FLD_IRQ_GPIO_EN;  //FLD_IRQ_GPIO_RISC2_EN
-	}
-	else{  //no key press
-		if(!key_not_released && !(numlock_status & KB_NUMLOCK_STATUS_POWERON)){
-			return 0;
-		}
-	}
-#endif
-
-	scan_pin_need = kb_key_pressed (gpio);
-	if(scan_pin_need){
-		return  kb_scan_key_value(numlock_status,read_key,gpio);
-	}
-	else{
-#if (KB_REPEAT_KEY_ENABLE)
-		repeat_key.key_change_flg = KEY_NONE;
-#endif
-#if (KEYSCAN_IRQ_TRIGGER_MODE)
-		key_not_released = 0;
-#endif
-		return 0;
-	}
-}
+u32 kb_scan_key (int numlock_status, int read_key);

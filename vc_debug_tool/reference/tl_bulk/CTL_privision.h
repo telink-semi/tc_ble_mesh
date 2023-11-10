@@ -105,6 +105,7 @@ public:
 };
 u8 set_provision_dat(u8 *tmp_dat);
 int App_key_bind_end_callback(u8 event);
+int send_static_oob2gateway_with_check(u8* node_uuid);
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

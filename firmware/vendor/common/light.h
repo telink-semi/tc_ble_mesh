@@ -113,8 +113,8 @@
 
 #endif
 
-#define LEVEL_MIN      			(-32767)
-#define LEVEL_MAX      			(32767)
+//#define LEVEL_MIN      			(-32767) // use "level off" instead.
+//#define LEVEL_MAX      			(32767)
 #if (0 == LIGHT_PAR_USER_EN)
 #define LIGHTNESS_MIN      		(1)			// can not set 0
 #define LIGHTNESS_MAX      		(0xFFFF)
@@ -141,7 +141,7 @@
 #define XYL_Y_DEFAULT   		(XYL_Y_MAX)
 #endif
 
-#define LEVEL_OFF				(-32768)
+#define LEVEL_OFF				(-32768)	// don't change
 #define LUM_OFF					(0)
 
 #define HSL_HUE_CNT_TOTAL       (HSL_HUE_MAX + 1)
@@ -155,7 +155,7 @@
 #define ONPOWER_UP_SELECT       ONPOWER_UP_DEFAULT // ONPOWER_UP_STORE // 
 #endif
 
-enum ST_TRANS_TYPE{
+enum ST_TRANS_TYPE{					// type of State transition
 	ST_TRANS_LIGHTNESS  	= 0,	// share with power level
 	#if (LIGHT_TYPE_CT_EN)
 	ST_TRANS_CTL_TEMP,
@@ -336,7 +336,8 @@ int light_onoff_idx_with_trans(u8 *set_trans, int idx);
 void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type, int hsl_set_cmd_flag);
 void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type);
 void light_onoff_all(u8 on);
-void light_transition_proc();
+int light_transition_proc();
+void light_transition_proc_stop(int light_idx, int st_trans_type);
 void light_par_save(int quick);
 void light_par_save_proc();
 void scene_status_change_check_all();
@@ -425,6 +426,7 @@ void set_keep_onoff_state_after_ota();
 void clr_keep_onoff_state_after_ota();
 int is_state_after_ota();
 
+extern u16 g_op_access_layer_rx;
 
 static inline u16 get_lightness_present(int light_idx)
 {

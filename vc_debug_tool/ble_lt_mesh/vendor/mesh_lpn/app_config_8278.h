@@ -63,10 +63,12 @@ extern "C" {
 #define UART_RX_PIN		UART_RX_PB0
 #endif
 
-#define HCI_LOG_FW_EN   0
+#ifndef HCI_LOG_FW_EN
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
 #define PRINT_DEBUG_INFO                    1
+#endif
 #endif
 
 #define BATT_CHECK_ENABLE       			1   //must enable
@@ -125,23 +127,84 @@ extern "C" {
 //
 
 //----------------------- GPIO for UI --------------------------------
-#define LPN_DEBUG_PIN_EN        0
+#define LPN_DEBUG_PIN_EN        		0
 
-//---------------  Button 
-#if (PCBA_SEL == PCBA_8278_DONGLE_48PIN)
+#define UI_KEYBOARD_ENABLE				1
+
+#if UI_KEYBOARD_ENABLE
+#define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K // drive pin pull
+#define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K    // scan pin pull
+
+#define	KB_LINE_HIGH_VALID				0   // dirve pin output 0 when keyscan(no drive pin in KB_LINE_MODE=1), scanpin read 0 is valid
+#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back trigged by key press, in case key loss
+#define KEYSCAN_IRQ_TRIGGER_MODE		0
+#define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
+
+#define	KB_MAP_NUM				KB_MAP_NORMAL
+#define	KB_MAP_FN				KB_MAP_NORMAL
+
+	#if (PCBA_SEL == PCBA_8278_DONGLE_48PIN)
+// key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
+#define KB_LINE_MODE			1 			
+
+// keymap
+#define KEY_RESET				1
+#define KEY_CMD					2
+#define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
+
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
+
+// scan pin as gpio
+#define PD5_FUNC				AS_GPIO
+#define PD6_FUNC				AS_GPIO
+
+//scan  pin pullup
 #define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD5     PM_PIN_PULLUP_1M	//btn
+
+//scan pin open input to read gpio level
 #define PD6_INPUT_ENABLE		1
 #define PD5_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PD6
-#define	SW2_GPIO				GPIO_PD5
-#elif (PCBA_SEL == PCBA_8278_C1T197A30_V1_0)
-#define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
-#define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
-#define PD2_INPUT_ENABLE		1
-#define PD1_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PD2
-#define	SW2_GPIO				GPIO_PD1
+	#elif(PCBA_SEL == PCBA_8278_C1T197A30_V1_0)
+// keymap
+#define KEY_RESET				1
+#define KEY_CMD					2
+#define KEY_SW3					3
+#define KEY_SW4					4
+#define	KB_MAP_NORMAL			{\
+								{KEY_RESET,	KEY_CMD},	 \
+								{KEY_SW3,	KEY_SW4},	 }
+
+#define KB_DRIVE_PINS 		 	{GPIO_PB4, GPIO_PB5}
+#define KB_SCAN_PINS   			{GPIO_PB2, GPIO_PB3}
+
+//drive pin as gpio
+#define	PB4_FUNC				AS_GPIO
+#define	PB5_FUNC				AS_GPIO
+
+//drive pin need 100K pulldown
+#define	PULL_WAKEUP_SRC_PB4		MATRIX_ROW_PULL
+#define	PULL_WAKEUP_SRC_PB5		MATRIX_ROW_PULL
+
+//drive pin open input to read gpio wakeup level
+#define PB4_INPUT_ENABLE		1
+#define PB5_INPUT_ENABLE		1
+
+//scan pin as gpio
+#define	PB2_FUNC				AS_GPIO
+#define	PB3_FUNC				AS_GPIO
+
+//scan  pin need 10K pullup
+#define	PULL_WAKEUP_SRC_PB2		MATRIX_COL_PULL
+#define	PULL_WAKEUP_SRC_PB3		MATRIX_COL_PULL
+
+//scan pin open input to read gpio level
+#define PB2_INPUT_ENABLE		1
+#define PB3_INPUT_ENABLE		1
+	#else
+		#error "Current board do not support keyboard !"
+	#endif
 #endif
 
 //---------------  LED / PWM
@@ -186,7 +249,11 @@ extern "C" {
 /////////////////// Clock  /////////////////////////////////
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
-#define CLOCK_SYS_CLOCK_HZ  	16000000
+#if EXTENDED_ADV_ENABLE
+#define CLOCK_SYS_CLOCK_HZ  	48000000		// need to process rx buffer quickly
+#else
+#define CLOCK_SYS_CLOCK_HZ  	32000000
+#endif
 
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal

@@ -235,7 +235,7 @@ typedef struct{
 #if JSON_PTS_ENABLE
 #define JSON_IVI_INDEX_ENABLE 	0
 #else
-#define JSON_IVI_INDEX_ENABLE 	1
+#define JSON_IVI_INDEX_ENABLE 	0
 #endif
 
 
@@ -255,6 +255,7 @@ typedef struct{
 	mesh_node_static_str	nodes[MAX_MESH_NODE_NUM];
 	#if JSON_IVI_INDEX_ENABLE
 	u8 ivi_idx[4];
+	u8 ivi_en;
 	#endif
 }sig_mesh_json_database_static;
 
@@ -278,6 +279,10 @@ mesh_node_str* json_mesh_find_node(u16 unicast);
 mesh_nodes_model_str *json_mesh_find_model(mesh_node_str* p_node,u16 ele_adr,int model_id);
 u8 mesh_json_appkey_add(mesh_node_str* p_node,u8 *app_key,u16 net_idx,u16 app_idx);
 u8 json_model_app_bind(mesh_nodes_model_str *p_model,u16 app_idx);
+u32 json_get_node_cnt();
+void json_enable_ivi(u8 *p_ivi);
+u8 json_can_do_provision();
+u8 json_get_ivi_en();
 
 extern int json_find_valid_prov();
 extern u8 mesh_json_set_node_info(u16 adr,u8 *p_mac);
@@ -301,5 +306,5 @@ u32 json_use_uuid_to_set_sno(u8 *p_uuid,u32 sno);
 
 u16 json_del_mesh_vc_node_info(u8 *p_uuid);
 u8 json_update_node_adr_devicekey(u16 new_adr,u16 old_adr,u8* devkey);
-
+int json_valid_iv_index();
 #endif

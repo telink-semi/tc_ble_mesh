@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 
@@ -204,7 +204,7 @@ int is_valid_lum(u8 lum);
 
 int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
 int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
-s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_type);
+s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_type, u16 op);
 void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 idx);
 int is_valid_transition_step(u8 transit_t);
 void model_pub_check_set_bind_all(st_pub_list_t *pub_flag, mesh_cb_fun_par_t *cb_par, int linear);
@@ -291,6 +291,8 @@ int mesh_level_def_u16_st_rsp(mesh_cb_fun_par_t *cb_par, int st_trans_type);
 int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type);
 void lightness_rsp_data_reformat(mesh_cmd_lightness_st_t *rsp);
 void lightness_set_data_reformat(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction);
+int is_dim2dark_set_op(u16 op);
+void light_res_sw_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type);
 
 
 // access_cmd

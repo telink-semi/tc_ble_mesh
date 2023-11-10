@@ -23,12 +23,10 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "mesh_node.h"
 #include "sensors_model.h"
 
-#if SENSOR_LIGHTING_CTRL_EN
-// MD_CLIENT_EN, SENSOR_GPIO_PIN and MD_SENSOR_EN are must be opened.
-STATIC_ASSERT(MD_CLIENT_EN && MD_SENSOR_EN && SENSOR_GPIO_PIN && SENSOR_LIGHTING_CTRL_ON_MS);
-#endif
 
 #if(MD_SENSOR_EN || MD_BATTERY_EN || MD_LOCATION_EN) 
 u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
@@ -40,55 +38,89 @@ model_sensor_t			model_sig_sensor;
 #if !WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_BATTERY_EN
 #endif
-u32 sensor_measure_ms = 0;
-u32 sensure_measure_quantity = 0;
+STATIC_ASSERT(SENSOR_NUMS == 1);
+STATIC_ASSERT(SENSOR_DATA_RAW_MAX_LEN <= SIZEOF_MEMBER(cadence_unit_t, cadence_low)); // delta and cadence in cadence_unit_t is u32 now
 
-mesh_cmd_sensor_descript_st_t sensor_descrip[SENSOR_NUMS] = { 
-    {PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL, 0x347, 0x256, 0x02, 0x40, 0x4B},
+u32 sensor_measure_ms = 0;
+u32 sensor_measure_quantity = 0;
+
+// Sensor Data and Sensor Series Column
+u8 sensor_data_raw0[SENSOR_DATA_RAW0_LEN];
+sensor_series_col_t sensor_series_col;
+
+sensor_data_t sensor_data[SENSOR_NUMS] = {
+	{SENSOR_PROP_ID, sizeof(sensor_data_raw0), sensor_data_raw0, &sensor_series_col},
 };
+
+// Sensor Descriptor
+const mesh_cmd_sensor_descript_st_t sensor_descrip[SENSOR_NUMS] = { 
+    {SENSOR_PROP_ID, 0x347, 0x256, 0x02, 0x40, 0x4B},
+};
+
+// Sensor Setting Map in model_sig_sensor
+const sensor_setting_tbl_t sensor_settings[SENSOR_NUMS][SENSOR_SETTINGS_NUMS] = {
+{
+	{SENSOR_SETTING_PROP_ID0, READ_WRITE, SENSOR_SETTING_RAW0_LEN, model_sig_sensor.sensor_states[0].setting.setting_raw},
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+	{SENSOR_SETTING_PROP_ID1, READ_WRITE, SENSOR_SETTING_RAW1_LEN, model_sig_sensor.sensor_states[0].setting.setting_raw + SENSOR_SETTING_RAW0_LEN},
+#endif
+},
+};
+
+sensor_setting_tbl_t *get_sensor_setting_tbl(u16 sensor_idx, u16 setting_id)
+{
+	sensor_setting_tbl_t *p_setting_tbl = 0;
+	if(sensor_idx < SENSOR_NUMS){
+		foreach(i, SENSOR_SETTINGS_NUMS){
+			p_setting_tbl = (sensor_setting_tbl_t *)&sensor_settings[sensor_idx][i];
+			if(setting_id == p_setting_tbl->setting_id){
+				return p_setting_tbl;
+			}
+		}
+	}
+
+	return 0;
+}
 
 u32 get_prop_id_index(u16 prop_id)
 {
-	if(prop_id == PROHIBITED){
-		return ID_PROHIBITED;
-	}
-	for(u8 i=0; i<SENSOR_NUMS; i++){
+	foreach(i, SENSOR_NUMS){
 		if(prop_id == model_sig_sensor.sensor_states[i].prop_id){
 			return i;
 		}
 	}
 	
-	return ID_UNKNOWN;
+	return -1;
 }
 
-u8 get_prop_id_format_type(u16 prop_id)
+sensor_data_t *get_sensor_data(u16 prop_id)
 {
-	u8 ret = 0;
-	switch(prop_id){
-		case 0x004E:
-			ret = 3;
-			break;
-		default:
-			break;
+ 	sensor_data_t *p_sensor_data = 0;
+	foreach(i, SENSOR_NUMS){
+		p_sensor_data = &sensor_data[i];
+		if(prop_id == p_sensor_data->prop_id){
+			return p_sensor_data;
+		}
 	}
 
-	return ret;
+	return 0;
 }
 
 void mesh_global_var_init_sensor_descrip()
 {	
 	foreach_arr(i,sensor_descrip){	
 		model_sig_sensor.sensor_states[i].prop_id = sensor_descrip[i].prop_id;
-		model_sig_sensor.sensor_states[i].cadence.fast_period_div = 2;
-		model_sig_sensor.sensor_states[i].cadence.trig_type = 1;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_down= 0x00;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up= 0x00;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = 0x04;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = 0x00;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_hight = 0x01;
+		model_sig_sensor.sensor_states[i].cadence.fast_period_div = FAST_CADENCE_PERIOD_DIV;
+		model_sig_sensor.sensor_states[i].cadence.trig_type = TRIGGER_TYPE_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_down = TRIGGER_DELTA_DOWN_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up = TRIGGER_DELTA_UP_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = MIN_INTERVAL_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = FAST_CADENCE_LOW_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_hight = FAST_CADENCE_HIGH_DEFAULT;
 		for(u8 j=0; j<SENSOR_SETTINGS_NUMS; j++){
-			model_sig_sensor.sensor_states[i].setting[j].setting_id = i+1;// 0:prohibited
-			model_sig_sensor.sensor_states[i].setting[j].setting_access = READ_WRITE;
+			model_sig_sensor.sensor_states[i].setting.setting_id[j] = sensor_settings[i][j].setting_id;
+			model_sig_sensor.sensor_states[i].setting.setting_access[j] = sensor_settings[i][j].setting_access;
+			// init setting raw below
 		}
 	}
 }
@@ -111,15 +143,16 @@ int mesh_cmd_sig_sensor_descript_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 	mesh_cmd_sensor_descript_st_t rsp[SENSOR_NUMS];
 	u32 len = sizeof(rsp);
 	u16 prop_id = par[0] + (par[1]<<8);
-	
-	if(par_len){
+
+	if(PROHIBITED_PROP_ID == prop_id){
+		return -1;
+	}
+	else if(par_len >= 2){ // prop id exist
 		len = sizeof(mesh_cmd_sensor_descript_st_t);
 		rsp[0].prop_id = prop_id;
 		u32 index = get_prop_id_index(prop_id);
-		if(index == ID_PROHIBITED){
-			return -1;
-		}
-		else if(index !=  ID_UNKNOWN){ 
+		
+		if(index < SENSOR_NUMS){ 
 			memcpy(rsp, &sensor_descrip[index], len);
 		}
 		else{
@@ -137,47 +170,51 @@ int mesh_cmd_sig_sensor_descript_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 	return err;
 }
 
-int mesh_tx_sensor_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id, int par_len)
-{
+int mesh_tx_sensor_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id, int id_exist)
+{	
+	if(id_exist && (PROHIBITED_PROP_ID == prop_id)){
+		return -1;
+	}
+	
 	sensor_mpid_B_t rsp[SENSOR_NUMS];
-
+	sensor_data_t *p_sensor_data = 0;
 	u8 len = 0;
 	
 	rsp[0].format = SENSOR_DATA_FORMAT_B;
 	rsp[0].prop_id = prop_id;
-	rsp[0].length = ARRAY_SIZE(rsp[0].raw_value)-1;     // in PTS, length value decreace 1, confirm later
-	if(par_len){
-		u32 id_index = get_prop_id_index(prop_id);
-		if(id_index == ID_PROHIBITED){
-			return -1;
-		}
-		else if(id_index != ID_UNKNOWN){
-			len = sizeof(sensor_mpid_B_t);
-			memcpy(rsp[0].raw_value,&model_sig_sensor.sensor_states[id_index].sensor_data,ARRAY_SIZE(rsp[0].raw_value));
-		}
-		else{
-			len = OFFSETOF(sensor_mpid_B_t,raw_value);
-			memset(rsp, 0xff, len);
-		}
+	
+	if(id_exist){
+		p_sensor_data = get_sensor_data(prop_id);
+	}
+	
+	if(p_sensor_data){
+		rsp[0].length = p_sensor_data->len_raw - 1; // The range 0x0-0x7E represents the values in the range 1-127.		
+		len = sizeof(sensor_mpid_B_t);
+		memcpy(rsp[0].raw_value, p_sensor_data->p_raw, p_sensor_data->len_raw);
+	}
+	else if(id_exist){
+		len = OFFSETOF(sensor_mpid_B_t,raw_value);
+		rsp[0].length = -1;
 	}
 	else{// get all property value
 		len = sizeof(rsp);
 		for(u8 i=0; i<SENSOR_NUMS; i++){
+			sensor_data_t *p_sensor_data = &sensor_data[i];
 			rsp[i].format = SENSOR_DATA_FORMAT_B;
-			rsp[i].length = ARRAY_SIZE(rsp[0].raw_value)-1;
-			rsp[i].prop_id = model_sig_sensor.sensor_states[i].prop_id;			
-			memcpy(rsp[i].raw_value,&model_sig_sensor.sensor_states[i].sensor_data, ARRAY_SIZE(rsp[0].raw_value));
+			rsp[i].length = p_sensor_data->len_raw - 1;	// The range 0x0-0x7E represents the values in the range 1-127.
+			rsp[i].prop_id = p_sensor_data->prop_id;			
+			memcpy(rsp[i].raw_value, p_sensor_data->p_raw, p_sensor_data->len_raw);
 		}
 	}
 	sensor_measure_ms = clock_time_ms();
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
-int mesh_sensor_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id, int par_len)
+int mesh_sensor_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id, int id_exist)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_sensor_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id, par_len);
+	return mesh_tx_sensor_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id, id_exist);
 }
 
 int mesh_cmd_sig_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -192,29 +229,37 @@ int mesh_cmd_sig_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int mesh_tx_cadence_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id)
 {
-	static sensor_cadence_st_t rsp;
-	u8 len = OFFSETOF(sensor_cadence_st_t, cadence);
-	
-	rsp.prop_id = prop_id;
-	u32 id_index = get_prop_id_index(prop_id);
-	u8 delta_len = get_prop_id_format_type(prop_id);
-	u8 cadence_len = delta_len;
-	if(id_index == ID_PROHIBITED){
+	if(PROHIBITED_PROP_ID == prop_id){
 		return -1;
 	}
-	else if(id_index != ID_UNKNOWN){
+	
+	static sensor_cadence_st_t rsp;
+	u8 len = OFFSETOF(sensor_cadence_st_t, cadence);
+	sensor_data_t *p_sensor_data = get_sensor_data(prop_id);
+	u32 id_index = get_prop_id_index(prop_id);
+	rsp.prop_id = prop_id;
+
+	if(p_sensor_data){
+		u8 delta_len = p_sensor_data->len_raw;
+		u8 cadence_len = delta_len;
 		sensor_cadence_t *p_cadence = (sensor_cadence_t *)&model_sig_sensor.sensor_states[id_index].cadence;
 		rsp.cadence.trig_type = p_cadence->trig_type;
 		rsp.cadence.fast_period_div = p_cadence->fast_period_div;
+		
 		if(p_cadence->trig_type){
-			delta_len = 2;
+			delta_len = SIZEOF_MEMBER(cadence_unitless_t, delta_down);
 		}
+		
 		memcpy(rsp.cadence.par, &p_cadence->cadence_unit.delta_down, delta_len);
 		memcpy(rsp.cadence.par+delta_len, &p_cadence->cadence_unit.delta_up, delta_len);
 		rsp.cadence.par[2*delta_len] = p_cadence->cadence_unit.min_interval;
 		memcpy(rsp.cadence.par+2*delta_len+1, &p_cadence->cadence_unit.cadence_low, cadence_len);
 		memcpy(rsp.cadence.par+2*delta_len+1+cadence_len, &p_cadence->cadence_unit.cadence_hight, cadence_len);
 		len = delta_len*2 + cadence_len*2 + 4;
+
+		if((p_cadence->fast_period_div>MAX_FAST_CADENCE_PERIOD_DIV) || (p_cadence->cadence_unit.min_interval>MAX_MIN_INTERVAL)){
+			len = OFFSETOF(sensor_cadence_st_t, cadence);
+		}
 	}
 
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
@@ -250,17 +295,20 @@ u8 mesh_cadence_para_check(u8 *par, int par_len)
 {
 	u8 err = 0;
 	sensor_cadence_st_t *p_cadence = (sensor_cadence_st_t *)(par);
-	u8 var_len = get_prop_id_format_type(p_cadence->prop_id);
-	if(p_cadence->cadence.fast_period_div >= 15){
+	sensor_data_t *p_sensor_data = get_sensor_data(p_cadence->prop_id);
+	u8 var_len = p_sensor_data->len_raw;
+	
+	if(p_cadence->cadence.fast_period_div >= MAX_FAST_CADENCE_PERIOD_DIV){
 		err = 1;
 	}
+	
 	if(p_cadence->cadence.trig_type){
-		if((par_len != var_len*2 + OFFSETOF(sensor_cadence_st_t,cadence.cadence_unitless.min_interval)+1) || (p_cadence->cadence.cadence_unitless.min_interval >= 26)){
+		if((par_len != var_len*2 + OFFSETOF(sensor_cadence_st_t,cadence.cadence_unitless.min_interval)+1) || (p_cadence->cadence.cadence_unitless.min_interval >= MAX_MIN_INTERVAL)){
 			err = 1;
 		}
 	}
 	else{
-		if((par_len!= 4+var_len*4) || (p_cadence->cadence.par[var_len*2] >= 26)){
+		if((par_len != 4+var_len*4) || (p_cadence->cadence.par[var_len*2] >= MAX_MIN_INTERVAL)){
 			err = 1;
 		}
 	}
@@ -275,22 +323,21 @@ int mesh_cmd_sig_sensor_cadence_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 	sensor_cadence_st_t *p_cadence_set = (sensor_cadence_st_t *)(par);
 	u16 prop_id =p_cadence_set->prop_id;
 	u32 id_index = get_prop_id_index(prop_id);
+	sensor_data_t *p_sensor_data = get_sensor_data(prop_id);
 	u8 par_err =  mesh_cadence_para_check(par, par_len);
-	
-	if(id_index == ID_UNKNOWN){
 
+	if(p_sensor_data && par_err){
+		return -1;
 	}
-	else if(par_err){
-		prop_id = PROHIBITED;
-	}
-	else if(id_index < ID_UNKNOWN){
-		u8 cadence_len = get_prop_id_format_type(prop_id);
+	
+	if(p_sensor_data){
+		u8 cadence_len = p_sensor_data->len_raw;
 		u8 delta_len = cadence_len;
 		if(p_cadence_set->cadence.trig_type){
-			delta_len = 2;
+			delta_len = SIZEOF_MEMBER(cadence_unitless_t, delta_down);
 		}
 		
-		if((delta_len <= 4) && (cadence_len <= 4)){
+		if((delta_len <= SIZEOF_MEMBER(cadence_unit_t, delta_down)) && (cadence_len <= SIZEOF_MEMBER(cadence_unit_t, cadence_low))){ // cadence and delta in cadence_unit_t is u32 now
 			sensor_cadence_t *p_cadence = (sensor_cadence_t *)&model_sig_sensor.sensor_states[id_index].cadence;
 			memset(p_cadence, 0x00, sizeof(sensor_cadence_t));
 			p_cadence->trig_type = p_cadence_set->cadence.trig_type;
@@ -317,21 +364,14 @@ int mesh_cmd_sig_sensor_cadence_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 int mesh_tx_settings_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id)
 {
 	sensor_settings_st_t rsp;
-	u8 len = sizeof(rsp);
+	u8 len = OFFSETOF(sensor_settings_st_t, setting_prop_id);
 	
 	rsp.prop_id = prop_id;
 	u32 id_index = get_prop_id_index(prop_id);
 	
-	if(id_index == ID_PROHIBITED){
-		return -1;
-	}
-	else if(id_index != ID_UNKNOWN){
-		for(u8 i=0; i<SENSOR_SETTINGS_NUMS; i++){
-			rsp.setting_prop_id[i] = model_sig_sensor.sensor_states[id_index].setting[i].setting_id;
-		}
-	}
-	else{
-		len = OFFSETOF(sensor_settings_st_t, setting_prop_id[0]);
+	if(id_index < SENSOR_NUMS){
+		memcpy(rsp.setting_prop_id, model_sig_sensor.sensor_states[id_index].setting.setting_id, sizeof(rsp.setting_prop_id));
+		len = sizeof(rsp);
 	}
 	
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
@@ -352,30 +392,23 @@ int mesh_cmd_sig_sensor_settings_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 
 int mesh_tx_setting_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id, u16 setting_id)
 {
-	sensor_setting_st_t rsp;
-	sensor_setting_t *p_setting = 0;
-	u8 len = sizeof(rsp);
-	
-	rsp.prop_id = prop_id;
-	rsp.setting_id = setting_id;
-
-	u32 id_index = 	get_prop_id_index(prop_id);
-	if(id_index == ID_PROHIBITED){
+	if(PROHIBITED_PROP_ID == prop_id){
 		return -1;
 	}
-	else if(id_index != ID_UNKNOWN){
-		for(u8 i=0; i<SENSOR_SETTINGS_NUMS; i++){
-			if(model_sig_sensor.sensor_states[id_index].setting[i].setting_id== setting_id){
-				p_setting = (sensor_setting_t *)&model_sig_sensor.sensor_states[id_index].setting[i];
-			}
-		}
-	}
-
-	if(p_setting){
-		memcpy(&rsp.setting_id, p_setting, sizeof(sensor_setting_t));
-	}
-	else{
-		len = OFFSETOF(sensor_setting_st_t, setting_access);
+	
+	sensor_setting_st_t rsp;
+	u8 len = OFFSETOF(sensor_setting_st_t, setting_access);
+	rsp.prop_id = prop_id;
+	rsp.setting_id = setting_id;
+	u32 id_index = 	get_prop_id_index(prop_id);
+	
+	if(id_index < SENSOR_NUMS){
+		sensor_setting_tbl_t *p_setting  = get_sensor_setting_tbl(id_index, setting_id);
+		if(p_setting){
+			rsp.setting_access = p_setting->setting_access;
+			memcpy(rsp.setting_raw, p_setting->p_raw, p_setting->len_raw);
+			len = len + 1 + p_setting->len_raw; // 1:access length
+		}		
 	}
 	
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
@@ -403,37 +436,29 @@ int mesh_sensor_setting_st_publish_ll(u8 idx)
 		return -1;
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
-	return mesh_tx_setting_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_SETTING_STATUS, model_sig_sensor.sensor_states[0].prop_id, model_sig_sensor.sensor_states[0].setting[0].setting_id);
+	return mesh_tx_setting_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_SETTING_STATUS, model_sig_sensor.sensor_states[0].prop_id, model_sig_sensor.sensor_states[0].setting.setting_id[0]);
 }
 
 int mesh_cmd_sig_sensor_setting_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
-	u16 prop_id = par[0] + (par[1]<<8);
-	u16 setting_id = par[2] + (par[3]<<8);
+	sensor_setting_set_t *p_setting_set = (sensor_setting_set_t *)par;
+	u32 id_index = 	get_prop_id_index(p_setting_set->prop_id);
 	
-	sensor_setting_t * p_setting =0;
-	u32 id_index = 	get_prop_id_index(prop_id);
-	
-	if(id_index < ID_PROHIBITED){
+	if(id_index < SENSOR_NUMS){
 		for(u8 i=0; i<SENSOR_SETTINGS_NUMS; i++){
-			if(model_sig_sensor.sensor_states[id_index].setting[i].setting_id== setting_id){
-				p_setting = (sensor_setting_t *)&model_sig_sensor.sensor_states[id_index].setting[i];
+			sensor_setting_tbl_t *p_setting_tbl  = get_sensor_setting_tbl(id_index, p_setting_set->setting_id);
+			if(p_setting_tbl && (p_setting_tbl->setting_access == READ_WRITE)){
+				memcpy(p_setting_tbl->p_raw, p_setting_set->setting_raw, p_setting_tbl->len_raw);
+				mesh_model_store(1, SIG_MD_SENSOR_SETUP_S);
 			}
-		}
-	}
-	
-	if(p_setting){
-		if(p_setting->setting_access == READ_WRITE){
-			memcpy(&p_setting->setting_raw, par+4, sizeof(p_setting->setting_raw));
-			mesh_model_store(1, SIG_MD_SENSOR_SETUP_S);
 		}
 	}
 
 	model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 0);
     model_pub_st_cb_re_init_sensor_setup(&mesh_sensor_setting_st_publish_ll);
 	if(cb_par->op_rsp != STATUS_NONE){	
-	 	err = mesh_sensor_setting_st_rsp(cb_par, prop_id, setting_id);
+	 	err = mesh_sensor_setting_st_rsp(cb_par, p_setting_set->prop_id, p_setting_set->setting_id);
 	}
 
 	return err;
@@ -441,21 +466,18 @@ int mesh_cmd_sig_sensor_setting_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 
 int mesh_tx_column_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id)
 {
-	sensor_col_st_t rsp;
-	u8 len = sizeof(rsp);
+	if(PROHIBITED_PROP_ID == prop_id){
+		return -1;	
+	}
 	
+	sensor_series_st_t rsp;
+	u8 len = OFFSETOF(sensor_series_st_t, series_raw);;
 	rsp.prop_id = prop_id;
-
-	u32 id_index = 	get_prop_id_index(prop_id);
-	if(id_index == ID_PROHIBITED){
-		return -1;
-	}
-	else if(id_index != ID_UNKNOWN){
-		
-	}
-	else{
-		memset(&rsp.raw_value.raw_val_X, 0x00, sizeof(rsp.raw_value.raw_val_X));
-		len = OFFSETOF(sensor_col_st_t, raw_value);
+	sensor_data_t * p_sensor_data = get_sensor_data(prop_id);
+	
+	if(p_sensor_data){
+		memcpy(&rsp.series_raw, p_sensor_data->p_series_col, sizeof(rsp.series_raw));
+		len = sizeof(rsp);
 	}
 	
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
@@ -479,14 +501,15 @@ int mesh_tx_series_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_comm
 	sensor_series_st_t rsp;
 	u8 len = sizeof(rsp);
 	
-	rsp.prop_id = prop_id;
-	u32 id_index = 	get_prop_id_index(prop_id);
-	
-	if(id_index == ID_PROHIBITED){
+	if(PROHIBITED_PROP_ID == prop_id){
 		return -1;
 	}
-	else if(id_index != ID_UNKNOWN){
-		memcpy(&rsp.series_raw, &model_sig_sensor.sensor_states[id_index].series_raw, sizeof(rsp.series_raw));
+
+	rsp.prop_id = prop_id;
+	sensor_data_t * p_sensor_data = get_sensor_data(prop_id);
+
+	if(p_sensor_data){
+		memcpy(&rsp.series_raw, p_sensor_data->p_raw, p_sensor_data->len_raw);
 	}
 	else{
 		memset(&rsp.series_raw, 0x00, sizeof(rsp.series_raw));
@@ -533,46 +556,61 @@ int mesh_sensor_setup_st_publish(u8 idx)
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
 	
-	return mesh_tx_cadence_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_CANDECE_STATUS, PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL);
+	return mesh_tx_cadence_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_CANDECE_STATUS, PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL);
 }
 
 u32 sensor_measure_proc()
 {
-	u32 min_interval = 1<<model_sig_sensor.sensor_states[0].cadence.cadence_unit.min_interval;
-	if(clock_time_exceed_ms(sensor_measure_ms, min_interval)){// 
-		sensor_measure_ms = clock_time_ms();
-		u8 pub_flag = 0;
-		//update sensure_measure_quantity here
-#if !WIN32 && SENSOR_LIGHTING_CTRL_EN
-        gpio_set_input_en(SENSOR_GPIO_PIN, 1);
-        gpio_set_output_en(SENSOR_GPIO_PIN, 0);
-        sleep_us(100);
-        sensure_measure_quantity = gpio_read(SENSOR_GPIO_PIN) ? 0 : 1;
+	sensor_cadence_t *p_cadence = &model_sig_sensor.sensor_states[0].cadence;
+	sensor_data_t * p_sensor_data = &sensor_data[0];
+	if(p_cadence->cadence_unit.min_interval <= MAX_MIN_INTERVAL){
+		u32 min_interval = 1<<p_cadence->cadence_unit.min_interval;
+		if(clock_time_exceed_ms(sensor_measure_ms, min_interval)){// 
+			sensor_measure_ms = clock_time_ms();
+			u8 pub_flag = 0;
+			//update sensor_measure_quantity here
+#if !WIN32 && SENSOR_LIGHTING_CTRL_USER_MODE_EN	// for sensor server to send sensor status.
+	        gpio_set_input_en(SENSOR_GPIO_PIN, 1);
+	        gpio_set_output_en(SENSOR_GPIO_PIN, 0);
+	        sleep_us(100);
+	        sensor_measure_quantity = gpio_read(SENSOR_GPIO_PIN) ? 0 : 1;
 #endif
-		
-		if(sensure_measure_quantity < model_sig_sensor.sensor_states[0].sensor_data){
-			if((model_sig_sensor.sensor_states[0].sensor_data - sensure_measure_quantity) > model_sig_sensor.sensor_states[0].cadence.cadence_unit.delta_down){
-				pub_flag = 1;
+			u32 measure_val = 0;
+			memcpy(&measure_val, p_sensor_data->p_raw, min2(sizeof(measure_val), p_sensor_data->len_raw));
+			
+			if(sensor_measure_quantity < measure_val){
+				if((measure_val - sensor_measure_quantity) > p_cadence->cadence_unit.delta_down){
+					pub_flag = 1;
+				}
 			}
-		}
-		else{
-			if((sensure_measure_quantity - model_sig_sensor.sensor_states[0].sensor_data) > model_sig_sensor.sensor_states[0].cadence.cadence_unit.delta_up){
-				pub_flag = 1;
+			else{
+				if((sensor_measure_quantity - measure_val) > p_cadence->cadence_unit.delta_up){
+					pub_flag = 1;
+				}
 			}
-		}
 
-		if(pub_flag){			
-			model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, (u8 *)&model_sig_sensor.sensor_srv[0].com, 0);
+			if(pub_flag){			
+				model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, (u8 *)&model_sig_sensor.sensor_srv[0].com, 0);
+			}
+			memcpy(p_sensor_data->p_raw, &sensor_measure_quantity, min2(sizeof(measure_val), p_sensor_data->len_raw));				
 		}
-		model_sig_sensor.sensor_states[0].sensor_data = sensure_measure_quantity;					
 	}
 
 	return 1;
 }
 #endif
 
-#if SENSOR_LIGHTING_CTRL_EN
+#if MD_SENSOR_CLIENT_EN
+int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	int err = 0;
+	if(cb_par->model){	// model may be Null for status message
+		//model_client_common_t *p_model = (model_client_common_t *)(cb_par->model);
+	}
+	return err;
+}
 
+#if SENSOR_LIGHTING_CTRL_USER_MODE_EN
 static u32 keep_on_timer = 0;
 static volatile bool sensor_set_light_on = false;
 
@@ -622,33 +660,20 @@ void sensor_lighting_ctrl_proc()
 }
 #endif
 
-#if MD_SENSOR_CLIENT_EN
-int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-	int err = 0;
-	if(cb_par->model){	// model may be Null for status message
-		//model_client_common_t *p_model = (model_client_common_t *)(cb_par->model);
-	}
-	return err;
-}
-
-int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-
 int mesh_cmd_sig_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-#if SENSOR_LIGHTING_CTRL_EN
-    sensor_mpid_B_t *p_st_B = (sensor_mpid_B_t *)par;
-    if(SENSOR_DATA_FORMAT_A == p_st_B->format){
-        //sensor_mpid_A_t *p_st_A = (sensor_mpid_A_t *)par;
-        // TODO
-    }else{ // SENSOR_DATA_FORMAT_B
-        if (p_st_B->raw_value[0]) {
-            sensor_lighting_ctrl_set_light_on();
-        }
-    }
-#elif (MD_LIGHT_CONTROL_EN && MD_SERVER_EN)
-    lc_rx_sensor_status(par, par_len, cb_par);
+#if SENSOR_LIGHTING_CTRL_USER_MODE_EN	// for sensor client to receive sensor status to turn light on/off.
+	sensor_mpid_B_t *p_st_B = (sensor_mpid_B_t *)par;
+	if(SENSOR_DATA_FORMAT_A == p_st_B->format){
+		//sensor_mpid_A_t *p_st_A = (sensor_mpid_A_t *)par;
+		// TODO
+	}else{ // SENSOR_DATA_FORMAT_B
+		if (p_st_B->raw_value[0]) {
+			sensor_lighting_ctrl_set_light_on();
+		}
+	}
 #endif
+
 	return 0;
 }
 

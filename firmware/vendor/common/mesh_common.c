@@ -287,6 +287,12 @@ u16 mesh_tx_with_random_delay_ms = 0; // max 12000
 #define MAX_BEACON_SEND_INTERVAL 	2000*1000
 beacon_send_str beacon_send;
 
+
+/**
+ * @brief       This function set the parameters for sending beacon packets
+ * @return      none
+ * @note        
+ */
 void beacon_str_init()
 {
 	beacon_send.start_time_s = system_time_s;
@@ -296,17 +302,38 @@ void beacon_str_init()
 	return ;
 }
 
+
+/**
+ * @brief       This function disable the sending beacon packet
+ * @return      none
+ * @note        
+ */
 void beacon_str_disable()
 {
 	beacon_send.en = 0;
 }
 
 static u8 mesh_seg_must_enable =0;
+
+/**
+ * @brief       This function force to use segment flow to send message even though access layer length is less than 11bytes.
+ * @param[in]   en	- 1: force to use segment flow to send message; 0: not force.
+ * @return      none
+ * @note        
+ */
 void mesh_seg_must_en(u8 en)
 {
 	mesh_seg_must_enable = en;
 }
 	
+
+/**
+ * @brief       This function force to use segment flow to send message even though access layer length is less than 11bytes.
+ * @param[in]   p				- all input setting material used to send message.
+ * @param[in]   p_match_type	- all parameters used to send message, include info of destination match type.
+ * @return      none
+ * @note        
+ */
 void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_type)
 {
 #if MI_API_ENABLE
@@ -327,6 +354,14 @@ void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_
 }
 
 
+
+/**
+ * @brief       This function determine whether the data is valid
+ * @param[in]   len		- data length
+ * @param[in]   p_data	- data
+ * @return      1: valid data; 0: invalid data
+ * @note        
+ */
 u8 get_flash_data_is_valid(u8 *p_data,u16 len)
 {
 	for(int i=0;i<len;i++){
@@ -337,6 +372,16 @@ u8 get_flash_data_is_valid(u8 *p_data,u16 len)
 	return 0;
 }
 
+
+/**
+ * @brief       This function rapid visa inspection
+ * @param[out]  r	- ecdh secret
+ * @param[in]   s	- private key
+ * @param[in]   x	- Public key of high 32 oneself
+ * @param[in]   y	- Public key of low 32 oneself
+ * @return      
+ * @note        
+ */
 void tn_p256_dhkey_fast(u8 *r, u8 *s, u8 *x, u8 *y)
 {
 	clock_switch_to_highest();
@@ -345,6 +390,13 @@ void tn_p256_dhkey_fast(u8 *r, u8 *s, u8 *x, u8 *y)
 }
 
 #if !WIN32
+
+/**
+ * @brief       This function check if crc of ecdh is valid.
+ * @param[in]   p_key	- parameters required for verification
+ * @return      1: crc valid; 0: crc invalid
+ * @note        
+ */
 u8 check_ecdh_crc(mesh_ecdh_key_str *p_key)
 {
 	u32 crc = crc16(p_key->dsk,sizeof(p_key->dsk)+sizeof(p_key->dpk));
@@ -355,6 +407,15 @@ u8 check_ecdh_crc(mesh_ecdh_key_str *p_key)
 	}
 }
 
+
+/**
+ * @brief       This function write new ecdh data with keeping other info of this sector.
+ * @param[in]   adr		- the write address of ecdh data
+ * @param[in]   len		- the size of ecdh data
+ * @param[in]   p_data	- ecdh data
+ * @return      none
+ * @note        
+ */
 void erase_ecdh_sector_restore_info(u32 adr,u8 *p_data,u16 len)
 {
 	u32 sec_adr = (adr>>12);
@@ -371,6 +432,13 @@ void erase_ecdh_sector_restore_info(u32 adr,u8 *p_data,u16 len)
 	flash_write_page(sec_adr,SECTOR_PAR_SIZE_MAX,temp_buf);
 }
 
+
+/**
+ * @brief       This function check if ecdh key is existed in flash, and if it is valid.
+ * @param[in]   p_key	- pub_key,private_key
+ * @return      1: two keys are invalid; 2: none keys are invalid; 3: one keys are invalid
+ * @note        
+ */
 u8 get_ecdh_key_sts(mesh_ecdh_key_str *p_key)
 {
 	u8 dsk_valid = get_flash_data_is_valid(p_key->dsk,sizeof(p_key->dsk));
@@ -384,6 +452,13 @@ u8 get_ecdh_key_sts(mesh_ecdh_key_str *p_key)
 	}
 }
 
+
+/**
+ * @brief       This function check whether the pub key and private key are valid.
+ * @param[in]   p_key	- key
+ * @return      1: key valid; 0: key invalid
+ * @note        
+ */
 u8 cal_dsk_dpk_is_valid_or_not(mesh_ecdh_key_str *p_key)
 {
 	
@@ -405,9 +480,16 @@ u8 cal_dsk_dpk_is_valid_or_not(mesh_ecdh_key_str *p_key)
 
 mesh_ecdh_key_str key_str;
 
+
+/**
+ * @brief       This function get private key
+ * @param[out]  p_private_key	- 
+ * @return      none
+ * @note        
+ */
 void get_private_key(u8 *p_private_key)
 {
-#if PROV_AUTH_LEAK_RECREATE_KEY_EN
+#if (PROV_AUTH_LEAK_RECREATE_KEY_EN || CERTIFY_BASE_ENABLE)
 	memcpy(p_private_key, key_str.dsk, 32);
 #else
 	mesh_ecdh_key_str key_str;
@@ -416,9 +498,16 @@ void get_private_key(u8 *p_private_key)
 #endif
 }
 
+
+/**
+ * @brief       This function get public key
+ * @param[in]   p_public_key	- 
+ * @return      none
+ * @note        
+ */
 void get_public_key(u8 *p_public_key)
 {
-#if PROV_AUTH_LEAK_RECREATE_KEY_EN
+#if (PROV_AUTH_LEAK_RECREATE_KEY_EN || CERTIFY_BASE_ENABLE)
 	memcpy(p_public_key, key_str.dpk, 64);
 #else
 	mesh_ecdh_key_str key_str;
@@ -427,6 +516,14 @@ void get_public_key(u8 *p_public_key)
 #endif
 }
 
+
+/**
+ * @brief       This function create rand with mac
+ * @param[in]   p_mac	- mac
+ * @param[out]  p_rand	- output(rand+mac)
+ * @return      
+ * @note        
+ */
 void create_rand_by_mac(u8* p_rand,u8* p_mac)
 {
 	p_rand[0]=rand();
@@ -435,6 +532,14 @@ void create_rand_by_mac(u8* p_rand,u8* p_mac)
 	return ;
 }
 
+
+/**
+ * @brief       This function generate random number
+ * @param[in]   len		- how many random numbers are generated
+ * @param[out]  p_buf	- store random numbers
+ * @return      0: generator rand num success; 4: failed
+ * @note        
+ */
 int telink_rand_num_generator(uint8_t* p_buf, uint8_t len)
 {
 	if(len > RAND_NUM_MAX_LEN){
@@ -446,12 +551,29 @@ int telink_rand_num_generator(uint8_t* p_buf, uint8_t len)
 	return MI_SUCCESS;
 }
 
+
+/**
+ * @brief       This function is random function for ecc.
+ * @param[out]  dest	- store random numbers
+ * @param[in]   size	- how many random numbers are generated
+ * @return      1
+ * @note        
+ */
 static int ecc_rng(uint8_t *dest, unsigned size)
 {
     telink_rand_num_generator(dest, (uint32_t) size);
     return 1;
 }
 
+
+/**
+ * @brief       This function swap endianness.
+ * @param[in]   in		- data to be swapped.
+ * @param[out]  out		- swap result
+ * @param[in]   size	- The size of bytes to be swapped
+ * @return      -1:swap error; 0:swap success
+ * @note        
+ */
 static int telink_swap_endian(const uint8_t *in, uint8_t *out, uint32_t size)
 {
     if (out < in + size && in < out + size)
@@ -463,6 +585,14 @@ static int telink_swap_endian(const uint8_t *in, uint8_t *out, uint32_t size)
     return 0;
 }
 
+
+/**
+ * @brief       This function create ecc key with fast way.
+ * @param[out]  dpk	- pub_key
+ * @param[out]  dsk	- private_key
+ * @return      none
+ * @note        
+ */
 void ecc_create_key_fast(u8* dsk,u8* dpk)
 {
 	const struct uECC_Curve_t * p_curve;
@@ -477,6 +607,12 @@ void ecc_create_key_fast(u8* dsk,u8* dpk)
 
 
 
+
+/**
+ * @brief       This function process public key creation.
+ * @return      none
+ * @note        
+ */
 void pubkey_create_proc()
 {
 	clock_switch_to_highest();
@@ -496,13 +632,30 @@ void pubkey_create_proc()
 	clock_switch_to_normal();
 }
 
+
+/**
+ * @brief       This function get valid private and public key of ECC from flash or re-create.
+ * @param[in]   force_en	- force to re-create private and public key.
+ * @return      none
+ * @note        
+ */
 void cal_private_and_public_key(u8 force_en)
 {
 	// first need to change the format to key(32+64),flag,crc(use crc16) 
-	// get all the para data first 	
-	if(prov_para.cert_base_en){
-		force_en = 0;
+	// get all the para data first 
+	#if CERTIFY_BASE_ENABLE
+	if(prov_para.cert_base_en ){
+		#if(GATEWAY_ENABLE)
+			force_en = 0;
+		#else
+			// node mode , force to use the certify part .
+			cert_base_set_key(key_str.dpk,key_str.dsk);	
+			key_str.valid = ECDH_KEY_VALID_FLAG;
+			key_str.crc = crc16(key_str.dsk,sizeof(key_str.dsk)+sizeof(key_str.dpk));
+			return ;
+		#endif
 	}
+	#endif
 	if(force_en){
 		// need to recreate the key info every time
 		pubkey_create_proc();
@@ -523,7 +676,9 @@ void cal_private_and_public_key(u8 force_en)
 			u32 irq_res = irq_disable();
 			#if CERTIFY_BASE_ENABLE
 			if(prov_para.cert_base_en){
-				cert_base_set_key(key_str.dpk,key_str.dsk);	
+				#if GATEWAY_ENABLE
+				pubkey_create_proc();
+				#endif
 			}else{
 				pubkey_create_proc();
 			}	
@@ -557,21 +712,40 @@ void cal_private_and_public_key(u8 force_en)
 }
 #endif 
 
+
+/**
+ * @brief       This function process security beacon and private beacon with beacon interval.
+ * @return      none
+ * @note        
+ */
 void mesh_secure_beacon_loop_proc()
 {
-	static u32 beacon_100ms_cnt =0;
-	if((++beacon_100ms_cnt > SEC_NW_BC_INV_DEF_100MS) && is_provision_success()){
-   		beacon_100ms_cnt = 0;
+	static u32 beacon_1s_tick = (u32)(SEC_NW_BC_INV_DEF_1S - 2); // send secure beacon when power up.
+	if(clock_time_exceed_s(beacon_1s_tick, SEC_NW_BC_INV_DEF_1S) && is_provision_success()){
+   		beacon_1s_tick = clock_time_s();
+		#if (!DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN)
    		mesh_tx_sec_private_beacon_proc(0);	
+		#endif
 	}
 }
 
+/**
+ * @brief       This function determine whether to send security network beacon
+ * @return      1: need; 0: no need
+ * @note        
+ */
 int is_need_send_sec_nw_beacon()
 {
 	return 	((NW_BEACON_BROADCASTING == model_sig_cfg_s.sec_nw_beacon));
 }
 
-void mesh_beacon_poll_100ms()
+
+/**
+ * @brief       This function poll to tx network security beacon and private beacon if the time arrives.
+ * @return      none
+ * @note        
+ */
+void mesh_beacon_poll_1s()
 {
 #if (IV_UPDATE_DISABLE)
     return ;
@@ -581,11 +755,9 @@ void mesh_beacon_poll_100ms()
 	return ;	// for test
 #endif
 
-    if(is_lpn_support_and_en){   
+	if(is_fn_support_and_en){
         //if(fri_ship_proc_lpn.status || is_in_mesh_friend_st_lpn()){
-            return ;
         //}
-    }else if(is_fn_support_and_en){
     	foreach(i,g_max_lpn_num){
 			mesh_fri_ship_proc_fn_t *proc_fn = &fri_ship_proc_fn[i];
 	        if(proc_fn->status && (FRI_ST_TIMEOUT_CHECK != proc_fn->status)){
@@ -593,9 +765,19 @@ void mesh_beacon_poll_100ms()
 	        }
         }
     }
+	#if (0 == SECURE_NETWORK_BEACON_LOOP_DISABLE)
     mesh_secure_beacon_loop_proc();
+	#endif
 }
 
+
+/**
+ * @brief       This function save tid. just for node with low power in deep sleep. 
+ *              because TID re-transaction will be invalid after 6 seconds.
+ * @param[in]   ele_idx	- element index
+ * @return      none
+ * @note        
+ */
 void mesh_tid_save(int ele_idx)
 {
 #if __PROJECT_MESH_SWITCH__
@@ -608,6 +790,12 @@ void mesh_tid_save(int ele_idx)
 u8 adv_mesh_en_flag = 0;
 u8 mesh_kr_filter_flag =0;
 u8 mesh_provisioner_buf_enable =0;
+
+/**
+ * @brief       This function enable mesh adv filter. 
+ * @return      none
+ * @note        
+ */
 void enable_mesh_adv_filter()
 {
 	#if (FEATURE_FRIEND_EN && GATEWAY_ENABLE)
@@ -623,6 +811,12 @@ void enable_mesh_adv_filter()
 	#endif
 }
 
+
+/**
+ * @brief       This function disable mesh adv filter.
+ * @return      none
+ * @note        
+ */
 void disable_mesh_adv_filter()
 {
 	#if TESTCASE_FLAG_ENABLE
@@ -632,26 +826,57 @@ void disable_mesh_adv_filter()
 	#endif	
 }
 
+
+/**
+ * @brief       This function enable key refresh filter
+ * @return      none
+ * @note        
+ */
 void enable_mesh_kr_cfg_filter()
 {
 	mesh_kr_filter_flag = 1;
 }
 
+
+/**
+ * @brief       This function disable key refresh filter
+ * @return      none
+ * @note        
+ */
 void disable_mesh_kr_cfg_filter()
 {
 	mesh_kr_filter_flag = 0;
 }
 
+
+/**
+ * @brief       This function enable provision buffer
+ * @return      none
+ * @note        
+ */
 void  enable_mesh_provision_buf()
 {
 	mesh_provisioner_buf_enable =1;
 }
+
+/**
+ * @brief       This function disable provision buffer
+ * @return      none
+ * @note        
+ */
 void  disable_mesh_provision_buf()
 {
 	mesh_provisioner_buf_enable =0;
 }
 
 extern attribute_t* gAttributes;
+
+/**
+ * @brief       This function get attribute permission.
+ * @param[in]   handle	- ATT handle of gAttributes in "my Attributes"
+ * @return      permission
+ * @note        
+ */
 u8 get_att_permission(u8 handle)
 {
 #if HOMEKIT_EN
@@ -662,6 +887,13 @@ u8 get_att_permission(u8 handle)
 }
 
 #if HOMEKIT_EN
+
+/**
+ * @brief       This function advertise filter for homekit.
+ * @param[in]   raw_pkt	- raw data of advertise packet
+ * @return      none
+ * @note        
+ */
 _attribute_ram_code_ void adv_homekit_filter(u8 *raw_pkt)
 {
 	extern u8 blt_pair_ok;
@@ -698,6 +930,13 @@ _attribute_ram_code_ void adv_homekit_filter(u8 *raw_pkt)
 
 #if (USER_ADV_FILTER_EN)
 	#if DU_ULTRA_PROV_EN
+
+/**
+ * @brief       This function check whether it is an ultra provision adv payload which is user define.
+ * @param[in]   p_payload	- rx advertise valid data
+ * @return      1: yes; 0: no
+ * @note        
+ */
 static inline int is_ultra_prov_adv(u8 *p_payload)
 {
 	genie_manu_factor_data_t *p_manu_data = (genie_manu_factor_data_t *)p_payload;
@@ -777,6 +1016,12 @@ _attribute_ram_code_ u8 user_adv_filter_proc(u8 * p_rf_pkt)
 	#if ACTIVE_SCAN_ENABLE
 static u8 scan_req_mac[6];
 
+
+/**
+ * @brief       This function : remote provision scan request process.
+ * @return      none
+ * @note        
+ */
 _attribute_ram_code_ void rp_active_scan_req_proc()
 {
 	if(reg_rf_irq_status & FLD_RF_IRQ_RX){
@@ -817,6 +1062,13 @@ _attribute_ram_code_ void rp_active_scan_req_proc()
 }
 	#endif
 
+
+/**
+ * @brief       This function is: remote provision connect adv filter process.
+ * @param[in]   p_rf_pkt	- Received packet data
+ * @return      0: discard this packet; 1: keep.
+ * @note        
+ */
 _attribute_ram_code_ u8 rp_conn_adv_filter_proc(u8 * p_rf_pkt)
 {
 	rf_packet_adv_t * p_adv = (rf_packet_adv_t *)(p_rf_pkt);
@@ -827,6 +1079,9 @@ _attribute_ram_code_ u8 rp_conn_adv_filter_proc(u8 * p_rf_pkt)
 		u8 temp_uuid[2]=SIG_MESH_PROVISION_SERVICE;
 		if(!memcmp(temp_uuid, p_pb_adv->uuid_pb_uuid, sizeof(temp_uuid))&&
 			!memcmp(rp_mag.rp_extend[0].uuid, p_pb_adv->service_data, sizeof(p_pb_adv->service_data))){
+			return 1;
+		}else if (!memcmp(temp_uuid, p_pb_adv->uuid_pb_uuid, sizeof(temp_uuid))&&
+			rp_mag.rp_scan_sts.scannedItemsLimit == MAX_SCAN_ITEMS_UUID_CNT){//unlimited scan
 			return 1;
 		}else{
 			return 0;
@@ -847,6 +1102,18 @@ _attribute_ram_code_ u8 rp_conn_adv_filter_proc(u8 * p_rf_pkt)
 }
 #endif
 
+#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
+#define reg_rf_chn_current  		REG_ADDR8(0x40d)
+#endif
+
+
+/**
+ * @brief       This function Filters the received broadcast packets
+ * @param[in]   blt_sts	- ble link layer state
+ * @param[in]   raw_pkt	- raw_data packet
+ * @return      0: discards the adv packet; 1: save the adv packet
+ * @note        
+ */
 _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 {
 	#if FEATURE_LOWPOWER_EN
@@ -902,6 +1169,17 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
                         || ((LL_TYPE_AUX_ADV_IND == adv_type)&&(p_ext->adv_mode == BLE_LL_EXT_ADV_MODE_NON_CONN_NON_SCAN))
                         #endif
 	                    );
+	
+	#if MESH_MONITOR_EN
+	if((blt_sts != BLS_LINK_STATE_CONN) || (ble_state == BLE_STATE_BRX_E)){
+		if(adv_type_accept_flag){ 	// add report adv channel
+			rf_packet_adv_t * pAdv = (rf_packet_adv_t *)p_rf_pkt;
+			pAdv->advA[pAdv->rf_len + 3] = reg_rf_chn_current; // advA[pAdv->rf_len + (0 ~ 2)] will be set to "rssi(1 byte) + RF dc(2 byte)" later. advA[pAdv->rf_len + 3] is CRC ok flag before set to channel here.
+		}
+	}else{
+		// TODO: GATT data: need to be handled for SMP mode and no SMP mode
+	}
+	#endif
 
 	// "fifo_free_cnt" here means if accepte this packet, there still is the number of "fifo_free_cnt" remained, because wptr has been ++.
 	u8 fifo_free_cnt = blt_rxfifo.num - ((u8)(blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1));
@@ -987,6 +1265,13 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 	return next_buffer;
 }
 #endif
+
+/**
+ * @brief       This function Set the default retry count for reliable command.
+ * @param[in]   retry_cnt	- retry times
+ * @return      none
+ * @note        
+ */
 void reliable_retry_cnt_def_set(u8 retry_cnt)
 {
     g_reliable_retry_cnt_def = retry_cnt > RELIABLE_RETRY_CNT_MAX ? RELIABLE_RETRY_CNT_MAX : retry_cnt;
@@ -1000,6 +1285,15 @@ const u16 master_filter_list[]={
     SIG_MD_LIGHT_HSL_S,SIG_MD_LIGHT_HSL_SETUP_S,SIG_MD_LIGHT_HSL_HUE_S,SIG_MD_LIGHT_HSL_SAT_S,
 	SIG_MD_FW_UPDATE_S,SIG_MD_FW_UPDATE_C,SIG_MD_FW_DISTRIBUT_S,SIG_MD_FW_DISTRIBUT_C,SIG_MD_BLOB_TRANSFER_S,SIG_MD_BLOB_TRANSFER_C,
 };
+
+/**
+ * @brief       This function get model list which need to bind.
+ * @param[out]  key_bind_list_buf	- save model_id
+ * @param[out]  p_list_cnt			- model id num
+ * @param[in]   max_cnt				- model id max num
+ * @return      0: get fail; 1: success.
+ * @note        none
+ */
 u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8 max_cnt)
 {
 	if(ARRAY_SIZE(master_filter_list) >= max_cnt){
@@ -1012,14 +1306,21 @@ u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8 max_cn
 #endif
 
 // SUBSCRIPTION SHARE
-#if SUBSCRIPTION_SHARE_EN
+STATIC_ASSERT(SUBSCRIPTION_BOUND_STATE_SHARE_EN == 1);
 
-#if (VENDOR_MD_NORMAL_EN)
-#ifndef SHARE_ALL_LIGHT_STATE_MODEL_EN      // user can define in user_app_config.h
+#if SUBSCRIPTION_BOUND_STATE_SHARE_EN
+	#ifndef SHARE_ALL_LIGHT_STATE_MODEL_EN      // user can define in user_app_config.h
 #define SHARE_ALL_LIGHT_STATE_MODEL_EN      (AIS_ENABLE)
-#endif
+	#endif
 
-const u16 sub_share_model_sig[] = {
+#define LOG_SHARE_MODEL_DEBUG(pbuf,len,format,...)		//LOG_MSG_LIB(TL_LOG_NODE_BASIC,pbuf,len,format,__VA_ARGS__)
+
+
+/**
+ * @brief       all sig models that have extend relation ship with onoff server model 
+ *              they should share the same subscription list.
+ */
+const u16 sub_share_model_sig_onoff_server_extend[] = { // model list for onoff extend. // should share when it is extend model.
     #if MD_SERVER_EN
         #if MD_ONOFF_EN
     SIG_MD_G_ONOFF_S, 
@@ -1029,25 +1330,43 @@ const u16 sub_share_model_sig[] = {
         #endif
         #if MD_LIGHTNESS_EN
     SIG_MD_LIGHTNESS_S, 
-            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
-    SIG_MD_LIGHTNESS_SETUP_S,
+            #if 1 // SHARE_ALL_LIGHT_STATE_MODEL_EN 		// should share when it is extend model.
+    SIG_MD_LIGHTNESS_SETUP_S, 								// SIG_MD_LIGHTNESS_SETUP_S extend lightness server.
             #endif
         #endif
         #if LIGHT_TYPE_CT_EN
     SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_TEMP_S,
-            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
+            #if 1 // SHARE_ALL_LIGHT_STATE_MODEL_EN 		// should share when it is extend model.
     SIG_MD_LIGHT_CTL_SETUP_S, 
             #endif
         #endif
         #if LIGHT_TYPE_HSL_EN
     SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_SAT_S,
-            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
+            #if 1 // SHARE_ALL_LIGHT_STATE_MODEL_EN 		// should share when it is extend model.
     SIG_MD_LIGHT_HSL_SETUP_S, 
             #endif
         #endif
-        #if SHARE_ALL_LIGHT_STATE_MODEL_EN // other not light state model
-    SIG_MD_SCENE_S,
+        #if MD_LIGHT_CONTROL_EN
+    SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_SETUP_S,
         #endif
+    	#if MD_DEF_TRANSIT_TIME_EN
+    SIG_MD_G_DEF_TRANSIT_TIME_S, 							// lightness setup extend power onoff setup extend default transition time server.
+        #endif
+    	#if MD_POWER_ONOFF_EN
+    SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_POWER_ONOFF_SETUP_S,	// SIG_MD_G_POWER_ONOFF_SETUP_S extend default transition time server.
+        #endif
+    	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
+    SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_SETUP_S,	// SIG_MD_G_POWER_LEVEL_S extend level.
+        #endif
+    	#if MD_SCENE_EN
+        	#if 1// SHARE_ALL_LIGHT_STATE_MODEL_EN
+    SIG_MD_SCENE_S, SIG_MD_SCENE_SETUP_S, 					// SIG_MD_SCENE_SETUP_S extend default transition time server.
+        	#endif
+        #endif
+    #endif
+    
+    #if MD_CLIENT_EN
+    // most client models are root model, except OTA which set in sub_share_model_sig_others_server_extend_[]: both Firmware Update Client and The Firmware Distribution Client model extend BLOB Transfer Client model.
     #endif
 
     #if WIN32 
@@ -1055,9 +1374,44 @@ const u16 sub_share_model_sig[] = {
     #endif
 };
 
-const u32 sub_share_model_vendor[] = {
+/**
+ * @brief       sig models of each array inside that have extend relation ship, the first model is root model,
+ *              they should share the same subscription list.
+ *              such as SIG_MD_TIME_S is root model, SIG_MD_TIME_SETUP_S extend SIG_MD_TIME_S, so the should share the same subscription list.
+ *              but SIG_MD_SENSOR_S should not share the same subscription list with SIG_MD_TIME_S.
+ */
+const u16 sub_share_model_sig_others_server_extend[][3] = { // model list for others. // should share when it is extend model.
+#if MD_SERVER_EN
+	// server model, the first model of each array is root model.
+	#if MD_LOCATION_EN
+	{SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_SETUP_S},
+	#endif
+	#if MD_PROPERTY_EN
+	{SIG_MD_G_USER_PROP_S, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_MFG_PROP_S}, // SIG_MD_G_CLIENT_PROP_S is root model and is not extended by anyother model.
+	#endif
+	#if MD_SENSOR_EN
+	{SIG_MD_SENSOR_S, SIG_MD_SENSOR_SETUP_S},
+	#endif
+	#if MD_TIME_EN
+	{SIG_MD_TIME_S, SIG_MD_TIME_SETUP_S},
+	#endif
+	#if MD_SCHEDULE_EN
+	{SIG_MD_SCHED_S, SIG_MD_SCHED_SETUP_S},
+	#endif
+#endif
+	
+	// client model
+#if MD_MESH_OTA_EN
+	#if 1 // (MD_SERVER_EN || MD_CLIENT_EN) // because SIG_MD_BLOB_TRANSFER_C and SIG_MD_FW_UPDATE_C will be used in light node.
+	{SIG_MD_BLOB_TRANSFER_S, SIG_MD_FW_UPDATE_S, SIG_MD_FW_DISTRIBUT_S},
+	{SIG_MD_BLOB_TRANSFER_C, SIG_MD_FW_UPDATE_C, SIG_MD_FW_DISTRIBUT_C},
+	#endif
+#endif
+};
+
+const u32 sub_share_model_vendor_server_extend[] = {
     #if MD_SERVER_EN
-        #if(SHARE_ALL_LIGHT_STATE_MODEL_EN)
+        #if (SHARE_ALL_LIGHT_STATE_MODEL_EN)
     VENDOR_MD_LIGHT_S,
             #if MD_VENDOR_2ND_EN
     VENDOR_MD_LIGHT_S2,
@@ -1070,79 +1424,165 @@ const u32 sub_share_model_vendor[] = {
     #endif
 };
 
-void share_model_sub(u16 op, u16 sub_adr, u8 *uuid, u32 light_idx)
+
+
+/**
+ * @brief       This function set subscription for model which extend onoff model.
+ * @param[in]   ele_adr	- element address
+ * @param[in]   op		- opcode
+ * @param[in]   sub_adr	- subscription list
+ * @param[in]   uuid	- if sub_adr is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @return      1: MODEL_SHARE_TYPE_ONOFF_SERVER_EXTEND
+ * @note        
+ */
+model_share_type_e share_model_sub_onoff_server_extend(u16 op, u16 sub_adr, u8 *uuid, u16 ele_adr)
 {
-	//for(light_idx = 0; light_idx < (LIGHT_CNT); ++light_idx) // should not share to other instance(light)
-	{
-		u16 ele_adr = ele_adr_primary + (light_idx * ELE_CNT_EVERY_LIGHT);
-			
-		foreach_arr(i,sub_share_model_sig){
-			mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, sub_share_model_sig[i], 1);
+	//for(light_idx = 0; light_idx < (LIGHT_CNT); ++light_idx) // should not share to other element. if not, level command will not be able to send to group address.
+	{			
+		foreach_arr(i,sub_share_model_sig_onoff_server_extend){
+			u32 model_list_set = sub_share_model_sig_onoff_server_extend[i];
+			u8 st = 0;
+			st = mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, model_list_set, 1);
+			LOG_SHARE_MODEL_DEBUG(0, 0,"share  onoff model sub addr:0x%04x, ele_adr:0x%04x, model id:0x%04x, st:%d", sub_adr, ele_adr, model_list_set, st);
 		}
 			
-		foreach_arr(i,sub_share_model_vendor){
-			mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, sub_share_model_vendor[i], 0);
+		foreach_arr(i,sub_share_model_vendor_server_extend){
+			u32 model_list_set = sub_share_model_vendor_server_extend[i]; // must u32 for vendor model id
+			u8 st = 0;
+			st = mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, model_list_set, 0);
+			LOG_SHARE_MODEL_DEBUG(0, 0,"share vendor model sub addr:0x%04x, ele_adr:0x%04x, model id:0x%04x, st:%d", sub_adr, ele_adr, model_list_set, st);
 		}
 			
-#if (ELE_CNT_EVERY_LIGHT >= 2)
-		foreach(i,ELE_CNT_EVERY_LIGHT - 1){
-			mesh_sub_search_and_set(op, ele_adr+i, sub_adr, uuid, SIG_MD_G_LEVEL_S, 1);
-		}
+#if 0 // (ELE_CNT_EVERY_LIGHT >= 2) // no need to set twice. have been set in sub_share_model_sig.
    	#if (LIGHT_TYPE_CT_EN)
-		mesh_sub_search_and_set(op, ele_adr+1, sub_adr, uuid, SIG_MD_LIGHT_CTL_TEMP_S, 1);
+		mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, SIG_MD_LIGHT_CTL_TEMP_S, 1);
     #endif
     #if (LIGHT_TYPE_HSL_EN)
-       	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL)
-		u32 offset = 1;
-        #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
-		u32 offset = 2; // temp model first
-        #endif
-		mesh_sub_search_and_set(op, ele_adr+offset, sub_adr, uuid, SIG_MD_LIGHT_HSL_HUE_S, 1);
-		mesh_sub_search_and_set(op, ele_adr+offset+1, sub_adr, uuid, SIG_MD_LIGHT_HSL_SAT_S, 1);
+		mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, SIG_MD_LIGHT_HSL_HUE_S, 1);
+		mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, SIG_MD_LIGHT_HSL_SAT_S, 1);
     #endif
 #endif
 	}
+
+	return MODEL_SHARE_TYPE_ONOFF_SERVER_EXTEND;
 }
 
-int is_need_share_model_sub(u32 model_id, bool4 sig_model)
+
+
+/**
+ * @brief       This function Check whether it is extend model of onoff model.
+ * @param[in]   model_id	- model id
+ * @param[in]   sig_model	- model id is sig model(1) or vendor model(0).
+ * @return      0:no; 1:yes
+ * @note        
+ */
+int is_need_share_model_sub_onoff_server_extend(u32 model_id, bool4 sig_model)
 {
     if(sig_model){
-        foreach_arr(i,sub_share_model_sig){
-            if(sub_share_model_sig[i] == model_id){
+        foreach_arr(i,sub_share_model_sig_onoff_server_extend){
+            if(sub_share_model_sig_onoff_server_extend[i] == model_id){
                 return 1;
             }
         }
-    }
+    }else{
+    	#if (SHARE_ALL_LIGHT_STATE_MODEL_EN)
+		foreach_arr(i,sub_share_model_vendor_server_extend){
+            if(sub_share_model_vendor_server_extend[i] == model_id){
+                return 1;
+            }
+		}
+		#endif
+	}
+	
     return 0;
 }
-#endif
-#endif
 
+/**
+ * @brief       This function set subscription for current model and its extend model.
+ * @param[in]   op			- opcode
+ * @param[in]   sub_adr		- subscription address.
+ * @param[in]   uuid		- if sub_adr is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   ele_adr		- element address
+ * @param[in]   model_id	- model id
+ * @param[in]   sig_model	- 1: model id is sig model; 0: vendor model.
+ * @return      
+ * @note        
+ */
+static inline model_share_type_e subscription_check_and_set_share_model(u16 op, u16 sub_adr, u8 *uuid, u16 ele_adr, u32 model_id, bool4 sig_model)
+{
+	if(is_need_share_model_sub_onoff_server_extend(model_id, sig_model)){
+		return share_model_sub_onoff_server_extend(op, sub_adr, uuid, ele_adr);
+	}else if(sig_model){
+        foreach_arr(i,sub_share_model_sig_others_server_extend){
+        	foreach_arr(j, sub_share_model_sig_others_server_extend[0]){
+        		u32 model_list_search = sub_share_model_sig_others_server_extend[i][j];
+        		if(model_list_search == model_id){
+		        	foreach_arr(k, sub_share_model_sig_others_server_extend[i]){
+						u32 model_list_set = sub_share_model_sig_others_server_extend[i][k];
+						if(0 != model_list_set){ // 0 is config server model, and it is also invalid model here.
+							u8 st = 0;
+							st = mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, model_list_set, 1);
+							LOG_SHARE_MODEL_DEBUG(0, 0,"share others model sub addr:0x%04x, ele_adr:0x%04x, model id:0x%04x, st:%d", sub_adr, ele_adr, model_list_set, st);
+						}
+					}
+		        	return MODEL_SHARE_TYPE_OTHERS_SERVER_EXTEND;
+	            }
+            }
+        }
+    }
+    
+    return MODEL_SHARE_TYPE_NONE;
+}
+
+
+/**
+ * @brief       This function set subscription address for extend model which also said share model.
+ * @param[in]   op			- opcode
+ * @param[in]   ele_adr		- element address
+ * @param[in]   sub_adr		- subscription address
+ * @param[in]   dst_adr		- destination address
+ * @param[in]   uuid		- if sub_adr is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   model_id	- model id
+ * @param[in]   sig_model	- model id is sig model(1) or vendor model(0).
+ * @return      none
+ * @note        
+ */
 _USER_CAN_REDEFINE_ void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model)
 {
-#if SUBSCRIPTION_SHARE_EN
-	#if (VENDOR_MD_NORMAL_EN)
     #if DUAL_VENDOR_EN
 	if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st)
     #endif
     {
-        if(is_need_share_model_sub(model_id, sig_model)){
-            if(is_own_ele(ele_adr)){
-                u32 light_idx = (ele_adr - ele_adr_primary) / ELE_CNT_EVERY_LIGHT;
-                share_model_sub(op, sub_adr, uuid, light_idx);
-            }
-		}
+        if(is_own_ele(ele_adr)){
+            //u32 light_idx = (ele_adr - ele_adr_primary) / ELE_CNT_EVERY_LIGHT;
+            subscription_check_and_set_share_model(op, sub_adr, uuid, ele_adr, model_id, sig_model);
+        }
     }
-	#endif
-       
-#endif
 }
+#endif
 
+
+/**
+ * @brief       This function return to subscription status
+ * @param[in]   st			- status
+ * @param[in]	p_sub_set	- subscription parameters
+ * @param[in]   sig_model	- model id is sig model(1) or vendor model(0).
+ * @param[in]   adr_src		- source address
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src)
 {
 	return mesh_rsp_sub_status(st, p_sub_set, sig_model, adr_src);
 }
 
+
+/**
+ * @brief       This function is callback function for provision event of mesh node.
+ * @param[in]   evt_code	- event code
+ * @return     	none 
+ * @note        
+ */
 void mesh_node_prov_event_callback(u8 evt_code)
 {
 #if WIN32
@@ -1201,6 +1641,13 @@ void mesh_node_prov_event_callback(u8 evt_code)
 #endif 
 }
 
+
+/**
+ * @brief       This function get little endianness version number.
+ * @param[in]   ver_big	- big endianness version number
+ * @return      little : little endianness version number
+ * @note        
+ */
 u16 get_little_end_version(u16 ver_big)
 {
 	u16 little = 0;
@@ -1219,9 +1666,16 @@ const fw_id_t fw_id_local = {
 
 
 /**
- * @brief  for both GATT and MESH ADV OTA
+ * @brief  check 
  * @param
  * @retval None
+ */
+/**
+ * @brief       This function check if new firmware has a valid PID(product ID) and VID(Version IS).
+ * @param[in]   p_fw_id		- firmware ID
+ * @param[in]   gatt_flag	- 1: it is GATT OTA.
+ * @return      
+ * @note        
  */
 _USER_CAN_REDEFINE_ int ota_is_valid_pid_vid(fw_id_t *p_fw_id, int gatt_flag)
 {
@@ -1250,9 +1704,15 @@ _USER_CAN_REDEFINE_ int ota_is_valid_pid_vid(fw_id_t *p_fw_id, int gatt_flag)
 #if !WIN32
 //----------------------- OTA --------------------------------------------
 u8 	ui_ota_is_working = 0;
-u8 ota_reboot_type = OTA_ERR_STS;
+u8 ota_reboot_type = OTA_FW_CHECK_ERR;
 u32 ota_reboot_later_tick = 0;
 
+
+/**
+ * @brief       This function This function is called back when the OTA start command is received.
+ * @return      none
+ * @note        
+ */
 void entry_ota_mode(void)
 {
 	ui_ota_is_working = 1;
@@ -1268,6 +1728,12 @@ void entry_ota_mode(void)
 	#endif
 }
 
+
+/**
+ * @brief       This function get if it is allowed OTA.
+ * @return      0: no authentication; 1: authentication
+ * @note        
+ */
 _USER_CAN_REDEFINE_ u8 ota_condition_enable()
 {
 	return pair_login_ok; // 1;
@@ -1280,6 +1746,13 @@ _USER_CAN_REDEFINE_ u8 ota_condition_enable()
 const u8 dualmode_ota_key_user[8] = DUALMODE_OTA_KEY_USER;
 extern u8 my_OtaData; // error code in read response
 
+
+/**
+ * @brief       This function check auth for homekit OTA.
+ * @param[in]   auth_app	- auth from app.
+ * @return      none
+ * @note        
+ */
 void cmd_ota_mesh_hk_login_handle(const u8 auth_app[16])
 {
     if(!is_provision_success()){
@@ -1295,6 +1768,13 @@ void cmd_ota_mesh_hk_login_handle(const u8 auth_app[16])
 #endif
 
 #if 1 // process flash parameter when OTA between diffrent SDK.
+
+/**
+ * @brief       This function set firmware type
+ * @param[in]   sdk_type	- sdk type
+ * @return      none
+ * @note        
+ */
 void set_firmware_type(u32 sdk_type)
 {
     u32 mesh_type = 0;
@@ -1306,12 +1786,24 @@ void set_firmware_type(u32 sdk_type)
 	flash_write_page (FLASH_ADR_MESH_TYPE_FLAG, 4, (u8 *)&mesh_type);
 }
 
+
+/**
+ * @brief       This function set firmware type to "TYPE SIG MESH"
+ * @return      none
+ * @note        
+ */
 void set_firmware_type_SIG_mesh()
 {
     set_firmware_type(TYPE_SIG_MESH);
 }
 
 #if FW_START_BY_BOOTLOADER_EN
+
+/**
+ * @brief       This function set firmware type to "TYPE DUAL MODE ZIGBEE RESET"
+ * @return      none
+ * @note        
+ */
 void set_firmware_type_zb_with_factory_reset()
 {
     set_firmware_type(TYPE_DUAL_MODE_ZIGBEE_RESET);
@@ -1319,12 +1811,30 @@ void set_firmware_type_zb_with_factory_reset()
 #endif
 
 #if DUAL_MODE_WITH_TLK_MESH_EN
+
+/**
+ * @brief       This function set firmware type to recover.
+ * @return      none
+ * @note        
+ */
 void set_firmware_type_recover()
 {
     set_firmware_type(TYPE_DUAL_MODE_RECOVER);
 }
 #endif
 
+
+/**
+ * @brief       This function set firmware type is FLASH_ADR_MESH_TYPE_FLAG
+ * @return      none
+ * @note        
+ */
+
+/**
+ * @brief       This function firmware type init
+ * @return      none
+ * @note        
+ */
 void set_firmware_type_init()
 {
     flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
@@ -1336,9 +1846,15 @@ void set_firmware_type_init()
 #define TLK_MESH_NO_TYPE_CHECK_EN   ((0 == FLASH_1M_ENABLE) && (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH))
 #endif
 
+
+/**
+ * @brief       This function adopt different settings for different SDK.
+ * @return      1: sig mesh; 0: other
+ * @note        
+ */
 u8 proc_telink_mesh_to_sig_mesh(void)
 {
-    #if (DUAL_VENDOR_EN)
+    #if (DUAL_VENDOR_EN || GATEWAY_ENABLE)
     return 1;
     #endif
     
@@ -1418,12 +1934,25 @@ u8 proc_telink_mesh_to_sig_mesh(void)
 u8 proc_telink_mesh_to_sig_mesh(void){return 0;}
 #endif
 
+
+/**
+ * @brief       This function trigger ota reboot flow.
+ * @param[in]   type	- ota reboot type 
+ * @return      none
+ * @note        
+ */
 void mesh_ota_reboot_set(u8 type)
 {
     ota_reboot_later_tick = clock_time() | 1;
     ota_reboot_type = type;
 }
 
+
+/**
+ * @brief       This function refresh tick of timeout countdown.
+ * @return      none
+ * @note        
+ */
 void mesh_ota_reboot_check_refresh()
 {
     if(ota_reboot_later_tick){
@@ -1431,6 +1960,12 @@ void mesh_ota_reboot_check_refresh()
     }
 }
 
+
+/**
+ * @brief       This function ota reboot process
+ * @return      none
+ * @note        
+ */
 void mesh_ota_reboot_proc()
 {
     #if PTS_TEST_OTA_EN
@@ -1447,7 +1982,14 @@ void mesh_ota_reboot_proc()
     #endif
     
     if(ota_reboot_later_tick && clock_time_exceed(ota_reboot_later_tick, reboot_standby_ms*1000)){ // for 4 hops or more
-        set_keep_onoff_state_after_ota();
+		set_keep_onoff_state_after_ota();
+
+		#if FEATURE_LOWPOWER_EN
+		if(BLS_LINK_STATE_CONN == blt_state){
+        	set_ota_gatt_connected_flag_lpn(); // for lpn, need send connectable adv after reboot.
+    	}
+		#endif
+		
         irq_disable();
         if(OTA_SUCCESS_DEBUG == ota_reboot_type){
             while(1){show_ota_result(OTA_SUCCESS);}
@@ -1470,6 +2012,12 @@ void mesh_ota_reboot_proc()
     }
 }
 
+
+/**
+ * @brief       This function trigger sending update parameters after GATT connection
+ * @return      none
+ * @note        
+ */
 void bls_l2cap_requestConnParamUpdate_Normal()
 {
     if(blt_state == BLS_LINK_STATE_CONN){
@@ -1478,6 +2026,15 @@ void bls_l2cap_requestConnParamUpdate_Normal()
 }
 
 //----------------------- ble connect callback --------------------------------------------
+
+/**
+ * @brief       This function is called when GATT connect success.
+ * @param[in]   e	- event code BLT_EV_FLAG_CONNECT
+ * @param[in]   p	- data len
+ * @param[in]   n	- raw data point to DATA after rf_len
+ * @return      none
+ * @note        
+ */
 void mesh_ble_connect_cb(u8 e, u8 *p, int n)
 {
 	#if MESH_RX_TEST
@@ -1508,6 +2065,13 @@ void mesh_ble_connect_cb(u8 e, u8 *p, int n)
     CB_USER_BLE_CONNECT(e, p, n);
 }
 
+
+/**
+ * @brief       This function After GATT disconnect, this function is called back.
+ * @param[in]   reason	- disconnect reason
+ * @return      none
+ * @note        
+ */
 void mesh_ble_disconnect_cb(u8 reason)
 {
 	app_adr = 0;
@@ -1519,7 +2083,7 @@ void mesh_ble_disconnect_cb(u8 reason)
 	#if (ONLINE_STATUS_EN && !GATEWAY_ENABLE)
     mesh_report_status_enable(0);
 	#endif
-	#if (MD_DF_EN && !FEATURE_LOWPOWER_EN)
+	#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN)
 	directed_proxy_dependent_node_delete();
 	#endif
 #if HOMEKIT_EN
@@ -1533,6 +2097,13 @@ void mesh_ble_disconnect_cb(u8 reason)
 }
 
 #if (BLE_REMOTE_PM_ENABLE)
+
+/**
+ * @brief       This function will be called before suspend.
+ * @param[in]   wakeup_tick	- suspend tick
+ * @return      1
+ * @note        
+ */
 int app_func_before_suspend(u32 wakeup_tick)
 {
 	if((wakeup_tick-clock_time() > 10*CLOCK_SYS_CLOCK_1MS)){// makesure enough time
@@ -1543,6 +2114,15 @@ int app_func_before_suspend(u32 wakeup_tick)
 #endif
 
 #if DEBUG_VC_FUNCTION
+
+/**
+ * @brief       This function push message to fifo for VC(sig mesh tool).
+ * @param[in]   cmd		- command
+ * @param[in]   pfifo	- send data
+ * @param[in]   cmd_len	- command length
+ * @return      1: success; others: error.
+ * @note        
+ */
 u8 send_vc_fifo(u8 cmd,u8 *pfifo,u8 cmd_len)
 {
 	if(cmd_len>0x50){
@@ -1558,6 +2138,12 @@ u8 send_vc_fifo(u8 cmd,u8 *pfifo,u8 cmd_len)
 
 //u8		dev_mac[12] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff,  0xc4,0xe1,0xe2,0x63, 0xe4,0xc7};
 //s8		dev_rssi_th = 0x7f;
+
+/**
+ * @brief       This function enable device scan
+ * @return      none
+ * @note        
+ */
 void app_enable_scan_all_device ()
 {
 	//memset (dev_mac, 0, 12);
@@ -1565,6 +2151,41 @@ void app_enable_scan_all_device ()
 	blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
 }
 
+
+/**
+ * @brief       This function enable advertise and scan function.
+ * @param[in]   adv_en	- advertise enable
+ * @param[in]   scan_en	- scan enable
+ * @return      0: set success; 1: fail
+ * @note        
+ */
+int mesh_set_adv_scan_enable(int adv_en, int scan_en)
+{
+	if(blt_state != BLS_LINK_STATE_CONN){
+		bls_ll_setAdvEnable(adv_en);
+
+		if(scan_en){
+			app_enable_scan_all_device();
+		}
+		else{
+			rf_set_tx_rx_off();
+			blc_ll_setScanEnable (0, 0);
+		}	
+
+		return SUCCESS;
+	}
+
+	return FAILURE;
+}
+
+
+/**
+ * @brief       This function check whether mac addresses are matched.
+ * @param[in]   mac		- mac address 
+ * @param[in]   mask	- mask
+ * @return      0: no matched; 1: matched
+ * @note        
+ */
 int	app_device_mac_match (u8 *mac, u8 *mask)
 {
 	u8 m[6];
@@ -1576,6 +2197,13 @@ int	app_device_mac_match (u8 *mac, u8 *mask)
 }
 
 // ------------set adv buffer--------
+
+/**
+ * @brief       This function set advertise random delay 
+ * @param[in]   en	- delay enable flag
+ * @return      none
+ * @note        
+ */
 void set_random_adv_delay(int en)   // 0-10ms for mesh network PDU random delay
 {
 	// random from 0--10ms
@@ -1592,6 +2220,13 @@ void set_random_adv_delay(int en)   // 0-10ms for mesh network PDU random delay
 	bls_set_adv_delay(cnt);
 }
 
+
+/**
+ * @brief       This function set random.
+ * @param[in]   random_ms	- random time, unit ms.
+ * @return      none
+ * @note        
+ */
 void set_random_adv_delay_normal_adv(u32 random_ms)
 {
     u32 cnt_max = GET_ADV_INTERVAL_LEVEL(random_ms);
@@ -1601,6 +2236,14 @@ void set_random_adv_delay_normal_adv(u32 random_ms)
 }
 
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) 
+
+/**
+ * @brief       This function set firmware Size and firmware Boot Address
+ * @param[in]   boot_addr		- boot start Address
+ * @param[in]   firmware_size_k	- firmware size, unit kbyte.
+ * @return      none
+ * @note        
+ */
 void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr)
 {
 	ota_firmware_size_k = firmware_size_k;
@@ -1625,6 +2268,12 @@ void set_ota_firmwaresize(int adr)  // if needed, must be called before cpu_wake
 }
 #endif
 
+
+/**
+ * @brief       This function is a test function.
+ * @return      0
+ * @note        
+ */
 int mesh_adv_tx_test()
 {
 	static u8 send_test_cnt;
@@ -1645,6 +2294,12 @@ int mesh_adv_tx_test()
 	return 0;
 }
 
+
+/**
+ * @brief       This function check if it is tx adv every time when "app advertise prepare handler" is called.
+ * @return      0: no; 1: yes
+ * @note        
+ */
 static inline int send_adv_every_prepare_cb()
 {
     return (MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN || (GATT_LPN_EN && !FEATURE_LOWPOWER_EN) ||DU_LPN_EN
@@ -1669,20 +2324,21 @@ u8 gatt_adv_send_flag = 0;
 #else
 u8 gatt_adv_send_flag = 1;
 #endif
-int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
+
+/**
+ * @brief       This function set advertise parameters for GATT adv.
+ * @param[out]  p			- advertise to be send
+ * @param[in]   rand_flag	- 1. need advertise random for current adv; 0: no need,
+ * @return      0: no need to send adv. 1: need.
+ * @note        
+ */
+static int gatt_adv_prepare_handler2(rf_packet_adv_t * p, int rand_flag)
 {
 #if PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE
 	if(g_provision_success_adv_quick_reconnect_tick
 	&& clock_time_exceed(g_provision_success_adv_quick_reconnect_tick, PROVISION_SUCCESS_QUICK_RECONNECT_TIMEOUT_US)){
 		g_provision_success_adv_quick_reconnect_tick = 0;
 	}
-#endif
-
-#if FEATURE_RELAY_EN
-    int relay_ret = relay_adv_prepare_handler(p, rand_flag);
-    if(relay_ret){
-        return relay_ret;
-    }
 #endif
 
     int ret = 0;
@@ -1777,8 +2433,7 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
 					
 					#if PROVISIONER_GATT_ADV_EN
 				else{
-					set_adv_provisioner(p);
-					ret=1;
+					ret = set_adv_provisioner(p);
 				}
 					#else
                     	#if PB_GATT_ENABLE
@@ -1822,22 +2477,64 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
     }
 #endif 
 
-#if(MD_CLIENT_EN && MD_SOLI_PDU_RPL_EN)
-	if(0 == ret){	
-		ret = set_adv_solicitation(p);
-	}
-#endif
-
-#if(BEACON_ENABLE)
-    if(0 == ret){   // priority is lowest
-        ret = pre_set_beacon_to_adv(p);
-    }
-#endif
-
     return ret;
 }
 
+
+/**
+ * @brief       This function set advertise parameters for GATT adv.
+ * @param[out]  p			- advertise to be send
+ * @param[in]   rand_flag	- 1. need advertise random for current adv; 0: no need,
+ * @return      0: no need to send adv. 1: need.
+ * @note        
+ */
+int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
+{
+	int ret;
+#if (PTS_TEST_EN && FEATURE_RELAY_EN) // SWITCH_ALWAYS_MODE_GATT_EN
+    ret = relay_adv_prepare_handler(p, rand_flag); // for NLC which need relay, and use switch project will never be relay if it is after gatt adv prepare.
+    if(ret){
+        return ret;
+    }
+#endif
+
+	ret = gatt_adv_prepare_handler2(p, rand_flag); // always return 1 for switch project, because prepare interval is equal to gatt adv interval.
+	if(ret){
+		return ret;
+	}
+
+#if (!PTS_TEST_EN && FEATURE_RELAY_EN)
+    ret = relay_adv_prepare_handler(p, rand_flag); // lower than GATT ADV should be better. if not, adv can not be send when too much relay packet, such as there are many nodes that are publishing with a low period.
+    if(ret){
+        return ret;
+    }
+#endif
+
+#if(PTS_TEST_EN && MD_CLIENT_EN && MD_SOLI_PDU_RPL_EN)
+	ret = set_adv_solicitation(p);
+    if(ret){
+        return ret;
+    }
+#endif
+
+#if(BEACON_ENABLE)
+	ret = pre_set_beacon_to_adv(p); // priority is lowest
+    if(ret){
+        return ret;
+    }
+#endif
+
+	return ret;
+}
+
 extern int rf_link_time_allow (u32 us);
+
+/**
+ * @brief       This function switch to scan mode after send ADV.
+ * @param[in]   tx_adv	- tx adv flag
+ * @return      0: switch fail; 1: switch success
+ * @note        
+ */
 int mesh_send_adv2scan_mode(int tx_adv)
 {
 	if((0 == tx_adv) || (BLS_LINK_STATE_ADV == blt_state) || ((BLS_LINK_STATE_CONN == blt_state) && (BLE_STATE_BRX_E == ble_state) && rf_link_time_allow(EXTENDED_ADV_ENABLE?5000:3000))){
@@ -1849,6 +2546,12 @@ int mesh_send_adv2scan_mode(int tx_adv)
 	return 0;
 }
 
+/**
+ * @brief       This function is called when adv interval arrives.
+ * @param[out]  p	- advertise to be send.
+ * @return      0: no need to send adv. 1: need.
+ * @note        
+ */
 int app_advertise_prepare_handler (rf_packet_adv_t * p)
 {
 #if EXTENDED_ADV_ENABLE
@@ -1864,15 +2567,12 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
 	static u32 adv_sn = 0;
 	adv_sn++;
 #if MD_PRIVACY_BEA
-	memcpy(p->advA,tbl_mac,6);	// may have been changed to random value, so need to re-init.
-	p->header.txAddr = 0;
+	if(p->header.txAddr){
+		memcpy(p->advA,tbl_mac,6);	// may have been changed to random value, so need to re-init.
+		p->header.txAddr = 0;
+	}
 #endif
 
-	#if (MESH_MONITOR_EN)
-	if(monitor_mode_en){
-		return 0;
-	}
-	#endif
 	set_random_adv_delay(0);
 	bls_set_adv_retry_cnt(0);
     
@@ -1884,6 +2584,17 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
 	
     my_fifo_t *p_fifo = 0;
     u8 *p_buf = 0;
+
+	#if (MESH_MONITOR_EN)
+	if(monitor_mode_en){
+		p_fifo = &mesh_adv_cmd_fifo;
+        p_buf = my_fifo_get(p_fifo);
+        if(p_buf){
+			my_fifo_pop(p_fifo); // not send adv in monitor mode
+		}
+		return 0;
+	}
+	#endif
 	
     #if FEATURE_FRIEND_EN
     p_fifo = &mesh_adv_fifo_fn2lpn;
@@ -1961,7 +2672,7 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
 
         ret = mesh_adv_cmd_set((u8 *)p, (u8 *)p_bear);
 		#if (PTS_TEST_EN && MD_SAR_EN)
-		bls_set_adv_retry_cnt(5);// resend to improve pts dongle receive performance   
+		bls_set_adv_retry_cnt(1);// resend to improve pts dongle receive performance   
 		#endif
         if(adv_retry_flag){
             bls_set_adv_retry_cnt(p_trans_par->count);
@@ -2112,6 +2823,10 @@ void ble_mac_init()
 	}
 }
 
+#if(AIS_ENABLE)
+STATIC_ASSERT(sizeof(mesh_scan_rsp_t) >= 31);
+#endif
+
 _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 {
 #if LLSYNC_PROVISION_AUTH_OOB
@@ -2119,16 +2834,28 @@ _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 	return ;
 #elif (0 == USER_REDEFINE_SCAN_RSP_EN)
 	mesh_scan_rsp_t tbl_scanRsp={0};
+	tbl_scanRsp.type = GAP_ADTYPE_MANUFACTURER_SPECIFIC;	// manufacture data
 	tbl_scanRsp.vendor_id = g_vendor_id;
 	tbl_scanRsp.adr_primary = ele_adr_primary;
 	memcpy(tbl_scanRsp.mac_adr, tbl_mac, sizeof(tbl_scanRsp.mac_adr));
+	#if 0
 	foreach(i,sizeof(tbl_scanRsp.rsv_user)){
 		tbl_scanRsp.rsv_user[i] = 1 + i;
 	}
+	#endif
 	
-	tbl_scanRsp.type = GAP_ADTYPE_MANUFACTURER_SPECIFIC;	// manufacture data
+	#if (NLC_PROFILE_EN)
+	tbl_scanRsp.len = OFFSETOF(mesh_scan_rsp_t, len_name) - 1;
+	tbl_scanRsp.len_name = 1 + sizeof(tbl_scanRsp.name);
+	tbl_scanRsp.type_name = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
+	void mesh_scan_rsp_add_local_name(u8 *p_name, u32 len_max);
+	mesh_scan_rsp_add_local_name(tbl_scanRsp.name, sizeof(tbl_scanRsp.name));
+	#else
 	tbl_scanRsp.len = sizeof(mesh_scan_rsp_t) - 1;
-	u8 rsp_len = tbl_scanRsp.len+1;
+	#endif
+	
+	u8 rsp_len = sizeof(mesh_scan_rsp_t);
+	
 	#if(AIS_ENABLE)
 	rsp_len = ais_pri_data_set(&tbl_scanRsp.len);	
 	#endif
@@ -2139,6 +2866,73 @@ _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 void mesh_ota_reboot_set(u8 type){}
 void mesh_ota_reboot_check_refresh(){}
 #endif
+
+/**
+ * @brief       This function is to push ADV bearer to fifo.
+ * @param[in]   f	- pointer to FIFO resources
+ * @param[in]   p	- buffer to be pushed
+ * @param[in]   n	- length of buffer
+ * @param[in]   ow	- if 1: means can be over write the oldest buffer in fifo when fifo if full.
+ * @return      0: success. others: fail.
+ * @note        diffrent between my_fifo_push and my_fifo_push_adv:
+ *              my_fifo_push:          no len in data, add len when push.
+ *              my_fifo_push_adv: have len in data,  just use for mesh_cmd_bear.
+ */
+int my_fifo_push_adv(my_fifo_t* f, u8* p, u8 n, u8 ow)    // ow: can be over_write
+{
+	if (n > f->size)
+	{
+		return -1;
+	}
+
+	if (((f->wptr - f->rptr) & 255) >= f->num)
+	{
+		if (ow) {
+			my_fifo_pop(f);
+		}
+		else {
+			return -1;
+		}
+	}
+
+	u32 r = irq_disable();
+	u8* pd = f->p + (f->wptr & (f->num - 1)) * f->size;
+	//*pd++ = n;
+	//*pd++ = n >> 8;
+	memcpy(pd, p, n);
+	f->wptr++;			// should be last for VC
+	irq_restore(r);
+	return 0;
+}
+
+/**
+ * @brief       This function pushed packet to fifo, then fifo will be sent by app_advertise_prepare_handler_.
+ * @param[in]   p_bear	- packet to be pushed to fifo.
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note
+ */
+int mesh_tx_cmd_add_packet(u8* p_bear)
+{
+	int err = 0;
+#if FEATURE_FRIEND_EN
+	if (use_mesh_adv_fifo_fn2lpn) {
+		err = mesh_tx_cmd_add_packet_fn2lpn(p_bear);
+	}
+	else
+#endif
+	{
+		mesh_cmd_bear_t* p = (mesh_cmd_bear_t*)p_bear;
+		//if((p->type == 0x2a) && (p->len == 0x15)){
+			//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"into fifo: %d",my_fifo_data_cnt_get(&mesh_adv_cmd_fifo));
+		//}
+		err = my_fifo_push_adv(&mesh_adv_cmd_fifo, p_bear, mesh_bear_len_get(p), 0);
+	}
+
+	if (err) {
+		err = TX_ERRNO_TX_FIFO_FULL;
+	}
+	return err;
+}
 
 u8 random_enable =1;
 void set_random_enable(u8 en)
@@ -2172,10 +2966,12 @@ void mesh_vd_init()
 	publish_when_powerup();
 	    #else
 	publish_powerup_random_ms = rand() % 1500;  // 0--1500ms
+	STATIC_ASSERT(MESH_POWERUP_BASE_TIME >=200);    /* do not be too short, because when power up, after (this base time + random), 
+						the node will publish lightness model or other model, then will trigger saving tx sequence number, then trigger flash write.
+						it's better not to trigger flash write too early when power up, because the power supply may be not stable.*/
+	publish_powerup_random_ms += MESH_POWERUP_BASE_TIME; // 200ms: base time.
 	    #endif
 	#endif
-	STATIC_ASSERT(MESH_POWERUP_BASE_TIME >=200);    // because this base time is bound to sno save when power up.
-	publish_powerup_random_ms += MESH_POWERUP_BASE_TIME; // 200ms: base time.
 #endif
 #if FAST_PROVISION_ENABLE
 	mesh_fast_prov_val_init();
@@ -2248,7 +3044,7 @@ void mesh_global_var_init()
     user_mesh_cps_init();
     u8 dev_key_def[16] = DEVKEY_DEF;
     memcpy(mesh_key.dev_key, dev_key_def, sizeof(mesh_key.dev_key));
-#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
+#if (SECURE_NETWORK_BEACON_LOOP_DISABLE || GATT_LPN_EN)
 	model_sig_cfg_s.sec_nw_beacon = NW_BEACON_NOT_BROADCASTING;
 #else
 	model_sig_cfg_s.sec_nw_beacon = SEC_NW_BC_BROADCAST_DEFAULT; // (NODE_CAN_SEND_ADV_FLAG) ? SEC_NW_BC_BROADCAST_DEFAULT : NW_BEACON_NOT_BROADCASTING;
@@ -2279,14 +3075,24 @@ void mesh_global_var_init()
 	model_sig_cfg_s.gatt_proxy = FEATURE_PROXY_EN ? GATT_PROXY_SUPPORT_ENABLE : GATT_PROXY_NOT_SUPPORT;
 	model_sig_cfg_s.nw_transmit.count = TRANSMIT_CNT_DEF;
 	model_sig_cfg_s.nw_transmit.invl_steps = TRANSMIT_INVL_STEPS_DEF;
-	#if 0   // TEST_CASE_NODE_CFG_CFGR_BV01_EN in pts7_3_1.exe
+#if 0   // TEST_CASE_NODE_CFG_CFGR_BV01_EN in pts7_3_1.exe
 	model_sig_cfg_s.relay = RELAY_NOT_SUPPORT;
-	#else
+#else
 	model_sig_cfg_s.relay_retransmit.count = TRANSMIT_CNT_DEF_RELAY;
 	model_sig_cfg_s.relay_retransmit.invl_steps = TRANSMIT_INVL_STEPS_DEF_RELAY;
 	model_sig_cfg_s.relay = FEATURE_RELAY_EN ? RELAY_SUPPORT_ENABLE : RELAY_NOT_SUPPORT;
+#endif
+	
+#if MESH_MODEL_MISC_SAVE_EN
+	#if (/*MD_PRIVACY_BEA &&  */MD_SERVER_EN && !WIN32) 	//  can not use MD_PRIVACY_BEA,  due to OTA.
+	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
+	//p_beacon_ser->beacon_sts = PRIVATE_BEACON_DISABLE;			// default value of globle has been 0. no need set again to save code.
+	p_beacon_ser->random_inv_step = 0x3c;	// 10 min
+	//p_beacon_ser->proxy_sts = PRIVATE_PROXY_DISABLE; 				// default value of globle has been 0. no need set again to save code.
+	//p_beacon_ser->identity_sts = PRIVATE_NODE_IDENTITY_DISABLE; 	// default value of globle has been 0. no need set again to save code.
 	#endif
-#if MD_SAR_EN
+
+	#if 1 // can not use MD_SAR_EN, because if disable MD_SAR_EN first, then OTA a new firmware with enable MD_SAR_EN will cause that all parameters will be 0.
 	g_mesh_model_misc_save.sar_transmitter.sar_seg_invl_step = SAR_SEG_INVL_STEP_DEF;
 	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt = SAR_UNICAST_RETRANS_CNT_DEF;
 	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt_no_ack = SAR_UNICAST_RETRANS_CNT_NO_ACK_DEF;
@@ -2299,9 +3105,10 @@ void mesh_global_var_init()
 	g_mesh_model_misc_save.sar_receiver.sar_ack_delay_inc = SAR_ACK_DELAY_INC_DEF;
 	g_mesh_model_misc_save.sar_receiver.sar_discard_timeout = SAR_DISCARD_TIMEOUT_DEF;
 	g_mesh_model_misc_save.sar_receiver.sar_ack_retrans_cnt = SAR_ACK_RETRANS_CNT_DEF;
-	g_mesh_model_misc_save.sar_receiver.sar_rcv_seg_invl_step = SAR_RCV_SEG_INVL_STEP_DEF;	
+	g_mesh_model_misc_save.sar_receiver.sar_rcv_seg_invl_step = SAR_RCV_SEG_INVL_STEP_DEF;
+	#endif
 #endif
-#if (MD_DF_EN&&!WIN32)
+#if (MD_DF_CFG_SERVER_EN && !WIN32)
 	mesh_directed_forwarding_default_val_init();
 #endif	
 #if DUAL_VENDOR_EN
@@ -2462,6 +3269,15 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 	if(is_own_ele(adr_dst) || !is_unicast_adr(adr_dst)){
 		mesh_key.netkey_sel_dec = nk_array_idx;
 		mesh_key.appkey_sel_dec = ak_array_idx;
+
+		if(!is_own_ele(adr_src)){
+			mesh_op_resource_t op_res;			
+			if(0 == mesh_search_model_id_by_op(&op_res, op, 1)){
+				if(is_use_device_key(op_res.id, op_res.sig)){ 
+					mesh_key.appkey_sel_dec = -1;	// need set to -1(means decryption by decive key) when convert vendor message into sending config message to self without changing source address which maybe src addr of gateway.
+				}
+			}
+		}
 	}
 	p_mat->pub_md = pub_md;
 	if(p_tx_head){
@@ -2536,7 +3352,7 @@ int mesh_tx_cmd2normal_with_tx_head(u16 op, u8 *par, u32 par_len, u16 adr_src, u
 	return mesh_tx_cmd2normal_2(op, par, par_len, adr_src, adr_dst, rsp_max, p_tx_head);
 }
 
-#if (MD_DF_EN)
+#if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
 int mesh_tx_cmd2normal_specified_key(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, int rsp_max, u16 netkey_index, u16 appkey_index)
 {
 	material_tx_cmd_t mat;
@@ -2546,7 +3362,7 @@ int mesh_tx_cmd2normal_specified_key(u16 op, u8 *par, u32 par_len, u16 adr_src, 
     if(nk_array_idx >= NET_KEY_MAX){
         nk_array_idx = ak_array_idx = 0;    // use first valid key later
     }
-	else if(ak_array_idx >= NET_KEY_MAX){
+	else if(ak_array_idx >= APP_KEY_MAX){
 		ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
 	}
 	u8 immutable_flag = 0;
@@ -2763,7 +3579,13 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
 	mesh_mi_rx_cb(params, par_len, cb_par);
 	#else
 	if(p_res->cb){ // have been check in library, check again.
+		#if MD_SERVER_EN
+		g_op_access_layer_rx = cb_par->op;
+		#endif
         err = p_res->cb(params, par_len, cb_par);   // use mesh_tx_with_random_delay_ms in this function in library.
+		#if MD_SERVER_EN
+		g_op_access_layer_rx = 0; // reset to invalid.
+		#endif
     }
 	#endif
     mesh_tx_with_random_delay_ms = 0; // must be clear here 
@@ -3043,7 +3865,7 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 		ret = mesh_tx_cmd_add_packet(hci_data);
 	}
 	else if(HCI_CMD_ADV_DEBUG_MESH_DONGLE2GATT == type){
-		if(mesh_is_proxy_ready()){	// is_proxy_support_and_en
+		if(mesh_is_proxy_ready()){	// is_proxy_support_and_en_active
 			ret = mesh_proxy_adv2gatt(hci_data, MESH_ADV_TYPE_MESSAGE);
 		}
 	}
@@ -3076,6 +3898,7 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 	#if (PTS_TEST_EN || PTS_TEST_OTA_EN)
 	else if (HCI_CMD_MESH_PTS_TEST_CASE_CMD == type)
 	{
+		void gw_ini_pts_test_case_cmd(u8 *par, int par_len); // for VC compile
 	    gw_ini_pts_test_case_cmd(hci_data, hci_data_len);
 	}
 	#endif
@@ -3250,7 +4073,7 @@ int blc_hci_tx_to_uart ()
 		}else
 		#endif
 		{
-			#if (GATEWAY_ENABLE&&(HCI_ACCESS == HCI_USE_UART ))
+			#if (MESH_MONITOR_EN || (GATEWAY_ENABLE&&(HCI_ACCESS == HCI_USE_UART )))
 			if (uart_Send((u8 *)p, p->len+2))
 			{
 				my_fifo_pop (&hci_tx_fifo);
@@ -3469,7 +4292,7 @@ int mesh_dev_key_candi_decrypt_cb(u16 src_adr, int dirty_flag , const u8* ac_bac
 {
 	int err =-1;
 	// both the vc and the node will use the remote prov candi decrypt
-#if MD_REMOTE_PROV
+#if (MD_REMOTE_PROV && DEVICE_KEY_REFRESH_ENABLE)
 	//roll back the src data to the ac part 
 	u8 *p_devkey = mesh_cfg_cmd_dev_key_candi_get(src_adr);
 	if(is_buf_zero(p_devkey,16)){

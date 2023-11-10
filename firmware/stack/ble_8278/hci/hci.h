@@ -24,7 +24,9 @@
  *******************************************************************************************************/
 #pragma  once
 
-
+#if 1
+#include "proj_lib/ble/hci/hci.h"
+#else
 #include "../ble_common.h" // modify by weixiong in mesh
 
 typedef int (*blc_hci_rx_handler_t) (void);
@@ -93,3 +95,4 @@ int blm_hci_handler (u8 *p, int n);
 int blc_hci_send_event (u32 h, u8 *para, int n);
 
 int blc_hci_proc (void);
+#endif

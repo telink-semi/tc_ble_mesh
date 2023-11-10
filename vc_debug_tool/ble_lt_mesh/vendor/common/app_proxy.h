@@ -129,7 +129,7 @@ typedef struct{
 typedef struct{
 	u8 filter_type;
 	u16 addr_list[MAX_LIST_LEN];
-	#if MD_DF_EN
+	#if MD_DF_CFG_SERVER_EN
 	u8 proxy_client_type;
 	direct_proxy_server_t directed_server[NET_KEY_MAX];
 	#endif
@@ -174,5 +174,7 @@ int pb_gatt_provision_out_ccc_cb(void *p);
 int	pb_gatt_Write (void *p);
 int proxy_out_ccc_cb(void *p);
 int proxy_gatt_Write(void *p);
+u8 mesh_get_proxy_privacy_para();
+
 #endif 
 

@@ -29,8 +29,8 @@
 //#include "../os/ev.h"
 //#include "../os/sys.h"
 
-//#include "../../vendor/common/keyboard_cfg.h"
-//#include "../../vendor/common/custom.h"
+//#include "vendor/common/keyboard_cfg.h"
+//#include "vendor/common/custom.h"
 
 #if (defined(KB_DRIVE_PINS) && defined(KB_SCAN_PINS))
 
@@ -319,7 +319,7 @@ u32 kb_scan_row(int drv_ind, u8 * gpio){
 	/*
 	 * set as gpio mode if using spi flash pin
 	 * */
-	u8 sr = irq_disable();
+	u32 sr = irq_disable();
 #if	(KB_KEY_FLASH_PIN_MULTI_USE)
 	MSPI_AS_GPIO;
 #endif
@@ -499,6 +499,47 @@ void global_var_no_ret_init_kb()
     memset(mtrx_last, 0, sizeof(mtrx_last));
 }
 #endif
+
+u32 kb_scan_key (int numlock_status, int read_key) {
+	u8 gpio[8];
+
+#if(KEYSCAN_IRQ_TRIGGER_MODE)
+	static u8 key_not_released = 0;
+
+	if(numlock_status & KB_NUMLOCK_STATUS_POWERON){
+		key_not_released = 1;
+	}
+
+	if(reg_irq_src & FLD_IRQ_GPIO_EN){  //FLD_IRQ_GPIO_RISC2_EN
+		key_not_released = 1;
+		reg_irq_src = FLD_IRQ_GPIO_EN;  //FLD_IRQ_GPIO_RISC2_EN
+	}
+	else{  //no key press
+		if(!key_not_released && !(numlock_status & KB_NUMLOCK_STATUS_POWERON)){
+			return 0;
+		}
+	}
+#endif
+
+#if(KB_LINE_MODE)
+	scan_pin_need = (1 << ARRAY_SIZE(scan_pins)) - 1;
+#else
+	scan_pin_need = kb_key_pressed (gpio);
+#endif
+
+	if(scan_pin_need){
+		return  kb_scan_key_value(numlock_status,read_key,gpio);
+	}
+	else{
+#if (KB_REPEAT_KEY_ENABLE)
+		repeat_key.key_change_flg = KEY_NONE;
+#endif
+#if (KEYSCAN_IRQ_TRIGGER_MODE)
+		key_not_released = 0;
+#endif
+		return 0;
+	}
+}
 
 #if 0
 

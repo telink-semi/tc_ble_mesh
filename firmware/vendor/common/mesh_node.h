@@ -270,8 +270,13 @@ enum{
 #define SIG_MD_LIGHT_LC_C              	0x1311
 // --------
 
-// --------
-
+//--------------------------------------- NLC profile ID
+#define NLC_PROFILE_ID_ALSMP			0x1600
+#define NLC_PROFILE_ID_BLCMP			0x1601
+#define NLC_PROFILE_ID_BSSMP			0x1602
+#define NLC_PROFILE_ID_DICMP			0x1603
+#define NLC_PROFILE_ID_ENMMP			0x1604
+#define NLC_PROFILE_ID_OCSMP			0x1605
 
 //--------------------------------------- config model
 #define NO_TX_RSP2SELF_EN               (!MD_CLIENT_EN)   // to save 
@@ -565,8 +570,11 @@ enum{
 };
 
 enum{
-    PAR2USB_MONITOR_MODE 		= 0,
-    PAR2USB_MONITOR_FILTER_SNO 	= 1,
+    PAR2USB_MONITOR_MODE 				= 0,
+    PAR2USB_MONITOR_FILTER_SNO 			= 1,
+    PAR2USB_MONITOR_SELECT_CHN			= 2,
+    PAR2USB_MONITOR_UNPROVISION_BEACON 	= 3,
+    PAR2USB_MONITOR_SECURE_NW_BEACON 	= 4,
 };
 
 enum{
@@ -607,10 +615,18 @@ static inline int is_transition_need(u8 transit_t, u8 delay)
     return (GET_TRANSITION_STEP(transit_t) || delay);
 }
 
+// --------------------------- dim2dark_delay_ms:
+//            _______ (target)
+//	 	     /
+//          /
+//	  _____/ (min) dim2dark_delay_ms: time of "OFF -> min".
+//   |
+// __| (off)
+// --------------------------- dim2dark_delay_ms end
 typedef struct{
+	u32 dim2dark_delay_ms;
 	s16 target_val;		// include onoff and level
 	s16 present_val;
-	u32 lc_prop_time_ms;    // light control onoff prop time, unit ms.
 	s16 level_move;     //
 	u8 transit_t;
 	u8 delay;
@@ -646,6 +662,13 @@ typedef struct{
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_g_level_delta_t;
+
+typedef struct{
+	s16 level;
+	u8 tid;
+	u8 transit_t;
+	u8 delay;		// unit 5ms
+}mesh_cmd_g_level_move_t; // be same as mesh_cmd_g_level_set_t.
 
 typedef struct{
 	s16 present_level;
@@ -722,12 +745,88 @@ typedef struct{
 	#else
 #define LIGHT_CNT                       (3)     // means instance count
 	#endif
+#elif (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_CTRL_CLIENT)
+#define LIGHT_CNT                       (4)     // means instance count
 #else
 #define LIGHT_CNT                       (1)     // means instance count
 #endif
 #endif
 #define ELE_CNT                         (LIGHT_CNT * ELE_CNT_EVERY_LIGHT)
 
+//--------------------------------node extended and corresponding models start--------------
+#if COMPOSITION_DATA_PAGE1_PRESENT_EN
+#define MAX_EXTEND_MD_NUM							2
+
+#define EXTEND_MD_ID_ARRAY_LIGHTNESS_SETUP_S		{SIG_MD_LIGHTNESS_S, SIG_MD_G_POWER_ONOFF_SETUP_S}
+#define EXTEND_MD_ID_ARRAY_LIGHTNESS_S				{SIG_MD_G_LEVEL_S, SIG_MD_G_POWER_ONOFF_S}
+
+#define EXTEND_MD_ID_ARRAY_POWER_ONOFF_SETUP_S		{SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_DEF_TRANSIT_TIME_S}
+#define EXTEND_MD_ID_ARRAY_POWER_ONOFF_S			{SIG_MD_G_ONOFF_S}
+
+#define EXTEND_MD_ID_ARRAY_POWER_LEVEL_S			{SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_LEVEL_S}
+#define EXTEND_MD_ID_ARRAY_POWER_LEVEL_SETUP_S		{SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_ONOFF_SETUP_S}		
+
+#define EXTEND_MD_ID_ARRAY_LOCATION_SETUP_S			{SIG_MD_G_LOCATION_S}
+
+#define EXTEND_MD_ID_ARRAY_ADMIN_PROP_S				{SIG_MD_G_USER_PROP_S}
+#define EXTEND_MD_ID_ARRAY_MANU_PROP_S				{SIG_MD_G_USER_PROP_S}
+
+#define EXTEND_MD_ID_ARRAY_SCENE_SETUP_S			{SIG_MD_SCENE_S, SIG_MD_G_DEF_TRANSIT_TIME_S}
+
+#define EXTEND_MD_ID_ARRAY_LIGHT_CTL_SETUP_S		{SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHTNESS_SETUP_S}			
+#define EXTEND_MD_ID_ARRAY_LIGHT_CTL_S				{SIG_MD_LIGHTNESS_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_CTL_TEMP_S			{SIG_MD_G_LEVEL_S}
+
+#define EXTEND_MD_ID_ARRAY_LIGHT_LC_SETUP_S			{SIG_MD_LIGHT_LC_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_LC_S				{SIG_MD_LIGHTNESS_S, SIG_MD_G_ONOFF_S}
+
+#define EXTEND_MD_ID_ARRAY_LIGHT_HSL_S				{SIG_MD_LIGHTNESS_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_HSL_HUE_S			{SIG_MD_G_LEVEL_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_HSL_SAT_S			{SIG_MD_G_LEVEL_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_HSL_SETUP_S		{SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHTNESS_SETUP_S}
+
+#define EXTEND_MD_ID_ARRAY_LIGHT_XYL_S				{SIG_MD_LIGHTNESS_S}
+#define EXTEND_MD_ID_ARRAY_LIGHT_XYL_SETUP_S		{SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHTNESS_SETUP_S}
+
+//#define EXTEND_MD_ID_ARRAY_VENDOR_SETUP_S
+enum{
+	EXTEND_MD_SHORT_FORMAT = 0,
+	EXTEND_MD_LONG_FORMAT = 1,
+};
+
+typedef struct{
+	u8 nums;
+	u8 numv;
+}cps_page1_ele_head_t;
+
+typedef struct{
+	u8 group_id_present:1;
+	u8 format:1;
+	u8 extend_cnt:6;
+	u8 group_id;
+}cps_page1_md_item_t;
+
+typedef struct{
+	s8 ele_offset;
+	u8 md_idx;
+}cps_page1_extend_md_item_t;
+
+typedef struct{
+	u16 main_md;
+	u16 extend_md[MAX_EXTEND_MD_NUM]; // u16, only sig models have extended model now.
+}extend_model_map_t;
+
+typedef struct{
+	u16 md_id1;
+	u16 md_id2;
+}corresponding_model_map_t;
+
+typedef struct{
+	u16 md_id;
+	u8  group_id;
+}corresponding_model_t;
+#endif
+//--------------------------------node extended and corresponding models end--------------
 
 enum{
     RELAY_SUPPORT_DISABLE = 0,  // supported
@@ -945,7 +1044,7 @@ typedef struct{
     #endif
 #endif
 #if MD_CLIENT_VENDOR_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[1];		        // client // if want to change clnt[1] to clnt[LIGHT_CNT], need to add ARRAY_SIZE(md_id_vendor_second) to CPS_DATA_ELE_SECOND.
 #endif
 }model_vd_light_t;
 
@@ -957,17 +1056,10 @@ typedef struct{
     #endif
 #endif
 #if MD_CLIENT_EN
-#if __PROJECT_MESH_SWITCH__
 	model_client_common_t onoff_clnt[LIGHT_CNT];	        // client
 	#if MD_LEVEL_EN
 	model_client_common_t level_clnt[LIGHT_CNT];	        // client
 	#endif
-#else
-	model_client_common_t onoff_clnt[1];	        // client
-	#if MD_LEVEL_EN
-	model_client_common_t level_clnt[1];	        // client
-	#endif
-#endif
 #endif
 }model_g_onoff_level_t;
 
@@ -1004,7 +1096,7 @@ typedef struct{
 #endif
 #if MD_CLIENT_EN
     #if MD_TIME_EN
-    model_client_common_t time_clnt[1];             // client
+    model_client_common_t time_clnt[1];             // client // only one time model is enough.
     #endif
     #if MD_SCHEDULE_EN
     model_client_common_t sch_clnt[1];              // client
@@ -1024,7 +1116,7 @@ typedef struct{
 	model_g_light_s_t setup[LIGHT_CNT];			// server
 	#endif
     #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
     #endif
 #endif
 }model_lightness_t;
@@ -1036,7 +1128,7 @@ typedef struct{
 	model_g_light_s_t temp[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 }model_light_ctl_t;
 
@@ -1048,7 +1140,7 @@ typedef struct{
 	model_g_light_s_t sat[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 }model_light_hsl_t;
 
@@ -1058,7 +1150,7 @@ typedef struct{
 	model_g_light_s_t setup[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 }model_light_xyl_t;
 
@@ -1093,34 +1185,38 @@ typedef struct{
 #define LEN_LC_PROP_MAX		(sizeof(lc_prop_head_t)-OFFSETOF(lc_prop_head_t,id))
 
 typedef struct{
+	lc_prop_luxlevel_t LuxLevelOn;       // confirm 2 or 3 byte later
+	lc_prop_luxlevel_t LuxLevelProlong;
+	lc_prop_luxlevel_t LuxLevelStandby;
+	u16 LightnessOn;
+	u16 LightnessProlong;
+	u16 LightnessStandby;
+	u8  RegAccuracy;
+	float RegKid;
+	float RegKiu;
+	float RegKpd;
+	float RegKpu;
+	lc_prop_u24_t TimeOccupancyDelay;
+	lc_prop_u24_t TimeFadeOn;
+	lc_prop_u24_t TimeRun;
+	lc_prop_u24_t TimeFade;
+	lc_prop_u24_t TimeProlong;
+	lc_prop_u24_t TimeStandbyAuto;
+	lc_prop_u24_t TimeStandbyManual;
+}light_lc_property_t;
+
+typedef struct{
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 #if MD_SERVER_EN
-	lc_prop_luxlevel_t LuxLevelOn[LIGHT_CNT];       // confirm 2 or 3 byte later
-	lc_prop_luxlevel_t LuxLevelProlong[LIGHT_CNT];
-	lc_prop_luxlevel_t LuxLevelStandby[LIGHT_CNT];
-	u16 LightnessOn[LIGHT_CNT];
-	u16 LightnessProlong[LIGHT_CNT];
-	u16 LightnessStandby[LIGHT_CNT];
-	u8  RegAccuracy[LIGHT_CNT];
-	float RegKid[LIGHT_CNT];
-	float RegKiu[LIGHT_CNT];
-	float RegKpd[LIGHT_CNT];
-	float RegKpu[LIGHT_CNT];
-	lc_prop_u24_t TimeOccupancyDelay[LIGHT_CNT];
-	lc_prop_u24_t TimeFadeOn[LIGHT_CNT];
-	lc_prop_u24_t TimeRun[LIGHT_CNT];
-	lc_prop_u24_t TimeFade[LIGHT_CNT];
-	lc_prop_u24_t TimeProlong[LIGHT_CNT];
-	lc_prop_u24_t TimeStandbyAuto[LIGHT_CNT];
-	lc_prop_u24_t TimeStandbyManual[LIGHT_CNT];
+	light_lc_property_t propty[LIGHT_CNT];
 	u8 mode[LIGHT_CNT];
-	u8 om[LIGHT_CNT];
+	u8 om[LIGHT_CNT]; // Occupancy Mode
 	u8 lc_onoff_target[LIGHT_CNT];
 	u8 rsv[LIGHT_CNT][4];
 #endif
@@ -1158,7 +1254,7 @@ typedef struct{
 	model_g_light_s_t setup[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 }model_g_power_level_t;
 
@@ -1182,6 +1278,8 @@ typedef struct{
 #if MD_LIGHT_CONTROL_EN //
     u8 lc_mode;
     u8 lc_onoff;
+    u8 lc_om; // Occupancy Mode
+	light_lc_property_t lc_propty; // MMDL/SR/LLCS/BV-02-C
 #endif
 #if LIGHT_TYPE_CT_EN
     u8 ct_flag;
@@ -1200,92 +1298,14 @@ typedef struct{
 	model_g_light_s_t setup[LIGHT_CNT];			// server
 #endif
 #if MD_CLIENT_EN
-	model_client_common_t clnt[1];		        // client
+	model_client_common_t clnt[LIGHT_CNT];		        // client
 #endif
 #if MD_SERVER_EN
 	scene_data_t data[LIGHT_CNT][SCENE_CNT_MAX];
 #endif
 }model_scene_t;
 
-//-------------------------------sensor model
-#define SENSOR_NUMS					1
-#define SENSOR_SETTINGS_NUMS		1
 
-typedef struct{
-	u16 delta_down;
-	u16 delta_up;
-	u8 min_interval;
-	u32 cadence_low:24;
-	u32 cadence_hight:24;
-}cadence_unitless_t;
-
-typedef struct{
-	u32 delta_down;
-	u32 delta_up;
-	u8 min_interval;
-	u32 cadence_low;
-	u32 cadence_hight;
-}cadence_unit_t;
-
-typedef struct{
-	u8 fast_period_div:7;
-	u8 trig_type:1;
-	union{ 
-		u8 par[17];
-		cadence_unitless_t cadence_unitless;
-		cadence_unit_t cadence_unit;
-	};
-}sensor_cadence_t;
-
-
-typedef struct{
-	u16 setting_id;
-	u8  setting_access;
-	u16  setting_raw;
-}sensor_setting_t;
-
-typedef struct{
-	u8 raw_val_X[12];
-	u8 raw_val_W[12];
-	u8 raw_val_Y[12];
-}sensor_series_col_t;
-
-typedef struct{
-	u16 prop_id;
-	sensor_cadence_t cadence;
-	sensor_setting_t setting[SENSOR_SETTINGS_NUMS];
-	u32	sensor_data;
-	sensor_series_col_t series_raw;
-}sensor_states_t;
-
-typedef struct{
-#if MD_SERVER_EN
-    #if MD_SENSOR_SERVER_EN
-	model_g_light_s_t sensor_srv[LIGHT_CNT];			// serve
-	model_g_light_s_t sensor_setup[LIGHT_CNT];			// setup
-	sensor_states_t sensor_states[SENSOR_NUMS];
-    #endif
-    #if MD_BATTERY_EN
-	model_g_light_s_t battery_srv[LIGHT_CNT];	// serve
-    #endif
-    #if MD_LOCATION_EN
-	model_g_light_s_t location_srv[LIGHT_CNT];
-	model_g_light_s_t location_setup[LIGHT_CNT];	
-    #endif
-#endif
-
-#if MD_SENSOR_CLIENT_EN
-	model_client_common_t sensor_clnt[1];		        // client
-#endif
-#if MD_CLIENT_EN
-	#if MD_BATTERY_EN
-	model_client_common_t battery_clnt[1];			// serve
-	#endif
-	#if MD_LOCATION_EN
-	model_client_common_t location_clnt[1];			// serve
-	#endif
-#endif
-}model_sensor_t;
 
 typedef struct{
 	u32 battery_leve:8;
@@ -1446,6 +1466,7 @@ typedef struct{
 	u8 mic_val;
 	u8 encode_flag;
 }mesh_key_save_t;
+
 // misc: sno
 typedef struct{
     u32 sno;
@@ -1461,6 +1482,12 @@ typedef struct{
 	#endif
 	u8 user[8];
 }misc_save_t;
+
+typedef struct{
+    u8 iv_index[4];	// big endianness
+    u8 iv_update_trigger_flag;     // trigger by self or other
+    u32 sno;
+}misc_save_gw2vc_t;
 
 enum{
     KEY_INVALID     = 0,        // must 0
@@ -1506,17 +1533,19 @@ typedef struct{
 	u8 beacon_sts;
 	u8 random_inv_step;
 	u8 proxy_sts;
-	u8 identity_sts;
+	u8 identity_sts;	// not applicable now, instead by priv_identity
 }mesh_privacy_beacon_save_t;
 
 typedef struct{
+#if 1 // MD_PRIVACY_BEA
 	mesh_privacy_beacon_save_t privacy_bc;
-#if 1//MD_SAR_EN
+#endif
+#if 1 // MD_SAR_EN
 	sar_transmitter_t sar_transmitter;
 	sar_receiver_t sar_receiver;
 #endif
-#if 1//MD_ON_DEMAND_PROXY_EN
-	u8 on_demand_proxy;
+#if 1 // MD_ON_DEMAND_PROXY_EN
+	u8 on_demand_proxy;	// enable or disable "on demand proxy" function
 #endif
 
 	//reserve;
@@ -1545,6 +1574,12 @@ static inline void mesh_model_on_demand_save()
 // common save
 #define FLASH_CHECK_SIZE_MAX	(64)
 #define SIZE_SAVE_FLAG		(4)
+
+typedef struct{
+	u8 flag;
+	u8 crc_en:1;
+	u16 crc;
+}mesh_save_head_t;
 
 typedef struct{
     u32 adr_base;
@@ -1590,7 +1625,7 @@ void mesh_friend_key_update_all_nk(u8 lpn_idx, u8 nk_arr_idx);
 void mesh_set_iv_idx_rx(u8 ivi);
 void mesh_iv_idx_init_cb(int rst_sno);
 void mesh_set_ele_adr(u16 adr);
-void mesh_set_ele_adr_ll(u16 adr, int save);
+void mesh_set_ele_adr_ll(u16 adr, int save, int reset_pub_flag);
 int is_own_ele(u16 adr);
 int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt);
 int is_retransaction(u16 adr, u8 tid);
@@ -1735,7 +1770,8 @@ void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
 #if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
 void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
 #endif
-
+int gateway_upload_ividx(misc_save_gw2vc_t *p_misc);
+u32 mesh_sno_get_save_delta();
 
 extern u16 ele_adr_primary;
 extern u8 g_ele_cnt;
@@ -1772,7 +1808,6 @@ extern _align_4_ model_light_lc_t       	model_sig_light_lc;
 extern _align_4_ model_scene_t			model_sig_scene;
 extern _align_4_ model_time_schedule_t	model_sig_time_schedule;
 extern _align_4_ model_g_power_onoff_trans_time_t    model_sig_g_power_onoff;
-extern _align_4_ model_sensor_t			model_sig_sensor;
 extern _align_4_ model_mesh_ota_t        	model_mesh_ota;
 // extern model_g_power_level_t    model_sig_g_power_level; // share with model_sig_lightness
 
@@ -1810,6 +1845,7 @@ typedef struct{
 } mesh_rcv_t;
 
 #define EXTEND_PROVISION_FLAG_OP		(0xFFFF)	// use a special op to represent provision data, no valid op is equal to this.
+#define PUBLISH_CHECK_INIT_DELAY		(40*1000) // period pub need delay
 
 enum{
     EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
@@ -1817,4 +1853,20 @@ enum{
     EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
     EXTEND_ADV_OPTION_MAX,
 };
+
+enum{
+	CPU_POWER_RESET,
+	CPU_WATCHDOG_RESET,
+	CPU_PAD_WAKEUP,
+	CPU_TIMER_WAKEUP,
+};
+
+int get_cpu_wakeup_source();
+void set_mesh_ota_distribute_100_flag();
+void clr_mesh_ota_distribute_100_flag();
+int is_mesh_ota_distribute_100_flag();
+
+#define set_ota_gatt_connected_flag_lpn		set_mesh_ota_distribute_100_flag
+#define clr_ota_gatt_connected_flag_lpn		clr_mesh_ota_distribute_100_flag
+#define is_ota_gatt_connected_flag_lpn		is_mesh_ota_distribute_100_flag
 

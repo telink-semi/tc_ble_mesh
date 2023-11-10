@@ -90,7 +90,7 @@ typedef struct
  */
 static inline void ringbuffer_init(ringbuffer_t* buffer, u8* const dataptr, const u16 size)
 {
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 
 	buffer->in     = dataptr;
 	buffer->out    = dataptr;
@@ -118,7 +118,7 @@ static inline void ringbuffer_init(ringbuffer_t* buffer, u8* const dataptr, cons
  */
 static inline u16 ringbuffer_get_count(ringbuffer_t* const buffer)
 {
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	u16 sount = buffer->sount;
 	irq_restore(r);
 	return sount;
@@ -187,7 +187,7 @@ static inline void ringbuffer_insert(ringbuffer_t* buffer, const u8 Data)
 	if (++buffer->in == buffer->end)
 	  buffer->in = buffer->start;
 
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 
 	buffer->sount++;
 
@@ -211,7 +211,7 @@ static inline u8 ringbuffer_remove(ringbuffer_t* buffer)
 	if (++buffer->out == buffer->end)
 	  buffer->out = buffer->start;
 
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 
 	buffer->sount--;
 

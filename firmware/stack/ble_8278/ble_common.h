@@ -65,8 +65,6 @@
 #define			BLUETOOTH_VER_4_2				8
 #define			BLUETOOTH_VER_5_0				9
 
-#define			BLUETOOTH_VER					BLUETOOTH_VER_4_2 // add by weixiong in mesh
-
 #ifndef 		BLUETOOTH_VER
 #define			BLUETOOTH_VER					BLUETOOTH_VER_5_0
 #endif

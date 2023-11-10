@@ -144,14 +144,14 @@ FONT 10, "System", 0, 0, 0x0
 BEGIN
     LTEXT           "network_key",IDC_network_key_text,14,54,42,8
     EDITTEXT        IDC_NETWORK_KEY,67,54,187,14,ES_AUTOHSCROLL
-    LTEXT           "key_index",IDC_STATIC,15,74,35,8
+    LTEXT           "netkey_idx(little)",IDC_STATIC,15,74,55,8
     EDITTEXT        IDC_KEY_INDEX,77,72,40,14,ES_AUTOHSCROLL
     LTEXT           "iv_update_flag",IDC_STATIC,14,90,49,8
     EDITTEXT        IDC_IV_UPDATE_FLAG,77,89,40,14,ES_AUTOHSCROLL
-    LTEXT           "iv_index",IDC_STATIC,141,75,29,8
-    EDITTEXT        IDC_IV_INDEX,178,72,61,14,ES_AUTOHSCROLL
-    LTEXT           "unicast_adr",IDC_STATIC,138,92,39,8
-    EDITTEXT        IDC_UNICAST_ADR,178,89,60,14,ES_AUTOHSCROLL
+    LTEXT           "iv_index(big end)",IDC_STATIC,128,75,57,8
+    EDITTEXT        IDC_IV_INDEX,187,72,60,14,ES_AUTOHSCROLL
+    LTEXT           "unicast_addr(little)",IDC_STATIC,128,92,61,8
+    EDITTEXT        IDC_UNICAST_ADR,187,89,60,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Provision",IDC_PROVISION_START,11,107,44,14
     PUSHBUTTON      "Disconnect",IDC_PRO_DISCONNECT,11,123,43,14,NOT WS_VISIBLE
     EDITTEXT        IDC_CMD_DAT,163,15,89,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
@@ -169,8 +169,8 @@ BEGIN
     PUSHBUTTON      "SetFilter",IDC_BUT_SET_FILTER_TYPE,18,179,33,14
     PUSHBUTTON      "SetPro_internal",IDC_SET_PRO,18,24,55,14
     EDITTEXT        IDC_APPKEY,293,32,160,14,ES_AUTOHSCROLL
-    LTEXT           "apk_idx",IDC_STATIC,262,15,27,8
-    EDITTEXT        IDC_APPKEY_INDEX,293,15,61,14,ES_AUTOHSCROLL
+    LTEXT           "appkey_idx(little)",IDC_STATIC,262,15,59,8
+    EDITTEXT        IDC_APPKEY_INDEX,320,15,61,14,ES_AUTOHSCROLL
     LTEXT           "app_key",IDC_STATIC,262,34,29,12
     GROUPBOX        "Static",IDC_STATIC,259,8,195,63
     PUSHBUTTON      "bind_all",IDC_APPKEY_BIND_ALL,264,52,34,14
@@ -205,7 +205,7 @@ BEGIN
     CONTROL         "广播(no_ack)",IDC_BROCAST_NOACK,"Button",BS_AUTORADIOBUTTON,12,102,53,14
     CONTROL         "并发(ack)",IDC_BROCAST_ACK,"Button",BS_AUTORADIOBUTTON,12,116,53,14
     CONTROL         "单播(no ack)",IDC_UNICAST_NO_ACK,"Button",BS_AUTORADIOBUTTON,12,87,53,14
-    EDITTEXT        IDC_PKT_NUMS,125,74,41,17,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PKT_NUMS,121,75,41,17,ES_AUTOHSCROLL
     GROUPBOX        "发包方式",IDC_STATIC,8,61,72,76
     EDITTEXT        IDC_NODES,134,21,41,17,ES_AUTOHSCROLL
     LTEXT           "总节点数",IDC_STATIC,98,22,32,17
@@ -216,13 +216,27 @@ BEGIN
     LTEXT           "Min",IDC_STATIC,307,70,13,14
     LTEXT           "Average",IDC_STATIC,303,87,26,14
     LTEXT           "note:\r\n1.测试命令接收延时:直连节点和被测节点需要同时上电.\r\n2.获取结果时，指定目标地址：若为直连节点，返回发出到收到ack的时间差；非直连节点，返回节点响应命令的延时时间.\r\n3.节点端buf只保存100条信息，并发(ack)需指定记录的node地址.\r\n4.节点地址注意不要重复.",IDC_STATIC,7,148,278,95
-    GROUPBOX        "分包数",IDC_STATIC,97,65,72,72
-    EDITTEXT        IDC_PKT_RECEIVE,125,96,41,17,ES_AUTOHSCROLL
-    LTEXT           "send",IDC_STATIC,104,79,20,11
-    LTEXT           "ack",IDC_STATIC,106,101,16,12
+    GROUPBOX        "access par len",IDC_STATIC,97,61,78,72
+    EDITTEXT        IDC_PKT_RECEIVE,121,97,41,17,ES_AUTOHSCROLL
+    LTEXT           "send",IDC_STATIC,101,79,20,11
+    LTEXT           "rsp",IDC_STATIC,101,101,16,12
     EDITTEXT        IDC_ADDR_GET,355,13,36,17,ES_AUTOHSCROLL
     PUSHBUTTON      "clear",IDC_BUTTON_CLEAR,305,104,24,17
     EDITTEXT        IDC_EDIT_CLEAR,330,105,60,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_RP_SCAN_CAP DIALOGEX 0, 0, 151, 102
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "remote scan para"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,46,81,50,14
+    EDITTEXT        IDC_RP_SCAN_LIMIT,62,14,37,12,ES_AUTOHSCROLL
+    LTEXT           "limit",IDC_STATIC,34,16,18,10,0,WS_EX_RIGHT
+    EDITTEXT        IDC_RP_SCAN_TIMEOUT,62,33,37,12,ES_AUTOHSCROLL
+    LTEXT           "timeout",IDC_STATIC,28,35,28,10
+    PUSHBUTTON      "get_limit",IDC_GET_SCAN_CAP,23,58,38,13
+    EDITTEXT        IDC_RP_SCAN_CAP_ST,65,59,37,12,ES_AUTOHSCROLL | ES_READONLY
 END
 
 
@@ -257,6 +271,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 295
     END
+
+    IDD_RP_SCAN_CAP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 144
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -272,6 +294,27 @@ BEGIN
 0x6877, 0x7469, 0x5f65, 0x696c, 0x7473, "\000" 
     IDC_COM_FILTER_TYPE, 0x403, 11, 0
 0x6c62, 0x6361, 0x5f6b, 0x696c, 0x7473, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_RX_TEST AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROVISION AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_RP_SCAN_CAP AFX_DIALOG_LAYOUT
+BEGIN
     0
 END
 
@@ -451,6 +494,7 @@ END
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\tl_ble_module.ico"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -495,6 +539,7 @@ END
 //
 
 IDB_IMAGES              BITMAP                  "res\\images.bmp"
+
 #endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////
 

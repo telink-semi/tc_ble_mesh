@@ -23,14 +23,14 @@
  *
  *******************************************************************************************************/
 #include "../tl_common.h"
-#include "../../proj_lib/pm.h"
+#include "proj_lib/pm.h"
 
 //#define MODULE_USB_ENABLE  1
 //#define FLOW_NO_OS         0
 //#define USB_MOUSE_ENABLE   1
 
 #if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE || USB_ID_AND_STRING_CUSTOM)
-	#include "../../vendor/8267_multi_mode/dongle_usb.h"
+	#include "vendor/8267_multi_mode/dongle_usb.h"
 #endif
 
 #ifndef USB_CUSTOM_HID_REPORT_REG_ACCESS

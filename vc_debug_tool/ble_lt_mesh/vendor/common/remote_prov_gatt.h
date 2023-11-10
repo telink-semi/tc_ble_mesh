@@ -24,12 +24,8 @@
  *******************************************************************************************************/
 #ifndef _REMOTE_PROV_GATT_H
 #define _REMOTE_PROV_GATT_H
-
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#define REMOTE_PROV_GATT_RESEND_DISABLE	0
+#include "tl_common.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"

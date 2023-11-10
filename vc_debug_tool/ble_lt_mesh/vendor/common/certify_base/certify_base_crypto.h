@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include "../user_config.h"
+#define URI_ENABLE 0
 
 #ifndef NULL
 #define NULL 	0
@@ -41,6 +42,33 @@ extern u32 der_buf_len;
 
 		// suppose the max record id is 16
 #define MAX_PROV_RECORD_CNT 	16
+/*********************************************
+offset (0): 	save fomate type(1 byte)
+offset (0x10): 	device_cert(max size is 0x6e0, the first 4bytes is len)
+offset (0x700): inter_midate_cert(max size is 0x700, the first 4 bytes is len)
+offset (0xe00): cert_pub_key (64 bytes)
+offset (0xe40): cert_private_key (32 bytes)
+offset (0xe60): cert_uuid (16 bytes)
+offset (0xe70): cert_static_oob (32 bytes)
+offset (0xf00): crc16. (initial value is 0xffff)
+offset (0xf04): valid flag.
+**********************************************/
+#define CERT_DEVICE_CERT_TYPE_OFFSET	0
+#define CERT_DEVICE_CERT_OFFSET			0x10
+#define CERT_INTER_CERT_OFFSET			0x700
+#define CERT_PUBKEY_OFFSET				0xe00
+#define CERT_PRIVATE_OFFSET				0xe40
+#define CERT_UUID_OFFSET				0xe60
+#define CERT_STATIC_OOB_OFFSET			0xe70
+#define CERT_CRC_OFFSET					0xf00
+#define CERT_VALID_OFFSET				0xf04
+
+#define CERT_VALID_FLAG					0xa5a55a5a
+
+#define CERT_IS_VALID					1
+#define CERT_IS_UNVALID_PROV			2
+#define CERT_IS_UNVALID_UNPROV			3
+
 
 typedef enum{
 	RECORD_PROV_SUC =0,
@@ -50,6 +78,7 @@ typedef enum{
 }RECORD_REQ_STS;
 
 int  cert_base_func_init();
+void cert_set_uuid(u8 *p_uuid);
 void cert_base_set_key(u8 *pk,u8 *sk);
 void get_cert_id_list(u8 *p_list,u32 *p_len);
 const char * get_cert_content_by_id(u16 id,u32* p_len);

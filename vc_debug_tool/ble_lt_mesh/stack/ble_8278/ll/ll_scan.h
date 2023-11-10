@@ -70,6 +70,7 @@ _attribute_aligned_(4) st_ll_scan_t  blts;
 
 u32		blts_scan_interval;
 
+extern         	rf_packet_scan_rsp_t	pkt_scan_rsp;
 extern 			rf_packet_scan_req_t	pkt_scan_req;
 
 

@@ -27,10 +27,6 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
-// to increase efficiency
-STATIC_ASSERT(sizeof(model_common_t) % 4 == 0);
-STATIC_ASSERT(sizeof(model_g_light_s_t) % 4 == 0);
-
 static inline void mesh_model_store_cfg_s()
 {
 	mesh_model_store(1, SIG_MD_CFG_SERVER);
@@ -62,6 +58,7 @@ typedef struct{
 
 extern u32 mesh_on_demand_proxy_time;
 
+int is_publish_allow();
 u8 mesh_get_network_transmit();
 u8 mesh_get_relay_retransmit();
 u8 mesh_get_ttl();
@@ -76,6 +73,8 @@ int mesh_sec_prov_confirmation_fun(unsigned char *cfm, unsigned char *input, int
 void mesh_sec_prov_salt_fun(unsigned char prov_salt[16],unsigned char *input,unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
 int mesh_sec_prov_session_key_fun(unsigned char sk[16], unsigned char *sn, unsigned char *input, int n, unsigned char ecdh[32],
 									unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
+u8 mesh_get_private_proxy();
+u8 mesh_get_private_node_identity();
 
 int mesh_cmd_sig_cfg_sar_transmitter_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_sar_transmitter_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

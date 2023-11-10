@@ -24,11 +24,8 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#include "tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 
 #define LONG_PRESS_TRIGGER_MS       (3000)
@@ -71,7 +68,16 @@ int mesh_lpn_send_gatt_adv();
 int mesh_lpn_rcv_delay_wakeup(void);
 int mesh_lpn_poll_md_wakeup(void);
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
-int mesh_lpn_subsc_pending_add(u16 op, u16 addr);
+/************************** access_set_lum **************************
+function : cache the sublist address for lpn  
+para:
+	op: opcode
+	addr: sublist address 
+	ready: 0:send sublist control message after receive pre sublist confirm message.  1:ready to send sublist control message.
+ret: 0  means OK 
+	-1 or other value means err 
+****************************************************************************/
+int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int ready);
 u32 get_lpn_poll_interval_ms();
 
 enum{
@@ -108,7 +114,14 @@ extern u8 mesh_lpn_quick_tx_flag;
 
 typedef struct{
 	u16 op;
-	u16 sub_addr;
+	u16 sub_list[SUB_LIST_MAX];
+	u32  cnt;
+	int ready;
 }lpn_sub_list_event_t;
 
 extern _align_4_ lpn_sub_list_event_t mesh_lpn_subsc_pending;
+extern mesh_subsc_list_retry_t subsc_list_retry;
+
+#define LPN_SUBSC_LIST_ADD_CNT_MAX		(SUB_LIST_MAX_IN_ONE_MSG + ARRAY_SIZE(mesh_lpn_subsc_pending.sub_list))	// default is 10.
+
+

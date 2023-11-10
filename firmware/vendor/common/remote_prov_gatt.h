@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #ifndef _REMOTE_PROV_GATT_H
 #define _REMOTE_PROV_GATT_H
-
+#define REMOTE_PROV_GATT_RESEND_DISABLE	0
 #include "tl_common.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"

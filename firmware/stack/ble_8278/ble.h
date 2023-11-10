@@ -41,11 +41,11 @@
 
 
 
-//#include "smp/smp.h" 				// comment by weixiong in mesh
-//#include "smp/smp_const.h" 		// comment by weixiong in mesh
-//#include "smp/smp_central.h" 		// comment by weixiong in mesh
-//#include "smp/smp_peripheral.h" 	// comment by weixiong in mesh
-//#include "smp/smp_storage.h" 		// comment by weixiong in mesh
+#include "smp/smp.h" 				
+#include "smp/smp_const.h" 			
+#include "smp/smp_central.h" 		
+#include "smp/smp_peripheral.h" 	
+#include "smp/smp_storage.h" 		
 
 #include "gap/gap.h"
 #include "gap/gap_event.h"

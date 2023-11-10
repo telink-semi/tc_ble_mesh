@@ -269,18 +269,19 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
     if(prov_mode_is_rp_mode()){
         remote_prov_scan_report_win32 *p_repwin32 =(remote_prov_scan_report_win32 *)p;
         remote_prov_scan_report *p_report = (remote_prov_scan_report *)&(p_repwin32->scan_report);
-        if(remote_prov_proc_client_scan_report(p_repwin32)){
+		int idx = remote_prov_proc_client_scan_report(p_repwin32);
+        if(-1 != idx){
             // need to add the infomation to the scan dlg part 
             u8 *p_uuid = p_report->uuid;
             CString str;
 			str.Format ("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %d dBm ",
 			p_uuid[0], p_uuid[1], p_uuid[2], p_uuid[3], p_uuid[4], p_uuid[5], p_uuid[6],p_uuid[7],
-			p_uuid[8], p_uuid[9], p_uuid[10], p_uuid[11], p_uuid[12], p_uuid[13], p_uuid[14], p_uuid[15],p_report->rssi-110);
-            ((CListBox *) GetDlgItem (IDC_SCANLIST))->AddString (str);
-        }
-        return ;
+			p_uuid[8], p_uuid[9], p_uuid[10], p_uuid[11], p_uuid[12], p_uuid[13], p_uuid[14], p_uuid[15],p_report->rssi);
+			((CListBox*)GetDlgItem(IDC_SCANLIST))->DeleteString(idx);
+			((CListBox*)GetDlgItem(IDC_SCANLIST))->InsertString(idx, str);
+         }
     }
-	if(ble_moudle_id_is_gateway()){
+	else if(ble_moudle_id_is_gateway()){
 		unsigned char *p_mac;
 		if(p[1]== HCI_GATEWAY_CMD_UPDATE_MAC){
 			p_mac =p+2;
@@ -481,8 +482,9 @@ void CScanDlg::OnCancel()
 void CScanDlg::OnOK()
 {
 	// TODO: 在此添加专用代码和/或调用基类
-
-	fifo_push_vc_cmd2dongle_usb((u8 *)m_mac, 7);
+	if (!prov_mode_is_rp_mode()) {
+		fifo_push_vc_cmd2dongle_usb((u8*)m_mac, 7);
+	}
 	WaitForSingleObject (NULLEVENT2, 10);
 	m_status = 1;
 

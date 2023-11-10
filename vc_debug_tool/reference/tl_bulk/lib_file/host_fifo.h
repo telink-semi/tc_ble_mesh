@@ -36,7 +36,8 @@
 extern void WriteFile_host_handle(u8 *buff, int n);
 #endif
 
-extern int group_status[2][32];
+#define VC_UI_GROUP_CNT_MAX					(64)
+extern int group_status[2][VC_UI_GROUP_CNT_MAX];
 
 int fifo_push_vc_cmd2dongle_usb(u8*p_tc,u8 len );
 void write_cmd_fifo_poll();

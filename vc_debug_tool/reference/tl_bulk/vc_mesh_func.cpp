@@ -289,6 +289,48 @@ void gatt_provision_net_info_callback()
 	set_gatt_provision_net_info(netkey,&key_idx,&flag,ivi,&unicast_adr);
 }
 
+u32 vc_file_read_all(u8 *data_out, u32 out_len_max, const char *filename)
+{    
+    errno_t err_fp;
+    FILE *fp;
+    
+    err_fp=fopen_s(&fp, filename, "rb");
+	
+    if(err_fp != 0){
+        AfxMessageBox("can't open ota firmware file");
+        return 0;
+    }
+    
+    u32 file_size = 0;
+
+    fseek( fp, 0, SEEK_END );
+    file_size = ftell( fp );
+    fseek( fp, 0, SEEK_SET );
+
+    if(file_size > out_len_max){
+    	return 0;
+    }
+    
+    fread(data_out,file_size,1,fp);
+    fclose(fp);
+
+    return file_size;
+}
+
+
+errno_t vc_file_write_with_new_or_rewrite(u8 *data_in, u32 len, const char *filename)
+{
+	errno_t err_fp;
+	FILE *fp;
+	err_fp=fopen_s(&fp, filename, "wb");
+	if(err_fp == 0){
+		fseek(fp,0,SEEK_SET );
+		fwrite(data_in, len,1,fp);
+		fclose(fp);
+	}
+	
+	return err_fp;
+}
 
 u32 new_fw_read(u8 *data_out, u32 max_len)
 {    
@@ -330,14 +372,7 @@ u32 new_fw_read(u8 *data_out, u32 max_len)
 void new_fw_write_file(u8 *data_in, u32 len)
 {
     #define NEW_FW_RX_NAME  "new_firmware_rx.bin"
-	errno_t err_fp;
-	FILE *fp;
-	err_fp=fopen_s(&fp,NEW_FW_RX_NAME,"wb");
-	if(err_fp == 0){
-		fseek(fp,0,SEEK_SET );
-		fwrite(data_in, len,1,fp);
-		fclose(fp);
-	}
+	vc_file_write_with_new_or_rewrite(data_in, len, NEW_FW_RX_NAME);
 }
 
 int GetCPUid(BYTE *an)

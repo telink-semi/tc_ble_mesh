@@ -27,6 +27,9 @@
 #include "clock.h"
 #include "register.h"
 #include "timer.h"
+#include "proj/mcu/irq_i.h"
+#include "vendor/common/mesh_config.h"
+
 /**
  * @brief       This function servers to perform aes_128 encryption for 16-Byte input data
  *              with specific 16-Byte key
@@ -42,6 +45,9 @@ int aes_encrypt(unsigned char *Key, unsigned char *Data, unsigned char *Result)
     unsigned char *p = Data;
     unsigned char i = 0;
 
+	#if EXTENDED_ADV_ENABLE
+	u8 r = irq_disable(); //  because irq_mesh_sec_msg_check_cache() which is irq function will also call aes_encrypt(),48M aes_encrypt run 32us
+	#endif
     //trig encrypt operation
     reg_aes_ctrl &= (~FLD_AES_CTRL_CODEC_TRIG);
 
@@ -69,6 +75,11 @@ int aes_encrypt(unsigned char *Key, unsigned char *Data, unsigned char *Result)
         *p++ = (tmp>>16) & 0xff;
         *p++ = (tmp>>24) & 0xff;
     }
+
+	#if EXTENDED_ADV_ENABLE
+	irq_restore(r);
+	#endif
+
     return 0;
 }
 

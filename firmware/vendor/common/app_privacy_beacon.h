@@ -30,7 +30,6 @@
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
-
 #define PRIVATE_BEACON_GET			0x6080
 #define PRIVATE_BEACON_SET			0x6180
 #define PRIVATE_BEACON_STATUS		0x6280
@@ -107,10 +106,10 @@ void mesh_node_identity_refresh_private();
 void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy);
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t);
 void mesh_key_add_trigger_beacon_send(u8 idx);
-
+void mesh_prov_para_random_generate();
 
 #if MD_SERVER_EN
-void mesh_private_para_init();
+void mesh_private_proxy_sts_init();
 int mesh_cmd_sig_beacon_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_beacon_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_beacon_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -122,7 +121,6 @@ int mesh_cmd_sig_private_node_identity_get(u8 *par, int par_len, mesh_cb_fun_par
 int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 void mesh_prov_para_random_proc();
 int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts);
-void generate_non_reslov_mac(u8*p_mac);
 
 #else
 #define mesh_privacy_init            				(0)

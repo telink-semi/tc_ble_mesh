@@ -106,7 +106,12 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 {
 	FLASH_ADDRESS_CONFIG;
 	blc_pm_select_internal_32k_crystal();
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
 	cpu_wakeup_init();
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	cpu_wakeup_init(LDO_MODE,EXTERNAL_XTAL_24M);
+#endif
+
 
 	int deepRetWakeUp = pm_is_MCU_deepRetentionWakeup();  //MCU deep retention wakeUp
 

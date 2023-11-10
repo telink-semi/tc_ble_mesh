@@ -48,8 +48,8 @@ typedef void (*stdio_rx_t) (uint8_t* p, uint8_t l);
  *
  * @param[in] rx_handler receive data callback
  *
- * @retval SUCCESS If the service was successfully initialized. Otherwise, an error code is returned.
- * @retval ERROR_NULL If either of the pointers p_mi_s or p_mi_s_init is NULL.
+ * @retval _SUCCESS If the service was successfully initialized. Otherwise, an error code is returned.
+ * @retval _ERROR_NULL If either of the pointers p_mi_s or p_mi_s_init is NULL.
  */
 int stdio_service_init(stdio_rx_t rx_handler);
 

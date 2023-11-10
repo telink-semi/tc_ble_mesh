@@ -52,7 +52,7 @@ const char insecurity_char[]="insecure";
 char schema_char[]="http://json-schema.org/draft-04/schema#";
 char id_char[]="http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
 char version_char[] = "1.0.0";
-char time_char[] = "2018-12-23T11:45:22-08:00";
+char time_char[] = "2018-12-23T11:45:22Z";
 char meshname_char[]="telink_test_room";
 
 
@@ -234,7 +234,7 @@ void json_remove_string(Document& doc, char *key_src)
 }
 
 
-int json_read_init(Document& doc, string file_in)
+int json_read_init(Document& doc, const string file_in)
 {
 	try
 	{
@@ -358,7 +358,7 @@ void rapid_json_set_table(Document& doc, u8 * p_dat,u32 len, u8 type,rapidjson::
 	return ;
 }
 
-void write_json_file_doc(char *p_file)
+void write_json_file_doc(const char *p_file)
 {
 	static CMutex msgCtrlTxMutex ;
 	msgCtrlTxMutex.Lock();
@@ -390,7 +390,7 @@ void write_json_file_doc(char *p_file)
 	
 }
 
-void write_json_file_doc_static(char *p_file)
+void write_json_file_doc_static(const char *p_file)
 {
 	Document doc;
 	json_read_init(doc, p_file);
@@ -670,8 +670,10 @@ int json_db_get_netkey_data(Document& doc, mesh_json_netkeys_str * p_js_netkey)
 		json_db_get_string(doc, netkeys_object[i],"name",p_netkey->name);
 		json_db_get_value(doc, netkeys_object[i],"index",(u8*)&(p_netkey->index),JSON_POINTER_U32);
 		json_db_get_string2data(doc, netkeys_object[i],"key",p_netkey->key);
-		json_db_get_string2data(doc, netkeys_object[i],"oldKey",p_netkey->oldkey);
-		json_db_get_value(doc, netkeys_object[i],"phase",&(p_netkey->phase),JSON_POINTER_U8);
+		json_db_get_value(doc, netkeys_object[i], "phase", &(p_netkey->phase), JSON_POINTER_U8);
+		if (p_netkey->phase != 0) {
+			json_db_get_string2data(doc, netkeys_object[i], "oldKey", p_netkey->oldkey);
+		}
 		json_db_get_string(doc, netkeys_object[i],"minSecurity",p_netkey->minSecurity);
 	}
 	return 1;
@@ -1002,7 +1004,7 @@ int json_db_get_scene_data(Document& doc, mesh_scene_str *p_js_scene)
 }
 
 
-int json_db_get_mesh_data_check(char *p_file)
+int json_db_get_mesh_data_check(const char *p_file)
 {
 	Document doc;
 	int res = json_read_init(doc, p_file);
@@ -1023,7 +1025,6 @@ int json_db_get_mesh_data_check(char *p_file)
 	json_db_get_nodes_data(doc, p_db->nodes);
 	json_db_get_groups_data(doc, p_db->groups);
 	json_db_get_scene_data(doc, p_db->scene);
-	json_db_get_ivi_idx(doc, p_db->ivi_idx);
 	if(memcmp(json_database.schema,json_database_check.schema,sizeof(json_database.schema))){
 		return -1;
 	}
@@ -1114,7 +1115,7 @@ int json_db_get_mesh_data_static(Document& doc)
 	json_db_get_groups_data(doc, p_db->groups);
 	json_db_get_scene_data(doc, p_db->scene);
 	#if JSON_IVI_INDEX_ENABLE
- 	json_db_get_ivi_idx(doc, p_db->ivi_idx);
+ 	json_db_get_ivi_idx(doc, p_db->ivi_idx,p_db->ivi_en);
 	#endif
 	return 1;
 }
@@ -1339,15 +1340,19 @@ int json_db_set_netKeys_data(Document& doc, mesh_json_netkeys_str *p_js_netkey)
 			Value int_object(kObjectType); 
 			json_db_set_string(doc, int_object,"name",p_net->name);
 			json_db_set_data_string(doc, int_object,"key",p_net->key,sizeof(p_net->key));
-			json_db_set_data_string(doc, int_object,"oldKey",p_net->oldkey,sizeof(p_net->oldkey));
+			
 			if(is_buf_zero_win(p_net->minSecurity,sizeof(p_net->minSecurity))||
 				(	memcmp(p_net->minSecurity,security_char,sizeof(security_char)) && 
 					memcmp(p_net->minSecurity,insecurity_char,sizeof(insecurity_char)))){
 				memcpy(p_net->minSecurity,security_char,sizeof(security_char));
 			}
 			json_db_set_string(doc, int_object,"minSecurity",p_net->minSecurity);
+			json_db_set_string(doc, int_object, "timestamp", time_char);
 			json_db_set_int(doc, int_object,"index",p_net->index);
 			json_db_set_int(doc, int_object,"phase",p_net->phase);
+			if (p_net->phase != 0) {
+				json_db_set_data_string(doc, int_object, "oldKey", p_net->oldkey, sizeof(p_net->oldkey));
+			}			
 			netKeys_object.PushBack(int_object,allocator);
 		}
 	}
@@ -1540,11 +1545,9 @@ int json_db_set_model_publish_data(Document& doc, rapidjson::Value & p_base,
 	Document::AllocatorType &allocator=doc.GetAllocator(); 
 	Value src = rapidjson::Value(p_src, allocator);
 	Value int_object(kObjectType);
-	#if JSON_PTS_ENABLE
 	if(p_pub->address == 0){
-		p_pub->address = 0xffff;// to pass the pts test for json file .
+		return 0;
 	}
-	#endif
 	json_db_set_u16_data(doc, int_object,"address",(p_pub->address));
 	json_db_set_int(doc, int_object,"index",p_pub->index);
 	json_db_set_int(doc, int_object,"ttl",p_pub->ttl);
@@ -1839,26 +1842,28 @@ int json_db_set_mesh_data_static(Document& doc)
 	memcpy(p_db->meshName,meshname_char,sizeof(meshname_char));
 	memcpy(p_db->timestamp,time_char,sizeof(time_char));
 	p_db->partial =0;// disable the partial part.
+	// keep order the same as JSON before output should be better
 	json_db_set_string(doc, doc_object,"$schema",p_db->schema);
 	json_db_set_string(doc, doc_object,"timestamp",p_db->timestamp);
 	json_db_set_string(doc, doc_object,"version",p_db->version);
 	json_db_set_string(doc, doc_object,"meshName",p_db->meshName);
-	json_db_set_boolean(doc, doc_object,"partial",p_db->partial);
 	json_db_set_string(doc, doc_object,"id",p_db->id);
+	json_db_set_boolean(doc, doc_object,"partial",p_db->partial);
 	json_db_set_data_string_uuid(doc, doc_object,"meshUUID",p_db->mesh_uuid,sizeof(p_db->mesh_uuid));
+	json_db_set_nodes_data_static(doc, p_db->nodes);
 	json_db_set_provision_data(doc, p_db->provisioners);
 	json_db_set_netKeys_data(doc, p_db->netKeys);
 	json_db_set_appKeys_data(doc, p_db->appkeys);
-	json_db_set_nodes_data_static(doc, p_db->nodes);
-	json_db_set_groups_data(doc, p_db->groups);
 	json_db_set_scene_data(doc, p_db->scene);
+	json_db_set_groups_data(doc, p_db->groups);
 	#if JSON_IVI_INDEX_ENABLE
-	json_db_set_ivi_data(doc, p_db->ivi_idx,sizeof(p_db->ivi_idx));
+	// when input the db should set to invalid ivi
+	json_db_set_ivi_data(doc, p_db->ivi_idx,sizeof(p_db->ivi_idx),0);
 	#endif
 	return 1;
 }
 
-int json_file_exist(Document& doc, char *p_json)
+int json_file_exist(Document& doc, const char *p_json)
 {
     if(json_read_init(doc, p_json)>0){
         return 1;
@@ -1866,7 +1871,7 @@ int json_file_exist(Document& doc, char *p_json)
         return 0;
     }
 }
-int init_json(char *p_json,u8 mode)  
+int init_json(const char *p_json,u8 mode)  
 {
 	Document doc;
     if(json_file_exist(doc, p_json)){

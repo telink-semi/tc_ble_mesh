@@ -378,13 +378,17 @@ void CTLMeshDlg::StatusNotify (unsigned char *p, int len)
 	mesh_rc_rsp_t rsp;
 	rsp.len = len;
 	memcpy(&rsp.src, p, len);
-    LOG_MSG_INFO (TL_LOG_CMD_RSP, (u8 *)&rsp.src, rsp.len, "Status Rsp______________");
 	
 	u16 op = rf_link_get_op_by_ac(rsp.data);
 	u32 size_op = SIZE_OF_OP(op);
     u8 *par = rsp.data + size_op;
     u16 par_len = GET_PAR_LEN_FROM_RSP(rsp.len, size_op);
-	
+	if (mesh_rsp_opcode_is_rp(op)) {
+		mesh_rp_client_rx_cb(&rsp);
+	}else{
+    	LOG_MSG_INFO (TL_LOG_CMD_RSP, (u8 *)&rsp.src, rsp.len, "Status Rsp______________");
+    }
+    
     #if MD_MESH_OTA_EN // VC_DISTRIBUTOR_UPDATE_CLIENT_EN
 	if(mesh_ota_master_rx(&rsp, op, size_op)){
 	    return ;
@@ -712,8 +716,9 @@ void CTLMeshDlg::UpdateGroupList (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 		int i;
 		int grp_idx = vc_get_grp_idx_by_md(p_list->model_id);
 		int cnt = (rsp->len - ((int)p_list - ((int)rsp + sizeof(rsp->len))) -OFFSETOF(mesh_cfg_model_sub_list_sig_t,sub_adr)) / 2;
-		if(cnt > 22){
-			cnt = 22;
+
+		if(cnt > ARRAY_SIZE(group_status[0])){
+			cnt = ARRAY_SIZE(group_status[0]);
 		}
 
 		for (i=0; i<cnt ; i++)
@@ -721,7 +726,7 @@ void CTLMeshDlg::UpdateGroupList (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 			u16 group_id = (p_list->sub_adr[i]);
 			if(is_group_adr(group_id)){
 				group_id &= (~0xC000);
-				if (group_id < 22)
+				if (group_id < ARRAY_SIZE(group_status[0]))
 				{
 					group_status[grp_idx][group_id + 1] = 1;
 				}
@@ -757,7 +762,7 @@ void CTLMeshDlg::UpdateGroupSetRsp (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 				}
 			}else if(is_group_adr(group_id)){
 				group_id &= (~0xC000);
-				if(group_id < 22){
+				if(group_id < ARRAY_SIZE(group_status[0])){
 					int grp_idx = vc_get_grp_idx_by_md(model_id);
 					if(CFG_MODEL_SUB_ADD == op_sub_set){
 						group_status[grp_idx][group_id + 1] = 1;
@@ -932,7 +937,7 @@ u32 CTLMeshDlg::GetOnlineStatusRspMax ()
 void CTLMeshDlg::UpdateGroupStatus ()
 {
 	char buff[128];
-	for (int i=0; i<24; i++)
+	for (int i=0; i<ARRAY_SIZE(group_status[0])+1; i++) // 2: 1(title)
 	{
 		sprintf_s (buff, sizeof(buff), "%d", i - 1);
 		if (i==0){

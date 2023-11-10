@@ -27,11 +27,24 @@
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/ble/blt_config.h"
 
+#if (PA_ENABLE)
+#define USE_SOFTWARE_PA		0
+
+	#if (0 == USE_SOFTWARE_PA)
+STATIC_ASSERT(MCU_CORE_TYPE >= MCU_CORE_8258);
+		#if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
+// if compile error here, please set USE_SOFTWARE_PA to 1.
+STATIC_ASSERT(((u32)PA_RXEN_PIN==(u32)RFFE_RX_PB2)||((u32)PA_RXEN_PIN==(u32)RFFE_RX_PC6)||((u32)PA_RXEN_PIN==(u32)RFFE_RX_PD0));
+STATIC_ASSERT(((u32)PA_TXEN_PIN==(u32)RFFE_TX_PB3)||((u32)PA_TXEN_PIN==(u32)RFFE_TX_PC7)||((u32)PA_TXEN_PIN==(u32)RFFE_TX_PD1));
+		#endif
+	#endif
+#endif
+
 rf_pa_callback_t  blc_rf_pa_cb = NULL;
 
-void app_rf_pa_handler(int type)
+#if(PA_ENABLE && USE_SOFTWARE_PA)
+_attribute_ram_code_ void app_rf_pa_handler(int type)
 {
-#if(PA_ENABLE)
 	if(type == PA_TYPE_TX_ON){
 	    gpio_set_output_en(PA_RXEN_PIN, 1);
 	    gpio_write(PA_RXEN_PIN, 0);
@@ -50,15 +63,15 @@ void app_rf_pa_handler(int type)
 	    gpio_set_output_en(PA_TXEN_PIN, 1);
 	    gpio_write(PA_TXEN_PIN, 0);
 	}
-#endif
 }
+#endif
 
 void rf_pa_init(void)
 {
 #if(PA_ENABLE)
     extern u8 my_rf_power_index;
 	rf_set_power_level_index (my_rf_power_index);
-#if(1)
+	#if(USE_SOFTWARE_PA)
     gpio_set_func(PA_TXEN_PIN, AS_GPIO);
     gpio_set_output_en(PA_TXEN_PIN, 1);
     gpio_write(PA_TXEN_PIN, 0);
@@ -68,9 +81,9 @@ void rf_pa_init(void)
     gpio_write(PA_RXEN_PIN, 0);
 
     blc_rf_pa_cb = app_rf_pa_handler;
-#else
+	#else
 	rf_rffe_set_pin(PA_TXEN_PIN, PA_RXEN_PIN);
-#endif	
+	#endif	
 #endif
 }
 

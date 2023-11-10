@@ -162,7 +162,7 @@ _attribute_ram_code_sec_noinline_ void flash_mspi_write_ram(unsigned char cmd, u
 }
 
 #if MI_API_ENABLE
-static inline int is_valid_sector_addr(u32 addr)
+static inline int is_valid_sector_addr(u32 addr, unsigned long len)
 {
     #if FLASH_1M_ENABLE
 	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR) || (addr >= 0x100000))
@@ -173,6 +173,38 @@ static inline int is_valid_sector_addr(u32 addr)
 	{
 		return 0;
 	}
+
+	return 1;
+}
+#else
+#define FLASH_MAX_SIZE		(1024 * 1024) // max 1M for B85m mesh now
+
+/**
+ * @brief       This function server to protect firmware area.
+ * @param[in]   addr- start address of the area.
+ * @param[in]   len	- the length(in byte) of content needs to write into the flash.
+ * @return      1: addr is valid. 0: addr is invalid.
+ * @note        
+ */
+static inline int is_valid_sector_addr(unsigned long addr, unsigned long len)
+{
+#if (FW_START_BY_BOOTLOADER_EN == 0)
+	#if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))	
+ 		#if (MCU_CORE_TYPE == MCU_CORE_8258)
+	u32 fw_boot_addr = ((REG_ADDR8(0x63e) & 0x03) << 7) << 10;
+		#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	u32 fw_boot_addr = ((REG_ADDR8(0x63e) & 0x07) << 7) << 10;
+		#endif
+		
+	if(((addr >= fw_boot_addr + (FW_SIZE_MAX_K << 10)) && (addr + len <= FLASH_MAX_SIZE)) // not use flash_capacity, because it may be changed unexpected.
+	|| ((addr + len <= fw_boot_addr)/* && (addr < fw_boot_addr)*/) // implied (fw_boot_addr != 0)
+	|| ((addr == (fw_boot_addr + 8)) && (len <= 4))){ // for write OTA flag
+		return 1;
+	}
+
+	return 0;
+	#endif
+ #endif
 
 	return 1;
 }
@@ -197,8 +229,8 @@ _attribute_ram_code_
 #endif
 void flash_erase_sector(unsigned long addr)
 {
-#if MI_API_ENABLE
-    if(!is_valid_sector_addr(addr)){
+#if (1 || MI_API_ENABLE)
+	if(0 == is_valid_sector_addr(addr, 1)){ // len 1 for compare erase end address.
         return ;
     }
 #endif
@@ -257,6 +289,11 @@ _attribute_ram_code_
 #endif
 void flash_write_page(unsigned long addr, unsigned long len, unsigned char *buf)
 {
+#if (1 || MI_API_ENABLE)
+	if(0 == is_valid_sector_addr(addr, len)){
+        return ;
+    }
+#endif
 	unsigned int ns = PAGE_SIZE - (addr&(PAGE_SIZE - 1));
 	int nw = 0;
 

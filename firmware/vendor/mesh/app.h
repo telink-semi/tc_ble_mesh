@@ -32,4 +32,5 @@
  * @return      none
  */
 void user_init_deepRetn();
+extern void deep_wakeup_proc(void);
 

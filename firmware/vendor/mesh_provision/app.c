@@ -32,8 +32,11 @@
 #include "proj/mcu/pwm.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj/drivers/adc.h"
-#include "proj_lib/ble/blt_config.h"
-#include "proj_lib/ble/ble_smp.h"
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
+#include "stack/ble/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#endif
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "proj_lib/mesh_crypto/mesh_md5.h"
 
@@ -45,12 +48,15 @@
 #include "../common/mesh_ota.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 #include "../common/remote_prov.h"
+#include "../common/security_network_beacon.h"
 #if SMART_PROVISION_ENABLE
 #include "vendor/common/smart_provision.h"
+#endif
+#if (MESH_CDTP_ENABLE)
+#include "mesh_cdtp.h"
 #endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
@@ -146,6 +152,11 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
+			
+			#if (MESH_CDTP_ENABLE)
+			app_coc_ble_connect_cb(p);
+			#endif
+			
 			proxy_cfg_list_init_upon_connection();
 			mesh_service_change_report();
 		}
@@ -179,6 +190,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#if DEBUG_MESH_DONGLE_IN_VC_EN
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
+		
+		#if (MESH_CDTP_ENABLE)
+		app_coc_ble_disconnect_cb(p);
+		#endif
 
 		mesh_ble_disconnect_cb(pd->reason);
 	}
@@ -190,88 +205,222 @@ int app_event_handler (u32 h, u8 *p, int n)
 
 	return 0;
 }
+
+/**
+ * @brief      BLE host event handler call-back.
+ * @param[in]  h       event type
+ * @param[in]  para    Pointer point to event parameter buffer.
+ * @param[in]  n       the length of event parameter.
+ * @return
+ */
+int app_host_event_callback (u32 h, u8 *para, int n)
+{
+#if (MESH_CDTP_ENABLE)
+	app_host_coc_event_callback(h, para, n);
+#endif
+
+	u8 event = h & 0xFF;
+
+	switch(event)
+	{
+		case GAP_EVT_SMP_TK_DISPALY:
+		{
+			#if BLE_REMOTE_SECURITY_ENABLE
+			//char pc[7];
+			gap_smp_TkDisplayEvt_single_connect_t *p = (gap_smp_TkDisplayEvt_single_connect_t *)para;
+			#if 1
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "SMP TK display int: %06d", p->tk_pincode);
+			#else
+			u8 int_buf[10];
+			u8 len = u32to_int_buf(p->tk_pincode, int_buf, sizeof(int_buf));
+			my_dump_str_data(APP_LOG_EN, "SMP TK display int:", int_buf, len);
+			my_dump_str_data(APP_LOG_EN, "SMP TK display u32:", &p->tk_pincode, 4);
+			#endif
+			#if (MESH_CDTP_ENABLE)
+			gateway_ots_rx_rsp_cmd((u8 *)&p->tk_pincode, sizeof(p->tk_pincode), OTS_OACP_OPCODE_USER_SMP_TK_DISPLAY);
+			#endif
+			//my_uart_send_str_int("int is:", pinCode);
+			//sprintf(pc, "%d", pinCode);
+			//printf("TK display:%s\n", pc);
+			#endif
+		}
+		break;
+
+		case GAP_EVT_SMP_TK_REQUEST_PASSKEY:
+		{
+
+		}
+		break;
+
+		case GAP_EVT_SMP_TK_REQUEST_OOB:
+		{
+
+		}
+		break;
+
+		case GAP_EVT_SMP_TK_NUMERIC_COMPARE:
+		{
+
+		}
+		break;
+
+		case GAP_EVT_ATT_EXCHANGE_MTU:
+		{
+
+		}
+		break;
+
+		default:
+		break;
+	}
+
+	return 0;
+}
+
+#if (UI_KEYBOARD_ENABLE)
+static int	long_pressed;
+static u8   key_released =1;
+
+/**
+ * @brief       This function servers to quickly scan keyboard after wakeup and hold this data to the cache.
+ * @param[in]   none 
+ * @return      none
+ * @note        
+ */
+void deep_wakeup_proc(void)
+{
+#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(kb_scan_key (KB_NUMLOCK_STATUS_POWERON, 1)){
+		deepback_key_state = DEEPBACK_KEY_CACHE;
+		memcpy(&kb_event_cache,&kb_event,sizeof(kb_event));
+	}
+#endif
+
+	return;
+}
+
+/**
+ * @brief       This function servers to process keyboard event from deep_wakeup_proc().
+ * @param[io]   *det_key - detect key flag. 0: no key detect, use deepback cache if exist. other: key had been detected.
+ * @return      none
+ * @note        
+ */
+void deepback_pre_proc(int *det_key)
+{
+#if (DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(!(*det_key) && deepback_key_state == DEEPBACK_KEY_CACHE){
+		memcpy(&kb_event,&kb_event_cache,sizeof(kb_event));
+		*det_key = 1;
+		deepback_key_state = DEEPBACK_KEY_IDLE;
+	}
+#endif
+
+	return;
+}
+
+/**
+ * @brief       This function servers to process keyboard event.
+ * @param[in]   none
+ * @return      none
+ * @note        
+ */
+void mesh_proc_keyboard (void)
+{
+	static u32		tick_key_pressed;
+	static u8		kb_last[2];
+	extern kb_data_t	kb_event;
+	kb_event.keycode[0] = 0;
+	kb_event.keycode[1] = 0;
+	int det_key = kb_scan_key (0, 1);
+#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(deepback_key_state != DEEPBACK_KEY_IDLE){
+		deepback_pre_proc(&det_key);
+	}
+#endif	
+	///////////////////////////////////////////////////////////////////////////////////////
+	//			key change:pressed or released
+	///////////////////////////////////////////////////////////////////////////////////////
+	if (det_key) 	{
+		/////////////////////////// key pressed  /////////////////////////////////////////
+		key_released = 0;
+		
+		if (kb_event.cnt == 2)   //two key press, do  not process
+		{
+		}
+		else if(kb_event.cnt == 1)
+		{		
+			#if SMART_PROVISION_ENABLE
+			if(KEY_SW1 == kb_event.keycode[0]){
+				static u8 onoff=1;
+				onoff = !onoff;
+				access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
+			}
+			else if(KEY_SW2 == kb_event.keycode[0]){
+				mesh_smart_provision_start();
+			}	
+			#endif
+
+			#if (DF_TEST_MODE_EN)
+			static u8 onoff;	
+			if(KEY_SW2 == kb_event.keycode[0]){ // dispatch just when you press the button 
+				foreach(i, MAX_FIXED_PATH){
+					path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[0].path[i];
+					if(is_ele_in_node(ele_adr_primary, p_fwd_entry->path_origin, p_fwd_entry->path_origin_snd_ele_cnt+1)){
+						access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
+						onoff = !onoff;
+						break;
+					}
+				}
+			}
+			#endif
+
+			#if IV_UPDATE_TEST_EN
+			mesh_iv_update_test_initiate(kb_event.keycode[0]);
+			#endif
+		}
+		///////////////////////////   key released  ///////////////////////////////////////
+		else {
+			key_released = 1;
+			long_pressed = 0;
+		}
+
+		tick_key_pressed = clock_time ();
+		kb_last[0] = kb_event.keycode[0];
+		kb_last[1] = kb_event.keycode[1];
+	}
+	//////////////////////////////////////////////////////////////////////////////////////////
+	//				no key change event
+	//////////////////////////////////////////////////////////////////////////////////////////
+	else if (kb_last[0])
+	{
+		//	long pressed
+		if (!long_pressed && clock_time_exceed(tick_key_pressed, 3*1000*1000))
+		{
+			long_pressed = 1;
+		}
+
+	}else{
+		key_released = 1;
+		long_pressed = 0;
+	}
+
+	return;
+}
+#endif
+
 u8 prov_end_status=0;
 void proc_ui()
 {
-	static u32 tick, scan_io_interval_us = 40000;
-	if (!clock_time_exceed (tick, scan_io_interval_us))
+#if (UI_KEYBOARD_ENABLE)
+	static u32 tick_scan, scan_io_interval_us = 8000;
+	if (!clock_time_exceed (tick_scan, scan_io_interval_us))
 	{
 		return;
 	}
-	tick = clock_time();
-	
-#if IV_UPDATE_TEST_EN
-	mesh_iv_update_test_initiate();
+	tick_scan = clock_time();
+
+	mesh_proc_keyboard();
 #endif
-
-#if SMART_PROVISION_ENABLE
-	static u8 st_sw1_last,st_sw2_last;	
-	u8 st_sw1 = !gpio_read(SW1_GPIO);
-	if(!(st_sw1_last)&&st_sw1){
-		static u8 onoff=1;
-		onoff = !onoff;
-		access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
-	}
-	st_sw1_last = st_sw1;
-	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	if(!(st_sw2_last)&&st_sw2){
-		mesh_smart_provision_start();
-	}
-	st_sw2_last = st_sw2;		
-#endif
-	#if 0
-	static u8 st_sw1_last;	
-	u8 st_sw1 = !gpio_read(SW1_GPIO);
-	static u8 st_sw2_last;	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	if(st_sw1_last != st_sw1 || st_sw2_last != st_sw2 ) {
-		if(st_sw1 && st_sw2){
-			provision_mag.pro_stop_flag = ~ provision_mag.pro_stop_flag;
-			set_provision_stop_flag_act(0);
-			
-		}else if(st_sw1){
-			#if 1
-			access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
-			#else
-			 mesh_cfg_model_relay_set_t relay_set;
-			relay_set.relay= 0x01;//relay = 0x01;
-			relay_set.transmit.count = 0x00;//relay_retransmit=relay_retransmit=0;
-			relay_set.transmit.invl_steps= 0x00;
-			mesh_tx_cmd2normal_primary(CFG_RELAY_SET, (u8 *)&relay_set, sizeof(mesh_cfg_model_relay_set_t), 0x01, 0x01);
-			#endif 
-			scan_io_interval_us = 100*1000; // fix dithering
-		}else if (st_sw2){
-			access_cmd_onoff(0xffff, 0, G_OFF, CMD_NO_ACK, 0);
-	    	scan_io_interval_us = 100*1000; // fix ditherin
-		}
-		st_sw1_last = st_sw1;
-		st_sw2_last = st_sw2;
-	}
-
-
-	
-	/*
-	if((!(st_sw1_last)&&st_sw1) && (!(st_sw2_last)&&st_sw2)){
-		prov_press_cnt++;
-		prov_end_status = prov_end_status?0:1;
-		st_sw1_last = st_sw1;
-		st_sw2_last = st_sw2;
-		return ;
-	}
-	if(!(st_sw1_last)&&st_sw1){
-		access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw1_last = st_sw1;
-	
-	if(!(st_sw2_last)&&st_sw2){ // dispatch just when you press the button 
-		access_cmd_onoff(0xffff, 0, G_OFF, CMD_NO_ACK, 0);
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw2_last = st_sw2;
-	*/
-	#endif
 }
 #if GATEWAY_ENABLE
 
@@ -305,21 +454,26 @@ u8 mesh_get_hci_tx_fifo_cnt()
 #endif
 }
 
+int gateway_common_cmd_rsp_ll(u8 *p_par, u16 len, u8 *head, u8 head_len)
+{
+	u16 valid_fifo_size = mesh_get_hci_tx_fifo_cnt() - head_len; // 2: length
+	if(len + head_len > valid_fifo_size){
+		return gateway_sar_pkt_segment(p_par, len, valid_fifo_size, head, head_len);
+	}
+	else{
+		return my_fifo_push_hci_tx_fifo(p_par,len, head, head_len); 
+	}
+}
+
 int gateway_common_cmd_rsp(u8 code,u8 *p_par,u16 len )
 {
 	u8 head[2] = {TSCRIPT_GATEWAY_DIR_RSP};
-	u8 head_len = 2;
 	head[1] = code;
-	u16 valid_fifo_size = mesh_get_hci_tx_fifo_cnt()-2; // 2: length
 #if SMART_PROVISION_ENABLE
 	mesh_smart_provision_rsp_handle(code, p_par, len);
 #endif
-	if(len+head_len > valid_fifo_size){
-		return gateway_sar_pkt_segment(p_par, len, valid_fifo_size, head, 2);
-	}
-	else{
-		return my_fifo_push_hci_tx_fifo(p_par,len, head, 2); 
-	}
+	
+	return gateway_common_cmd_rsp_ll(p_par, len, head, sizeof(head));
 }
 
 u8 gateway_provision_rsp_cmd(u16 unicast_adr)
@@ -349,6 +503,12 @@ u8 gateway_upload_mac_address(u8 *p_mac,u8 *p_adv)
 	len = p_adv[0];
 	memcpy(para,p_mac,6);
 	memcpy(para+6,p_adv,len+4); // rssi = para[6+1+len];
+#if (HCI_ACCESS != HCI_USE_NONE)
+	if(my_fifo_free_cnt_get(&hci_tx_fifo) < 3){ 
+		return -1; // reserve 2 for communication between tool and gateway
+	}
+#endif
+
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_UPDATE_MAC,para,len+10);
 }
 
@@ -383,6 +543,11 @@ u8 gateway_upload_node_info(u16 unicast)
 	return -1;
 }
 
+int gateway_upload_gatt_ota_sts(u8 result)
+{
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_GATT_OTA_STS, &result, sizeof(result));
+}
+
 #if FAST_PROVISION_ENABLE
 int fast_provision_upload_node_info(u16 unicast, u16 pid)
 {
@@ -409,7 +574,7 @@ u8 gateway_upload_provision_self_sts(u8 sts)
 	}
 	provison_net_info_str* p_net = (provison_net_info_str*)(buf+1);
 	p_net->unicast_address = provision_mag.unicast_adr_last;
-	swap32(p_net->iv_index, (u8 *)&iv_idx_st.iv_cur);
+	get_iv_big_endian(p_net->iv_index, (u8 *)&iv_idx_st.iv_cur);
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_PRO_STS_RSP,buf,sizeof(buf));
 }
 
@@ -421,7 +586,7 @@ int gateway_upload_primary_info_get()
 	if(p_netkey){
 		memcpy(mesh_info.provision_data.net_work_key, p_netkey->key, 16);
 		mesh_info.provision_data.key_index = p_netkey->index;
-		swap32(mesh_info.provision_data.iv_index, (u8 *)&iv_idx_st.iv_cur);
+		get_iv_big_endian(mesh_info.provision_data.iv_index, (u8 *)&iv_idx_st.iv_cur);
 		mesh_info.provision_data.unicast_address = ele_adr_primary;
 		mesh_info.appkey.apk_idx = p_netkey->app_key[0].index;
 		memcpy(mesh_info.appkey.app_key, p_netkey->app_key[0].key, 16);
@@ -441,10 +606,6 @@ int gateway_upload_primary_info_set(provision_primary_mesh_info_t *p)
 	return gateway_upload_primary_info_get();
 }
 
-u8 gateway_upload_ivi(u8 *p_ivi)
-{
-	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SECURE_IVI,p_ivi,4);
-}
 
 
 u8 gateway_upload_mesh_ota_sts(u8 *p_dat,int len)
@@ -458,6 +619,7 @@ u8 gateway_upload_mesh_sno_val()
                         (u8 *)&mesh_adv_tx_cmd_sno,sizeof(mesh_adv_tx_cmd_sno));
 
 }
+
 u8 gateway_upload_dev_uuid(u8 *p_uuid,u8 *p_mac)
 {
     u8 uuid_mac[22];
@@ -467,10 +629,13 @@ u8 gateway_upload_dev_uuid(u8 *p_uuid,u8 *p_mac)
                         (u8 *)uuid_mac,sizeof(uuid_mac));
 }
 
-u8 gateway_upload_ividx(u8 *p_ivi)
+int gateway_upload_ividx(misc_save_gw2vc_t *p_misc)
 {
-    return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_IVI,
-                        p_ivi,4);
+	if(is_iv_index_invalid() || !is_provision_success()){
+    	return -1;
+	}
+	
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_IVI, (u8 *)p_misc, sizeof(misc_save_gw2vc_t));
 }
 
 u8 gateway_upload_mesh_src_cmd(u16 op,u16 src,u8 *p_ac_par)
@@ -607,12 +772,19 @@ u8 gateway_upload_extend_adv_option(u8 option_val)
     return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION,(u8 *)&option_val,sizeof(option_val));
 }
 u8 ivi_beacon_key[16];
-u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
+int gateway_cmd_from_host_ctl(u8 *p, u16 len )
 {
 	if(len<=0){
 		return 0;
 	}
 	u8 op_code = p[0];
+
+	if(is_iv_index_invalid()){
+		if((op_code == HCI_GATEWAY_CMD_FAST_PROV_START) || (op_code == HCI_GATEWAY_CMD_RP_START) || (op_code == HCI_GATEWAY_CMD_SET_NODE_PARA)){
+			return -1;
+		}
+	}
+	
 	if(op_code == HCI_GATEWAY_CMD_START){
 		set_provision_stop_flag_act(0);
 	}else if (op_code == HCI_GATEWAY_CMD_STOP){
@@ -668,18 +840,18 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}else if (op_code == HCI_GATEWAY_CMD_GET_SNO){
         gateway_upload_mesh_sno_val();
 	}else if (op_code == HCI_GATEWAY_CMD_SET_SNO){
-        u32 sno;
-        memcpy((u8 *)&sno,p+1,4);
+        u32 sno = 0;
+        memcpy((u8 *)&sno,p+1,3);
         mesh_adv_tx_cmd_sno = sno;
         mesh_misc_store();
+	    LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"set sno by sig_mesh_tool: 0x%06x (%d)", sno, sno);
 	}else if (op_code == HCI_GATEWAY_CMD_GET_PRO_SELF_STS){
 		gateway_upload_provision_self_sts(is_provision_success());
 		gateway_upload_node_ele_cnt(g_ele_cnt);
 	}else if (op_code == HCI_GATEWAY_CMD_STATIC_OOB_RSP){
-		if(len-1>16){
-			return 1;
-		}
-		mesh_set_pro_auth(p+1,len-1);
+		provision_mag.oob_len = (len-1) >= 32 ? 32 : 16;
+		mesh_set_pro_auth(p+1,provision_mag.oob_len);
+	    //LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"get oob and oob len: %d, len rx: %d", provision_mag.oob_len, len-1);
 	}else if (op_code == HCI_GATEWAY_CMD_GET_UUID_MAC){
         // rsp the uuid part 
         gateway_upload_dev_uuid(prov_para.device_uuid,tbl_mac);
@@ -743,14 +915,6 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		u16 pid = p[1] + (p[2]<<8);
 		u16 addr = p[3] + (p[4]<<8);
 		mesh_fast_prov_start(pid, addr);
-	}else if (op_code == HCI_GATEWAY_CMD_RP_MODE_SET){
-		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
-		gw_get_rp_mode(p[1]);
-		#endif
-	}else if (op_code == HCI_GATEWAY_CMD_RP_SCAN_START_SET){
-		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
-		gw_rp_scan_start();
-		#endif
 	}else if (op_code == HCI_GATEWAY_CMD_RP_LINK_OPEN){
 		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
 		u16 adr = p[1] + (p[2]<<8);
@@ -768,7 +932,7 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
 		// set the provisionee's netinfo para 
 		if(is_rp_working()){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote-prov is in process");
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote-prov is in process",0);
 			return 0;
 		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
@@ -791,7 +955,13 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		u8* p_netkey = p+1;
 		mesh_sec_get_beacon_key (ivi_beacon_key, p_netkey);
 		#endif
+	}else if (op_code == HCI_GATEWAY_CMD_OTS_TX){
+		#if MESH_CDTP_ENABLE
+		void gateway_ots_rx_vc_cmd_handle(u8 *p_hci_cmd, u16 len);
+		gateway_ots_rx_vc_cmd_handle(p, len);
+		#endif
 	}
+	
 	return 1;
 }
 
@@ -822,7 +992,7 @@ u8 gateway_cmd_from_host_ota(u8 *p, u16 len )
 		irq_restore(irq_en);
 	}
 	otaWrite((u8 *)&local_ota);
-	return 1;
+	return 0;
 }
 
 u8 gateway_cmd_from_host_mesh_ota(u8 *p, u16 len )
@@ -883,9 +1053,13 @@ void main_loop ()
 	}  
 #endif
 
-	#if (TESTCASE_FLAG_ENABLE && (!__PROJECT_MESH_PRO__))
+#if (TESTCASE_FLAG_ENABLE && (!__PROJECT_MESH_PRO__))
 	test_case_key_refresh_patch();
-	#endif
+#endif
+
+#if MESH_CDTP_ENABLE
+	mesh_cdtp_loop();
+#endif
 }
 
 void user_init()
@@ -915,6 +1089,57 @@ void user_init()
 
 	//link layer initialization
 	//bls_ll_init (tbl_mac);
+
+	//Smp Initialization may involve flash write/erase(when one sector stores too much information,
+	//	 is about to exceed the sector threshold, this sector must be erased, and all useful information
+	//	 should re_stored) , so it must be done after battery check
+#if (BLE_REMOTE_SECURITY_ENABLE)
+	bls_smp_configParingSecurityInfoStorageAddr(FLASH_ADR_SMP_PARA_START); // must before blc_smp_peripheral_init().
+
+	#if MESH_CDTP_ENABLE
+		#if (CDTP_SMP_LEVEL == 3)	// CDTP spec require SMP >= level 3
+	blc_smp_param_setBondingDeviceMaxNumber(4);    //if not set, default is : SMP_BONDING_DEVICE_MAX_NUM
+
+	//set security level: "LE_Security_Mode_1_Level_3"
+	blc_smp_setSecurityLevel(Authenticated_Paring_with_Encryption);  //if not set, default is : LE_Security_Mode_1_Level_2(Unauthenticated_Pairing_with_Encryption)
+	blc_smp_enableAuthMITM(1);
+	blc_smp_setBondingMode(Bondable_Mode);	// if not set, default is : Bondable_Mode
+	blc_smp_setIoCapability(IO_CAPABILITY_DISPLAY_ONLY);	// if not set, default is : IO_CAPABILITY_NO_INPUT_NO_OUTPUT
+
+	//Smp Initialization may involve flash write/erase(when one sector stores too much information,
+	//   is about to exceed the sector threshold, this sector must be erased, and all useful information
+	//   should re_stored) , so it must be done after battery check
+	//Notice:if user set smp parameters: it should be called after usr smp settings
+		#else
+#error todo level 4
+		#endif
+
+	blc_smp_peripheral_init(); // must before blc_ll_initSlaveRole_module() and must be after all smp level setting.
+	blc_smp_configSecurityRequestSending(SecReq_IMM_SEND, SecReq_PEND_SEND, 1000);	// for APP to show pair menu
+	#else
+	//Hid device on android7.0/7.1 or later version
+	// New paring: send security_request immediately after connection complete
+	// reConnect:  send security_request 1000mS after connection complete. If master start paring or encryption before 1000mS timeout, slave do not send security_request.
+	blc_smp_configSecurityRequestSending(SecReq_IMM_SEND, SecReq_PEND_SEND, 1000); //if not set, default is:  send "security request" immediately after link layer connection established(regardless of new connection or reconnection )
+	#endif
+	
+	blc_gap_registerHostEventHandler(app_host_event_callback);
+#endif
+
+	blc_gap_setEventMask(
+						#if MESH_CDTP_ENABLE
+						  GAP_EVT_MASK_L2CAP_COC_CONNECT			|  \
+						  GAP_EVT_MASK_L2CAP_COC_DISCONNECT			|  \
+						  GAP_EVT_MASK_L2CAP_COC_RECONFIGURE		|  \
+						  GAP_EVT_MASK_L2CAP_COC_RECV_DATA			|  \
+						  GAP_EVT_MASK_L2CAP_COC_SEND_DATA_FINISH	|  \
+						  GAP_EVT_MASK_L2CAP_COC_CREATE_CONNECT_FINISH  |  \
+						  GAP_EVT_MASK_SMP_TK_DISPALY
+						#else
+						0
+						#endif
+	);
+
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 	blc_ll_initBasicMCU(tbl_mac);   //mandatory
 #elif((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
@@ -1001,6 +1226,11 @@ void user_init()
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);
+#endif
+
+#if MESH_CDTP_ENABLE
+	mesh_cdtp_init();
+	// blc_att_enableWriteReqReject(1); // TODO: response error code for OTS
 #endif
 }
 

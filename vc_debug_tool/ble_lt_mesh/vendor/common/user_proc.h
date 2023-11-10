@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #ifndef __USER_PROC_H
 #define __USER_PROC_H
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"

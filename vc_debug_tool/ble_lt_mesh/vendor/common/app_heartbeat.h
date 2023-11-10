@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #ifndef APP_HEARTBEAT_H_
 #define APP_HEARTBEAT_H_
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/mesh_node.h"
 
@@ -95,7 +95,7 @@ u8 cal_heartbeat_count_log(u16 val);
 void mesh_heartbeat_poll_100ms();
 
 void mesh_cmd_sig_lowpower_heartbeat();
-void heartbeat_cmd_send_conf(u8 ttl,u16 feature,u16 dst);
+void heartbeat_cmd_send_conf();
 // heart beat part dispatch 
 int mesh_cmd_sig_heart_pub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_pub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -104,6 +104,6 @@ int mesh_cmd_sig_heartbeat_sub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 int mesh_cmd_sig_heartbeat_sub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_sub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear);
-void mesh_heartbeat_cb_data(u16 src, u16 dst,u8 *p_hb);
+void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear);
 
 #endif

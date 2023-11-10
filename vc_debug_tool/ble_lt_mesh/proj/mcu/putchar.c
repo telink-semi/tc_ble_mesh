@@ -82,6 +82,7 @@ int swire_putc(int c) {
 	return -1;
 }
 
+#if 0
 int putchar(int c){
 	if(reg_usb_host_conn){
 		swire_is_init = 0;		// should re-init swire if connect swire again
@@ -90,6 +91,7 @@ int putchar(int c){
 		return swire_putc((char)c);
 	}
 }
+#endif
 
 #endif
 

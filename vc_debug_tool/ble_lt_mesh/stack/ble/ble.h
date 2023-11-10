@@ -31,8 +31,8 @@
 
 
 #include "l2cap/l2cap.h"
-//#include "phy/phy.h"
-//#include "phy/phy_test.h"
+#include "phy/phy.h"
+#include "phy/phy_test.h"
 
 
 #include "proj_lib/ble/att.h"

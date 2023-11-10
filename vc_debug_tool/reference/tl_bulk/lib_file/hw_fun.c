@@ -76,6 +76,11 @@ void sleep_us (u32 us)
 	while(!clock_time_exceed(t, us)){
 	}
 }
+
+void sleep_ms(u32 ms)
+{
+	sleep_us(ms*1000);
+}
 // flash interface about the operation 
 #if VC_APP_ENABLE
 

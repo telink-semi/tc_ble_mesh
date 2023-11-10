@@ -34,14 +34,20 @@
     <Filter Include="Header Files\Common_Headers">
       <UniqueIdentifier>{8142539a-713a-42aa-a4ab-ae478304a005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\sig_mesh_lib">
-      <UniqueIdentifier>{affa370d-5120-4bfd-8ed2-a9df4fa31890}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\aes_ecb">
       <UniqueIdentifier>{42cb5d04-3ee8-43b0-8445-949ec74e60a8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\mesh_draft_lib">
       <UniqueIdentifier>{69b77ea9-cbd4-41b9-8354-ceefd8a0687c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh_draft_lib\certify_base">
+      <UniqueIdentifier>{7f1d6666-33f9-41ca-a206-eeed05bdc600}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\third_party">
+      <UniqueIdentifier>{ec752a48-b2cf-459e-9515-d706d6207a32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\third_party\zlib">
+      <UniqueIdentifier>{13519d53-f150-49df-897c-0032ff6f96c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -222,6 +228,18 @@
     <ClCompile Include="aes_ecb\test_ecb.c">
       <Filter>Source Files\aes_ecb</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\asn_telink.c">
+      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\certify_base_crypto.c">
+      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\pem_der.c">
+      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\sha1_telink.c">
+      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\config_model.c">
       <Filter>Source Files\Files_common</Filter>
     </ClCompile>
@@ -230,6 +248,78 @@
     </ClCompile>
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_log.c">
       <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\directed_forwarding.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_ota_initiator.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_ota.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\remote_prov.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\remote_prov_cli.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\subnet_bridge.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_privacy_beacon.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\solicitation_rpl_cfg_model.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\op_agg_model.c">
+      <Filter>Source Files\mesh_draft_lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_access_layer.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\security_network_beacon.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="Remote_scan_dlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\gw_node_info.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\adler32.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\compress.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\crc32.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\deflate.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\inffast.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\inflate.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\inftrees.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\trees.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\uncompr.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\zlib\zutil.c">
+      <Filter>Source Files\third_party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_file\mesh_cdtp_vs.c">
+      <Filter>Source Files\Files_master_func</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -321,6 +411,9 @@
     </ClInclude>
     <ClInclude Include="aes_ecb\aes_ecb.h">
       <Filter>Source Files\aes_ecb</Filter>
+    </ClInclude>
+    <ClInclude Include="Remote_scan_dlg.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

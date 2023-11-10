@@ -104,7 +104,17 @@ ret: 0  means OK
 int access_cmd_set_delta(u16 adr, u8 rsp_max, s32 level, int ack, transition_par_t *trs_par);
 
 
-
+/************************** access_cmd_set_level **************************
+function : move the level to level max or level min under speed of "level/(transition time)"   
+para:
+	adr: set the node's adr 
+	rsp_max: means after sending the parameter,it will how many different packets back 
+	level: -32768 ~ 32767
+	ack: 1 means send reliable cmd ,and the node will send rsp ,0 means unreliable ,will not send 
+ret: 0  means OK 
+	-1 or other value means err 
+****************************************************************************/
+int access_cmd_set_level_move(u16 adr, u8 rsp_max, s16 level, int ack, transition_par_t *trs_par);
 
 
 /************************** access_set_lum **************************

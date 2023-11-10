@@ -26,6 +26,8 @@
 
 #include "tl_common.h"
 
+#define SWITCH_GROUP_ADDR_START 	0xc000
+
 enum{
     SWITCH_MODE_NORMAL      = 0,
     SWITCH_MODE_GATT	   	= 1,
