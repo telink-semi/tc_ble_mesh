@@ -97,7 +97,15 @@
     if (meshList == nil) {
         NSDictionary *meshDict = [SigDataSource.share getDictionaryFromDataSource];
         NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
-        meshList = [NSArray arrayWithObject:tempData];
+        //Migrate data from a single network to multiple networks.
+        NSData *oldData = [NSUserDefaults.standardUserDefaults objectForKey:kSaveLocationDataKey];
+        if (oldData.length > 0) {
+            //exist old single network
+            meshList = [NSArray arrayWithObject:oldData];
+        } else {
+            //not exist
+            meshList = [NSArray arrayWithObject:tempData];
+        }
         [[NSUserDefaults standardUserDefaults] setValue:meshList forKey:kCacheMeshListKey];
         [[NSUserDefaults standardUserDefaults] setValue:SigDataSource.share.meshUUID forKey:kCacheCurrentMeshUUIDKey];
         [[NSUserDefaults standardUserDefaults] synchronize];
