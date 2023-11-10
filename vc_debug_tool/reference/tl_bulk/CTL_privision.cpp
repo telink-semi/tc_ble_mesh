@@ -52,7 +52,7 @@ CString csNetKey=_T("11 22 c2 c3 c4 c5 c6 c7 d8 d9 da db dc dd de df");
 CString csNetKeyIndex=_T("00 00");				// NET_KEY_PRIMARY
 CString csAppKey=_T("60 96 47 71 73 4f bd 76 e3 b4 05 19 d1 d9 4a 48");
 CString csAppKeyIndex=_T("00 00");				// APP_KEY_PRIMARY
-CString csIvi_update_index=_T("11 22 33 44");
+CString csIvi_update_index=_T("00 00 00 01");
 CString csUnicast=_T("01 00");
 CString csCmd=_T("a3 ff 00 00 00 00 02 00 ff ff 82 02 01 00"); 
 CString csListData = _T("01 00 ff ff");
@@ -347,7 +347,25 @@ int CTL_privision::GetProvision_para()
 	return 1;
 }
 
+int send_static_oob2gateway_with_check(u8 *node_uuid)
+{
+	u8 static_oob[32];
+	u8 oob_len = get_auth_value_by_uuid(node_uuid, static_oob);
+	if (oob_len != 16 && oob_len != 32) {
+		// invalid len ,and do nothing
+		return 0;
+	}
+	
+	// send the cmd into the dongle
+	unsigned char gateway_buf[64];
+	gateway_buf[0] = HCI_CMD_GATEWAY_CTL & 0xFF;
+	gateway_buf[1] = (HCI_CMD_GATEWAY_CTL >> 8) & 0xFF;
+	gateway_buf[2] = HCI_GATEWAY_CMD_STATIC_OOB_RSP;
+	memcpy(gateway_buf + 3, static_oob, oob_len);
+	WriteFile_host_handle(gateway_buf, oob_len + 3);
 
+	return oob_len;
+}
 
 void CTL_privision::OnProvisionStart() 
 {
@@ -356,16 +374,20 @@ void CTL_privision::OnProvisionStart()
 	if(!GetProvision_para()){
 		return ;
 	}
+	if(json_can_do_provision() == 0){
+		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"it can not do provision now ,need to connect proxy device to eable ivi");
+		return ;
+	}
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"start provision for the device");
 	if(!ble_moudle_id_is_gateway()&&!m_fast_prov_mode){
 
 	//json_del_mesh_vc_node_info(sigmesh_node_uuid);
 		if(is_provision_working()){
-			LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"vc provision is in process");
+			LOG_MSG_ERR(TL_LOG_GATT_PROVISION,0,0,"vc provision is in process");
 			return ;
 		}
 	    if(is_rp_working()){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"vc remote-prov is in process");
+			LOG_MSG_ERR(TL_LOG_REMOTE_PROV,0,0,"vc remote-prov is in process");
 			return ;
 		}
 	}
@@ -376,6 +398,11 @@ void CTL_privision::OnProvisionStart()
 		AfxMessageBox("the unicast adr should be 1~0x7fff");
 	    return ;
 	}
+
+	if(dkri_check_en == 0){
+		LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"is this new address 0x%04x already used in VC node info ?", provision_mag.pro_net_info.unicast_address);
+	}
+	
 	if(dkri_check_en == 0 && get_VC_node_info(provision_mag.pro_net_info.unicast_address, 0) !=0){
 		// only int the normal mode ,need to check the provision net information part 
 		AfxMessageBox("the unicast adr has alreay been used");
@@ -426,6 +453,7 @@ void CTL_privision::OnProvisionStart()
 			}else{
 				gateway_set_node_provision_para(gateway_provisionee_buf);
 			}	
+			send_static_oob2gateway_with_check(sigmesh_node_uuid);
 		}		
 	}else{
 		if(m_fast_prov_mode){					
@@ -578,6 +606,10 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 	if(!GetProvision_para()){
 		return ;
 	}
+	if(json_can_do_provision() == 0){
+		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"it can not do provision slef now ,need to connect proxy device to eable ivi");
+		return ;
+	}	
 	unsigned char tmp_str[128];
 	u16 ak_idx = (u16)strtol(csAppKeyIndex,NULL,16);
 	u8 ak_idx_len =0;
@@ -614,11 +646,13 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 		set_provision_dlg_part((u8 *)&(p_net_str->unicast_address),sizeof(p_net_str->unicast_address),
 					&csUnicast,IDC_UNICAST_ADR);
         json_add_provisioner_info(p_net_str,vc_uuid);
+        win32_create_rand_buf(json_database.mesh_uuid, sizeof(json_database.mesh_uuid));
 		write_json_file_doc(FILE_MESH_DATA_BASE);
+		set_ini_provioner_mesh_uuid(json_database.mesh_uuid);
 		pro_self_flag=1;
 	}
 #endif
-    if(mesh_provision_par_set_dir((u8 *)(p_net_str))!=0){
+    if(mesh_provision_par_set_dir(p_net_str)!=0){
 		AfxMessageBox("please input the unicast adr, the highest bit should be 0");
 		return;
 	}
@@ -742,18 +776,30 @@ u8 composition_data_PANNEL[]={0x11,0x02,0x07,0x00,0x33,0x33,0x69,0x00,0x07,0x00,
 	0x00,0x00
 };
 
+u8 composition_data_LPN[]= {0x11,0x02,0x01,0x02,0x33,0x36,0x69,0x00,0x0a,0x00,0x00,0x00,0x05,0x01,0x00,0x00,
+    0x02,0x00,0x03,0x00,0x00,0x10,0x02,0x10,0x11,0x02,0x00,0x00
+};
+
+extern void uuid_create_by_mac(u8* mac, u8* uuid);
 extern u32 get_cps_vd_model_id(const mesh_element_head_t *p_ele, u32 index);
 void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid)
 {
 	provison_net_info_str *p_net_info = (provison_net_info_str *)gatt_pro_dat;
+	u8 dev_uuid_fast[16];
+#if 1
+	uuid_create_by_mac(dev_key, dev_uuid_fast); // low 6 bytes of dev_key is Mac
+#else
+	memcpy(dev_uuid_fast, dev_key, 16);
+#endif
+
 	p_net_info->unicast_address = node_addr;  
 	if(ble_moudle_id_is_gateway()){
-		memcpy(gw_dev_uuid, dev_key, 16);
+		memcpy(gw_dev_uuid, dev_uuid_fast, 16);
 		memcpy(gw_dev_mac, dev_key, 6);
 		memcpy(gw_dev_key, dev_key, 16);	
 	}
 	else{
-		memcpy(sigmesh_node_uuid, dev_key, 16);
+		memcpy(sigmesh_node_uuid, dev_uuid_fast, 16);
 		memcpy(sigmesh_node_mac, dev_key, 6);
 		memcpy(gatt_dev_key, dev_key, 16);	
 	}
@@ -765,6 +811,7 @@ void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid)
 	p_node = json_mesh_find_node(node_addr);
 	mesh_page0_t * p_mesh_page = 0;
 	int mesh_page_size = 0;
+	pid &= BIT_MASK_LEN(PID_DEV_TYPE_LEN); // ignore mcu chip type
 	if(LIGHT_TYPE_CT == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_CT;
 		mesh_page_size = sizeof(composition_data_CT);
@@ -789,6 +836,11 @@ void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid)
 		p_mesh_page = (mesh_page0_t *)&composition_data_PANNEL;
 		mesh_page_size = sizeof(composition_data_PANNEL);
 		VC_node_cps_save((mesh_page0_t *)&composition_data_PANNEL, node_addr, sizeof(composition_data_PANNEL));
+	}
+	else if ((PID_LPN & BIT_MASK_LEN(PID_DEV_TYPE_LEN)) == pid) {
+		p_mesh_page = (mesh_page0_t*)&composition_data_LPN;
+		mesh_page_size = sizeof(composition_data_LPN);
+		VC_node_cps_save((mesh_page0_t*)&composition_data_LPN, node_addr, sizeof(composition_data_LPN));
 	}
 	else{
 		p_mesh_page = (mesh_page0_t *)&composition_data_CT;
@@ -871,9 +923,6 @@ int App_key_bind_end_callback(u8 event)
 		
 	}
 
-	if (p_ctl_pro->m_fast_prov_mode) {
-		m_pMeshDlg->InitStatus();
-	}
 	return 1;
 }
 

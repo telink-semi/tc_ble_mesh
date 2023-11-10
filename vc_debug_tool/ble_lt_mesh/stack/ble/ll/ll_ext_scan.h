@@ -40,7 +40,7 @@
 #include "stack/ble/ll/ll_conn/ll_master.h"
 
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "drivers.h"
 
 

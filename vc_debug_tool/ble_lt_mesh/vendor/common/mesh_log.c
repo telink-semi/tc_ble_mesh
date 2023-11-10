@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj/common/tstring.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
@@ -99,6 +99,54 @@ const char * get_op_string(u16 op, const char *str_in)
 	
 	return p_str_ret ? p_str_ret : OP_STRING_NOT_FOUND;
 }
+
+typedef struct{
+	u8 op;
+	#if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
+	char string[23];
+	#else
+	char string[15];
+	#endif
+}mesh_op_string_ctl_t;
+
+const mesh_op_string_ctl_t mesh_op_string_ctl[] = {
+    {CMD_CTL_ACK, 						"CTL_ACK"},
+    {CMD_CTL_POLL, 						"LPN_POLL"},
+    {CMD_CTL_UPDATE, 					"FN_UPDATE"},
+    {CMD_CTL_REQUEST, 					"LPN_REQUEST"},
+    {CMD_CTL_OFFER, 					"FN_OFFER"},
+    {CMD_CTL_CLEAR, 					"FNorLPN_CLEAR"},
+    {CMD_CTL_CLR_CONF, 					"FN_CLEAR_CONF"},
+    {CMD_CTL_SUBS_LIST_ADD, 			"LPN_LIST_ADD"},
+    {CMD_CTL_SUBS_LIST_REMOVE, 			"LPN_LIST_REMOVE"},
+    {CMD_CTL_SUBS_LIST_CONF, 			"FN_LIST_CONF"},
+    {CMD_CTL_HEARTBEAT, 				"CTL_HEARTBEAT"},
+#if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
+    {CMD_CTL_PATH_REQUEST, 				"PATH_REQUEST"},
+    {CMD_CTL_PATH_REPLY, 				"PATH_REPLY"},
+    {CMD_CTL_PATH_CONFIRMATION, 		"PATH_CONFIRMATION"},
+    {CMD_CTL_PATH_ECHO_REQUEST, 		"PATH_ECHO_REQUEST"},
+    {CMD_CTL_PATH_ECHO_REPLY, 			"PATH_ECHO_REPLY"},
+    {CMD_CTL_DEPENDENT_NODE_UPDATE, 	"DEPENDENT_NODE_UPDATE"},
+    {CMD_CTL_PATH_REQUEST_SOLICITATION,	"PATH_REQ_SOLICITATION"},
+#endif
+};
+
+const char * get_op_string_ctl(u8 op, int filter_cfg)
+{
+	if(filter_cfg){
+		// TODO
+	}else{
+		foreach_arr(i, mesh_op_string_ctl){
+			const mesh_op_string_ctl_t *p = &mesh_op_string_ctl[i];
+			if(op == p->op){
+				return p->string;
+			}
+		}
+	}
+	
+	return OP_STRING_NOT_FOUND;
+}
 #else
 typedef struct{
 	u16 op;
@@ -164,7 +212,22 @@ const char * get_op_string(u16 op, const char *str_in)
 {
 	return OP_STRING_NOT_FOUND;
 }
+
+const char * get_op_string_ctl(u8 op, int filter_cfg)
+{
+	return OP_STRING_NOT_FOUND;
+}
 #endif	
+
+void print_log_mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, int err, int filter_cfg)
+{
+
+    if(err){
+		LOG_MSG_ERR(TL_LOG_NODE_SDK,p_mat->par, p_mat->par_len,"tx ctl error,op:0x%x(%s)par:",p_mat->op,get_op_string_ctl((u8)p_mat->op, filter_cfg));
+	}else{
+		LOG_MSG_LIB(TL_LOG_NODE_SDK,p_mat->par, p_mat->par_len,"tx ctl,sno:0x%x op:0x%x(%s),dst:0x%x par:",mesh_adv_tx_cmd_sno-1,p_mat->op,get_op_string_ctl((u8)p_mat->op, filter_cfg),p_mat->adr_dst); // "tx cmd sno" has been increase to next command, so need to decrease.
+	}
+}
 
 /**
   * @}

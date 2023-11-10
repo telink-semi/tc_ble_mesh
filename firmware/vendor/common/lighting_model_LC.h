@@ -27,6 +27,15 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
+#if MD_LIGHT_CONTROL_EN
+#define LOG_LIGHT_LC_EN					(0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
+#if LOG_LIGHT_LC_EN
+#define LOG_LIGHT_LC_DEBUG(pbuf,len,format,...)		LOG_MSG_LIB(TL_LOG_NODE_BASIC,pbuf,len,format,__VA_ARGS__)
+#else
+#define LOG_LIGHT_LC_DEBUG(pbuf,len,format,...)		//
+#endif
+#endif
+
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 
@@ -92,17 +101,23 @@
 #define LC_PROP_VAL_RegulatorKiu            (0) // confirm later
 #define LC_PROP_VAL_RegulatorKpd            (0) // confirm later
 #define LC_PROP_VAL_RegulatorKpu            (0) // confirm later
-#define LC_PROP_VAL_TimeFade                (2*1000)    // unit: ms
 #if PTS_TEST_EN
+#define LC_PROP_VAL_TimeFade                (0*1000)    // unit: ms
 #define LC_PROP_VAL_TimeFadeOn              (0*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeStandbyAuto     (0*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeStandbyManual   (0*1000)    // unit: ms
+#define LC_PROP_VAL_TimeOccupancyDelay      (0*1000)    // unit: ms
+#define LC_PROP_VAL_TimeProlong             (0*1000)    // unit: ms
+#define LC_PROP_VAL_TimeRun                 (0*1000)    // unit: ms
 #else
+#define LC_PROP_VAL_TimeFade                (2*1000)    // unit: ms
 #define LC_PROP_VAL_TimeFadeOn              (2*1000)    // unit: ms
-#endif
 #define LC_PROP_VAL_TimeFadeStandbyAuto     (3*1000)    // unit: ms
 #define LC_PROP_VAL_TimeFadeStandbyManual   (3*1000)    // unit: ms
 #define LC_PROP_VAL_TimeOccupancyDelay      (2*1000)    // unit: ms
 #define LC_PROP_VAL_TimeProlong             (4*1000)    // unit: ms
 #define LC_PROP_VAL_TimeRun                 (5*1000)    // unit: ms
+#endif
 
 enum{
     LC_MODE_OFF = 0,
@@ -143,8 +158,9 @@ enum{
     LC_STATE_PROLONG,   // 5
     LC_STATE_FADE_STANDBY_AUTO,     // 6
     LC_STATE_FADE_STANDBY_MANUAL,   // 7
-    LC_STATE_OCCUPANCY_DELAY,       // 8
+    //LC_STATE_OCCUPANCY_DELAY,       // occupancy delay is an indepent tick countdown system from light control state.
     LC_STATE_MAX,
+    LC_STATE_KEEP_CURRENT_ST, // keep current state, no state or lightness change.
 };
 
 // -----------
@@ -153,6 +169,7 @@ void scene_get_lc_par(scene_data_t *p_scene, int light_idx);
 void scene_load_lc_par(scene_data_t *p_scene, int light_idx);
 void LC_property_tick_set(int idx);
 void LC_property_st_and_tick_set(int light_idx, u8 st);
+void LC_occupancy_value_and_tick_set(int light_idx, u8 occupancy_on);
 void LC_property_proc();
 void light_LC_global_init();
 int mesh_lc_prop_st_publish(u8 idx);
@@ -161,7 +178,11 @@ int mesh_lc_onoff_st_publish(u8 light_idx);
 void LC_light_transition_complete_handle(int light_idx);
 void access_cmd_set_LC_lightness(int light_idx, u16 lightness, transition_par_t *trs_par, u32 time_ms);
 void LC_state_check_and_clear_by_user_command(int light_idx);
-int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+void LC_property_proc_st_set(int light_idx, u8 st);
+void LC_state_enter(int light_idx, transition_par_t *trs_par, u8 lc_st);
+void LC_proc_init(int light_idx);
+void lc_mode_set_par(int light_idx, u8 lc_mode);
+void light_lc_debug_print_all_par();
 
 int access_cmd_lc_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par);
 
@@ -175,6 +196,7 @@ int mesh_cmd_sig_lc_prop_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_prop_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_sensor_status_lc(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
 #define mesh_cmd_sig_lc_mode_get                (0)
 #define mesh_cmd_sig_lc_mode_set                (0)

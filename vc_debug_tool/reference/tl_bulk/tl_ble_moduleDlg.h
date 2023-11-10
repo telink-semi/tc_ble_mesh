@@ -302,7 +302,7 @@ typedef struct{
     u16 src;
     u8 mac[6];
     u8 uuid[16];
-    u8 rssi;
+    s8 rssi;
 }remote_prov_uuid_str;
 typedef struct{
     int prov_mode;
@@ -324,20 +324,29 @@ u16 remote_prov_client_find_adr_by_uuid(u8 *p_uuid_rep);
 unsigned char Dongle_is_gateway_or_not() ;
 int ota_file_check();
 void gateway_get_dev_uuid_mac();
+void gateway_get_sno();
+void gateway_set_sno(u32 sno);
 void gateway_set_extend_seg_mode(u8 mode);
 void gateway_send_cmd_to_del_node_info(u16 uni);
 void vc_get_dev_key(u8 *p_devkey);
 void gateway_set_prov_devkey(u16 unicast,u8 *p_devkey);
 unsigned char ble_moudle_id_is_kmadongle();
-void    gw_json_update();
+void    gw_json_update(int node_idx);
 u8 unicast_is_in_range_or_not(u16 unicast,u8* p_uuid);
 void read_version_rsp();
 void gateway_set_rp_mode(u8 en);
 void gateway_start_scan_start();
 void gateway_send_link_open(u16 adr,u8 *p_uuid);
 void gateway_send_rp_start(u8*p_net_info);
+void gateway_update_netkey_by_json(u8 *p_netkey);
+void set_ini_import_json_flag(int import_flag);
+int get_ini_import_json_flag();
 
-
+void set_ini_provioner_tx_cmd_sno(u32 sno);
+void set_ini_provioner_mesh_uuid(u8* p_mesh_uuid);
+u32 get_ini_provioner_mesh_uuid(u8 *p_mesh_uuid_out);
+int is_match_ini_uuid(u8 *uuid_json);
+int ini_get_and_writeback_tx_cmd_sno(u8* p_mesh_uuid);
 
 
 

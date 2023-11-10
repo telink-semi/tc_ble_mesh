@@ -164,6 +164,8 @@ void user_power_on_proc()
     #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE)&&!MI_API_ENABLE)
     foreach(i,LIGHT_CNT){
         u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
+		mesh_key.netkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
+		mesh_key.appkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
         #if MD_LIGHTNESS_EN
         mesh_tx_cmd_lightness_st(i, adr_src, 0xffff, LIGHTNESS_STATUS, 0, 0);
         #elif MD_LEVEL_EN
@@ -199,9 +201,9 @@ void user_set_def_sub_adr()
     const u16 group_def_set[] = {0xc000, 0xcfff};
     	#endif
     foreach_arr(i,group_def_set){
-        foreach(light_idx, LIGHT_CNT){
-            share_model_sub(CFG_MODEL_SUB_ADD, group_def_set[i], 0, light_idx);
-        }
+        foreach(ele_idx, ELE_CNT){
+        	share_model_sub_onoff_server_extend(CFG_MODEL_SUB_ADD, group_def_set[i], 0, ele_adr_primary + ele_idx);
+		}
     }
     #endif
 }
@@ -238,7 +240,34 @@ int user_node_rc_link_open_callback()
 	return 1;
 }
 
-
+/*********************** static oob data info *********************
+for device:
+	1. static oob length change from 16 to 32 bytes in the flash due to EPA function.
+	2. if the first 16 bytes is all 0xff, it means no oob mode, or it is static oob mode.
+	   support both EPA and normal mode when "PROV_EPA EN" is enable.
+	   normal mode: use first 16 bytes as static oob.
+	   EPA mode:    use 32 bytes of the flash as static oob. 
+	3. in the "AIS ENABLE" mode ,it will not support epa mode ,just use normal mode
+for provisioner:
+	1. use EPA mode only when unprovision device support epa and length of static oob in database is 32 byte.
+**********************************************************/
+#ifdef FLASH_ADR_STATIC_OOB
+u8 mesh_static_oob_data_by_flash()
+{
+	u8 oob_data[32];
+	flash_read_page(FLASH_ADR_STATIC_OOB, 32, oob_data);
+	if(!get_flash_data_is_valid(oob_data, 16)){
+		// if the first 16 byte is all 0xff, it will be no oob mode .
+		memset(dev_auth, 0, 32);
+		// will set in the func of the user_node_oob_set
+		return 0;
+	}
+	
+	// set the 32 bytes to dev_auth.
+	mesh_set_dev_auth(oob_data, sizeof(oob_data));
+	return 1;	
+}
+#endif
 
 void mesh_provision_para_init(u8 *p_random)
 {
@@ -257,11 +286,9 @@ void mesh_provision_para_init(u8 *p_random)
 	prov_para.rand_gen_s = clock_time_s();
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
-	#if (!AIS_ENABLE && !LLSYNC_PROVISION_AUTH_OOB)
-	u8 oob_data[16];
-	flash_read_page(FLASH_ADR_STATIC_OOB,16,oob_data);
-	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){//oob was burned in flash
-		mesh_set_dev_auth(oob_data,sizeof(oob_data));
+	#if (!AIS_ENABLE && !LLSYNC_PROVISION_AUTH_OOB && !TESTCASE_FLAG_ENABLE)
+	if(mesh_static_oob_data_by_flash()){//oob was burned in flash
+		// it means it will enter oob mode .
 	}else
 	#endif
 	{
@@ -286,6 +313,17 @@ void user_prov_multi_oob()
 #endif
 }
 
+#if (FAST_PROVISION_ENABLE && !WIN32)
+STATIC_ASSERT(MD_REMOTE_PROV == 0); // can not enable both, because app can not get the same device uuid calculated from mac.
+#endif
+
+/**
+ * @brief       This function get device uuid by md5 algorithm.
+ * @param[in]	mac	- Mac address
+ * @param[out]	uuid- device uuid
+ * @return      none
+ * @note        
+ */
 void uuid_create_by_mac(u8 *mac,u8 *uuid)
 {
 // test md5 function part 
@@ -306,7 +344,7 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
 	uuid_create_md5_from_name((uuid_mesh_t *)uuid, NameSpace_DNS, name_string, 15);
 
     //special proc to set the mac address into the uuid part 
-    #if MD_REMOTE_PROV
+    #if (!WIN32 && MD_REMOTE_PROV)
 	uuid_mesh_t * p_uuid = (uuid_mesh_t * )uuid;
     memcpy(p_uuid->node,mac,6);	// just for showing mac on UI of VC remote scanning.
     #endif
@@ -327,10 +365,17 @@ void user_prov_multi_device_uuid()
         // NO NEED DEV UUID
 	#elif LLSYNC_PROVISION_AUTH_OOB
 		llsync_mesh_dev_uuid_get(LLSYNC_MESH_UNNET_ADV_BIT, prov_para.device_uuid, sizeof(prov_para.device_uuid));
+	#elif PLATFORM_TELINK_EN
+		set_dev_uuid_for_platform_telink(prov_para.device_uuid);
     #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE  and all other)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);
 	    }else{
+	    	#if (CERTIFY_BASE_ENABLE )
+				cert_set_uuid(prov_para.device_uuid);
+				return ;
+			#endif
+			
 	        #if NORMAL_MODE_DEV_UUID_CUSTOMIZE_EN   // TBD
             u8 uuid_read[16];
             flash_read_page(FLASH_ADR_DEV_UUID,16,uuid_read);

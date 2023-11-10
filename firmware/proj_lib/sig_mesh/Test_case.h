@@ -31,6 +31,10 @@
 #endif
 
 
+enum {
+	GW_INI_PTS_TC_CMD_BLOB_TRANS_FLOW = 1,		// TC: TEST CASE
+};
+
 #ifndef SET_TC_FIFO
 #define SET_TC_FIFO(cmd, pfifo, cmd_len)	
 #endif

@@ -192,7 +192,7 @@ u8 att_perm_auth_rdwd  = ATT_PERMISSIONS_RDWD_AUTHOR;
 const u8 my_OtaServiceUUID[16]		= TELINK_OTA_UUID_SERVICE;
 const u8 my_OtaUUID[16]		= TELINK_SPP_DATA_OTA;
 
-static u8 my_OtaProp		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP;
+static u8 my_OtaProp		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY;
 const u8  my_OtaName[] = {'O', 'T', 'A'};
 u8	 	my_OtaData 		= 0x00;
 // pb-gatt 
@@ -324,11 +324,221 @@ u8 ais_data_buf[2];
 #define ATT_NUM_START_SERVICE_CHANGE        (ATT_NUM_START_MI_API + MAX_MI_ATT_NUM)
 #define ATT_NUM_START_AIS                   (ATT_NUM_START_SERVICE_CHANGE + MAX_SERVICE_CHANGE_ATT_NUM)
 #define ATT_NUM_START_ONLINE_ST             (ATT_NUM_START_AIS + MAX_AIS_ATT_NUM)
+#define ATT_NUM_START_OTS             		(ATT_NUM_START_ONLINE_ST + MAX_ONLINE_ST_ATT_NUM)
 
-#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_ONLINE_ST + MAX_ONLINE_ST_ATT_NUM - 1)
+
+#if (MESH_CDTP_ENABLE)
+#include "./mesh_cdtp.h"
+#if 1//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)	
+	////////////////////////////////////// OTS /////////////////////////////////////////////////////
+	#if 1//(BLC_AUDIO_OTS_ENABLE)
+		#if (CDTP_SMP_LEVEL == 3)
+#define CDTP_ATT_PERMISSIONS_READ_V			ATT_PERMISSIONS_AUTHEN_READ
+#define CDTP_ATT_PERMISSIONS_WRITE_V		ATT_PERMISSIONS_AUTHEN_WRITE
+#define CDTP_ATT_PERMISSIONS_RDWR_V			ATT_PERMISSIONS_AUTHEN_RDWR
+		#else // level 4
+#define CDTP_ATT_PERMISSIONS_READ_V			ATT_PERMISSIONS_SECURE_CONN_READ
+#define CDTP_ATT_PERMISSIONS_WRITE_V		ATT_PERMISSIONS_SECURE_CONN_WRITE
+#define CDTP_ATT_PERMISSIONS_RDWR_V			ATT_PERMISSIONS_SECURE_CONN_RDWR
+		#endif
+
+u8 CDTP_ATT_PERMISSIONS_READ_VAR = CDTP_ATT_PERMISSIONS_READ_V;
+u8 CDTP_ATT_PERMISSIONS_WRITE_VAR = CDTP_ATT_PERMISSIONS_WRITE_V;
+u8 CDTP_ATT_PERMISSIONS_RDWR_VAR = CDTP_ATT_PERMISSIONS_RDWR_V;
+
+#define CDTP_ATT_PERMISSIONS_READ			(&CDTP_ATT_PERMISSIONS_READ_VAR)
+#define CDTP_ATT_PERMISSIONS_WRITE			(&CDTP_ATT_PERMISSIONS_WRITE_VAR)
+#define CDTP_ATT_PERMISSIONS_RDWR			(&CDTP_ATT_PERMISSIONS_RDWR_VAR)
+
+STATIC_ASSERT(CDTP_SMP_LEVEL >= 3);
+
+int app_att_audioOtsRead(void *p);
+int app_att_audioOtsWrite(void *p);
+
+
+enum{ // not be used for b85 mesh SDK, just for compile
+	//// OTS ////
+	/**********************************************************************************************/
+	OTS_PS_H = ATT_NUM_START_OTS, // must not be real handle value and can not be 0, because each handle value enum will be used in blc_audio_setServiceByRole().
+	
+	OTS_FEATURE_CD_H, //M Mandatory:Read; Optional:
+	OTS_FEATURE_DP_H,
+	OTS_OBJECT_NAME_CD_H, //M Mandatory:Read; Optional:Write
+	OTS_OBJECT_NAME_DP_H,
+	OTS_OBJECT_TYPE_CD_H, //M Mandatory:Read; Optional:
+	OTS_OBJECT_TYPE_DP_H,
+	OTS_OBJECT_SIZE_CD_H, //M Mandatory:Read; Optional:
+	OTS_OBJECT_SIZE_DP_H,
+	OTS_OBJECT_FIRST_CREATED_CD_H, //O Mandatory:Read; Optional:Write
+	OTS_OBJECT_FIRST_CREATED_DP_H,
+	OTS_OBJECT_LAST_CREATED_CD_H,  //O Mandatory:Read; Optional:Write
+	OTS_OBJECT_LAST_CREATED_DP_H,
+	OTS_OBJECT_ID_CD_H, //O Mandatory:Read; Optional:
+	OTS_OBJECT_ID_DP_H,
+	OTS_OBJECT_PROPERTIES_CD_H, //M Mandatory:Read; Optional:Write
+	OTS_OBJECT_PROPERTIES_DP_H,
+	OTS_OBJECT_ACTION_CP_CD_H, //M Mandatory:Write,Indicate; Optional:
+	OTS_OBJECT_ACTION_CP_DP_H,
+	OTS_OBJECT_ACTION_CP_CCC_H,
+	OTS_OBJECT_LIST_CP_CD_H, //O Mandatory:Write,Indicate; Optional:
+	OTS_OBJECT_LIST_CP_DP_H,
+	OTS_OBJECT_LIST_CP_CCC_H,
+	OTS_OBJECT_LIST_FILTER_CD_H, //O Mandatory:Read,Write; Optional:
+	OTS_OBJECT_LIST_FILTER_DP_H,
+	OTS_OBJECT_CHANGED_CD_H, //O Mandatory:Indicate; Optional:
+	OTS_OBJECT_CHANGED_DP_H,
+	OTS_OBJECT_CHANGED_CCC_H,
+};
+
+static const u16 my_OtsServiceUUID = SERVICE_UUID_OBJECT_TRANSFER;
+//    OTS Feature    Mandatory:Read; Optional:
+static const u16 my_OtsFeatureUUID = CHARACTERISTIC_UUID_OTS_FEATURE;
+static const u8 my_OtsFeatureChar[5] = {
+	CHAR_PROP_READ,
+	U16_LO(OTS_FEATURE_DP_H), U16_HI(OTS_FEATURE_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_FEATURE), U16_HI(CHARACTERISTIC_UUID_OTS_FEATURE),
+};
+
+#if 1//OTS_FOR_CDTP_EN // for CDTP
+u8 my_OtsFeatureValue[8] = {OACP_CalculateChecksumOpCodeSupported | OACP_ReadOpCodeSupported | OACP_WriteOpCodeSupported};
+#else
+u8 my_OtsFeatureValue[8] = {
+	0xFF, 0x03, 0x00, 0x00, // OACP_Features_field_e // OACP Features Field, all supported. <OTS_V10.pdf> P16
+	0x0F, 0x00, 0x00, 0x00, // OLCP_Features_field_e // OLCP Features Field, all supported. <OTS_V10.pdf> P17
+};
+#endif
+//    Object Name    Mandatory:Read; Optional:Write
+static const u16 my_OtsObjectNameUUID = CHARACTERISTIC_UUID_OTS_OBJECT_NAME;
+static const u8 my_OtsObjectNameChar[5] = {
+	CHAR_PROP_READ | CHAR_PROP_WRITE,
+	U16_LO(OTS_OBJECT_NAME_DP_H), U16_HI(OTS_OBJECT_NAME_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_NAME), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_NAME),
+};
+u8 my_OtsObjectNameValue[] = {
+	'O','b','j','e','c','t',' ','2',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+//		'T','e','l','i','n','k',
+};
+//    Object Type    Mandatory:Read; Optional:
+static const u16 my_OtsObjectTypeUUID = CHARACTERISTIC_UUID_OTS_OBJECT_TYPE;
+static const u8 my_OtsObjectTypeChar[5] = {
+	CHAR_PROP_READ,
+	U16_LO(OTS_OBJECT_TYPE_DP_H), U16_HI(OTS_OBJECT_TYPE_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_TYPE), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_TYPE),
+};
+u8 my_OtsObjectTypeValue[2] = {0xFF,0x7F};
+//    Object Size    Mandatory:Read; Optional:
+static const u16 my_OtsObjectSizeUUID = CHARACTERISTIC_UUID_OTS_OBJECT_SIZE;
+static const u8 my_OtsObjectSizeChar[5] = {
+	CHAR_PROP_READ,
+	U16_LO(OTS_OBJECT_SIZE_DP_H), U16_HI(OTS_OBJECT_SIZE_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_SIZE), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_SIZE),
+};
+//    Object First-Created    Mandatory:Read; Optional:Write
+static const u16 my_OtsFirstCreatedUUID = CHARACTERISTIC_UUID_OTS_OBJECT_FIRST_CREATED;
+static const u8 my_OtsFirstCreatedChar[5] = {
+	CHAR_PROP_READ | CHAR_PROP_WRITE,
+	U16_LO(OTS_OBJECT_FIRST_CREATED_DP_H), U16_HI(OTS_OBJECT_FIRST_CREATED_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_FIRST_CREATED), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_FIRST_CREATED),
+};
+
+u8 my_OtsFirstCreatedValue[] =
+{
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //2021-01-21 09:04:46
+};
+//    Object Last-Modified    Mandatory:Read; Optional:Write
+static const u16 my_OtsLastCreatedUUID = CHARACTERISTIC_UUID_OTS_OBJECT_LAST_CREATED;
+static const u8 my_OtsLastCreatedChar[5] = {
+	CHAR_PROP_READ | CHAR_PROP_WRITE,
+	U16_LO(OTS_OBJECT_LAST_CREATED_DP_H), U16_HI(OTS_OBJECT_LAST_CREATED_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_LAST_CREATED), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_LAST_CREATED),
+};
+u8 my_OtsLastCreatedValue[] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //2021-01-21 09:08:21
+};
+//    Object ID    Mandatory:Read; Optional:
+static const u16 my_OtsObjectIDUUID = CHARACTERISTIC_UUID_OTS_OBJECT_ID;
+static const u8 my_OtsObjectIDChar[5] = {
+	CHAR_PROP_READ,
+	U16_LO(OTS_OBJECT_ID_DP_H), U16_HI(OTS_OBJECT_ID_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_ID), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_ID),
+};
+u8 my_OtsObjectIDValue[] = {
+	0x00, 0x01, 0x00, 0x00, 0x00, 0x00,  //0x000000000100 to 0xFFFFFFFFFFFF.
+};
+//    Object Properties    Mandatory:Read; Optional:Write
+static const u16 my_OtsObjectPropertiesUUID = CHARACTERISTIC_UUID_OTS_OBJECT_PROPERTIES;
+static const u8 my_OtsObjectPropertiesChar[5] = {
+	CHAR_PROP_READ | CHAR_PROP_WRITE,
+	U16_LO(OTS_OBJECT_PROPERTIES_DP_H), U16_HI(OTS_OBJECT_PROPERTIES_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_PROPERTIES), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_PROPERTIES),
+};
+u8 my_OtsObjectPropertiesValue[] = {
+	0x8F, 0x00, 0x00, 0x00, //Object Properties, all supported. <OTS_V10.pdf> P22
+};
+//    Object Action Control Point    Mandatory:Write,Indicate; Optional:
+static const u16 my_OtsActionControlPointUUID = CHARACTERISTIC_UUID_OTS_OBJECT_ACTION_CONTROL_POINT;
+static const u8 my_OtsActionControlPointChar[5] = {
+	CHAR_PROP_WRITE | CHAR_PROP_INDICATE,
+	U16_LO(OTS_OBJECT_ACTION_CP_DP_H), U16_HI(OTS_OBJECT_ACTION_CP_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_ACTION_CONTROL_POINT), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_ACTION_CONTROL_POINT),
+};
+u8 my_OtsActionControlPointValue[21] = {0};
+u16 my_OtsActionControlPointCCC = 0x0000;
+//    Object List Control Point    Mandatory:Write,Indicate; Optional:
+static const u16 my_OtsListControlPointUUID = CHARACTERISTIC_UUID_OTS_OBJECT_LIST_CONTROL_POINT;
+static const u8 my_OtsListControlPointChar[5] = {
+	CHAR_PROP_WRITE | CHAR_PROP_INDICATE,
+	U16_LO(OTS_OBJECT_LIST_CP_DP_H), U16_HI(OTS_OBJECT_LIST_CP_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_LIST_CONTROL_POINT), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_LIST_CONTROL_POINT),
+};
+u8 my_OtsListControlPointValue[7] = { 0x00, };
+u16 my_OtsListControlPointCCC = 0;
+//    Object List Filter    Mandatory:Read,Write; Optional:
+static const u16 my_OtsObjectListFilterUUID = CHARACTERISTIC_UUID_OTS_OBJECT_LIST_FILTER;
+static const u8 my_OtsObjectListFilterChar[5] = {
+	CHAR_PROP_READ | CHAR_PROP_WRITE,
+	U16_LO(OTS_OBJECT_LIST_FILTER_DP_H), U16_HI(OTS_OBJECT_LIST_FILTER_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_LIST_FILTER), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_LIST_FILTER),
+};
+u8 my_OtsObjectListFilterValue[15] = { 0x00//ItemList: FilterValue(1Byte)+Size(1Byte)+String, 0x00--No Filter (everything passes)
+//		0x01, 0x06, 'T','e','l','i','n','k', //0x01-Name Starts With
+//		0x02, 0x06, 'T','e','l','i','n','k', //0x02-Name Ends With
+//		0x03, 0x06, 'T','e','l','i','n','k', //0x03-Name Contains
+//		0x04, 0x06, 'T','e','T','T','T','T', //0x04-Name is Exactly
+};
+//    Object Changed    Mandatory:Indicate; Optional:
+static const u16 my_OtsObjectChangedUUID = CHARACTERISTIC_UUID_OTS_OBJECT_CHANGED;
+static const u8 my_OtsObjectChangedChar[5] = {
+	CHAR_PROP_INDICATE,
+	U16_LO(OTS_OBJECT_CHANGED_DP_H), U16_HI(OTS_OBJECT_CHANGED_DP_H),
+	U16_LO(CHARACTERISTIC_UUID_OTS_OBJECT_CHANGED), U16_HI(CHARACTERISTIC_UUID_OTS_OBJECT_CHANGED),
+};
+u8 my_OtsObjectChangedValue[7] = {
+	0x00, //Flags
+	0x00, 0x01, 0x00, 0x00, 0x00, 0x00, //Object ID
+};
+u16 my_OtsObjectChangedCCC = 0;
+
+	#endif
+#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+
+#define MAX_OTS_ATT_NUM 	            (OTS_OBJECT_CHANGED_CCC_H-OTS_PS_H+1)
+#else
+#define MAX_OTS_ATT_NUM 	            (0)
+#endif
+
+#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_OTS + MAX_OTS_ATT_NUM - 1)
 
 /*const */u8 PROVISION_ATT_HANDLE = (ATT_NUM_START_PROVISION + 2);  // slave
 /*const */u8 GATT_PROXY_HANDLE = (ATT_NUM_START_PROXY + 2);  // slave
+const u8 SERVICE_GATT_OTA_HANDLE = (ATT_NUM_START_GATT_OTA + 2);
 const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE = (ATT_NUM_START_SERVICE_CHANGE + 2);
 const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 
@@ -464,6 +674,54 @@ const attribute_t my_Attributes[] = {
 	// 002c - 0037
 	MY_ATTRIBUTE_AIS
 #endif
+	
+#if (MESH_CDTP_ENABLE)//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+		////////////////////////////////////// OTS /////////////////////////////////////////////////////
+	#if 1//(BLC_AUDIO_OTS_ENABLE)
+	//	OTS_PS_H, // 0x2c(44)
+	{OTS_OBJECT_CHANGED_CCC_H-OTS_PS_H+1,CDTP_ATT_PERMISSIONS_RDWR,2,2,(u8*)(&my_primaryServiceUUID), (u8*)(&my_OtsServiceUUID), 0},
+	//	  OTS Feature	 Mandatory:Read; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsFeatureChar),(u8*)(&my_characterUUID), (u8*)(my_OtsFeatureChar), 0}, //0x2d(45)
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsFeatureValue),(u8*)(&my_OtsFeatureUUID), (u8*)(&my_OtsFeatureValue), 0, 0}, // 0x2e(46)
+	//	  Object Name	 Mandatory:Read; Optional:Write
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectNameChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectNameChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsObjectNameValue),(u8*)(&my_OtsObjectNameUUID), (u8*)(&my_OtsObjectNameValue), app_att_audioOtsWrite, app_att_audioOtsRead}, // 0x30(48)
+	//	  Object Type	 Mandatory:Read; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectTypeChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectTypeChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectTypeValue),(u8*)(&my_OtsObjectTypeUUID), (u8*)(&my_OtsObjectTypeValue), 0, app_att_audioOtsRead}, // 0x32(50)
+	//	  Object Size	 Mandatory:Read; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectSizeChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectSizeChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectSizeValue),(u8*)(&my_OtsObjectSizeUUID), (u8*)(&my_OtsObjectSizeValue), 0, app_att_audioOtsRead}, // 0x34(52)
+	//	  Object First-Created	  Mandatory:Read; Optional:Write
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsFirstCreatedChar),(u8*)(&my_characterUUID), (u8*)(my_OtsFirstCreatedChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsFirstCreatedValue),(u8*)(&my_OtsFirstCreatedUUID), (u8*)(&my_OtsFirstCreatedValue), app_att_audioOtsWrite, app_att_audioOtsRead},
+	//	  Object Last-Modified	  Mandatory:Read; Optional:Write
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsLastCreatedChar),(u8*)(&my_characterUUID), (u8*)(my_OtsLastCreatedChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsLastCreatedValue),(u8*)(&my_OtsLastCreatedUUID), (u8*)(&my_OtsLastCreatedValue), app_att_audioOtsWrite, app_att_audioOtsRead},
+	//	  Object ID    Mandatory:Read; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectIDChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectIDChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectIDValue),(u8*)(&my_OtsObjectIDUUID), (u8*)(&my_OtsObjectIDValue), 0, app_att_audioOtsRead},
+	//	  Object Properties    Mandatory:Read; Optional:Write
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectPropertiesChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectPropertiesChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsObjectPropertiesValue),(u8*)(&my_OtsObjectPropertiesUUID), (u8*)(&my_OtsObjectPropertiesValue), app_att_audioOtsWrite, app_att_audioOtsRead}, // 0x3c(60): only read
+	//	  Object Action Control Point	 Mandatory:Write,Indicate; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsActionControlPointChar),(u8*)(&my_characterUUID), (u8*)(my_OtsActionControlPointChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_WRITE,2,sizeof(my_OtsActionControlPointValue),(u8*)(&my_OtsActionControlPointUUID), (u8*)(&my_OtsActionControlPointValue), app_att_audioOtsWrite, 0},//0x3e(62)
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsActionControlPointCCC),(u8*)(&clientCharacterCfgUUID), (u8*)(&my_OtsActionControlPointCCC), 0}, // 0x3f(63)
+	//	  Object List Control Point    Mandatory:Write,Indicate; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsListControlPointChar),(u8*)(&my_characterUUID), (u8*)(my_OtsListControlPointChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_WRITE,2,sizeof(my_OtsListControlPointValue),(u8*)(&my_OtsListControlPointUUID), (u8*)(&my_OtsListControlPointValue), app_att_audioOtsWrite, 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsListControlPointCCC),(u8*)(&clientCharacterCfgUUID), (u8*)(&my_OtsListControlPointCCC), 0},
+	//	  Object List Filter	Mandatory:Read,Write; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectListFilterChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectListFilterChar), 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsObjectListFilterValue),(u8*)(&my_OtsObjectListFilterUUID), (u8*)(&my_OtsObjectListFilterValue), app_att_audioOtsWrite, app_att_audioOtsRead},
+	//	  Object Changed	Mandatory:Indicate; Optional:
+	{0,CDTP_ATT_PERMISSIONS_READ,2,sizeof(my_OtsObjectChangedChar),(u8*)(&my_characterUUID), (u8*)(my_OtsObjectChangedChar), 0},
+	{0, 			   0x00,2,sizeof(my_OtsObjectChangedValue),(u8*)(&my_OtsObjectChangedUUID), (u8*)(&my_OtsObjectChangedValue), 0, 0},
+	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsObjectChangedCCC),(u8*)(&clientCharacterCfgUUID), (u8*)(&my_OtsObjectChangedCCC), 0},
+	#endif
+#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+
 };
 
 void my_att_init(u8 mode)
@@ -484,5 +742,53 @@ void my_att_init(u8 mode)
 	}
 #endif 
 }
+
+#if (MESH_CDTP_ENABLE)
+int blc_audio_setServiceByRole(u8 role, BLC_AUDIO_SERVICE_ENUM srvType, attribute_t *pService);
+
+void app_audio_gatt_init(void)
+{
+	int ret;
+
+	//bls_att_setAttributeTable((u8 *)my_Attributes);
+
+	ret = 0;
+	#if 1//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+		#if 1//(BLC_AUDIO_OTS_ENABLE)
+			ret += blc_audio_setServiceByRole(BLC_AUDIO_ROLE_SERVER, BLC_AUDIO_SERVICE_OTS, (attribute_t*)&my_Attributes[ATT_NUM_START_OTS]); // OTS_PS_H
+		#endif //(BLC_AUDIO_TBS_ENABLE)
+	#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+	if(ret != 0){
+		
+	}
+	my_dump_str_data(APP_LOG_EN, "app_audio_gatt_init_ return: ", (u8 *)&ret, 4);
+	//printf("app_audios_gatt_init: %d\r\n", ret);
+}
+
+int blc_audio_otpAttRead(u16 connHandle, void* p);
+int blc_audio_otpAttWrite(u16 connHandle, void* p);
+
+int app_att_audioOtsRead(void *p)
+{
+	my_dump_str_data(APP_LOG_EN, "ots att_read_enter:", NULL, 0); // p, sizeof(rf_packet_att_read_t));
+	rf_packet_att_read_t *p_r = (rf_packet_att_read_t *)p; // include dma len for BLE mesh library, not include dma len for new ble generic sdk.
+	if(blc_audio_otpAttRead(BLS_CONN_HANDLE, &p_r->type) == BLC_AUDIO_SUCCESS)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+int app_att_audioOtsWrite(void *p)
+{
+	my_dump_str_data(APP_LOG_EN, "ots att_write_enter:", NULL, 0); // p, sizeof(rf_packet_att_write_t));
+	rf_packet_att_write_t *p_w = (rf_packet_att_write_t *)p; // include dma len for BLE mesh library, not include dma len for new ble generic sdk.
+	return blc_audio_otpAttWrite(BLS_CONN_HANDLE, &p_w->type);
+}
+#endif
+
 
 #endif

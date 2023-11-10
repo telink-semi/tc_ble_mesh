@@ -52,10 +52,13 @@
 #endif
 
 #include "vendor/user_app/user_app.h"
+#include "vendor/common/nlc/mesh_nlc.h"
 
 #if LLSYNC_ENABLE
 #include "ble_qiot_export.h"
 #include "vendor/common/llsync/samples/telink/main/ll_app_mesh.h"
+#elif PLATFORM_TELINK_EN
+#include "vendor/common/telink_platform/telink_platform.h"
 #endif
 
 /** @addtogroup Mesh_Common
@@ -117,7 +120,7 @@ void i2c_sim_burst_write(u8 id, u8 addr,u8 *p,int n);
 #define MESH_RSP_RANDOM_DELAY_2S			200 //unit:ADV_INTERVAL_MIN(10ms)
 #define MESH_RSP_RANDOM_DELAY_3S			300 //unit:ADV_INTERVAL_MIN(10ms)
 
-#define MESH_POWERUP_BASE_TIME				200
+#define MESH_POWERUP_BASE_TIME				200 // when power up, after (this base time + random), the node will publish lightness model or other model, details refer to publish_when_powerup_();
 
 #if (0 == USER_REDEFINE_SCAN_RSP_EN)        // user can define in user_app.h
 typedef struct{
@@ -126,8 +129,15 @@ typedef struct{
 	u16 vendor_id;      // vendor id follow spec
 	u8 mac_adr[6];
 	u16 adr_primary;
-    u8 rsv_telink[8];  // not for user
-    u8 rsv_user[11];
+	#if (NLC_PROFILE_EN)
+	// local name
+	u8 len_name;
+	u8 type_name;
+	u8 name[NLC_LOCAL_NAME_LEN];
+	#else
+    u8 rsv_telink[8];	// not for user // TO be defined, no need to be sent now.
+    u8 rsv_user[11];	// TO be defined, no need to be sent now.
+    #endif
 }mesh_scan_rsp_t;
 #endif
 
@@ -193,6 +203,14 @@ void mesh_ota_reboot_proc();
 u8 proc_telink_mesh_to_sig_mesh(void);
 u8 send_vc_fifo(u8 cmd,u8 *pfifo,u8 cmd_len);
 void app_enable_scan_all_device ();
+/**
+ * @brief       This function server to set adv enable and scan enable
+ * @param[in]   adv_en	- 0: adv disable 1:adv enable
+ * @param[in]   scan_en	- 0: scan disable 1:scan enable
+ * @return      SUCCESS or FAILURE
+ * @note        
+ */
+int mesh_set_adv_scan_enable(int adv_en, int scan_en);
 int	app_device_mac_match (u8 *mac, u8 *mask);
 int app_l2cap_packet_receive (u16 handle, u8 * raw_pkt);
 int chn_conn_update_dispatch(u8 *p);
@@ -217,7 +235,13 @@ void mesh_scan_rsp_init();
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8 rsp_op, u8 tid);
 void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model);
-void share_model_sub(u16 op, u16 sub_adr, u8 *uuid, u32 light_idx);
+
+typedef enum{
+	MODEL_SHARE_TYPE_NONE 					= 0,
+	MODEL_SHARE_TYPE_ONOFF_SERVER_EXTEND 	= 1,
+	MODEL_SHARE_TYPE_OTHERS_SERVER_EXTEND 	= 2,
+}model_share_type_e;
+model_share_type_e share_model_sub_onoff_server_extend(u16 op, u16 sub_adr, u8 *uuid, u16 ele_adr);
 void APP_reset_vendor_id(u16 vd_id);
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_tx_cmd2self_primary(u32 light_idx, u8 *ac, int len_ac);
@@ -277,8 +301,9 @@ int SendOpParaDebug_VC(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);  // o
 #endif
 extern u8  mesh_user_define_mode ;
 
-extern u8 PROVISION_ATT_HANDLE; // may use in library
-extern u8 GATT_PROXY_HANDLE;    // may use in library
+extern u8 PROVISION_ATT_HANDLE; 
+extern u8 GATT_PROXY_HANDLE;
+extern const u8 SERVICE_GATT_OTA_HANDLE;
 extern const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE;
 extern const u8 ONLINE_ST_ATT_HANDLE_SLAVE;
 extern u8 proc_homekit_pair;
@@ -341,6 +366,10 @@ typedef struct{
 #define ECDH_KEY_STS_NONE_VALID	2
 #define ECDH_KEY_STS_ONE_VALID	3
 
+typedef struct {
+	u32	tk_pincode;
+} gap_smp_TkDisplayEvt_single_connect_t;
+
 void provision_ecc_calc();
 void set_dev_uuid_for_simple_flow( u8 *p_uuid);
 u8 prov_uuid_fastbind_mode(u8 *p_uuid);
@@ -377,6 +406,8 @@ void mesh_gatt_adv_beacon_enable(u8 enable);
 
 // ----------- mesh_log.c -------
 const char * get_op_string(u16 op, const char *str_in);
+const char * get_op_string_ctl(u8 op, int filter_cfg);
+void print_log_mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, int err, int filter_cfg);
 
 
 // ------------ clock -----------

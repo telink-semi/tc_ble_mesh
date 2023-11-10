@@ -589,7 +589,7 @@ extern int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u
 u8 win32_proved_state();
 
 
-void mesh_heartbeat_cb_data(u16 src, u16 dst,u8 *p_hb);
+void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear);
 
 
 void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);

@@ -32,6 +32,12 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 
+#define MESH_SR_BV_10_C				0
+#define MESH_SR_BV_11_C				0
+#define MESH_SR_BV_RESEND_DISABLE	0
+#define MESH_SR_RPR_PDU_BV01_C		0
+#define MESH_GATT_TIMEOUT_EN		0
+
 #define REMOTE_PROV_SCAN_ITEM_CNT   4
 #define REMOTE_PROV_DKRI_EN_FLAG	0x80
 enum{
@@ -376,22 +382,17 @@ typedef enum{
 
 void mesh_rp_para_init();
 int mesh_cmd_sig_rp_scan_capa(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_scan_capa_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_tx_cmd_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_stop(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_extend_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_close(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_link_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_pdu_send(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_pdu_outbound_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_pdu_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int remote_prov_report_cb(u8 rssi,u8 *p_uuid,u8 * p_oob);
 int remote_prov_report_raw_pkt_cb(u8 *p_beacon);
 void mesh_cmd_sig_rp_loop_proc();
@@ -402,6 +403,22 @@ void mesh_rp_netkey_del_cb(u8 idx,u16 op);
 void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
 int mesh_prov_server_to_client_cmd(u8 *prov_dat,u8 len);
 void mesh_rp_server_set_link_rp_sts(u8 sts);
+
+#if MD_CLIENT_EN
+int mesh_cmd_sig_rp_scan_capa_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_extend_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_link_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_pdu_outbound_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_pdu_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_rp_scan_capa_sts			(0)
+#define mesh_cmd_sig_rp_scan_sts				(0)
+#define mesh_cmd_sig_rp_extend_scan_report		(0)
+#define mesh_cmd_sig_rp_link_sts				(0)
+#define mesh_cmd_sig_rp_pdu_outbound_report		(0)
+#define mesh_cmd_sig_rp_pdu_report				(0)
+#endif
 
 // remote prov client part 
 typedef struct{

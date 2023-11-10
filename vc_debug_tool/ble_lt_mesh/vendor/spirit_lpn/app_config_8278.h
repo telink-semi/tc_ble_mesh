@@ -66,10 +66,12 @@ extern "C" {
 #define UART_RX_PIN		UART_RX_PB0
 #endif
 
-#define HCI_LOG_FW_EN   0
+#ifndef HCI_LOG_FW_EN
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
 #define PRINT_DEBUG_INFO                    1
+#endif
 #endif
 
 #define BATT_CHECK_ENABLE       			1   //must enable
@@ -109,6 +111,7 @@ extern "C" {
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 #define BLE_SIG_MESH_CERTIFY_ENABLE 	0
+#define BLT_SOFTWARE_TIMER_ENABLE		1
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0

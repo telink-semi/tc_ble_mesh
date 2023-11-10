@@ -131,6 +131,88 @@ typedef enum{
 }conn_para_up_rsp;
 
 
+#if 1//(L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN)
+/**
+ *  @brief  Definition for L2CAP signal packet formats
+ */
+typedef enum{
+	L2CAP_COMMAND_REJECT_RSP           		= 0x01,
+	L2CAP_CONNECTION_REQ                 	= 0x02,
+	L2CAP_CONNECTION_RSP                 	= 0x03,
+	L2CAP_CONFIGURATION_REQ                	= 0x04,
+	L2CAP_CONFIGURATION_RSP           		= 0x05,
+	L2CAP_DISCONNECTION_REQ           		= 0x06,
+	L2CAP_DISCONNECTION_RSP           		= 0x07,
+	L2CAP_ECHO_REQ          		 		= 0x08,
+	L2CAP_ECHO_RSP           				= 0x09,
+	L2CAP_INFORMATION_REQ           		= 0x0A,
+	L2CAP_INFORMATION_RSP           		= 0x0B,
+	L2CAP_CREATE_CHANNEL_REQ          		= 0x0C,
+	L2CAP_CREATE_CHANNEL_RSP           		= 0x0D,
+	L2CAP_MOVE_CHANNEL_REQ           		= 0x0E,
+	L2CAP_MOVE_CHANNEL_RSP           		= 0x0F,
+	L2CAP_MOVE_CHANNEL_CONFIRMATION_REQ		= 0x10,
+	L2CAP_MOVE_CHANNEL_CONFIRMATION_RSP     = 0x11,
+	L2CAP_CONNECTION_PARAMETER_UPDATE_REQ	= 0x12, // = L2CAP_CMD_CONN_UPD_PARA_REQ
+	L2CAP_CONNECTION_PARAMETER_UPDATE_RSP	= 0x13, // = L2CAP_CMD_CONN_UPD_PARA_RESP
+	L2CAP_LE_CREDIT_BASED_CONNECTION_REQ 	= 0x14,
+	L2CAP_LE_CREDIT_BASED_CONNECTION_RSP 	= 0x15,
+	L2CAP_FLOW_CONTROL_CREDIT_IND 			= 0x16,
+	L2CAP_CREDIT_BASED_CONNECTION_REQ 		= 0x17,	//core_5.2
+	L2CAP_CREDIT_BASED_CONNECTION_RSP 		= 0x18,	//core_5.2
+	L2CAP_CREDIT_BASED_RECONFIGURE_REQ 		= 0x19,	//core_5.2
+	L2CAP_CREDIT_BASED_RECONFIGURE_RSP 		= 0x1A,	//core_5.2
+}l2cap_sig_pkt_format;
+
+
+typedef struct {
+	unsigned char opcode;
+	unsigned char data[0];
+} attr_pkt_t;
+
+typedef struct {
+	u8 code;
+	u8 identifier;
+	u16 dataLen;
+	u8 data[0];
+} signal_pkt_t;
+
+typedef struct {
+	u8 code;
+	u8 data[0];
+} smp_pkt_t;
+
+typedef struct {
+	u16 sduLen;
+	u8 info[0];
+} coc_start_pkt_t;
+
+typedef struct {
+	u8 info[0];
+} coc_cont_pkt_t;
+
+typedef struct {
+	union{
+		coc_start_pkt_t start;
+		coc_cont_pkt_t cont;
+	};
+} coc_pkt_t;
+
+typedef struct{
+	u16 pduLen;
+	u16 cid;
+	union{
+		attr_pkt_t att;
+		signal_pkt_t signal;
+		smp_pkt_t smp;
+		coc_pkt_t coc;
+	} payload;
+} l2cap_pkt_t;
+
+void blt_l2cap_signalDataControl(u16 connHandle, rf_packet_l2cap_t *ptrSig);
+int hci_slave_handle_valid(u16 handle);
+u16 blt_l2cap_getAclRxBufferSize(void);
+#endif
 
 
 /******************************* User Interface  ************************************/

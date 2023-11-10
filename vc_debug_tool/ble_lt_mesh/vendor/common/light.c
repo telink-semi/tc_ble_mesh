@@ -105,6 +105,9 @@ const light_res_hw_t light_res_hw[LIGHT_CNT][1] = {
     #if (LIGHT_CNT >= 4)
     [3] = {RES_HW_PWM_W},
     #endif
+    #if (LIGHT_CNT >= 5)
+#error TODO: to add pwm or IO resource by user.
+    #endif
 };
 #endif
 #endif
@@ -143,6 +146,13 @@ const u16 rgb_lumen_map[101] = {
     214*256,218*256,222*256,226*256,230*256,235*256,240*256,245*256,250*256,255*256,// must less or equal than (255*256)
 };
 
+
+/**
+ * @brief       This function set light ct mode for LIGHT_TYPE_CT_HSL
+ * @param[in]   mode	- 0:  HSL mode; 1: CT mode.
+ * @return      none
+ * @note        
+ */
 void set_ct_mode(u8 mode)
 {
     if(ct_flag != mode){
@@ -155,8 +165,8 @@ void set_ct_mode(u8 mode)
 
 /**
  * @brief  Save Generic OnOff States for next power-on.
- * @param  idx: Light Count index.
- * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @param  idx: index of Light Count.
+ * @param  st_trans_type: a enum value of ST_TRANS_TYPE.
  * @param  onoff: OnOff States.
  *     @arg G_OFF: Off state.
  *     @arg G_ON: On state.
@@ -169,6 +179,14 @@ void set_on_power_up_onoff(int idx, int st_trans_type, u8 onoff)
 	light_par_save(0);
 }
 
+
+/**
+ * @brief       This function set last value which will be used when power up.
+ * @param[in]   last	- last value
+ * @param[out]  p_save	- pointer to save
+ * @return      none
+ * @note        
+ */
 void set_on_power_up_last(sw_level_save_t *p_save, s16 last)
 {
 	if(LEVEL_OFF == last){
@@ -179,6 +197,13 @@ void set_on_power_up_last(sw_level_save_t *p_save, s16 last)
 	}
 }
 
+
+/**
+ * @brief       This function get last value which will be used when power up.
+ * @param[in]   p_save	- pointer to save
+ * @return      if need to be on when power up: last value; if off: LEVEL_OFF
+ * @note        
+ */
 s16 get_on_power_up_last(sw_level_save_t *p_save)
 {
 	return (p_save->onoff ? p_save->last : LEVEL_OFF);
@@ -188,16 +213,34 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 #if 1 // KEEP_ONOFF_STATE_AFTER_OTA // alway on, because lpn need to set in gatt adv mode after ota reboot.
 #define OTA_REBOOT_CHECK_FLAG			(KEEP_ONOFF_STATE_AFTER_OTA ? FLD_OTA_REBOOT_FLAG : 0)
 
+
+/**
+ * @brief       This function save OTA satte when OTA, then it can keep light state after OTA reboot.
+ * @return      none
+ * @note        
+ */
 void set_keep_onoff_state_after_ota()
 {
 	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_OTA_REBOOT_FLAG);
 }
 
+
+/**
+ * @brief       This function clear OTA satte.
+ * @return      none
+ * @note        
+ */
 void clr_keep_onoff_state_after_ota()
 {
 	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_OTA_REBOOT_FLAG));
 }
 
+
+/**
+ * @brief       This function get if it is ota state.
+ * @return      none
+ * @note        
+ */
 int is_state_after_ota()
 {
 	return (analog_read(DEEP_ANA_REG0) & FLD_OTA_REBOOT_FLAG);
@@ -205,6 +248,12 @@ int is_state_after_ota()
 #endif
 #endif
 
+
+/**
+ * @brief       This function initial global variable for light software resource. as if it is default value for compile.
+ * @return      none
+ * @note        
+ */
 void mesh_global_var_init_light_sw()
 {
 	foreach_arr(i,light_res_sw){
@@ -266,6 +315,11 @@ void mesh_global_var_init_light_sw()
 	}
 }
 
+/**
+ * @brief       This function load software resource of the light from p_save which read from flash before.
+ * @return      none
+ * @note        
+ */
 void light_res_sw_load()
 {
 	foreach_arr(i,light_res_sw){
@@ -311,30 +365,82 @@ void light_res_sw_load()
 			} 
 			
 			p_trans->present = p_trans->target = level_poweron;
+			#if (MD_LIGHT_CONTROL_EN)
+			if(0 == i && ST_TRANS_LIGHTNESS == k){
+				#if 0 // PTS_TEST_MMDL_SR_LLC_BV_11_C
+				u8 onpowerup = ONPOWER_UP_VAL(i);
+				u8 lc_mode = ((ONPOWER_UP_OFF == onpowerup)||(ONPOWER_UP_DEFAULT == onpowerup)) ? LC_MODE_OFF : model_sig_light_lc.mode[i];
+				u8 lc_onoff = model_sig_light_lc.lc_onoff_target[i];
+				LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"**** init **** lc mode:%d, level:%d, onpower par:%d, lc onoff:%d ****", lc_mode, level_poweron, ONPOWER_UP_VAL(i), lc_onoff);
+				lc_mode_set_par(i, lc_mode);
+					#if 1
+				if(LC_MODE_ON == lc_mode){
+					if(lc_onoff){
+						#if 1 // TODO: why can not send lc onoff command ? 
+						model_sig_light_lc.lc_onoff_target[i] = lc_onoff; 
+						#else
+						access_cmd_lc_onoff(ele_adr_primary, 0, lc_onoff, 0, 0); // why no tick set to g_lc_prop_proc_ ? now send message at "test_once_flag" of LC_property_proc_.
+						#endif
+					}
+				}
+					#endif
+				#else
+				lc_mode_set_par(i, model_sig_light_lc.mode[i]);
+				#endif
+			}
+			#endif
 		}
 	}
 }
 
+/**
+ * @brief       This function manual set light status parameter
+ * @param[in]   onoff		- on or off
+ * @param[in]   transit_t	- transition time parameter
+ * @param[in]   light_idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      none
+ * @note        
+ */
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx)
 {
     mesh_cmd_g_onoff_set_t cmd_onoff = {0, 0, 0, 0};
     cmd_onoff.onoff = !!onoff;
     cmd_onoff.transit_t = transit_t;
     st_pub_list_t pub_list = {{0}};
+	//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"yyyyyyyy 666", 0);
+#if (MD_LIGHT_CONTROL_EN)
+	set_LC_lightness_flag = 1; // to not clear LC flow.
+#endif
     g_onoff_set(&cmd_onoff, sizeof(cmd_onoff),1,light_idx,0, &pub_list);
+#if (MD_LIGHT_CONTROL_EN)
+	set_LC_lightness_flag = 0;
+#endif
 }
 
+/**
+ * @brief       This function check light edch parameter is exist
+ * @return      0:not exist; 1:exist
+ * @note        
+ */
 u8 edch_is_exist()
 {
+#if PROV_AUTH_LEAK_RECREATE_KEY_EN
+#else
 	u32 *p_edch = (u32 *) FLASH_ADR_EDCH_PARA;
 	if(*p_edch == 0xffffffff){
 		return 0;
 	}	
+#endif
 	return 1;
 }
 
 /*
  * light pwm init() will cost 1.5ms when 16MHz. so it should not be called directly when retention wakeup.
+ */
+/**
+ * @brief       This function initial light pwm register.
+ * @return      none
+ * @note        
  */
 void light_pwm_init()
 {
@@ -387,11 +493,23 @@ void set_keep_onoff_state_after_ota(){}
 #endif
 
 static u32 tick_light_save;
+
+/**
+ * @brief       This function trigger countdown timer to save light parameter.
+ * @param[in]   quick	- 1: save at once.
+ * @return      none
+ * @note        
+ */
 void light_par_save(int quick)
 {
 	tick_light_save = (quick ? (clock_time() - BIT(31)) : clock_time()) | 1;
 }
 
+/**
+ * @brief       This function process countdown timer to save light parameter.
+ * @return      none
+ * @note        
+ */
 void light_par_save_proc()
 {
 	// save proc
@@ -404,6 +522,11 @@ void light_par_save_proc()
 }
 
 #if (MD_SCENE_EN)
+/**
+ * @brief       This function check all light scene status when change
+ * @return      none
+ * @note        
+ */
 void scene_status_change_check_all()
 {
     #if MD_SERVER_EN
@@ -417,6 +540,14 @@ void scene_status_change_check_all()
 }
 #endif
 
+/**
+ * @brief       This function servers to set pwm CMP which determine PWM level.
+ * @param[in]   id	- pwm id.
+ * @param[in]   y	- variable of the CMP.
+ * @param[in]   pol	- invert pwm or not.
+ * @return      none
+ * @note        
+ */
 void pwm_set_lum (int id, u16 y, int pol)
 {
 #if (IS_VC_PROJECT)
@@ -431,6 +562,13 @@ void pwm_set_lum (int id, u16 y, int pol)
 #endif
 }
 
+/**
+ * @brief       This function to get pwm CMP determined by both color and luminance.
+ * @param[in]   val	- value
+ * @param[in]   lum	- rgb_lumen_map index
+ * @return      pwm count status(CMP)
+ * @note        
+ */
 u32 get_pwm_cmp(u8 val, u8 lum){
     if(lum >= ARRAY_SIZE(rgb_lumen_map) - 1){
         lum = ARRAY_SIZE(rgb_lumen_map) - 1;
@@ -440,6 +578,42 @@ u32 get_pwm_cmp(u8 val, u8 lum){
     return ((u32)val * val_lumen_map) / 255;
 }
 
+#define LIGHTNESS_AVERAGE_STEP	(65535 / (ARRAY_SIZE(rgb_lumen_map) - 1))
+#define RGB_AVERAGE_STEP		(255 / (ARRAY_SIZE(rgb_lumen_map) - 1))
+STATIC_ASSERT((LIGHTNESS_AVERAGE_STEP > 0) || (RGB_AVERAGE_STEP > 0));
+
+/**
+ * @brief       This function get smooth pwm value
+ * @param[in]   lightness	- lightness
+ * @param[in]   step		- lightness unit or step.
+ * @return      pwm value
+ * @note        
+ */
+u16 get_pwm_smooth(u16 lightness, u32 step)
+{
+	u8 lum = lightness / step;
+	u16 lightness_remain = lightness % step;
+	u16 pwm_remain = 0;
+	u16 pwm_max = rgb_lumen_map[ARRAY_SIZE(rgb_lumen_map) - 1];
+
+	if (lum >= ARRAY_SIZE(rgb_lumen_map) - 1) {
+		lum = ARRAY_SIZE(rgb_lumen_map) - 1;
+	}else {
+		// if ((lightness_remain > 0) || (step <= 3))
+		{
+			pwm_remain = (lightness_remain * (rgb_lumen_map[lum + 1] - rgb_lumen_map[lum])) / (step);
+		}
+	}
+
+	u32 pwm_val = rgb_lumen_map[lum] + pwm_remain;
+	if (pwm_val > pwm_max) {
+		pwm_val = pwm_max;
+	}else if((lightness > 0) && (pwm_val < rgb_lumen_map[1])){ // pwm_val may be 0, when lightness equal to 1, so need to compare lightness, not pwm_val.
+		pwm_val = rgb_lumen_map[1]; // if less than minimum PWM, some bulb may not work good.
+	}
+
+	return pwm_val;
+}
 
 /**
  * @brief  Control lights on hardware.
@@ -493,6 +667,13 @@ float Hue_2_RGB(float v1,float v2,float vH){
     return(v1);
 }
 
+/**
+ * @brief       This function switch HSL to RGB
+ * @param[in]   hsl	- HSL
+ * @param[in]   rgb	- RGB
+ * @return      none
+ * @note        
+ */
 void HslToRgb(HSL_set hsl, RGB_set *rgb)
 {
 	float m1,m2;
@@ -516,19 +697,35 @@ void HslToRgb(HSL_set hsl, RGB_set *rgb)
 #endif 
 
 #if MD_SERVER_EN
+u16 g_op_access_layer_rx = 0;	// 0 means invalid op, not APPKEY_ADD.
+
+/**
+ * @brief       This function Set last Generic Level parameters for light.
+ * @param[in]   idx				- index of Light Count.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      none
+ * @note        
+ */
 void light_res_sw_g_level_last_set(int idx, int st_trans_type)
 {
 	//set_level_current_type(idx, st_trans_type);
 	sw_level_save_t *p_save = P_SW_LEVEL_SAVE(idx, st_trans_type);
 	st_transition_t *p_trans = P_ST_TRANS(idx, st_trans_type);
-	set_on_power_up_last(p_save, p_trans->target);
+	if(1 && (ST_TRANS_LIGHTNESS == st_trans_type) && (LEVEL_OFF == p_trans->target) && // TEST_MMDL_SR_LLN_BV10: set to "if(0)"
+		is_dim2dark_set_op(g_op_access_layer_rx)){ // onoff/lightness set,etc commands have been changed to level set, so need to record op in 
+		// to follow new spec, when dim to dark(lightness 0), should save min as last value but not the lightness before set to 0.
+		p_save->onoff = 0;
+		p_save->last = p_save->min;
+	}else{
+		set_on_power_up_last(p_save, p_trans->target);
+	}
 	light_par_save(0);
 }
 #endif
 
 /**
  * @brief  Set Generic Level parameters(Global variables) for light.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.
@@ -548,6 +745,14 @@ void light_res_sw_g_level_set(int idx, s16 level, int init_time_flag, int st_tra
 	}
 }
 
+/**
+ * @brief       This function Set Generic Level target(Global variables) for light.
+ * @param[in]   idx				- index of Light Count.
+ * @param[in]   level			- General Level value.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      none
+ * @note        
+ */
 void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// only for move set command
 {
 	//set_level_current_type(idx, st_trans_type);
@@ -557,49 +762,25 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
 	p_trans->delay_ms = 0;
 }
 
-// --------------------------------
 /**
- * @brief  Refresh the light status through the global variables 
- *   that have been set.
- * @param  idx: Light Count index.
- * @retval None
+ * @brief       This function Control lights on hardware.
+ * @param[in]   idx	- index of Light Count.
+ * @return      none
+ * @note        
  */
-_USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
+void light_dim_refresh_mi_ct(int idx)
 {
-	st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
-	// u16 lightness = get_lightness_from_level(p_trans->present);
-#if (LIGHT_TYPE_SEL != LIGHT_TYPE_HSL)
-	u8 lum_100 = level2lum(p_trans->present);
-#endif
-    //LOG_MSG_INFO(DEBUG_SHOW_VC_SELF_EN ? TL_LOG_COMMON : TL_LOG_MESH,0,0,"present_lum %d", lum_100);
-	CB_NL_PAR_NUM_3(p_nl_level_state_changed,idx * ELE_CNT_EVERY_LIGHT + ST_TRANS_LIGHTNESS, p_trans->present, p_trans->target);
-#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN|| LPN_CONTROL_EN)
-    foreach_arr(i,light_res_hw[LIGHT_CNT]){
-        const light_res_hw_t *p_hw = &light_res_hw[idx][i];
-        led_onoff_gpio(p_hw->gpio, 0 != lum_100);
-    }
-	return ;
-#else
-    #if(!(LIGHT_TYPE_CT_EN || LIGHT_TYPE_HSL_EN))
-    light_dim_set_hw(idx, 0, get_pwm_cmp(0xff, lum_100));
-    #else
-	    #if (LIGHT_TYPE_CT_EN)
-    u8 ct_100 = 0;
-    if(ct_flag && (lum_100 != 0)){
-	    u16 temp = light_ctl_temp_prensent_get(idx);
-	    ct_100 = temp_to_temp100_hw(temp);
-		static u8 debug_ct_100; debug_ct_100 = ct_100;
-    }
-            #if (XIAOMI_MODULE_ENABLE&&!AIS_ENABLE)
+	st_transition_t *p_trans_l = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
     //calc the temp100 transfer for mi 
+	u8 lum_100 = level2lum(p_trans_l->present);
     u16 mi_temp = light_ctl_temp_prensent_get(idx);
     u8 mi_ct = 0;
 	#if LS_TEST_ENABLE
-	#define CT_MI_MIN		3000
-	#define CT_MI_MAX		6400
+#define CT_MI_MIN		3000
+#define CT_MI_MAX		6400
 	#else
-	#define CT_MI_MIN		2700
-	#define CT_MI_MAX		6500
+#define CT_MI_MIN		2700
+#define CT_MI_MAX		6500
 	#endif
     if(mi_temp<CT_MI_MIN){
         mi_ct =0;
@@ -611,17 +792,67 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
     light_dim_set_hw(idx, 0, 0xffff);// turn on the filter part 
     light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, mi_ct*lum_100/100));
     light_dim_set_hw(idx, 2, get_pwm_cmp(0xff, (100-mi_ct)*lum_100/100));
+}
+
+// --------------------------------
+/**
+ * @brief  Refresh the light status through the global variables 
+ *   that have been set.
+ * @param  idx: index of Light Count.
+ * @retval None
+ */
+_USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
+{
+	st_transition_t *p_trans_l = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
+	// u16 lightness = get_lightness_from_level(p_trans->present);
+#if (LIGHT_TYPE_SEL != LIGHT_TYPE_HSL)
+	u32 lightness_65535 = s16_to_u16(p_trans_l->present);
+#endif
+
+    //LOG_MSG_INFO(DEBUG_SHOW_VC_SELF_EN ? TL_LOG_COMMON : TL_LOG_MESH,0,0,"present_lum %d", lum_100);
+	CB_NL_PAR_NUM_3(p_nl_level_state_changed,idx * ELE_CNT_EVERY_LIGHT + ST_TRANS_LIGHTNESS, p_trans_l->present, p_trans_l->target);
+#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN|| LPN_CONTROL_EN)
+    foreach_arr(i,light_res_hw[LIGHT_CNT]){
+        const light_res_hw_t *p_hw = &light_res_hw[idx][i];
+        led_onoff_gpio(p_hw->gpio, 0 != lightness_65535);
+    }
+	return ;
+#else
+    #if(!(LIGHT_TYPE_CT_EN || LIGHT_TYPE_HSL_EN))
+    light_dim_set_hw(idx, 0, get_pwm_smooth(lightness_65535, LIGHTNESS_AVERAGE_STEP));
+    #else
+	    #if (LIGHT_TYPE_CT_EN)
+            #if (XIAOMI_MODULE_ENABLE&&!AIS_ENABLE)
+    p_trans_l = p_trans_l; // will be optimized
+    lightness_65535 = lightness_65535; // will be optimized
+	light_dim_refresh_mi_ct(idx);
             #else
+	st_transition_t *p_trans_ct = P_ST_TRANS(idx, ST_TRANS_CTL_TEMP);
+	u32 ct_65535 = s16_to_u16(p_trans_ct->present);
+    if(ct_flag && (lightness_65535 != 0)){
+		#if 0 // to get color temperature value from level which store in flash.
+	    u16 color_temperature = light_ctl_temp_prensent_get(idx); // range from CTL_TEMP_MIN(800) to CTL_TEMP_MAX(20000) by default.
+	    u8 ct_100 = temp_to_temp100_hw(color_temperature);		  // transform to range from 0 to 100;
+		static u8 debug_ct_100; debug_ct_100 = ct_100;
+		#endif
+    }
+
     if(ct_flag){
-        light_dim_set_hw(idx, 0, get_pwm_cmp(0xff,(100-ct_100)*lum_100/100));
-        light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, ct_100*lum_100/100)); 
+		u32 warn_led_lightness = ((65535 - ct_65535) * lightness_65535) / 65535;
+		u32 cold_led_lightness = (ct_65535 * lightness_65535) / 65535;
+		u32 warn_led_pwm = get_pwm_smooth(warn_led_lightness, LIGHTNESS_AVERAGE_STEP);
+		u32 cold_led_pwm = get_pwm_smooth(cold_led_lightness, LIGHTNESS_AVERAGE_STEP);
+		light_dim_set_hw(idx, 0, warn_led_pwm);
+		light_dim_set_hw(idx, 1, cold_led_pwm); 
+		
+		//LOG_MSG_LIB(TL_LOG_NODE_SDK,0,0,"pwm:0x%04x,0x%04x", warn_led_pwm, cold_led_pwm);
     }
             #endif   
         #endif
         
         #if (LIGHT_TYPE_HSL_EN)
     if(!ct_flag){
-        //u8 r = irq_disable();
+        //u32 r = irq_disable();
         //u32 tick_1 = clock_time();
         st_transition_t *p_hue = P_ST_TRANS(idx, ST_TRANS_HSL_HUE);
         st_transition_t *p_sat = P_ST_TRANS(idx, ST_TRANS_HSL_SAT);
@@ -629,11 +860,11 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
         RGB_set RGB;
         HSL.h = ((float)(s16_to_u16(p_hue->present))/65535.0f);
         HSL.s = ((float)(s16_to_u16(p_sat->present))/65535.0f);
-        HSL.l = ((float)(s16_to_u16(p_trans->present))/65535.0f);
+        HSL.l = ((float)(s16_to_u16(p_trans_l->present))/65535.0f);
         HslToRgb(HSL,&RGB);
-        light_dim_set_hw(idx, 0, get_pwm_cmp(0xff, RGB.r*100/255));
-        light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, RGB.g*100/255));
-        light_dim_set_hw(idx, 2, get_pwm_cmp(0xff, RGB.b*100/255));
+        light_dim_set_hw(idx, 0, get_pwm_smooth(RGB.r, RGB_AVERAGE_STEP));
+        light_dim_set_hw(idx, 1, get_pwm_smooth(RGB.g, RGB_AVERAGE_STEP));
+        light_dim_set_hw(idx, 2, get_pwm_smooth(RGB.b, RGB_AVERAGE_STEP));
         //static u32 A_1[100];
         // static u32 A_1_cnt;
         //if(A_1_cnt < 100){
@@ -646,6 +877,16 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 #endif
 }
 
+/**
+ * @brief      This function get light publish list
+ * @param[in]  st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @param[in]  present_level	- present level
+ * @param[in]  target_level		- target level
+ * @param[in]  pub_trans_flag	- publish transmit flag
+ * @param[out] pub_list			- publish list
+ * @return     none
+ * @note        
+ */
 void get_light_pub_list(int st_trans_type, s16 present_level, s16 target_level, int pub_trans_flag, st_pub_list_t *pub_list)
 {
     if(pub_trans_flag){
@@ -662,7 +903,7 @@ void get_light_pub_list(int st_trans_type, s16 present_level, s16 target_level, 
 
 /**
  * @brief  Set Generic Level for light.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.
@@ -694,6 +935,12 @@ int light_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type,
 
 //------------------ model call back func
 //------get function
+/**
+ * @brief       This function get light status change remain time
+ * @param[in]   p_trans	- light parameter
+ * @return      remain time
+ * @note        
+ */
 u8 light_remain_time_get(st_transition_t *p_trans)
 {
 	u32 remain_ms = p_trans->remain_t_ms;
@@ -706,6 +953,14 @@ u8 light_remain_time_get(st_transition_t *p_trans)
 	return remain_t;
 }
 
+/**
+ * @brief       This function get light level
+ * @param[out]  rsp				- pointer to response data
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      0:get success; -1:get fail
+ * @note        
+ */
 int light_g_level_get(u8 *rsp, int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -722,7 +977,7 @@ int light_g_level_get(u8 *rsp, int idx, int st_trans_type)
 
 /**
  * @brief  Get Light CTL Default Value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Light CTL Default Value.
  */
@@ -737,7 +992,7 @@ s16 light_g_level_def_get(int idx, int st_trans_type)
 
 /**
  * @brief  Get Light CTL Default Value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Light CTL Default Value.
  */
@@ -749,7 +1004,7 @@ u16 light_g_level_def_get_u16(int idx, int st_trans_type)
 /**
  * @brief  Set Light CTL Default Value.
  * @param  val: Light CTL Default Value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -769,7 +1024,7 @@ int light_g_level_def_set(s16 val, int idx, int st_trans_type)
 /**
  * @brief  Set Light CTL Default Value.
  * @param  val: Light CTL Default Value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -782,7 +1037,7 @@ int light_g_level_def_set_u16(u16 val, int idx, int st_trans_type)
 /**
  * @brief  Get level range value.
  * @param  p_range: Point to Light Range value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -804,7 +1059,7 @@ int light_g_level_range_get(light_range_s16_t *p_range, int idx, int st_trans_ty
 /**
  * @brief  Get Light CTL Temperature Range value.
  * @param  p_range: Point to Light CTL Temperature Range value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -823,7 +1078,7 @@ int light_g_level_range_get_u16(light_range_u16_t *p_range, int idx, int st_tran
  * @brief  Set Light (Lightness/CTL Temperature/HSL/xyL) Range value.
  * @param  min: Range Min.
  * @param  max: Range Max.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -843,7 +1098,7 @@ int light_g_level_range_set(u16 min, u16 max, int idx, int st_trans_type)
 
 /**
  * @brief  Get light target level value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval light target level value.
  */
@@ -859,7 +1114,7 @@ s16 light_g_level_target_get(int idx, int st_trans_type)
 
 /**
  * @brief  Get light present level value.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval light present level value.
  */
@@ -873,16 +1128,36 @@ s16 light_g_level_present_get(int idx, int st_trans_type)
 	return 0;
 }
 
+/**
+ * @brief       This function get light present level and transition to u16
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      light level
+ * @note        
+ */
 u16 light_g_level_present_get_u16(int idx, int st_trans_type)
 {
 	return s16_to_u16(light_g_level_present_get(idx, st_trans_type));
 }
 
+/**
+ * @brief       This function  get light present level
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      light level
+ * @note        
+ */
 u8 light_g_onoff_present_get(int idx)
 {
     return (light_g_level_present_get(idx, ST_TRANS_LIGHTNESS) != LEVEL_OFF);
 }
 
+/**
+ * @brief       This function get last light level
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      0:get fail; other:last light level
+ * @note        
+ */
 s16 light_g_level_last_get(int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -893,6 +1168,15 @@ s16 light_g_level_last_get(int idx, int st_trans_type)
 	return 0;
 }
 
+/**
+ * @brief       This function get light level by onoff
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   on				- onoff cmd
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @param[in]   force_last		- the last value is enforced
+ * @return      light level
+ * @note        
+ */
 s16 get_light_g_level_by_onoff(int idx, int on, int st_trans_type, int force_last)
 {
 	if(on){
@@ -909,6 +1193,13 @@ s16 get_light_g_level_by_onoff(int idx, int on, int st_trans_type, int force_las
 }
 
 #if (LIGHT_TYPE_CT_EN)
+/**
+ * @brief       This function get light color temperature
+ * @param[in]   light_idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   target_flag	- is use target flag
+ * @return      temp
+ * @note        
+ */
 u16 light_ctl_temp_get_ll(int light_idx, int target_flag)
 {
     u16 temp = 0;
@@ -921,17 +1212,35 @@ u16 light_ctl_temp_get_ll(int light_idx, int target_flag)
 	return temp;
 }
 
+/**
+ * @brief       This function get present color temperature
+ * @param[in]   light_idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      color temperature
+ * @note        
+ */
 u16 light_ctl_temp_prensent_get(int light_idx)
 {
 	return light_ctl_temp_get_ll(light_idx, 0);
 }
 
+/**
+ * @brief       This function target color temperature
+ * @param[in]   light_idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      color temperature
+ * @note        
+ */
 u16 light_ctl_temp_target_get(int light_idx)
 {
 	return light_ctl_temp_get_ll(light_idx, 1);
 }
 #endif
 
+/**
+ * @brief       This function lum to level
+ * @param[in]   lum	- lum
+ * @return      level
+ * @note        
+ */
 s16 lum2level(u8 lum)
 {
 	if(lum > 100){
@@ -940,6 +1249,12 @@ s16 lum2level(u8 lum)
 	return (-32768 + division_round(65535*lum,100));
 }
 
+/**
+ * @brief       This function level to luminance which range 0 ~ 100.
+ * @param[in]   level	- level value
+ * @return      lum
+ * @note        
+ */
 u8 level2lum(s16 level)
 {
 	u16 lightness = level + 32768;
@@ -954,16 +1269,34 @@ u8 level2lum(s16 level)
 	return (((lightness + fix_1p2)*100)/65535);
 }
 
+/**
+ * @brief       This function get lightess from luminance which range 0 ~ 100.
+ * @param[in]   lum	- lum value
+ * @return      lightess
+ * @note        
+ */
 u16 lum2_lightness(u8 lum)
 {
 	return (get_lightness_from_level(lum2level(lum)));
 }
 
+/**
+ * @brief       This function get lum from lightess
+ * @param[in]   lightness	- lightess value
+ * @return      lum
+ * @note        
+ */
 u8 lightness2_lum(u16 lightness)
 {
 	return (level2lum(get_level_from_lightness(lightness)));
 }
 
+/**
+ * @brief       This function temp(0-100) to temp(CTL_TEMP_MIN - CTL_TEMP_MAX)
+ * @param[in]   temp100	- temp100 value
+ * @return      color temperature
+ * @note        
+ */
 u16 temp100_to_temp(u8 temp100)
 {
 	if(temp100 > 100){
@@ -972,6 +1305,12 @@ u16 temp100_to_temp(u8 temp100)
 	return (CTL_TEMP_MIN + ((CTL_TEMP_MAX - CTL_TEMP_MIN)*temp100)/100);
 }
 
+/**
+ * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
+ * @param[in]   temp- color temperature value
+ * @return      temperature100
+ * @note        
+ */
 u8 temp_to_temp100_hw(u16 temp) // use for driver pwm, 0--100 is absolute value, not related to temp range
 {
 	if(temp < CTL_TEMP_MIN){
@@ -985,11 +1324,24 @@ u8 temp_to_temp100_hw(u16 temp) // use for driver pwm, 0--100 is absolute value,
 	return (((temp - CTL_TEMP_MIN + fix_1p2)*100)/(CTL_TEMP_MAX - CTL_TEMP_MIN));   // temp100 can be zero.
 }
 
+/**
+ * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
+ * @param[in]   temp- temperature
+ * @return      color temperature value(0-100)
+ * @note        
+ */
 u8 temp_to_temp100(u16 temp)
 {
 	return temp_to_temp100_hw(temp);   // comfirm later, related with temp range
 }
 
+/**
+ * @brief       This function get light luminance
+ * @param[in]   idx			- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   target_flag	- is get target flag
+ * @return      lum
+ * @note        
+ */
 u8 light_lum_get(int idx, int target_flag)
 {
 	st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
@@ -997,6 +1349,13 @@ u8 light_lum_get(int idx, int target_flag)
 }
 
 #if (LIGHT_TYPE_CT_EN)
+/**
+ * @brief       This function get temp100
+ * @param[in]   idx			- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   target_flag	- is get target flag
+ * @return      temp100
+ * @note        
+ */
 u8 light_ct_lum_get(int idx, int target_flag)
 {
     return temp_to_temp100(light_ctl_temp_get_ll(idx, target_flag));
@@ -1005,6 +1364,14 @@ u8 light_ct_lum_get(int idx, int target_flag)
 
 //------set function
 #if 1
+/**
+ * @brief       This function set light level
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   on				- on or off
+ * @param[in]   init_time_flag	- is init target flag
+ * @return      0
+ * @note        
+ */
 int light_onoff_idx(int idx, int on, int init_time_flag){
     if(idx < LIGHT_CNT){
     	int st_trans_type = ST_TRANS_LIGHTNESS;
@@ -1017,7 +1384,7 @@ int light_onoff_idx(int idx, int on, int init_time_flag){
 
 /**
  * @brief  Set Generic Level for light by index.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.
@@ -1036,6 +1403,15 @@ int light_g_level_set_idx(int idx, s16 level, int init_time_flag, int st_trans_t
 }
 
 #if MD_SERVER_EN
+/**
+ * @brief       This function set level with transition time.
+ * @param[in]   set_trans		- transition time parameters
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   st_trans_type	- transition type
+ * @param[in]   hsl_set_cmd_flag- flag of HSL set command.
+ * @return      none
+ * @note        
+ */
 void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type, int hsl_set_cmd_flag)
 {
     if(idx < LIGHT_CNT){
@@ -1045,11 +1421,15 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
 		p_trans->target = p_set->target_val;
 		if(0x3F == (p_set->transit_t & 0x3F)){
 			p_trans->remain_t_ms = -1;
+			p_trans->delay_ms =  p_set->delay * 5; // 5 is unit define by spec
 		}else{
+			#if 0 // no lc_prop_time_ms now, because property time has been set to transition parameter of access_cmd_set_LC_lightness_().
 		    if(p_set->lc_prop_time_ms){
 			    p_trans->remain_t_ms = p_set->lc_prop_time_ms;
-			}else{
-                p_trans->remain_t_ms = 100 * get_transition_100ms((trans_time_t *)&p_set->transit_t);
+			}else
+			#endif
+			{
+                p_trans->remain_t_ms = 100 * get_transition_100ms((trans_time_t *)&p_set->transit_t) - p_set->dim2dark_delay_ms;
 			}
 			
 			if(p_trans->remain_t_ms){
@@ -1057,18 +1437,19 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
                     // have been make sure (target_val != present_val) and (level_move != 0) before.
 				    p_trans->step_1p32768 = ((p_set->level_move * 32768) /(s32)(p_trans->remain_t_ms)) * LIGHT_ADJUST_INTERVAL;
                     u32 abs_step = abs(p_set->level_move);
-                    u32 abs_delta = (p_set->target_val - p_set->present_val);
+                    u32 abs_delta = abs(p_set->target_val - p_set->present_val);
                     u32 mod = abs_delta % abs_step;
-                    u32 remain_t_ms_org = p_trans->remain_t_ms;
-                    u32 val;
-                    if(remain_t_ms_org >= 65536){
-                        // remain_t_ms_org is less than 37800000, so (remain_t_ms_org * 100) is less than 0xffffffff
-                        val = (((remain_t_ms_org * 100)/abs_step)*(mod))/100;
-                    }else{
-                        // make sure not overflow
-                        val = (remain_t_ms_org * mod) / abs_step;
+                    u32 remain_t_ms_org = p_trans->remain_t_ms; // max value is (RES_10MIN * 64)
+                    u32 val = 0;
+                    u32 multy_value = 1;
+                    if(remain_t_ms_org >= (65536 * 2)){
+                    	multy_value = 1024;
+                    	remain_t_ms_org /= multy_value;
                     }
-                    p_trans->remain_t_ms = remain_t_ms_org * (abs_delta / abs_step) + val;
+
+                    val = (remain_t_ms_org * mod) / abs_step;
+                    p_trans->remain_t_ms = ((remain_t_ms_org * abs_delta) / abs_step) * multy_value + val;
+					//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"move time, result: %d, remain_t_ms_org: %d, delta: %d, step: %d, val: %d", p_trans->remain_t_ms, remain_t_ms_org, abs_delta, abs_step, val);
                 }else{
 					s32 delta = (p_trans->target - p_trans->present);
 					#if LIGHT_TYPE_HSL_EN
@@ -1084,11 +1465,13 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
                             p_trans_sat->present = p_trans_sat->target;
 					    }
 					}
-
+					
+					#if(TESTCASE_FLAG_ENABLE == 0)//MMDL/SR/LHSLH/BV-04-C need process of pts
 					if(ST_TRANS_HSL_HUE == st_trans_type){
 					    // hue is a circular parameter from 0~360 degree
 					    delta = get_Hue_delta_value(s16_to_u16(p_trans->target), s16_to_u16(p_trans->present));
 					}
+					#endif
 					#endif
 					
 				    p_trans->step_1p32768 = ((delta * 32768) /(s32)(p_trans->remain_t_ms)) * LIGHT_ADJUST_INTERVAL;
@@ -1107,13 +1490,20 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
 			}else{
 				p_trans->step_1p32768 = 0;
 			}
+			
 			p_trans->present_1p32768 = 0; // init
+			p_trans->delay_ms = min(p_set->delay * 5 + p_set->dim2dark_delay_ms, BIT_MASK_LEN(sizeof(p_trans->delay_ms) * 8)); // "* 5" is unit define by spec
 		}
-		p_trans->delay_ms = p_set->delay * 5;
     }
 }
 #endif
 
+/**
+ * @brief       This function set all light onoff
+ * @param[in]   on	- on or off
+ * @return      none
+ * @note        
+ */
 void light_onoff_all(u8 on){
     foreach(i, LIGHT_CNT){
         light_onoff_idx(i, on, 1);
@@ -1121,6 +1511,13 @@ void light_onoff_all(u8 on){
 }
 
 #if CMD_LINEAR_EN
+/**
+ * @brief       This function set light linear
+ * @param[in]   idx		- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   linear	- The target value of the Light Lightness Linear state
+ * @return      0
+ * @note        
+ */
 int set_light_linear_flag(int idx,u16 linear)
 {
 	if(idx < LIGHT_CNT){
@@ -1130,6 +1527,12 @@ int set_light_linear_flag(int idx,u16 linear)
 	return 0;
 }
 
+/**
+ * @brief       This function clear light liner flag
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      0
+ * @note        
+ */
 int clear_light_linear_flag(int idx)
 {
 	if(idx < LIGHT_CNT){
@@ -1139,11 +1542,23 @@ int clear_light_linear_flag(int idx)
 	return 0;
 }
 
+/**
+ * @brief       This function get light linear value
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      linear value
+ * @note        
+ */
 u16 get_light_linear_val(int idx)
 {
     return light_res_sw[idx].linear;
 }
 
+/**
+ * @brief       This function light is exist linear flag
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      0:not linear_flag; other:linear_flag
+ * @note        
+ */
 int is_linear_flag(int idx)
 {
 	if(idx < LIGHT_CNT){
@@ -1153,6 +1568,13 @@ int is_linear_flag(int idx)
 }
 #endif
 
+/**
+ * @brief       This function set light level
+ * @param[in]   id	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   en	- on or off
+ * @return      none
+ * @note        
+ */
 void app_led_en (int id, int en)
 {
     if(id < LIGHT_CNT){
@@ -1162,6 +1584,13 @@ void app_led_en (int id, int en)
 
 #if MD_SERVER_EN
 // transition and delay proc
+/**
+ * @brief       This function get next step light level
+ * @param[in]   idx				- light level
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      next step light level
+ * @note        
+ */
 s16 light_get_next_level(int idx, int st_trans_type)
 {
     st_transition_t *p_trans = P_ST_TRANS(idx, st_trans_type);
@@ -1186,7 +1615,10 @@ s16 light_get_next_level(int idx, int st_trans_type)
 	}else
 	#endif
 	{
-        result = get_val_with_check_range(result, p_save->min, p_save->max, st_trans_type);
+        result = get_val_with_check_range(result, LEVEL_OFF, p_save->max, st_trans_type, G_LEVEL_SET_NOACK); // use LEVEL_MIN but not p_save->min, because it is during transition proccess.
+        if((LEVEL_OFF == result) && (ST_TRANS_LIGHTNESS == st_trans_type) && (p_trans->step_1p32768 > 0)){
+        	// result = LEVEL_OFF + 1; //
+        }
     }
 	
 	return (s16)result;
@@ -1221,8 +1653,14 @@ void light_transition_log(int st_trans_type, s16 present_level)
 #endif
 }
 
-void light_transition_proc()
+/**
+ * @brief       This function process light transition which include delay time and transition time.
+ * @return      0:gradient compete; 1:gradient  not compete
+ * @note        
+ */
+int light_transition_proc()
 {
+	int transiting_flag = 0;
     int all_trans_ok = 1;   // include no transition
 	foreach_arr(i,light_res_sw){
 	    int dim_refresh_flag = 0;
@@ -1231,13 +1669,15 @@ void light_transition_proc()
 			int complete_level = 0;
 			if(p_trans->delay_ms){
 				p_trans->delay_ms--;
+				transiting_flag = 1;
 				if((0 == p_trans->delay_ms) && (0 == p_trans->remain_t_ms)){
 					complete_level = 1;
 				}else{
 				    all_trans_ok = 0;
 				}
 			}else{
-				if(p_trans->remain_t_ms){	
+				if(p_trans->remain_t_ms){
+					transiting_flag = 1;
 					if(p_trans->present != p_trans->target){
 						if(0 == (p_trans->remain_t_ms % LIGHT_ADJUST_INTERVAL)){
                             s16 next_val = light_get_next_level(i, trans_type);
@@ -1248,7 +1688,17 @@ void light_transition_proc()
 							light_transition_log(trans_type, p_trans->present);
 						}
 					}
-					p_trans->remain_t_ms--;
+
+					#if 1
+					p_trans->remain_t_ms--; // should keep remain time for Binary state transitions from 0x00 to 0x01,.
+					#else
+					if(p_trans->present != p_trans->target){
+						p_trans->remain_t_ms--;
+					}else{
+						p_trans->remain_t_ms = 0;
+					}
+					#endif
+					
 					if(0 == p_trans->remain_t_ms){
 						complete_level = 1;	// make sure the last status is same with target
 					}else{
@@ -1270,6 +1720,7 @@ void light_transition_proc()
 				
                 #if MD_LIGHT_CONTROL_EN
                 if(ST_TRANS_LIGHTNESS == trans_type){
+					// LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"wwwww light transition complete", 0);
                     LC_light_transition_complete_handle(i);
                 }
                 #endif
@@ -1286,11 +1737,32 @@ void light_transition_proc()
 	        light_pub_trans_step = ST_PUB_TRANS_ALL_OK;
 	    }
 	}
+
+	return transiting_flag;
+}
+
+/**
+ * @brief       This function stop transition process.
+ * @param[in]   light_idx		- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
+ * @return      none
+ * @note        
+ */
+void light_transition_proc_stop(int light_idx, int st_trans_type) // only used for move set now
+{
+	if(light_idx < LIGHT_CNT){
+		memset(&light_res_sw[light_idx].trans[st_trans_type], 0, sizeof(light_res_sw[light_idx].trans[st_trans_type]));
+	}
 }
 #endif
 
 
 // LED function
+/**
+ * @brief       This function refresh all the light status through the global variables 
+ * @return      none
+ * @note        
+ */
 void light_dim_refresh_all()
 {
     foreach(i, LIGHT_CNT){
@@ -1306,21 +1778,44 @@ fp_proc_led 				p_vendor_proc_led 				= 0;
 static u32 led_event_pending;
 static int led_count = 0;
 
+/**
+ * @brief       This function configure the frequency and times of LED flashing
+ * @param[in]   e	- LED flashing event type
+ * @return      none
+ * @note        
+ */
 void cfg_led_event (u32 e)
 {
 	led_event_pending = e;
 }
 
+/**
+ * @brief       This function stop the frequency and time of LED flashing
+ * @return      none
+ * @note        
+ */
 void cfg_led_event_stop ()
 {
 	led_event_pending = led_count = 0;
 }
 
+/**
+ * @brief       This function check led is busy
+ * @return      0:not busy; 1:busy
+ * @note        
+ */
 int is_led_busy()
 {
     return (!(!led_count && !led_event_pending));
 }
 
+/**
+ * @brief       This function config gpio of led
+ * @param[in]   gpio- gpio
+ * @param[in]   on	- on or off
+ * @return      none
+ * @note        
+ */
 void led_onoff_gpio(u32 gpio, u8 on){
 #if (FEATURE_LOWPOWER_EN || PM_DEEPSLEEP_RETENTION_ENABLE)
     gpio_set_func (gpio, AS_GPIO);
@@ -1334,7 +1829,12 @@ void led_onoff_gpio(u32 gpio, u8 on){
 #endif
 }
 
-#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE)
+#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || ((SMART_PROVISION_ENABLE || FAST_PROVISION_ENABLE) && !MD_SERVER_EN))
+/**
+ * @brief       This function is led indicator event polling function
+ * @return      none
+ * @note        
+ */
 void proc_led()
 {
 	if(p_vendor_proc_led){
@@ -1399,6 +1899,12 @@ void proc_led()
 }
 #else
 
+/**
+ * @brief       This function process led
+ * @param[in]   void- none
+ * @return      none
+ * @note        
+ */
 void proc_led(void)
 {
 	if(p_vendor_proc_led){
@@ -1475,6 +1981,12 @@ void proc_led(void)
 }
 #endif 
 
+/**
+ * @brief       This function is callback function of light event.
+ * @param[in]   status	- rx Flashing event
+ * @return      none
+ * @note        
+ */
 _USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 {
 #ifdef WIN32
@@ -1508,6 +2020,9 @@ _USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 	    #else
         cfg_led_event(LED_EVENT_FLASH_1HZ_4S);
         #endif
+        #if LLSYNC_ENABLE
+		llsync_stop_silence_adv_timeout_check();
+		#endif
     }else if(status == LGT_CMD_SET_SUBSCRIPTION){
 	    #ifdef CFG_LED_EVENT_SET_SUBSCRIPTION
 	    CFG_LED_EVENT_SET_SUBSCRIPTION;
@@ -1542,6 +2057,13 @@ _USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 }
 
 #ifndef WIN32
+/**
+ * @brief       This function run LED indicator event with sleep_us.
+ * @param[in]   count			- flashing num
+ * @param[in]   half_cycle_us	- flashing step
+ * @return      none
+ * @note        
+ */
 void light_ev_with_sleep(u32 count, u32 half_cycle_us)
 {
 	gpio_set_func(GPIO_LED, AS_GPIO);
@@ -1564,6 +2086,12 @@ void light_ev_with_sleep(u32 count, u32 half_cycle_us)
 	gpio_write(GPIO_LED, 0);
 }
 
+/**
+ * @brief       This function flash LED for ota event.
+ * @param[in]   result	- ota result
+ * @return      none
+ * @note        
+ */
 _USER_CAN_REDEFINE_ void show_ota_result(int result)
 {
 	if(result == OTA_REBOOT_NO_LED){
@@ -1576,6 +2104,11 @@ _USER_CAN_REDEFINE_ void show_ota_result(int result)
 	}
 }
 
+/**
+ * @brief       This function flash LED for factory reset event
+ * @return      none
+ * @note        
+ */
 _USER_CAN_REDEFINE_ void show_factory_reset()
 {
 	light_ev_with_sleep(8, 500*1000);	//1Hz shine for  8 second

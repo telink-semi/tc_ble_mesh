@@ -244,7 +244,7 @@ BFN_SET(attr2, x, ATTR2_PRIO);
 #define SET_FLD_V(...) 				VARARG(SET_FLD_V, __VA_ARGS__) 
 
 
-// 跟上一个宏不一样，这个表示直接赋值
+//
 #define SET_FLD_FULL_V3(x, m, v)											((x) = MASK_VAL2(m,v))
 #define SET_FLD_FULL_V5(x, m1, v1, m2, v2)  								((x) = MASK_VAL4(m1,v1,m2,v2))
 #define SET_FLD_FULL_V7(x, m1, v1, m2, v2, m3, v3)  						((x) = MASK_VAL6(m1,v1,m2,v2,m3,v3))

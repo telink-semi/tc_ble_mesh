@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -43,6 +43,11 @@ u32 mesh_md_light_hsl_addr = FLASH_ADR_MD_LIGHT_HSL;
 
 s16 get_Hue_delta_value(u16 hue_target, u16 hue_present) // hue is a circular parameter from 0~360 degree
 {
+#if 0 // if (HSL_HUE_MAX != 0xffff) can not use this algorithm, because of the way getting next level of light_get_next_level_().
+	s16 delta = abs(hue_target - hue_present) > 0x8000 ? ((s16)hue_target - (s16)hue_present) : (hue_target - hue_present);
+	// LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"Delta_hsl_hue %d, 0x%04x, 0x%04x,\r\n", delta, hue_target, hue_present);
+	return result;
+#else
 	s16 result = 0;
 	u16 Tmp_Current_hue = hue_present;
 	u32 Tmp_caulate_val = 0;
@@ -69,6 +74,7 @@ s16 get_Hue_delta_value(u16 hue_target, u16 hue_present) // hue is a circular pa
 	#endif
 
 	return result;
+#endif
 }
 
 

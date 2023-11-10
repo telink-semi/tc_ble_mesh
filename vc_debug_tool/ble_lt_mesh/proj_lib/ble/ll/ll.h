@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 
 extern u8 adv_mesh_en_flag ;
@@ -389,7 +389,7 @@ int blm_send_acl_to_btusb (u16 conn, u8 *p);
 #ifndef WIN32
 static inline u8  blc_ll_getTxFifoNumber (void)
 {
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	u8 ret = ((reg_dma_tx_wptr - reg_dma_tx_rptr) & 15 )  +  ( (blt_txfifo.wptr - blt_txfifo.rptr) & 31 ) ;
 	irq_restore(r);
 	return ret;

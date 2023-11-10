@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #if (VENDOR_MD_NORMAL_EN)
 // vendor model id

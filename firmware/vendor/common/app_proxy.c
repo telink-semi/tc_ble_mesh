@@ -96,15 +96,6 @@ int proxy_out_ccc_cb(void *p)
 	beacon_send.conn_beacon_flag =1;
 	beacon_send.tick = clock_time();
 
-#if (MD_DF_EN&&MD_SERVER_EN&&!WIN32)
-	proxy_mag.proxy_client_type = UNSET_CLIENT;
-	for(int i=0; i<NET_KEY_MAX; i++){
-		proxy_mag.directed_server[i].use_directed = (DIRECTED_PROXY_DEFAULT_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_directed_default);
-		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
-		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
-		mesh_directed_proxy_capa_report(i);
-	}
-#endif
 	return 1;	
 }
 
@@ -208,6 +199,8 @@ void proxy_cfg_list_init_upon_connection()
 	#if DU_ENABLE
 	proxy_proc_filter_mesh_cmd(VD_DU_GROUP_DST);
 	#endif
+	prov_para.privacy_para = mesh_get_proxy_privacy_para();
+	
 	return ;
 }
 
@@ -242,24 +235,26 @@ int is_valid_adv_with_proxy_filter(u16 src)
 	return valid;
 }
 
-#if MD_DF_EN
+#if MD_DF_CFG_SERVER_EN
 int is_proxy_client_addr(u16 addr)
 {
-	
-	if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
-		foreach(netkey_offset, NET_KEY_MAX){			
-			if(addr == proxy_mag.directed_server[netkey_offset].client_addr){
-				return 1;
+	if((DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type) || (PROXY_CLIENT == proxy_mag.proxy_client_type)){
+		if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
+			foreach(netkey_offset, NET_KEY_MAX){			
+				if(addr == proxy_mag.directed_server[netkey_offset].client_addr){
+					return 1;
+				}
 			}
 		}
+			
+		if(FILTER_WHITE_LIST == proxy_mag.filter_type){
+			foreach(i, MAX_LIST_LEN){
+				if(addr == proxy_mag.addr_list[i]){
+					return 1;
+				}
+			}
+		}	
 	}
-	else if((PROXY_CLIENT == proxy_mag.proxy_client_type) && (FILTER_WHITE_LIST == proxy_mag.filter_type)){
-		foreach(i, MAX_LIST_LEN){
-			if(addr == proxy_mag.addr_list[i]){
-				return 1;
-			}
-		}
-	}	
 
 	return 0;
 }
@@ -360,14 +355,18 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 	// if not set ,use the white list 
 	SET_TC_FIFO(TSCRIPT_PROXY_SERVICE, (u8 *)p_str, len-17);
 	if(p_nw->src && (app_adr != p_nw->src)){
+		#if (!PTS_TEST_EN && (NLCP_BLC_EN == 0) && (SWITCH_ALWAYS_MODE_GATT_EN == 0)) // BLCMP/BLC/PERF/BV-01-I, When sending packets, the return value of is_pkt_notify_only() must be 0
+		// not record to app_adr, because this address is not added to filter list.
+		// in this case, PTS send filter set, then only send network message through ADV, then message response to PTS will not be sent throuth both ADV and GATT, so PTS will fail to receive response.
 		app_adr = p_nw->src;
+		#endif
 	}
 	
 	switch(p_str->opcode & 0x3f){
 		case PROXY_FILTER_SET_TYPE:
 			// switch the list part ,and if switch ,it should clear the certain list 
 			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"set filter type %d ",p_str->para[0]);
-			#if (MD_DF_EN && !FEATURE_LOWPOWER_EN && !WIN32)
+			#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
 			if(FILTER_BLACK_LIST ==  p_str->para[0]){
 				directed_proxy_dependent_node_delete();
 				proxy_mag.proxy_client_type = BLACK_LIST_CLIENT;
@@ -393,7 +392,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 				// suppose the data is little endiness 
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
 				add_data_to_list(proxy_unicast);
-				#if (MD_DF_EN && !FEATURE_LOWPOWER_EN && !WIN32)
+				#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
 				if(FILTER_WHITE_LIST == proxy_mag.filter_type){
 					directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&proxy_unicast, 1);
 				}
@@ -413,7 +412,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			}
 			send_filter_sts(p_nw);
 			break;
-		#if (MD_DF_EN&&!WIN32)
+		#if (MD_DF_CFG_SERVER_EN && !WIN32)
 		case DIRECTED_PROXY_CONTROL:{
 				directed_proxy_ctl_t *p_directed_ctl = (directed_proxy_ctl_t *)p_str->para;
 				endianness_swap_u16((u8 *)&p_directed_ctl->addr_range);
@@ -450,7 +449,13 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 		default:
 			break;
 	}
-	#if MD_DF_EN
+	
+	/*if(p_str->opcode & 0x3f){
+		LOG_USER_MSG_INFO(0,0,"p_nw->src:%x",p_nw->src);
+		proxy_proc_filter_mesh_cmd(p_nw->src);	
+	}*/
+
+	#if MD_DF_CFG_SERVER_EN
 	if(UNSET_CLIENT == proxy_mag.proxy_client_type){
 		proxy_mag.proxy_client_type = PROXY_CLIENT; 
 	}
@@ -577,26 +582,49 @@ u8 mesh_get_identity_type(mesh_net_key_t *p_netkey)
 #if MD_SERVER_EN
 	u8 gatt_proxy_sts = model_sig_cfg_s.gatt_proxy;
 	u8 priv_proxy_sts = g_mesh_model_misc_save.privacy_bc.proxy_sts;
-	u8 node_identi =NODE_IDENTITY_PROHIBIT;
-	if(gatt_proxy_sts == GATT_PROXY_SUPPORT_DISABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
-		node_identi = PRIVATE_NETWORK_ID_TYPE;
-	}else if ( gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE &&
-			   (priv_proxy_sts == PRIVATE_PROXY_DISABLE ||priv_proxy_sts == PRIVATE_PROXY_NOT_SUPPORT)){
-		node_identi = NETWORK_ID_TYPE;
-	}else{}
-
+	u8 node_identi =NETWORK_ID_TYPE;
+	// node identity have higher prior
 	if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_STOP && p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
 		node_identi = PRIVATE_NODE_IDENTITY_TYPE;
 	}else if ( p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN &&
 			(p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_NOT_SUPPORT || p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_DISABLE)){
 		node_identi = NODE_IDENTITY_TYPE;
+	}else if(gatt_proxy_sts == GATT_PROXY_SUPPORT_DISABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
+		node_identi = PRIVATE_NETWORK_ID_TYPE;
+	}else if ( gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE &&
+			   (priv_proxy_sts == PRIVATE_PROXY_DISABLE ||priv_proxy_sts == PRIVATE_PROXY_NOT_SUPPORT)){
+		node_identi = NETWORK_ID_TYPE;
 	}
 	return node_identi;
 #else
 	return 1;
 #endif
 }
+
 #endif
+
+u8 mesh_get_proxy_privacy_para()// only can proc in the connection state
+{
+	#if MD_PRIVACY_BEA
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0];
+		if(!p_netkey_base->valid){
+			continue;
+		}
+		u8 node_identity_type = mesh_get_identity_type(p_netkey_base);
+		if(	node_identity_type == PRIVATE_NETWORK_ID_TYPE || node_identity_type == PRIVATE_NODE_IDENTITY_TYPE){
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	return 0;
+	#else
+	return 0;
+	#endif
+}
+
+
 
 u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 {

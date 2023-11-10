@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #define SEC_MES_DEBUG_EN    0
 #define FRIEND_MSG_TEST_EN  0
@@ -38,6 +38,6 @@ void mesh_message_fri_msg_ctl_seg();
 int mesh_tx_cmd_layer_upper_ctl_primary(u8 op, u8 *par, u32 len_par, u16 adr_dst);
 void test_cmd_wakeup_lpn();
 void test_cmd_tdebug();
-void mesh_iv_update_test_initiate();
+void mesh_iv_update_test_initiate(u8 key_code);
 
 

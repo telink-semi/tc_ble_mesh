@@ -1,12 +1,12 @@
 /********************************************************************************************************
  * @file	uart.h
  *
- * @brief	This is the header file for TLSR8278
+ * @brief	This is the header file for B87
  *
  * @author	Driver Group
- * @date	May 8, 2018
+ * @date	2019
  *
- * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@
 
 #ifndef     uart_H
 #define     uart_H
+#define uart_rtx_pin_tx_trig() uart_clr_tx_done()
 
 
 /**
@@ -93,6 +94,16 @@ typedef enum{
 }UART_RxPinDef;
 
 /**
+ *  @brief  Define UART RTX pin: C2 D0 D3 D7
+ */
+typedef enum{
+	UART_RTX_PC2 = GPIO_PC2,
+	UART_RTX_PD0 = GPIO_PD0,
+	UART_RTX_PD3 = GPIO_PD3,
+	UART_RTX_PD7 = GPIO_PD7,
+}UART_RTxPinDef;
+
+/**
  *  @brief  Define UART CTS pin : A3 B2 C4 D1
  */
 
@@ -138,6 +149,34 @@ static inline void uart_reset(void)
 	reg_rst0 &= (~FLD_RST0_UART);
 }
 
+/**
+ * @brief     This function serves to clear tx done.
+ * @param[in] none
+ * @return    none
+ */
+static inline void uart_clr_tx_done(void)
+{
+	reg_uart_state = BIT(7);
+}
+
+/**
+ * @brief      	This function is used to enable the rtx function.
+ * @return     	none.
+ */
+static inline void uart_rtx_en()
+{
+	reg_uart_rx_timeout1 |=FLD_UART_P7816_EN;
+}
+
+/**
+ * @brief     This function serves to set the mask of uart_txdone
+ * @param[in] none
+ * @return    none
+ */
+static inline void uart_mask_tx_done_irq_enable(void){
+	reg_uart_rx_timeout1 |= FLD_UART_MASK_TXDONE_IRQ;
+	uart_clr_tx_done();//In order to use the tx_done irq, change its status from 1 to 0,otherwise it will make an interrupt after initialization.
+}
 
 /**
  * @brief      	This function initializes the UART module.
@@ -215,6 +254,26 @@ static inline void uart_ndma_clear_tx_index(void)
 {
     uart_TxIndex=0;
 }
+//use this index to cycle the four register of uart. this index should be reset to 0,when send data after system wakeup.
+extern unsigned char uart_RxIndex;
+/**
+ * @brief     uart read data function with not DMA method.
+ *            variable uart_RxIndex,it must cycle the four registers 0x90 0x91 0x92 0x93 for the design of SOC.
+ *            so we need variable to remember the index.
+ * @param[in] none.
+ * @return    data received.
+ */
+extern volatile unsigned char uart_ndma_read_byte(void);
+/**
+ * @brief     This function is used to set the 'uart_RxIndex' to 0.
+ *			  After wakeup from power-saving mode, you must call this function before read data.
+ * @param[in] none.
+ * @return    none.
+ */
+static inline void uart_ndma_clear_rx_index(void)
+{
+    uart_RxIndex=0;
+}
 /**
  * @brief     config the number level setting the irq bit of status register 0x9d
  *            ie 0x9d[3].
@@ -237,11 +296,30 @@ extern void uart_ndma_irq_triglevel(unsigned char rx_level, unsigned char tx_lev
 extern unsigned char uart_ndmairq_get(void);
 
 /**
- * @brief     uart send data function, this  function tell the DMA to get data from the RAM and start
- *            the DMA transmission
+ * @brief     uart send data function, this  function tell the DMA to get data from the RAM and start the DMA transmission
  * @param[in] Addr - pointer to the buffer containing data need to send
- * @return    1: send success ;
- *            0: DMA busy
+ * @return    none
+ * @note      If you want to use uart DMA mode to send data, it is recommended to use this function.
+ *            This function just triggers the sending action, you can use interrupt or polling with the FLD_UART_TX_DONE flag to judge whether the sending is complete. 
+ *            After the current packet has been sent, this FLD_UART_TX_DONE will be set to 1, and FLD_UART_TX_DONE interrupt can be generated. 
+ *			  If you use interrupt mode, you need to call uart_clr_tx_done() in the interrupt processing function, uart_clr_tx_done() will set FLD_UART_TX_DONE to 0.
+ *            DMA can only send 2047-bytes one time at most.
+ */
+extern void uart_send_dma(unsigned char* Addr);
+
+/**
+ * @brief     This function is saved for compatibility with other SDK and isn't be used in driver sdk.Because it has the following problems:
+ *			  You can't use this function if you open FLD_UART_TX_DONE irq,This function can only be used in polling method.
+ *	          There may be a risk of data loss under certain usage conditions.
+ *			  It will first check whether the last packet has been sent, if it is checked that the last packet has been sent, 
+ *			  it will trigger the sending, otherwise it will not send.
+ *		
+ * @param[in] Addr - pointer to the buffer containing data need to send
+ * @return    1: DMA triggered successfully
+ *            0: UART busy : last packet not send over,you can't start to send the current packet data
+ *
+ * @note      DMA can only send 2047-bytes one time at most.
+ *			  
  */
 extern volatile unsigned char uart_dma_send(unsigned char* Addr);
 
@@ -332,6 +410,13 @@ extern void uart_gpio_set(UART_TxPinDef tx_pin,UART_RxPinDef rx_pin);
  * @return    none
  */
 extern void uart_mask_error_irq_enable(void);
+
+/**
+* @brief      This function serves to set rtx pin for UART module.
+* @param[in]  rtx_pin  - the rtx pin need to set.
+* @return     none
+*/
+extern void uart_set_rtx_pin(UART_RTxPinDef rtx_pin);
 
 #endif
 

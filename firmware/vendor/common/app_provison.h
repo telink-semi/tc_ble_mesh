@@ -28,8 +28,12 @@
 #include "vendor/common/mesh_node.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/sig_mesh/Test_case.h"
-#define PB_GATT_ENABLE 1
+#include "gw_node_info.h"
 
+#define VALID_CERT_ENABLE_CHECK	0// initial is close .
+
+#define PB_GATT_ENABLE 		1
+#define PROV_CASE_ENABLE	0
 extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
 #if PTS_TEST_EN
@@ -395,47 +399,11 @@ typedef  enum{
 	UNEXPECT_ERROR,
 	CANNOT_ASSGIN_ADDR,
 	INVALID_DATA_PROV,
-}TRANS_FAIL_CODE_ENUM;
-#define ELE_LIGHT_MODEL_SIZE  (380-12)	
- typedef struct{
-	u8 nums;
-	u8 numv;
-	u8 id[ELE_LIGHT_MODEL_SIZE];
-}mesh_element_model_id;
-
-typedef struct{
-    u16 len_cps;
-    #if 1   // must same with page0_local_t from start to numv
-    mesh_page0_head_t page0_head;
-    u16 local;
-    mesh_element_model_id model_id;
-    #endif
-}VC_node_cps_t;
+}TRANS_FAIL_CODE_ENUM; 
 
 #define MODEL_NOT_FOUND         (0xff)
 
-#if DONGLE_PROVISION_EN&&!WIN32
-typedef struct{
-    u16 node_adr;    // primary address
-    u8 element_cnt;
-    u8 rsv;
-    u8 dev_key[16];
-	#if MD_REMOTE_PROV
-	u8 dev_key_candi[16];
-	#endif
-}VC_node_info_t;
-#else
-typedef struct{
-    u16 node_adr;    // primary address
-    u8 element_cnt;
-    u8 rsv;
-    u8 dev_key[16];
-    VC_node_cps_t cps;
-	#if WIN32
-	u8 dev_key_candi[16];
-	#endif
-}VC_node_info_t;    // size is 404(0x194)
-#endif
+
 typedef struct{
 	VC_node_info_t node_info[MESH_NODE_MAX_NUM];
 	mesh_key_t mesh_key;
@@ -589,7 +557,7 @@ typedef struct{
 	u8  oob_info[2];// the oob info is small endiness, in the unprovision beacon is bigendiness,in the prrovision adv is small endiness
 	u8  device_uuid[16];
 	u8 priv_random[13];
-	u8 priv_non_reslov[6];
+	u8 priv_non_resolvable[6];
 	u8 cert_base_en;
 	u8 direct_invite;
 	u8 err_op_code;
@@ -600,6 +568,7 @@ typedef struct{
 	u8 rec_list_len;
 	u8 rec_rsp_len;
 	u8 cert_ack_hold;
+	u8 privacy_para;
 }prov_para_proc_t;
 extern _align_4_ prov_para_proc_t prov_para;
 
@@ -619,6 +588,7 @@ typedef struct{
 	provison_net_info_str pro_net_info;
 	u8  unused_oob[16];
 	u16 unicast_adr_last;
+	u8  oob_len;
 }pro_para_mag;
 extern u8 prov_link_cls_code;
 extern u8 dev_auth[32];
@@ -777,7 +747,6 @@ extern _align_4_ fast_prov_par_t fast_prov;
 #define MESH_PRO_MAX_LENG 31
 
 #define MAX_RETRY_INTERVAL	1000*1000
-extern _align_4_ VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
 
 #define PROV_VAR_UION_EN    (FEATURE_LOWPOWER_EN) // can't not change
 
@@ -857,7 +826,7 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary);
 void erase_vc_node_info();
 
 extern void set_pb_gatt_adv(u8 *p,u8 flags);
-extern void set_adv_provisioner(rf_packet_adv_t * p);
+extern int set_adv_provisioner(rf_packet_adv_t * p);
 extern void set_adv_provision(rf_packet_adv_t * p);
 extern u8 set_adv_proxy(rf_packet_adv_t * p);
 extern void set_private_mesh_adv(rf_packet_adv_t * p);

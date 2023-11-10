@@ -29,7 +29,7 @@
 #include "../drivers/usb.h"
 #include "../drivers/usbhw.h"
 #include "../drivers/usbhw_i.h"
-#include "../../vendor/8267_master_kma_dongle/rf_frame.h"
+#include "vendor/8267_master_kma_dongle/rf_frame.h"
 
 #ifndef	USB_MOUSE_REPORT_SMOOTH
 #define	USB_MOUSE_REPORT_SMOOTH	0

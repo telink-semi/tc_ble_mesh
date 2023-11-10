@@ -24,7 +24,9 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
+
+#define SWITCH_GROUP_ADDR_START 	0xc000
 
 enum{
     SWITCH_MODE_NORMAL      = 0,
@@ -34,6 +36,7 @@ enum{
 
 extern u32 switch_mode_tick;
 
+void user_init_deepRetn(void);
 void switch_mode_set(int mode);
 void mesh_proc_keyboard ();
 void global_reset_new_key_wakeup();

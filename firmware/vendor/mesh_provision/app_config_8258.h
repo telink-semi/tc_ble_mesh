@@ -58,6 +58,17 @@ extern "C" {
 #define	USB_PRINTER				1
 #define	FLOW_NO_OS				1
 
+///////////////////// CDTP ///////////////////////////////////////
+#define MESH_CDTP_ENABLE							0
+#if (MESH_CDTP_ENABLE)
+#define LE_AUDIO_DEMO_ENABLE                    	1
+#define L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN     1
+#define SLAVE_COC_ENABLE                            1
+#define APP_LOG_EN									1
+
+#define CDTP_SMP_LEVEL								3 // must 3 or 4 // CDTP spec require SMP >= level 3
+#endif
+
 /////////////////////HCI ACCESS OPTIONS///////////////////////////////////////
 #define HCI_USE_NONE	0
 #define HCI_USE_UART	1
@@ -83,7 +94,7 @@ extern "C" {
 #endif
 
 #ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN   0
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
 #define PRINT_DEBUG_INFO                    1
@@ -116,7 +127,7 @@ extern "C" {
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
 #endif
 
-#define PROVISIONER_GATT_ADV_EN	    0
+#define PROVISIONER_GATT_ADV_EN	    (0 || MESH_CDTP_ENABLE)
 
 #if EXTENDED_ADV_ENABLE
 #define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
@@ -127,48 +138,81 @@ extern "C" {
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0
-#define BLE_REMOTE_SECURITY_ENABLE      0
+#define BLE_REMOTE_SECURITY_ENABLE      (0 || MESH_CDTP_ENABLE)   // 1 for smp,  0 no security
 #define BLE_IR_ENABLE					0
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0
 #endif
 
-//////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
-#define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K
-#define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
+//----------------------- keyboard --------------------------------
+#if SMART_PROVISION_ENABLE
+#define UI_KEYBOARD_ENABLE				1
+#endif
 
-#define	KB_LINE_HIGH_VALID				0   //dirve pin output 0 when keyscan, scanpin read 0 is valid
+#ifndef UI_KEYBOARD_ENABLE
+#define UI_KEYBOARD_ENABLE				0
+#endif
+
+#if UI_KEYBOARD_ENABLE
+#define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K // drive pin pull
+#define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K    // scan pin pull
+			
+#define	KB_LINE_HIGH_VALID				0   // dirve pin output 0 when keyscan(no drive pin in KB_LINE_MODE=1), scanpin read 0 is valid
 #define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back trigged by key press, in case key loss
 #define KEYSCAN_IRQ_TRIGGER_MODE		0
 #define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
-
-//stuck key
-#define STUCK_KEY_PROCESS_ENABLE		0
-#define STUCK_KEY_ENTERDEEP_TIME		60  //in s
-
-//repeat key
-#define KB_REPEAT_KEY_ENABLE			0
-#define	KB_REPEAT_KEY_INTERVAL_MS		200
-#define KB_REPEAT_KEY_NUM				1
-//
-
-//----------------------- GPIO for UI --------------------------------
-//---------------  Button 
-#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+			
+#define	KB_MAP_NUM				KB_MAP_NORMAL
+#define	KB_MAP_FN				KB_MAP_NORMAL
+			
+	#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+// key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
+#define KB_LINE_MODE			1 			
+			
+// keymap
+#define KEY_SW1					1
+#define KEY_SW2					2
+#define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
+			
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
+			
+// scan pin as gpio
+#define PD5_FUNC				AS_GPIO
+#define PD6_FUNC				AS_GPIO
+			
+//scan	pin pullup
 #define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD5     PM_PIN_PULLUP_1M	//btn
+			
+//scan pin open input to read gpio level
 #define PD6_INPUT_ENABLE		1
 #define PD5_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PD6
-#define	SW2_GPIO				GPIO_PD5
-#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)    // PCBA_8258_DEVELOPMENT_BOARD
+	#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)    // PCBA_8258_C1T139A30_V1_0
+// key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
+#define KB_LINE_MODE			1 			
+			
+// keymap
+#define KEY_SW1					1
+#define KEY_SW2					2
+#define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
+			
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
+			
+// scan pin as gpio
+#define PD2_FUNC				AS_GPIO
+#define PD1_FUNC				AS_GPIO
+			
+//scan	pin pullup
 #define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
+			
+//scan pin open input to read gpio level
 #define PD2_INPUT_ENABLE		1
 #define PD1_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PD2
-#define	SW2_GPIO				GPIO_PD1
+	#endif
 #endif
 
 //---------------  LED / PWM

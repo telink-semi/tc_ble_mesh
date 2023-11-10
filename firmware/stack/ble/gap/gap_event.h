@@ -47,8 +47,17 @@
 #define GAP_EVT_ATT_EXCHANGE_MTU									 16
 #define GAP_EVT_GATT_HANDLE_VLAUE_CONFIRM							 17
 
+#if 1 // L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN
+#define GAP_EVT_L2CAP_COC_CONNECT									 22
+#define GAP_EVT_L2CAP_COC_DISCONNECT								 23
+#define GAP_EVT_L2CAP_COC_RECONFIGURE								 24
+#define GAP_EVT_L2CAP_COC_RECV_DATA									 25
+#define GAP_EVT_L2CAP_COC_SEND_DATA_FINISH							 26
+#define GAP_EVT_L2CAP_COC_CREATE_CONNECT_FINISH						 27
 
-
+#define GAP_EVT_L2CAP_CONN_PARAM_UPDATE_REQ                          28
+#define GAP_EVT_L2CAP_CONN_PARAM_UPDATE_RSP                          29
+#endif
 
 #define GAP_EVT_MASK_NONE                                        	 0x00000000
 #define GAP_EVT_MASK_SMP_PARING_BEAGIN                          	 (1<<GAP_EVT_SMP_PARING_BEAGIN)
@@ -71,7 +80,17 @@
 
 
 
+#if 1 // L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN
+#define GAP_EVT_MASK_L2CAP_CONN_PARAM_UPDATE_REQ					(1<<GAP_EVT_L2CAP_CONN_PARAM_UPDATE_REQ)
+#define GAP_EVT_MASK_L2CAP_CONN_PARAM_UPDATE_RSP					(1<<GAP_EVT_L2CAP_CONN_PARAM_UPDATE_RSP)
 
+#define GAP_EVT_MASK_L2CAP_COC_CONNECT								(1<<GAP_EVT_L2CAP_COC_CONNECT)
+#define GAP_EVT_MASK_L2CAP_COC_DISCONNECT							(1<<GAP_EVT_L2CAP_COC_DISCONNECT)
+#define GAP_EVT_MASK_L2CAP_COC_RECONFIGURE							(1<<GAP_EVT_L2CAP_COC_RECONFIGURE)
+#define GAP_EVT_MASK_L2CAP_COC_RECV_DATA				 			(1<<GAP_EVT_L2CAP_COC_RECV_DATA)
+#define GAP_EVT_MASK_L2CAP_COC_SEND_DATA_FINISH						(1<<GAP_EVT_L2CAP_COC_SEND_DATA_FINISH)
+#define GAP_EVT_MASK_L2CAP_COC_CREATE_CONNECT_FINISH				(1<<GAP_EVT_L2CAP_COC_CREATE_CONNECT_FINISH)
+#endif
 
 typedef struct {
 	u16	connHandle;
@@ -116,7 +135,67 @@ typedef struct {
 } gap_gatt_mtuSizeExchangeEvt_t;
 
 
+#if 1 // L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN
+/**
+ *  @brief  Event Parameters for "GAP_EVT_L2CAP_CONN_PARAM_UPDATE_REQ"
+ */
+typedef struct {
+	u16	connHandle;
+	u8	id;
+	u16 min_interval;
+	u16 max_interval;
+	u16 latency;
+	u16 timeout;
+} gap_l2cap_connParamUpdateReqEvt_t;
 
+/**
+ *  @brief  Event Parameters for "GAP_EVT_L2CAP_CONN_PARAM_UPDATE_RSP"
+ */
+typedef struct {
+	u16	connHandle;
+	u8  id;
+	u16	result;
+} gap_l2cap_connParamUpdateRspEvt_t;
+
+
+typedef struct{
+	u16	connHandle;
+	u16 spsm;
+	u16 mtu;
+	u16 srcCid;
+	u16 dstCid;
+} gap_l2cap_cocConnectEvt_t;
+
+typedef struct {
+	u16	connHandle;
+	u16 srcCid;
+	u16 dstCid;
+} gap_l2cap_cocDisconnectEvt_t;
+
+typedef struct {
+	u16 connHandle;
+	u16 srcCid;
+	u16 mtu;
+} gap_l2cap_cocReconfigureEvt_t;
+
+typedef struct{
+	u16	connHandle;
+	u16 dstCid;
+	u16 length;
+	u8* data;
+} gap_l2cap_cocRecvDataEvt_t;
+
+typedef struct{
+	u16 connHandle;
+	u16 srcCid;
+} gap_l2cap_cocSendDataFinishEvt_t;
+
+typedef struct{
+	u16 connHandle;
+	u8 code;
+	u16 result;
+} gap_l2cap_cocCreateConnectFinishEvt_t;
+#endif
 
 extern u32		gap_eventMask;
 

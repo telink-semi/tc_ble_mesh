@@ -43,7 +43,13 @@
 #define _attribute_no_inline_   __attribute__((noinline)) 
 // #define _inline_ 				extern __attribute__ ((gnu_inline)) inline
 #define __WEAK                  __attribute__((weak))   // user can define their own function
-#define _align_4_				__attribute__((aligned(4)))
+
+/*
+ * _align_4_: for eclipse, can save code size and ramcode size,
+ *            if add align when extern gloabal variable with struct, because other file will take this gloabal variable as not align.
+ *            no need to add align for u32/u26, because eclipse has already taken it as 16/32 bit align.
+ */
+#define _align_4_				__attribute__((aligned(4))) // 
 
 //---- just for driver, not for user
 #define _attribute_ram_code_sec_      		__attribute__((section(".ram_code")))
@@ -91,6 +97,9 @@
 #ifndef _attribute_no_retention_bss_
 #define _attribute_no_retention_bss_    //
 #endif
+#ifndef _attribute_ble_data_retention_
+#define _attribute_ble_data_retention_    //
+#endif
 #ifndef _align_4_
 #define _align_4_						
 #endif
@@ -102,4 +111,14 @@
 #define _align_type_4_					_align_4_	// must make sure all pointers of the struct are 4 bytes aligned when used
 
 #define _USER_CAN_REDEFINE_             __WEAK // user can re-define function in user_app.c
+
+#define COMPILE_PRINT_MACRO_HELPER(x)	#x
+#define COMPILE_PRINT_MACRO(x)			#x"="COMPILE_PRINT_MACRO_HELPER(x)
+/* 
+ * func: get value of MACRO when compile.
+ * COMPILE_PRINT_MACRO sample:
+#pragma message(COMPILE_PRINT_MACRO(BLC_PM_DEEP_RETENTION_MODE_EN));
+*/
+
+// #define COMPILE_PRINT_SIZEOF(x) 		char __size_of_x_is[sizeof(x) + 1] = {[sizeof(x)] = ""} // only support in RISC-V compiler now.
 

@@ -26,7 +26,7 @@
 #define LL_CONN_PHY_H_
 
 
-//#include "stack/ble/phy/phy.h"
+#include "stack/ble/phy/phy.h"
 
 
 

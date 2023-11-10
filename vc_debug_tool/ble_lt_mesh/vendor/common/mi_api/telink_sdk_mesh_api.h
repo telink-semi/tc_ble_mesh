@@ -25,7 +25,7 @@
 #ifndef _TELINK_SDK_MESH_API_C_
 #define _TELINK_SDK_MESH_API_C_
 #include "./mijia_ble_api/mible_api.h"
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"

@@ -32,10 +32,18 @@
 #include "vendor/common/app_provison.h"
 #include "proj/common/types.h"
 #include "app_privacy_beacon.h"
+#include "directed_forwarding.h"
 #include "blt_soft_timer.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 
 
+/**
+ * @brief       This function tx beacon in adv adv bearer.
+ * @param[in]   bear			- packet need to send.
+ * @param[in]   trans_par_val	- transmit parameter, include retransmit count and interval.
+ * @return      0: tx success; -1: fifo full
+ * @note        
+ */
 int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val)
 {
 	#if FEATURE_RELAY_EN	// use relay buffer should be better
@@ -50,6 +58,11 @@ int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val)
 	return err;
 }
 
+/**
+ * @brief       This function process sending unprovision beacon.
+ * @return      0: tx success; -1: fifo full
+ * @note        
+ */
 int mesh_beacon_send_proc()
 {
 	int err = -1;
@@ -60,6 +73,9 @@ int mesh_beacon_send_proc()
 				err = mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner
 				if(0 == err){				 
 					beacon_send.conn_beacon_flag =0;
+					#if (MD_DF_CFG_SERVER_EN && !WIN32)
+					mesh_directed_proxy_capa_report_upon_connection(); // report after security network beacon.
+					#endif
 				}				
 			}
 		}
@@ -86,6 +102,12 @@ int mesh_beacon_send_proc()
 	return err;
 }
 
+/**
+ * @brief       This function check if the packet is unprovision beacon.
+ * @param[in]   dat	- packet data
+ * @return      0: yes; -1: no
+ * @note        
+ */
 int check_pkt_is_unprovision_beacon(u8 *dat)
 {
 	mesh_cmd_bear_t *p_bear = CONTAINER_OF((mesh_cmd_nw_t *)dat, mesh_cmd_bear_t, nw);;
@@ -98,6 +120,14 @@ int check_pkt_is_unprovision_beacon(u8 *dat)
 	}
 }
 
+/**
+ * @brief       This function initial beacon data without Uniform Resource Identifier.
+ * @param[out]  p_str	- beacon packet
+ * @param[in]   p_uuid	- uuid
+ * @param[in]   p_info	- oob information.
+ * @return      1
+ * @note        
+ */
 u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
 {
 	#if LPN_CONTROL_EN
@@ -120,6 +150,15 @@ u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
 	return 1;
 }
 
+/**
+ * @brief       This function initial beacon data with Uniform Resource Identifier.
+ * @param[out]  p_str	- beacon packet
+ * @param[in]   p_uuid	- uuid
+ * @param[in]   p_info	- oob information.
+ * @param[in]   p_hash	- hash
+ * @return      1
+ * @note        
+ */
 u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash)
 {
 	#if LPN_CONTROL_EN
@@ -143,6 +182,13 @@ u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash)
 	return 1;
 }
 
+/**
+ * @brief       This function beacon test function
+ * @param[in]   p_tc	-  id of test case
+ * @param[in]   len		-  id len
+ * @return      1
+ * @note        
+ */
 u8 beacon_test_case(u8*p_tc,u8 len )
 {
     beacon_str  beaconData = {{0}};
@@ -160,6 +206,12 @@ u8 beacon_test_case(u8*p_tc,u8 len )
 // URI_HASH             {72 26 a2 7f};  // sample data for URI_DATA
 
 
+/**
+ * @brief       This function check if it is unprovision beacon with Uniform Resource Identifier.
+ * @param[in]   report	- report of adv event
+ * @return      1:exist uri; 0:not exist uri
+ * @note        
+ */
 u8  is_unprovision_beacon_with_uri(event_adv_report_t *report)
 {
 	if(report->len == 25){
@@ -169,10 +221,6 @@ u8  is_unprovision_beacon_with_uri(event_adv_report_t *report)
 	}
 }
 
-
-int unprov_beacon_send(u8 mode ,u8 blt_sts)
-{
-	int err = -1;
 /*
 	Device UUID : 70cf7c9732a345b691494810d2e9cbf4
 	OOB : Number, Inside Manual
@@ -183,8 +231,18 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	URI Hash : d97478b3667f4839487469c72b8e5e9e
 	Beacon : 0070cf7c9732a345b691494810d2e9cbf44020d97478b3
 */
-    beacon_str  beaconData = {{0}};
 
+/**
+ * @brief       This function send unprovision beacon
+ * @param[in]   mode	- unprovision beacon mode
+ * @param[in]   blt_sts	- 1: send to GATT bear, 0: send to ADV bear
+ * @return      0: success; others: error
+ * @note        
+ */
+int unprov_beacon_send(u8 mode ,u8 blt_sts)
+{
+	int err = -1;
+    beacon_str  beaconData = {{0}};
 	if(mode == MESH_UNPROVISION_BEACON_WITH_URI){
 		u8 hash_tmp[16];
 		u8 uri_dat[] = URI_DATA;
@@ -203,6 +261,13 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	return err;
 }	
 
+/**
+ * @brief       This function send security network beacon
+ * @param[in]   p_nk_base	- netkey base
+ * @param[in]   blt_sts	- 1: send to GATT bear, 0: send to ADV bear
+ * @return      0: success, others: fail.
+ * @note        
+ */
 int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 {
 	int err = -1;
@@ -225,11 +290,11 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     mesh_beacon_sec_nw_t *p_bc_sec = (mesh_beacon_sec_nw_t *)bc_bear.beacon.data;
 	get_iv_update_key_refresh_flag(&p_bc_sec->flag, p_bc_sec->iv_idx, key_phase);
     memcpy(p_bc_sec->nwId, p_netkey->nw_id, sizeof(p_bc_sec->nwId));
-    #if 0
-    #if (HCI_ACCESS == HCI_USE_USB)
+    #if 0 // print_tx_security_beacon_test_en
+    #if 0//(HCI_ACCESS == HCI_USE_USB)
 	SET_TC_FIFO(TSCRIPT_MESH_TX, (u8 *)&bc_bear.len, bc_bear.len+1);
     #else
-    LOG_MSG_LIB(TL_LOG_NODE_SDK,&bc_bear.len, bc_bear.len+1,"xxx TX beacon,nk arr idx:%d, new:%d, ",GetNKArrayIdxByPointer(p_nk_base),(KEY_REFRESH_PHASE2 == key_phase));
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,&bc_bear.len, bc_bear.len+1,"xxx TX beacon, discovery mode: %d, nk arr idx:%d, new:%d, ",iv_idx_st.searching_flag, GetNKArrayIdxByPointer(p_nk_base),(KEY_REFRESH_PHASE2 == key_phase));
 	#endif
 	#endif
     mesh_sec_beacon_auth(p_netkey->bk, (u8 *)&p_bc_sec->flag, 0);
@@ -237,32 +302,46 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     	#if WIN32
 		err = prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
-		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
+		err = mesh_proxy_adv2gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);
 		#endif
 		if(0 == err){	
 			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:",0);
 		}
 	}else{
 		// static u32 iv_idx_st_A1;iv_idx_st_A1++;
-    	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_DEF_PAR_BEACON);
+    	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_PAR_SECURITY_BEACON);
 	}
     return err;
 }
+/********************************secure beacon in connect state rules***********
+Proxy Privacy parameter				Behavior
+	Not Supported				Send Secure Network beacon
+	Disabled					Send Secure Network beacon
+	Enabled						Send Mesh Private beacon
+********************************************************************************/
 
+/**
+ * @brief       This function send security beacon to all netkeys.
+ * @param[in]   blt_sts	- 1: send to GATT bear, 0: send to ADV bear
+ * @return      0: success, others: fail.
+ * @note        
+ */
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
 	int err = 0;
-	if((0 == is_need_send_sec_nw_beacon()) && !blt_sts){// force notify security while gatt connecting
+	if(!is_provision_success()|| is_iv_index_invalid() || MI_API_ENABLE){// if not provisioned it will not send secure beacon .
 		return err;
 	}
-	if(!is_provision_success()||MI_API_ENABLE){// in the mi mode will never send secure beacon .
+	
+	if((blt_sts == 0) && (is_need_send_sec_nw_beacon() == 0)){//1. GATT: must notify notify security while gatt connecting which not depend on "model_sig_cfg_s.sec_nw_beacon_".  please refer to spec "6.6 Proxy Server behavior" 2. adv: depend on "model_sig_cfg_s.sec_nw_beacon_". 
 		return err;
 	}
+	
 	foreach(i,NET_KEY_MAX){
-		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0];
+		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0]; // just to check valid flag here, not determine which key will be used to send beacon.
 		if(!p_netkey_base->valid){
 			continue;
-		}
+		}		
 		#if TESTCASE_FLAG_ENABLE
 		/* in the pts private beacon proxy bv-07c , it should not send 
 		two secure beacon on gatt connection , other wise the filter sts will fail*/
@@ -277,6 +356,12 @@ int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 	return err;
 }
 
+/**
+ * @brief       This function tx security beacon and private beacon to all netkeys.
+ * @param[in]   blt_sts	- 1: send to GATT bear, 0: send to ADV bear
+ * @return      0: success, others: fail.
+ * @note        
+ */
 int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 {
 	int err = mesh_tx_sec_nw_beacon_all_net(blt_sts);
@@ -286,16 +371,4 @@ int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 		#endif
 	#endif
 	return err;
-}
-
-int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx)
-{
-	#if __PROJECT_MESH_SWITCH__
-	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());
-	extern int soft_timer_rcv_beacon_timeout();
-	soft_timer_rcv_beacon_timeout();
-	blt_soft_timer_delete(&soft_timer_rcv_beacon_timeout);
-	switch_iv_update_time_refresh(); 
-	#endif
-	return 0;
 }

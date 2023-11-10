@@ -76,6 +76,8 @@ SS_DEFINE_GUID(GUID_DEVINTERFACE_USBPRINT, 0x28d78fad, 0x5a12, 0x11D1, 0xae, 0x5
 //GUID DECLSPEC_SELECTANY GUID_DEVINTERFACE_USBPRINT = { 0x28d78fad, 0x5a12, 0x11D1, { 0xae, 0x5b, 0x00, 0x00, 0xf8, 0x03, 0xa8, 0xc2 } };
 GUID GUID_DEVINTERFACE_USBPRINT = { 0x28d78fad, 0x5a12, 0x11D1, { 0xae, 0x5b, 0x00, 0x00, 0xf8, 0x03, 0xa8, 0xc2 } };
 
+int is_B91_gw_usb_id(char * interfacename, unsigned int dev_RAM);
+
 extern HANDLE NULLEVENT2;
 HANDLE GetPrintDeviceHandle(unsigned short id)
 {
@@ -141,7 +143,13 @@ HANDLE GetPrintDeviceHandle(unsigned short id)
 		//SetupDiDestroyDeviceInfoList(devs);
 		//return NULL;
       //}
-	char * str_tlk = strstr (interfacename, "vid_248a&pid_");
+    int gw_B91_flag = 0;
+	char * str_tlk = strstr (interfacename, "vid_248a&pid_08d4"); // manual usb descriptor
+	if(str_tlk){
+		gw_B91_flag = 1;
+	}else{
+		str_tlk = strstr (interfacename, "vid_248a&pid_");
+	}
 	if (str_tlk) {
 		last_handle = usbHandle;
 		usbHandle = CreateFile(interfacename, 
@@ -152,25 +160,35 @@ HANDLE GetPrintDeviceHandle(unsigned short id)
 						0, //FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
 						//FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
 						NULL);
-	  }
       // usbHandle = CreateFile(interfacename, GENERIC_WRITE, FILE_SHARE_READ,
 	  	//		     NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 	if (usbHandle != INVALID_HANDLE_VALUE) {
 		unsigned int dev = 0;
-		ReadMem (usbHandle, 0x7e, (LPBYTE) &dev, 4, 2);
-		if ((dev == id) || (id == 0xffff)) {
+		unsigned int reg_addr_usb_id = 0x7e; // 0x801401fe; // 
+		ReadMem (usbHandle, reg_addr_usb_id, (LPBYTE) &dev, 4, 2);
+		if (gw_B91_flag || (dev == id) || (id == 0xffff)) {
 			SetupDiDestroyDeviceInfoList(devs);
 			  return usbHandle;
 		}
 		else{
-			ReadMem2 (usbHandle, 0x7e, (LPBYTE) &dev, 4, 2);
-			if ((dev == id) || (id == 0xffff)) {
+			ReadMem2 (usbHandle, reg_addr_usb_id, (LPBYTE) &dev, 4, 2);
+			if ((dev == id) || (id == 0xffff)) { // (dev != 0x0818) // (dev == id)
 				SetupDiDestroyDeviceInfoList(devs);
 				return usbHandle;
 			}
 		}
+
+		#if 1 // use manual usb descriptor
+		str_tlk = strstr (interfacename, "vid_248a&pid_5320"); // mcu default print device
+		if(str_tlk && is_B91_gw_usb_id(interfacename, dev)){
+			SetupDiDestroyDeviceInfoList(devs);
+			return usbHandle;
+		}
+		#endif
+		CloseHandle(usbHandle); // close should be better when insert EVK.
      }
     }
+  }
   }
   SetupDiDestroyDeviceInfoList(devs);
 	return 0;

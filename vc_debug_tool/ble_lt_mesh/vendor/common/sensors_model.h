@@ -24,17 +24,98 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
-#include "proj_lib/sig_mesh/app_mesh.h"
+#include "tl_common.h"
 /****************************************************
 Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 *****************************************************/
+// NLCP_TYPE_ALS
+#define PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL  			(0x004E) //Characteristic: Illuminance, uint24
+#define PROP_ID_SENSOR_GAIN								(0x0074) // Characteristic: Coefficient
 
-#define PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL  (0x004E) //Characteristic: Illuminance, uint24
+// NLCP_TYPE_OCS
+#define PROP_ID_OCCUPANCY_MOTION_SENSED             	(0x0042) //Characteristic: Percentage 8, u8
+#define PROP_ID_OCCUPANCY_MOTION_THRESHOLD          	(0x0043) //Characteristic: Percentage 8, u8
+#define PROP_ID_PEOPLE_COUNT              				(0x004C) //Characteristic: Count 16, u16
+#define PROP_ID_PRESENCE_DETECTED						(0x004D) //Characteristic: Boolean, u8
+#define PROP_ID_TIME_SINCE_MOTION_SENSED				(0x0068) //Characteristic: Time(unit ms): u24
 
-#define PROP_ID_OCCUPANCY_MOTION_SENSED             (0x0042) //Characteristic: Percentage 8, u8
-#define PROP_ID_OCCUPANCY_MOTION_THRESHOLD          (0x0043) //Characteristic: Percentage 8, u8
-#define PROP_ID_OCCUPANCY_PEOPLE_COUNT              (0x004C) //Characteristic: Count 16, u16
+// NLCP_TYPE_ENM
+#define PROP_ID_PRECISE_TOTAL_DEVICE_ENERGY_USE			(0x0072) //Characteristic: Energy32, u32
+
+
+//------------------sensor setting start----------------------------
+
+#define SENSOR_NUMS						1 // support only 1 now
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_SETTINGS_NUMS			2
+#else
+#define SENSOR_SETTINGS_NUMS			1
+#endif
+
+// Sensor Property ID
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_PROP_ID					PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL
+#elif (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS)
+#define SENSOR_PROP_ID					PROP_ID_OCCUPANCY_MOTION_SENSED
+#elif (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ENM)
+#define SENSOR_PROP_ID					PROP_ID_PRECISE_TOTAL_DEVICE_ENERGY_USE
+#else
+#define SENSOR_PROP_ID					PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL
+#endif
+
+// Sensor Setting Property ID
+#define SENSOR_SETTING_PROP_ID0			SENSOR_PROP_ID
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_SETTING_PROP_ID1			PROP_ID_SENSOR_GAIN
+#endif
+
+#define SENSOR_SETTING_RAW0_LEN			3 // Sensor Setting Raw lenghth of SENSOR_SETTING_PROP_ID0
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_SETTING_RAW1_LEN			4 // Sensor Setting Raw lenghth of SENSOR_SETTING_PROP_ID1
+#endif
+
+#define SENSOR_SETTING_RAW0_START		0
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_SETTING_RAW1_START		(SENSOR_SETTING_RAW0_START + SENSOR_SETTING_RAW0_LEN)
+#define SENSOR_SETTING_RAW_TOTAL_LEN	(SENSOR_SETTING_RAW1_START + SENSOR_SETTING_RAW1_LEN)
+#else
+#define SENSOR_SETTING_RAW_TOTAL_LEN	(SENSOR_SETTING_RAW0_START + SENSOR_SETTING_RAW0_LEN)
+#endif
+
+// sensor data length, reference to Mesh Device Properties
+#if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
+#define SENSOR_DATA_RAW0_LEN			3 // Sensor Measured Raw lenghth of SENSOR_PROP_ID
+#elif (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS)
+	#if (SENSOR_PROP_ID == PROP_ID_PEOPLE_COUNT)
+#define SENSOR_DATA_RAW0_LEN			2
+	#else
+#define SENSOR_DATA_RAW0_LEN			1
+	#endif
+#elif (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ENM)
+#define SENSOR_DATA_RAW0_LEN			4
+#else
+#define SENSOR_DATA_RAW0_LEN			3
+#endif
+#define SENSOR_DATA_RAW_MAX_LEN			SENSOR_DATA_RAW0_LEN
+
+// sensor cadence default value
+enum{
+	TRIGGER_TYPE_FORMAT,
+	TRIGGER_TYPE_UNITLESS,	
+};
+
+#define MAX_FAST_CADENCE_PERIOD_DIV		15 // spec defined, not change.
+#define MAX_MIN_INTERVAL				26 // spec defined, not change.
+
+#define TRIGGER_TYPE_DEFAULT			TRIGGER_TYPE_FORMAT
+#define FAST_CADENCE_PERIOD_DIV			2
+#define TRIGGER_DELTA_DOWN_DEFAULT		0
+#define TRIGGER_DELTA_UP_DEFAULT		0
+#define MIN_INTERVAL_DEFAULT			4
+#define FAST_CADENCE_LOW_DEFAULT		0
+#define FAST_CADENCE_HIGH_DEFAULT		1
+
+//------------------sensor setting end----------------------------
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
@@ -63,6 +144,80 @@ Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 #define SENSOR_SETTING_STATUS		0x5B
 
 typedef struct{
+	u16 delta_down;
+	u16 delta_up;
+	u8 min_interval;
+	u32 cadence_low:(SENSOR_DATA_RAW_MAX_LEN*8);
+	u32 cadence_hight:(SENSOR_DATA_RAW_MAX_LEN*8);
+}cadence_unitless_t; // for tx message 
+
+typedef struct{
+	u32 delta_down;
+	u32 delta_up;
+	u8 min_interval;
+	u32 cadence_low;
+	u32 cadence_hight;
+}cadence_unit_t; // for save setting.
+
+typedef struct{
+	u8 fast_period_div:7;
+	u8 trig_type:1;
+	union{ 
+		u8 par[17];
+		cadence_unitless_t cadence_unitless;
+		cadence_unit_t cadence_unit;
+	};
+}sensor_cadence_t;
+
+
+typedef struct{
+	u16 setting_id[SENSOR_SETTINGS_NUMS];
+	u8  setting_access[SENSOR_SETTINGS_NUMS];
+	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
+}sensor_setting_par_t;
+
+typedef struct{
+	u8 raw_val_X[12];
+	u8 raw_val_W[12];
+	u8 raw_val_Y[12];
+}sensor_series_col_t;
+
+typedef struct{
+	u16 prop_id;
+	sensor_cadence_t cadence;
+	sensor_setting_par_t setting;
+}sensor_states_t;
+
+typedef struct{
+#if MD_SERVER_EN
+    #if MD_SENSOR_SERVER_EN
+	model_g_light_s_t sensor_srv[LIGHT_CNT];			// serve
+	model_g_light_s_t sensor_setup[LIGHT_CNT];			// setup
+	sensor_states_t sensor_states[SENSOR_NUMS];
+    #endif
+    #if MD_BATTERY_EN
+	model_g_light_s_t battery_srv[LIGHT_CNT];	// serve
+    #endif
+    #if MD_LOCATION_EN
+	model_g_light_s_t location_srv[LIGHT_CNT];
+	model_g_light_s_t location_setup[LIGHT_CNT];	
+    #endif
+#endif
+
+#if MD_SENSOR_CLIENT_EN
+	model_client_common_t sensor_clnt[1];		        // client
+#endif
+#if MD_CLIENT_EN
+	#if MD_BATTERY_EN
+	model_client_common_t battery_clnt[1];			// serve
+	#endif
+	#if MD_LOCATION_EN
+	model_client_common_t location_clnt[1];			// serve
+	#endif
+#endif
+}model_sensor_t;
+
+typedef struct{
 	u16 prop_id;
 	u32 positive_tolerance:12;
 	u32 negative_tolerance:12;
@@ -71,23 +226,39 @@ typedef struct{
 	u8	update_interval;
 }mesh_cmd_sensor_descript_st_t;
 
+typedef struct{
+	u16 setting_id;
+	u8  setting_access;
+	u8  len_raw;
+	u8  *p_raw;
+}sensor_setting_tbl_t;
+
+typedef struct{
+	u16 prop_id;
+	u8  len_raw; // length of *p_raw
+	u8  *p_raw;
+	sensor_series_col_t *p_series_col;
+}sensor_data_t;
+
 enum{
 	SENSOR_DATA_FORMAT_A = 0,
 	SENSOR_DATA_FORMAT_B = 1,
 };
 
+#define FORMAT_B_VALUE_LEN_ZERO_FLAG		(0x7F)
+
 typedef struct{
 	u16 format:1;  // 0
 	u16 length:4;
 	u16 prop_id:11;
-	u8  raw_value[4];
+	u8  raw_value[SENSOR_DATA_RAW_MAX_LEN];
 }sensor_mpid_A_t;
 
 typedef struct{
  	u8 format:1;   // 1
 	u8 length:7;
 	u16 prop_id;
-	u8 raw_value[4];
+	u8 raw_value[SENSOR_DATA_RAW_MAX_LEN];
  }sensor_mpid_B_t;
 
 typedef struct{
@@ -98,23 +269,13 @@ typedef struct{
 typedef struct{
  	u8 format:1;   // 1
 	u8 length:7;
-	u8 raw_value[4];
+	u8 raw_value[SENSOR_DATA_RAW_MAX_LEN];
  }sensor_npid_b_t;
 
 typedef struct{
 	u16 prop_id;
 	u16 setting_prop_id[SENSOR_SETTINGS_NUMS];
 } sensor_settings_st_t;
-
-typedef struct{
-	u8 fast_period_div:7;
-	u8 trig_type:1;
-	u32 delta_down:24;
-	u32 delta_up:24;
-	u32 min_interval:8;
-	u32 cadence_low:24;
-	u32 cadence_hight:24;
-}sensor_cadence_u24_t;
 
 typedef struct{
 	u16 prop_id;
@@ -130,13 +291,13 @@ typedef struct{
 	u16 prop_id;
 	u16 setting_id;
 	u8  setting_access;
-	u16  setting_raw;
+	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
 }sensor_setting_st_t;
 
 typedef struct{
 	u16 prop_id;
 	u16 setting_id;
-	u16  setting_raw;
+	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
 }sensor_setting_set_t;
 
 typedef struct{
@@ -154,11 +315,6 @@ typedef struct{
 	u16 prop_id;
 	u16 raw_val_X;
 }sensor_col_get_t;
-
-typedef struct{
-	u16 prop_id;
-	sensor_series_col_t raw_value;
-}sensor_col_st_t;
 
 //sensor sampling function
 enum{
@@ -188,8 +344,7 @@ enum{
 };
 
 enum{
-	ID_UNKNOWN = 0xfffffffe,
-	ID_PROHIBITED = 0xffffffff,
+	PROHIBITED_PROP_ID = 0,
 };
 
 enum{
@@ -198,9 +353,14 @@ enum{
 	READ_WRITE=3,
 };
 
+extern _align_4_ model_sensor_t			model_sig_sensor;
+extern sensor_data_t sensor_data[SENSOR_NUMS];
+
 void mesh_global_var_init_sensor_descrip();
 int mesh_sensor_st_publish(u8 idx);
 int mesh_sensor_setup_st_publish(u8 idx);
+sensor_data_t *get_sensor_data(u16 prop_id);
+
 #if MD_SENSOR_SERVER_EN
 int mesh_cmd_sig_sensor_descript_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -242,10 +402,8 @@ int mesh_cmd_sig_sensor_series_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 #endif
 
 u32 sensor_measure_proc();
-#if SENSOR_LIGHTING_CTRL_EN
 void sensor_lighting_ctrl_proc();
-#endif
 int access_cmd_sensor_occupancy_motion_sensed(u16 adr_dst, u8 percent);
 
 extern _align_4_ model_sensor_t			model_sig_sensor;
-extern u32 sensure_measure_quantity;
+extern u32 sensor_measure_quantity;

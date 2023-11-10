@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -49,6 +49,14 @@ STATIC_ASSERT((sizeof(model_scene_t) + 4) <= (4096 - 96));    // one sector, 4: 
 scene_proc_t	scene_proc[LIGHT_CNT];
 u8 tansition_forced_by_recall_flag = 0;
 
+/**
+ * @brief       This function set active scene.
+ * @param[in]   idx			- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   scene_id	- 
+ * @param[in]   trans_flag	- transition flag
+ * @return      none
+ * @note        
+ */
 void scene_active_set(int idx, u16 scene_id, int trans_flag)
 {
 	scene_proc_t *p_scene_proc = &scene_proc[idx];
@@ -61,6 +69,12 @@ void scene_active_set(int idx, u16 scene_id, int trans_flag)
 	}
 }
 
+/**
+ * @brief       This function set target state when scene transition complete.
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      none
+ * @note        
+ */
 void scene_target_complete_check(int idx)
 {
 	scene_proc_t *p_scene = &scene_proc[idx];
@@ -70,6 +84,14 @@ void scene_target_complete_check(int idx)
 	}
 }
 
+/**
+ * @brief       This function check if scene changing(transition) complete.
+ * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   present_level	- 
+ * @param[in]   st_trans_type	- enum value of ST_TRANS_TYPE
+ * @return      none
+ * @note        
+ */
 void scene_status_change_check(int idx, s16 present_level, int st_trans_type)
 {
 	scene_proc_t *p_scene = &scene_proc[idx];
@@ -91,6 +113,15 @@ void scene_status_change_check(int idx, s16 present_level, int st_trans_type)
 	model command callback function ----------------
 */	
 
+/**
+ * @brief       This function tx "SCENE REG STATUS"
+ * @param[in]   idx		- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- destination address
+ * @param[in]   st		- status
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note        
+ */
 int mesh_tx_cmd_scene_reg_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st)
 {
 	scene_reg_status_t rsp = {0};
@@ -108,6 +139,12 @@ int mesh_tx_cmd_scene_reg_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st)
 }
 
 #if 0	// no need publish for scene
+/**
+ * @brief       This function publish "SCENE REG STATUS".
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note        
+ */
 int mesh_scene_reg_st_publish(u8 idx)
 {
 	model_common_t *p_com_md = &model_sig_scene.srv[idx].com;
@@ -121,17 +158,39 @@ int mesh_scene_reg_st_publish(u8 idx)
 }
 #endif
 
+/**
+ * @brief       This function responsd message with "SCENE REG STATUS"
+ * @param[in]   cb_par	- parameters of callback function which handle the opcode received.
+ * @param[in]   st		- status
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note        
+ */
 int mesh_scene_reg_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_scene_reg_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, st);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Scene Register Get"
+ * @param[in]   par		- parameter of this opcode.
+ * @param[in]   par_len	- parameter length.
+ * @param[in]   cb_par	- parameters of callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note        
+ */
 int mesh_cmd_sig_scene_reg_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_scene_reg_st_rsp(cb_par, SCENE_ST_SUCCESS);
 }
 
+/**
+ * @brief       This function set and save scene parameters.
+ * @param[in]   scene_id- 
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      error status code of set scene.
+ * @note        
+ */
 u8 mesh_cmd_sig_scene_set_ll(u16 scene_id, mesh_cb_fun_par_t *cb_par)
 {
     u8 st = SCENE_ST_SUCCESS;
@@ -210,6 +269,14 @@ u8 mesh_cmd_sig_scene_set_ll(u16 scene_id, mesh_cb_fun_par_t *cb_par)
     return st;
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Scene Store" and "Scene Delete".
+ * @param[in]   par		- parameter
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e.
+ * @note        
+ */
 int mesh_cmd_sig_scene_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -228,6 +295,13 @@ int mesh_cmd_sig_scene_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 //--
+/**
+ * @brief       This function get transition time when scene changing.
+ * @param[out]  rsp	- pointer to response data
+ * @param[in]   idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      none
+ * @note        
+ */
 void mesh_scene_st_rsp_par_fill(scene_status_t *rsp, u8 idx)
 {
 	mesh_cmd_g_level_st_t level_st; 
@@ -235,6 +309,17 @@ void mesh_scene_st_rsp_par_fill(scene_status_t *rsp, u8 idx)
 	rsp->remain_t = level_st.remain_t;  // because ST_TRANS_LIGHTNESS is  forced to transmiting, when scene recall.
 }
 
+/**
+ * @brief       This function ...
+ * @param[in]   idx		- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- destination address
+ * @param[in]   st		- status
+ * @param[in]   uuid	- if destination address is virtual address, it is uuid of virtual address. if not, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
+ * @return      
+ * @note        
+ */
 int mesh_tx_cmd_scene_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st, u8 *uuid, model_common_t *pub_md)
 {
 	scene_status_t rsp = {0};
@@ -285,13 +370,14 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	    return -1;
 	}
 
-	if(!cb_par->retransaction){
-        tansition_forced_by_recall_flag = 1;
-    	foreach(i,SCENE_CNT_MAX){
-    		scene_data_t *p = &model_sig_scene.data[cb_par->model_idx][i];
-    		if(p_recall->id == p->id){
+	
+    tansition_forced_by_recall_flag = 1;
+	foreach(i,SCENE_CNT_MAX){
+		scene_data_t *p = &model_sig_scene.data[cb_par->model_idx][i];
+		if(p_recall->id == p->id){
+			st = SCENE_ST_SUCCESS;
+			if(!cb_par->retransaction){
 				CB_NL_PAR_NUM_2(p_nl_scene_server_state_recalled, p_recall->id, (u8 *)&model_sig_scene.data[cb_par->model_idx][i].nl_data);
-    			st = SCENE_ST_SUCCESS;
     			mesh_cmd_g_level_set_t level_set_tmp = {0};
 
     			#if LIGHT_TYPE_CT_EN
@@ -338,42 +424,46 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 st_pub_list_t pub_list = {{0}};
                 // all para in scene data have been check valid before, no need check again
     			g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, cb_par->model_idx, 0, ST_TRANS_LIGHTNESS, 1, &pub_list); // force = 1: because PTS just recall but no state change,
-    			#if LIGHT_TYPE_CT_EN
-    			if(p->ct_flag){
-    			    // Temp
-    			    level_set_tmp.level = p->temp_s16;
-                    g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, cb_par->model_idx, 0, ST_TRANS_CTL_TEMP, 0, &pub_list);
-                    // delta uv
-                    level_set_tmp.level = p->delta_uv_s16;
-                    err = g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, cb_par->model_idx, 0, ST_TRANS_CTL_D_UV, 0, &pub_list);
-                }else
-                #endif
-    			{
-                    #if LIGHT_TYPE_HSL_EN
-        			hue_set_tmp.hue = s16_to_u16(p->hue_s16);
-        			sat_set_tmp.sat = s16_to_u16(p->sat_s16);
-                    len_tmp = GET_PAR_LEN_BY_TRANS(sizeof(hue_set_tmp), is_len_with_trans);
-                    light_hue_set(&hue_set_tmp, len_tmp, LIGHT_HSL_HUE_SET_NOACK, cb_par->model_idx, 0, &pub_list);
-                    light_sat_set(&sat_set_tmp, len_tmp, LIGHT_HSL_SAT_SET_NOACK, cb_par->model_idx, 0, &pub_list);
-                    #endif
-                    #if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-        			x_set_tmp.x = s16_to_u16(p->x_s16);
-        			y_set_tmp.y = s16_to_u16(p->y_s16);
-                    len_tmp = GET_PAR_LEN_BY_TRANS(sizeof(x_set_tmp), is_len_with_trans);
-                    light_x_set(&x_set_tmp, len_tmp, LIGHT_XYL_SET_NOACK, cb_par->model_idx, 0, &pub_list);
-                    light_y_set(&y_set_tmp, len_tmp, LIGHT_XYL_SET_NOACK, cb_par->model_idx, 0, &pub_list);
-                    #endif
-                }
+				if(LEVEL_OFF != level_set_tmp.level){ // light OFF scene just need to turn light to off, and no need to change last level.
+					#if LIGHT_TYPE_CT_EN
+	    			if(p->ct_flag){
+	    			    // Temp
+	    			    level_set_tmp.level = p->temp_s16;
+	                    g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, cb_par->model_idx, 0, ST_TRANS_CTL_TEMP, 0, &pub_list);
+	                    // delta uv
+	                    level_set_tmp.level = p->delta_uv_s16;
+	                    err = g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, cb_par->model_idx, 0, ST_TRANS_CTL_D_UV, 0, &pub_list);
+	                }else
+	                #endif
+	    			{
+	                    #if LIGHT_TYPE_HSL_EN
+	        			hue_set_tmp.hue = s16_to_u16(p->hue_s16);
+	        			sat_set_tmp.sat = s16_to_u16(p->sat_s16);
+	                    len_tmp = GET_PAR_LEN_BY_TRANS(sizeof(hue_set_tmp), is_len_with_trans);
+	                    light_hue_set(&hue_set_tmp, len_tmp, LIGHT_HSL_HUE_SET_NOACK, cb_par->model_idx, 0, &pub_list);
+	                    light_sat_set(&sat_set_tmp, len_tmp, LIGHT_HSL_SAT_SET_NOACK, cb_par->model_idx, 0, &pub_list);
+	                    #endif
+	                    #if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
+	        			x_set_tmp.x = s16_to_u16(p->x_s16);
+	        			y_set_tmp.y = s16_to_u16(p->y_s16);
+	                    len_tmp = GET_PAR_LEN_BY_TRANS(sizeof(x_set_tmp), is_len_with_trans);
+	                    light_x_set(&x_set_tmp, len_tmp, LIGHT_XYL_SET_NOACK, cb_par->model_idx, 0, &pub_list);
+	                    light_y_set(&y_set_tmp, len_tmp, LIGHT_XYL_SET_NOACK, cb_par->model_idx, 0, &pub_list);
+	                    #endif
+	                }
+				}
+				
                 #if MD_LIGHT_CONTROL_EN
                 scene_load_lc_par(p, cb_par->model_idx);
                 #endif
                 
                 mesh_publish_all_manual(&pub_list, SIG_MD_LIGHTNESS_S, 1);
-    			break;	// exist
-    		}
-    	}
-        tansition_forced_by_recall_flag = 0;
+			}
+			break;	// exist
+		}
 	}
+    tansition_forced_by_recall_flag = 0;
+
     
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_scene_st_rsp(cb_par, st);

@@ -31,16 +31,16 @@ using namespace RAPIDJSON_NAMESPACE;
 
 void json_write();
 void json_read() ;
-int  init_json(char *p_json,unsigned char mode);
+int  init_json(const char *p_json,unsigned char mode);
 void read_json_file_init();
 void read_json_file_doc();
-void write_json_file_doc(char *p_file);
+void write_json_file_doc(const char *p_file);
 int json_db_set_mesh_data(Document& doc);
-void write_json_file_doc_static(char *p_file);
+void write_json_file_doc_static(const char *p_file);
 int json_db_set_mesh_data_static(Document& doc);
 #define FILE_MESH_DATA_BASE 	"mesh_database.json"	
 #define MODEL_SIG_FLAG  1
 #define MODEL_VENDOR_FLAG 2
-int json_file_exist(Document& doc, char *p_json);
-int json_db_get_mesh_data_check(char *p_file);
+int json_file_exist(Document& doc, const char *p_json);
+int json_db_get_mesh_data_check(const char *p_file);
 #endif 

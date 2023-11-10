@@ -24,8 +24,8 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
-#include "../../mesh_node.h"
+#include "tl_common.h"
+#include "vendor/common/mesh_node.h"
 
 #if (VENDOR_MD_MI_EN)
 // op cmd 11xxxxxx yyyyyyyy yyyyyyyy (vendor)

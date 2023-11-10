@@ -74,15 +74,48 @@ u32 mesh_md_g_power_onoff_addr = FLASH_ADR_MD_G_POWER_ONOFF;	// share with defau
 #if MD_SERVER_EN
 //-------- sig generic model
 //----generic onoff
+/**
+ * @brief       This function determine if the steps in the transition are valid
+ * @param[in]   transit_t	- transition parameter
+ * @return      0:invaild; 1:valid
+ * @note        
+ */
 int is_valid_transition_step(u8 transit_t)
 {
 	return (GET_TRANSITION_STEP(transit_t) <= TRANSITION_STEP_MAX);
 }
 
+#if (ELE_CNT_EVERY_LIGHT > 1)
+/**
+ * @brief       This function determine if a multi-element action is required
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0:not need; 1:need
+ * @note        
+ */
+int is_multiply_ele_action_needed(mesh_cb_fun_par_t *cb_par)
+{
+	int action_needed = 1;
+    int trans_type = get_trans_type_from_level_md_idx(cb_par->model_idx);
+	if(is_fixed_group(cb_par->adr_dst)){ // not only ADR_ALL_NODES
+		if(trans_type != 0){
+			// MMDL/SR/MLTEL/BV-01-C // Processing Generic OnOff Messages to All-Nodes
+			// PTS require no action to ONOFF model of second element which is use for light control model.
+			// because the two onoff model represent different things, such as lightness and light control, so we should not use a level value to set them at the same time.
+
+			// MMDL/SR/MLTEL/BV-02-C // Processing Generic Level Messages to All-Nodes
+			// because the levels represent different things, such as lightness and CT, so we should not use a level value to set them at the same time.
+			action_needed = 0;
+		}
+	}
+	return action_needed;
+}
+#endif
+
+
 /**
  * @brief  Fill in the parameters of the structure mesh_cmd_g_onoff_st_t.
  * @param  rsp: Pointer to structure mesh_cmd_g_onoff_st_t.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @retval None
  */
 void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
@@ -100,15 +133,21 @@ void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
 #endif
 }
 
+#if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
+int access_cmd_onoff_with_pub_test_result(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par, u32 roll_code, u32 gw_rx_system_s, int node_rsp_rx_ack_num);
+
+int rx_ack_num = 0;
+u32 code_add=0;
+#endif
 
 /**
  * @brief  Send General Onoff Status message.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
  *   address, uuid needs to be passed in, otherwise fill in 0.
- * @param  pub_md: When publishing, you need to pass in parameters. 
+ * @param  publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
  *   For non-publish, pass in 0.
  * @param  op_rsp: The opcode to response
  * @retval Whether the function executed successfully
@@ -129,7 +168,25 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	par[7] = mesh_rcv_cmd.send_index;
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, mesh_rcv_cmd.ack_par_len, ele_adr, dst_adr, uuid, pub_md);
 #endif
+
+#if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
+	u8 rsp_data[sizeof(rsp)+210] = {0};
+	int rx_gw_ack_num = rx_ack_num;
+	memcpy(rsp_data, (u8 *)&rsp, sizeof(rsp));	
+	memcpy(rsp_data + sizeof(rsp) + 4, (u8 *)&system_time_s, 4);
+	memcpy(rsp_data + sizeof(rsp) + 4 + 4, (u8 *)&rx_gw_ack_num, 4);	
+	int tx_rsp_flag = 0;
+
+	foreach(i, 5){
+		code_add++;
+		memcpy(rsp_data + sizeof(rsp), (u8 *)&code_add, 4);
+		//LOG_USER_MSG_INFO(0,0,"node tx roll_code:%d, system_time:%d", code_add,system_time_s);
+		tx_rsp_flag |= mesh_tx_cmd_rsp(op_rsp, (u8 *)rsp_data, len + 210, ele_adr, dst_adr, uuid, pub_md);
+	}
+	return tx_rsp_flag;
+#else
     return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
+#endif
 }
 
 /**
@@ -146,7 +203,7 @@ int mesh_g_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
 
 /**
  * @brief  Publish Generic OnOff Status.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
@@ -190,7 +247,7 @@ int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
  *     @arg 0: from last state when light on or from Non-volatile storage 
  *             when light off.
  *     @arg 1: Force from last state.
- * @param  idx: Light Count index.
+ * @param  idx: index of Light Count.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -200,6 +257,13 @@ int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
  */
 int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
+#if 0 // PTS_TEST_MMDL_SR_MLTEL_BV_01 // because we use LIGHT_TYPE_PANEL_ to test BV01. and we don't have a project with more than one onoff model in a light. so trans_type is always 0 in is_multiply_ele_action_needed_(), then can not return 0.
+	if(idx > 0){
+		// refer to is_multiply_ele_action_needed()
+		return 0; // PTS require no action to ONOFF model of second element which is use for light control model. do not know why.
+	}
+#endif
+
 	int err = -1;
 	if(p_set->onoff < G_ONOFF_RSV){
 		int st_trans_type = ST_TRANS_LIGHTNESS;
@@ -210,6 +274,9 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
 		err = g_level_set((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, st_trans_type, 0, pub_list);
         if(!err){
 		    set_on_power_up_onoff(idx, st_trans_type, p_set->onoff);
+		    #if 0 // PTS_TEST_MMDL_SR_LLC_BV_08_C
+			model_sig_light_lc.lc_onoff_target[idx] = p_set->onoff; // need to place another generic onoff model at the third element which only include LC models.
+		    #endif
 		}
 	}
 	
@@ -229,6 +296,10 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
 int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
+#if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
+	rx_ack_num++;
+#endif
+
     mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
 #if MESH_RX_TEST
 	mesh_rcv_cmd.ack_par_len = 9;
@@ -240,6 +311,15 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		mesh_rcv_cmd.rcv_time[par[8]%TEST_CNT] = (clock_time() - mesh_rcv_cmd.send_tick)/32/1000;
 	}
 #endif
+
+#if 0 // we will not have more than one onoff model in a light(LIGHT_CNT), so inactive these code.
+	#if (ELE_CNT_EVERY_LIGHT > 1)) //
+	if(0 == is_multiply_ele_action_needed(cb_par)){
+		return 0;
+	}
+	#endif
+#endif
+
 #if LPN_CONTROL_EN // just for test 
 	p_set->transit_t = 0;
 #endif
@@ -277,12 +357,12 @@ void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 model_idx)
 
 /**
  * @brief  Send General Level Status message.
- * @param  idx: Light Count index.
+ * @param  idx: model index.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
  *   address, uuid needs to be passed in, otherwise fill in 0.
- * @param  pub_md: When publishing, you need to pass in parameters. 
+ * @param  pub_md: publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
  *   For non-publish, pass in 0.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -330,6 +410,12 @@ int mesh_tx_cmd_g_level_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 }
 
 #if MD_LEVEL_EN
+/**
+ * @brief       This function publisg general Level Status
+ * @param[in]   idx	- model index.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_g_level_st_publish(u8 idx)
 {
 	model_common_t *p_com_md = &model_sig_g_onoff_level.level_srv[idx].com;
@@ -387,6 +473,13 @@ int mesh_cmd_sig_g_level_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     int err = 0;
     int light_idx = get_light_idx_from_level_md_idx(cb_par->model_idx);
     int trans_type = get_trans_type_from_level_md_idx(cb_par->model_idx);
+
+#if (ELE_CNT_EVERY_LIGHT > 1)
+	if(0 == is_multiply_ele_action_needed(cb_par)){
+		return 0;
+	}
+#endif
+    
 #if CMD_LINEAR_EN
 	if(trans_type == ST_TRANS_LIGHTNESS){
 		clear_light_linear_flag(cb_par->model_idx);
@@ -412,12 +505,28 @@ int mesh_cmd_sig_g_level_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 #if MD_DEF_TRANSIT_TIME_EN
 //generic default transition time
+/**
+ * @brief       This function send generic default transition time
+ * @param[in]   idx		- model index
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- Destination address
+ * @param[in]   uuid	- if destination address is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL. 
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_tx_cmd_def_trans_time_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
 	u8 *par_rsp = (u8 *)&model_sig_g_power_onoff.trans_time[idx];
 	return mesh_tx_cmd_rsp(G_DEF_TRANS_TIME_STATUS, par_rsp, 1, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief       This function publish generic default transition time
+ * @param[in]   idx	- model index
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_def_trans_time_st_publish(u8 idx)
 {
 	model_common_t *p_com_md = &model_sig_g_power_onoff.def_trans_time_srv[idx].com;
@@ -430,12 +539,28 @@ int mesh_def_trans_time_st_publish(u8 idx)
 	return mesh_tx_cmd_def_trans_time_st(idx, ele_adr, pub_adr, uuid, p_com_md);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Default Transition Time Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_def_trans_time_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
     return mesh_tx_cmd_def_trans_time_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Default Transition Time Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_def_trans_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = -1;
@@ -460,12 +585,28 @@ int mesh_cmd_sig_def_trans_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 
 #if MD_POWER_ONOFF_EN
 //generic power onoff
+/**
+ * @brief       This function tx generic power onoff status
+ * @param[in]   idx		- model index
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- Destination address
+ * @param[in]   uuid	- if destination address is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL. 
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_tx_cmd_on_powerup_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
 	u8 *par_rsp = (u8 *)&model_sig_g_power_onoff.on_powerup[idx];
 	return mesh_tx_cmd_rsp(G_ON_POWER_UP_STATUS, par_rsp, 1, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief       This function publish Generic OnPowerUp status
+ * @param[in]   idx	- model index
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_on_powerup_st_publish(u8 idx)
 {
 	model_common_t *p_com_md = &model_sig_g_power_onoff.pw_onoff_srv[idx].com;
@@ -478,12 +619,28 @@ int mesh_on_powerup_st_publish(u8 idx)
 	return mesh_tx_cmd_on_powerup_st(idx, ele_adr, pub_adr, uuid, p_com_md);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic OnPowerUp Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_on_powerup_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
     return mesh_tx_cmd_on_powerup_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic OnPowerUp Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_on_powerup_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     u8 val_new = par[0];
@@ -506,50 +663,121 @@ int mesh_cmd_sig_g_on_powerup_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
 
 //----generic power
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
+/**
+ * @brief       This function check generic power value is valid
+ * @param[in]   val	- power value
+ * @return      0:invalid; 1:valid
+ * @note        
+ */
 static inline int is_valid_power(u16 val)
 {
 	return (val != 0);
 }
 
 //generic power level
+/**
+ * @brief       This function publish generic power level status
+ * @param[in]   idx	- model index
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_g_power_st_publish(u8 idx)
 {
 	return mesh_lightness_st_publish_ll(idx, G_POWER_LEVEL_STATUS);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Level Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameters  length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     return mesh_cmd_sig_lightness_get(par, par_len, cb_par);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Level Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_set(par, par_len, cb_par);
 }
 
 //----generic power last
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Last Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_last_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_last_get(par, par_len, cb_par);
 }
 
 //----generic power default
+
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Default Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_def_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_def_get(par, par_len, cb_par);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Default Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_def_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_def_set(par, par_len, cb_par);
 }
 
 //----generic power range
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Range Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_range_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_range_get(par, par_len, cb_par);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Range Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_power_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_lightness_range_set(par, par_len, cb_par);
@@ -562,6 +790,17 @@ int mesh_cmd_sig_g_power_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_SENSOR_EN
 #endif
 
+/**
+ * @brief       This function tx battery status
+ * @param[in]   idx		- model index
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- Destination address
+ * @param[in]   op_rsp	- The opcode to response
+ * @param[in]   uuid	- if destination address is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_tx_cmd_battery_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_battery_st_t rsp = {0};
@@ -574,12 +813,28 @@ int mesh_tx_cmd_battery_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uui
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Battery Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_battery_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_battery_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op_rsp, 0, 0);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Battery Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_battery_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_cmd_sig_battery_get(par, par_len, cb_par);
@@ -597,6 +852,17 @@ mesh_generic_location_t mesh_generic_location = {
 {0x8000, 0x8000, 0x7fff, 0xff, 0x00}
 };
 
+/**
+ * @brief       This function tx "Generic Location Global Status"
+ * @param[in]   idx		- model index
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- Destination address
+ * @param[in]   op_rsp	- The opcode to response
+ * @param[in]   uuid	- if destination address is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_tx_cmd_location_global_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_location_global_st_t *p_rsp = {0};
@@ -606,17 +872,42 @@ int mesh_tx_cmd_location_global_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp,
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)p_rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief       This function rx G_LOCATION_GLOBAL_GET, then respond "Generic Location Global Status".
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_location_global_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_location_global_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op_rsp, 0, 0);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Global Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameters len
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_location_global_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_location_global_st_rsp(cb_par);
 }
 
+/**
+ * @brief       This function rx G_LOCATION_LOCAL_GET, respond location local status
+ * @param[in]   idx		- model index
+ * @param[in]   ele_adr	- element address
+ * @param[in]   dst_adr	- Destination address
+ * @param[in]   op_rsp	- The opcode to response
+ * @param[in]   uuid	- if destination address is virtual address, it is the Label UUID of it. if not virtual address, set to NULL.
+ * @param[in]   pub_md	- publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_tx_cmd_location_local_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_location_local_st_t *p_rsp = {0};
@@ -626,17 +917,39 @@ int mesh_tx_cmd_location_local_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, 
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)p_rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief       This function respond "Generic Location Local Status"
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_location_local_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_location_local_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op_rsp, 0, 0);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Local Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_location_local_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_location_local_st_rsp(cb_par);
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Global Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_location_global_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -652,6 +965,14 @@ int mesh_cmd_sig_g_location_global_set(u8 *par, int par_len, mesh_cb_fun_par_t *
 	return err;
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Local Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_g_global_local_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -670,6 +991,15 @@ int mesh_cmd_sig_g_global_local_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 #endif
 
 //----generic onoff   // use for MESH_RX_TEST also when was in server model.
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic OnOff Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -691,11 +1021,33 @@ int mesh_cmd_sig_g_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		mesh_rcv_ack.rcv_cnt++;
 	}
 #endif
+
+#if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
+	mesh_cmd_g_onoff_st_t rx_node_par;
+	u32 roll_code, gw_rx_system_s;
+	int node_rsp_rx_ack_num;
+	
+	memcpy(&roll_code, par + sizeof(rx_node_par), 4);
+	memcpy(&gw_rx_system_s, par + sizeof(rx_node_par) + 4, 4);
+	memcpy(&node_rsp_rx_ack_num, par + sizeof(rx_node_par) + 4 + 4, 4);	
+	
+	access_cmd_onoff_with_pub_test_result(cb_par->adr_src, 0, !par[0], 0, 0, roll_code, gw_rx_system_s, node_rsp_rx_ack_num);
+#endif
+
     return err;
 }
 
 #if MD_CLIENT_EN
 //----generic level
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Level Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_level_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -704,6 +1056,15 @@ int mesh_cmd_sig_g_level_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     return err;
 }
 //generic default transition time
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Default Transition Time Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_def_trans_time_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -712,6 +1073,15 @@ int mesh_cmd_sig_def_trans_time_status(u8 *par, int par_len, mesh_cb_fun_par_t *
     return err;
 }
 //generic power onoff
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic OnPowerUp Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_on_powerup_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -720,6 +1090,15 @@ int mesh_cmd_sig_g_on_powerup_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb
     return err;
 }
 //----generic power
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Level Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_power_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -729,6 +1108,15 @@ int mesh_cmd_sig_g_power_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 //----generic power last
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Last Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_power_last_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -739,6 +1127,15 @@ int mesh_cmd_sig_g_power_last_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 }
 
 //----generic power default
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Default Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_power_def_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -749,6 +1146,15 @@ int mesh_cmd_sig_g_power_def_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 }
 
 //----generic power range
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Power Range Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_power_range_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -759,6 +1165,15 @@ int mesh_cmd_sig_g_power_range_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 }
 
 //battery model
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Battery Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_battery_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -769,6 +1184,15 @@ int mesh_cmd_sig_g_battery_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
 }
 
 //location model
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Global Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_location_global_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -778,6 +1202,15 @@ int mesh_cmd_sig_g_location_global_status(u8 *par, int par_len, mesh_cb_fun_par_
     return err;
 }
 
+
+/**
+ * @brief       This function will be called when receive the opcode of "Generic Location Local Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_g_location_local_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -962,7 +1395,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     CMD_NO_STR(SOLI_PDU_RPL_ITEM_STATUS,1,SIG_MD_SOLI_PDU_RPL_CFG_S, SIG_MD_SOLI_PDU_RPL_CFG_C,mesh_cmd_sig_cfg_soli_rpl_status,STATUS_NONE),
 #endif
 
-#if MD_DF_EN
+#if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
 	// directed forwarding
 	CMD_NO_STR(DIRECTED_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS),
 	CMD_NO_STR(DIRECTED_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS),
@@ -1019,7 +1452,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     CMD_NO_STR(DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE),      
 #endif
 
-#if MD_SBR_EN
+#if (MD_SBR_CFG_SERVER_EN || MD_SBR_CFG_CLIENT_EN)
 	// subnet bridge
 	CMD_NO_STR(SUBNET_BRIDGE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_get,SUBNET_BRIDGE_STATUS),
 	CMD_NO_STR(SUBNET_BRIDGE_SET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_set,SUBNET_BRIDGE_STATUS),
@@ -1031,8 +1464,8 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     CMD_NO_STR(BRIDGED_SUBNETS_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE),	
 	CMD_NO_STR(BRIDGING_TABLE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_get,BRIDGING_TABLE_LIST),
     CMD_NO_STR(BRIDGING_TABLE_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE),	
-	CMD_NO_STR(BRIDGE_CAPABILITY_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridge_capa_get,BRIDGE_CAPABILITY_STATUS),
-    CMD_NO_STR(BRIDGE_CAPABILITY_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE),
+	CMD_NO_STR(BRIDGE_TABLE_SIZE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridge_capa_get,BRIDGE_TABLE_SIZE_STATUS),
+    CMD_NO_STR(BRIDGE_TABLE_SIZE_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE),
 #endif
 
 #if MD_REMOTE_PROV  
@@ -1185,6 +1618,8 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	CMD_NO_STR(SENSOR_SETTING_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, SENSOR_SETTING_STATUS),
 	CMD_NO_STR(SENSOR_SETTING_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, STATUS_NONE),
 	CMD_NO_STR(SENSOR_SETTING_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_setting_status, STATUS_NONE),
+#elif (MD_LIGHT_CONTROL_EN && MD_SERVER_EN) // light control server should also support sensor status.
+	CMD_NO_STR(SENSOR_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_sensor_status_lc, STATUS_NONE),
 #endif
     // ----- mesh ota
 #if MD_MESH_OTA_EN
@@ -1383,6 +1818,16 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 mesh_search_model_id_by_op():
 get model id, call back function, status command flag
 */
+
+
+/**
+ * @brief       This function search model id by opcode.
+ * @param[out]  op_res	- opcode resource
+ * @param[in]   op		- opcode
+ * @param[in]   tx_flag	- 1: get tx model id(usually client model); 0: get rx model id(usually server model).
+ * @return      0: success; others: error
+ * @note        
+ */
 int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
 {
     memset(op_res, 0, sizeof(mesh_op_resource_t));
@@ -1432,6 +1877,15 @@ int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
     return -1;
 }
 
+/**
+ * @brief       This function determine and return whether the opcode needs tid
+ * @param[out]  tid_pos_out			- tid position in access layer.
+ * @param[in]   op					- opcode
+ * @param[in]   par					- parameter of this message
+ * @param[in]   tid_pos_vendor_app	- tid position of vendor message which will be passed in by API.
+ * @return      0:no need; 1:need
+ * @note        
+ */
 int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
 {
     int cmd_with_tid = 0;
@@ -1504,6 +1958,12 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
     return cmd_with_tid;
 }
 
+/**
+ * @brief       This function get the opcode to response
+ * @param[in]   op	- opcode
+ * @return      STATUS_NONE: not found; other: response opcode
+ * @note        
+ */
 u32 get_op_rsp(u16 op)
 {
     mesh_op_resource_t op_res;
@@ -1513,6 +1973,13 @@ u32 get_op_rsp(u16 op)
     return STATUS_NONE;
 }
 
+/**
+ * @brief       This function check if opcode is reliable, which means if need response to "op" or not.
+ * @param[in]   op			- opcode
+ * @param[in]   vd_op_rsp	- vendor opcode response.
+ * @return      0:not reliable; 1:reliable
+ * @note        
+ */
 int is_reliable_cmd(u16 op, u32 vd_op_rsp)
 {
     #if VC_SUPPORT_ANY_VENDOR_CMD_EN
@@ -1537,61 +2004,58 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 
 #if MD_SAR_EN
 	{SIG_MD_SAR_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
-#if MD_CFG_CLIENT_EN
+	#if MD_CFG_CLIENT_EN
     {SIG_MD_SAR_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-#endif	
+	#endif	
 #endif
 
 #if MD_LARGE_CPS_EN
 	{SIG_MD_LARGE_CPS_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
-#if MD_CFG_CLIENT_EN
+	#if MD_CFG_CLIENT_EN
     {SIG_MD_LARGE_CPS_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-#endif	
+	#endif	
 #endif
 
 #if MD_ON_DEMAND_PROXY_EN
 	{SIG_MD_ON_DEMAND_PROXY_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
-#if MD_CFG_CLIENT_EN
+	#if MD_CFG_CLIENT_EN
 	{SIG_MD_ON_DEMAND_PROXY_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-#endif	
+	#endif	
 #endif
 
 #if MD_OP_AGG_EN
     #if MD_SERVER_EN
 	{SIG_MD_OP_AGG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
-#if MD_CFG_CLIENT_EN
+	#if MD_CFG_CLIENT_EN
 	{SIG_MD_OP_AGG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-#endif	
+	#endif	
 #endif
 
 #if MD_SOLI_PDU_RPL_EN
     #if MD_SERVER_EN
 	{SIG_MD_SOLI_PDU_RPL_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.srv, 0)},
     #endif
-#if MD_CFG_CLIENT_EN
+	#if MD_CLIENT_EN
 	{SIG_MD_SOLI_PDU_RPL_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.clnt, 0)},
-#endif	
+	#endif	
 #endif
 
     {SIG_MD_HEALTH_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.srv, &mesh_health_cur_sts_publish)},  // change to multy element model later. 
     {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
-#if MD_DF_EN
-    #if MD_SERVER_EN
+
+#if MD_DF_CFG_SERVER_EN
     {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
-    #endif
-    #if MD_CLIENT_EN
+#endif
+#if MD_DF_CFG_CLIENT_EN
     {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-    #endif
 #endif
 
-#if MD_SBR_EN
-    #if MD_SERVER_EN
+#if MD_SBR_CFG_SERVER_EN
     {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
-    #endif
-    #if MD_CLIENT_EN
+#endif
+#if MD_SBR_CFG_CLIENT_EN
     {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
-    #endif
 #endif
 
 #if MD_MESH_OTA_EN
@@ -1704,6 +2168,11 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     #if MD_SERVER_EN
     {SIG_MD_LIGHTNESS_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, &mesh_lightness_st_publish)},
     {SIG_MD_LIGHTNESS_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.setup, 0)},
+    #if 0 // TEST_MMDL_SR_LLN_BV20
+    {SIG_MD_LIGHT_LC_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, 0)},
+    {SIG_MD_LIGHT_LC_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, 0)},
+    {SIG_MD_LIGHT_LC_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, 0)},
+    #endif
     #endif
     #if MD_CLIENT_EN
     {SIG_MD_LIGHTNESS_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.clnt, 0)},
@@ -1850,6 +2319,16 @@ const mesh_vendor_model_resource_t MeshVendorModelResource[] = {
         }\
     }
 
+/**
+ * @brief       This function find element resource in model.
+ * @param[in]	ele_adr		- element address
+ * @param[in]	model_id	- model index
+ * @param[in]	sig_model	- sig model flag
+ * @param[out]  idx_out		- model index of model array.
+ * @param[in]	set_flag	- 
+ * @return		model source
+ * @note        
+ */
 u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, u8 *idx_out, int set_flag)
 {
     u8 *p_model = 0;
@@ -1933,6 +2412,11 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
     return p_model;
 }
 
+/**
+ * @brief       This function initial element address of model.
+ * @return      none
+ * @note        
+ */
 void mesh_model_ele_adr_init()
 {
     foreach_arr(m,MeshSigModelResource){
@@ -1961,6 +2445,13 @@ void mesh_model_ele_adr_init()
 
 #if MD_SERVER_EN
     #if MD_LIGHT_CONTROL_EN
+	
+/**
+ * @brief       This function is to re-initial callback function of publish status for LC server model. 
+ * @param[in]   cb	- callback function of publish status
+ * @return      none
+ * @note        
+ */
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb)
 {
     foreach_arr(i,model_sig_light_lc.srv){
@@ -1970,6 +2461,13 @@ void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb)
     #endif
 
     #if MD_SENSOR_SERVER_EN
+
+/**
+ * @brief       This function is to re-initial callback function of publish status for sensor setup model. 
+ * @param[in]   cb	- callback function
+ * @return      none
+ * @note        
+ */
 void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb)
 {
     foreach_arr(i,model_sig_sensor.sensor_setup){
@@ -1978,6 +2476,13 @@ void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb)
 }
     #endif
 
+
+/**
+ * @brief       This function register callback function of publish status.
+ * @param[in]   cb	- callback function
+ * @return      none
+ * @note        
+ */
 void mesh_model_cb_pub_st_register()
 {
     foreach_arr(m,MeshSigModelResource){
@@ -1993,9 +2498,12 @@ void mesh_model_cb_pub_st_register()
     }
     
 #if MD_LIGHT_CONTROL_EN
+	#if 0 // PTS_TEST_MMDL_SR_LLC_BV_11_C
+	#else
 	foreach_arr(i,model_sig_light_lc.lc_onoff_target){
-        model_sig_light_lc.lc_onoff_target[i] = 0;    // init, not use data in flash. 
+        model_sig_light_lc.lc_onoff_target[i] = 0;    // init, not use data in flash. but BV11 Light LC Server Power-Up Behavior need to recover.
 	}
+	#endif
 #endif
 
 
@@ -2018,6 +2526,12 @@ void mesh_model_cb_pub_st_register()
 }
 
 #if(DUAL_VENDOR_EN)
+
+/**
+ * @brief       This function set callback function of publish status
+ * @return      none
+ * @note        
+ */
 void vendor_md_cb_pub_st_set2ali()
 {
     MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_light_onoff_st_publish);
@@ -2027,6 +2541,14 @@ void vendor_md_cb_pub_st_set2ali()
 }
 #endif
 
+/**
+ * @brief       This function publish parameter set
+ * @param[in]   level_set_st- level set publish state
+ * @param[in]   model		- model
+ * @param[in]   priority	- set priority publish model when there many model need to publish.
+ * @return      none
+ * @note        
+ */
 void model_pub_check_set(int level_set_st, u8 *model, int priority)
 {
     model_common_t *p_model = (model_common_t *)model;

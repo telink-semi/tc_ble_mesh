@@ -340,6 +340,7 @@ unsigned char uart_Send(unsigned char* data, unsigned int len){
 	    memcpy(tx_buff + 4, data, len);
 		reg_dma1_addr = (unsigned short)(unsigned int)tx_buff;//packet data, start address is sendBuff+1
 		reg_dma_tx_rdy0	 |= FLD_DMA_CHN_UART_TX;
+		reg_dma1_size = 0xff;//if no, the value is 0x20 and a maximum of 506 bytes can be sent. After being added, a maximum of 2047 bytes can be sent
 		
 		return 1;
 	}

@@ -29,12 +29,14 @@
 #include "afxmt.h"
 #include "tl_ble_module.h"
 #include "ScanDlg.h"
+#include "Remote_scan_dlg.h"
 #include "tl_ble_moduleDlg.h"
 #include "TLMeshDlg.h"
 #include "usbprt.h"
 #include "./lib_file/gatt_provision.h"
 #include "./lib_file/hw_fun.h"
 #include "./lib_file/host_fifo.h"
+#include "./lib_file/mesh_cdtp_vs.h"
 #include "CTL_privision.h"
 #include "TL_RxTest.h"
 #include <stdio.h>
@@ -42,6 +44,8 @@
 #include "../../ble_lt_mesh/vendor/common/app_privacy_beacon.h"
 #include "../../ble_lt_mesh/vendor/common/app_heartbeat.h"
 #include "../../ble_lt_mesh/vendor/common/fast_provision_model.h"
+#include "../../ble_lt_mesh/vendor/common/security_network_beacon.h"
+#include "../../ble_lt_mesh/vendor/common/sensors_model.h"
 #include "../../ble_lt_mesh/proj_lib/ble/service/ble_ll_ota.h"
 #include "../../ble_lt_mesh/proj_lib/mesh_crypto/sha256_telink.h"
 #include "rapid_json_interface.h"
@@ -69,6 +73,7 @@ CTLMeshDlg * m_pMeshDlg;
 CTL_privision *  m_proDlg;
 CTL_RxTest * m_pRxTestDlg;
 CScanDlg	*m_pScanDlg;
+CRemoteScanPar rp_dlg;
 
 unsigned char 	m_retry_cnt;
 bool	connect_serial_port;
@@ -86,6 +91,10 @@ int disable_log_cmd = 0;
 CTl_ble_moduleDlg*  g_module_dlg=NULL;
 provision_mac_str_t mac_str;
 u8 mesh_lpn_rx_master_key = 0;
+static u8 get_sno_once_open_tool_flag = 1;
+
+int gateway_provision_set_sno_en = 0;
+int import_json_reboot_flag = 0;
 
 #if (DRAFT_FEATURE_VENDOR_TYPE_SEL != DRAFT_FEATURE_VENDOR_TYPE_NONE)
 STATIC_ASSERT(0x0171 == VENDOR_ID);
@@ -225,6 +234,7 @@ HANDLE	m_hDevW = NULL;
 
 HANDLE NULLEVENT2 = CreateEvent( NULL, TRUE, FALSE, NULL ) ;
 HANDLE EVENT_UPDATE_NODE_INFO = CreateEvent(NULL, TRUE, FALSE, _T("Event update node info"));
+HANDLE REMOTE_SCAN_START_EVENT = CreateEvent(NULL, TRUE, FALSE, _T("Event send scan start"));
 
 UINT ThreadBulkIn ( void* pParams )
 {
@@ -417,13 +427,25 @@ void gateway_json_init()
 {
 	LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "gateway json init start ");
 	if(init_json(FILE_MESH_DATA_BASE,0)){
-		int node_idx = provision_find_json_node_by_uuid(vc_uuid);
+		int node_idx = -1;
+		if((0 == import_json_reboot_flag) || is_match_ini_uuid(json_database.mesh_uuid)){ // import_json_reboot_flag == 0 means no import event.
+			node_idx = provision_find_json_node_by_uuid(vc_uuid);
+		}else{
+			int node_idx2 = provision_find_json_node_by_uuid(vc_uuid);
+			if(node_idx2 != -1){
+				#define STR_CACHE_ATTENTION		"gateway devcie UUID found in JSON, but not match the mesh UUID in INI file. Please attention Cache Problem! may need to restart all light nodes."
+				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, STR_CACHE_ATTENTION);
+				AfxMessageBox(STR_CACHE_ATTENTION);
+			}
+		}
+		
 		LOG_MSG_INFO (TL_LOG_COMMON, vc_uuid, 16, "node_idx=%d, vc_uuid=", node_idx);
 		// init the mesh_key info
 		mesh_key_retrieve();
 		if( prov_get_net_info_from_json(&net_info,&netidx,node_idx)){
-			if(node_idx == -1){
-				AfxBeginThread(ThreadGatewayJsonUpdate, NULL);
+			// if the gateway need to update ,will force to update .
+			if(node_idx == -1 || (gateway_provision_sts == 0)){
+				AfxBeginThread(ThreadGatewayJsonUpdate, (void *)&node_idx);
 			}
 			else{
 				update_VC_info_from_json(netidx ,VC_node_info);// update VC_node_info
@@ -466,9 +488,8 @@ void vc_json_init()
 				sprintf_s ((char *)tmp, sizeof(tmp), "%s", (const char*)csAppKey);
 				Text2Bin(vc_dlg_appkey.app_key, tmp);	
 			}
-    	    if(node_idx == -1){// need provision itself
-               	mesh_provision_par_set_dir((u8*)&net_info);
-
+    	    if(node_idx == -1 ){// need provision itself,only ivi enable can provision itself
+				mesh_provision_par_set_dir(&net_info);
     		   	update_VC_info_from_json(netidx ,VC_node_info);
     			provision_self_to_json(&net_info,&netidx,vc_uuid,vc_dev_key);
 				// set the ram part of the dev key 
@@ -489,6 +510,8 @@ void vc_json_init()
 	}else{
 		pro_self_flag =0;
 	}
+
+	set_ini_import_json_flag(0); // clear
 }
 
 BOOL CTl_ble_moduleDlg::OnInitDialog()
@@ -528,6 +551,7 @@ BOOL CTl_ble_moduleDlg::OnInitDialog()
 		vc_json_init();
 	}
 	sig_mesh_user_init();
+	import_json_reboot_flag = get_ini_import_json_flag();
 
 	EnableToolTips(TRUE);
 	m_tooltip.Create(this);
@@ -663,6 +687,18 @@ int WritePrivateProfileInt( LPCTSTR lpAppName, LPCTSTR lpKeyName, INT Value, LPC
 	return( WritePrivateProfileString( lpAppName, lpKeyName, ValBuf, lpFileName ) );
 }
 
+int WritePrivateProfileBuff( LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpFileName, u8 *p_data, u32 len )
+{
+	u8 str[2048] = {0};
+	if(len * 2 + 1 > sizeof(str)){
+		return -1;
+	}
+	
+	bin2text_clean(str, p_data, len);
+	return( WritePrivateProfileString( lpAppName, lpKeyName, (char *)str, lpFileName ) );
+}
+
+
 void set_ini_unicast_max(u16 adr)
 {
 	WritePrivateProfileInt("SET", "json_adr_max",adr, m_InitFile);
@@ -671,7 +707,101 @@ void set_ini_unicast_max(u16 adr)
 u16 get_ini_unicast_max()
 {
 	return GetPrivateProfileInt("SET", "json_adr_max",0, m_InitFile);
+}
 
+void set_ini_import_json_flag(int import_flag)
+{
+	WritePrivateProfileInt("SET", "import_json_flag", import_flag, m_InitFile);
+}
+
+int get_ini_import_json_flag()
+{
+	return GetPrivateProfileInt("SET", "import_json_flag",0, m_InitFile);
+}
+
+static void set_ini_provioner_tx_cmd_sno_2(u32 sno) // save tx command sno of gateway or VC.
+{
+	u8 uuid[16] = {0};
+	if(0 == get_ini_provioner_mesh_uuid(uuid)){
+		// not found, maybe cleared by edit ini file.
+		set_ini_provioner_mesh_uuid(json_database.mesh_uuid);
+	}
+	
+	WritePrivateProfileInt("SET", "tx_cmd_sno", sno, m_InitFile);
+	LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "save tx cmd sno to INI: 0x%06x(%d)", sno, sno);
+}
+
+static void set_ini_provioner_tx_cmd_sno(u32 sno)
+{
+	if(gateway_provision_sts){
+		set_ini_provioner_tx_cmd_sno_2(sno);
+	}
+}
+
+void clr_ini_provioner_tx_cmd_sno()
+{
+	set_ini_provioner_tx_cmd_sno_2(0); // must init to 0 or delete when uuid change.
+}
+
+void set_ini_provioner_mesh_uuid(u8 *p_mesh_uuid) // save tx command sno of gateway or VC.
+{
+	WritePrivateProfileBuff("SET", "mesh_uuid", m_InitFile, p_mesh_uuid, 16);
+	clr_ini_provioner_tx_cmd_sno();
+}
+
+/**
+ * @brief       This function get uuid in INI file.
+ * @param[io]   p_mesh_uuid_out	- 
+ * @return      uuid length
+ * @note        
+ */
+u32 get_ini_provioner_mesh_uuid(u8 *p_mesh_uuid_out)
+{
+	u32 uuid_len = 0;
+	char uuid_ini[256] = {0};
+	u32 nd = GetPrivateProfileString ("SET", "mesh_uuid", "", uuid_ini, sizeof(uuid_ini), m_InitFile);
+	if(32 == nd){
+		uuid_len = Text2Bin(p_mesh_uuid_out, (u8 *)uuid_ini);
+	}
+	return uuid_len;
+}
+
+int is_match_ini_uuid(u8 *uuid_json)
+{
+	u8 uuid_ini[256] = {0};
+	u32 len = get_ini_provioner_mesh_uuid(uuid_ini);
+
+	if((16 == len) && (0 == memcmp(uuid_json, uuid_ini, 16))){
+		return 1;
+	}
+	return 0;
+}
+
+int ini_get_and_writeback_tx_cmd_sno(u8 *p_mesh_uuid)
+{
+	int found = 0;
+
+	if(is_match_ini_uuid(p_mesh_uuid)){
+		found = 1;
+		u32 sno = GetPrivateProfileInt("SET", "tx_cmd_sno", 0, m_InitFile); // 0: return 0 if not found.
+		if(0 == sno){
+			sno = 1; // can not use 0 to send command.
+		}
+
+		if(import_json_reboot_flag){
+			LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "input JSON with same mesh uuid complete, and writeback_tx_cmd_sno to dongle: 0x%06x(%d)", sno, sno);
+			gateway_set_sno(sno + mesh_sno_get_save_delta());
+		}
+	}else{
+		clr_ini_provioner_tx_cmd_sno();
+	}
+
+	if (0 == found) {
+		set_ini_provioner_mesh_uuid(json_database.mesh_uuid); // update uuid
+		LOG_MSG_INFO(TL_LOG_COMMON, json_database.mesh_uuid, 16, "update mesh uuid to ini", 0);
+	}
+
+	return found;
 }
 
 void CTl_ble_moduleDlg::CTl_ble_module_Init() 
@@ -1549,8 +1679,76 @@ void VC_mesh_cmd_rsp_handle(u8 *pu)
     u16 len = pu[1] + (pu[2] << 8);
     m_pMeshDlg->StatusNotify (pu+3, len);
     m_pRxTestDlg->StatusNotify(pu+3, len);
+	if (::IsWindow(rp_dlg.m_hWnd)) {
+		rp_dlg.StatusNotify(pu + 3, len);
+	}
 }
 extern int mesh_rsp_handle_proc_fun(mesh_rc_rsp_t *p_rsp,mesh_tx_reliable_t *p_tx_rela);
+
+int win32_mesh_rc_data_beacon_sec (u8 *p_payload, u32 t)
+{
+	int err = 0;
+    mesh_cmd_bear_t *bc_bear = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
+    mesh_beacon_t *p_bc = &bc_bear->beacon;
+
+    // -- if want to use cache to discard the same iv quickly, it should be in normal state. during update process, the first beacon may not be handled, such as segment busy.
+    mesh_beacon_sec_nw_t backup_rc;
+    memcpy(&backup_rc, p_bc->data, sizeof(backup_rc)); // backup to make sure it can not be over written, even though adv filter function may have checked to prevent being over write.
+    mesh_beacon_sec_nw_t *p_sec_nw = &backup_rc;
+    err = mesh_sec_beacon_dec((u8 *)&p_sec_nw->flag);
+    if(err){return 100;}
+	//decypt suc 
+	u32 iv;
+	get_iv_little_endian((u8 *)&iv, p_sec_nw->iv_idx);
+
+	if (!is_iv_index_invalid()) {
+		if (iv < iv_idx_st.iv_cur) {		// less
+			return -1;
+		}
+
+		if ((u32)(iv - iv_idx_st.iv_cur) >= (42 + 1)) {
+			return -1;
+		}
+	}
+
+	mesh_iv_idx_init(iv, iv != iv_idx_st.iv_cur, 1);
+	return err;
+}
+
+int win32_mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
+{
+	int err = 0;
+    mesh_cmd_bear_t *bc_bear = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
+    mesh_beacon_t *p_bc = &bc_bear->beacon;
+	LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "rcv private beacon", 0);
+    mesh_beacon_privacy_t backup_rc;
+    memcpy(&backup_rc, p_bc->data, sizeof(backup_rc)); // backup to make sure it can not be over written.
+    mesh_beacon_privacy_t *p_sec_privacy = &backup_rc;
+	u8 key_flag,ivi_idx[4];
+    err = mesh_privacy_beacon_dec((u8 *)p_sec_privacy,&key_flag,ivi_idx);
+	//LOG_MSG_INFO(TL_LOG_NODE_SDK,ivi_idx, 4,"rcv private beacon %02x\r\n",key_flag);
+    if(err){
+		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "check private beacon fail", 0);
+		return 100;
+	}
+	// decrypt suc
+	u32 iv;
+	get_iv_little_endian((u8*)&iv, ivi_idx);
+	if (!is_iv_index_invalid()) {
+		if (iv < iv_idx_st.iv_cur) {		// less
+			return -1;
+		}
+
+		if ((u32)(iv - iv_idx_st.iv_cur) >= (42 + 1)) {
+			return -1;
+		}
+	}
+
+	mesh_iv_idx_init(iv, iv != iv_idx_st.iv_cur, 1);
+	return err;
+}
+
+
 LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 {
 
@@ -1614,6 +1812,8 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				    mesh_proxy_set_filter_init(ele_adr_primary);
 				}
 			}else{
+				// if terminate the ble connection ,we should initial the provision sts
+				gatt_pro_para_mag_init(); // to avoid the provision disconnect by ble disconnect.				
 			    connect_addr_gatt = 0;
 			}
 		}else if (pu[0]==MESH_GATT_OTA_STATUS){
@@ -1686,13 +1886,18 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					memcpy((u8 *)(&net_info),pu+3,sizeof(net_info));
 					// use the gateway para 
 					net_info.unicast_address = json_get_next_unicast_adr_val(vc_uuid);
-					m_proDlg->SetButton_sts();	
+					m_proDlg->SetButton_sts();
+					if(get_sno_once_open_tool_flag){
+						get_sno_once_open_tool_flag = 0;
+						gateway_get_sno();
+					}
 					LOG_MSG_INFO(TL_LOG_GATEWAY,pu, rsp_len+2,"HCI_GATEWAY_CMD_PRO_STS_RSP provisioned \r\n");
 				}else{
 					// the gateway not provisioned 
 					gateway_provision_sts =0;
 					LOG_MSG_INFO(TL_LOG_GATEWAY,pu, rsp_len+2,"HCI_GATEWAY_CMD_PRO_STS_RSP unprovisioned \r\n");
 				}
+				gateway_json_init();
 			}else if (type == HCI_GATEWAY_CMD_PROVISION_EVT){
 			    gateway_prov_event_t *p_prov =(gateway_prov_event_t *)(pu+2) ;
                 // set the information part 
@@ -1735,19 +1940,40 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
                 memcpy(gw_mac,pu+18,6);
                 LOG_MSG_INFO(TL_LOG_GATEWAY,pu+2, 16,"the gateway uuid is \r\n");
                 LOG_MSG_INFO(TL_LOG_GATEWAY,pu+18, 6,"the gateway mac adr is \r\n");
-				gateway_json_init();
+				gateway_get_provision_self_sts();
 				ele_adr_primary = json_use_uuid_to_get_unicast(vc_uuid);
 				gateway_set_extend_seg_mode(m_ExtendAdvOption);
 			}else if (type == HCI_GATEWAY_CMD_SEND_VC_NODE_INFO) {
 				SetEvent(EVENT_UPDATE_NODE_INFO);
 			}
 			else if (type == HCI_GATEWAY_CMD_SEND_IVI){
-                u8 *p_ivi = pu+2;
-				LOG_MSG_INFO(TL_LOG_IV_UPDATE,p_ivi, 4,"gateway dongle report IVI: \r\n", 0);
-                #if JSON_FILE_ENABLE
-                mesh_json_update_ivi_index(p_ivi);
-                #endif
+				misc_save_gw2vc_t *p_misc = (misc_save_gw2vc_t *)(pu+2);
+                u8 *p_ivi = p_misc->iv_index;
+				LOG_MSG_INFO(TL_LOG_IV_UPDATE,p_ivi, 4,"gateway dongle report sno: 0x%06x, iv trigger flag: %d, iv index: \r\n", p_misc->sno, p_misc->iv_update_trigger_flag);
+				u32 iv_index;
+				get_iv_little_endian((u8 *)&iv_index, p_ivi);
+				mesh_iv_idx_init(iv_index, iv_index != iv_idx_st.iv_cur, 1);
 				m_proDlg->update_ivi_edit(p_ivi);
+
+				int found = 0;
+				//LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "gateway_provision_set_sno_en: %d", gateway_provision_set_sno_en);
+				if(gateway_provision_set_sno_en){
+					gateway_provision_set_sno_en = 0; // clear
+					gateway_provision_sts =1;
+					LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "found uuid: %d", found);
+					found = ini_get_and_writeback_tx_cmd_sno(json_database.mesh_uuid);
+				}
+				
+				if(found){
+					// has set sno to ini in ini_get_and_writeback_tx_cmd_sno_()
+				}else{
+					set_ini_provioner_tx_cmd_sno(p_misc->sno); // only refresh sno
+				}
+				
+				if(import_json_reboot_flag){
+					set_ini_import_json_flag(0); // clear
+					LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "clear import JSON flag", 0);
+				}
 			}else if (type == HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION) {
 			    u8 option_val = pu[2];
                 LOG_MSG_INFO(TL_LOG_GATEWAY,0, 0,"the gateway Extend Adv option is:%d \r\n", pu[2]);
@@ -1762,6 +1988,10 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
                 vc_reliable.mat.op = p_cmd->op;
                 vc_reliable.mat.adr_src = p_cmd->src;
                 memcpy(vc_reliable.ac_par,p_cmd->ac_par,sizeof(p_cmd->ac_par));
+			}else if (type == HCI_GATEWAY_CMD_SEND_SNO_RSP){
+				u32 sno = 0;
+				memcpy(&sno, pu+2, 3);
+				set_ini_provioner_tx_cmd_sno(sno);
 			}else if (type == HCI_GATEWAY_CMD_SEND){
 			    prov_print_gateway_log(1,pu[2],pu+2,rsp_len);
 			}else if (type == HCI_GATEWAY_DEV_RSP){
@@ -1771,15 +2001,9 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					mesh_prov_oob_str *p_capability = (mesh_prov_oob_str *)(pu + 2);
 					vc_node_ele_cnt = p_capability->capa.ele_num;
 					if(p_capability->capa.sta_oob.sta_oob_en){
-						u8 static_oob[16];
-						get_auth_value_by_uuid(sigmesh_node_uuid, static_oob);
-						// send the cmd into the dongle
-						unsigned char gateway_buf[64];
-						gateway_buf[0] =  HCI_CMD_GATEWAY_CTL & 0xFF;
-						gateway_buf[1] = (HCI_CMD_GATEWAY_CTL >> 8) & 0xFF;
-						gateway_buf[2] = HCI_GATEWAY_CMD_STATIC_OOB_RSP;
-						memcpy(gateway_buf+3,static_oob,16 );
-						WriteFile_host_handle(gateway_buf ,19);	
+						if (!send_static_oob2gateway_with_check(sigmesh_node_uuid)) {
+							return 0;
+						}
 					}
 				}
 			}else if (type == HCI_GATEWAY_CMD_LINK_OPEN){
@@ -1797,7 +2021,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				vc_reliable.mat.adr_dst = p_gate_cmd->dst;
 				memcpy(vc_reliable.ac_par,p_gate_cmd->para,sizeof(p_gate_cmd->para));
 				LOG_MSG_INFO(TL_LOG_GATEWAY,p_gate_cmd->para, rsp_len-6,
-				"cmd sendback src:%04x dst:%04x,op %04x(%s)", p_gate_cmd->src,p_gate_cmd->dst,p_gate_cmd->opcode,get_op_string(p_gate_cmd->opcode,0));
+				"cmd sendback src:0x%04x dst:0x%04x,op %04x(%s)", p_gate_cmd->src,p_gate_cmd->dst,p_gate_cmd->opcode,get_op_string(p_gate_cmd->opcode,0));
 			}else if (type == HCI_GATEWAY_CMD_LOG_BUF){
 				char *p_buf = (char *)(pu+2);
 				gateway_rsp_len = rsp_len;
@@ -1806,9 +2030,6 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				char *p_buf = (char *)(pu+2);
 				p_buf[rsp_len]='\0';
 				LOG_MSG_INFO(TL_LOG_GW_VC_LOG,gateway_rsp_buf,gateway_rsp_len,"%s",p_buf);
-			}else if (type == HCI_GATEWAY_CMD_RP_SCAN_REPORT_RSP){
-				LOG_MSG_INFO(TL_LOG_GW_VC_LOG,gateway_rsp_buf,gateway_rsp_len,"get the scan report",0);
-				remote_prov_scan_report_cb(pu+2,(u8)rsp_len);
 			}
 			else if (type == HCI_GATEWAY_CMD_ONLINE_ST) {
 				if(0 == rsp_len){
@@ -1819,6 +2040,17 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						update_online_st_pkt((u8*)p_st_report, rsp_len - ONLINE_ST_MIC_LEN_GATT);
 					}
 				}
+			}
+			else if(type == HCI_GATEWAY_CMD_SEND_GATT_OTA_STS){
+				if(pu[2] == BLE_SUCCESS){
+					LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load suc", 0);
+				}
+				else{
+					LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load fail:%d", pu[2]);
+				}
+			}
+			else if(type == HCI_GATEWAY_CMD_OTS_RX){
+				CDTP_ots_rx_handle(pu, n);
 			}
 			return 0;
 		}
@@ -1845,6 +2077,17 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					if(UNPROVISION_BEACON == p_bear_rx->beacon.type){
 						check_pkt_is_unprovision_beacon(proxy_buf);
 					}else if(SECURE_BEACON == p_bear_rx->beacon.type){
+						if (0 == win32_mesh_rc_data_beacon_sec(&(p_bear_rx->len), 0)) { // iv update success
+							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
+							
+							if (ble_moudle_id_is_gateway()) {
+								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
+							}
+							else if (ble_moudle_id_is_kmadongle()) {
+								vc_json_init();
+							}
+							sig_mesh_user_init();
+						}
 						mesh_rc_data_beacon_sec(&(p_bear_rx->len), 0);
 						if(filter_send_flag){
 							mesh_proxy_set_filter_init(ele_adr_primary);
@@ -1852,6 +2095,15 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						}
 					}else if(PRIVACY_BEACON == p_bear_rx->beacon.type){
 						#if MD_PRIVACY_BEA
+						if (0 == win32_mesh_rc_data_beacon_privacy(&(p_bear_rx->len), 0)) { // iv update success
+							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
+							if (ble_moudle_id_is_gateway()) {
+								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
+							}else if (ble_moudle_id_is_kmadongle()) {
+								vc_json_init();
+							}
+							sig_mesh_user_init();
+						}
 						mesh_rc_data_beacon_privacy(&(p_bear_rx->len), 0);
 						#endif
 					}
@@ -1919,9 +2171,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "provision write handle is %x", provision_write_handle);
 				}else{
 					provision_write_handle = pu[4]+4;
-				}
-				
-				read_version_rsp();
+				}			
 			}
 			
 			else if (pu[0]==DONGLE_REPORT_PROXY_UUID)
@@ -1942,12 +2192,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				}
 			}
 			else if (pu[0]==DONGLE_REPROT_READ_RSP){
-				u8  fwRevision_value [FW_REVISION_VALUE_LEN]={0};
-				memcpy(fwRevision_value,pu+2,pu[1]);
-				LOG_MSG_INFO (TL_LOG_COMMON, fwRevision_value, 
-					sizeof(fwRevision_value), "slave fw version is ", 0);
-				u8 auth_en;
-				auth_en = fwRevision_value[FW_REVISION_VALUE_LEN-2];
+				
 			}
 			else if (pu[0]==DONGLE_REPORT_ONLINE_ST_UUID)
 			{
@@ -1965,6 +2210,14 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
         				}
     				}
 				}
+			}
+			else if (DONGLE_REPROT_FW_VERSION == type) {
+				u8  fwRevision_value[FW_REVISION_VALUE_LEN] = { 0 };
+				memcpy(fwRevision_value, pu + 2, pu[1]);
+				LOG_MSG_INFO(TL_LOG_COMMON, fwRevision_value,
+					sizeof(fwRevision_value), "slave fw version is ", 0);
+				u8 auth_en;
+				auth_en = fwRevision_value[FW_REVISION_VALUE_LEN - 2];
 			}
 			else if(DONGLE_REPORT_ATT_MTU == type)
 			{
@@ -2323,13 +2576,6 @@ unsigned char SendPktAttOp(unsigned char att_op,unsigned short handle,unsigned c
 	return 1;
 }
 
-void read_version_rsp()
-{
-	#define ATT_VERSION_IDX		12
-	SendPktAttOp(ATT_OP_READ_REQ,ATT_VERSION_IDX,0,0);
-	LOG_MSG_INFO(TL_LOG_WIN32,0,0,"read rsp",0);
-}
-
 unsigned char SendPkt(unsigned short handle,unsigned char *p ,unsigned char  len)
 {
 	LOG_MSG_WIN32_FILE(TL_LOG_COMMON,(u8 *)p, len,"write data hanle is %d   ",handle);
@@ -2464,7 +2710,6 @@ void CTl_ble_moduleDlg::OnDevice()
 	}
 	memset((u8 *)&gatt_mac_list,0,sizeof(gatt_mac_list));
 	set_node_prov_mode(PROV_DIRECT_MODE);
-	gateway_set_rp_mode(0);
 	//DWORD nB;
 	if(ble_moudle_id_is_gateway()){
 		gateway_VC_provision_start();
@@ -2516,6 +2761,11 @@ void CTl_ble_moduleDlg::OnMeshDisplay()
 	// TODO: Add your control notification handler code here
 
 	if(!device_and_connect_check_valid()){
+		return ;
+	}
+	
+	if(!json_valid_iv_index()){
+		AfxMessageBox("waiting for receive iv index after import JSON file!");
 		return ;
 	}
 
@@ -2637,7 +2887,8 @@ void caculate_sha256_oob_by_para_tab(u8 *pid,u8 *p_mac,u8 *p_secret,u8 sha256_ou
 int get_auth_value_by_uuid(u8 *uuid_in,u8 *oob_out)
 {
 	FILE * f_three_par;
-	int err = -1;
+	int oob_read_len = 0; // 0 means not found.
+	int tmp_len =0;
 	int line_index = 0;
 	char three_par[256]={0};
 	u8 pid_tmp[4*2+1];
@@ -2645,14 +2896,15 @@ int get_auth_value_by_uuid(u8 *uuid_in,u8 *oob_out)
 	u8 mac[6],mac_tmp[6*2+1];
 	u8 secret[16],secret_tmp[16*2+1];
 	u8 uuid[16] = {0},uuid_tmp[16*2+80] = {0};
-	u8 oob[16] = {0},oob_tmp[16*2+80] = {0};
+	u8 oob[32] = {0},oob_tmp[32*2+80] = {0};
 
 	sha256_dev_uuid_str *p_ais_uuid = (sha256_dev_uuid_str *)uuid_in;
 	if(p_ais_uuid->cid == SHA256_BLE_MESH_PID){
+		oob_read_len = 16; // force to be found
 		if(fopen_s(&f_three_par,"three_para.TXT","r") == 0){
 			while(1){
 				fgets(three_par, 64, f_three_par);	
-				if(sscanf_s( three_par, "%8[0-9]%*[^0-9a-f]%[0-9a-f]%*[^0-9a-f]%[0-9a-f]",pid_tmp, sizeof(pid_tmp), secret_tmp, sizeof(secret_tmp), mac_tmp, sizeof(mac_tmp)) == 3)
+				if(sscanf_s( three_par, "%8[0-9]%*[^0-9a-fA-F]%[0-9a-fA-F]%*[^0-9a-fA-F]%[0-9a-fA-F]",pid_tmp, sizeof(pid_tmp), secret_tmp, sizeof(secret_tmp), mac_tmp, sizeof(mac_tmp)) == 3)
 				{
 					pid = atoi((char *)pid_tmp);
 					Text2Bin(secret, secret_tmp);
@@ -2663,7 +2915,32 @@ int get_auth_value_by_uuid(u8 *uuid_in,u8 *oob_out)
 						u8 sha256_out[32];
 						caculate_sha256_oob_by_para_tab((u8 *)&pid, mac, secret, sha256_out);
 						memcpy(oob_out, sha256_out, 16);
-						err = 0;
+						break;
+					}
+				}
+				if(feof(f_three_par)) break;
+			}
+			fclose(f_three_par);
+		}
+	}else{
+		oob_read_len = 0;
+		if(fopen_s(&f_three_par,"oob_database.TXT","r") == 0){
+			while(1){
+				fgets(three_par, sizeof(three_par), f_three_par);	
+				if(sscanf_s( three_par, "%[0-9a-fA-F]%*[^0-9a-fA-F]%[0-9a-fA-F]", uuid_tmp, sizeof(uuid_tmp), oob_tmp, sizeof(oob_tmp)) == 2)
+				{
+					Text2Bin(uuid, uuid_tmp);
+					tmp_len = Text2Bin(oob, oob_tmp);
+
+					if(!memcmp(uuid_in,uuid,16)){
+						// find uuid and the oob 
+						if(tmp_len >= 32){
+							oob_read_len = 32;
+						}else{
+							oob_read_len = 16;
+						}
+						
+					    memcpy(oob_out, oob, oob_read_len);
 						break;
 					}
 				}
@@ -2672,28 +2949,8 @@ int get_auth_value_by_uuid(u8 *uuid_in,u8 *oob_out)
 			fclose(f_three_par);
 		}
 	}
-	else{
-		if(fopen_s(&f_three_par,"oob_database.TXT","r") == 0){
-		while(1){
-			fgets(three_par, sizeof(three_par), f_three_par);	
-			if(sscanf_s( three_par, "%[0-9a-f]%*[^0-9a-f]%[0-9a-f]", uuid_tmp, sizeof(uuid_tmp), oob_tmp, sizeof(oob_tmp)) == 2)
-			{
-				Text2Bin(uuid, uuid_tmp);
-				Text2Bin(oob, oob_tmp);
-
-				if(!memcmp(uuid_in,uuid,16)){
-				    memcpy(oob_out, oob, 16);
-				    err = 0;
-					break;
-				}
-			}
-			if(feof(f_three_par)) break;
-		}
-		fclose(f_three_par);
-	}
-	}
 	
-	return err;
+	return oob_read_len;
 }
 
 
@@ -2813,6 +3070,8 @@ void gateway_set_provisioner_para(unsigned char *p_net_info)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SET_PRO_PARA;
 	memcpy(buff+3,p_net_info,25);
+
+	gateway_provision_set_sno_en = 1;
 	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_PRO_PARA ", 0);
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
@@ -2864,7 +3123,38 @@ void gateway_get_dev_uuid_mac()
 	buff[0]=0xe9;
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_GET_UUID_MAC;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_NODE_PARA ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_UUID_MAC ", 0);
+	WriteFile_host_handle(buff, sizeof(buff));
+	return ;
+}
+
+void gateway_get_sno()
+{
+	if(!gateway_provision_sts){
+		return ; // unprovision state will not get sno
+	}
+	
+	u8 buff[3];
+	buff[0]=0xe9;
+	buff[1]=0xff;
+	buff[2]=HCI_GATEWAY_CMD_GET_SNO;
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_SNO ", 0);
+	WriteFile_host_handle(buff, sizeof(buff));
+	return ;
+}
+
+void gateway_set_sno(u32 sno)
+{
+	if(!gateway_provision_sts){
+		return ; // unprovision state will not get sno
+	}
+	
+	u8 buff[3+4] = {0};
+	buff[0]=0xe9;
+	buff[1]=0xff;
+	buff[2]=HCI_GATEWAY_CMD_SET_SNO;
+	memcpy(buff + 3, &sno, 3);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_SNO to dongle", 0);
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -2876,7 +3166,7 @@ void gateway_set_extend_seg_mode(u8 mode)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION;
 	buff[3]=mode;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_NODE_PARA ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION ", 0);
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -2888,7 +3178,7 @@ void gateway_send_cmd_to_del_node_info(u16 uni)
 	buff[2]=HCI_GATEWAY_CMD_DEL_VC_NODE_INFO;
 	buff[3]=uni&0xff;
 	buff[4]=(uni>>8)&0xff;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_NODE_PARA ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_DEL_VC_NODE_INFO ", 0);
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -2919,29 +3209,6 @@ void gateway_get_provision_self_sts()
 	return ;
 }
 
-void gateway_set_rp_mode(u8 en)
-{
-	u8 buff[4];
-	buff[0]= 0xe9;
-	buff[1]= 0xff;
-	buff[2]= HCI_GATEWAY_CMD_RP_MODE_SET;
-	buff[3]= en;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "gateway_set_rp_mode", 0);
-	WriteFile_host_handle(buff, sizeof(buff));
-	return ;
-}
-
-void gateway_start_scan_start()
-{
-	u8 buff[3];
-	buff[0]=0xe9;
-	buff[1]=0xff;
-	buff[2]=HCI_GATEWAY_CMD_RP_SCAN_START_SET;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "gateway_start_scan_start", 0);
-	WriteFile_host_handle(buff, sizeof(buff));
-	return ;
-}
-
 void gateway_send_link_open(u16 adr,u8 *p_uuid)
 {
 	u8 buff[21];
@@ -2965,6 +3232,75 @@ void gateway_send_rp_start(u8*p_net_info)
 	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_RP_START ", 0);
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
+}
+
+void gateway_update_netkey_by_json(u8 *p_netkey)
+{
+	u8 buff[19];
+	buff[0]=0xe9;
+	buff[1]=0xff;
+	buff[2]=HCI_GATEWAY_CMD_SEND_NET_KEY;
+	memcpy(buff+3,p_netkey,16);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SEND_NET_KEY ", 0);
+	WriteFile_host_handle(buff, sizeof(buff));
+	return ;
+}
+
+int is_B91_gw_usb_id(char * interfacename, unsigned int dev_RAM)	// for B91 chip which can not access RAM directely.
+{
+	int match_flag = 0;
+	if((dev_RAM == 0x0818/*EVK*/) || (dev_RAM == ID_KMA_DONGLE) || (dev_RAM == ID_NODE) || (dev_RAM == ID_GATEWAY_VC)){
+		return 0;
+	}
+
+	return 1; // TODO: ReadFile in this function will cause failed to write/read the handle created before.
+
+	HANDLE usbHandle = 0;
+	usbHandle = CreateFile(interfacename, 
+					GENERIC_READ | GENERIC_WRITE,
+					FILE_SHARE_READ | FILE_SHARE_WRITE,
+					NULL, 
+					OPEN_ALWAYS, 
+					FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED, //FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
+					//FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
+					NULL);
+
+	if (usbHandle != INVALID_HANDLE_VALUE) {
+		unsigned char buff_r[1024] = {0};
+		//if(!connect_serial_port)
+		{
+			OVERLAPPED	OverlappedWrite;
+			OVERLAPPED	OverlappedRead;
+			memset(&OverlappedWrite,0,sizeof(OVERLAPPED));
+			OverlappedWrite.hEvent=CreateEvent(NULL,false,false,NULL);
+			memset(&OverlappedRead,0,sizeof(OVERLAPPED));
+			OverlappedRead.hEvent=CreateEvent(NULL,false,false,NULL);
+			
+			DWORD	nB;
+			unsigned char buff_w[] = {HCI_CMD_GATEWAY_CTL & 0xff, (HCI_CMD_GATEWAY_CTL >> 8) & 0xff,
+			                             HCI_GATEWAY_CMD_GET_USB_ID};
+			int bok =  WriteFile(usbHandle, buff_w, sizeof(buff_w), &nB, &OverlappedWrite);
+			//Sleep(2);
+			if(WaitForSingleObject(OverlappedWrite.hEvent,100) == WAIT_OBJECT_0) // WAIT_OBJECT_0, WAIT_TIMEOUT, WAIT_ABANDONED
+			{
+				bok = ReadFile(usbHandle, buff_r, sizeof(buff_r), &nB, &OverlappedRead);
+				if(WaitForSingleObject(OverlappedRead.hEvent,100) == WAIT_OBJECT_0)
+				{
+					//if(nB > 0)
+					{
+						unsigned char rsp_B91_id[] = {TSCRIPT_GATEWAY_DIR_RSP, HCI_GATEWAY_CMD_RSP_USB_ID, 
+													  ID_GATEWAY_VC & 0xff,(ID_GATEWAY_VC >> 8) & 0xff};
+						if(0 == memcmp(rsp_B91_id, buff_r, sizeof(rsp_B91_id))){
+							match_flag = 1;
+						}
+					}
+				}
+			}
+		}
+		CloseHandle(usbHandle);
+	}
+
+	return match_flag;
 }
 
 void CTl_ble_moduleDlg::OnBnClickedUartMode()
@@ -3215,7 +3551,7 @@ void download_gateway_firmware(u8 *buf,int len)
 	download_gateway_send_all_data(buf,len);
 	//send  ota end 
 	download_gateway_send_end(len);
-	LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load suc");
+	LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware transfered all data.");
 }
 
 int ota_file_check()
@@ -3270,6 +3606,11 @@ void CTl_ble_moduleDlg::OnBnClickedMeshOta()
 	}
 }
 
+void gateway_VC_factory_reset_and_del_JSON()
+{
+	gateway_VC_factory_reset();
+	DeleteFile(FILE_MESH_DATA_BASE);
+}
 
 void CTl_ble_moduleDlg::OnBnClickedGatewatReset()
 {
@@ -3284,6 +3625,24 @@ void CTl_ble_moduleDlg::OnBnClickedGatewatReset()
 		p_net->unicast_address = 1;
 		gateway_provision_sts =0;
 		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait the gateway finish shining,and the gateway will reset",0);
+		WaitForSingleObject (NULLEVENT2, 4000);//wait 4s until it finish factory reset ,and then restart the vc tools.
+		// Create New Process.reboot
+		 char buf[1024];
+	    ::GetModuleFileName(NULL,buf,sizeof(buf));
+	    CString strPath = buf;
+	    ShowWindow(SW_HIDE);
+	    STARTUPINFO si;
+	    PROCESS_INFORMATION pi;
+	    ZeroMemory(&si, sizeof(si));
+	    si.cb = sizeof(si);
+	    ZeroMemory(&pi, sizeof(pi));
+
+	    si.dwFlags = STARTF_USESHOWWINDOW;  // 指定wShowWindow成员有效
+	    si.wShowWindow = TRUE;              // 此成员设为TRUE的话则显示新建进程的主窗口，
+	    CreateProcess(strPath, "Restart", NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
+		//OnOK();//退出当前执行对话框程序
+		TerminateProcess(GetCurrentProcess(), 0);
+
 	}else{
 		AfxMessageBox(_T("only the gateway will have this problem !"));
 	}
@@ -3376,6 +3735,14 @@ void write_no_rsps_pkts(u8 *p,u16 len,u16 handle,u8 msg_type)
 	return ;
 }
 
+void ProcessMessages()
+{
+	CWinApp* pApp = AfxGetApp();
+	MSG msg;
+	while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+		pApp->PumpMessage();
+}
+
 void CTl_ble_moduleDlg::OnBnClickedRpScan()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -3386,22 +3753,27 @@ void CTl_ble_moduleDlg::OnBnClickedRpScan()
 	set_node_prov_mode(PROV_REMOTE_MODE);
 	//DWORD nB;
 	if(prov_mode_is_rp_mode()){
-		if(ble_moudle_id_is_gateway()){
-			// in the gw mode ,need to send the cmd to proc to control the gw
-			gateway_set_rp_mode(1);
-			gateway_start_scan_start();
+		u16 adr_list[MESH_OTA_UPDATE_NODE_MAX] = {0};
+		u32 update_node_cnt=0;
+		update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
+		//loop to send the scan start .
+		if(update_node_cnt == 0){
+			LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!",0);
+            return ;
+		}
+
+		rp_dlg.DoModal();
+		UpdateData();
+
+		m_pScanDlg->ShowWindow(SW_NORMAL);
+		if ((rp_dlg.scan_num <= 255) && (rp_dlg.timeout <= 255)) {
+			for (u32 i = 0;i < update_node_cnt;i++) {
+				send_rp_scan_start(adr_list[i], (u8)rp_dlg.scan_num, (u8)rp_dlg.timeout);// serarch 2 item,and the time limit is 6s
+				WaitForSingleObject(REMOTE_SCAN_START_EVENT, 240);
+				ProcessMessages();
+			}
 		}else{
-			u16 adr_list[MESH_OTA_UPDATE_NODE_MAX] = {0};
-			u32 update_node_cnt=0;
-			update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
-			//loop to send the scan start .
-			if(update_node_cnt == 0){
-				LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!",0);
-	            return ;
-			}
-			for(u32 i=0;i<update_node_cnt;i++){
-				send_rp_scan_start(adr_list[i],2,4);// serarch 2 item,and the time limit is 6s
-			}
+			LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "Remote scan parameter err!!!", 0);
 		}
 	}else{
         if(ble_moudle_id_is_gateway()){
@@ -3428,7 +3800,7 @@ int remote_prov_find_uuid_idx(remote_prov_scan_report *p_report)
         remote_prov_uuid_str *p_uuid = &(rp_cli_win32.uuid[i]);
         if(p_uuid->valid){
 			if( !memcmp(p_uuid->uuid ,p_report->uuid,sizeof(p_report->uuid))){
-                return -2;// find the same uuid 
+                return i;// find the same uuid 
             }
         }else if(empty_idx == -1){
             empty_idx = i;
@@ -3444,14 +3816,24 @@ int remote_prov_proc_client_scan_report(remote_prov_scan_report_win32 *p_reportw
     int idx = remote_prov_find_uuid_idx(p_rep);
     if(idx>=0){
         remote_prov_uuid_str *p_uuid = &(rp_cli_win32.uuid[idx]);
-        p_uuid->valid =1;
-        p_uuid->src = p_reportwin32->unicast;
-        p_uuid->rssi = p_rep->rssi;
-        memcpy(p_uuid->uuid,p_rep->uuid,sizeof(p_rep->uuid));
-        return 1;
-    }else{
-        return 0;
+		if(p_uuid->valid == 0){
+			p_uuid->valid =1;
+        	p_uuid->src = p_reportwin32->unicast;
+        	p_uuid->rssi = p_rep->rssi;
+        	memcpy(p_uuid->uuid,p_rep->uuid,sizeof(p_rep->uuid));
+		}else{ // if the valid is 1,it means the same .
+			if(p_rep->rssi > p_uuid->rssi )// the node is nearer than the p_uuid
+			{
+				p_uuid->src = p_reportwin32->unicast;
+				p_uuid->rssi = p_rep->rssi;
+			}
+			else {
+				idx = -1; // not need to update scan list
+			}
+		}
     }
+
+	return idx;
 }
 
 u16 remote_prov_client_find_adr_by_uuid(u8 *p_uuid_rep)
@@ -3642,7 +4024,11 @@ void mesh_common_model_retrieve_win(model_common_t *p_common,mesh_node_str *p_no
         }
     }
     //sub proc part 
+    #if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
+    memcpy(p_common->sub_buf.sub_addr,p_json_model->subscribe,sizeof(p_common->sub_buf.sub_addr));
+    #else
     memcpy(p_common->sub_list,p_json_model->subscribe,sizeof(p_common->sub_list));
+    #endif
     // pub proc part 
     mesh_model_pub_par_t *p_pub_common = &(p_common->pub_par);
     mesh_models_publish_str *p_pub_json = &(p_json_model->publish);
@@ -4028,10 +4414,16 @@ u8 win32_proved_state()
      }
 }
 
-void mesh_heartbeat_cb_data(u16 src, u16 dst,u8 *p_hb)
+void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear_heartbeat)
 {
+	mesh_cmd_nw_t *p_nw = &(p_bear_heartbeat->nw);
+	mesh_hb_msg_t *p_hb =(mesh_hb_msg_t *)(p_bear_heartbeat->lt_ctl_unseg.data);
+
+	u8 hops = p_hb->iniTTL- (p_nw->ttl) + 1;
+
     LOG_MSG_INFO(TL_LOG_COMMON,p_hb,sizeof(mesh_hb_msg_t)+1,
-        "heartbeat src adr is 0x%04x,dst adr is 0x%04x",src,dst);
+        "heartbeat src addr:0x%04x,dst addr:0x%04x, initTTL:0x%x, rx pkt TTL:0x%x, hops result:0x%x",
+        p_nw->src,p_nw->dst,p_hb->iniTTL,p_nw->ttl,hops);
 }
 
 
@@ -4148,13 +4540,7 @@ int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size
                 #endif
             }
             break;
-        case FLASH_ADR_MD_REMOTE_PROV:
-            if(flag == MESH_PARA_RETRIEVE_VAL){
-                #if MD_REMOTE_PROV
-                err = mesh_model_remote_prov_win32((model_remote_prov_t *) in_out);
-                #endif
-            }
-            break;
+
         default:
             break;
     }
@@ -4177,20 +4563,24 @@ void CTl_ble_moduleDlg::OnBnClickedChnSet()
 	}
 }
 
-void gw_json_update()
+/*****************************************
+* if node_idx =-1, it means gw is not exist in the json file 
+* or if node_idx>0. it means gw is exist in the json file 
+* ***************************************/
+void gw_json_update(int node_idx)
 {
-		// clear all the json file , and do init part for the gateway part 
-        gateway_VC_factory_reset();
-		// wait until the gateway finish the reset .
-		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait until it finish reset",0);
-		WaitForSingleObject (NULLEVENT2, 5000);
+		int node_found_flag = (node_idx >= 0);
 		//  provision the gateway first . 
-		gateway_get_provision_self_sts();
 		WaitForSingleObject (NULLEVENT2, 500);
 		// wait to get the information of the gateway part 
 		mesh_json_netkeys_str *p_net = json_database.netKeys;
 		// get the first node information first 
-		prov_get_net_info_from_json(&net_info,&netidx,-1);
+		if(node_found_flag){
+			// have already get the net info before. and it means this node existe in JSON.
+		}else{ // (node_idx == -1) // not found
+			prov_get_net_info_from_json(&net_info, &netidx, -1);
+		}
+		
 		get_app_key_idx_by_net_idx(net_info.key_index,&vc_dlg_appkey);
 		update_VC_info_from_json(netidx ,VC_node_info);
 		// find the max unicast adr .
@@ -4200,29 +4590,45 @@ void gw_json_update()
 		// do the keybind information 
 		gateway_set_provisioner_para((u8 *)(&net_info));//provision the gateway part 
 		gateway_set_prov_devkey(net_info.unicast_address,vc_dev_key);
-	    provision_self_to_json(&net_info,&netidx,vc_uuid,vc_dev_key);
+		if(!node_found_flag){
+			provision_self_to_json(&net_info, &netidx, vc_uuid, vc_dev_key);
+			// need to update the part of the unicast adr part 
+			json_add_provisioner_info(&net_info, vc_uuid);
+		}
 		//set the dev key part 
 		set_dev_key(vc_dev_key);
-		// need to update the part of the unicast adr part 
-        json_add_provisioner_info(&net_info,vc_uuid);
 		mesh_misc_store();
 		ele_adr_primary = net_info.unicast_address;
 		VC_node_dev_key_save(ele_adr_primary, mesh_key.dev_key,g_ele_cnt);
 		VC_node_cps_save(gp_page0, ele_adr_primary, SIZE_OF_PAGE0_LOCAL);
 		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "provision the gateway first ",0);
-		mesh_json_set_node_info(ele_adr_primary,gw_mac);
-    	json_set_appkey_bind_self_proc(vc_uuid,netidx);
-		write_json_file_doc(FILE_MESH_DATA_BASE);
+		if(!node_found_flag){
+			mesh_json_set_node_info(ele_adr_primary, gw_mac);
+			json_set_appkey_bind_self_proc(vc_uuid, netidx);
+		}
 		gateway_set_start_keybind(1,(u8*)(&vc_dlg_appkey.apk_idx),vc_dlg_appkey.app_key);
-		
+		write_json_file_doc(FILE_MESH_DATA_BASE);
 		// then we will need to update all the information into the gateway part 
 		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "update the vc node info into the gateway ",0);
+		if(node_found_flag){
+			// use the provisioner's  uuid to get max unicast adr in the provisioner range .
+			set_ini_unicast_max(json_get_next_unicast_adr_val(vc_uuid));
+		}else{
+			set_ini_unicast_max(ele_adr_primary + 1);//unicast adr use next // 1: element count of current node.
+		}
 }
 
 UINT ThreadGatewayJsonUpdate (void* pParams)
 {
-	gw_json_update();
+	int gw_node_idx = -1;// the initial state 
+	gw_node_idx = *(int*)(pParams);
+	// clear all the json file , and do init part for the gateway part 
+    gateway_VC_factory_reset();
+	// wait until the gateway finish the reset .
+	LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait until it finish reset",0);
+	WaitForSingleObject (NULLEVENT2, 5000);
 
+	gw_json_update(gw_node_idx);  // gateway will send HCI_GATEWAY_CMD_SEND_IVI if it update the iv index from the network.
 	return 0;
 }
 
@@ -4234,24 +4640,21 @@ UINT ThreadUpdateGatewayNodesInfo(void *pParam)
 
 }
 
-
-void CTl_ble_moduleDlg::OnBnClickedInputDb()
+void CdtpInputDbFromJSON(const char *filename)
 {
-	// TODO: 在此添加控件通知处理程序代码
-	if(ota_filename.GetLength() == 0){
-		AfxMessageBox(_T("empty json file "));
-		return ;
-	}
 	set_ini_unicast_max(0);
-	init_json( ota_filename.GetBuffer(),1);//read the json file into the  json_db_static
-	ota_filename.ReleaseBuffer();
+	init_json(filename,1);//read the json file into the  json_db_static
 	database_static_to_normal();// update the json_db_static into the json_database
+	set_ini_import_json_flag(1);
+	
 	// TODO: Add your control notification handler code here
     char buf[1024];
     ::GetModuleFileName(NULL,buf,sizeof(buf));
     CString strPath = buf;
-    ShowWindow(SW_HIDE);//隐藏本对话框
+    g_module_dlg->ShowWindow(SW_HIDE);//隐藏本对话框
 
+	// set break point here to reboot manually.
+	
     // Create New Process.
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -4265,7 +4668,24 @@ void CTl_ble_moduleDlg::OnBnClickedInputDb()
 	//OnOK();//退出当前执行对话框程序
 	TerminateProcess(GetCurrentProcess(), 0);
 }
-	
+
+void CdtpOutputDbToJSON(const char *filename)
+{
+	database_normal_to_static();//update the information into the jsosn_db_static 
+	write_json_file_doc_static(filename);// write the data into the json file part 
+}
+
+void CTl_ble_moduleDlg::OnBnClickedInputDb()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if(ota_filename.GetLength() == 0){
+		AfxMessageBox(_T("empty json file "));
+		return ;
+	}
+
+	CdtpInputDbFromJSON(ota_filename.GetBuffer());
+	ota_filename.ReleaseBuffer();
+}
 
 void CTl_ble_moduleDlg::OnBnClickedOutputDb()
 {
@@ -4291,7 +4711,7 @@ void CTl_ble_moduleDlg::OnBnClickedUseDirected()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
-	#if MD_DF_EN
+	#if MD_DF_CFG_CLIENT_EN
 	mesh_directed_proxy_control_set(m_use_directed, ele_adr_primary, g_ele_cnt);
 	#endif
 }

@@ -88,6 +88,8 @@ SECTIONS
         {
         . = (((. + 3) / 4)*4);
          PROVIDE(_start_data_ = . );
+        KEEP(*(.cps_prefix))
+        KEEP(*(.cps_data))
         *(.retention_data)
         *(.retention_data.*)
          *(.data);

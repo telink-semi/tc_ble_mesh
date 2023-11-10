@@ -51,6 +51,7 @@ int database_normal_to_static()
 
 int database_static_to_normal()
 {
+	extern u8 ble_moudle_id_is_gateway();
 	u32 sno = json_use_uuid_to_get_sno(vc_uuid); // get the sno of the provisioner first 
 	memcpy(&json_database,&json_db_static,sizeof(json_db_static)-MAX_MESH_NODE_NUM*(sizeof(mesh_node_static_str)));
 	// get the provisioner's sno 
@@ -60,9 +61,12 @@ int database_static_to_normal()
 		mesh_node_str *p_node = &(json_database.nodes[i]);
 		memcpy(p_node,p_staic_node,sizeof(mesh_node_static_str));
 	}
+	// should disable the ivi idx ,and set the ivi idx to 0 ,and disable the ivi_en flag
 	#if JSON_IVI_INDEX_ENABLE
 	memcpy(json_database.ivi_idx,json_db_static.ivi_idx,4);
 	#endif
+	u32 invalid_iv = MESH_INVALID_IV_INDEX;
+	memcpy(json_database.ivi_idx, &invalid_iv, 4); // must set to invalid, will update by receiving the security network beacon.
 	json_use_uuid_to_set_sno(vc_uuid,sno);
 	write_json_file_doc(FILE_MESH_DATA_BASE);//write the file into the json file  
 	return 1;
@@ -475,6 +479,39 @@ int json_valid_netidx(mesh_json_netkeys_str *p_net)
 	return -1;
 }
 
+u32 json_get_node_cnt()
+{
+	u32 cnt=0;
+	for(int i=0;i<MAX_MESH_NODE_NUM;i++){
+		mesh_node_str *p_node = &(json_database.nodes[i]);
+		if(p_node->valid){
+			cnt++;
+		}
+	}
+	return cnt;
+}
+
+int json_valid_iv_index()
+{
+	u32 invalid_iv = MESH_INVALID_IV_INDEX;
+	if (memcmp(json_database.ivi_idx, &invalid_iv, 4)) {
+		return 1;
+	}
+	return 0;
+}
+
+u8 json_can_do_provision()
+{
+	// if the json do not have node ,it can do provision itself,or the ivi enable can provision 
+	if(json_get_node_cnt()==0){
+		return 1;
+	}else if (json_valid_iv_index()){
+		return 2;
+	}else{
+		return 0;
+	}
+}
+
 u8 json_get_node_ele_cnt(mesh_node_str *p_node)
 {
     u8 cnt =0;
@@ -582,6 +619,9 @@ int  prov_get_net_info_from_json(provison_net_info_str *net_info,int *p_net_idx,
 	}
 	*p_net_idx = p_net[valid_idx].index;
 	memcpy(net_info->iv_index,json_database.ivi_idx,sizeof(json_database.ivi_idx));
+	u32 iv_index;
+	get_iv_little_endian((u8 *)&iv_index, json_database.ivi_idx);
+	mesh_iv_idx_init(iv_index, 0, 0);
 	// get the provision net information part 
 	p_net = &(json_database.netKeys[valid_idx]);
 	net_info->flags =0;
@@ -1018,7 +1058,7 @@ u8 json_mesh_netkey_add(mesh_node_str* p_node,u16 idx,u8 *p_key)
 {
     mesh_json_netkeys_str *p_netkey = json_database.netKeys;
     // net dispatch 
-    memcpy(json_database.ivi_idx,iv_idx_st.cur,sizeof(iv_idx_st.cur));
+    get_iv_big_endian(json_database.ivi_idx, (u8 *)&iv_idx_st.iv_cur);
     if(json_mesh_netkey_get_same_idx(idx,p_netkey) == MAX_NETKEY_TOTAL_NUM){
         int blank_idx = json_mes_netkey_get_blank_idx(idx,p_netkey);
         if(blank_idx < MAX_NETKEY_TOTAL_NUM){
@@ -1157,7 +1197,9 @@ u8 mesh_json_appkey_update(u8 *app_key,u16 net_idx,u16 app_idx)
 int mesh_json_update_ivi_index(u8 *p_index)
 {
 	Document doc;
-    if(json_file_exist(doc, FILE_MESH_DATA_BASE)){
+	u32 invalid_iv = MESH_INVALID_IV_INDEX;
+	int valid = memcmp(p_index, &invalid_iv, 4);
+    if(valid && json_file_exist(doc, FILE_MESH_DATA_BASE)){
         memcpy(json_database.ivi_idx,p_index,sizeof(json_database.ivi_idx));
 		write_json_file_doc(FILE_MESH_DATA_BASE);
     }

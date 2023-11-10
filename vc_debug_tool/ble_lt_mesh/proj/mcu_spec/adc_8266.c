@@ -27,7 +27,7 @@
 #if(__TL_LIB_8266__ || (MCU_CORE_TYPE == MCU_CORE_8266))
 
 #if ( MODULE_ADC_ENABLE)
-#include "../../proj_lib/rf_drv.h"
+#include "proj_lib/rf_drv.h"
 static inline void adc_set_clk_freq(u8 mhz){
 	reg_adc_step_l = mhz*4;
 	reg_adc_mod = MASK_VAL(FLD_ADC_MOD, 192*4, FLD_ADC_CLK_EN, 1);

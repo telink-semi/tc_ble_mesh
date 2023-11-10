@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 
@@ -39,6 +39,7 @@ typedef struct{
 }mac_addr_get_t;
 extern _align_4_ my_fifo_t fast_prov_mac_fifo;
 
+void start_fast_provision_state_machine(u16 pid);
 void mesh_device_key_set_default();
 void mesh_fast_prov_start(u16 pid, u16 start_addr);
 void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp);

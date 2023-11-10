@@ -1179,10 +1179,8 @@ void set_ccc_by_master()
 	    app_host_smp_sdp_pending != SMP_PENDING){
 	    if(prov_out_handle){
 			dat_ccc0[7] = prov_out_ccc_handle;
-			
 			blm_push_fifo(BLM_CONN_HANDLE,dat_ccc0);
 			sleep_us(blm[0].conn_interval*1250<<2); // wait 4 interval for rsp
-			
 			memcpy(tmp_uuid,my_provision_out_uuid,sizeof(my_provision_out_uuid));
 			tmp_uuid[2]= prov_out_handle;
 			tmp_uuid[3]= prov_in_handle;

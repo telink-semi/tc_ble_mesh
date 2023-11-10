@@ -59,6 +59,7 @@ typedef struct{
 	provison_net_info_str pro_net_info;
 	u8 oob_type;
 	u8 oob_buf[16];
+	u8 oob_len;
 }gatt_pro_para_mag;
 
 typedef struct{

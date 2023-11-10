@@ -32,6 +32,7 @@
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh_property.h"
+#include "sensors_model.h"
 
 #if (MD_PROPERTY_EN)
 model_property_t	model_sig_property;

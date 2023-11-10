@@ -57,16 +57,21 @@
 
 
 #define		BLT_TIMER_SAFE_MARGIN_PRE	  (CLOCK_16M_SYS_TIMER_CLK_1US<<7)  //128 us
-#define		BLT_TIMER_SAFE_MARGIN_POST	  (CLOCK_16M_SYS_TIMER_CLK_1S<<2)   // 4S
+#define		BLT_TIMER_SAFE_MARGIN_POST	  (CLOCK_16M_SYS_TIMER_CLK_1S<<3)   // 8S
 static int inline blt_is_timer_expired(u32 t, u32 now) {
 	return ((u32)(now + BLT_TIMER_SAFE_MARGIN_PRE - t) < BLT_TIMER_SAFE_MARGIN_POST);
 }
 
 
 
+#include "tl_common.h"
+#if LLSYNC_ENABLE
+#include "ble_qiot_utils_mesh.h"
 
+typedef void (*blt_timer_callback_t)(void *param);	//#define blt_timer_callback_t	ble_timer_cb
+#else
 typedef int (*blt_timer_callback_t)(void);
-
+#endif
 
 
 

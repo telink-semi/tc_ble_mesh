@@ -1039,6 +1039,37 @@ int uECC_make_key(uint8_t *public_key,
     return 0;
 }
 
+/**
+ * @brief       This function get public key and private key of secp256r1(same as prime256v1 or P-256.)
+                for SMP with big endianness.
+ * @param[out]  public_key	- big endianness
+ * @param[out]  private_key	- big endianness
+ * @return      1: success; 0: fail.
+ * @note        
+ */
+int swECC_make_key(uint8_t *public_key,        uint8_t *private_key)
+{
+	int ret = 0;
+	uECC_Curve curve = uECC_secp256r1();
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+	uECC_word_t _private[curve->num_bytes];
+    uECC_word_t _public[curve->num_bytes * 2];
+#else
+    uECC_word_t *_private = private_key;
+    uECC_word_t *_public = public_key;
+#endif	
+	
+	ret = uECC_make_key((uint8_t *)_public, (uint8_t *)_private, curve);
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+	uECC_vli_nativeToBytes(private_key, BITS_TO_BYTES(curve->num_n_bits), _private);
+    uECC_vli_nativeToBytes(public_key, curve->num_bytes, _public);
+    uECC_vli_nativeToBytes(
+        public_key + curve->num_bytes, curve->num_bytes, _public + curve->num_words);
+#endif
+
+	return ret;
+}
+
 int uECC_shared_secret(const uint8_t *public_key,
                        const uint8_t *private_key,
                        uint8_t *secret,
@@ -1082,6 +1113,42 @@ int uECC_shared_secret(const uint8_t *public_key,
     uECC_vli_nativeToBytes(secret, num_bytes, _public);
 #endif
     return !EccPoint_isZero(_public, curve);
+}
+
+/**
+ * @brief       This function shared secret for secp256r1(same as prime256v1 or P-256.)
+                for SMP with big endianness.
+ * @param[in]   public_key	- big endianness
+ * @param[in]   private_key	- big endianness
+ * @param[out]  secret	- big endianness
+ * @return      1: success; 0: fail.
+ * @note        
+ */
+int swECC_shared_secret(const uint8_t *public_key,
+                       const uint8_t *private_key,
+                       uint8_t *secret) {
+    int ret = 0;
+	uECC_Curve curve = uECC_secp256r1();
+		
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+	uECC_word_t _private[curve->num_words];
+	uECC_word_t _public[curve->num_words * 2];
+	uint8_t _secret[curve->num_bytes];
+	uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve->num_n_bits));
+    uECC_vli_bytesToNative(_public, public_key, curve->num_bytes);
+    uECC_vli_bytesToNative(_public + curve->num_words, public_key + curve->num_bytes, curve->num_bytes);
+#else
+	uECC_word_t *_private = private_key;
+    uECC_word_t *_public = public_key;
+	uint8_t *_secret = secret;
+#endif
+
+	ret = uECC_shared_secret((uint8_t *)_public, (uint8_t *)_private, _secret, curve);
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+	uECC_vli_nativeToBytes(secret, curve->num_bytes, (uECC_word_t *)_secret);
+#endif
+
+	return ret;
 }
 
 #if uECC_SUPPORT_COMPRESSED_POINT

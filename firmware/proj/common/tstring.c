@@ -179,7 +179,7 @@ char *	strstr(const char *s1, const char *s2)
 }
 #endif
 
-int is_buf_zero(void *data, unsigned int len){
+int is_buf_zero(const void *data, unsigned int len){
 	u8 *p = (u8*)data;
 	for(unsigned int i = 0; i < len; ++i){
 		if(*p){

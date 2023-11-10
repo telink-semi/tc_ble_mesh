@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -32,8 +32,11 @@
 #include "proj/mcu/pwm.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj/drivers/adc.h"
-#include "proj_lib/ble/blt_config.h"
-#include "proj_lib/ble/ble_smp.h"
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
+#include "stack/ble/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#endif
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "proj_lib/mesh_crypto/mesh_md5.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
@@ -45,7 +48,6 @@
 #include "../common//vendor_model.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 
@@ -257,8 +259,7 @@ void test_sig_mesh_cmd_fun()
 			return;
 		}	
 		tick_notify_test_tick = clock_time();
-		ret_tmp = mesh_tx_cmd_rsp(G_LEVEL_STATUS, (u8 *)&A_debug_sts_level, sizeof(A_debug_sts_level), ele_adr_primary, 
-						ele_adr_primary, 0, 0);
+		ret_tmp = mesh_tx_cmd2normal_primary(G_LEVEL_STATUS, (u8 *)&A_debug_sts_level, sizeof(A_debug_sts_level), ADR_ALL_NODES, 0);
 		if(A_debug_notify_pkt_sts == BLE_SUCCESS && ret_tmp == 0){
 			A_debug_notify_pkt_sts = HCI_ERR_MAC_CONN_FAILED;
 			A_debug_sts_level++;
@@ -349,7 +350,7 @@ void main_loop ()
 #endif
 	proc_ui();
 	proc_led();
-	factory_reset_cnt_check();
+	//factory_reset_cnt_check();
 	
 	mesh_loop_process();
 	#if MI_API_ENABLE
@@ -440,6 +441,20 @@ void user_init()
 
 	//link layer initialization
 	//bls_ll_init (tbl_mac);
+
+	//Smp Initialization may involve flash write/erase(when one sector stores too much information,
+	//	 is about to exceed the sector threshold, this sector must be erased, and all useful information
+	//	 should re_stored) , so it must be done after battery check
+#if (BLE_REMOTE_SECURITY_ENABLE)
+	bls_smp_configParingSecurityInfoStorageAddr(FLASH_ADR_SMP_PARA_START); // must before blc_smp_peripheral_init().
+	blc_smp_peripheral_init();
+
+	//Hid device on android7.0/7.1 or later version
+	// New paring: send security_request immediately after connection complete
+	// reConnect:  send security_request 1000mS after connection complete. If master start paring or encryption before 1000mS timeout, slave do not send security_request.
+	blc_smp_configSecurityRequestSending(SecReq_IMM_SEND, SecReq_PEND_SEND, 1000); //if not set, default is:  send "security request" immediately after link layer connection established(regardless of new connection or reconnection )
+#endif
+
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 	blc_ll_initBasicMCU(tbl_mac);   //mandatory
 #elif((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))

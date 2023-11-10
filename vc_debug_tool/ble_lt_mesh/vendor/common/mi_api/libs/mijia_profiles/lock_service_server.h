@@ -76,8 +76,8 @@ typedef struct
  *
  * @param[in] config  Information needed to initialize the service.
  *
- * @retval SUCCESS If the service was successfully initialized. Otherwise, an error code is returned.
- * @retval ERROR_NULL If either of the pointers p_mi_s or p_mi_s_init is NULL.
+ * @retval _SUCCESS If the service was successfully initialized. Otherwise, an error code is returned.
+ * @retval _ERROR_NULL If either of the pointers p_mi_s or p_mi_s_init is NULL.
  */
 int lock_service_init(lock_init_t *p_config);
 

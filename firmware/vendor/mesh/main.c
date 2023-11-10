@@ -209,20 +209,21 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 
 
 #if	(PM_DEEPSLEEP_RETENTION_ENABLE)
-		if( pm_is_MCU_deepRetentionWakeup() ){
-			user_init_deepRetn ();
-		}
-		else
+	if( pm_is_MCU_deepRetentionWakeup() ){
+		user_init_deepRetn ();
+	}
+	else
 #endif
 	{
+		#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+		LOG_USER_MSG_INFO(0, 0, "[mesh] Start from SIG Mesh", 0);
+		#else
+		LOG_USER_MSG_INFO(0, 0, "Start user init...", 0);
+		#endif
 		user_init();
 	}
 
-
     irq_enable();
-	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-	LOG_USER_MSG_INFO(0, 0,"[mesh] Start from SIG Mesh", 0);
-	#endif
 
 	while (1) {
 #if (MODULE_WATCHDOG_ENABLE)

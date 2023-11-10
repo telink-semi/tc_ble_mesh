@@ -32,10 +32,10 @@
 #include "../../proj/mcu/config.h"
 #include "mesh_config.h"
 
-#define SW_VERSION_SPEC			(3)		// "3" means SIG MESH 1.0.x
-#define SW_VERSION_MAJOR		(3)		// 
-#define SW_VERSION_MINOR		(3)		// 
-#define SW_VERSION_2ND_MINOR	(6)		// second minor
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x
+#define SW_VERSION_MAJOR		(1)		// 
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor
 
 // big endian
 #define FW_VERSION_TELINK_RELEASE   ((SW_VERSION_SPEC << 4) + (SW_VERSION_MAJOR << 0) + \
@@ -67,19 +67,20 @@
  *     MCU chip type	    : 4
  * }
 */
+#define PID_DEV_TYPE_LEN		(12)
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
-#define PID_LIGHT				((PID_CHIP_TYPE << 12) | LIGHT_TYPE_SEL)
+#define PID_LIGHT				((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | LIGHT_TYPE_SEL)
 // ------ gateway ------
-#define PID_GATEWAY             ((PID_CHIP_TYPE << 12) | 0x0101)
+#define PID_GATEWAY             ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0101)
 // ------ LPN ------
-#define PID_LPN                 ((PID_CHIP_TYPE << 12) | 0x0201)
+#define PID_LPN                 ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0201)
 // ------ SWITCH ------
-#define PID_SWITCH              ((PID_CHIP_TYPE << 12) | 0x0301)
+#define PID_SWITCH              ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0301)
 // ------ SPIRIT_LPN ------
-#define PID_SPIRIT_LPN          ((PID_CHIP_TYPE << 12) | 0x0401)
+#define PID_SPIRIT_LPN          ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0401)
 // ------ gateway node with homekit ------
-#define PID_GW_NODE_HK          ((PID_CHIP_TYPE << 12) | 0x0501)
+#define PID_GW_NODE_HK          ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0501)
 
 // ------ HOME KIT ------
 // from 0xC000 -- 0xFFFF
@@ -155,3 +156,12 @@ user can be allowed to redefined PID and VID if needed.
 #ifndef RAM_SIZE_MAX
 #define RAM_SIZE_MAX            		(64*1024)
 #endif
+
+#ifndef __IRQ_STACK_SIZE__
+	#if EXTENDED_ADV_ENABLE
+#define __IRQ_STACK_SIZE__            	(0x280)	// cost about 0x1D0 for demo SDK. // because call irq_mesh_sec_msg_check_cache in irq state.
+	#else
+#define __IRQ_STACK_SIZE__            	(0x180)
+	#endif
+#endif
+

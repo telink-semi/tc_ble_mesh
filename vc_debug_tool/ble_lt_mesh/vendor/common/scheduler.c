@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifdef WIN32
 #include <stdlib.h>
 #else
@@ -80,7 +80,7 @@ int mesh_cmd_sig_scheduler_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 //--
-int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr)
+int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr, u16 op)
 {
 	if(schd_idx >= 16){
 		return 0;
@@ -89,9 +89,17 @@ int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr
 	scheduler_t *p_get = &g_schd_list[ele_idx][schd_idx];
 	scheduler_t rsp;
 	memcpy(&rsp, p_get, sizeof(rsp));
-	rsp.valid_flag_or_idx = schd_idx;
+	u32 rsp_len = SIZE_SCHEDULER;
+
+	if(SCHD_ACTION_GET == op){
+		if(SCHD_ACTION_NONE == rsp.action || 0 == p_get->valid_flag_or_idx){
+			rsp.year = 0; // clear high bit of index.
+			rsp_len = 1;
+		}
+	}
 	
-	return mesh_tx_cmd_rsp(SCHD_ACTION_STATUS, (u8 *)&rsp, SIZE_SCHEDULER, ele_adr, dst_adr, 0, 0);
+	rsp.valid_flag_or_idx = schd_idx;
+	return mesh_tx_cmd_rsp(SCHD_ACTION_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
 }
 
 #if 0	// no need publish for schd_action
@@ -111,7 +119,7 @@ int mesh_schd_action_st_publish(u8 idx)
 int mesh_schd_action_st_rsp(mesh_cb_fun_par_t *cb_par, u8 schd_idx)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-	return mesh_tx_cmd_schd_action_st(cb_par->model_idx, schd_idx, p_model->com.ele_adr, cb_par->adr_src);
+	return mesh_tx_cmd_schd_action_st(cb_par->model_idx, schd_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op);
 }
 
 int mesh_cmd_sig_schd_action_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)

@@ -216,6 +216,15 @@ extern const RF_PowerTypeDef rf_power_Level_list[60];
 #define    RF_ZIGBEE_PACKET_RSSI_GET(p)     			(p[p[0]+2])
 #define    RF_ZIGBEE_PACKET_TIMESTAMP_GET(p)           	(p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
 #define    RF_ZIGBEE_PACKET_PAYLOAD_LENGTH_GET(p)      	(p[4])
+#define    RF_TPLL_PACKET_LENGTH_OK(p)              	(p[0] == (p[4] & 0x3f) + 11)
+#define    RF_TPLL_PACKET_CRC_OK(p)                 	((p[p[0]+3] & 0x01) == 0x00)
+#define    RF_TPLL_PACKET_RSSI_GET(p)               	(p[p[0]+2])
+#define    RF_SB_PACKET_PAYLOAD_LENGTH_GET(p)      	(p[0] - 10)
+#define    RF_SB_PACKET_CRC_OK(p)                  	((p[p[0]+3] & 0x01) == 0x00)
+#define    RF_SB_PACKET_CRC_GET(p)                 	((p[p[0]-8]<<8) + p[p[0]-7]) //Note: here assume that the MSByte of CRC is received first
+#define    RF_SB_PACKET_RSSI_GET(p)                	(p[p[0]+2])
+#define    RF_TPLL_PACKET_TIMESTAMP_GET(p)          (p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
+#define    RF_SB_PACKET_TIMESTAMP_GET(p)           (p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
 
 
 
@@ -795,6 +804,16 @@ extern void rf_set_channel (signed char chn, unsigned short set);//general
  * @return  none.
  */
 extern void rf_set_channel_500k(signed short chn, unsigned short set);
+/**
+*	@brief		this function is to set private for RF.
+*	@param[in]	len - length of private.
+*	@return	 	none.
+*/
+static inline void rf_private(int len)
+{
+    write_reg8(0x404, read_reg8(0x404)|0x03); //select private header mode
+    write_reg8(0x406, len);
+}
 
 
 /**

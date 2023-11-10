@@ -30,9 +30,9 @@
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
 #define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
-#define MAX_FIXED_PATH						(PTS_TEST_EN?4:4)
-#define MAX_NON_FIXED_PATH					(PTS_TEST_EN?4:16)
-#define MAX_DEPENDENT_NUM					(MAX_LPN_NUM+2) // 2 for directed client
+#define MAX_FIXED_PATH						(PTS_TEST_EN?2:16)
+#define MAX_NON_FIXED_PATH					(PTS_TEST_EN?2:64)
+#define MAX_DEPENDENT_NUM					(PTS_TEST_EN?1:(2+1))   // 2 + 1: dependent node(lpn and directed client). 
 
 #define MAX_DSC_TBL							(PTS_TEST_EN?4:0x10)
 #define MAX_CONCURRENT_CNT					4
@@ -276,7 +276,7 @@ typedef struct{
 	u16 destination;
 	u8  dependent_origin_list_size;
 	u8  dependent_target_list_size;
-	u8 	par[MAX_DEPENDENT_NUM*2];
+	u8 	par[MAX_DEPENDENT_NUM*sizeof(addr_range_t)*2]; // 2: for dependent origin and target
 }forwarding_tbl_dependengts_add_t;
 
 typedef struct{
@@ -467,63 +467,6 @@ typedef struct{
 	u8 	snd_ele_cnt;
 }path_addr_t;
 
-#if 0
-typedef struct{
-	u16 fixed_path_flag:1;
-	u16 unicast_destination_flag:1;
-	u16 backward_path_validated_flag:1;
-	u16 bearer_toward_path_origin_indicator:1;
-	u16 bearer_toward_path_target_indicator:1;
-	u16 dependent_origin_list_size_indicator:2;
-	u16 dependent_target_list_size_indicator:2;
-	u16 rfu:7;
-}forwarding_table_entry_head_t;
-
-
-typedef struct{	// one entry of the forwarding table
-	forwarding_table_entry_head_t entry_head;
-	union {
-		u16 src_addr;
-		unicast_addr_range_t path_origin_unicast_addr_range;
-	};
-	u16 dependent_origin_list_size; // 1 or 2 byte indicated in entry head
-	u16 bearer_toward_path_origin;
-	union {
-		u16 dst_addr;			// unicast or group
-		unicast_addr_range_t path_target_unicast_addr_range;
-	};
-	u16 dependent_target_list_size;// 1 or 2 byte indicated in entry head
-	u16 bearer_toward_path_target; 
-}fixed_path_entry_t;
-
-typedef struct{	// one entry of the forwarding table
-	forwarding_table_entry_head_t entry_head;
-	u8 lane_counter;
-	u16 path_lifetime;
-	u8 path_origin_forwarding_number;
-	union {
-		u16 src_addr;
-		unicast_addr_range_t path_origin_unicast_addr_range;
-	};
-	u16 dependent_origin_list_size;// 1 or 2 byte indicated in entry head
-	u16 bearer_toward_path_origin;
-	union {
-		u16 dst_addr;			// unicast or group
-		unicast_addr_range_t path_target_unicast_addr_range;
-	};
-	u16 dependent_target_list_size;// 1 or 2 byte indicated in entry head
-	u16 bearer_toward_path_target; 
-}non_fixed_path_entry_t;
-
-typedef struct{
-	union{
-		forwarding_table_entry_head_t entry_head;
-		fixed_path_entry_t fixed_path_entry;
-		non_fixed_path_entry_t non_fixed_path_entry;
-	};
-}path_entry_t;
-#endif
-
 typedef struct{	// one entry of the forwarding table
 	u8  fixed_path:1;
 	u8  backward_path_validated:1;
@@ -554,6 +497,7 @@ typedef struct{
 	path_entry_com_t entry;
 }non_fixed_entry_t;
 
+#if MD_DF_CFG_SERVER_EN
 typedef struct{
 	non_fixed_entry_t path[MAX_NON_FIXED_PATH];
 //	u16 update_id; // use model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id instead
@@ -563,7 +507,7 @@ typedef struct{
 	path_entry_com_t path[MAX_FIXED_PATH];
 	u16 update_id;
 }fixed_fwd_tbl_t;
-
+#endif
 
 typedef struct{
 	u8 path_need;
@@ -599,17 +543,17 @@ typedef struct{
 	discovery_state_t state;
 }discovery_entry_par_t;
 
+#if MD_DF_CFG_SERVER_EN
 typedef struct{
 	u8 forwarding_number;
 	discovery_entry_par_t dsc_entry_par[MAX_DSC_TBL];
 }discovery_table_t;
 
 typedef struct{
-#if MD_SERVER_EN
 	mesh_directed_forward_t directed_forward;
 	fixed_fwd_tbl_t fixed_fwd_tbl[NET_KEY_MAX];
-#endif
 }model_df_cfg_t;
+#endif
 
 extern int path_monitoring_test_mode;
 void mesh_df_led_event(u8 nid);
@@ -625,13 +569,15 @@ int is_proxy_use_directed(u16 netkey_offset);
 void directed_proxy_dependent_node_delete();
 void mesh_directed_forwarding_bind_state_update();
 void mesh_directed_forwarding_default_val_init();
-void mesh_directed_proxy_capa_report(int netkey_offset);
+int mesh_directed_proxy_capa_report(int netkey_offset);
+int mesh_directed_proxy_capa_report_upon_connection();
 path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination);
 int mesh_df_path_monitoring(path_entry_com_t *p_entry);
 int directed_forwarding_initial_start(u16 netkey_index, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt);
 int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt);
 void mesh_directed_forwarding_proc(u8 *p_bear, u8 *par, int par_len, int src_type);
-int is_address_in_dependent_list(path_entry_com_t *p_fwd_entry, u16 addr);
+int is_address_in_dependent_origin(path_entry_com_t *p_fwd_entry, u16 addr);
+int is_address_in_dependent_target(path_entry_com_t *p_fwd_entry, u16 addr);
 int forwarding_tbl_dependent_add(u16 range_start, u8 range_length, path_addr_t *p_dependent_list);
 int directed_forwarding_solication_start(u16 netkey_offset, mesh_ctl_path_request_solication_t *p_addr_list, u8 list_num);
 
@@ -671,7 +617,7 @@ int cfg_cmd_directed_ctl_network_transmit_set(u16 node_adr, u8 transmit);
 int cfg_cmd_directed_ctl_relay_retransmit_get(u16 node_adr);
 int cfg_cmd_directed_ctl_relay_retransmit_set(u16 node_adr, u8 transmit);
 
-#if !WIN32
+#if (MD_DF_CFG_SERVER_EN && !WIN32)
 int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
@@ -679,7 +625,7 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 #define mesh_cmd_sig_cfg_directed_control_set							(0)	
 #endif
  
- #if (MD_SERVER_EN&&!FEATURE_LOWPOWER_EN&&!WIN32)
+ #if (MD_DF_CFG_SERVER_EN&&!FEATURE_LOWPOWER_EN&&!WIN32)
 int mesh_cmd_sig_cfg_path_metric_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_dsc_tbl_capa_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -748,7 +694,7 @@ int mesh_cmd_sig_cfg_directed_control_relay_transmit_set(u8 *par, int par_len, m
 #define mesh_cmd_sig_cfg_directed_control_relay_transmit_set			(0)
 #endif
 
-#if MD_CLIENT_EN
+#if MD_DF_CFG_CLIENT_EN
 int mesh_cmd_sig_cfg_directed_control_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_dsc_tbl_capa_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

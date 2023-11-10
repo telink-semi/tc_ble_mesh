@@ -24,14 +24,14 @@
  *******************************************************************************************************/
 // gerneral defination 
 #include "../../../reference/tl_bulk/lib_file/Gatt_provision.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_mesh.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/pm.h"
-#include "../../vendor/common/app_proxy.h"
-#include "../../vendor/common/app_health.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/pm.h"
+#include "vendor/common/app_proxy.h"
+#include "vendor/common/app_health.h"
 
 
 /************************************output function *************************************/
@@ -206,7 +206,7 @@ para:
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/	
-int mesh_provision_par_set_dir(u8 *prov_par);
+int mesh_provision_par_set_dir(provison_net_info_str *prov_par);
 
 /************************** check_pkt_is_unprovision_beacon **************************
 function : check the pkt is unprovision beacon or not    
@@ -589,7 +589,7 @@ extern int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u
 u8 win32_proved_state();
 
 
-void mesh_heartbeat_cb_data(u16 src, u16 dst,u8 *p_hb);
+void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear);
 
 
 void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);

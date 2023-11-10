@@ -33,6 +33,12 @@ u8 hb_sts_change = 0;
 u32 hb_pub_100ms =0;
 u32 hb_sub_100ms =0;
 
+
+/**
+ * @brief       This function trigger sending heartbeat by states changed of low power node.
+ * @return      none
+ * @note        
+ */
 void mesh_cmd_sig_lowpower_heartbeat()
 {
 	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_LOWPOWER_BIT)){
@@ -42,6 +48,15 @@ void mesh_cmd_sig_lowpower_heartbeat()
 }
 
 // heart beat part dispatch 
+
+/**
+ * @brief       This function will be called when receive the opcode of "Config Heartbeat Publication Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others: error.
+ * @note        
+ */
 int mesh_cmd_sig_heart_pub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	// reserve to diaptch the status 
@@ -51,15 +66,18 @@ int mesh_cmd_sig_heart_pub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
     return err;
 }
 
-int mesh_cmd_sig_heartbeat_pub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+/**
+ * @brief       This function send response of "Config Heartbeat Publication Status".
+ * @param[in]   adr_src	- source address of "Config Heartbeat Publication Get/Set"
+ * @param[in]   sts		- status of "Config Heartbeat Publication Status"
+ * @return      0: success, others: error code.
+ * @note        
+ */
+int mesh_cmd_sig_heartbeat_pub_sts(u8 sts,u16 adr_src)
 {
-	int err = -1;
+	int err =-1;
 	mesh_heartbeat_pub_status_t heart_pub_status;
-	if(mesh_net_key_find(model_sig_cfg_s.hb_pub.netkeyidx) == NET_KEY_MAX){
-		heart_pub_status.status = ST_INVALID_NETKEY;
-	}else{
-		heart_pub_status.status = ST_SUCCESS;
-	}
+	heart_pub_status.status = sts;
 	heart_pub_status.dst = model_sig_cfg_s.hb_pub.dst_adr;
 	heart_pub_status.countlog = model_sig_cfg_s.hb_pub.cnt_log;
 	heart_pub_status.periodlog = model_sig_cfg_s.hb_pub.per_log;
@@ -67,9 +85,28 @@ int mesh_cmd_sig_heartbeat_pub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	heart_pub_status.feature = model_sig_cfg_s.hb_pub.feature;
 	//heart_pub_status.netkeyIndex = mesh_key.net_key[mesh_key.netkey_sel_dec][0].index;
 	heart_pub_status.netkeyIndex = model_sig_cfg_s.hb_pub.netkeyidx;
-	err = mesh_tx_cmd_rsp_cfg_model(HEARTBEAT_PUB_STATUS,(u8 *)(&heart_pub_status.status),sizeof(heart_pub_status),cb_par->adr_src);
-    return err;
+	return err = mesh_tx_cmd_rsp_cfg_model(HEARTBEAT_PUB_STATUS,(u8 *)(&heart_pub_status.status),sizeof(heart_pub_status),adr_src);
 }
+
+/**
+ * @brief       This function will be called when receive the opcode of "Config Heartbeat Publication Get"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others: error code.
+ * @note        
+ */
+int mesh_cmd_sig_heartbeat_pub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	return mesh_cmd_sig_heartbeat_pub_sts(ST_SUCCESS,cb_par->adr_src);
+}
+
+/**
+ * @brief       This function get count from log. (2^n)
+ * @param[in]   val	- log value
+ * @return      2^val
+ * @note        
+ */
 u16 get_cnt_log_to_val(u8 val)
 {
 	if((val == 0)||(val>0x11 && val <0xff)){
@@ -81,23 +118,64 @@ u16 get_cnt_log_to_val(u8 val)
 	}else{
 		return 1<<(val-1);
 	}
-
 }
+
+/**
+ * @brief       This function check if parameters are valid.
+ * @param[in]   p_pub	- pointer of "Config Heartbeat Publication Set"
+ * @return      0: success, others: error code.
+ * @note        
+ */
+u8 mesh_heartbeat_para_valid(mesh_cfg_model_heartbeat_pub_set_t *p_pub)
+{
+	if(p_pub->count_log>0x11 &&p_pub->count_log<0xff ){// cnt log
+		return ST_INVALID_PUB_PAR;
+	}else if (p_pub->period_log>0x11){// period bigger than 0x11 is invalid
+		return ST_INVALID_PUB_PAR;
+	}else if (p_pub->ttl>0x7f){// ttl is invalid
+		return ST_UNSPEC_ERR;
+	/*}else if (p_pub->features&0xfff0 != 0){//  // should skip reserved filed. // higher bit is reserved
+		return ST_FEATURE_NOT_SUPPORT;*/
+	}else if (mesh_net_key_find(p_pub->netkeyindex) == NET_KEY_MAX){
+		return ST_INVALID_NETKEY;
+	}else{
+		return ST_SUCCESS;
+	}
+}
+
+/**
+ * @brief       This function heartbeat pub set
+ * @param[in]   cb_par	- Callback parameter pointer
+ * @param[in]   par		- param
+ * @param[in]   par_len	- param len
+ * @return      -1:rsp fail; 0:rsp suc
+ * @note        
+ */
 int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = -1;
+	u8 sts;
 	mesh_heartbeat_pub_str *p_pub = &(model_sig_cfg_s.hb_pub);
-	mesh_cfg_model_heartbeat_pub_set_t *p_pub_get = (mesh_cfg_model_heartbeat_pub_set_t *)(par);
-	p_pub->dst_adr = p_pub_get->dst;
-	p_pub->cnt_log = p_pub_get->count_log;
-	p_pub->cnt_val = get_cnt_log_to_val(p_pub_get->count_log);
-	p_pub->per_log = p_pub_get->period_log;
-	p_pub->ttl = p_pub_get->ttl;
-	p_pub->feature = (p_pub_get->features)&0x000f;
-	p_pub->netkeyidx = p_pub_get->netkeyindex;
+	mesh_cfg_model_heartbeat_pub_set_t *p_pub_set = (mesh_cfg_model_heartbeat_pub_set_t *)(par);
+	sts = mesh_heartbeat_para_valid(p_pub_set);
+	if(sts!= ST_SUCCESS){
+		// rsp invalid sts directly
+		mesh_heartbeat_pub_status_t rsp;
+		rsp.status = sts;
+		memcpy(&rsp.dst, p_pub_set, sizeof(mesh_heartbeat_pub_status_t) - OFFSETOF(mesh_heartbeat_pub_status_t, dst));
+		return mesh_tx_cmd_rsp_cfg_model(HEARTBEAT_PUB_STATUS,(u8 *)(&rsp),sizeof(rsp),cb_par->adr_src);
+	}
+	// only the para is valid ,can set the para part.
+	p_pub->dst_adr = p_pub_set->dst;
+	p_pub->cnt_log = p_pub_set->count_log;
+	p_pub->cnt_val = get_cnt_log_to_val(p_pub_set->count_log);
+	p_pub->per_log = p_pub_set->period_log;
+	p_pub->ttl = p_pub_set->ttl;
+	p_pub->feature = (p_pub_set->features)&0x000f;
+	p_pub->netkeyidx = p_pub_set->netkeyindex;
 	// leave the key index settings .
 	//rsp the status 
-	err = mesh_cmd_sig_heartbeat_pub_get(par,par_len,cb_par);
+	err = mesh_cmd_sig_heartbeat_pub_sts(ST_SUCCESS,cb_par->adr_src);
 #if TESTCASE_FLAG_ENABLE
 	hb_pub_100ms = clock_time_100ms(); // test case required, because count in response of get command, should be same with set command.
 #else
@@ -111,6 +189,14 @@ int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	return err;
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Config Heartbeat Publication Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_heartbeat_sub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err =-1;
@@ -128,6 +214,15 @@ int mesh_cmd_sig_heartbeat_sub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	err = mesh_tx_cmd_rsp_cfg_model(HEARTBEAT_SUB_STATUS,(u8 *)(&sub_status.status),sizeof(sub_status),cb_par->adr_src);
 	return err;
 }
+
+/**
+ * @brief       This function will be called when receive the opcode of "Config Heartbeat Subscription Set"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_heartbeat_sub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err =-1;
@@ -168,10 +263,26 @@ int mesh_cmd_sig_heartbeat_sub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	// how to rsp 
 	mesh_common_store(FLASH_ADR_MD_CFG_S);
 	err = mesh_cmd_sig_heartbeat_sub_get(par,par_len,cb_par);
+	
+	#if 0 //MESH_NODE_CFG_HBS_BV_02_C
+	//This behavior is inconsistent with MESH.TS, which is suspected to be a problem with V1.1 PTS. V1.0 PTS does not require this modification
+	if(p_sub_set->period_log == 0){
+		p_cfg_hb_sub->cnt_log = 0;
+	}
+	#endif
+	
 	hb_sub_100ms = clock_time_100ms();
 	return err;
 }
 
+/**
+ * @brief       This function will be called when receive the opcode of "Config Heartbeat Subscription Status"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others: error code.
+ * @note        
+ */
 int mesh_cmd_sig_heartbeat_sub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -180,12 +291,19 @@ int mesh_cmd_sig_heartbeat_sub_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 	return err;
 }
 
+/**
+ * @brief       This function will be called when receive CMD_CTL_HEARTBEAT(Control message of Heartbeat).
+                This function process this command.
+ * @param[in]   p_bear	- bearer pointer of this command.
+ * @return      none
+ * @note        
+ */
 void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
 {
 	mesh_cmd_nw_t *p_nw = &(p_bear->nw);
 	mesh_heartbeat_sub_str *p_sub = &(model_sig_cfg_s.hb_sub);
 	#if WIN32 
-	mesh_heartbeat_cb_data(p_nw->src, p_nw->dst,(u8 *)&(p_bear->lt_ctl_unseg));
+	mesh_heartbeat_cb_data(p_bear);
 	#endif
 	#if GATEWAY_ENABLE
 	mesh_hb_msg_cb_t hb_par;
@@ -214,17 +332,29 @@ void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
 	p_sub->cnt_log = cal_heartbeat_count_log(p_sub->cnt_val);
 }
 
+/**
+ * @brief       This function send control message of Heartbeat.
+ * @return      none
+ * @note        
+ */
 void heartbeat_cmd_send_conf()
 {
     mesh_hb_msg_t hb_msg;
-	hb_msg.rfu = 0;
+    memset(&hb_msg, 0, sizeof(hb_msg));
 	hb_msg.iniTTL = model_sig_cfg_s.hb_pub.ttl;
 	mesh_page_feature_t *p_feature = (mesh_page_feature_t *)&hb_msg.fea;
-	p_feature->relay = model_sig_cfg_s.relay;
-	p_feature->proxy = model_sig_cfg_s.gatt_proxy;
-	p_feature->frid = model_sig_cfg_s.frid;
-	p_feature->low_power = FEATURE_LOWPOWER_EN;
-	p_feature->rfu = 0;
+#if FEATURE_RELAY_EN
+	p_feature->relay = (RELAY_SUPPORT_ENABLE == model_sig_cfg_s.relay);
+#endif
+#if FEATURE_PROXY_EN
+	p_feature->proxy = (GATT_PROXY_SUPPORT_ENABLE == model_sig_cfg_s.gatt_proxy);
+#endif
+#if FEATURE_FRIEND_EN
+	p_feature->frid = (FRIEND_SUPPORT_ENABLE == model_sig_cfg_s.frid);	// spec "3.6.5.10 Heartbeat" indicate "in use or not in use", more details refer to "MESH/NODE/CFG/HBP/BV-04-C [Triggered publishing of Heartbeat messages - Friend state changes]"
+#endif
+#if FEATURE_LOWPOWER_EN
+	p_feature->low_power = is_friend_ship_link_ok_lpn();				// spec "3.6.5.10 Heartbeat" indicate "in use or not in use", refer to "MESH/NODE/CFG/HBP/BV-05-C [Triggered publishing of Heartbeat messages - Low Power state changes]"
+#endif
 	
 	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, model_sig_cfg_s.hb_pub.dst_adr,0);
 	LOG_MSG_INFO(TL_LOG_MESH, 0, 0,"send heartbeat ",0);
@@ -232,6 +362,11 @@ void heartbeat_cmd_send_conf()
 }
 
 // mesh send heartbeat message 
+/**
+ * @brief       This function is a poll and process function for procedure of Heartbeat Subscription.
+ * @return      none
+ * @note        
+ */
 void mesh_heartbeat_sub_poll()
 {
 	// dispatch the heartbeat subscription part 
@@ -254,6 +389,11 @@ void mesh_heartbeat_sub_poll()
 	}
 }
 
+/**
+ * @brief       This function is a poll and process function for procedure of Heartbeat Publish.
+ * @return      none
+ * @note        
+ */
 void mesh_heartbeat_pub_poll()
 {
 	// dispatch the heartbeat publication part 
@@ -286,7 +426,7 @@ void mesh_heartbeat_pub_poll()
     		friend_cmd_send_fn(0, CMD_CTL_HEARTBEAT);
     	}	
     	
-    	if(hb_sts_change && clock_time_exceed(hb_pub_100ms,1)){
+    	if(hb_sts_change && clock_time_exceed_100ms(hb_pub_100ms,1)){
     		hb_pub_100ms = clock_time_100ms();
     		hb_sts_change--;
     		friend_cmd_send_fn(0, CMD_CTL_HEARTBEAT);
@@ -294,6 +434,11 @@ void mesh_heartbeat_pub_poll()
 	}
 }
 
+/**
+ * @brief       This function is a poll function for heartbeat.
+ * @return      none
+ * @note        
+ */
 void mesh_heartbeat_poll_100ms()
 {
     if(!heartbeat_en){
@@ -307,15 +452,27 @@ void mesh_heartbeat_poll_100ms()
 #define HEARTBEAT_MIN_HOPS		0x01
 #define HEARTBEAT_MAX_HOPS		0x7f
 
+/**
+ * @brief       This function set heartbeat feature
+ * @return      none
+ * @note        
+ */
 void set_heartbeat_feature()
 {
 	//set the heartbeat feature enable by the feature 
 	mesh_page_feature_t *p_ft = (mesh_page_feature_t *)&model_sig_cfg_s.hb_pub.feature;
 	p_ft->relay = is_relay_support_and_en;
-	p_ft->proxy = is_proxy_support_and_en;
+	p_ft->proxy = is_proxy_enable_st;
 	p_ft->frid = is_fn_support_and_en;
 	p_ft->low_power = is_lpn_support_and_en;
 }
+
+/**
+ * @brief       This function get high bits 
+ * @param[in]   val	- value
+ * @return      bit
+ * @note        
+ */
 u8 get_high_bits(u16 val)
 {
 	u8 i;
@@ -326,6 +483,13 @@ u8 get_high_bits(u16 val)
 	}
 	return 15;
 }
+
+/**
+ * @brief       This function caculate heartbeat count log
+ * @param[in]   val	- value
+ * @return      count of log
+ * @note        
+ */
 u8 cal_heartbeat_count_log(u16 val)
 {
 	if(val ==0){
@@ -337,7 +501,13 @@ u8 cal_heartbeat_count_log(u16 val)
 	}
 }
 
-u8 disptch_heartbeat_count_log(u8 val)
+/**
+ * @brief       This function check val of "heartbeat count log" is valid or not.
+ * @param[in]   val	- value
+ * @return      1: valid, 0: invalid.
+ * @note        
+ */
+u8 dispatch_heartbeat_count_log(u8 val)
 {
 	if(val>=12 && val<=0xfe){
 		return 0;
@@ -347,6 +517,12 @@ u8 disptch_heartbeat_count_log(u8 val)
 	return 0;
 }
 
+/**
+ * @brief       This function check val of "heartbeat publish TTL" is valid or not.
+ * @param[in]   val	- value
+ * @return      1: valid, 0: invalid.
+ * @note        
+ */
 u8 dispatch_heartbeat_pub_ttl(u8 val)
 {
 	if(val>=0x80){
@@ -355,6 +531,12 @@ u8 dispatch_heartbeat_pub_ttl(u8 val)
 		return 1;
 	}
 }
+
+/**
+ * @brief       This function initial heartbeat
+ * @return      none
+ * @note        
+ */
 void init_heartbeat_str()
 {
 	// need to trigger the hearbeat msg ,at the first time 

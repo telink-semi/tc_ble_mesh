@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -32,6 +32,7 @@
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh_property.h"
+#include "sensors_model.h"
 
 #if (MD_PROPERTY_EN)
 model_property_t	model_sig_property;

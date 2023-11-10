@@ -30,6 +30,10 @@
 
 MYFIFO_INIT(hci_vc_cmd2dongle_usb_fifo, 512, 32);	// packet size may be 380
 
+void CDTP_vs_loop();
+int json_valid_iv_index();
+
+
 int fifo_push_vc_cmd2dongle_usb(u8*p_tc,u8 len )
 {
 	return my_fifo_push(&hci_vc_cmd2dongle_usb_fifo, p_tc,len,0,0);
@@ -228,9 +232,9 @@ _attribute_no_inline_ void hci_tx_fifo_poll()	// VC receive ADV or other pkt fro
 		}
 		#endif
 		else if((MESH_PROV | TSCRIPT_MESH_RX) == report_type){
-			mesh_provision_par_set((fifo->data+1));
+			mesh_provision_par_set((provison_net_info_str *)(fifo->data+1));
 		}else{ 
-			OnAppendLog_vs(fifo->data, fifo->len);	// should not happen now
+			OnAppendLog_vs(fifo->data, fifo->len);
 		}
 		#else
 		OnAppendLog_vs(fifo->data, fifo->len);
@@ -262,6 +266,12 @@ int SendOpByINI(u8 *ini_buf, u32 len)
 	if(IsSendOpBusy(reliable, cmd->adr_dst)){
 		return TX_ERRNO_TX_BUSY;
 	}
+
+	#if 0
+	if(!json_valid_iv_index()){
+		return TX_ERRNO_IV_INVALID;
+	}
+	#endif
 	
 	if(is_unicast_adr(cmd->adr_dst) && reliable && (cmd->rsp_max > 1)){
 		cmd->rsp_max = 1;
@@ -352,7 +362,7 @@ int VC_cb_tx_cmd_err(material_tx_cmd_t *p_mat, int err)
 }
 #endif
 
-unsigned short crc16 (unsigned char *pD, int len)
+unsigned short crc16 (const unsigned char *pD, int len)
 {
     static unsigned short poly[2]={0, 0xa001};              //0x8005 <==> 0xa001
     unsigned short crc = 0xffff;
@@ -387,4 +397,5 @@ void Thread_main_process()
 	#if FEATURE_LOWPOWER_EN
 	mesh_lpn_proc_suspend(); // must at last of main_loop()
 	#endif
+	CDTP_vs_loop();
 }

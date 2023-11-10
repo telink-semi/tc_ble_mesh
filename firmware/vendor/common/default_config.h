@@ -91,6 +91,9 @@ extern "C" {
 #ifndef	DISTRIBUTOR_UPDATE_SERVER_EN
 #define DISTRIBUTOR_UPDATE_SERVER_EN      	0
 #endif
+#ifndef	APP_LOG_EN
+#define APP_LOG_EN      		0
+#endif
 
 
 #if __PROJECT_MESH_PRO__

@@ -49,7 +49,7 @@
 	#ifdef __PROJECT_MESH_GW_NODE_HK__
 	.equ IRQ_STK_SIZE,	0x400
 	#else
-	.equ IRQ_STK_SIZE,	0x180
+	.equ IRQ_STK_SIZE,	__IRQ_STACK_SIZE__
 	#endif
 	.equ __LOAD_RAM, 	__LOAD_RAM_SIZE__
 	.equ __RAM_START_ADDR, 	(0x840000) 

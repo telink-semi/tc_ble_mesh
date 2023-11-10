@@ -1,30 +1,6 @@
-/********************************************************************************************************
- * @file	resource.h
- *
- * @brief	This is the header file for BLE SDK
- *
- * @author	Mesh Group
- * @date	2017
- *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
- *          All rights reserved.
- *
- *          Licensed under the Apache License, Version 2.0 (the "License");
- *          you may not use this file except in compliance with the License.
- *          You may obtain a copy of the License at
- *
- *              http://www.apache.org/licenses/LICENSE-2.0
- *
- *          Unless required by applicable law or agreed to in writing, software
- *          distributed under the License is distributed on an "AS IS" BASIS,
- *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *          See the License for the specific language governing permissions and
- *          limitations under the License.
- *
- *******************************************************************************************************/
 //{{NO_DEPENDENCIES}}
-// Create by Microsoft Visual C++
-// Used by tl_ble_module.rc
+// Microsoft Visual C++ 生成的包含文件。
+// 供 tl_ble_module.rc 使用
 //
 #define IDD_TL_BLE_MODULE_DIALOG        102
 #define IDR_MAINFRAME                   128
@@ -33,6 +9,7 @@
 #define IDB_IMAGES                      133
 #define IDD_PROVISION                   134
 #define IDD_RX_TEST                     136
+#define IDD_RP_SCAN_CAP                 139
 #define IDC_COMMAND                     1000
 #define IDC_INPUT                       1002
 #define IDC_IF_SPI                      1003
@@ -118,6 +95,7 @@
 #define IDC_SET_PRO                     1068
 #define IDC_OTA                         1068
 #define IDC_START                       1068
+#define IDC_GET_SCAN_CAP                1068
 #define IDC_GET_CPS2                    1069
 #define IDC_DEL_NODE                    1069
 #define IDC_RX_TEST                     1069
@@ -297,14 +275,18 @@
 #define IDC_CHECK_AUTO_SAVE_LOG         1183
 #define IDC_STATIC_EXTEND_ADV_OPTION    1184
 #define IDC_COMBO_EXTEND_ADV_OPTION     1185
+#define IDC_RP_SCAN_LIMIT               1186
+#define IDC_RP_SCAN_TIMEOUT             1187
+#define IDC_RP_SCAN_TIMEOUT2            1188
+#define IDC_RP_SCAN_CAP_ST              1188
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1186
+#define _APS_NEXT_CONTROL_VALUE         1188
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

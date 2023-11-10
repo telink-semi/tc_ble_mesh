@@ -47,8 +47,8 @@ CTL_RxTest::CTL_RxTest(CWnd* pParent /*=NULL*/)
 	, m_max_time(0)
 	, m_min_time(0)
 	, m_average_time(0)
-	, m_pkts_send(1)
-	, m_pkts_receive(1)
+	, m_pkts_send(8)
+	, m_pkts_receive(8)
 	, m_csAddrGet(_T("0x0000"))
 	, m_clear_result(0)
 {
@@ -151,9 +151,9 @@ void CTL_RxTest::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_MIN, m_min_time);
 	DDX_Text(pDX, IDC_AVERAGE, m_average_time);
 	DDX_Text(pDX, IDC_PKT_NUMS, m_pkts_send);
-	DDV_MinMaxByte(pDX, m_pkts_send, 1, 47);
+	DDV_MinMaxByte(pDX, m_pkts_send, 8, 223);
 	DDX_Text(pDX, IDC_PKT_RECEIVE, m_pkts_receive);
-	DDV_MinMaxByte(pDX, m_pkts_receive, 1, 47);
+	DDV_MinMaxByte(pDX, m_pkts_receive, 8, 223);
 	DDX_Text(pDX, IDC_ADDR_GET, m_csAddrGet);
 }
 

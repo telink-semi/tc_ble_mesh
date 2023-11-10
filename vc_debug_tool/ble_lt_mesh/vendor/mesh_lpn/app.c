@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -33,8 +33,11 @@
 #include "proj/mcu/watchdog_i.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj/drivers/adc.h"
-#include "proj_lib/ble/blt_config.h"
-#include "proj_lib/ble/ble_smp.h"
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
+#include "stack/ble/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#endif
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "proj_lib/mesh_crypto/mesh_md5.h"
 
@@ -46,7 +49,6 @@
 #include "../common/subnet_bridge.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "proj_lib/ble/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 
@@ -64,7 +66,7 @@ MYFIFO_INIT(blt_txfifo, 40, 8);
 
 //u8		peer_type;
 //u8		peer_mac[12];
-#if MD_DF_EN
+#if MD_DF_CFG_SERVER_EN
 static u8 lpn_df_backup[NET_KEY_MAX];
 #endif
 
@@ -73,6 +75,7 @@ static u8 lpn_df_backup[NET_KEY_MAX];
 //////////////////////////////////////////////////////////////////////////////
 
 //----------------------- UI ---------------------------------------------
+u32 lpn_key_wakeup_start_tick = 0;
 void test_cmd_wakeup_lpn()
 {
 	#if PTS_TEST_EN
@@ -80,6 +83,7 @@ void test_cmd_wakeup_lpn()
 	#else
 	static u8 test_onoff;
 	access_cmd_onoff(0xffff, 0, (test_onoff++) & 1, CMD_NO_ACK, 0);
+	lpn_key_wakeup_start_tick = clock_time()|1;
 	#endif
 }
 
@@ -92,7 +96,7 @@ void friend_ship_establish_ok_cb_lpn()
         mesh_vd_lpn_pub_set();
     #endif    
 
-	#if MD_DF_EN
+	#if MD_DF_CFG_SERVER_EN
 	foreach(i, NET_KEY_MAX){
 		lpn_df_backup[i] = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding;
 		if(DIRECTED_FORWARDING_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding){
@@ -111,7 +115,7 @@ void friend_ship_disconnect_cb_lpn()
 		blt_soft_timer_update(&mesh_lpn_send_gatt_adv, ADV_INTERVAL_MS*1000);
 	}
 
-	#if MD_DF_EN
+	#if MD_DF_CFG_SERVER_EN
 	foreach(i, NET_KEY_MAX){
 		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding = lpn_df_backup[i];
 	}
@@ -232,7 +236,7 @@ void proc_ui()
 
 	//static u32 A_req_tick;
 	static u8 fri_request_send = 1;
-	if(fri_request_send/* || clock_time_exceed(A_req_tick, 2000*1000)*/){
+	if(fri_request_send && (LPN_MODE_GATT_OTA != lpn_mode)){
 		fri_request_send = 0;
 		//A_req_tick = clock_time();
 		//if((!is_in_mesh_friend_st_lpn()) && (!fri_ship_proc_lpn.status)){
@@ -272,7 +276,7 @@ void main_loop ()
 	if(RF_MODE_BLE != dual_mode_proc()){    // should be before is mesh latency window()
         proc_ui();
         proc_led();
-        factory_reset_cnt_check();
+        //factory_reset_cnt_check();
 		return ;
 	}
 	#endif
@@ -306,14 +310,12 @@ void main_loop ()
 		#endif
     }  
 #endif	
-	#if PTS_TEST_EN
-	pts_test_case_lpn();
-	#endif
 	
-	mesh_lpn_proc_suspend(); // must at last of main_loop()
 	#if LPN_VENDOR_SENSOR_EN
     sensor_proc_loop();
 	#endif
+	mesh_lpn_state_proc(); 
+	mesh_lpn_pm_proc(); // must at last of main_loop()
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
@@ -358,15 +360,26 @@ void user_init()
 	#endif
 	blc_app_loadCustomizedParameters();  //load customized freq_offset cap value and tp value
 
-	usb_id_init();
-	usb_log_init ();
-	usb_dp_pullup_en (1);  //open USB enum
 
 	////////////////// BLE stack initialization ////////////////////////////////////
 	ble_mac_init();    
 
 	//link layer initialization
 	//bls_ll_init (tbl_mac);
+
+	//Smp Initialization may involve flash write/erase(when one sector stores too much information,
+	//	 is about to exceed the sector threshold, this sector must be erased, and all useful information
+	//	 should re_stored) , so it must be done after battery check
+#if (BLE_REMOTE_SECURITY_ENABLE)
+	bls_smp_configParingSecurityInfoStorageAddr(FLASH_ADR_SMP_PARA_START); // must before blc_smp_peripheral_init().
+	blc_smp_peripheral_init();
+
+	//Hid device on android7.0/7.1 or later version
+	// New paring: send security_request immediately after connection complete
+	// reConnect:  send security_request 1000mS after connection complete. If master start paring or encryption before 1000mS timeout, slave do not send security_request.
+	blc_smp_configSecurityRequestSending(SecReq_IMM_SEND, SecReq_PEND_SEND, 1000); //if not set, default is:  send "security request" immediately after link layer connection established(regardless of new connection or reconnection )
+#endif
+
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 	blc_ll_initBasicMCU(tbl_mac);   //mandatory
 #elif((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
@@ -467,8 +480,11 @@ void user_init()
 	user_init_peripheral(0);
 	mesh_lpn_gatt_adv_refresh();
 	if(flag_after_ota){
-		// enter GATT ADV mode for APP to check the new version value.
-		lpn_mode_set(LPN_MODE_GATT_OTA);	// must after mesh_lpn_gatt_adv_refresh_
+		if(is_ota_gatt_connected_flag_lpn()){ // connectable adv send flag after mesh ota, set in mesh_ota_reboot_proc().
+			clr_ota_gatt_connected_flag_lpn(); 
+			// enter GATT ADV mode for APP to check the new version value.
+			lpn_mode_set(LPN_MODE_GATT_OTA);	// must after mesh_lpn_gatt_adv_refresh_
+		}
 	}
 }
 
@@ -487,13 +503,16 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	user_init_peripheral(1); 
 	extern u8 blt_busy;
 	if((BLS_LINK_STATE_ADV == blt_state) && is_friend_ship_link_ok_lpn() && (!my_fifo_get(&mesh_adv_cmd_fifo)) && ( (0 == fri_ship_proc_lpn.poll_tick) || clock_time_exceed(fri_ship_proc_lpn.poll_tick, get_lpn_poll_interval_ms()*1000/2)) &&
-		blt_busy && !mesh_lpn_subsc_pending.op){ // not soft timer wakeup
+		blt_busy && !mesh_lpn_subsc_pending.op && !subsc_list_retry.retry_cnt){ // not soft timer wakeup and not sub list control message pending
 		mesh_friend_ship_start_poll();
 	}	
 //  if(!is_led_busy()){
 //	    light_pwm_init();   // cost about 1.5ms
 //	}
-	
+#if UI_KEYBOARD_ENABLE
+	deep_wakeup_proc();// fast detect key when powerup
+#endif
+
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 #endif

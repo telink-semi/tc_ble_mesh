@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #pragma once
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "stack/ble_8278/blt_config.h"
 #include "stack/ble_8278/ble_common.h"
 #include "stack/ble_8278/l2cap/l2cap.h"
