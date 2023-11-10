@@ -1,7 +1,6 @@
 stages:
   - scc
   - checkLicense
-  - build_Andes
   - oss
   - misspellChecking
   - sensitive_word_check
@@ -47,27 +46,6 @@ checkLicense:
     - "unknow_type_file.txt"
   when: manual #always
 
-build_Andes:
-  variables:
-    ECLIPSE_PROJECT_PATH: './eagle_ble_sdk'
-    ECLIPSE_PROJECT_NAME: 'B91_ble_multi_conn_sdk'
-    ECLIPSE_BUILD_TARGET: 'B91_demo'         
-  stage: build_Andes
-  tags:
-    - TELINKIDE_LINUX
-  dependencies: []
-  before_script:
-  script:
-    - date
-    - echo "--------------- Will build Demo -----------------"
-    - echo $ECLIPSE_PROJECT_PATH --- $ECLIPSE_PROJECT_NAME/$ECLIPSE_BUILD_TARGET
-    - $ANDESRISCV_ECLIPSE_BUILD  -data ${CI_PIPELINE_ID}_WS  -import $ECLIPSE_PROJECT_PATH -cleanBuild $ECLIPSE_PROJECT_NAME/$ECLIPSE_BUILD_TARGET
-    - date
-  artifacts:
-    paths:
-    - "B91_ble_multi_conn_sdk/B91_demo/output/objdump.txt"
-    - "b91m_ble_multiconn_sdk/B91_demo/output/*.bin"
-  when: manual
 
 oss:
   tags:
