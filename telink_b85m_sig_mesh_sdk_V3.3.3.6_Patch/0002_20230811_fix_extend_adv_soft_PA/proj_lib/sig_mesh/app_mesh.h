@@ -2009,7 +2009,7 @@ void tl_log_file(u32 level_module,u8 *pbuf,int len,char  *format,...);
 #define LOG_SRC_PROV            (1 <<  3) /**< Receive logs from the provisioning module. */
 #define LOG_SRC_PACMAN          (1 <<  4) /**< Receive logs from the packet manager. */
 #define LOG_SRC_INTERNAL        (1 <<  5) /**< Receive logs from the internal event module. */
-#define LOG_SRC_API             (1 <<  6) /**< Receive logs from the nRF Mesh API. */
+#define LOG_SRC_API             (1 <<  6) /**< Receive logs from the  Mesh API. */
 #define LOG_SRC_DFU             (1 <<  7) /**< Receive logs from the DFU module. */
 #define LOG_SRC_BEACON          (1 <<  8) /**< Receive logs from the beacon module. */
 #define LOG_SRC_TEST            (1 <<  9) /**< Receive logs from unit tests. */
