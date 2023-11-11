@@ -1,5 +1,6 @@
 stages:
   - scc
+  - genLicense
   - checkLicense
   - oss
   - misspellChecking
@@ -20,6 +21,22 @@ scc:
     paths:
     - scc.txt
   when: manual #always
+
+genLicense:
+  stage: genLicense
+  tags:
+    - LINUX
+  before_script:
+  script:
+    - date
+    - generat_license_list
+    - date
+  artifacts:
+    paths:
+    - "license_list_gen.txt"
+    - "no_license_list_gen.txt"
+    - "mismatch_license_file_gen.txt"
+  when: manual
 
 checkLicense:
   variables:
