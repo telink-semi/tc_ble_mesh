@@ -32,7 +32,7 @@
 
 /**
  `IQAutoToolbarBySubviews`
- Creates Toolbar according to subview's hirarchy of Textfield's in view.
+ Creates Toolbar according to subview's hierarchy of Textfield's in view.
  
  `IQAutoToolbarByTag`
  Creates Toolbar according to tag property of TextField's.

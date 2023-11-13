@@ -85,7 +85,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback {
     if (self.isRemoteScaning) {
         NSString *errstr = @"SigRemoteAddManager is remoteScaning, please call `stopRemoteProvisionScan`";
-        TeLogError(@"%@",errstr);
+        TelinkLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (resultCallback) {
             resultCallback(NO, err);
@@ -115,7 +115,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         }
     } else {
         NSString *errstr = @"Reomte scan fail: current connected node is no support remote provision scan.";
-        TeLogError(@"%@",errstr);
+        TelinkLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (self.scanResultBlock) {
             self.scanResultBlock(NO, err);
@@ -172,7 +172,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     [self reset];
@@ -183,13 +183,13 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     _inboundPDUNumber = -1;
     self.isLinkOpenReportWaiting = YES;
     __weak typeof(self) weakSelf = self;
-    TeLogInfo(@"start provision.");
+    TelinkLogInfo(@"start provision.");
     self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                TelinkLogInfo(@"disconnect in provisioning，provision fail.");
                 if (fail) {
                     weakSelf.isProvisionning = NO;
                     NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
@@ -200,20 +200,20 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }];
     
     self.messageHandle = [SDKLibCommand remoteProvisioningLinkOpenWithDestination:reportNodeAddress UUID:reportNodeUUID retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"linkOpen responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"linkOpen responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
 //        if (responseMessage.status == SigRemoteProvisioningStatus_success) {
 //            [weakSelf getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
 //                [weakSelf getCapabilitiesResultWithResponse:response];
 //            }];
 //        } else {
 //            [self provisionFail];
-//            TeLogDebug(@"sentProvisionConfirmationPdu error, parameters= %@",responseMessage.parameters);
+//            TelinkLogDebug(@"sentProvisionConfirmationPdu error, parameters= %@",responseMessage.parameters);
 //        }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [weakSelf provisionFail];
-            TeLogDebug(@"sentProvisionConfirmationPdu error = %@",error.domain);
+            TelinkLogDebug(@"sentProvisionConfirmationPdu error = %@",error.domain);
         }
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -243,7 +243,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 // 1.remoteProvisioningScanCapabilitiesGet
 - (void)getRemoteProvisioningScanCapabilities {
-    TeLogVerbose(@"getRemoteProvisioningScanCapabilities address=0x%x",SigMeshLib.share.dataSource.getCurrentConnectedNode.address);
+    TelinkLogVerbose(@"getRemoteProvisioningScanCapabilities address=0x%x",SigMeshLib.share.dataSource.getCurrentConnectedNode.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:SigMeshLib.share.dataSource.getCurrentConnectedNode.address retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
 //        if (responseMessage.activeScan) {
@@ -253,13 +253,13 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             [weakSelf performSelector:@selector(startRemoteProvisioningScan) withObject:nil afterDelay:0.5];
         });
 //        } else {
-//            TeLogInfo(@"nodeAddress 0x%x no support remote provision scan, try next address.");
+//            TelinkLogInfo(@"nodeAddress 0x%x no support remote provision scan, try next address.");
 //            [weakSelf endSingleRemoteProvisionScan];
 //        }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
-            TeLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout.",SigMeshLib.share.dataSource.unicastAddressOfConnected);
+            TelinkLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout.",SigMeshLib.share.dataSource.unicastAddressOfConnected);
             [weakSelf endSingleRemoteProvisionScan];
         }
     }];
@@ -278,9 +278,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             }
             weakSelf.semaphore = dispatch_semaphore_create(0);
             weakSelf.messageHandle = [SDKLibCommand remoteProvisioningScanStartWithDestination:node.address scannedItemsLimit:kScannedItemsLimit timeout:kScannedItemsTimeout UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
-                TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+                TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 [NSThread sleepForTimeInterval:0.2];
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
@@ -308,7 +308,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 - (BOOL)isDeviceSupported{
     if (self.provisioningCapabilities.provisionType != SigProvisioningPduType_capabilities || self.provisioningCapabilities.numberOfElements == 0) {
-        TeLogError(@"Capabilities is error.");
+        TelinkLogError(@"Capabilities is error.");
         return NO;
     }
     return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1;
@@ -317,7 +317,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)sendRemoteProvisionPDUWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount complete:(RemotePDUResultCallBack)complete {
     self.messageHandle = [SDKLibCommand remoteProvisioningPDUSendWithDestination:self.reportNodeAddress outboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU retryCount:retryCount responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         }
     }];
 }
@@ -330,7 +330,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     identify = [LibTools convertDataToHexStr:_reportNodeUUID];
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     NSData *devKeyData = self.provisioningData.deviceKey;
-    TeLogInfo(@"deviceKey=%@",devKeyData);
+    TelinkLogInfo(@"deviceKey=%@",devKeyData);
     
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
@@ -380,7 +380,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [self.provisioningData provisionerDidObtainAuthValue:data];
     NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmation];
     SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
-//    TeLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
+//    TelinkLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
     self.outboundPDUNumber = 3;
     [self sendRemoteProvisionPDUWithOutboundPDUNumber:self.outboundPDUNumber provisioningPDU:pdu.pduData retryCount:kRemoteProgressRetryCount complete:nil];
 }
@@ -403,7 +403,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step1:getCapabilities
 - (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step1\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step1\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
     [self identifyWithAttentionDuration:self.attentionDuration];
@@ -420,7 +420,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_ready) {
-        TeLogError(@"current node isn't in ready.");
+        TelinkLogError(@"current node isn't in ready.");
         return;
     }
 
@@ -437,22 +437,22 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step2:start
 - (void)sentStartNoOobProvisionPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step2(noOob)\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step2(noOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
-        TeLogError(@"current state is wrong.");
+        TelinkLogError(@"current state is wrong.");
         return;
     }
     
     // Ensure the Network Key is set.
     if (self.networkKey == nil) {
-        TeLogError(@"current networkKey isn't specified.");
+        TelinkLogError(@"current networkKey isn't specified.");
         return;
     }
     
     // Is the Bearer open?
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"current node's bearer isn't open.");
+        TelinkLogError(@"current node's bearer isn't open.");
         return;
     }
     
@@ -476,22 +476,22 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step2(staticOob)\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step2(staticOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
-        TeLogError(@"current state is wrong.");
+        TelinkLogError(@"current state is wrong.");
         return;
     }
 
     // Ensure the Network Key is set.
     if (self.networkKey == nil) {
-        TeLogError(@"current networkKey isn't specified.");
+        TelinkLogError(@"current networkKey isn't specified.");
         return;
     }
 
     // Is the Bearer open?
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"current node's bearer isn't open.");
+        TelinkLogError(@"current node's bearer isn't open.");
         return;
     }
 
@@ -518,7 +518,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step2.5:Publickey
 - (void)sentProvisionPublickeyPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step2.5(noOob)\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step2.5(noOob)\n\n");
 
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
@@ -530,7 +530,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step3:Confirmation
 - (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step3\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step3\n\n");
     self.provisionResponseBlock = block;
     NSData *authValue = nil;
     if (self.staticOobData) {
@@ -553,7 +553,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step4:Random
 - (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step4\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step4\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
     SigProvisioningRandomPdu *pdu = [[SigProvisioningRandomPdu alloc] initWithRandom:self.provisioningData.provisionerRandom];
@@ -563,7 +563,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 #pragma mark step5:EncryptedData
 - (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========remote provision:step5\n\n");
+    TelinkLogInfo(@"\n\n==========remote provision:step5\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
 
@@ -577,7 +577,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)getCapabilitiesResultWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_capabilities && self.outboundPDUNumber == 0 && self.inboundPDUNumber == 0) {
         SigProvisioningCapabilitiesPdu *capabilitiesPdu = (SigProvisioningCapabilitiesPdu *)response;
-        TeLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
+        TelinkLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
         self.provisioningCapabilities = capabilitiesPdu;
         self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
         self.state = ProvisioningState_capabilitiesReceived;
@@ -591,13 +591,13 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             if (self.staticOobData) {
                 //当前设置为static oob provision
                 if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
-                    TeLogVerbose(@"static oob provision, staticOobData=%@",self.staticOobData);
+                    TelinkLogVerbose(@"static oob provision, staticOobData=%@",self.staticOobData);
                     [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kRemoteProgressTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                         [weakSelf sentProvisionPublicKeyPduWithResponse:response];
                     }];
                 } else {
                     //设备不支持则直接provision fail
-                    TeLogError(@"This device is not support static oob.");
+                    TelinkLogError(@"This device is not support static oob.");
                     [self provisionFail];
                 }
             }else{
@@ -609,17 +609,17 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
         [self provisionFail];
     }else{
-        TeLogDebug(@"getCapabilities:no handel this response data");
+        TelinkLogDebug(@"getCapabilities:no handel this response data");
     }
 }
 
 - (void)sentProvisionPublicKeyPduWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_publicKey && self.outboundPDUNumber == 2 && self.inboundPDUNumber == 2) {
         SigProvisioningPublicKeyPdu *publicKeyPdu = (SigProvisioningPublicKeyPdu *)response;
-        TeLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
+        TelinkLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
         self.provisioningData.devicePublicKey = publicKeyPdu.publicKey;
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:publicKeyPdu.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
@@ -628,25 +628,25 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                 [weakSelf sentProvisionConfirmationPduWithResponse:response];
             }];
         }else{
-            TeLogDebug(@"calculate SharedSecret fail.");
+            TelinkLogDebug(@"calculate SharedSecret fail.");
             [self provisionFail];
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         [self provisionFail];
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
     }
 }
 
 - (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_confirmation && self.outboundPDUNumber == 3 && self.inboundPDUNumber == 3) {
         SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
-        TeLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
+        TelinkLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
         if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
-            TeLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
+            TelinkLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
             self.state = ProvisioningState_fail;
             return;
         }
@@ -657,24 +657,24 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         [self provisionFail];
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
     }
 }
 
 - (void)sentProvisionRandomPduWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_random && self.outboundPDUNumber == 4 && self.inboundPDUNumber == 4) {
         SigProvisioningRandomPdu *randomPdu = (SigProvisioningRandomPdu *)response;
-        TeLogInfo(@"device random back:%@",randomPdu.random);
+        TelinkLogInfo(@"device random back:%@",randomPdu.random);
         [self.provisioningData provisionerDidObtainWithDeviceRandom:randomPdu.random];
         if ([self.provisioningData.provisionerRandom isEqualToData:randomPdu.random]) {
-            TeLogDebug(@"Random of device is equal to random of provisioner!");
+            TelinkLogDebug(@"Random of device is equal to random of provisioner!");
             self.state = ProvisioningState_fail;
             return;
         }
         if (![self.provisioningData validateConfirmation]) {
-            TeLogDebug(@"validate Confirmation fail");
+            TelinkLogDebug(@"validate Confirmation fail");
             [self provisionFail];
             return;
         }
@@ -685,15 +685,15 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         [self provisionFail];
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionRandomPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionRandomPdu:no handel this response data");
     }
 }
 
 - (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningPdu *)response {
-    TeLogInfo(@"\n\n==========remote provision end.\n\n");
-    TeLogInfo(@"device provision result back:%@",response.pduData);
+    TelinkLogInfo(@"\n\n==========remote provision end.\n\n");
+    TelinkLogInfo(@"device provision result back:%@",response.pduData);
     if (response.provisionType == SigProvisioningPduType_complete && self.outboundPDUNumber == 5 && self.inboundPDUNumber == 5) {
         [self provisionSuccess];
         [SigBearer.share setBearerProvisioned:YES];
@@ -705,10 +705,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         [self provisionFail];
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionEncryptedDataWithMicPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMicPdu error = %lu",(unsigned long)failedPdu.errorCode);
         self.provisionResponseBlock = nil;
     }else{
-        TeLogDebug(@"sentProvisionEncryptedDataWithMicPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMicPdu:no handel this response data");
     }
 }
 
@@ -719,12 +719,12 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 /// @param source The Unicast Address of the Element from which the message was sent.
 /// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TeLogVerbose(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x",message,message.parameters,source,destination);
+    TelinkLogVerbose(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x",message,message.parameters,source,destination);
     if ([message isKindOfClass:[SigRemoteProvisioningScanReport class]] && self.isRemoteScaning) {
         // Try parsing the response.
         SigRemoteScanRspModel *model = [[SigRemoteScanRspModel alloc] initWithParameters:message.parameters];
         if (!model) {
-            TeLogInfo(@"parsing SigRemoteProvisioningScanReport fail.");
+            TelinkLogInfo(@"parsing SigRemoteProvisioningScanReport fail.");
             return;
         }
         model.reportNodeAddress = source;
@@ -756,16 +756,16 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                     self.provisionResponseBlock(msg);
                 }
             } else {
-                TeLogDebug(@"the response is not valid.");
+                TelinkLogDebug(@"the response is not valid.");
                 return;
             }
         } else {
-            TeLogDebug(@"parsing the response fail.");
+            TelinkLogDebug(@"parsing the response fail.");
             return;
         }
     } else if ([message isKindOfClass:[SigRemoteProvisioningPDUOutboundReport class]]) {
         UInt8 inboundPDUNumber = ((SigRemoteProvisioningPDUOutboundReport *)message).outboundPDUNumber;
-        TeLogInfo(@"inboundPDUNumber=%d",inboundPDUNumber);
+        TelinkLogInfo(@"inboundPDUNumber=%d",inboundPDUNumber);
         self.inboundPDUNumber = inboundPDUNumber;
         if (self.outboundPDUNumber == 1 && self.inboundPDUNumber == 1) {
             //进行step2.5
@@ -791,20 +791,20 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 /// A callback called when an unsegmented message was sent to the SigBearer, or when all
-/// segments of a segmented message targetting a Unicast Address were acknowledged by
+/// segments of a segmented message targeting a Unicast Address were acknowledged by
 /// the target Node.
 /// @param message The message that has been sent.
 /// @param localElement The local Element used as a source of this message.
 /// @param destination The address to which the message was sent.
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
-//    TeLogVerbose(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
+//    TelinkLogVerbose(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
 }
 
 /// A callback called when a message failed to be sent to the target Node, or the response for
 /// an acknowledged message hasn't been received before the time run out.
 /// For unsegmented unacknowledged messages this callback will be invoked when the
 /// SigBearer was closed.
-/// For segmented unacknowledged messages targetting a Unicast Address, besides that,
+/// For segmented unacknowledged messages targeting a Unicast Address, besides that,
 /// it may also be called when sending timed out before all of the segments were acknowledged
 /// by the target Node, or when the target Node is busy and not able to proceed the message
 /// at the moment.
@@ -818,7 +818,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 /// @param destination The address to which the message was sent.
 /// @param error The error that occurred.
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error {
-//    TeLogVerbose(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
+//    TelinkLogVerbose(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
 }
 
 /// A callback called whenever a SigProxyConfiguration Message has been received from the mesh network.
@@ -826,7 +826,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 /// @param source The Unicast Address of the Element from which the message was sent.
 /// @param destination The address to which the message was sent.
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-//    TeLogVerbose(@"didReceiveSigProxyConfigurationMessage=%@,source=0x%x,destination=0x%x",message,source,destination);
+//    TelinkLogVerbose(@"didReceiveSigProxyConfigurationMessage=%@,source=0x%x,destination=0x%x",message,source,destination);
 }
 
 /// 当SDK不支持EPA功能时，默认都使用SigFipsP256EllipticCurve_CMAC_AES128。
@@ -855,9 +855,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
     if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
         self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
-        TeLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+        TelinkLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
     }
-    TeLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
+    TelinkLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;
 }
 

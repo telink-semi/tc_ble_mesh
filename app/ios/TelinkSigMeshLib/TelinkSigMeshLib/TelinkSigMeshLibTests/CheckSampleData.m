@@ -715,9 +715,9 @@
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [SDKLibCommand sendSigOpcodesAggregatorSequenceMessage:message retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:items.count successCallback:^(UInt16 source, UInt16 destination, SigOpcodesAggregatorStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"SigOpcodesAggregatorSequence=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogInfo(@"SigOpcodesAggregatorSequence=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(semaphore);
     }];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

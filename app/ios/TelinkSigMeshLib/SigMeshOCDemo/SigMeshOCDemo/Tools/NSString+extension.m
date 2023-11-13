@@ -98,7 +98,7 @@
                                                           error:&err];
     if(err)
     {
-        TeLogDebug(@"json解析失败：%@",err);
+        TelinkLogDebug(@"json解析失败：%@",err);
         return nil;
     }
     return dic;

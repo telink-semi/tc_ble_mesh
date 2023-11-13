@@ -162,7 +162,7 @@
     [self.objectNameCharacteristic setValue:[self getValueOfObjectName]];
     [self.objectTypeCharacteristic setValue:[self getValueOfObjectType]];
     [self.objectSizeCharacteristic setValue:[self getValueOfObjectSize]];
-    TeLogInfo(@"设置ObjectSize=0x%@, 取self.objectSizeCharacteristic.value=%@", [self getValueOfObjectSize], self.objectSizeCharacteristic.value);
+    TelinkLogInfo(@"设置ObjectSize=0x%@, 取self.objectSizeCharacteristic.value=%@", [self getValueOfObjectSize], self.objectSizeCharacteristic.value);
     [self.objectFirstCreatedCharacteristic setValue:[self getValueOfObjectFirstCreated]];
     [self.objectLastModifiedCharacteristic setValue:[self getValueOfObjectLastModified]];
     [self.objectPropertiesCharacteristic setValue:[self getValueOfObjectProperties]];
@@ -504,7 +504,7 @@
             weakSelf.objectModel.objectLocked = NO;
             if (data != nil) {
                 //成功通过上面的progress=1.0来判断
-                TeLogInfo(@"write object data to client=%@", sourceData);
+                TelinkLogInfo(@"write object data to client=%@", sourceData);
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([weakSelf.delegate respondsToSelector:@selector(onServiceReadError:)]) {
@@ -933,7 +933,7 @@
  *
  */
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didPublishL2CAPChannel:(CBL2CAPPSM)PSM error:(nullable NSError *)error {
-    TeLogInfo(@"peripheral=%@ PSM=%d error=%@", peripheral, PSM, error);
+    TelinkLogInfo(@"peripheral=%@ PSM=%d error=%@", peripheral, PSM, error);
     self.channelPSM = PSM;
 }
 
@@ -948,7 +948,7 @@
  *
  */
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didUnpublishL2CAPChannel:(CBL2CAPPSM)PSM error:(nullable NSError *)error {
-    TeLogInfo(@"peripheral=%@ PSM=%d error=%@", peripheral, PSM, error);
+    TelinkLogInfo(@"peripheral=%@ PSM=%d error=%@", peripheral, PSM, error);
 
 }
 
@@ -963,7 +963,7 @@
  *
  */
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didOpenL2CAPChannel:(nullable CBL2CAPChannel *)channel error:(nullable NSError *)error {
-    TeLogInfo(@"peripheral=%@ channel=%d error=%@", peripheral, channel, error);
+    TelinkLogInfo(@"peripheral=%@ channel=%d error=%@", peripheral, channel, error);
     if (error) {
         self.isOpenedChannel = NO;
         self.channelModel = nil;

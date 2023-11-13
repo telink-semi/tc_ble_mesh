@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) id <OnOffModelCellDelegate>delegate;
 
 - (void)refreshUI;
-+ (CGFloat)getOnOffModelCellHightOfItemCount:(NSInteger)itemCount;
++ (CGFloat)getOnOffModelCellHeightOfItemCount:(NSInteger)itemCount;
 
 @end
 

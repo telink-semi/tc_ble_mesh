@@ -1821,9 +1821,9 @@
 @end
 
 
-@implementation SigNetkeyDerivaties
+@implementation SigNetkeyDerivatives
 
-- (SigNetkeyDerivaties *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper {
+- (SigNetkeyDerivatives *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
@@ -1984,16 +1984,16 @@
     return _directedSecurityOldNid;
 }
 
-- (SigNetkeyDerivaties *)keys {
+- (SigNetkeyDerivatives *)keys {
     if (!_keys && self.key && self.key.length > 0 && ![self.key isEqualToString:@"00000000000000000000000000000000"]) {
-        _keys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:self.key] helper:OpenSSLHelper.share];
+        _keys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[LibTools nsstringToHex:self.key] helper:OpenSSLHelper.share];
     }
     return _keys;
 }
 
-- (SigNetkeyDerivaties *)oldKeys {
+- (SigNetkeyDerivatives *)oldKeys {
     if (!_oldKeys && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-        _oldKeys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
+        _oldKeys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[LibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
     }
     return _oldKeys;
 }
@@ -2012,7 +2012,7 @@
     return _oldNetworkId;
 }
 
-- (SigNetkeyDerivaties *)transmitKeys {
+- (SigNetkeyDerivatives *)transmitKeys {
     if (_phase == distributingKeys) {
         return self.oldKeys;
     }
@@ -2204,7 +2204,7 @@
 }
 
 /// Initialize SigProvisionerModel object.
-/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @param maxHighAddressUnicast The max height unicastAddress of `allocatedUnicastRange`.
 /// @param provisionerUUID The UUID of new provisioner.
 /// @returns return `nil` when initialize SigProvisionerModel object fail.
 - (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID {
@@ -2306,13 +2306,13 @@
     return [LibTools uint16From16String:self.lowAddress];
 }
 
-/// Get int number of hight address.
-- (NSInteger)hightIntAddress{
+/// Get int number of height address.
+- (NSInteger)heightIntAddress{
     return [LibTools uint16From16String:self.highAddress];
 }
 
 /// Initialize SigRangeModel object.
-/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @param maxHighAddressUnicast The max height unicastAddress of `allocatedUnicastRange`.
 /// @returns return `nil` when initialize SigRangeModel object fail.
 - (instancetype)initWithMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
@@ -2440,7 +2440,7 @@
     return _oldAid;
 }
 
-/// Get curent bound network key.
+/// Get current bound network key.
 - (nullable SigNetkeyModel *)getCurrentBoundNetKey {
     SigNetkeyModel *tem = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
@@ -3036,7 +3036,7 @@
     return [LibTools lightnessToLum:self.brightness];
 }
 
-///return node true color temperture, range is 0~100
+///return node true color temperature, range is 0~100
 - (UInt8)trueTemperature{
     return [LibTools tempToTemp100:self.temperature];
 }
@@ -4021,7 +4021,7 @@
             UInt16 temperature = [LibTools temp100ToTemp:lum];
             self.temperature = temperature;
         } else {
-            TeLogWarn(@"source address is Undefined.");
+            TelinkLogWarn(@"source address is Undefined.");
         }
     } else if ([responseMessage isMemberOfClass:[SigLightCTLTemperatureStatus class]]) {
         SigLightCTLTemperatureStatus *message = (SigLightCTLTemperatureStatus *)responseMessage;
@@ -4056,12 +4056,12 @@
             self.state = message.presentLightOnOff;
         }
     } else {
-//        TeLogWarn(@"Node response status Model is Undefined.");
+//        TelinkLogWarn(@"Node response status Model is Undefined.");
     }
 }
 
 - (void)addDefaultPublicAddressToRemote {
-    TeLogInfo(@"addDefaultPublicAddressToRemote");
+    TelinkLogInfo(@"addDefaultPublicAddressToRemote");
     for (int i=0; i < self.elements.count; i++) {
         SigElementModel *element = self.elements[i];
         for (SigModelIDModel *model in element.models) {
@@ -4433,7 +4433,7 @@
         /// Initialize self.
         // Composition Data must have at least 4 bytes: 2 for Location and one for NumS and NumV.
         if (compositionData && compositionData.length < *offset + 4) {
-            TeLogError(@"Composition Data must have at least 4 bytes.");
+            TelinkLogError(@"Composition Data must have at least 4 bytes.");
             return nil;
         }
 
@@ -4454,7 +4454,7 @@
         
         // Ensure the Composition Data have enough data.
         if (compositionData.length < *offset + 3 + sigModelsByteCount + vendorModelsByteCount) {
-            TeLogError(@"the Composition Data have not enough data.");
+            TelinkLogError(@"the Composition Data have not enough data.");
             return nil;
         }
         
@@ -4729,10 +4729,10 @@
 
 /// Adds the given Application Key Index to the bound keys.
 ///
-/// - paramter applicationKeyIndex: The Application Key index to bind.
+/// - parameter applicationKeyIndex: The Application Key index to bind.
 - (void)bindApplicationKeyWithIndex:(UInt16)applicationKeyIndex {
     if ([_bind containsObject:@(applicationKeyIndex)]) {
-        TeLogInfo(@"bind exist appIndex.");
+        TelinkLogInfo(@"bind exist appIndex.");
         return;
     }
     [_bind addObject:@(applicationKeyIndex)];
@@ -4744,7 +4744,7 @@
 /// - parameter applicationKeyIndex: The Application Key index to unbind.
 - (void)unbindApplicationKeyWithIndex:(UInt16)applicationKeyIndex {
     if (![_bind containsObject:@(applicationKeyIndex)]) {
-        TeLogInfo(@"unbind not exist appIndex.");
+        TelinkLogInfo(@"unbind not exist appIndex.");
         return;
     }
     [_bind removeObject:@(applicationKeyIndex)];
@@ -4760,7 +4760,7 @@
 - (void)subscribeToGroup:(SigGroupModel *)group {
     NSString *address = group.address;
     if ([_subscribe containsObject:address]) {
-        TeLogInfo(@"subscribe exist appIndex.");
+        TelinkLogInfo(@"subscribe exist appIndex.");
         return;
     }
     [_subscribe addObject:address];
@@ -4772,7 +4772,7 @@
 - (void)unsubscribeFromGroup:(SigGroupModel *)group {
     NSString *address = group.address;
     if (![_subscribe containsObject:address]) {
-        TeLogInfo(@"unsubscribe not exist appIndex.");
+        TelinkLogInfo(@"unsubscribe not exist appIndex.");
         return;
     }
     [_subscribe removeObject:address];
@@ -4784,7 +4784,7 @@
 - (void)unsubscribeFromAddress:(UInt16)address {
     NSString *addressStr = [SigHelper.share getNodeAddressString:address];
     if (![_subscribe containsObject:addressStr]) {
-        TeLogInfo(@"unsubscribe not exist appIndex.");
+        TelinkLogInfo(@"unsubscribe not exist appIndex.");
         return;
     }
     [_subscribe removeObject:addressStr];
@@ -5451,7 +5451,7 @@
         } else if (meshMessage.opCode <= 0xFFFF) {
             opcodeAndParametersLength += 2;
         } else {
-            TeLogError(@"meshMessage.opCode is invalid!");
+            TelinkLogError(@"meshMessage.opCode is invalid!");
             return nil;
         }
         _lengthFormat = opcodeAndParametersLength > 0x7F;
@@ -5488,7 +5488,7 @@
             }
             NSInteger length = _lengthFormat == NO ? (_lengthShort+1) : (_lengthLong+2);
             if (opcodeAndParameters.length < length) {
-                TeLogError(@"opcodeAndParameters is invalid!");
+                TelinkLogError(@"opcodeAndParameters is invalid!");
                 return nil;
             } else {
                 _opcodeAndParameters = [NSData dataWithData:[opcodeAndParameters subdataWithRange:NSMakeRange(_lengthFormat == NO ? 1 : 2, _lengthFormat == NO ? _lengthShort : _lengthLong)]];
@@ -5532,7 +5532,7 @@
         /// Initialize self.
         // At least 1 octet is required.
         if (opCodeAndParameters == nil || opCodeAndParameters.length == 0) {
-            TeLogError(@"opCodeAndParameters has not data.");
+            TelinkLogError(@"opCodeAndParameters has not data.");
             return nil;
         }
         UInt8 octet0 = 0;
@@ -5540,7 +5540,7 @@
         memcpy(&octet0, dataByte, 1);
 
         if (octet0 == 0b01111111) {
-            TeLogError(@"Opcode 0b01111111 is reseved for future use.");
+            TelinkLogError(@"Opcode 0b01111111 is reseved for future use.");
             return nil;
         }
 
@@ -5556,7 +5556,7 @@
         if ((octet0 & 0x40) == 0) {
             // At least 2 octets are required.
             if (opCodeAndParameters.length < 2) {
-                TeLogError(@"opCodeAndParameters is error.");
+                TelinkLogError(@"opCodeAndParameters is error.");
                 return nil;
             }
             _opCodeSize = 2;
@@ -5569,7 +5569,7 @@
         // 3-octet Opcodes.
         // At least 3 octets are required.
         if (opCodeAndParameters.length < 3) {
-            TeLogError(@"opCodeAndParameters is error.");
+            TelinkLogError(@"opCodeAndParameters is error.");
             return nil;
         }
         _opCodeSize = 3;

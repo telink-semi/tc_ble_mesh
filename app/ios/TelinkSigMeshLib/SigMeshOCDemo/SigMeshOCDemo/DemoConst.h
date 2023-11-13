@@ -242,7 +242,7 @@ typedef enum : UInt8 {
 #define kImportCompleteAction   @"kImportCompleteAction"
 
 //获取导航栏+状态栏的高度
-#define kGetRectNavAndStatusHight  (self.navigationController.navigationBar.frame.size.height+[[UIApplication sharedApplication] statusBarFrame].size.height)
+#define kGetRectNavAndStatusHeight  (self.navigationController.navigationBar.frame.size.height+[[UIApplication sharedApplication] statusBarFrame].size.height)
 
 #define SCANSPACEOFFSET 0.15f
 

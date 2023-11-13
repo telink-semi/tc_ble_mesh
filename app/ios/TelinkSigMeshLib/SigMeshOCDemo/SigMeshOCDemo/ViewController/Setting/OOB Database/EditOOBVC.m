@@ -72,7 +72,7 @@
         [self showTips:@"Please enter 16 or 32 bytes oob."];
         return;
     }
-    TeLogInfo(@"oob input success!");
+    TelinkLogInfo(@"oob input success!");
     if (self.backOobModel) {
         if (self.isAdd) {
             SigOOBModel *model = [[SigOOBModel alloc] initWithSourceType:OOBSourceTypeManualInput UUIDString:self.uuidTF.text OOBString:self.oobTF.text];

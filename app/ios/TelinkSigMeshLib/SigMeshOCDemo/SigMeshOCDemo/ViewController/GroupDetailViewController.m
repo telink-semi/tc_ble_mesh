@@ -29,7 +29,7 @@
 @interface GroupDetailViewController()
 @property (weak, nonatomic) IBOutlet UILabel *headerLabel;
 @property (weak, nonatomic) IBOutlet UISlider *brightnessSlider;
-@property (weak, nonatomic) IBOutlet UISlider *tempratureSlider;
+@property (weak, nonatomic) IBOutlet UISlider *temperatureSlider;
 @property (weak, nonatomic) IBOutlet UILabel *LumLabel;
 @property (weak, nonatomic) IBOutlet UILabel *TempLabel;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
@@ -185,7 +185,7 @@
     self.hadChangeTempareture = YES;
     self.hasNextTempareture = NO;
 //    __weak typeof(self) weakSelf = self;
-    [DemoCommand changeTempratureWithTemprature100:self.nextTempareture address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
+    [DemoCommand changeTemperatureWithTemperature100:self.nextTempareture address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
 //        [weakSelf.collectionView reloadData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         
@@ -236,7 +236,7 @@
     self.title = @"Group Setting";
     self.headerLabel.text = [NSString stringWithFormat:@"%@ Devices:",self.model.name];
     self.brightnessSlider.value = self.model.groupBrightness;
-    self.tempratureSlider.value = self.model.groupTempareture;
+    self.temperatureSlider.value = self.model.groupTempareture;
 
     self.source = [[NSMutableArray alloc] init];
     NSArray *groupDevices = [NSArray arrayWithArray:self.model.groupDevices];
@@ -284,7 +284,7 @@
 }
 
 - (void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 - (void)changeLevelWithGroupAddress:(UInt16)groupAddress isAdd:(BOOL)isAdd {
@@ -294,7 +294,7 @@
     }
 //    __weak typeof(self) weakSelf = self;
     [DemoCommand changeLevelWithAddress:groupAddress level:level responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericLevelStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"control level success.");
+        TelinkLogDebug(@"control level success.");
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            //根据回包进行HSL的滑竿进行联动。
 //            if (weakSelf.model.HSLAddresses.count > 0) {

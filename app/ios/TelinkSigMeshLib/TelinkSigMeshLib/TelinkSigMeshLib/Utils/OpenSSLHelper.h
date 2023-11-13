@@ -51,7 +51,7 @@
 /// @return The 128-bit authentication code (MAC).
 - (NSData *)calculateCMAC:(NSData *)someData andKey:(NSData *)key;
 
-/// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
+/// RFC3610 defines the AES Counted with CBC-MAC (CCM).
 /// This method generates ciphertext and MIC (Message Integrity Check).
 /// @param someData The data to be encrypted and authenticated, also known as plaintext.
 /// @param key The 128-bit key.
@@ -70,7 +70,7 @@
 /// @return Decrypted data, if decryption is successful and MIC is valid, otherwise `nil`.
 - (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad;
 
-/// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
+/// Obfuscates given data by XORing it with PECB, which is calculated by encrypting
 /// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
 /// @param data The data to obfuscate.
 /// @param privacyRandom Data used as Privacy Random.
@@ -195,9 +195,9 @@
 - (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData;
 
 /// Verify the user certificate list using the root certificate.
-/// @param userCerDatas certificate data formatted by x509 DeviceCertificate der.
+/// @param userCerDataList certificate data formatted by x509 DeviceCertificate der.
 /// @param rootCerData certificate data formatted by x509 root der.
 /// @return YES means verify success, NO means verify fail.
-- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData;
+- (BOOL)checkUserCertificateDataList:(NSArray <NSData *>*)userCerDataList withRootCertificate:(NSData *)rootCerData;
 
 @end

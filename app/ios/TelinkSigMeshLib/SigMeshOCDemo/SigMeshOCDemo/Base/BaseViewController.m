@@ -246,7 +246,7 @@
         //提示是否导入Mesh
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Mesh JSON receive complete, import data?" preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
+            TelinkLogDebug(@"点击确认");
             [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
             NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
             if (importCompleteAction.intValue == ImportSwitchMode_manual) {
@@ -254,11 +254,11 @@
                 __weak typeof(self) weakSelf = self;
                 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Share import success, switch to the new mesh?" preferredStyle:UIAlertControllerStyleAlert];
                 [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击确认");
+                    TelinkLogDebug(@"点击确认");
                     [weakSelf switchMeshActionWithMeshDictionary:dict];
                 }]];
                 [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击取消");
+                    TelinkLogDebug(@"点击取消");
                     
                 }]];
                 [weakSelf presentViewController:alertController animated:YES completion:nil];
@@ -268,7 +268,7 @@
             }
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击取消");
+            TelinkLogDebug(@"点击取消");
             
         }]];
         [weakSelf presentViewController:alert animated:YES completion:nil];

@@ -22,7 +22,7 @@
  *******************************************************************************************************/
 
 #import "SigUpperTransportLayer.h"
-#import "SigHearbeatMessage.h"
+#import "SigHeartbeatMessage.h"
 #import "SigLowerTransportPdu.h"
 #import "SigAccessMessage.h"
 #import "SigUpperTransportPdu.h"
@@ -34,7 +34,7 @@
 
 /*
  The upper transport layer encrypts, decrypts, and authenticates application data and is designed
- to provide confidentiality of access messages. It also defines how transport control messages
+ to provide confidenticality of access messages. It also defines how transport control messages
  are used to manage the upper transport layer between nodes, including when used by the Friend feature.
  */
 @interface SigUpperTransportModel : NSObject
@@ -53,7 +53,7 @@
 @property (nonatomic,strong) NSUserDefaults *defaults;
 /// The upper transport layer shall not transmit a new segmented Upper Transport PDU to a given destination until the previous Upper Transport PDU to that destination has been either completed or cancelled.
 ///
-/// This map contains queues of messages targetting each destination.
+/// This map contains queues of messages targeting each destination.
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigUpperTransportModel *>*>*queues;
 
 @end
@@ -76,21 +76,21 @@
 
 /// Handles received Lower Transport PDU.
 /// Depending on the PDU type, the message will be either propagated to Access Layer, or handled internally.
-/// @param lowerTransportPdu The Lower Trasport PDU received.
+/// @param lowerTransportPdu The Lower Transport PDU received.
 - (void)handleLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu {
     switch (lowerTransportPdu.type) {
         case SigLowerTransportPduType_accessMessage:
             {
-//                TeLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
+//                TelinkLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
                 SigAccessMessage *accessMessage = (SigAccessMessage *)lowerTransportPdu;
                 NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:SigMeshLib.share.dataSource];
                 if (dict && dict.allKeys.count == 2) {
                     SigUpperTransportPdu *upperTransportPdu = dict[@"SigUpperTransportPdu"];
                     SigKeySet *keySet = dict[@"SigKeySet"];
-//                    TeLogInfo(@"%@ received",upperTransportPdu);
+//                    TelinkLogInfo(@"%@ received",upperTransportPdu);
                     [_networkManager.accessLayer handleUpperTransportPdu:upperTransportPdu sentWithSigKeySet:keySet];
                 }else{
-                    TeLogError(@"Failed to decode PDU");
+                    TelinkLogError(@"Failed to decode PDU");
                 }
             }
             break;
@@ -100,16 +100,16 @@
             switch (controlMessage.opCode) {
                 case 0x0A:
                     {
-                        SigHearbeatMessage *heartbeat = [[SigHearbeatMessage alloc] initFromControlMessage:controlMessage];
+                        SigHeartbeatMessage *heartbeat = [[SigHeartbeatMessage alloc] initFromControlMessage:controlMessage];
                         if (heartbeat) {
-                            TeLogInfo(@"%@ received",heartbeat);
-                            [self handleHearbeat:heartbeat];
+                            TelinkLogInfo(@"%@ received",heartbeat);
+                            [self handleHeartbeat:heartbeat];
                         }
                     }
                     break;
                     
                 default:
-                    TeLogInfo(@"Unsupported Control Message received (opCode: 0x%x)",controlMessage.opCode);
+                    TelinkLogInfo(@"Unsupported Control Message received (opCode: 0x%x)",controlMessage.opCode);
                     // Other Control Messages are not supported.
                     break;
             }
@@ -131,7 +131,7 @@
     SigNetkeyModel *networkKey = command.curNetkey;
     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.curIvIndex sequence:sequence];
     _networkManager.upperTransportLayer.upperTransportPdu = pdu;
-//    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
+//    TelinkLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
     
     //1.修正当前进行分包的pdu.unsegmentedMessageLowerTransportPDUMaxLength的值。
     //2.如果是SigMeshLib.share.dataSource.security==SigMeshMessageSecurityHigh，必得是发送segment。
@@ -152,12 +152,12 @@
     }
     
     if (isSegmented) {
-        TeLogInfo(@"sending segment pdu.");
+        TelinkLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
         // immediately.
         [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey ivIndex:command.curIvIndex];
     } else {
-        TeLogInfo(@"sending unsegment pdu.");
+        TelinkLogInfo(@"sending unsegment pdu.");
         [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey ivIndex:command.curIvIndex];
     }
 }
@@ -171,16 +171,16 @@
     // handler data. If so, cancel it.
     NSMutableArray *array = _queues[@(handle.destination)];
     if (array == nil || array.count == 0) {
-//        TeLogDebug(@"array == nil || array.count == 0");
+//        TelinkLogDebug(@"array == nil || array.count == 0");
         return;
     }
     SigUpperTransportModel *model = array.firstObject;
     if (model == nil) {
-        TeLogDebug(@"model == nil");
+        TelinkLogDebug(@"model == nil");
         return;
     }
     if (model.pdu.message.opCode == handle.opCode && model.pdu.source == handle.source) {
-        TeLogInfo(@"Cancelling sending %@",model.pdu);
+        TelinkLogInfo(@"Cancelling sending %@",model.pdu);
         [_networkManager.lowerTransportLayer cancelSendingSegmentedUpperTransportPdu:model.pdu];
         shouldSendNext = YES;
     }
@@ -205,12 +205,12 @@
 /// @param destination The destination address.
 - (void)lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:(UInt16)destination {
     if (_queues == nil || _queues.count == 0 || _queues[@(destination)] == nil) {
-        TeLogDebug(@"_queues[destination] is empty.");
+        TelinkLogDebug(@"_queues[destination] is empty.");
         return;
     }
     NSMutableArray *tem = [NSMutableArray arrayWithArray:_queues[@(destination)]];
     if (tem.count == 0) {
-        TeLogDebug(@"_queues[destination] is empty.");
+        TelinkLogDebug(@"_queues[destination] is empty.");
         return;
     }
     
@@ -221,8 +221,8 @@
     [self sendNextToDestination:destination];
 }
 
-- (void)handleHearbeat:(SigHearbeatMessage *)hearbeat {
-    // TODO: Implement handling Heartbeat messages
+- (void)handleHeartbeat:(SigHeartbeatMessage *)heartbeat {
+    // TODO: Implement handling heartbeat messages
 
 }
 
@@ -242,7 +242,7 @@
     if (_queues[@(pdu.destination)].count == 1) {
         [self sendNextToDestination:pdu.destination];
     }else{
-        TeLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
+        TelinkLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
     }
 }
 
@@ -254,7 +254,7 @@
 - (void)sendNextToDestination:(UInt16)destination {
     NSMutableArray *array = _queues[@(destination)];
     if (array == nil || array.count == 0) {
-//        TeLogDebug(@"array == nil || array.count == 0");
+//        TelinkLogDebug(@"array == nil || array.count == 0");
         return;
     }
     SigUpperTransportModel *model = array.firstObject;

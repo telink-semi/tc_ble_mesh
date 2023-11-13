@@ -2,7 +2,6 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="2Qi-x5-oWD">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -1207,7 +1206,7 @@ mac:AABBCCDDEEFF</string>
                         <outlet property="tempLevelDecreaseButton" destination="2Qw-06-wYI" id="Ckd-43-Y5a"/>
                         <outlet property="tempLevelIncreaseButton" destination="LSc-rx-Ruu" id="cJ5-cs-URe"/>
                         <outlet property="tempLevelLabel" destination="SvX-zK-jHa" id="cDU-aW-Yjl"/>
-                        <outlet property="tempratureSlider" destination="Tex-8N-NU7" id="FLH-Pn-5am"/>
+                        <outlet property="temperatureSlider" destination="Tex-8N-NU7" id="FLH-Pn-5am"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qMC-aC-9tF" userLabel="First Responder" sceneMemberID="firstResponder"/>

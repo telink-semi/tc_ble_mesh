@@ -98,7 +98,7 @@ typedef enum : UInt16 {
     
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_ready) {
-        TeLogError(@"current node isn't in ready.");
+        TelinkLogError(@"current node isn't in ready.");
         return;
     }
 
@@ -129,7 +129,7 @@ typedef enum : UInt16 {
 
 - (BOOL)isDeviceSupported{
     if (self.provisioningCapabilities.provisionType != SigProvisioningPduType_capabilities || self.provisioningCapabilities.numberOfElements == 0) {
-        TeLogError(@"Capabilities is error.");
+        TelinkLogError(@"Capabilities is error.");
         return NO;
     }
     return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1 || self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1;
@@ -139,7 +139,7 @@ typedef enum : UInt16 {
     UInt16 address = self.provisioningData.unicastAddress;
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     NSData *devKeyData = self.provisioningData.deviceKey;
-    TeLogInfo(@"deviceKey=%@",devKeyData);
+    TelinkLogInfo(@"deviceKey=%@",devKeyData);
     
     self.unprovisionedDevice.address = address;
     [SigMeshLib.share.dataSource updateScanRspModelToDataSource:self.unprovisionedDevice];
@@ -182,7 +182,7 @@ typedef enum : UInt16 {
     [self.provisioningData provisionerDidObtainAuthValue:data];
     NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmation];
     SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
-//    TeLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
+//    TelinkLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
 
     [self sendPdu:pdu];
 }
@@ -249,7 +249,7 @@ typedef enum : UInt16 {
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -257,13 +257,13 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
-    TeLogInfo(@"start provision.");
+    TelinkLogInfo(@"start provision.");
     self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                TelinkLogInfo(@"disconnect in provisioning，provision fail.");
                 if (fail) {
                     weakSelf.isProvisionning = NO;
                     NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
@@ -299,10 +299,10 @@ typedef enum : UInt16 {
         [self provisionWithNetworkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess fail:fail];
     } else {
         __weak typeof(self) weakSelf = self;
-        TeLogVerbose(@"start connect for provision.");
+        TelinkLogVerbose(@"start connect for provision.");
         [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
             if (successful) {
-                TeLogVerbose(@"connect successful.");
+                TelinkLogVerbose(@"connect successful.");
                 [weakSelf provisionWithPeripheral:peripheral networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess fail:fail];
             } else {
                 if (fail) {
@@ -339,7 +339,7 @@ typedef enum : UInt16 {
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     self.certificateDict = [NSMutableDictionary dictionary];
@@ -349,7 +349,7 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
-    TeLogInfo(@"start certificateBasedProvision.");
+    TelinkLogInfo(@"start certificateBasedProvision.");
     
     __weak typeof(self) weakSelf = self;
     [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
@@ -375,7 +375,7 @@ typedef enum : UInt16 {
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -383,13 +383,13 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
-    TeLogInfo(@"start provision.");
+    TelinkLogInfo(@"start provision.");
     self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                TelinkLogInfo(@"disconnect in provisioning，provision fail.");
                 if (fail) {
                     weakSelf.isProvisionning = NO;
                     NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
@@ -421,7 +421,7 @@ typedef enum : UInt16 {
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -429,13 +429,13 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
-    TeLogInfo(@"start provision.");
+    TelinkLogInfo(@"start provision.");
     self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                TelinkLogInfo(@"disconnect in provisioning，provision fail.");
                 if (fail) {
                     weakSelf.isProvisionning = NO;
                     NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
@@ -465,10 +465,10 @@ typedef enum : UInt16 {
         [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
     } else {
         __weak typeof(self) weakSelf = self;
-        TeLogVerbose(@"start connect for provision.");
+        TelinkLogVerbose(@"start connect for provision.");
         [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
             if (successful) {
-                TeLogVerbose(@"connect successful.");
+                TelinkLogVerbose(@"connect successful.");
                 [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
             } else {
                 if (fail) {
@@ -506,7 +506,7 @@ typedef enum : UInt16 {
         }
     }
     if (provisionNet == nil) {
-        TeLogError(@"error network key.");
+        TelinkLogError(@"error network key.");
         return;
     }
     self.certificateDict = [NSMutableDictionary dictionary];
@@ -517,18 +517,18 @@ typedef enum : UInt16 {
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
-    TeLogInfo(@"start certificateBasedProvision.");
+    TelinkLogInfo(@"start certificateBasedProvision.");
     
     if (peripheral.state == CBPeripheralStateConnected) {
-        TeLogVerbose(@"start RecordsGet.");
+        TelinkLogVerbose(@"start RecordsGet.");
         [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
             [weakSelf sentProvisioningRecordsGetWithResponse:response];
         }];
     } else {
-        TeLogVerbose(@"start connect for provision.");
+        TelinkLogVerbose(@"start connect for provision.");
         [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
             if (successful) {
-                TeLogVerbose(@"connect successful.");
+                TelinkLogVerbose(@"connect successful.");
                 [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
             } else {
                 if (fail) {
@@ -542,7 +542,7 @@ typedef enum : UInt16 {
 
 #pragma mark step1:getCapabilities
 - (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step1\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step1\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
@@ -553,22 +553,22 @@ typedef enum : UInt16 {
 
 #pragma mark step2:start
 - (void)sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step2(noOob)\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step2(noOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
-        TeLogError(@"current state is wrong.");
+        TelinkLogError(@"current state is wrong.");
         return;
     }
     
     // Ensure the Network Key is set.
     if (self.networkKey == nil) {
-        TeLogError(@"current networkKey isn't specified.");
+        TelinkLogError(@"current networkKey isn't specified.");
         return;
     }
     
     // Is the Bearer open?
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"current node's bearer isn't open.");
+        TelinkLogError(@"current node's bearer isn't open.");
         return;
     }
         
@@ -603,22 +603,22 @@ typedef enum : UInt16 {
 }
 
 - (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step2(staticOob)\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step2(staticOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
-        TeLogError(@"current state is wrong.");
+        TelinkLogError(@"current state is wrong.");
         return;
     }
     
     // Ensure the Network Key is set.
     if (self.networkKey == nil) {
-        TeLogError(@"current networkKey isn't specified.");
+        TelinkLogError(@"current networkKey isn't specified.");
         return;
     }
     
     // Is the Bearer open?
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"current node's bearer isn't open.");
+        TelinkLogError(@"current node's bearer isn't open.");
         return;
     }
     
@@ -655,7 +655,7 @@ typedef enum : UInt16 {
 
 #pragma mark step3:Confirmation
 - (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step3\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step3\n\n");
     self.provisionResponseBlock = block;
     NSData *authValue = nil;
     if (self.staticOobData) {
@@ -682,7 +682,7 @@ typedef enum : UInt16 {
 
 #pragma mark step4:Random
 - (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step4\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step4\n\n");
     self.provisionResponseBlock = block;
     SigProvisioningRandomPdu *pdu = [[SigProvisioningRandomPdu alloc] initWithRandom:self.provisioningData.provisionerRandom];
     [self sendPdu:pdu];
@@ -696,7 +696,7 @@ typedef enum : UInt16 {
 
 #pragma mark step5:EncryptedData
 - (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision:step5\n\n");
+    TelinkLogInfo(@"\n\n==========provision:step5\n\n");
     self.provisionResponseBlock = block;
     NSData *provisioningData = self.provisioningData.getProvisioningData;
     NSData *encryptedProvisioningDataAndMic = [self.provisioningData getEncryptedProvisioningDataAndMicWithProvisioningData:provisioningData];
@@ -716,7 +716,7 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_capabilities) {
         SigProvisioningCapabilitiesPdu *capabilitiesPdu = (SigProvisioningCapabilitiesPdu *)response;
-        TeLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
+        TelinkLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
         self.provisioningCapabilities = capabilitiesPdu;
         self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
         self.state = ProvisioningState_capabilitiesReceived;
@@ -730,27 +730,27 @@ typedef enum : UInt16 {
             if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
                 //设备端支持staticOOB
                 if (self.staticOobData) {
-                    TeLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",self.staticOobData);
+                    TelinkLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",self.staticOobData);
                     [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                         [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                     }];
                 } else {
                     if (SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable) {
                         //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
-                        TeLogVerbose(@"static OOB device,do no OOB provision");
+                        TelinkLogVerbose(@"static OOB device,do no OOB provision");
                         [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                             [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                         }];
                     } else {
                         //SDK当前未设置兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）
                         //设备不支持则直接provision fail
-                        TeLogError(@"SDK not find static OOB data, not support static OOB.");
+                        TelinkLogError(@"SDK not find static OOB data, not support static OOB.");
                         self.state = ProvisioningState_fail;
                     }
                 }
             } else {
                 //设备端不支持staticOOB
-                TeLogVerbose(@"no OOB device,do no OOB provision");
+                TelinkLogVerbose(@"no OOB device,do no OOB provision");
                 [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                     [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                 }];
@@ -759,14 +759,14 @@ typedef enum : UInt16 {
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"getCapabilities:no handel this response data");
+        TelinkLogDebug(@"getCapabilities:no handel this response data");
     }
 }
 
 - (void)getCapabilitiesTimeout {
-    TeLogInfo(@"getCapabilitiesTimeout");
+    TelinkLogInfo(@"getCapabilitiesTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
     });
@@ -781,30 +781,30 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_publicKey) {
         SigProvisioningPublicKeyPdu *publicKeyPdu = (SigProvisioningPublicKeyPdu *)response;
-        TeLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
+        TelinkLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
         self.provisioningData.devicePublicKey = publicKeyPdu.publicKey;
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:publicKeyPdu.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
-            TeLogInfo(@"APP端SharedSecret=%@",[LibTools convertDataToHexStr:self.provisioningData.sharedSecret]);
+            TelinkLogInfo(@"APP端SharedSecret=%@",[LibTools convertDataToHexStr:self.provisioningData.sharedSecret]);
             __weak typeof(self) weakSelf = self;
             [self sentProvisionConfirmationPduWithTimeout:kProvisionConfirmationTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                 [weakSelf sentProvisionConfirmationPduWithResponse:response];
             }];
         } else {
-            TeLogDebug(@"calculate SharedSecret fail.");
+            TelinkLogDebug(@"calculate SharedSecret fail.");
             self.state = ProvisioningState_fail;
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
     }
 }
 
 - (void)sentStartProvisionPduAndPublicKeyPduTimeout {
-    TeLogInfo(@"sentStartProvisionPduAndPublicKeyPduTimeout");
+    TelinkLogInfo(@"sentStartProvisionPduAndPublicKeyPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
     });
@@ -819,10 +819,10 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_confirmation) {
         SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
-        TeLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
+        TelinkLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
         if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
-            TeLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
+            TelinkLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
             self.state = ProvisioningState_fail;
             return;
         }
@@ -836,14 +836,14 @@ typedef enum : UInt16 {
         });
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
     }
 }
 
 - (void)sentProvisionConfirmationPduTimeout {
-    TeLogInfo(@"sentProvisionConfirmationPduTimeout");
+    TelinkLogInfo(@"sentProvisionConfirmationPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
     });
@@ -858,15 +858,15 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_random) {
         SigProvisioningRandomPdu *randomPdu = (SigProvisioningRandomPdu *)response;
-        TeLogInfo(@"device random back:%@",randomPdu.random);
+        TelinkLogInfo(@"device random back:%@",randomPdu.random);
         [self.provisioningData provisionerDidObtainWithDeviceRandom:randomPdu.random];
         if ([self.provisioningData.provisionerRandom isEqualToData:randomPdu.random]) {
-            TeLogDebug(@"Random of device is equal to random of provisioner!");
+            TelinkLogDebug(@"Random of device is equal to random of provisioner!");
             self.state = ProvisioningState_fail;
             return;
         }
         if (![self.provisioningData validateConfirmation]) {
-            TeLogDebug(@"validate Confirmation fail");
+            TelinkLogDebug(@"validate Confirmation fail");
             self.state = ProvisioningState_fail;
             return;
         }
@@ -877,14 +877,14 @@ typedef enum : UInt16 {
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionRandomPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionRandomPdu:no handel this response data");
     }
 }
 
 - (void)sentProvisionRandomPduTimeout {
-    TeLogInfo(@"sentProvisionRandomPduTimeout");
+    TelinkLogInfo(@"sentProvisionRandomPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
     });
@@ -894,8 +894,8 @@ typedef enum : UInt16 {
 }
 
 - (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningPdu *)response {
-    TeLogInfo(@"\n\n==========provision end.\n\n");
-    TeLogInfo(@"device provision result back:%@",response.pduData);
+    TelinkLogInfo(@"\n\n==========provision end.\n\n");
+    TelinkLogInfo(@"device provision result back:%@",response.pduData);
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
     });
@@ -908,15 +908,15 @@ typedef enum : UInt16 {
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisionEncryptedDataWithMic error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMic error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionEncryptedDataWithMic:no handel this response data");
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMic:no handel this response data");
     }
     self.provisionResponseBlock = nil;
 }
 
 - (void)sentProvisionEncryptedDataWithMicPduTimeout {
-    TeLogInfo(@"sentProvisionEncryptedDataWithMicPduTimeout");
+    TelinkLogInfo(@"sentProvisionEncryptedDataWithMicPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
     });
@@ -933,7 +933,7 @@ typedef enum : UInt16 {
 /// @param timeout timeout of this pdu.
 /// @param block response of this pdu.
 - (void)sentProvisioningRecordRequestWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision: Record Request PDU\n\n");
+    TelinkLogInfo(@"\n\n==========provision: Record Request PDU\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordRequestTimeout) object:nil];
@@ -959,14 +959,14 @@ typedef enum : UInt16 {
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisioningRecordRequest error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisioningRecordRequest error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisioningRecordRequest:no handel this response data");
+        TelinkLogDebug(@"sentProvisioningRecordRequest:no handel this response data");
     }
 }
 
 - (void)sentProvisioningRecordRequestTimeout {
-    TeLogInfo(@"sentProvisioningRecordRequestTimeout");
+    TelinkLogInfo(@"sentProvisioningRecordRequestTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordRequestTimeout) object:nil];
     });
@@ -979,7 +979,7 @@ typedef enum : UInt16 {
 /// @param timeout timeout of this pdu.
 /// @param block response of this pdu.
 - (void)sentProvisioningRecordsGetWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
-    TeLogInfo(@"\n\n==========provision: Records Get PDU\n\n");
+    TelinkLogInfo(@"\n\n==========provision: Records Get PDU\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordsGetTimeout) object:nil];
@@ -998,26 +998,26 @@ typedef enum : UInt16 {
     if (response.provisionType == SigProvisioningPduType_recordsList) {
         SigProvisioningRecordsListPdu *recordsListPdu = (SigProvisioningRecordsListPdu *)response;
         self.state = ProvisioningState_recordsList;
-        TeLogInfo(@"response=%@,data=%@,recordsList=%@",response,recordsListPdu.pduData,recordsListPdu.recordsList);
+        TelinkLogInfo(@"response=%@,data=%@,recordsList=%@",response,recordsListPdu.pduData,recordsListPdu.recordsList);
         if ([recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_DeviceCertificate)] || [recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)]) {
             //5.4.2.6.3 Provisioning records,recordID=1是Device Certificate的数据。
             self.recordsListPdu = recordsListPdu;
             [self getCertificate];
         } else {
             self.state = ProvisioningState_fail;
-            TeLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=0 or 1.");
+            TelinkLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=0 or 1.");
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
-        TeLogDebug(@"sentProvisioningRecordsGet error = %lu",(unsigned long)failedPdu.errorCode);
+        TelinkLogDebug(@"sentProvisioningRecordsGet error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisioningRecordsGet:no handel this response data");
+        TelinkLogDebug(@"sentProvisioningRecordsGet:no handel this response data");
     }
 }
 
 - (void)sentProvisioningRecordsGetTimeout {
-    TeLogInfo(@"sentProvisioningRecordsGetTimeout");
+    TelinkLogInfo(@"sentProvisioningRecordsGetTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordsGetTimeout) object:nil];
     });
@@ -1072,9 +1072,9 @@ typedef enum : UInt16 {
                 [self.certificateDict removeObjectForKey:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)];
             }
             NSData *root = SigDataSource.share.defaultRootCertificateData;
-            BOOL result = [OpenSSLHelper.share checkUserCertificates:weakSelf.certificateDict.allValues withRootCertificate:root];
+            BOOL result = [OpenSSLHelper.share checkUserCertificateDataList:weakSelf.certificateDict.allValues withRootCertificate:root];
             if (result == NO) {
-                TeLogDebug(@"=====>根证书验证失败,check certificate fail.");
+                TelinkLogDebug(@"=====>根证书验证失败,check certificate fail.");
                 weakSelf.state = ProvisioningState_fail;
                 return;
             }
@@ -1090,7 +1090,7 @@ typedef enum : UInt16 {
         if (tem && tem.length) {
             self.staticOobData = [NSData dataWithData:tem];
         }
-        TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:self.staticOobData])
+        TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:self.staticOobData])
         self.devicePublicKey = publicKey;
         self.state = ProvisioningState_ready;
         __weak typeof(self) weakSelf = self;
@@ -1098,7 +1098,7 @@ typedef enum : UInt16 {
             [weakSelf getCapabilitiesResultWithResponse:response];
         }];
     } else {
-        TeLogDebug(@"=====>证书验证失败,check certificate fail.");
+        TelinkLogDebug(@"=====>证书验证失败,check certificate fail.");
         self.state = ProvisioningState_fail;
     }
 }
@@ -1145,9 +1145,9 @@ typedef enum : UInt16 {
     }
     if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
         self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
-        TeLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+        TelinkLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
     }
-    TeLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
+    TelinkLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;
 }
 

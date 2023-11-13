@@ -112,7 +112,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

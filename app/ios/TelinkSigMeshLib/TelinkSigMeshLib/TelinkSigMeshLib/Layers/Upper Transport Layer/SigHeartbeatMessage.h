@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     SigHearbeatMessage.h
+ * @file     SigHeartbeatMessage.h
  *
- * @brief    for TLSR chips
+ * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2019/9/16
+ * @date     2023/11/13
  *
- * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) [2023], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigControlMessage;
 
-@interface SigHearbeatMessage : NSObject
+@interface SigHeartbeatMessage : NSObject
 /// Source Address.
 @property (nonatomic,assign) UInt16 source;
 /// Destination Address.
@@ -39,18 +39,18 @@ NS_ASSUME_NONNULL_BEGIN
 /// Currently active features of the node.
 @property (nonatomic,assign) SigFeatures features;
 
-/// Initialize SigHearbeatMessage object.
+/// Initialize SigHeartbeatMessage object.
 /// @param message The SigControlMessage object.
-/// @returns return `nil` when initialize SigHearbeatMessage object fail.
+/// @returns return `nil` when initialize SigHeartbeatMessage object fail.
 - (instancetype)initFromControlMessage:(SigControlMessage *)message;
 
-/// Creates a Heartbeat message.
+/// Creates a heartbeat message.
 ///
 /// - parameter ttl:         Initial TTL used when sending the message.
 /// - parameter features:    Currently active features of the node.
 /// - parameter source:      The source address.
 /// - parameter destination: The destination address.
-- (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targettingDestination:(UInt16)destination;
+- (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targetingDestination:(UInt16)destination;
 
 @end
 

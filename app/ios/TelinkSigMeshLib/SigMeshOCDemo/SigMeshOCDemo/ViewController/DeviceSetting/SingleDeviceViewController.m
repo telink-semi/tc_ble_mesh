@@ -70,7 +70,7 @@
     [self setUpAllViewController];
     
     __weak typeof(self) weakSelf = self;
-    double h = kGetRectNavAndStatusHight;
+    double h = kGetRectNavAndStatusHeight;
     [self setUpContentViewFrame:^(UIView *contentView) {
         contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
     }];
@@ -130,7 +130,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

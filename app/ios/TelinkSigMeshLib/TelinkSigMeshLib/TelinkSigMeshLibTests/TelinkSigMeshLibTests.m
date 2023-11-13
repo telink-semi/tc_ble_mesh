@@ -82,10 +82,10 @@
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.UUID.length, 2*16);
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.count, 1);
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.lowIntAddress, 0xc000);
-//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.hightIntAddress, 0xc0ff);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.heightIntAddress, 0xc0ff);
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.count, 1);
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress, 0x0001);
-//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x03ff);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.heightIntAddress, 0x03ff);
 //    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedSceneRange.count, 1);
 //    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.firstScene, @"0001");
 //    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
@@ -133,7 +133,7 @@
 //    NSString *str = @"308202e7308201cfa003020102020101300d06092a864886f70d01010b050030213112301006035504030c09636572745f73656c66310b300906035504061302434e301e170d3231303330313130313335365a170d3232303330313130313335365a30213112301006035504030c09636572745f73656c66310b300906035504061302434e30820122300d06092a864886f70d01010105000382010f003082010a0282010100b939503ceb2be1a1d2f936eba0ee96790b2c779f19847f9e97c14a3f076a48ae0499ce85e50bc8c2c4de9fcc7b10dfc9935f1116e401aa8f0f81f0b1c7a58cb9a347625ea1fd8200113fb0fb2d17741230bd1d81bc5c5e63d6fd0770c48bd40b1163c6a28fc9d56e4f631fd0aa746d197d933de647b304a713bf29cd9b602f64fd545ca88a480ccf897d787c649efcaf96de1de884109c6548c94642b3d9223f92f3640cc0f2e8cc3ea57fb184643f22247983e57b4869a3f1064eb9be057a525de7394959057ac230180f65a64a0041aa103d49aa089fab610f75b0f87e93535c59f8fa729d5cd6b094d8c606998e411ebbf114a08cd9684eb2cf029a717a2d0203010001a32a3028300e0603551d0f0101ff0404030205a030160603551d250101ff040c300a06082b06010505070304300d06092a864886f70d01010b0500038201010061718ff2107ccb1f7c265f35201ee7f220e9aaa9ae280efe21b75acf8522657aed007ade7e108ccc19a82b369b91b8ebdb23793706996af499f92a1ed770f9ee56efc7fff4c41b4511509b2da54226496f9093c57e8a9b928f29c1870c2ec3b36a0bfc21ef745dd13145d96b897d593a9df7672442aba02062ee44ad0110f44fe2a700f6eb4861869e68a6101e45e0904decabc9e7a64faa4ad27a070faade31ffaac4f88127bd6631fc7144d5b0ecf69fe68b92f5121bacd6ed31b2ec7c94dbfeae031c25e8c7acd8ba67cf02495e8b58ef9d7e29cae048c25ce3e2896435ffd60ce2ee4dfc5c6fba7fab946187d0c89ff61c661e5d5a237af742ca41cd2c96".uppercaseString;
   NSData *data = [LibTools nsstringToHex:str];
     NSData *publicKey = [OpenSSLHelper.share getStaticOOBDataFromCertificate:data];
-    TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@",[LibTools convertDataToHexStr:data],[LibTools convertDataToHexStr:publicKey])
+    TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@",[LibTools convertDataToHexStr:data],[LibTools convertDataToHexStr:publicKey])
 }
 
 - (void)testRootCertificate {
@@ -172,10 +172,10 @@
     XCTAssertEqual(defaultMesh.curProvisionerModel.UUID.length, 2*16);
     XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedGroupRange.count, 1);
     XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedGroupRange.firstObject.lowIntAddress, 0xc000);
-    XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedGroupRange.firstObject.hightIntAddress, 0xc0ff);
+    XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedGroupRange.firstObject.heightIntAddress, 0xc0ff);
     XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedUnicastRange.count, 1);
     XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress, 0x0001);
-    XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x03ff);
+    XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedUnicastRange.firstObject.heightIntAddress, 0x03ff);
     XCTAssertEqual(defaultMesh.curProvisionerModel.allocatedSceneRange.count, 1);
     XCTAssertEqualObjects(defaultMesh.curProvisionerModel.allocatedSceneRange.firstObject.firstScene, @"0001");
     XCTAssertEqualObjects(defaultMesh.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
@@ -246,10 +246,10 @@
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.UUID.length, 2*16);
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.count, 1);
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.lowIntAddress, 0xc000);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.hightIntAddress, 0xc0ff);
+    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.heightIntAddress, 0xc0ff);
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.count, 1);
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress, 0x0001);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x03ff);
+    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.heightIntAddress, 0x03ff);
     XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedSceneRange.count, 1);
     XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.firstScene, @"0001");
     XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");

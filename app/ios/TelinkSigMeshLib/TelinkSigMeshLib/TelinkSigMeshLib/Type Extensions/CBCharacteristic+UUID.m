@@ -25,7 +25,7 @@
 
 @implementation CBCharacteristic (UUID)
 
-- (BOOL)isTheCharacteriticWithID:(NSString *)uuidString{
+- (BOOL)isTheCharacteristicWithID:(NSString *)uuidString{
     if ([self.UUID.UUIDString isEqualToString:uuidString]) {
         return YES;
     }

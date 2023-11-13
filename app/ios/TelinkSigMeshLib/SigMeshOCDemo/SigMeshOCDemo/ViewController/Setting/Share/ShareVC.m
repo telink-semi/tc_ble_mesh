@@ -47,7 +47,7 @@
     [self setUpAllViewController];
     
     __weak typeof(self) weakSelf = self;
-    double h = kGetRectNavAndStatusHight;
+    double h = kGetRectNavAndStatusHeight;
     [self setUpContentViewFrame:^(UIView *contentView) {
         contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
     }];
@@ -104,14 +104,14 @@
     NSString *remoteHostName = @"www.apple.com";
     Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
     if (hostReachability.currentReachabilityStatus == NotReachable) {
-        TeLogDebug(@"无网络");
+        TelinkLogDebug(@"无网络");
     } else {
-        TeLogDebug(@"有网络");
+        TelinkLogDebug(@"有网络");
     }
 }
 
 -(void)dealloc {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

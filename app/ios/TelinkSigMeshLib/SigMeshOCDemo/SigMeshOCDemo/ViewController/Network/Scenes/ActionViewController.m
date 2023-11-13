@@ -27,7 +27,7 @@
 
 @interface ActionViewController ()
 @property (weak, nonatomic) IBOutlet UISlider *brightnessSlider;
-@property (weak, nonatomic) IBOutlet UISlider *tempratureSlider;
+@property (weak, nonatomic) IBOutlet UISlider *temperatureSlider;
 @property (weak, nonatomic) IBOutlet UILabel *LumLabel;
 @property (weak, nonatomic) IBOutlet UILabel *TempLabel;
 
@@ -44,7 +44,7 @@
 - (IBAction)changeTempareture:(UISlider *)sender {
     SigNodeModel *device = [SigDataSource.share getNodeWithAddress:self.model.address];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)",(int)sender.value];
-    [DemoCommand changeTempratureWithTemprature100:sender.value address:[device.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+    [DemoCommand changeTemperatureWithTemperature100:sender.value address:[device.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
 }
 
 - (IBAction)clickHSL:(UIButton *)sender {
@@ -61,7 +61,7 @@
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)",self.model.trueBrightness];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)",self.model.trueTemperature];
     self.brightnessSlider.value = self.model.trueBrightness;
-    self.tempratureSlider.value = self.model.trueTemperature;
+    self.temperatureSlider.value = self.model.trueTemperature;
     self.title = [NSString stringWithFormat:@"%d",self.model.address];
     
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];

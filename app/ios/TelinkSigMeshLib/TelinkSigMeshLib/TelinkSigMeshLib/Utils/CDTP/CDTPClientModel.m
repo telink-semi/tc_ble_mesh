@@ -163,11 +163,11 @@
 }
 
 - (void)readOTSFeature {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     __weak typeof(self) weakSelf = self;
     [self.privateBluetooth readCharachteristicWithCharacteristic:self.otsFeatureCharacteristic ofPeripheral:self.servicePeripheral timeout:60.0 complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
         if (characteristic == self.otsFeatureCharacteristic && characteristic.value.length >= 4) {
-            TeLogInfo(@"");
+            TelinkLogInfo(@"");
             struct OACPFeatures feature = {};
             feature.value = 0;
             Byte *dataByte = (Byte *)characteristic.value.bytes;
@@ -179,12 +179,12 @@
 }
 
 - (void)readAction {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     [self.channelModel openStreamAction];
     __weak typeof(self) weakSelf = self;
     [self.privateBluetooth readCharachteristicWithCharacteristic:self.objectSizeCharacteristic ofPeripheral:self.servicePeripheral timeout:60.0 complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
         if (characteristic == self.objectSizeCharacteristic) {
-            TeLogInfo(@"");
+            TelinkLogInfo(@"");
             if (characteristic.value && characteristic.value.length >= 4) {
                 UInt32 size = 0;
                 Byte *dataByte = (Byte *)characteristic.value.bytes;
@@ -196,7 +196,7 @@
 }
 
 - (void)readObjectWithSize:(UInt32)size {
-    TeLogInfo(@"back object szie = %d", size);
+    TelinkLogInfo(@"back object size = %d", size);
     __weak typeof(self) weakSelf = self;
     [weakSelf writeOACPReadWithOffset:0 length:size progress:^(float progress) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -348,7 +348,7 @@
 }
 
 - (void)openChannelWithPSM:(CBL2CAPPSM)psm ResultBlock:(bleConnectPeripheralCallback)block {
-    //    TeLogError(@"不触发openChannel！！！！！！");
+    //    TelinkLogError(@"不触发openChannel！！！！！！");
     __weak typeof(self) weakSelf = self;
     [self.privateBluetooth openChannelWithPeripheral:self.servicePeripheral PSM:psm timeout:60.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, CBL2CAPChannel * _Nullable channel, NSError * _Nullable error) {
         if (error == nil) {
@@ -449,7 +449,7 @@
 
 - (void)writeOACPDeleteObjectWithComplete:(_Nullable ResponseOfOACPMessageBlock)block {
     OTSCommand *command = [[OTSCommand alloc] initOACPDeleteCommandWithTimeout:5.0 responseCallback:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OACPDeleteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OACPDeleteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
         if (block) {
             block(responseMessage, error);
         }
@@ -469,16 +469,16 @@
 
 - (void)writeOACPExecuteObject {
     OTSCommand *command = [[OTSCommand alloc] initOACPExecuteCommandWithTimeout:5.0 responseCallback:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OACPExecuteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OACPExecuteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOACPReadWithOffset:(UInt32)offset length:(UInt32)length progress:(ProgressCallback)progress complete:(_Nullable CompleteCallback)block {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     __weak typeof(self) weakSelf = self;
     OTSCommand *command = [[OTSCommand alloc] initOACPReadCommandWithOffset:offset length:length timeout:5.0 responseCallback:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OACPReadCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OACPReadCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
         if (responseMessage.resultCode == OACPResultCode_Success) {
             [weakSelf.channelModel readStreamWithSize:length progress:progress complete:block];
         } else {
@@ -491,12 +491,12 @@
 }
 
 - (void)writeOACPWriteWithObjectData:(NSData *)objectData offset:(UInt32)offset length:(UInt32)length truncate:(BOOL)truncate progress:(ProgressCallback)progress complete:(_Nullable CompleteCallback)block {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     __weak typeof(self) weakSelf = self;
     OTSCommand *command = [[OTSCommand alloc] initOACPWriteCommandWithOffset:offset length:length truncate:truncate timeout:60.0 responseCallback:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
         //触发write object content成功，开始通过outputStream写object content。
         //{length = 3, bytes = 0x600601}
-        TeLogInfo(@"OACPWriteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OACPWriteCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
         if (responseMessage.resultCode == OACPResultCode_Success) {
             [weakSelf.channelModel writeStreamWithData:objectData progress:progress complete:block];
         } else {
@@ -510,7 +510,7 @@
 
 - (void)writeOACPAbortObject {
     OTSCommand *command = [[OTSCommand alloc] initOACPAbortCommandWithTimeout:5.0 responseCallback:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OACPAbortCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OACPAbortCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
@@ -527,56 +527,56 @@
 
 - (void)writeOLCPFirst {
     OTSCommand *command = [[OTSCommand alloc] initOLCPFirstCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPFirstCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPFirstCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPLast {
     OTSCommand *command = [[OTSCommand alloc] initOLCPLastCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPLastCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPLastCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPPrevious {
     OTSCommand *command = [[OTSCommand alloc] initOLCPPreviousCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPPreviousCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPPreviousCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPNext {
     OTSCommand *command = [[OTSCommand alloc] initOLCPNextCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPNextCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPNextCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPGoToWithObjectID:(NSData *)objectID {
     OTSCommand *command = [[OTSCommand alloc] initOLCPGoToCommandWithObjectID:objectID timeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPNextCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPNextCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPOrderCommandWithOrder:(ListSortOrder)order {
     OTSCommand *command = [[OTSCommand alloc] initOLCPOrderCommandWithOrder:order timeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPOrderCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPOrderCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPRequestNumberOfObjects {
     OTSCommand *command = [[OTSCommand alloc] initOLCPRequestNumberOfObjectsCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPRequestNumberOfObjectsCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPRequestNumberOfObjectsCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
 
 - (void)writeOLCPClearMarking {
     OTSCommand *command = [[OTSCommand alloc] initOLCPClearMarkingCommandWithTimeout:5.0 responseCallback:^(OLCPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
-        TeLogInfo(@"OLCPClearMarkingCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
+        TelinkLogInfo(@"OLCPClearMarkingCommand response=%@, payload=%@, error=%@", responseMessage, responseMessage.payload, error);
     }];
     [OTSHandle.share sendOTSCommand:command];
 }
@@ -613,7 +613,7 @@
 
 /// CDTP Client start scan CDTP Service.
 - (void)startScanCDTPService {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     __weak typeof(self) weakSelf = self;
     [_privateBluetooth scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kObjectTransferService]] checkNetworkEnable:NO result:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if ([advertisementData.allKeys containsObject:CBAdvertisementDataServiceUUIDsKey]) {
@@ -635,14 +635,14 @@
 
 /// CDTP Client stop scan CDTP Service.
 - (void)stopScanCDTPService {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     [_privateBluetooth stopScan];
 }
 
 /// CDTP Client read mesh network object from CDTP Service.
 /// - Parameter peripheral: the bluetooth Peripheral object of CDTP Service.
 - (void)startReadMeshObjectFromServicePeripheral:(CBPeripheral *)peripheral {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     self.servicePeripheral = peripheral;
     OTSHandle.share.peripheral = peripheral;
     OTSHandle.share.bluetooth = _privateBluetooth;
@@ -670,7 +670,7 @@
 ///   - object: The mesh network CDTP object.
 ///   - peripheral: the bluetooth Peripheral object of CDTP Service.
 - (void)startWriteMeshObject:(ObjectModel *)object toServicePeripheral:(CBPeripheral *)peripheral {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     self.servicePeripheral = peripheral;
     OTSHandle.share.peripheral = peripheral;
     OTSHandle.share.bluetooth = _privateBluetooth;

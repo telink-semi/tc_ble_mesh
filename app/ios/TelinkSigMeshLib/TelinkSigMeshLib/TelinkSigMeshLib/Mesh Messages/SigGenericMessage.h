@@ -6373,7 +6373,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The status codes for this field are defined in Table 8.23.
 @property (nonatomic,assign) SigFirmwareUpdateServerAndClientModelStatusType status;
 /// The Firmware Update Additional Information state from the Firmware Update Server
-/// (see Section 8.3.1.3), szie is 5 bits.
+/// (see Section 8.3.1.3), size is 5 bits.
 /// The Additional Information field shall indicate the Firmware Update Additional
 /// Information state (see Section 8.3.1.3).
 @property (nonatomic,assign) SigFirmwareUpdateAdditionalInformationStatusType additionalInformation;
@@ -6514,14 +6514,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.95),
 /// 8.4.1.9 Firmware Update Status.
 @interface SigFirmwareUpdateStatus : SigGenericMessage
-/// Status Code for the requesting message, szie is 3 bits.
+/// Status Code for the requesting message, size is 3 bits.
 /// The Status field shall identify the Status Code for the last operation
 /// performed on the Firmware Update Server state. The values of the
 /// field are defined in Table 8.23.
 @property (nonatomic,assign) SigFirmwareUpdateServerAndClientModelStatusType status;
 /// Reserved for Future Use. Size is 2 bits.
 @property (nonatomic,assign) UInt8 RFU1;
-/// The Update Phase state of the Firmware Update Server, szie is 3 bits.
+/// The Update Phase state of the Firmware Update Server, size is 3 bits.
 /// The Update Phase field shall indicate the Update Phase state (see
 /// Section 8.3.1.2).
 @property (nonatomic,assign) SigFirmwareUpdatePhaseType updatePhase;
@@ -6531,7 +6531,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Update TTL values are defined in Table 8.5.
 @property (nonatomic,assign) UInt8 updateTTL;
 /// The Firmware Update Additional Information state from the Firmware
-/// Update Server (see Section 8.3.1.3) (C.1), szie is 5 bits. (C.1: If the
+/// Update Server (see Section 8.3.1.3) (C.1), size is 5 bits. (C.1: If the
 /// Update TTL field is present, the Additional Information field, RFU2 field,
 /// Update Timeout Base field, Update BLOB ID field, and Firmware Image
 /// Index field shall be present; otherwise, the Additional Information field,
@@ -6540,7 +6540,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// If present, the Additional Information field shall indicate the Firmware
 /// Update Additional Information state (see Section 8.3.1.3).
 @property (nonatomic,assign) SigFirmwareUpdateAdditionalInformationStatusType additionalInformation;
-/// Reserved for Future Use (C.1), szie is 3 bits.(C.1: If the Update TTL field
+/// Reserved for Future Use (C.1), size is 3 bits.(C.1: If the Update TTL field
 /// is present, the Additional Information field, RFU2 field, Update Timeout
 /// Base field, Update BLOB ID field, and Firmware Image Index field shall
 /// be present; otherwise, the Additional Information field, RFU2 field,
@@ -6633,11 +6633,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Distribution Timeout Base field shall contain the value that is used to
 /// calculate when firmware image distribution will be suspended.
 @property (nonatomic,assign) UInt16 distributionTimeoutBase;
-/// Mode of the transfer, szie is 2 bits.
+/// Mode of the transfer, size is 2 bits.
 /// The Distribution Transfer Mode field shall indicate the mode used to transfer
 /// the BLOB to the Updating node (see Section 7.2.1.4).
 @property (nonatomic,assign) SigTransferModeState distributionTransferMode;
-/// Firmware update policy, szie is 1 bits.
+/// Firmware update policy, size is 1 bits.
 /// The Update Policy field shall indicate the update policy that the Firmware
 /// Distribution Server will use for this firmware image distribution.
 @property (nonatomic,assign) SigUpdatePolicyType updatePolicy;
@@ -6766,7 +6766,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Policy field, RFU field and the Distribution Firmware Image Index field shall not be
 /// present.)
 @property (nonatomic,assign) UInt16 distributionTimeoutBase;
-/// Mode of the transfer, szie is 2 bits (C.1). (C.1: If the Distribution Multicast Address
+/// Mode of the transfer, size is 2 bits (C.1). (C.1: If the Distribution Multicast Address
 /// field is present, the Distribution AppKey Index field, Distribution TTL field, Distribution
 /// Timeout Base field, Distribution Transfer Mode field, Update Policy field, RFU field,
 /// and the Distribution Firmware Image Index field shall also be present; otherwise, the
@@ -6774,7 +6774,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Distribution Transfer Mode field, Update Policy field, RFU field and the Distribution
 /// Firmware Image Index field shall not be present.)
 @property (nonatomic,assign) SigTransferModeState distributionTransferMode;
-/// Firmware update policy, szie is 1 bits (C.1). (C.1: If the Distribution Multicast Address
+/// Firmware update policy, size is 1 bits (C.1). (C.1: If the Distribution Multicast Address
 /// field is present, the Distribution AppKey Index field, Distribution TTL field, Distribution
 /// Timeout Base field, Distribution Transfer Mode field, Update Policy field, RFU field, and
 /// the Distribution Firmware Image Index field shall also be present; otherwise, the
@@ -7226,8 +7226,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigFirmwareDistributionReceiversAdd : SigAcknowledgedGenericMessage
 /// The Firmware Distribution Receivers Add message shall contain at least one Receiver Entry.
 /// For each Receiver Entry field in the message, the value of the Address field shall be unique.
-@property (nonatomic,strong) NSMutableArray <SigReceiverEntryModel *>*receiverEntrysList;
-- (instancetype)initWithReceiverEntrysList:(NSArray <SigReceiverEntryModel *>*)receiverEntrysList;
+@property (nonatomic,strong) NSMutableArray <SigReceiverEntryModel *>*receiverEntriesList;
+- (instancetype)initWithReceiverEntriesList:(NSArray <SigReceiverEntryModel *>*)receiverEntriesList;
 
 /**
  * @brief   Initialize SigFirmwareDistributionReceiversAdd object.
@@ -7407,9 +7407,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.28),
 /// 7.3.1.2 BLOB Transfer Start.
 @interface SigBLOBTransferStart : SigAcknowledgedGenericMessage
-/// Reserved for Future Use, szie is 6 bits.
+/// Reserved for Future Use, size is 6 bits.
 @property (nonatomic,assign) UInt8 RFU;
-/// BLOB transfer mode, szie is 2 bits.
+/// BLOB transfer mode, size is 2 bits.
 /// The Transfer Mode field shall indicate the new value of the Transfer
 /// Mode state (see Section 7.2.1.4). The valid values of the field are
 /// Pull BLOB Transfer Mode and Push BLOB Transfer Mode.
@@ -7479,14 +7479,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note   - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf (page.29),
 /// 7.3.1.4 BLOB Transfer Status.
 @interface SigBLOBTransferStatus : SigGenericMessage
-/// Status Code for the requesting message, szie is 4 bits.
+/// Status Code for the requesting message, size is 4 bits.
 /// The Status field shall identify the Status Code for the last operation
 /// performed on the BLOB Transfer Server states. The values of the Status
 /// field are defined in Table 7.17.
 @property (nonatomic,assign) SigBLOBTransferStatusType status;
-/// Reserved for Future Use, szie is 2 bits.
+/// Reserved for Future Use, size is 2 bits.
 @property (nonatomic,assign) UInt8 RFU;
-/// BLOB transfer mode, szie is 2 bits.
+/// BLOB transfer mode, size is 2 bits.
 /// The Transfer Mode field shall indicate the Transfer Mode state of the BLOB
 /// Transfer Server (see Section 7.2.1.4).
 @property (nonatomic,assign) SigTransferModeState transferMode;
@@ -7575,7 +7575,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Chunk Number field shall indicate the chunk’s number in a set
 /// of chunks in a block.
 @property (nonatomic,assign) UInt16 chunkNumber;
-/// Part of the BLOB data, szie is 1 to Chunk Size.
+/// Part of the BLOB data, size is 1 to Chunk Size.
 /// The Chunk Data field shall contain the chunk of the block identified by
 /// the Chunk Number. The size of the Chunk Data field shall be greater
 /// than 0 octets, and shall be less than or equal to the number of octets

@@ -25,11 +25,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigLowerTransportPdu,SigHearbeatMessage,SigNetworkManager,SigAccessPdu;
+@class SigLowerTransportPdu,SigHeartbeatMessage,SigNetworkManager,SigAccessPdu;
 
 /*
  The upper transport layer encrypts, decrypts, and authenticates application data and is designed
- to provide confidentiality of access messages. It also defines how transport control messages
+ to provide confidenticality of access messages. It also defines how transport control messages
  are used to manage the upper transport layer between nodes, including when used by the Friend feature.
  */
 @interface SigUpperTransportLayer : NSObject
@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Handles received Lower Transport PDU.
 /// Depending on the PDU type, the message will be either propagated to Access Layer, or handled internally.
-/// @param lowerTransportPdu The Lower Trasport PDU received.
+/// @param lowerTransportPdu The Lower Transport PDU received.
 - (void)handleLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu;
 
 /// Encrypts the Access PDU using given key set and sends it down to Lower Transport Layer.
@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param destination The destination address.
 - (void)lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:(UInt16)destination;
 
-- (void)handleHearbeat:(SigHearbeatMessage *)hearbeat;
+- (void)handleHeartbeat:(SigHeartbeatMessage *)heartbeat;
 
 @end
 

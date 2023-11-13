@@ -111,7 +111,7 @@
                     }
                 }
             }
-            TeLogDebug(@"%@",indexPath);
+            TelinkLogDebug(@"%@",indexPath);
             if (hadBound) {
                 [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this netkey, you can`t delete it!" sure:nil];
                 return;

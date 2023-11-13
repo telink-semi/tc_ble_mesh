@@ -845,7 +845,7 @@ static NSString * const ID = @"CONTENTCELL";
     // 判断控制器的view有没有加载，没有就加载，加载完在发送通知
     if (vc.view) {
         // 发出通知点击标题通知
-        [[NSNotificationCenter defaultCenter] postNotificationName:YZDisplayViewClickOrScrollDidFinshNote  object:vc];
+        [[NSNotificationCenter defaultCenter] postNotificationName:YZDisplayViewClickOrScrollDidFinishNote  object:vc];
         
         // 发出重复点击标题通知
         if (_selIndex == i) {
@@ -1095,7 +1095,7 @@ static NSString * const ID = @"CONTENTCELL";
     UIViewController *vc = self.childViewControllers[i];
     
     // 发出通知
-    [[NSNotificationCenter defaultCenter] postNotificationName:YZDisplayViewClickOrScrollDidFinshNote object:vc];
+    [[NSNotificationCenter defaultCenter] postNotificationName:YZDisplayViewClickOrScrollDidFinishNote object:vc];
 }
 
 
@@ -1110,7 +1110,7 @@ static NSString * const ID = @"CONTENTCELL";
 
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    if (self.dragingFollow) {
+    if (self.draggingFollow) {
         // 获取角标
         NSInteger i = scrollView.contentOffset.x / YZScreenW;
         [self setLabelTitleCenter:self.titleLabels[i]];

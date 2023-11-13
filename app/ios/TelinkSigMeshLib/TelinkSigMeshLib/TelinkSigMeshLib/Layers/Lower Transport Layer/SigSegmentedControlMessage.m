@@ -51,12 +51,12 @@
         UInt8 tem = 0;
         memcpy(&tem, dataByte, 1);
         if (data.length < 5 || (tem & 0x80) == 0) {
-            TeLogError(@"initFromUnsegmentedPdu fail.");
+            TelinkLogError(@"initFromUnsegmentedPdu fail.");
             return nil;
         }
         _opCode = tem & 0x7F;
         if (_opCode == 0) {
-            TeLogError(@"initFromUnsegmentedPdu fail.");
+            TelinkLogError(@"initFromUnsegmentedPdu fail.");
             return nil;
         }
         UInt16 tem1 = 0,tem2=0,tem3=0;
@@ -67,7 +67,7 @@
         self.segmentOffset = ((tem2 & 0x03) << 3) | ((tem3 & 0xE0) >> 5);
         self.lastSegmentNumber = tem3 & 0x1F;
         if (self.segmentOffset > self.lastSegmentNumber) {
-            TeLogError(@"initFromUnsegmentedPdu fail.");
+            TelinkLogError(@"initFromUnsegmentedPdu fail.");
             return nil;
         }
         self.upperTransportPdu = [data subdataWithRange:NSMakeRange(4, data.length-4)];

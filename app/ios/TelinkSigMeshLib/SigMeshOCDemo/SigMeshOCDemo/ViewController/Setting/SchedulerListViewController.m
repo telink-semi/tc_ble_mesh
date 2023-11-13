@@ -75,16 +75,16 @@
 //    [operationQueue addOperationWithBlock:^{
 //        //这个block语句块在子线程中执行
 //        [DemoCommand getSchedulerStatusWithAddress:weakSelf.model.address resMax:1 Completation:^(ResponseModel *m) {
-//            TeLogDebug(@"getSchedulerStatusWithAddress=%@",m.rspData);
+//            TelinkLogDebug(@"getSchedulerStatusWithAddress=%@",m.rspData);
 //            UInt16 status = 0;
 //            Byte *pu = (Byte *)[m.rspData bytes];
 //            memcpy(&status, pu + 9, 2);
 //            for (int i=0; i<16; i++) {
 //                if (status&(1<<i)) {
-//                    TeLogDebug(@"this node has schedulerID:%d",i);
+//                    TelinkLogDebug(@"this node has schedulerID:%d",i);
 //                    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 //                    [DemoCommand getSchedulerActionWithAddress:weakSelf.model.address resMax:1 schedulerModelID:i Completation:^(ResponseModel *m) {
-//                        TeLogDebug(@"getSchedulerActionWithAddress=%@",m.rspData);
+//                        TelinkLogDebug(@"getSchedulerActionWithAddress=%@",m.rspData);
 //                        dispatch_semaphore_signal(semaphore);
 //                    }];
 //                    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);

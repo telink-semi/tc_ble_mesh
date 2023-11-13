@@ -115,9 +115,9 @@
 
 - (void)clickSetTime {
     [DemoCommand setNowTimeWithAddress:self.device.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigTimeStatus * _Nonnull responseMessage) {
-        TeLogVerbose(@"setNowTimeWithAddress finish.");
+        TelinkLogVerbose(@"setNowTimeWithAddress finish.");
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
 }
 
@@ -136,7 +136,7 @@
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             SigNodeModel *curDevice = allArray.firstObject;
             [DemoCommand setSchedulerActionWithAddress:curDevice.address schedulerModel:weakSelf.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
-                TeLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
+                TelinkLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
                 UInt16 sceneID = weakSelf.model.sceneId;
                 UInt64 scheduler = weakSelf.model.schedulerData;
                 NSMutableData *mData = [NSMutableData dataWithData:[NSData dataWithBytes:&scheduler length:8]];
@@ -146,11 +146,11 @@
                     dispatch_semaphore_signal(semaphore);
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                TeLogDebug(@"");
+                TelinkLogDebug(@"");
             }];
             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
-        TeLogDebug(@"save success");
+        TelinkLogDebug(@"save success");
         [weakSelf.device saveSchedulerModelWithModel:weakSelf.model];
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf.navigationController popViewControllerAnimated:YES];

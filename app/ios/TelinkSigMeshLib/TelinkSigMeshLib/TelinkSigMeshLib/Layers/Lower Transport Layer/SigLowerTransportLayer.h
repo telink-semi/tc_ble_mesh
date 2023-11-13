@@ -45,14 +45,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// 缓存重发segment数据包的定时器。(设备端不返回这个Segment长包的接收情况，该定时器是segment发包和重发包的总超时定时器，该定时器执行则表示该segment包发送失败，设备端没收全APP发送的segment包。)
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*incompleteTimers;
 /// An item is removed when a next message has been received from the same Node.
-/// 缓存接收到的Segment Acknowlegment Messages。（设备端返回这个APP发送的Segment长包的接收情况，APP需要补充丢失的包或者停止重发segment数据包的定时器incompleteTimers）
+/// 缓存接收到的Segment Acknowledgment Messages。（设备端返回这个APP发送的Segment长包的接收情况，APP需要补充丢失的包或者停止重发segment数据包的定时器incompleteTimers）
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,SigSegmentAcknowledgmentMessage *>*acknowledgments;
 
 //#prage mark in going segments
 
 /// 缓存接收到的segment数据包。（用于返回app接收到segment的情况，定时器）
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*incompleteSegments;
-/// 缓存APP端向设备端发送Segment Acknowlegment Messages的定时器。(告诉设备端一个Segment长包中哪个包丢失了或者所有包都接收了。)
+/// 缓存APP端向设备端发送Segment Acknowledgment Messages的定时器。(告诉设备端一个Segment长包中哪个包丢失了或者所有包都接收了。)
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*acknowledgmentTimers;
 
 @property (nonatomic,strong) SigLowerTransportPdu *unSegmentLowerTransportPdu;

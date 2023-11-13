@@ -47,10 +47,10 @@
         [self performSelector:@selector(getCompositionDataTimeOut) withObject:nil afterDelay:10.0];
         [ShowTipsHandle.share show:Tip_GetComposition];
     });
-    TeLogDebug(@"getCompositionData 0x%02x",self.model.address);
+    TelinkLogDebug(@"getCompositionData 0x%02x",self.model.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.model.compositionData = [[SigPage0 alloc] initWithParameters:responseMessage.parameters];
         [SigDataSource.share saveLocationData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {

@@ -144,7 +144,7 @@
     l = hsl.lightness;
     
     if (h<0 || h>=1 || s<0 || s>1 || l<0 || l>1) {
-        TeLogDebug(@"警告：传入的HSLModel为非法值");
+        TelinkLogDebug(@"警告：传入的HSLModel为非法值");
         return [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0];
     }
     if (s == 0) {

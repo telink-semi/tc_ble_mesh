@@ -90,11 +90,11 @@
     
     //===========test==========//
 //    ActionModel *model = self.allActions[indexPath.row];
-//    TeLogDebug(@"getCompositionData 0x%02x",model.address);
+//    TelinkLogDebug(@"getCompositionData 0x%02x",model.address);
 //    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
-//        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//        TeLogDebug(@"finish.");
+//        TelinkLogDebug(@"finish.");
 //    }];
     //===========test==========//
 }
@@ -224,7 +224,7 @@
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = saveArray.firstObject;
 //            [DemoCommand getSceneRegisterStatusWithAddress:curAction.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-//                TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
+//                TelinkLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 //                if (error == nil) {
 //
@@ -232,7 +232,7 @@
 //            }];
             __block SigSceneRegisterStatus *response = nil;
             [DemoCommand saveSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
+                TelinkLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                 response = responseMessage;
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
@@ -265,13 +265,13 @@
             });
             return;
         }
-        TeLogDebug(@"add finish");
+        TelinkLogDebug(@"add finish");
         while (delArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = delArray.firstObject;
             __block SigSceneRegisterStatus *response = nil;
             [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
+                TelinkLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
                 response = responseMessage;
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
@@ -304,8 +304,8 @@
             });
             return;
         }
-        TeLogDebug(@"del finish");
-        TeLogDebug(@"save success");
+        TelinkLogDebug(@"del finish");
+        TelinkLogDebug(@"save success");
         weakSelf.model.actionList = curArray;
         [[SigDataSource share] saveSceneModelWithModel:weakSelf.model];
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -357,7 +357,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 @end

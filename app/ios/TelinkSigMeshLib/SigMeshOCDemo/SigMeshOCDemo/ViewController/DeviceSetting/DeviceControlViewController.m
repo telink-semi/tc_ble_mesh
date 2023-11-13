@@ -133,14 +133,14 @@ typedef enum : NSUInteger {
 
 - (void)getDeviceState {
     //获取当前设备的详细状态数据(亮度、色温、HSL)
-    //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temprature at node detail vc.
+    //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temperature at node detail vc.
     //modelID 0x1303:Light CTL Get
     BOOL hasCTLGet = [self.model getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0;
     //modelID 0x1300:Light Lightness Get
     BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)].count > 0;
 
     if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet && self.model.state != DeviceStateOutOfLine) {
-        //get light and temprature
+        //get light and temperature
         __weak typeof(self) weakSelf = self;
         [DemoCommand getCTLWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightCTLStatus * _Nonnull responseMessage) {
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
@@ -193,7 +193,7 @@ typedef enum : NSUInteger {
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 #pragma mark - UITableViewDataSource
@@ -258,7 +258,7 @@ typedef enum : NSUInteger {
             return 692.5;
             break;
         case ModelUITypeOnOff:
-            return [OnOffModelCell getOnOffModelCellHightOfItemCount:type.addresses.count];
+            return [OnOffModelCell getOnOffModelCellHeightOfItemCount:type.addresses.count];
             break;
         case ModelUITypeLum:
             return 109;
@@ -360,9 +360,9 @@ typedef enum : NSUInteger {
     //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
 //        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
 //        [SDKLibCommand genericOnOffSetDestination:elementAddress isOn:value transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-//            TeLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
+//            TelinkLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
 //        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //        }];
 }
 
@@ -404,7 +404,7 @@ typedef enum : NSUInteger {
 - (void)changeBrightnessWithModelType:(ModelType *)type {
     self.hadChangeBrightness = YES;
     self.hasNextBrightness = NO;
-    TeLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
+    TelinkLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
     self.model.brightness = [LibTools lumToLightness:self.nextBrightness];
     UInt16 elementAddress = [type.addresses.firstObject intValue];
     [DemoCommand changeBrightnessWithBrightness100:self.nextBrightness address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
@@ -426,7 +426,7 @@ typedef enum : NSUInteger {
     self.hasNextTempareture = NO;
     self.model.temperature = [LibTools temp100ToTemp:self.nextTempareture];
     UInt16 elementAddress = [type.addresses.firstObject intValue];
-    [DemoCommand changeTempratureWithTemprature100:self.nextTempareture address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+    [DemoCommand changeTemperatureWithTemperature100:self.nextTempareture address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinishWithModelType:) object:type];
         [self performSelector:@selector(changeTemparetureFinishWithModelType:) withObject:type afterDelay:kCommandInterval];
@@ -449,7 +449,7 @@ typedef enum : NSUInteger {
     UInt16 address = type.addresses.firstObject.intValue;
     __weak typeof(self) weakSelf = self;
     [DemoCommand changeLevelWithAddress:address level:level responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericLevelStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"control level success.");
+        TelinkLogDebug(@"control level success.");
         dispatch_async(dispatch_get_main_queue(), ^{
             //根据回包进行HSL的滑竿进行联动。
             if (weakSelf.model.HSLAddresses.count > 0) {

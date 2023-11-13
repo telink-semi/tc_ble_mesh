@@ -97,7 +97,7 @@ static SigMeshLib *shareLib = nil;
 /// It will calculate _maxNetworkTransmitInterval again.
 - (void)setNetworkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps {
     if (networkTransmitIntervalSteps > 0b11111) {
-        TeLogDebug(@"networkTransmitIntervalSteps range:0~0b11111! Set to default value 0b00010.");
+        TelinkLogDebug(@"networkTransmitIntervalSteps range:0~0b11111! Set to default value 0b00010.");
         networkTransmitIntervalSteps = 0b00010;
     }
     _networkTransmitIntervalSteps = networkTransmitIntervalSteps;
@@ -108,7 +108,7 @@ static SigMeshLib *shareLib = nil;
 /// It will calculate _maxNetworkTransmitInterval again.
 - (void)setNetworkTransmitCount:(UInt8)networkTransmitCount {
     if (networkTransmitCount > 0b111) {
-        TeLogDebug(@"networkTransmitCount range:0~0b111! Set to default value 0b101.");
+        TelinkLogDebug(@"networkTransmitCount range:0~0b111! Set to default value 0b101.");
         _networkTransmitCount = 0b101;
     }
     _networkTransmitCount = networkTransmitCount;
@@ -134,7 +134,7 @@ static SigMeshLib *shareLib = nil;
 /// @param type The PDU type.
 - (void)bearerDidDeliverData:(NSData *)data type:(SigPduType)type {
     if (self.networkManager == nil) {
-        TeLogDebug(@"self.networkManager == nil");
+        TelinkLogDebug(@"self.networkManager == nil");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -152,7 +152,7 @@ static SigMeshLib *shareLib = nil;
     // Note: Currently, the decrypted networkPdu is directly called back to facilitate adding some optimized logic code later.
     if (networkPdu.isSegmented) {
         if (_receiveSegmentTimer == nil) {
-//            TeLogDebug(@"==========RxBusy标志开始");
+//            TelinkLogDebug(@"==========RxBusy标志开始");
             __weak typeof(self) weakSelf = self;
             _receiveSegmentTimer = [BackgroundTimer scheduledTimerWithTimeInterval:_receiveSegmentMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
                 [weakSelf cleanReceiveSegmentBusyStatus];
@@ -172,9 +172,9 @@ static SigMeshLib *shareLib = nil;
 
 /// Clean busy status of receive segment.
 - (void)cleanReceiveSegmentBusyStatus {
-//    TeLogDebug(@"");
+//    TelinkLogDebug(@"");
     if (self.isReceiveSegmentPDUing) {
-//        TeLogDebug(@"==========RxBusy标志清除");
+//        TelinkLogDebug(@"==========RxBusy标志清除");
         self.isReceiveSegmentPDUing = NO;
         self.sourceOfReceiveSegmentPDU = 0;
         if (_receiveSegmentTimer) {
@@ -235,7 +235,7 @@ static SigMeshLib *shareLib = nil;
 - (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"Send fail! Mesh Network is disconnected!");
+        TelinkLogError(@"Send fail! Mesh Network is disconnected!");
         // handle for disconnected
         if (command.resultCallback) {
             //handle resultCallback
@@ -245,7 +245,7 @@ static SigMeshLib *shareLib = nil;
     }
 #endif
     if (self.dataSource == nil) {
-        TeLogError(@"Send fail! Mesh Network not created!");
+        TelinkLogError(@"Send fail! Mesh Network not created!");
         // handle for dataSource
         if (command.resultCallback) {
             //handle resultCallback
@@ -254,7 +254,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     if (self.dataSource.curLocationNodeModel == nil || self.dataSource.curLocationNodeModel.address == 0) {
-        TeLogError(@"Send fail! Local Provisioner has no Unicast Address assigned!");
+        TelinkLogError(@"Send fail! Local Provisioner has no Unicast Address assigned!");
         // handle for curLocationNodeModel
         if (command.resultCallback) {
             //handle resultCallback
@@ -263,7 +263,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     if (![SigHelper.share isUnicastAddress:destination]) {
-        TeLogError(@"Send fail! Address: 0x%x is not a Unicast Address.",destination);
+        TelinkLogError(@"Send fail! Address: 0x%x is not a Unicast Address.",destination);
         // handle for destination
         if (command.resultCallback) {
             //handle resultCallback
@@ -272,7 +272,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     if (![SigHelper.share isRelayedTTL:initialTtl]) {
-        TeLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
+        TelinkLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
         // handle for ttl
         if (command.resultCallback) {
             //handle resultCallback
@@ -297,7 +297,7 @@ static SigMeshLib *shareLib = nil;
             [weakSelf.networkManager sendConfigMessage:message toDestination:destination withTtl:initialTtl command:command];
         });
     } else {
-        TeLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
+        TelinkLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
     }
     [lock unlock];
     return messageHandle;
@@ -335,7 +335,7 @@ static SigMeshLib *shareLib = nil;
 - (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"Send fail! Mesh Network is disconnected!");
+        TelinkLogError(@"Send fail! Mesh Network is disconnected!");
         // handle for disconnected
         if (command.resultCallback) {
             //handle resultCallback
@@ -346,7 +346,7 @@ static SigMeshLib *shareLib = nil;
 #endif
 
     if (self.networkManager == nil || self.dataSource == nil) {
-        TeLogError(@"Send fail! Mesh Network not created");
+        TelinkLogError(@"Send fail! Mesh Network not created");
         // handle for dataSource
         if (command.resultCallback) {
             //handle resultCallback
@@ -355,7 +355,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     if (self.dataSource.curLocationNodeModel == nil || self.dataSource.curLocationNodeModel.elements.firstObject == nil) {
-        TeLogError(@"Send fail! Local Provisioner has no Unicast Address assigned.");
+        TelinkLogError(@"Send fail! Local Provisioner has no Unicast Address assigned.");
         // handle for curLocationNodeModel
         if (command.resultCallback) {
             //handle resultCallback
@@ -366,7 +366,7 @@ static SigMeshLib *shareLib = nil;
     SigNodeModel *localNode = self.dataSource.curLocationNodeModel;
     SigElementModel *source = localNode.elements.firstObject;
     if (source.getParentNode != localNode) {
-        TeLogError(@"Send fail! The Element does not belong to the local Node.");
+        TelinkLogError(@"Send fail! The Element does not belong to the local Node.");
         // handle for curLocationNodeModel
         if (command.resultCallback) {
             //handle resultCallback
@@ -375,7 +375,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     if (![SigHelper.share isRelayedTTL:initialTtl]) {
-        TeLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
+        TelinkLogError(@"Send fail! TTL value %d is invalid.",initialTtl);
         // handle for ttl
         if (command.resultCallback) {
             //handle resultCallback
@@ -401,7 +401,7 @@ static SigMeshLib *shareLib = nil;
             [weakSelf.networkManager sendMeshMessage:message fromElement:source toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey command:command];
         });
     } else {
-        TeLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
+        TelinkLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
     }
     [lock unlock];
     return messageHandle;
@@ -432,7 +432,7 @@ static SigMeshLib *shareLib = nil;
 - (nullable SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"Send fail! Mesh Network is disconnected!");
+        TelinkLogError(@"Send fail! Mesh Network is disconnected!");
         // handle for disconnected
         if (command.resultCallback) {
             //handle resultCallback
@@ -442,7 +442,7 @@ static SigMeshLib *shareLib = nil;
     }
 #endif
     if (self.dataSource == nil) {
-        TeLogError(@"Send fail! Mesh Network not created");
+        TelinkLogError(@"Send fail! Mesh Network not created");
         // handle for dataSource
         if (command.resultCallback) {
             //handle resultCallback
@@ -464,7 +464,7 @@ static SigMeshLib *shareLib = nil;
             [weakSelf.networkManager sendSigProxyConfigurationMessage:message];
         });
     } else {
-        TeLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
+        TelinkLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
     }
     [lock unlock];
     return messageHandle;
@@ -477,12 +477,12 @@ static SigMeshLib *shareLib = nil;
 - (nullable NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"Send fail! Mesh Network is disconnected!");
+        TelinkLogError(@"Send fail! Mesh Network is disconnected!");
         return [NSError errorWithDomain:kSigMeshLibCommandMeshDisconnectedErrorMessage code:kSigMeshLibCommandMeshDisconnectedErrorCode userInfo:nil];
     }
 #endif
     if (self.dataSource == nil) {
-        TeLogError(@"Send fail! Mesh Network not created");
+        TelinkLogError(@"Send fail! Mesh Network not created");
         return [NSError errorWithDomain:kSigMeshLibNoCreateMeshNetworkErrorMessage code:kSigMeshLibNoCreateMeshNetworkErrorCode userInfo:nil];
     }
     
@@ -498,7 +498,7 @@ static SigMeshLib *shareLib = nil;
             BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:YES block:^(BackgroundTimer * _Nonnull t) {
                 if (command.hadRetryCount < command.retryCount) {
                     command.hadRetryCount ++;
-                    TeLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
+                    TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
                     [SigBearer.share.getCurrentPeripheral writeValue:data forCharacteristic:onlineStatusCharacteristic type:CBCharacteristicWriteWithResponse];
                 } else {
                     [weakSelf commandTimeoutWithCommand:command];
@@ -516,7 +516,7 @@ static SigMeshLib *shareLib = nil;
 /// @param messageId The message identifier.
 - (void)cancelSigMessageHandle:(SigMessageHandle *)messageId {
     if (self.networkManager == nil) {
-        TeLogError(@"Send fail! Error: Mesh Network not created.");
+        TelinkLogError(@"Send fail! Error: Mesh Network not created.");
         return;
     }
     SDKLibCommand *command = [self getCommandWithSendMessageOpCode:messageId.opCode];
@@ -525,7 +525,7 @@ static SigMeshLib *shareLib = nil;
 
 /// cancel all commands and retry of commands and retry of segment PDU.
 - (void)cleanAllCommandsAndRetry {
-    TeLogDebug(@"清除commands cache.");
+    TelinkLogDebug(@"清除commands cache.");
     NSLock *lock = [[NSLock alloc] init];
     [lock lock];
     NSArray *commands = [NSArray arrayWithArray:_commands];
@@ -573,7 +573,7 @@ static SigMeshLib *shareLib = nil;
     NSLock *lock = [[NSLock alloc] init];
     [lock lock];
     [self.commands addObject:command];
-    TeLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,timeout=%f,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, command.timeout, self.commands.count);
+    TelinkLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,timeout=%f,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, command.timeout, self.commands.count);
     [lock unlock];
 //    //存在response的指令需存储
 //    if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
@@ -590,12 +590,12 @@ static SigMeshLib *shareLib = nil;
 /// - Parameter command: The SDKLibCommand object.
 - (void)commandTimeoutWithCommand:(SDKLibCommand *)command {
     [self commandResponseFinishWithCommand:command];
-    TeLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
+    TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
     NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
     [self handleResultCallback:command error:error];
     
 //    if (command.resultCallback && !command.hadReceiveAllResponse) {
-//        TeLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
+//        TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
 //        NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
 //        command.resultCallback(NO, error);
 //    }
@@ -715,7 +715,7 @@ static SigMeshLib *shareLib = nil;
 /// @param source The Unicast Address of the Element from which the message was sent.
 /// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TeLogInfo(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
+    TelinkLogInfo(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
     SigNodeModel *node = [self.dataSource getNodeWithAddress:source];
 
     //根据设备是否打开了publish功能来判断是否给该设备添加监测离线的定时器。
@@ -779,13 +779,13 @@ static SigMeshLib *shareLib = nil;
 }
 
 /// A callback called when an unsegmented message was sent to the SigBearer, or when all
-/// segments of a segmented message targetting a Unicast Address were acknowledged by
+/// segments of a segmented message targeting a Unicast Address were acknowledged by
 /// the target Node.
 /// @param message The message that has been sent.
 /// @param localElement The local Element used as a source of this message.
 /// @param destination The address to which the message was sent.
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
-    TeLogInfo(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
+    TelinkLogInfo(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
     //filter command = nil
     if (command == nil) {
@@ -820,7 +820,7 @@ static SigMeshLib *shareLib = nil;
 /// an acknowledged message hasn't been received before the time run out.
 /// For unsegmented unacknowledged messages this callback will be invoked when the
 /// SigBearer was closed.
-/// For segmented unacknowledged messages targetting a Unicast Address, besides that,
+/// For segmented unacknowledged messages targeting a Unicast Address, besides that,
 /// it may also be called when sending timed out before all of the segments were acknowledged
 /// by the target Node, or when the target Node is busy and not able to proceed the message
 /// at the moment.
@@ -834,7 +834,7 @@ static SigMeshLib *shareLib = nil;
 /// @param destination The address to which the message was sent.
 /// @param error The error that occurred.
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error {
-    TeLogInfo(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
+    TelinkLogInfo(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
     //filter command = nil
     if (command == nil) {
@@ -855,7 +855,7 @@ static SigMeshLib *shareLib = nil;
 /// @param source The Unicast Address of the Element from which the message was sent.
 /// @param destination The address to which the message was sent.
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TeLogInfo(@"didReceiveSigProxyConfigurationMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
+    TelinkLogInfo(@"didReceiveSigProxyConfigurationMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
     SDKLibCommand *command = [self getCommandWithReceiveMessage:(SigMeshMessage *)message fromSource:source];
     //filter command = nil
     if (command == nil) {
@@ -1055,7 +1055,7 @@ static SigMeshLib *shareLib = nil;
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
             if (command.hadRetryCount < command.retryCount) {
                 command.hadRetryCount ++;
-                TeLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
+                TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
                 dispatch_async(weakSelf.queue, ^{
                     [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
                     if (command.commandType == SigCommandType_meshMessage) {
@@ -1067,7 +1067,7 @@ static SigMeshLib *shareLib = nil;
                     }
                 });
             } else {
-                TeLogError(@"retry error!");
+                TelinkLogError(@"retry error!");
             }
         }];
         command.retryTimer = timer;

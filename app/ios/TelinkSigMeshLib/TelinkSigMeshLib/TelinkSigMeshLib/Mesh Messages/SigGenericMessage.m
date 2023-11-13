@@ -71,7 +71,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 /// The Type of the response message.
 - (Class)responseType {
-    TeLogDebug(@"注意：本类的子类未重写该方法。");
+    TelinkLogDebug(@"注意：本类的子类未重写该方法。");
     return [SigAcknowledgedGenericMessage class];
 }
 
@@ -15186,15 +15186,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithReceiverEntrysList:(NSArray <SigReceiverEntryModel *>*)receiverEntrysList {
+- (instancetype)initWithReceiverEntriesList:(NSArray <SigReceiverEntryModel *>*)receiverEntriesList {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_FirmwareDistributionReceiversAdd;
-        if (receiverEntrysList && receiverEntrysList.count) {
-            _receiverEntrysList = [NSMutableArray arrayWithArray:receiverEntrysList];
+        if (receiverEntriesList && receiverEntriesList.count) {
+            _receiverEntriesList = [NSMutableArray arrayWithArray:receiverEntriesList];
             NSMutableData *mData = [NSMutableData data];
-            for (SigReceiverEntryModel *model in receiverEntrysList) {
+            for (SigReceiverEntryModel *model in receiverEntriesList) {
                 [mData appendData:model.parameters];
             }
             self.parameters = mData;
@@ -15224,7 +15224,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
             SigReceiverEntryModel *model = [[SigReceiverEntryModel alloc] initWithParameters:[parameters subdataWithRange:NSMakeRange(mArray.count*3, 3)]];
             [mArray addObject:model];
         }
-        _receiverEntrysList = mArray;
+        _receiverEntriesList = mArray;
     }
     return self;
 }
@@ -16253,7 +16253,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         [mData appendData:data];
         //暂时不处理该逻辑，因为需要知道当前BLOB的chunks个数。
         if (format == SigBLOBBlockFormatType_someChunksMissing) {
-            TeLogError(@"暂时不处理该逻辑，因为需要知道当前BLOB的chunks个数!!!");
+            TelinkLogError(@"暂时不处理该逻辑，因为需要知道当前BLOB的chunks个数!!!");
 //            if (missingChunksList && missingChunksList.count > 0) {
 //                for (NSNumber *num in missingChunksList) {
 //

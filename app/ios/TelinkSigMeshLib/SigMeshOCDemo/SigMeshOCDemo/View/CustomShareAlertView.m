@@ -93,8 +93,8 @@
 - (CustomShareAlert *)customAlert {
     if (!_customAlert) {
         _customAlert =[[NSBundle mainBundle]loadNibNamed:@"CustomShareAlert" owner:self options:nil].firstObject;
-        CGFloat hight = [_customAlert getAlertHightWithItemArray:_itemArray];
-        _customAlert.frame = CGRectMake(0, [[UIScreen mainScreen] bounds].size.height - hight, [[UIScreen mainScreen] bounds].size.width, hight);
+        CGFloat height = [_customAlert getAlertHeightWithItemArray:_itemArray];
+        _customAlert.frame = CGRectMake(0, [[UIScreen mainScreen] bounds].size.height - height, [[UIScreen mainScreen] bounds].size.width, height);
         __weak typeof(self) weakSelf = self;
         [_customAlert setBackClickIndexBlock:^(NSInteger index) {
             if (weakSelf.alertResult) {

@@ -99,11 +99,11 @@
  
  @return 返回2000-01-01-00:00:00 到现在的秒数
  */
-+ (NSInteger )secondsFrome2000{
++ (NSInteger )secondsFrom2000{
     NSInteger section = 0;
     //1970到现在的秒数-1970到2000的秒数
     section = [[NSDate date] timeIntervalSince1970] - 946684800;
-    //    TeLogInfo(@"new secondsFrome2000=%ld",(long)section);
+    //    TelinkLogInfo(@"new secondsFrom2000=%ld",(long)section);
     return section;
 }
 
@@ -184,11 +184,11 @@
     //原做法：生成的数据长度不足16，弃用
     //    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
     //    NSData *data = [NSData dataWithBytes: &time length: sizeof(time)];
-    //    TeLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
+    //    TelinkLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
     //    if (data.length > 16) {
     //        data = [data subdataWithRange:NSMakeRange(0, 16)];
     //    }
-    //    TeLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
+    //    TelinkLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
     //    return data;
     //新做法：与appkey生成规则一致。
     return [self createRandomDataWithLength:16];
@@ -212,9 +212,9 @@
         key[i] = arc4random() % 256;
     }
     NSData *data = [NSData dataWithBytes:key length:length];
-    //    TeLogInfo(@"createRandomData:%@",data);
+    //    TelinkLogInfo(@"createRandomData:%@",data);
     if (data.length == 0) {
-        TeLogInfo(@"ERROE : createRandomData fail");
+        TelinkLogInfo(@"ERROE : createRandomData fail");
     }
     return data;
 }
@@ -610,9 +610,9 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
 #pragma mark - AES相关
 
 /**
- * @brief   128 bit AES ECB encryption on speicified plaintext and keys
- * @param   inData    Pointer to speicified plaintext.
- * @param   in_len    The length of speicified plaintext.
+ * @brief   128 bit AES ECB encryption on specified plaintext and keys
+ * @param   inData    Pointer to specified plaintext.
+ * @param   in_len    The length of specified plaintext.
  * @param   key    keys to encrypt the plaintext.
  * @param   outData    Pointer to binary encrypted data.
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
@@ -627,7 +627,7 @@ int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned c
 }
 
 /**
- * @brief   128 bit AES ECB decryption on speicified encrypted data and keys
+ * @brief   128 bit AES ECB decryption on specified encrypted data and keys
  * @param   inData    Pointer to encrypted data.
  * @param   in_len    The length of encrypted data.
  * @param   key    keys to decrypt the encrypted data.

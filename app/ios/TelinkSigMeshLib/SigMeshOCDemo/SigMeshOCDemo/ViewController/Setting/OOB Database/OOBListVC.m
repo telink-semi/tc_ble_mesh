@@ -156,7 +156,7 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             SigOOBModel *model = self.sourceArray[indexPath.row];
-            TeLogDebug(@"%@",indexPath);
+            TelinkLogDebug(@"%@",indexPath);
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete oob data, UUID:%@",model.UUIDString];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

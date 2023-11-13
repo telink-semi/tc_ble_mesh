@@ -37,7 +37,7 @@
 /// Tips Title of Provision Mode
 #define kProvisionModeTitle  @"Provision Mode"
 /// Tips message of Provision Mode
-#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\n1. Scan for an unprovisioned device, connect and provision;\n\n2. Keep the connection state, send scan command to the device;\n\n3. Some remote devices info will be upload;\n\n4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh devcie."
+#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\n1. Scan for an unprovisioned device, connect and provision;\n\n2. Keep the connection state, send scan command to the device;\n\n3. Some remote devices info will be upload;\n\n4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
 /// 3.subscription level
 #define kSubscriptionLevel   @"Enable subscription level service model ID"
 /// Tips Title of subscription level
@@ -202,7 +202,7 @@
     __weak typeof(self) weakSelf = self;
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Reset all settings to default values?" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        TeLogDebug(@"点击确认");
+        TelinkLogDebug(@"点击确认");
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:KeyBindType_Normal] forKey:kKeyBindType];
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:ProvisionMode_normalSelectable] forKey:kProvisionMode];
         if ([SigDataSource.share.defaultGroupSubscriptionModels containsObject:@(kSigModel_GenericLevelServer_ID)]) {
@@ -218,7 +218,7 @@
         [weakSelf showTips:@"Reset all settings success!"];
     }]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        TeLogDebug(@"点击取消");
+        TelinkLogDebug(@"点击取消");
         
     }]];
     [self presentViewController:alertController animated:YES completion:nil];

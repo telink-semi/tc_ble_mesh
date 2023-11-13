@@ -123,7 +123,7 @@
     for (CommandModel *model in self.commands) {
         UIAlertAction *alertT = [UIAlertAction actionWithTitle:model.name style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             weakSelf.commandIndex = [weakSelf.commands indexOfObject:model];
-            TeLogInfo(@"index=%d,name=%@",weakSelf.commandIndex,model.name);
+            TelinkLogInfo(@"index=%d,name=%@",weakSelf.commandIndex,model.name);
             [weakSelf refreshFirstCommandUI];
         }];
         [actionSheet addAction:alertT];
@@ -227,7 +227,7 @@
 }
 
 - (void)showNewLogMessage:(NSString *)msg{
-    TeLogInfo(@"%@",msg);
+    TelinkLogInfo(@"%@",msg);
     NSDateFormatter *dformatter = [[NSDateFormatter alloc] init];
     dformatter.dateFormat =@"HH:mm:ss.SSS";
     self.logString = [self.logString stringByAppendingString:[NSString stringWithFormat:@"%@ %@\n",[dformatter stringFromDate:[NSDate date]],msg]];
@@ -246,7 +246,7 @@
 }
 
 - (void)dealloc {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
 }
 
 @end

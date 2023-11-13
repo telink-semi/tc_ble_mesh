@@ -28,7 +28,7 @@
 
 
 /// The base class of every mesh message. Mesh messages can be sent and
-/// and recieved from the mesh network. For messages with the opcode known
+/// and received from the mesh network. For messages with the opcode known
 /// during compilation a `StaticMeshMessage` protocol should be preferred.
 ///
 /// Parameters `security` and `isSegmented` are checked and should be set
@@ -111,9 +111,9 @@
 
 - (void)showMeshMessageSecurity:(SigMeshMessageSecurity)meshMessageSecurity {
     if (meshMessageSecurity == SigMeshMessageSecurityLow) {
-        TeLogInfo(@"Low (32-bit TransMIC)");
+        TelinkLogInfo(@"Low (32-bit TransMIC)");
     } else {
-        TeLogInfo(@"High (64-bit TransMIC)");
+        TelinkLogInfo(@"High (64-bit TransMIC)");
     }
 }
 

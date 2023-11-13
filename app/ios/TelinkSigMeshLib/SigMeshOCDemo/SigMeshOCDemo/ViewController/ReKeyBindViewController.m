@@ -35,7 +35,7 @@
 @implementation ReKeyBindViewController
 
 - (IBAction)kickOut:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     self.hasClickKickout = YES;
     [ShowTipsHandle.share show:Tip_KickoutDevice];
         
@@ -48,7 +48,7 @@
 }
 
 - (IBAction)keyBind:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     self.hasClickKeyBind = YES;
     [self blockState];
     [ShowTipsHandle.share show:Tip_ReKeyBindDevice];
@@ -97,7 +97,7 @@
 }
 
 - (void)showKeyBindSuccess {
-    TeLogDebug(@"reKeyBind success");
+    TelinkLogDebug(@"reKeyBind success");
     dispatch_async(dispatch_get_main_queue(), ^{
         [ShowTipsHandle.share show:Tip_ReKeyBindDeviceSuccess];
         [ShowTipsHandle.share delayHidden:3.0];
@@ -117,16 +117,16 @@
 }
 
 - (void)showKeyBindFail{
-    TeLogVerbose(@"reKeyBind fail");
+    TelinkLogVerbose(@"reKeyBind fail");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
     });
     [ShowTipsHandle.share hidden];
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            TeLogDebug(@"stopMeshConnect success");
+            TelinkLogDebug(@"stopMeshConnect success");
         } else {
-            TeLogDebug(@"stopMeshConnect fail");
+            TelinkLogDebug(@"stopMeshConnect fail");
         }
     }];
     
@@ -142,15 +142,15 @@
 }
 
 - (void)kickoutAction{
-    TeLogDebug(@"send kickout.");
+    TelinkLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
     _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (isResponseAll) {
-            TeLogDebug(@"kickout success.");
+            TelinkLogDebug(@"kickout success.");
         } else {
-            TeLogDebug(@"kickout fail.");
+            TelinkLogDebug(@"kickout fail.");
         }
         [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -199,6 +199,6 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 @end

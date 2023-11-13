@@ -66,7 +66,7 @@
             _stateLabel.text = @"UNBIND";
             break;
         case AddDeviceModelStateScanned:
-            _stateLabel.text = @"SCANED";
+            _stateLabel.text = @"SCANNED";
             break;
         case AddDeviceModelStateConnecting:
             _stateLabel.text = @"CONNECTING";

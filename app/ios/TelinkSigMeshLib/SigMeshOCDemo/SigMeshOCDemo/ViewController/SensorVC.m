@@ -64,7 +64,7 @@
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand sendOpINIData:iniData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",(unsigned int)responseMessage.opCode,responseMessage.parameters];
-        TeLogVerbose(@"%@",str);
+        TelinkLogVerbose(@"%@",str);
         [weakSelf showNewLogMessage:str];
         if (responseMessage.opCode == 0xE11102 && source == weakSelf.model.address) {
             UInt16 h = 0,t = 0;
@@ -78,13 +78,13 @@
             [weakSelf showNewLogMessage:[NSString stringWithFormat:@"response:%@,h=%d,t=%d",responseMessage.parameters,h,t]];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogVerbose(@"");
+        TelinkLogVerbose(@"");
     }];
-    TeLogInfo(@"send ini:%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
+    TelinkLogInfo(@"send ini:%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
 }
 
 //- (IBAction)clickKictOut:(UIButton *)sender {
-//    TeLogDebug(@"");
+//    TelinkLogDebug(@"");
 //    self.hasClickKickout = YES;
 //    [ShowTipsHandle.share show:Tip_KickoutDevice];
 //    
@@ -99,10 +99,10 @@
 //}
 //
 //- (void)kickoutAction{
-//    TeLogDebug(@"");
+//    TelinkLogDebug(@"");
 //    __weak typeof(self) weakSelf = self;
 //    [DemoCommand kickoutDevice:self.model.address retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-//        TeLogDebug(@"delete device success.");
+//        TelinkLogDebug(@"delete device success.");
 //        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
 //        [weakSelf pop];
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -135,7 +135,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

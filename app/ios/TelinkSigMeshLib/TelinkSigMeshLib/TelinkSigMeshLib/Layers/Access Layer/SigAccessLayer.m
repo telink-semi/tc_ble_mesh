@@ -169,7 +169,7 @@
 }
 
 - (void)dealloc {
-    TeLogWarn(@"_reliableMessageContexts=%@",_reliableMessageContexts);
+    TelinkLogWarn(@"_reliableMessageContexts=%@",_reliableMessageContexts);
     [_transactions removeAllObjects];
     NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
     for (SigAcknowledgmentContext *model in reliableMessageContexts) {
@@ -186,7 +186,7 @@
 - (void)handleUpperTransportPdu:(SigUpperTransportPdu *)upperTransportPdu sentWithSigKeySet:(SigKeySet *)keySet {
     SigAccessPdu *accessPdu = [[SigAccessPdu alloc] initFromUpperTransportPdu:upperTransportPdu];
     if (accessPdu == nil) {
-        TeLogError(@"handleUpperTransportPdu fail.");
+        TelinkLogError(@"handleUpperTransportPdu fail.");
         return;
     }
     // If a response to a sent request has been received, cancel the context.
@@ -207,7 +207,7 @@
         [context invalidate];
         [_reliableMessageContexts removeObjectAtIndex:index];
     }
-//    TeLogInfo(@"receieved:%@",accessPdu);
+//    TelinkLogInfo(@"receieved:%@",accessPdu);
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
 }
 
@@ -241,7 +241,7 @@
             }
             m = genericMessage;
         }
-//        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+//        TelinkLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
     } else if ([message isKindOfClass:[SigIniMeshMessage class]] && command.tidPosition != 0) {
         if (command.tidPosition != 0) {
             UInt8 tid = command.tid;
@@ -262,7 +262,7 @@
     }
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
     SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
-    TeLogInfo(@"Sending message:%@->%@",message.class,pdu);
+    TelinkLogInfo(@"Sending message:%@->%@",message.class,pdu);
     
     _networkManager.accessLayer.accessPdu = pdu;
     [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
@@ -290,7 +290,7 @@
     }
     SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithAddress:destination];
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:message sentFromLocalElement:element toDestination:meshAddress userInitiated:YES];
-    TeLogInfo(@"Sending %@ %@",message,pdu);
+    TelinkLogInfo(@"Sending %@ %@",message,pdu);
     SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:networkKey node:node];
     
     _networkManager.accessLayer.accessPdu = pdu;
@@ -305,7 +305,7 @@
 /// @param keySet The set of keys that the message was encrypted with.
 /// @param command The command of the message.
 - (void)replyToMessageSentToOrigin:(UInt16)origin withMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
-    TeLogInfo(@"Replying with %@ from: %@, to: 0x%x",message,element,destination);
+    TelinkLogInfo(@"Replying with %@ from: %@, to: 0x%x",message,element,destination);
     SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithAddress:destination];
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:message sentFromLocalElement:element toDestination:meshAddress userInitiated:NO];
     
@@ -320,7 +320,7 @@
     float delay = [SigHelper.share isUnicastAddress:origin] ? [SigHelper.share getRandomfromA:0.020 toB:0.050] : [SigHelper.share getRandomfromA:0.020 toB:0.500];
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        TeLogInfo(@"Sending %@",pdu);
+        TelinkLogInfo(@"Sending %@",pdu);
         UInt8 ttl = element.getParentNode.defaultTTL;
         if (![SigHelper.share isRelayedTTL:ttl]) {
             ttl = weakSelf.networkManager.defaultTtl;
@@ -332,7 +332,7 @@
 /// Cancels sending the message with the given handle.
 /// @param handle The message handle.
 - (void)cancelSigMessageHandle:(SigMessageHandle *)handle {
-//    TeLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
+//    TelinkLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
     NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
     for (SigAcknowledgmentContext *model in reliableMessageContexts) {
         if (model.request.opCode == handle.opCode && model.source == handle.source &&
@@ -364,11 +364,11 @@
 ///
 /// @param accessPdu The Access PDU received.
 /// @param keySet The set of keys that the message was encrypted with.
-/// @param request The previosly sent request message, that the received message responds to, or `nil`, if no request has been sent.
+/// @param request The previously sent request message, that the received message responds to, or `nil`, if no request has been sent.
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(nullable SigAcknowledgedMeshMessage *)request {
     SigNodeModel *localNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (localNode == nil) {
-        TeLogError(@"localNode error.");
+        TelinkLogError(@"localNode error.");
         return;
     }
     
@@ -386,7 +386,7 @@
 }
 
 - (void)removeAllTimeoutTimerInreliableMessageContexts {
-    TeLogInfo(@"============9.3.AccessError.timeout");
+    TelinkLogInfo(@"============9.3.AccessError.timeout");
     NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
     for (SigAcknowledgmentContext *context in reliableMessageContexts) {
         if (context.timeoutTimer == nil) {

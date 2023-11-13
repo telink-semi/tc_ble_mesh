@@ -128,7 +128,7 @@
 
 - (void)dealloc
 {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     if (_scanView) {
         [self.scanView stop];
     }

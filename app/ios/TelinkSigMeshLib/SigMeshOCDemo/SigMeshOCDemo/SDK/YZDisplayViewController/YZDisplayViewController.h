@@ -32,7 +32,7 @@ typedef enum : NSUInteger {
 /**
     标题是否需要跟随拖动保持居中
  */
-@property (nonatomic, assign) BOOL dragingFollow;
+@property (nonatomic, assign) BOOL draggingFollow;
 
 /**
     如果_isfullScreen = Yes，这个方法就不好使。

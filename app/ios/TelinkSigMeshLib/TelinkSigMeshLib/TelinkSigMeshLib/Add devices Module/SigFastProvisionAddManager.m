@@ -103,14 +103,14 @@
 /// @param productId  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api.
 /// @param compositionData compositionData of node in this productId.
 /// @param unprovisioned current Connected Node Is Unprovisioned?
-/// @param scanResponseBlock callback when SDK scaned unprovision devcie successful.
-/// @param startProvisionBlock callback when SDK start provision devcie.
-/// @param singleSuccess callback when SDK add single devcie successful.
+/// @param scanResponseBlock callback when SDK scanned unprovision device successful.
+/// @param startProvisionBlock callback when SDK start provision device.
+/// @param singleSuccess callback when SDK add single device successful.
 /// @param finish callback when fast provision finish, fast provision successful when error is nil.
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish {
     if (self.fastProvisionStatus != SigFastProvisionStatus_idle) {
         NSString *errstr = [NSString stringWithFormat:@"fastProvisionStatus is %d, needn't call again.",self.fastProvisionStatus];
-        TeLogError(@"%@",errstr);
+        TelinkLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (finish) {
             finish(err);
@@ -156,7 +156,7 @@
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productIds:(NSArray <NSNumber *>*)productIds currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish {
     if (self.fastProvisionStatus != SigFastProvisionStatus_idle) {
         NSString *errstr = [NSString stringWithFormat:@"fastProvisionStatus is %d, needn't call again.",self.fastProvisionStatus];
-        TeLogError(@"%@",errstr);
+        TelinkLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (finish) {
             finish(err);
@@ -181,14 +181,14 @@
 
 #pragma mark step1: resetNetwork
 - (void)resetNetwork {
-    TeLogInfo(@"\n\n==========fast provision:step1\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step1\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_resetNetwork;
     self.setAddressList = [NSMutableArray array];
     UInt16 delayMillisecond = 1000;
     [self fastProvisionResetNetworkWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getAddress) object:nil];
@@ -198,7 +198,7 @@
 
 #pragma mark step2: getAddress
 - (void)getAddress {
-    TeLogInfo(@"\n\n==========fast provision:step2\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step2\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_getAddress;
     self.scanMacAddressList = [NSMutableArray array];
     __weak typeof(self) weakSelf = self;
@@ -246,12 +246,12 @@
 
 #pragma mark step3: setAddress
 - (void)setAddress {
-    TeLogInfo(@"\n\n==========fast provision:step3\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step3\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_setAddress;
     SigFastProvisionModel *model = self.scanMacAddressList.firstObject;
     __weak typeof(self) weakSelf = self;
     [self fastProvisionSetAddressWithProvisionAddress:self.provisionAddress macAddressData:model.macAddress toDestination:model.sourceUnicastAddress successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressSetStatus) {
             if (responseMessage.parameters.length >= 8) {
                 NSData *mac = [responseMessage.parameters subdataWithRange:NSMakeRange(0, 6)];
@@ -264,16 +264,16 @@
                     DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:model.productId];
                     weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
                 } else {
-                    TeLogInfo(@"set address response error!");
+                    TelinkLogInfo(@"set address response error!");
                 }
             } else {
-                TeLogInfo(@"set address response error!");
+                TelinkLogInfo(@"set address response error!");
             }
         } else {
-            TeLogInfo(@"set address response error!");
+            TelinkLogInfo(@"set address response error!");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         [weakSelf.scanMacAddressList removeObjectAtIndex:0];
         [weakSelf setSingleAddressFinish];
     }];
@@ -289,13 +289,13 @@
 
 #pragma mark step4: getAddressRetry
 - (void)getAddressRetry {
-    TeLogInfo(@"\n\n==========fast provision:step4\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step4\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_getAddressRetry;
     self.scanMacAddressList = [NSMutableArray array];
     __weak typeof(self) weakSelf = self;
     UInt16 productId = self.productIds.count > 1 ? 0xFFFF : self.productIds.firstObject.intValue;
     [self fastProvisionGetAddressRetryWithProductId:productId provisionAddress:self.provisionAddress successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressGetStatus) {
             SigFastProvisionModel *model = [[SigFastProvisionModel alloc] init];
             if (responseMessage.parameters.length >= 8) {
@@ -318,7 +318,7 @@
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getAddressRetryFinish) object:nil];
@@ -338,8 +338,8 @@
             [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
                 
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                NSString *errstr = @"SigFastProvisionAddManager scaned unprovision device fail.";
-                TeLogError(@"%@",errstr);
+                NSString *errstr = @"SigFastProvisionAddManager scanned unprovision device fail.";
+                TelinkLogError(@"%@",errstr);
                 NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf performSelector:@selector(callbackFastProvisionError:) withObject:err afterDelay:0.3];
@@ -351,16 +351,16 @@
 
 #pragma mark step5: setNetworkInfo
 - (void)setNetworkInfo {
-    TeLogInfo(@"\n\n==========fast provision:step5\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step5\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_setNetworkInfo;
     if (self.startProvisionBlock) {
         self.startProvisionBlock();
     }
     __weak typeof(self) weakSelf = self;
     [self fastProvisionSetNetworkInfoWithSuccessCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf performSelector:@selector(confirm) withObject:nil afterDelay:0.5];
         });
@@ -369,17 +369,17 @@
 
 #pragma mark step6: confirm
 - (void)confirm {
-    TeLogInfo(@"\n\n==========fast provision:step6\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step6\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_confirm;
     __weak typeof(self) weakSelf = self;
     __block BOOL hasResponse = NO;
     [self fastProvisionConfirmWithSuccessCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshProvisionConfirmStatus) {
             hasResponse = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (hasResponse) {
             [weakSelf setNetworkInfo];
         } else {
@@ -390,14 +390,14 @@
 
 #pragma mark step7: complete
 - (void)complete {
-    TeLogInfo(@"\n\n==========fast provision:step7\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:step7\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_confirmOk;
     UInt16 delayMillisecond = 1000;
 //    __weak typeof(self) weakSelf = self;
     [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fastProvisionSuccessAction) object:nil];
@@ -406,7 +406,7 @@
 }
 
 - (void)fastProvisionSuccessAction {
-    TeLogInfo(@"\n\n==========fast provision:Success.\n\n");
+    TelinkLogInfo(@"\n\n==========fast provision:Success.\n\n");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
@@ -457,7 +457,7 @@
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (weakSelf.finishBlock) {
                 NSString *errstr = [NSString stringWithFormat:@"Fast provision is timeout:60s, current status is %d.",weakSelf.fastProvisionStatus];
-                TeLogError(@"%@",errstr);
+                TelinkLogError(@"%@",errstr);
                 NSError *err = [NSError errorWithDomain:errstr code:-weakSelf.fastProvisionStatus userInfo:nil];
                 weakSelf.finishBlock(err);
             }
@@ -466,7 +466,7 @@
     } else {
         if (self.finishBlock) {
             NSString *errstr = [NSString stringWithFormat:@"Device is disconnected! Fast provision is fail, current status is %d.",self.fastProvisionStatus];
-            TeLogError(@"%@",errstr);
+            TelinkLogError(@"%@",errstr);
             NSError *err = [NSError errorWithDomain:errstr code:-self.fastProvisionStatus userInfo:nil];
             self.finishBlock(err);
         }

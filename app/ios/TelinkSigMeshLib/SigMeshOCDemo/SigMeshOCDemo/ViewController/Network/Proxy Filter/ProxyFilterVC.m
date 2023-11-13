@@ -65,7 +65,7 @@
         textField.text = @"";
     }];
     [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        TeLogDebug(@"输入address完成");
+        TelinkLogDebug(@"输入address完成");
         UITextField *addressTF = inputAlertController.textFields.firstObject;
         //check input length
         if (addressTF.text.length == 0) {
@@ -80,7 +80,7 @@
             return;
         }
         UInt16 address = [LibTools uint16From16String:addressTF.text];
-        TeLogDebug(@"输入address=%d",address);
+        TelinkLogDebug(@"输入address=%d",address);
         if ([weakSelf.filterModel.addressList containsObject:@(address)]) {
             [weakSelf showTips:[NSString stringWithFormat:@"Add fail! The address 0x%04X already exists.", address]];
             return;
@@ -93,7 +93,7 @@
             [weakSelf refreshSourceAndUI];
         }]];
         [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击取消");
+            TelinkLogDebug(@"点击取消");
         }]];
         [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
     }]];
@@ -130,7 +130,7 @@
             }
             UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:[NSString stringWithFormat:@"Are you sure delete address: 0x%04X?", address.intValue] preferredStyle:UIAlertControllerStyleAlert];
             [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"点击确认");
+                TelinkLogDebug(@"点击确认");
                 [weakSelf.filterModel.addressList removeObject:address];
                 NSDictionary *dict = [weakSelf.filterModel getDictionaryOfSigProxyFilterModel];
                 NSData *filterData = [LibTools getJSONDataWithDictionary:dict];
@@ -139,7 +139,7 @@
                 [weakSelf refreshSourceAndUI];
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"点击取消");
+                TelinkLogDebug(@"点击取消");
                 
             }]];
             [self presentViewController:alertController animated:YES completion:nil];

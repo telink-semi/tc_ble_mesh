@@ -41,7 +41,7 @@
 @implementation AddBridgeTableVC
 
 - (IBAction)addBridgingTable:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigBearer.share.isOpen) {
         if (self.model.state != DeviceStateOutOfLine) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -52,7 +52,7 @@
             __weak typeof(self) weakSelf = self;
             __block BOOL hasFail = NO;
             _messageHandle = [SDKLibCommand bridgeTableAddWithDestination:self.model.address subnetBridge:self.bridgeModel retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (responseMessage.status == SigConfigMessageStatus_success) {
                     [weakSelf.model.subnetBridgeList addObject:weakSelf.bridgeModel];
                     [SigDataSource.share saveLocationData];
@@ -62,7 +62,7 @@
                     [ShowTipsHandle.share show:[NSString stringWithFormat:@"add Subnet Bridge to node fail! error status=%d",responseMessage.status]];
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(addSubnetBridgeTimeOut) object:nil];
                     if (!isResponseAll || error || hasFail) {

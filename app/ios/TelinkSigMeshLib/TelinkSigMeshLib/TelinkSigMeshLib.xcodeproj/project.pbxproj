@@ -197,9 +197,7 @@
 		25D88C172361458500D4F0F7 /* SigLowerTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		25D88C182361458500D4F0F7 /* SigAccessMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C082361458500D4F0F7 /* SigAccessMessage.m */; };
 		25D88C1F2361459100D4F0F7 /* SigUpperTransportPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */; };
-		25D88C202361459100D4F0F7 /* SigHearbeatMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */; };
 		25D88C212361459100D4F0F7 /* SigUpperTransportLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */; };
-		25D88C222361459100D4F0F7 /* SigHearbeatMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25D88C232361459100D4F0F7 /* SigUpperTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		25D88C242361459100D4F0F7 /* SigUpperTransportLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		25D88C2F236148FF00D4F0F7 /* CBUUID+Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -244,6 +242,8 @@
 		9169645E2AC56AEC0010D34A /* OTSCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964212AC56AEC0010D34A /* OTSCommand.m */; };
 		916964602AC56AEC0010D34A /* OTSBaseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 916964222AC56AEC0010D34A /* OTSBaseModel.m */; };
 		916964622AC56AEC0010D34A /* CDTPServiceModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 916964232AC56AEC0010D34A /* CDTPServiceModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916B2B1B2B01C01A0014B8FF /* SigHeartbeatMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 916B2B192B01C01A0014B8FF /* SigHeartbeatMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		916B2B1C2B01C01A0014B8FF /* SigHeartbeatMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 916B2B1A2B01C01A0014B8FF /* SigHeartbeatMessage.m */; };
 		91C5EAE22A37195D0087C814 /* CBCharacteristic+UUID.h in Headers */ = {isa = PBXBuildFile; fileRef = 91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */; };
 		91C5EAE42A37195D0087C814 /* CBCharacteristic+UUID.m in Sources */ = {isa = PBXBuildFile; fileRef = 91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */; };
 /* End PBXBuildFile section */
@@ -431,9 +431,7 @@
 		25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigLowerTransportPdu.h; sourceTree = "<group>"; };
 		25D88C082361458500D4F0F7 /* SigAccessMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAccessMessage.m; sourceTree = "<group>"; };
 		25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigUpperTransportPdu.m; sourceTree = "<group>"; };
-		25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigHearbeatMessage.m; sourceTree = "<group>"; };
 		25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigUpperTransportLayer.m; sourceTree = "<group>"; };
-		25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigHearbeatMessage.h; sourceTree = "<group>"; };
 		25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigUpperTransportPdu.h; sourceTree = "<group>"; };
 		25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigUpperTransportLayer.h; sourceTree = "<group>"; };
 		25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBUUID+Hex.h"; sourceTree = "<group>"; };
@@ -478,6 +476,8 @@
 		916964212AC56AEC0010D34A /* OTSCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTSCommand.m; sourceTree = "<group>"; };
 		916964222AC56AEC0010D34A /* OTSBaseModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTSBaseModel.m; sourceTree = "<group>"; };
 		916964232AC56AEC0010D34A /* CDTPServiceModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDTPServiceModel.h; sourceTree = "<group>"; };
+		916B2B192B01C01A0014B8FF /* SigHeartbeatMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigHeartbeatMessage.h; sourceTree = "<group>"; };
+		916B2B1A2B01C01A0014B8FF /* SigHeartbeatMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigHeartbeatMessage.m; sourceTree = "<group>"; };
 		91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBCharacteristic+UUID.h"; sourceTree = "<group>"; };
 		91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBCharacteristic+UUID.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -572,8 +572,8 @@
 		25335CCE235ED9EE006C79C1 /* Upper Transport Layer */ = {
 			isa = PBXGroup;
 			children = (
-				25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */,
-				25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */,
+				916B2B192B01C01A0014B8FF /* SigHeartbeatMessage.h */,
+				916B2B1A2B01C01A0014B8FF /* SigHeartbeatMessage.m */,
 				25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */,
 				25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */,
 				25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */,
@@ -1026,6 +1026,7 @@
 				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
 				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
 				916964342AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.h in Headers */,
+				916B2B1B2B01C01A0014B8FF /* SigHeartbeatMessage.h in Headers */,
 				2553955124907AA00095B499 /* srp.h in Headers */,
 				2553951324907A9D0095B499 /* ui.h in Headers */,
 				2553956924907AA20095B499 /* ocsp.h in Headers */,
@@ -1147,7 +1148,6 @@
 				2553950524907A9C0095B499 /* bn.h in Headers */,
 				2553952524907A9E0095B499 /* opensslconf-armv7.h in Headers */,
 				2553954924907AA00095B499 /* pkcs7.h in Headers */,
-				25D88C222361459100D4F0F7 /* SigHearbeatMessage.h in Headers */,
 				255394FD24907A9B0095B499 /* ssl3.h in Headers */,
 				2553951D24907A9D0095B499 /* opensslconf.h in Headers */,
 				916964422AC56AEC0010D34A /* SDKLibCommand+directForwarding.h in Headers */,
@@ -1316,6 +1316,7 @@
 				25D88BF22361456C00D4F0F7 /* SigAccessLayer.m in Sources */,
 				25D88C112361458500D4F0F7 /* SigControlMessage.m in Sources */,
 				25335F3A235EE873006C79C1 /* SigDataSource.m in Sources */,
+				916B2B1C2B01C01A0014B8FF /* SigHeartbeatMessage.m in Sources */,
 				25B95FEF238E595600244D14 /* SigConst.m in Sources */,
 				25D88C182361458500D4F0F7 /* SigAccessMessage.m in Sources */,
 				256A68BA2459129C00131CC4 /* TelinkHttpManager.m in Sources */,
@@ -1328,7 +1329,6 @@
 				25D88BF42361456C00D4F0F7 /* SigAccessPdu.m in Sources */,
 				25335F11235ED9F2006C79C1 /* OpenSSLHelper.m in Sources */,
 				25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */,
-				25D88C202361459100D4F0F7 /* SigHearbeatMessage.m in Sources */,
 				91C5EAE42A37195D0087C814 /* CBCharacteristic+UUID.m in Sources */,
 				25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */,
 				916964362AC56AEC0010D34A /* MeshOTAManager.m in Sources */,
