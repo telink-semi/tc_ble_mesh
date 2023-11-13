@@ -199,7 +199,7 @@
                         deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID compositionData:nil];
                     }
                     if (deviceType.defaultCompositionData.elements == nil || deviceType.defaultCompositionData.elements.count == 0) {
-                        TelinkLogError(@"defaultCompositionData had setted to CT");
+                        TelinkLogError(@"defaultCompositionData had set to CT");
                         deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:1 compositionData:nil];
                     }
                     weakSelf.page = deviceType.defaultCompositionData;

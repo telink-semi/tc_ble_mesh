@@ -28,7 +28,7 @@
 #define kRSSIThresholdValue (-80)
 
 /*
- Developer can get more detail by read doucment named "SIG Mesh iOS APP(OC版本)使用以及开发手册.docx".
+ Developer can get more detail by read document named "SIG Mesh iOS APP(OC版本)使用以及开发手册.docx".
  */
 
 @interface RemoteAddVC ()<UICollectionViewDelegate,UICollectionViewDataSource>

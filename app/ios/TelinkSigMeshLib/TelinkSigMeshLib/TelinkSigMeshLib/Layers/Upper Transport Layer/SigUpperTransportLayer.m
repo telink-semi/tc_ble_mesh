@@ -167,7 +167,7 @@
 /// @param handle The message handle.
 - (void)cancelHandleSigMessageHandle:(SigMessageHandle *)handle {
     BOOL shouldSendNext = NO;
-    // Check if the message that is currently being sent mathes the
+    // Check if the message that is currently being sent matches the
     // handler data. If so, cancel it.
     NSMutableArray *array = _queues[@(handle.destination)];
     if (array == nil || array.count == 0) {

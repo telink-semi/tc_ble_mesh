@@ -166,8 +166,8 @@
  */
 - (nullable CBCharacteristic *)getCBCharacteristicWithUUIDString:(NSString *)uuidString ofPeripheral:(CBPeripheral *)peripheral {
     CBCharacteristic *c = nil;
-    for (CBService *ser in peripheral.services) {
-        for (CBCharacteristic *cha in ser.characteristics) {
+    for (CBService *service in peripheral.services) {
+        for (CBCharacteristic *cha in service.characteristics) {
             if ([cha.UUID.UUIDString.uppercaseString isEqualToString:uuidString.uppercaseString]) {
                 c = cha;
                 break;

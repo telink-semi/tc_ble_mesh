@@ -660,10 +660,10 @@ static NSString * const ID = @"CONTENTCELL";
     if (_isShowTitleGradient == NO) return;
     
     // 获取右边缩放
-    CGFloat rightSacle = offsetX / YZScreenW - leftLabel.tag;
+    CGFloat rightScale = offsetX / YZScreenW - leftLabel.tag;
     
     // 获取左边缩放比例
-    CGFloat leftScale = 1 - rightSacle;
+    CGFloat leftScale = 1 - rightScale;
     
     // RGB渐变
     if (_titleColorGradientStyle == YZTitleColorGradientStyleRGB) {
@@ -674,7 +674,7 @@ static NSString * const ID = @"CONTENTCELL";
         
         // rightColor
         // 1 0 0
-        UIColor *rightColor = [UIColor colorWithRed:_startR + r * rightSacle green:_startG + g * rightSacle blue:_startB + b * rightSacle alpha:1];
+        UIColor *rightColor = [UIColor colorWithRed:_startR + r * rightScale green:_startG + g * rightScale blue:_startB + b * rightScale alpha:1];
         
         // 0.3 0 0
         // 1 -> 0.3
@@ -698,21 +698,21 @@ static NSString * const ID = @"CONTENTCELL";
         if (offsetDelta > 0) { // 往右边
             rightLabel.textColor = self.norColor;
             rightLabel.fillColor = self.selColor;
-            rightLabel.progress = rightSacle;
+            rightLabel.progress = rightScale;
             
             leftLabel.textColor = self.selColor;
             leftLabel.fillColor = self.norColor;
-            leftLabel.progress = rightSacle;
+            leftLabel.progress = rightScale;
             
         } else if(offsetDelta < 0){ // 往左边
             
             rightLabel.textColor = self.norColor;
             rightLabel.fillColor = self.selColor;
-            rightLabel.progress = rightSacle;
+            rightLabel.progress = rightScale;
             
             leftLabel.textColor = self.selColor;
             leftLabel.fillColor = self.norColor;
-            leftLabel.progress = rightSacle;
+            leftLabel.progress = rightScale;
             
         }
     }
@@ -724,9 +724,9 @@ static NSString * const ID = @"CONTENTCELL";
     if (_isShowTitleScale == NO) return;
     
     // 获取右边缩放
-    CGFloat rightSacle = offsetX / YZScreenW - leftLabel.tag;
+    CGFloat rightScale = offsetX / YZScreenW - leftLabel.tag;
     
-    CGFloat leftScale = 1 - rightSacle;
+    CGFloat leftScale = 1 - rightScale;
     
     CGFloat scaleTransform = _titleScale?_titleScale:YZTitleTransformScale;
     
@@ -736,7 +736,7 @@ static NSString * const ID = @"CONTENTCELL";
     leftLabel.transform = CGAffineTransformMakeScale(leftScale * scaleTransform + 1, leftScale * scaleTransform + 1);
     
     // 1 ~ 1.3
-    rightLabel.transform = CGAffineTransformMakeScale(rightSacle * scaleTransform + 1, rightSacle * scaleTransform + 1);
+    rightLabel.transform = CGAffineTransformMakeScale(rightScale * scaleTransform + 1, rightScale * scaleTransform + 1);
 }
 
 // 获取两个标题按钮宽度差值

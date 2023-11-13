@@ -41,10 +41,10 @@
         if (self.model.state != DeviceStateOutOfLine) {
             [self pushToAddBridgingTableVC];
         } else {
-            [self showTips:@"The node is offline, app cann`t add bridge table."];
+            [self showTips:@"The node is offline, app can not add bridge table."];
         }
     } else {
-        [self showTips:@"The mesh is offline, app cann`t add bridge table."];
+        [self showTips:@"The mesh is offline, app can not add bridge table."];
     }
 }
 
@@ -68,11 +68,11 @@
                 }];
             } else {
                 sender.on = !sender.on;
-                [self showTips:@"The node is offline, app cann`t set subnet bridge."];
+                [self showTips:@"The node is offline, app can not set subnet bridge."];
             }
         } else {
             sender.on = !sender.on;
-            [self showTips:@"The mesh is offline, app cann`t set subnet bridge."];
+            [self showTips:@"The mesh is offline, app can not set subnet bridge."];
         }
     }
 }
@@ -103,10 +103,10 @@
 
                 }];
             } else {
-                [self showTips:@"The node is offline, app cann`t remove bridge table."];
+                [self showTips:@"The node is offline, app can not remove bridge table."];
             }
         } else {
-            [self showTips:@"The mesh is offline, app cann`t remove bridge table."];
+            [self showTips:@"The mesh is offline, app can not remove bridge table."];
         }
     }
 }

@@ -4627,7 +4627,7 @@
 }
 
 - (UInt16)getIntModelIdentifier {
-    //sig model:1306 vendor mdoel:00010211
+    //sig model:1306 vendor model:00010211
     //ModelID+CID = vendorModelID
     UInt16 tem = 0;
     if (self.isBluetoothSIGAssigned) {
@@ -4640,7 +4640,7 @@
 
 - (UInt16)getIntCompanyIdentifier {
     //ModelID+CID = vendorModelID
-    //sig model:1306 vendor mdoel:00010211
+    //sig model:1306 vendor model:00010211
     UInt16 tem = 0;
     if (self.isVendorModelID) {
         tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
@@ -5540,7 +5540,7 @@
         memcpy(&octet0, dataByte, 1);
 
         if (octet0 == 0b01111111) {
-            TelinkLogError(@"Opcode 0b01111111 is reseved for future use.");
+            TelinkLogError(@"Opcode 0b01111111 is reserved for future use.");
             return nil;
         }
 

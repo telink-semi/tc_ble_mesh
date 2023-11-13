@@ -230,13 +230,13 @@
     [self addLocationNodeWithProvisioner:provisioner];
 
     //5.add default group
-    Groups *defultGroup = [[Groups alloc] init];
+    Groups *defaultGroup = [[Groups alloc] init];
     [_groups removeAllObjects];
-    for (int i=0; i<defultGroup.groupCount; i++) {
+    for (int i=0; i<defaultGroup.groupCount; i++) {
         SigGroupModel *group = [[SigGroupModel alloc] init];
         group.address = [NSString stringWithFormat:@"%04X",0xc000+i];
         group.parentAddress = [NSString stringWithFormat:@"%04X",0];
-        group.name = defultGroup.names[i];
+        group.name = defaultGroup.names[i];
         [_groups addObject: group];
     }
 
@@ -982,7 +982,7 @@
         TelinkLogInfo(@"exist local provisioner, needn't create");
     }else{
         //don't exist local provisioner, create and add to SIGDataSource.provisioners, then save location.
-        //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
+        //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress can not bigger than 0x7fff.
         if (self.provisioners.count <= 0x7f) {
             SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:[self getMaxHighAllocatedUnicastAddress] andProvisionerUUID:[self getCurrentProvisionerUUID]];
             [_provisioners addObject:provisioner];
@@ -990,7 +990,7 @@
             _timestamp = [LibTools getNowTimeStringOfJson];
             [self saveLocationData];
         }else{
-            TelinkLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
+            TelinkLogInfo(@"warning: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
             return;
         }
     }

@@ -43,7 +43,7 @@
     if (SigBearer.share.isOpen) {
         [self pushToAddForwardingTableVC];
     } else {
-        [self showTips:@"The mesh is offline, app cann`t add forwarding table."];
+        [self showTips:@"The mesh is offline, app can not add forwarding table."];
     }
 }
 
@@ -86,7 +86,7 @@
                 [weakSelf removeForwardingTableFromDataSource:forwardingTable];
             }];
         } else {
-            [self showTips:@"The mesh is offline, app cann`t remove forwarding table."];
+            [self showTips:@"The mesh is offline, app can not remove forwarding table."];
         }
     }
 }

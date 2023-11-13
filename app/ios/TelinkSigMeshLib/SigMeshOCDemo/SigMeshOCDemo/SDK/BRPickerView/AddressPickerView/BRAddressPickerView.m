@@ -105,12 +105,12 @@
 #pragma mark - 获取模型数组
 - (NSArray <BRProvinceModel *>*)getProvinceModelArr:(NSArray *)dataSourceArr {
     NSMutableArray *tempArr1 = [NSMutableArray array];
-    for (NSDictionary *proviceDic in dataSourceArr) {
-        BRProvinceModel *proviceModel = [[BRProvinceModel alloc]init];
-        proviceModel.code = [proviceDic objectForKey:@"code"];
-        proviceModel.name = [proviceDic objectForKey:@"name"];
-        proviceModel.index = [dataSourceArr indexOfObject:proviceDic];
-        NSArray *cityList = [proviceDic.allKeys containsObject:@"cityList"] ? [proviceDic objectForKey:@"cityList"] : [proviceDic objectForKey:@"citylist"];
+    for (NSDictionary *provinceDic in dataSourceArr) {
+        BRProvinceModel *provinceModel = [[BRProvinceModel alloc]init];
+        provinceModel.code = [provinceDic objectForKey:@"code"];
+        provinceModel.name = [provinceDic objectForKey:@"name"];
+        provinceModel.index = [dataSourceArr indexOfObject:provinceDic];
+        NSArray *cityList = [provinceDic.allKeys containsObject:@"cityList"] ? [provinceDic objectForKey:@"cityList"] : [provinceDic objectForKey:@"citylist"];
         NSMutableArray *tempArr2 = [NSMutableArray array];
         for (NSDictionary *cityDic in cityList) {
             BRCityModel *cityModel = [[BRCityModel alloc]init];
@@ -129,8 +129,8 @@
             cityModel.arealist = [tempArr3 copy];
             [tempArr2 addObject:cityModel];
         }
-        proviceModel.citylist = [tempArr2 copy];
-        [tempArr1 addObject:proviceModel];
+        provinceModel.citylist = [tempArr2 copy];
+        [tempArr1 addObject:provinceModel];
     }
     return [tempArr1 copy];
 }

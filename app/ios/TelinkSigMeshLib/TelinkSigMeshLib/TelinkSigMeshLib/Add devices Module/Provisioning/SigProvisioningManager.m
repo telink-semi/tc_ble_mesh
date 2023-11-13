@@ -761,7 +761,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"getCapabilities:no handel this response data");
+        TelinkLogDebug(@"getCapabilities:no handle this response data");
     }
 }
 
@@ -799,7 +799,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handle this response data");
     }
 }
 
@@ -838,7 +838,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handle this response data");
     }
 }
 
@@ -879,7 +879,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisionRandomPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionRandomPdu:no handle this response data");
     }
 }
 
@@ -910,7 +910,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisionEncryptedDataWithMic error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisionEncryptedDataWithMic:no handel this response data");
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMic:no handle this response data");
     }
     self.provisionResponseBlock = nil;
 }
@@ -961,7 +961,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisioningRecordRequest error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisioningRecordRequest:no handel this response data");
+        TelinkLogDebug(@"sentProvisioningRecordRequest:no handle this response data");
     }
 }
 
@@ -1012,7 +1012,7 @@ typedef enum : UInt16 {
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisioningRecordsGet error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisioningRecordsGet:no handel this response data");
+        TelinkLogDebug(@"sentProvisioningRecordsGet:no handle this response data");
     }
 }
 

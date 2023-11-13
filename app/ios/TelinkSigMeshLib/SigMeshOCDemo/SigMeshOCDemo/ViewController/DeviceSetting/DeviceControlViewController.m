@@ -89,7 +89,7 @@ typedef enum : NSUInteger {
     self.tableView.baseTableViewDelegate = self;
     self.dataSource = [NSMutableArray array];
     if (self.model.HSLAddresses.count > 0) {
-        self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+        self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
 
         ModelType *type = [[ModelType alloc] init];
         type.uiType = ModelUITypeHSL;
@@ -176,19 +176,19 @@ typedef enum : NSUInteger {
 }
 
 - (void)HSLCallBack{
-    self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+    self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
-- (UIColor *)getColorWithH:(UInt8)h S:(UInt8)s L:(UInt8)l{
+- (UIColor *)getColorWithHue:(UInt8)hue saturation:(UInt8)saturation ligntness:(UInt8)ligntness {
     //注意：hsl四舍五入取两位小数，理论上hsl中h为[0~100)
-    if (h == 100) {
-        h = 99;
+    if (hue == 100) {
+        hue = 99;
     }
     HSLModel *hsl = [[HSLModel alloc] init];
-    hsl.hue = [NSString stringWithFormat:@"%d",h].div(@"100").floatValue;
-    hsl.saturation = [NSString stringWithFormat:@"%d",s].div(@"100").floatValue;
-    hsl.lightness = [NSString stringWithFormat:@"%d",l].div(@"100").floatValue;
+    hsl.hue = [NSString stringWithFormat:@"%d",hue].div(@"100").floatValue;
+    hsl.saturation = [NSString stringWithFormat:@"%d",saturation].div(@"100").floatValue;
+    hsl.lightness = [NSString stringWithFormat:@"%d",ligntness].div(@"100").floatValue;
     return [ColorManager getRGBWithHSLColor:hsl];
 }
 
@@ -453,7 +453,7 @@ typedef enum : NSUInteger {
         dispatch_async(dispatch_get_main_queue(), ^{
             //根据回包进行HSL的滑竿进行联动。
             if (weakSelf.model.HSLAddresses.count > 0) {
-                weakSelf.colorModel = [weakSelf getColorWithH:weakSelf.model.HSL_Hue100 S:weakSelf.model.HSL_Saturation100 L:weakSelf.model.HSL_Lightness100];
+                weakSelf.colorModel = [weakSelf getColorWithHue:weakSelf.model.HSL_Hue100 saturation:weakSelf.model.HSL_Saturation100 ligntness:weakSelf.model.HSL_Lightness100];
             }
             [weakSelf.tableView reloadData];
         });

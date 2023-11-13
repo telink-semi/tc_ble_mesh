@@ -129,7 +129,7 @@ typedef enum : NSUInteger {
         return NO;
     }
     if (models.count == 0) {
-        TelinkLogInfo(@"OTA devices list is invaid.");
+        TelinkLogInfo(@"OTA devices list is invalid.");
         return NO;
     }
     

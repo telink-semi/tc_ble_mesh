@@ -89,7 +89,7 @@
     strm.next_in=(Bytef *)[data bytes];
     strm.avail_in = (int)[data length];
     
-    // Compresssion Levels:
+    // Compression Levels:
     //   Z_NO_COMPRESSION
     //   Z_BEST_SPEED
     //   Z_BEST_COMPRESSION

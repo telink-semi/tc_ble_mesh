@@ -659,7 +659,7 @@ static SigMeshLib *shareLib = nil;
 /// - Parameters:
 ///   - destination: An address may be a unicast address, a virtual address, or a group address.
 ///   There is also a special value to represent an unassigned address that is not used in messages.
-///   - responseMaxCount: The count of response message shoult response in this command.
+///   - responseMaxCount: The count of response message should response in this command.
 - (float)getReliableIntervalWithDestination:(UInt16)destination responseMaxCount:(NSInteger)responseMaxCount {
     int multiple = 1;
     if (self.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength > kUnsegmentedMessageLowerTransportPDUMaxLength) {

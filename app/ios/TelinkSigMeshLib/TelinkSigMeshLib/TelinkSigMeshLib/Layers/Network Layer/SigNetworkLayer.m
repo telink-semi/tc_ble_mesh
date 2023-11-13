@@ -384,7 +384,7 @@
         TelinkLogError(@"controlMessage == nil");
         return;
     }
-//    TelinkLogInfo(@"%@ receieved (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
+//    TelinkLogInfo(@"%@ received (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
     SigFilterStatus *filterStatus = [[SigFilterStatus alloc] init];
     if (controlMessage.opCode == filterStatus.opCode) {
         SigFilterStatus *message = [[SigFilterStatus alloc] initWithParameters:controlMessage.upperTransportPdu];

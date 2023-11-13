@@ -298,7 +298,7 @@
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            //根据回包进行HSL的滑竿进行联动。
 //            if (weakSelf.model.HSLAddresses.count > 0) {
-//                weakSelf.colorModel = [weakSelf getColorWithH:weakSelf.model.HSL_Hue100 S:weakSelf.model.HSL_Saturation100 L:weakSelf.model.HSL_Lightness100];
+//                weakSelf.colorModel = [weakSelf getColorWithHue:weakSelf.model.HSL_Hue100 saturation:weakSelf.model.HSL_Saturation100 ligntness:weakSelf.model.HSL_Lightness100];
 //            }
 //            [weakSelf.tableView reloadData];
 //        });

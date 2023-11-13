@@ -209,7 +209,7 @@
     XCTAssertNotNil(defaultMesh.timestamp);
     XCTAssertEqualObjects(defaultMesh.ivIndex, @"00000000");
     
-    //7.scanLsit and sno
+    //7.scanList and sno
     XCTAssertEqual(defaultMesh.scanList.count, 0);
 //    XCTAssertEqual(defaultMesh.getSequenceNumberUInt32, 0);
     
@@ -283,7 +283,7 @@
     XCTAssertNotNil(SigDataSource.share.timestamp);
     XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");
     
-    //7.scanLsit and sno
+    //7.scanList and sno
     XCTAssertEqual(SigDataSource.share.scanList.count, 0);
     XCTAssertEqual(SigDataSource.share.getSequenceNumberUInt32, 0);
     

@@ -288,7 +288,7 @@
                         NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
                         XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
                         NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615b5dd4a846cae0c032bf0746f44f1b8cc8ce5edc57e55beed49c0"];
+                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
                         XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 
                         NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);
@@ -396,7 +396,7 @@
                         NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
                         XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
                         NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615b5dd4a846cae0c032bf0746f44f1b8cc8ce5edc57e55beed49c0"];
+                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
                         XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 
                         NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);
@@ -514,7 +514,7 @@
 //                        NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
 //                        XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
 //                        NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-//                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615b5dd4a846cae0c032bf0746f44f1b8cc8ce5edc57e55beed49c0"];
+//                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
 //                        XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 //
 //                        NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);

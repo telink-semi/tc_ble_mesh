@@ -146,7 +146,7 @@
             });
         }];
     } else {
-        [self showTips:[NSString stringWithFormat:@"The mesh is offline, app cann`t %@ forwarding table.", self.isNew ? @"add" : @"edit"]];
+        [self showTips:[NSString stringWithFormat:@"The mesh is offline, app can not %@ forwarding table.", self.isNew ? @"add" : @"edit"]];
     }
 }
 
@@ -184,9 +184,9 @@
 //        SigNodeModel *node1 = SigDataSource.share.curLocationNodeModel;
         SigNodeModel *node1 = SigDataSource.share.curNodes.firstObject;
         SigNodeModel *node2 = SigDataSource.share.curNodes.lastObject;
-        SigUnicastAddressRangeFormatModel *formt1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
-        SigUnicastAddressRangeFormatModel *formt2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
-        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:NO pathOriginUnicastAddrRange:formt1 pathTargetUnicastAddrRange:formt2 multicastDestination:0x8000 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
+        SigUnicastAddressRangeFormatModel *format1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
+        SigUnicastAddressRangeFormatModel *format2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
+        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:NO pathOriginUnicastAddrRange:format1 pathTargetUnicastAddrRange:format2 multicastDestination:0x8000 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
     } else {
         self.title = @"Edit Forwarding Table";
         [self.addButton setTitle:@"Edit Forwarding Table" forState:UIControlStateNormal];

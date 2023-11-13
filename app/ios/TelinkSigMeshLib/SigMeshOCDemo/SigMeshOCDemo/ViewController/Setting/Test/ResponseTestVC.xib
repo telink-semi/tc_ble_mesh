@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21225" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21207"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -11,12 +10,12 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ResponseTestVC">
             <connections>
-                <outlet property="autoScrollButtom" destination="GPe-Ez-3lt" id="UiN-SP-Dx6"/>
-                <outlet property="clearLogButtom" destination="MP4-0i-Tca" id="dvf-zI-od0"/>
-                <outlet property="commandButtom" destination="Iux-l3-znX" id="pQj-hN-5Sc"/>
+                <outlet property="autoScrollButton" destination="GPe-Ez-3lt" id="UiN-SP-Dx6"/>
+                <outlet property="clearLogButton" destination="MP4-0i-Tca" id="dvf-zI-od0"/>
+                <outlet property="commandButton" destination="Iux-l3-znX" id="pQj-hN-5Sc"/>
                 <outlet property="contentText" destination="HnY-tS-2MY" id="7Cx-oC-6Vb"/>
                 <outlet property="intervalTimeTF" destination="01F-mP-RbM" id="eEz-et-ePg"/>
-                <outlet property="startButtom" destination="JKj-0z-T87" id="QU0-HJ-Ebs"/>
+                <outlet property="startButton" destination="JKj-0z-T87" id="QU0-HJ-Ebs"/>
                 <outlet property="totalCountTF" destination="cWK-Ve-uUp" id="iXC-KN-wEq"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
@@ -36,7 +35,7 @@
                         <color key="titleColor" red="0.94117647059999998" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     </state>
                     <connections>
-                        <action selector="clickStartButtom:" destination="-1" eventType="touchUpInside" id="val-hb-lxh"/>
+                        <action selector="clickStartButton:" destination="-1" eventType="touchUpInside" id="val-hb-lxh"/>
                     </connections>
                 </button>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="HnY-tS-2MY">
@@ -52,7 +51,7 @@
                         <color key="titleColor" red="0.94117647059999998" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     </state>
                     <connections>
-                        <action selector="clickClearLogButtom:" destination="-1" eventType="touchUpInside" id="5My-bw-gnS"/>
+                        <action selector="clickClearLogButton:" destination="-1" eventType="touchUpInside" id="5My-bw-gnS"/>
                     </connections>
                 </button>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Total Count:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HAq-nO-O3h">
@@ -102,7 +101,7 @@
                     </state>
                     <state key="selected" image="xuan"/>
                     <connections>
-                        <action selector="clickAutoScrollButtom:" destination="-1" eventType="touchUpInside" id="3Xv-XV-EVQ"/>
+                        <action selector="clickAutoScrollButton:" destination="-1" eventType="touchUpInside" id="3Xv-XV-EVQ"/>
                     </connections>
                 </button>
                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Interval Time(ms)" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="01F-mP-RbM">
@@ -118,7 +117,7 @@
                     </constraints>
                     <state key="normal" title="ALL OFF"/>
                     <connections>
-                        <action selector="clickCommandButtom:" destination="-1" eventType="touchUpInside" id="eZH-EE-LRT"/>
+                        <action selector="clickCommandButton:" destination="-1" eventType="touchUpInside" id="eZH-EE-LRT"/>
                     </connections>
                 </button>
                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Total Count" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="cWK-Ve-uUp">

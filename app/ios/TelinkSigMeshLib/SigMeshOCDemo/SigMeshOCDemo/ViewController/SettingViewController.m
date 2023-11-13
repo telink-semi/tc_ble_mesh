@@ -217,7 +217,7 @@
     
 //#ifdef DEBUG
 //    NSString *appBundleVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
-//    self.versionLabel.text = [NSString stringWithFormat:@"%@ Bulid:%@",app_Version,appBundleVersion];
+//    self.versionLabel.text = [NSString stringWithFormat:@"%@ Build:%@",app_Version,appBundleVersion];
 //#else
     self.versionLabel.text = [NSString stringWithFormat:@"%@",app_Version];
 //#endif

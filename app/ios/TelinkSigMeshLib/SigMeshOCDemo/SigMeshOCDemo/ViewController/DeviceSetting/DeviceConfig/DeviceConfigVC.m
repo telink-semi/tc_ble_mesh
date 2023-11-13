@@ -208,7 +208,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Default TTL failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Default TTL successed!"];
+                [ShowTipsHandle.share show:@"Get Default TTL success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -227,7 +227,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Relay & RelayRetransmit failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit successed!"];
+                [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -246,7 +246,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Secure Network Beacon failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Secure Network Beacon successed!"];
+                [ShowTipsHandle.share show:@"Get Secure Network Beacon success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -265,7 +265,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get GATT Proxy failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get GATT Proxy successed!"];
+                [ShowTipsHandle.share show:@"Get GATT Proxy success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -284,7 +284,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Node Identity failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Node Identity successed!"];
+                [ShowTipsHandle.share show:@"Get Node Identity success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -303,7 +303,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Friend failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Friend successed!"];
+                [ShowTipsHandle.share show:@"Get Friend success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -325,7 +325,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Key Refresh Phase failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Key Refresh Phase successed!"];
+                [ShowTipsHandle.share show:@"Get Key Refresh Phase success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -344,7 +344,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Network Transmit failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Network Transmit successed!"];
+                [ShowTipsHandle.share show:@"Get Network Transmit success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -363,7 +363,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Mesh Private Beacon failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Mesh Private Beacon successed!"];
+                [ShowTipsHandle.share show:@"Get Mesh Private Beacon success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -382,7 +382,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get GATT Proxy failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get GATT Proxy successed!"];
+                [ShowTipsHandle.share show:@"Get GATT Proxy success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -401,7 +401,7 @@
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Private Node Identity failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Private Node Identity successed!"];
+                [ShowTipsHandle.share show:@"Get Private Node Identity success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -455,7 +455,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Default TTL failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Default TTL successed!"];
+                        [ShowTipsHandle.share show:@"Set Default TTL success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -530,7 +530,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Relay & RelayRetransmit failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit successed!"];
+                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -566,7 +566,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Secure Network Beacon failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Secure Network Beacon successed!"];
+                        [ShowTipsHandle.share show:@"Set Secure Network Beacon success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -602,7 +602,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set GATT Proxy failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set GATT Proxy successed!"];
+                        [ShowTipsHandle.share show:@"Set GATT Proxy success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -638,7 +638,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Node Identity failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Node Identity successed!"];
+                        [ShowTipsHandle.share show:@"Set Node Identity success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -674,7 +674,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Friend failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Friend successed!"];
+                        [ShowTipsHandle.share show:@"Set Friend success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -740,7 +740,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Relay & RelayRetransmit failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit successed!"];
+                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -796,7 +796,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Mesh Private Beacon failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Mesh Private Beacon successed!"];
+                        [ShowTipsHandle.share show:@"Set Mesh Private Beacon success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -832,7 +832,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private GATT Proxy failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Private GATT Proxy successed!"];
+                        [ShowTipsHandle.share show:@"Set Private GATT Proxy success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -868,7 +868,7 @@
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private Node Identity failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Private Node Identity successed!"];
+                        [ShowTipsHandle.share show:@"Set Private Node Identity success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];

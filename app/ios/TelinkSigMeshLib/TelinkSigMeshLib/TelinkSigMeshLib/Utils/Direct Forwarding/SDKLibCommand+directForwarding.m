@@ -126,7 +126,7 @@
 
 /// Get description string.
 - (NSString *)getDescription {
-    NSString *tem = [NSString stringWithFormat:@"lengthPresent:%@\nrangeStart:0x%X", _lengthPresent ? @"Ture" : @"False", _rangeStart];
+    NSString *tem = [NSString stringWithFormat:@"lengthPresent:%@\nrangeStart:0x%X", _lengthPresent ? @"True" : @"False", _rangeStart];
     if (_lengthPresent) {
         tem = [NSString stringWithFormat:@"%@\nrangeLength:0x%X", tem, _lengthPresent];
     }
@@ -450,7 +450,7 @@
     } else {
         target = [NSString stringWithFormat:@"multicastDestination:0x%X", _multicastDestination];
     }
-    NSString *tem = [NSString stringWithFormat:@"Forwarding Table:\nNetKeyIndex:0x%04X\nunicastDestinationFlag:%@\nbackwardPathValidatedFlag:%@\npathOriginUnicastAddrRange:%@\n%@\nbearerTowardPathOrigin:0x%X\nbearerTowardPathTarget:0x%X\nEntryNodeAddress=%@", _netKeyIndex, _unicastDestinationFlag ? @"Ture" : @"False", _backwardPathValidatedFlag ? @"Ture" : @"False", _pathOriginUnicastAddrRange.getDescription, target, _bearerTowardPathOrigin, _bearerTowardPathTarget, [self getEntryNodeAddressString]];
+    NSString *tem = [NSString stringWithFormat:@"Forwarding Table:\nNetKeyIndex:0x%04X\nunicastDestinationFlag:%@\nbackwardPathValidatedFlag:%@\npathOriginUnicastAddrRange:%@\n%@\nbearerTowardPathOrigin:0x%X\nbearerTowardPathTarget:0x%X\nEntryNodeAddress=%@", _netKeyIndex, _unicastDestinationFlag ? @"True" : @"False", _backwardPathValidatedFlag ? @"True" : @"False", _pathOriginUnicastAddrRange.getDescription, target, _bearerTowardPathOrigin, _bearerTowardPathTarget, [self getEntryNodeAddressString]];
     
     return tem;
 }

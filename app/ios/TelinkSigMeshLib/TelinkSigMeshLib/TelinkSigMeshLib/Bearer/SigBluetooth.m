@@ -346,7 +346,7 @@
         }
         if (weakSelf.currentPeripheral) {
             [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-                [weakSelf ressetParameters];
+                [weakSelf resetParameters];
                 weakSelf.currentPeripheral = nil;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (complete) {
@@ -408,10 +408,10 @@
 }
 
 - (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
-    NSMutableArray *identiferArray = [[NSMutableArray alloc] init];
+    NSMutableArray *identifierArray = [[NSMutableArray alloc] init];
     
-    [identiferArray addObject:[CBUUID UUIDWithString:uuidString]];
-    NSArray *knownPeripherals = [self.manager retrievePeripheralsWithIdentifiers:identiferArray];
+    [identifierArray addObject:[CBUUID UUIDWithString:uuidString]];
+    NSArray *knownPeripherals = [self.manager retrievePeripheralsWithIdentifiers:identifierArray];
     if (knownPeripherals.count > 0) {
         TelinkLogInfo(@"get peripherals from uuid:%@ count: %lu",uuidString,(unsigned long)knownPeripherals.count);
         return knownPeripherals.firstObject;
@@ -689,7 +689,7 @@
     }
 }
 
-- (void)ressetParameters {
+- (void)resetParameters {
     self.OTACharacteristic = nil;
     self.PBGATT_InCharacteristic = nil;
     self.PBGATT_OutCharacteristic = nil;

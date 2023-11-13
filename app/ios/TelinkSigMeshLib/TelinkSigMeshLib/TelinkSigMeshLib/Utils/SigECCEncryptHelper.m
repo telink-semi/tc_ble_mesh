@@ -105,7 +105,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey {
     if (@available(iOS 10.0, *)) {
-        return [self calculateSharedSecretEithPublicKey:devicePublicKey];
+        return [self calculateSharedSecretWithPublicKey:devicePublicKey];
     } else {
         UInt8 tem = 0x04;
         NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
@@ -199,7 +199,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 ///
 /// - parameter publicKey: The device's Public Key as bytes.
 /// - returns: The ECDH Shared Secret.
-- (NSData * _Nullable)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
+- (NSData * _Nullable)calculateSharedSecretWithPublicKey:(NSData *)publicKey {
     if (@available(iOS 10.0, *)) {
         // First byte has to be 0x04 to indicate uncompressed representation.
         UInt8 tem = 0x04;

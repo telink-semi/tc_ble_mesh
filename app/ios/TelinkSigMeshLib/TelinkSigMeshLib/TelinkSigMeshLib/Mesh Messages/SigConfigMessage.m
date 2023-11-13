@@ -45,7 +45,7 @@
         return [NSData data];
     }
     if (limit == 1 || indexes.count == 1) {
-        // Encode a sigle Key Index into 2 bytes.
+        // Encode a single Key Index into 2 bytes.
         NSNumber *indexNumber = indexes.firstObject;
         UInt16 index = indexNumber.intValue;
         UInt16 tem = CFSwapInt16HostToLittle(index);
@@ -89,7 +89,7 @@
         return [NSArray array];
     }
     if (limit == 1 || size == 2) {
-        // Decode a sigle Key Index from 2 bytes.
+        // Decode a single Key Index from 2 bytes.
         UInt16 index = 0;
         Byte *dataByte = (Byte *)data.bytes;
         memcpy(&index, dataByte+offset, 2);

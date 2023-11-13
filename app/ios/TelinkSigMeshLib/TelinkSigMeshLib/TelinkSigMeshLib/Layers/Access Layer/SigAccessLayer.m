@@ -207,7 +207,7 @@
         [context invalidate];
         [_reliableMessageContexts removeObjectAtIndex:index];
     }
-//    TelinkLogInfo(@"receieved:%@",accessPdu);
+//    TelinkLogInfo(@"received:%@",accessPdu);
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
 }
 

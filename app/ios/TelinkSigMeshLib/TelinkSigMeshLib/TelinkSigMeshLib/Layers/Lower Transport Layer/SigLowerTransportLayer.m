@@ -102,7 +102,7 @@
                 if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigSegmentedAccessMessage *segment = [[SigSegmentedAccessMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-//                        TelinkLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TelinkLogInfo(@"accessMessage %@ received (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -117,7 +117,7 @@
                 } else if (networkPdu.ctl == SigLowerTransportPduType_transportControlMessage) {
                     SigSegmentedControlMessage *segment = [[SigSegmentedControlMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-//                        TelinkLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TelinkLogInfo(@"controlMessage %@ received (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -136,7 +136,7 @@
                 if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigAccessMessage *accessMessage = [[SigAccessMessage alloc] initFromUnsegmentedPdu:networkPdu];
                     if (accessMessage) {
-//                        TelinkLogVerbose(@"%@ receieved (decrypted using key: %@)",accessMessage,accessMessage.networkKey);
+//                        TelinkLogVerbose(@"%@ received (decrypted using key: %@)",accessMessage,accessMessage.networkKey);
                         // Unsegmented message is not acknowledged. Just pass it to higher layer.
                         [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:accessMessage];
                     } else {
@@ -150,7 +150,7 @@
                     if (opCode == 0x00) {
                         SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initFromNetworkPdu:networkPdu];
                         if (ack) {
-//                            TelinkLogVerbose(@"SigSegmentAcknowledgmentMessage receieved =%@ (decrypted using key: %@)",ack,ack.networkKey);
+//                            TelinkLogVerbose(@"SigSegmentAcknowledgmentMessage received =%@ (decrypted using key: %@)",ack,ack.networkKey);
                             [weakSelf handleSegmentAcknowledgmentMessage:ack];
                         } else {
                             TelinkLogError(@"ack = nil.");
@@ -158,7 +158,7 @@
                     } else {
                         SigControlMessage *controlMessage = [[SigControlMessage alloc] initFromNetworkPdu:networkPdu];
                         if (controlMessage) {
-                            TelinkLogVerbose(@"%@ receieved (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
+                            TelinkLogVerbose(@"%@ received (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
                             // Unsegmented message is not acknowledged. Just pass it to higher layer.
                             [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:controlMessage];
                         } else {

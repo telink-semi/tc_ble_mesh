@@ -159,7 +159,7 @@ static NSUInteger provisionAddress;
     }
 }
 
-- (void)scanAndConnnectAndProvisionAndKeybind {
+- (void)scanAndConnectAndProvisionAndKeybind {
     [self showAndSaveLog:[NSString stringWithFormat:@"[Start] scan [%d]",_currentCount]];
     __weak typeof(self) weakSelf = self;
     __block BOOL scanSuccess = NO;
@@ -313,7 +313,7 @@ static NSUInteger provisionAddress;
     double connectT = (_averageConnectTime*_currentSuccessCount+_currentConnectTime)/(_currentSuccessCount+(_currentConnectTime==0?0:1));
     double provisionT = (_averageProvisionTime*_currentSuccessCount+_currentProvisionTime)/(_currentSuccessCount+(_currentProvisionTime==0?0:1));
     double keybindT = (_averageKeybindTime*_currentSuccessCount+_currentKeybindTime)/(_currentSuccessCount+(_currentKeybindTime==0?0:1));
-    NSString *str = [NSString stringWithFormat:@"success:%d fail:%d precent:%.2f%% kickout fail:%d\nscanT:%0.2fs connectT:%0.2fs provisionT:%0.2fs keybindT:%0.2fs allT:%0.2fs",_currentSuccessCount,_currentFailCount,100*(((double)_currentSuccessCount)/(_currentSuccessCount+_currentFailCount)),_currentKickoutFailCount,scanT,connectT,provisionT,keybindT,_averageScanTime+_averageConnectTime+_averageProvisionTime+_averageKeybindTime];
+    NSString *str = [NSString stringWithFormat:@"success:%d fail:%d percent:%.2f%% kickout fail:%d\nscanT:%0.2fs connectT:%0.2fs provisionT:%0.2fs keybindT:%0.2fs allT:%0.2fs",_currentSuccessCount,_currentFailCount,100*(((double)_currentSuccessCount)/(_currentSuccessCount+_currentFailCount)),_currentKickoutFailCount,scanT,connectT,provisionT,keybindT,_averageScanTime+_averageConnectTime+_averageProvisionTime+_averageKeybindTime];
     if (_currentScanTime != 0 && _currentConnectTime != 0 && _currentProvisionTime != 0 && _currentKeybindTime != 0) {
         _averageScanTime = scanT;
         _averageConnectTime = connectT;
@@ -378,7 +378,7 @@ static NSUInteger provisionAddress;
 
         [self refreshShowLabel];
 
-        [self scanAndConnnectAndProvisionAndKeybind];
+        [self scanAndConnectAndProvisionAndKeybind];
     }
 }
 

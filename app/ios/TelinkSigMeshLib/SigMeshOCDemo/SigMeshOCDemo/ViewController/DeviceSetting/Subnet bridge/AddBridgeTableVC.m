@@ -75,10 +75,10 @@
                 });
             }];
         } else {
-            [self showTips:@"The node is offline, app cann`t add bridge table."];
+            [self showTips:@"The node is offline, app can not add bridge table."];
         }
     } else {
-        [self showTips:@"The mesh is offline, app cann`t add bridge table."];
+        [self showTips:@"The mesh is offline, app can not add bridge table."];
     }
 }
 

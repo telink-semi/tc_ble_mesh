@@ -539,9 +539,9 @@
  *  @return 字典数据
  */
 +(NSDictionary *)getDictionaryWithJSONData:(NSData*)data {
-    NSString *receiveStr = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
-    NSData * datas = [receiveStr dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:datas options:NSJSONReadingMutableLeaves error:nil];
+    NSString *receiveStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData *d = [receiveStr dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:d options:NSJSONReadingMutableLeaves error:nil];
     return jsonDict;
 }
 
@@ -618,12 +618,12 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
  */
 int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData) {
-    size_t numBytesCrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesCrypted);
+    size_t numBytesEncrypted = 0;
+    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesEncrypted);
     if (cryptStatus != kCCSuccess) {
         printf("aes128_ecb_encrypt fail!\n");
     }
-    return (int)numBytesCrypted;
+    return (int)numBytesEncrypted;
 }
 
 /**
@@ -635,12 +635,12 @@ int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned c
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means decrypt success, other means fail.
  */
 int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData) {
-    size_t numBytesCrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesCrypted);
+    size_t numBytesEncrypted = 0;
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesEncrypted);
     if (cryptStatus != kCCSuccess) {
         printf("aes128_ecb_decrypt fail!\n");
     }
-    return (int)numBytesCrypted;
+    return (int)numBytesEncrypted;
 }
 
 #pragma mark - 正则表达式相关

@@ -29,7 +29,7 @@
 typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 @interface SigRemoteAddManager ()<SigMessageDelegate>
-@property (nonatomic,assign) BOOL isRemoteScaning;
+@property (nonatomic,assign) BOOL isRemoteScanning;
 @property (nonatomic,assign) UInt8 currentMaxScannedItems;
 @property (nonatomic,weak) id oldDelegateForDeveloper;
 @property (nonatomic,strong) NSMutableArray <SigRemoteScanRspModel *>*remoteScanRspModels;
@@ -83,8 +83,8 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 #pragma mark - remote scan
 
 - (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback {
-    if (self.isRemoteScaning) {
-        NSString *errstr = @"SigRemoteAddManager is remoteScaning, please call `stopRemoteProvisionScan`";
+    if (self.isRemoteScanning) {
+        NSString *errstr = @"SigRemoteAddManager is remoteScanning, please call `stopRemoteProvisionScan`";
         TelinkLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (resultCallback) {
@@ -97,16 +97,16 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.oldDelegateForDeveloper = SigMeshLib.share.delegateForDeveloper;
     SigMeshLib.share.delegateForDeveloper = self;
     self.remoteScanRspModels = [NSMutableArray array];
-    self.isRemoteScaning = YES;
+    self.isRemoteScanning = YES;
     [self startSingleRemoteProvisionScan];
 }
 
 - (void)stopRemoteProvisionScan {
-    self.isRemoteScaning = NO;
+    self.isRemoteScanning = NO;
 }
 
 - (void)endRemoteProvisionScan {
-    self.isRemoteScaning = NO;
+    self.isRemoteScanning = NO;
     //因为上面for循环发送了多次，在这里清理block。
     [SigMeshLib.share cleanAllCommandsAndRetry];
     if (self.currentMaxScannedItems >= 0x04 && self.currentMaxScannedItems <= 0xFF) {
@@ -273,7 +273,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         for (SigNodeModel *node in SigMeshLib.share.dataSource.curNodes) {
-            if (!weakSelf.isRemoteScaning) {
+            if (!weakSelf.isRemoteScanning) {
                 return;
             }
             weakSelf.semaphore = dispatch_semaphore_create(0);
@@ -612,7 +612,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         TelinkLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
         [self provisionFail];
     }else{
-        TelinkLogDebug(@"getCapabilities:no handel this response data");
+        TelinkLogDebug(@"getCapabilities:no handle this response data");
     }
 }
 
@@ -636,7 +636,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
+        TelinkLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handle this response data");
     }
 }
 
@@ -659,7 +659,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionConfirmationPdu:no handle this response data");
     }
 }
 
@@ -687,7 +687,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TelinkLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TelinkLogDebug(@"sentProvisionRandomPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionRandomPdu:no handle this response data");
     }
 }
 
@@ -708,7 +708,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         TelinkLogDebug(@"sentProvisionEncryptedDataWithMicPdu error = %lu",(unsigned long)failedPdu.errorCode);
         self.provisionResponseBlock = nil;
     }else{
-        TelinkLogDebug(@"sentProvisionEncryptedDataWithMicPdu:no handel this response data");
+        TelinkLogDebug(@"sentProvisionEncryptedDataWithMicPdu:no handle this response data");
     }
 }
 
@@ -720,7 +720,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 /// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
     TelinkLogVerbose(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x",message,message.parameters,source,destination);
-    if ([message isKindOfClass:[SigRemoteProvisioningScanReport class]] && self.isRemoteScaning) {
+    if ([message isKindOfClass:[SigRemoteProvisioningScanReport class]] && self.isRemoteScanning) {
         // Try parsing the response.
         SigRemoteScanRspModel *model = [[SigRemoteScanRspModel alloc] initWithParameters:message.parameters];
         if (!model) {

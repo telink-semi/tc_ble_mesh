@@ -219,8 +219,8 @@
 
 - (void)writeObjectWithObjectModel:(ObjectModel *)object {
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         __block BOOL isFail = NO;
         weakSelf.semaphore = dispatch_semaphore_create(0);
         
@@ -290,8 +290,8 @@
 
 - (void)connectAndOpenNotifyOpenChannelWithResultBlock:(bleConnectPeripheralCallback)block {
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         [weakSelf.privateBluetooth connectPeripheralWithError:self.servicePeripheral timeout:60.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, NSError * _Nullable error) {
             if (error == nil) {
                 [weakSelf.privateBluetooth discoverServicesOfPeripheral:peripheral timeout:60.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {

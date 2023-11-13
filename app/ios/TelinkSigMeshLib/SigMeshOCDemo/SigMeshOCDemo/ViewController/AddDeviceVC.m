@@ -170,8 +170,8 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     }
     if (mArray.count > 0) {
         __weak typeof(self) weakSelf = self;
-        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-        [oprationQueue addOperationWithBlock:^{
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+        [operationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             for (AddDeviceModel *model in mArray) {
@@ -212,8 +212,8 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
             if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
                 staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
             }
-            NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-            [oprationQueue addOperationWithBlock:^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            [operationQueue addOperationWithBlock:^{
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 __block NSError *error = nil;
                 if (model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning) {

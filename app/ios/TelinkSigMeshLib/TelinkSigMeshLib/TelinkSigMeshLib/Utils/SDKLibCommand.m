@@ -431,7 +431,7 @@
 /*
  sample data
 ---> Sending - Access PDU, source:(0001)->destination: (0008) Op Code: (0000801B), parameters: (080000C000FF), accessPdu=801B080000C000FF
-<--- Response - Access PDU, source:(0008)->destination: (0001) Op Code: (0000801F), parameters: (00080000C000FF), accessPdu=801F00080000C000FF receieved (decrypted using key: <SigDeviceKeySet: 0x282840300>)
+<--- Response - Access PDU, source:(0008)->destination: (0001) Op Code: (0000801F), parameters: (00080000C000FF), accessPdu=801F00080000C000FF received (decrypted using key: <SigDeviceKeySet: 0x282840300>)
 */
 /**
  * @brief   Config Model Subscription Add.

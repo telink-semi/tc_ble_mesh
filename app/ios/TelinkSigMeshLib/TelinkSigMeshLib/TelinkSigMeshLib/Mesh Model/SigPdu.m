@@ -1008,12 +1008,12 @@
         UInt8 ctlTtl = (_ctl << 7) | (_ttl & 0x7F);
 
         // Data to be obfuscated: CTL/TTL, Sequence Number, Source Address.
-        UInt32 bigSequece = CFSwapInt32HostToBig(sequence);
+        UInt32 bigSequence = CFSwapInt32HostToBig(sequence);
         UInt16 bigSource = CFSwapInt16HostToBig(_source);
         UInt16 bigDestination = CFSwapInt16HostToBig(_destination);
         UInt32 bigIndex = CFSwapInt32HostToBig(index);
 
-        NSData *seq = [[NSData dataWithBytes:&bigSequece length:4] subdataWithRange:NSMakeRange(1, 3)];
+        NSData *seq = [[NSData dataWithBytes:&bigSequence length:4] subdataWithRange:NSMakeRange(1, 3)];
         NSData *data1 = [NSData dataWithBytes:&ctlTtl length:1];
         NSData *data2 = [NSData dataWithBytes:&bigSource length:2];
         NSMutableData *deobfuscatedData = [NSMutableData dataWithData:data1];

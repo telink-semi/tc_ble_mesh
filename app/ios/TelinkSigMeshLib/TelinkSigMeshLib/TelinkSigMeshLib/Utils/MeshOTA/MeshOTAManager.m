@@ -73,8 +73,8 @@
 @property (nonatomic, assign) NSInteger chunkIndex;//记录当前chunk的index
 @property (nonatomic, assign) NSInteger successActionInCurrentProgress;//记录当前阶段成功的设备个数
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSArray *>*losePacketsDict;//step10阶段传输失败的包。
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSDictionary *>*oFirmwareInformations;//记录MeshOTA前设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSDictionary *>*nFirmwareInformations;//记录MeshOTA后设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSDictionary *>*oFirmwareInformation;//记录MeshOTA前设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSDictionary *>*nFirmwareInformation;//记录MeshOTA后设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, SigBLOBInformationStatus *>*oBLOBInformations;//记录MeshOTA前设备的BLOBInformation
 @property (nonatomic, assign) UInt8 retryCountInBLOBChunkTransfer;//记录step10:BLOBChunkTransfer阶段已经重试的次数
 @property (nonatomic, retain) dispatch_semaphore_t semaphore;
@@ -153,7 +153,7 @@
     }
 }
 
-/// null funcation
+/// null function
 - (void)nullFunc {}
 
 // 7.4.1.3 Pull BLOB State Machine
@@ -884,7 +884,8 @@
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
-    self.oFirmwareInformations = [NSMutableDictionary dictionary];
+    self.oFirmwareInformation = [NSMutableDictionary dictionary];
+    self.nFirmwareInformation = [NSMutableDictionary dictionary];
     __weak typeof(self) weakSelf = self;
     NSArray *allAddressArray = [NSArray arrayWithArray:self.allAddressArray];
     for (NSNumber *nodeAddress in allAddressArray) {
@@ -910,7 +911,7 @@
                         if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                         TelinkLogDebug(@"initiator firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                        weakSelf.oFirmwareInformations[@(source)] = @{kPid:@(pid),kVid:@(vid)};
+                        weakSelf.oFirmwareInformation[@(source)] = @{kPid:@(pid),kVid:@(vid)};
                         if ([LibTools uint16From16String:node.vid] != vid) {
                             [SigDataSource.share updateNodeModelVidWithAddress:source vid:vid];
                         }
@@ -1706,8 +1707,8 @@
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexs = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexs) {
+            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
@@ -1796,11 +1797,11 @@
                     NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
                     TelinkLogInfo(@"%@",errorString);
-                    NSMutableArray *chunkIndexs = [NSMutableArray array];
+                    NSMutableArray *chunkIndexes = [NSMutableArray array];
                     for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
-                        [chunkIndexs addObject:@(i)];
+                        [chunkIndexes addObject:@(i)];
                     }
-                    weakSelf.losePacketsDict[@(source)] = chunkIndexs;
+                    weakSelf.losePacketsDict[@(source)] = chunkIndexes;
                 }
             } else {
                 NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
@@ -1829,23 +1830,23 @@
 //            [self BLOBChunkTransferWithLosePackets];
             //做法2：retry使用组播地址
             NSMutableDictionary *newDict = [NSMutableDictionary dictionary];
-            NSMutableArray *newLoseChunkIndexs = [NSMutableArray array];
+            NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexs = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexs) {
-                    if (![newLoseChunkIndexs containsObject:chunkIndex]) {
-                        [newLoseChunkIndexs addObject:chunkIndex];
+                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                    if (![newLoseChunkIndexes containsObject:chunkIndex]) {
+                        [newLoseChunkIndexes addObject:chunkIndex];
                     }
                 }
             }
-            if (newLoseChunkIndexs.count > 0) {
+            if (newLoseChunkIndexes.count > 0) {
                 if (losePacketsDict.count == 1) {
-                    newDict[losePacketsDict.allKeys.firstObject] = newLoseChunkIndexs;
+                    newDict[losePacketsDict.allKeys.firstObject] = newLoseChunkIndexes;
                 } else {
-                    newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexs;
+                    newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexes;
                 }
-                TelinkLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
+                TelinkLogInfo(@"newLoseChunkIndexes=%@",newLoseChunkIndexes);
                 self.losePacketsDict = [NSMutableDictionary dictionaryWithDictionary:newDict];
                 [self initiatorToDistributorBLOBChunkTransferWithLosePackets];
             }else{
@@ -1874,7 +1875,7 @@
         self.retryCountInBLOBChunkTransfer = 0;
         [self performSelector:@selector(initiatorToDistributorBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else if (self.blockIndex == self.allBlockCount - 1) {
-        // all blcoks had send
+        // all blocks had send
 //        [self performSelector:@selector(firmwareUpdateFirmwareDistributionFirmwareGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         [self performSelector:@selector(firmwareUpdateFirmwareDistributionStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
@@ -2536,8 +2537,8 @@
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexs = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexs) {
+            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
@@ -2664,11 +2665,11 @@
                             NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                             weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
                             TelinkLogInfo(@"%@",errorString);
-                            NSMutableArray *chunkIndexs = [NSMutableArray array];
+                            NSMutableArray *chunkIndexes = [NSMutableArray array];
                             for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
-                                [chunkIndexs addObject:@(i)];
+                                [chunkIndexes addObject:@(i)];
                             }
-                            weakSelf.losePacketsDict[@(source)] = chunkIndexs;
+                            weakSelf.losePacketsDict[@(source)] = chunkIndexes;
                         }
                     } else {
                         NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
@@ -2705,23 +2706,23 @@
 //            [self BLOBChunkTransferWithLosePackets];
             //做法2：retry使用组播地址
             NSMutableDictionary *newDict = [NSMutableDictionary dictionary];
-            NSMutableArray *newLoseChunkIndexs = [NSMutableArray array];
+            NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexs = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexs) {
-                    if (![newLoseChunkIndexs containsObject:chunkIndex]) {
-                        [newLoseChunkIndexs addObject:chunkIndex];
+                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                    if (![newLoseChunkIndexes containsObject:chunkIndex]) {
+                        [newLoseChunkIndexes addObject:chunkIndex];
                     }
                 }
             }
-            if (newLoseChunkIndexs.count > 0) {
+            if (newLoseChunkIndexes.count > 0) {
                 if (losePacketsDict.count == 1) {
-                    newDict[losePacketsDict.allKeys.firstObject] = newLoseChunkIndexs;
+                    newDict[losePacketsDict.allKeys.firstObject] = newLoseChunkIndexes;
                 } else {
-                    newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexs;
+                    newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexes;
                 }
-                TelinkLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
+                TelinkLogInfo(@"newLoseChunkIndexes=%@",newLoseChunkIndexes);
                 self.losePacketsDict = [NSMutableDictionary dictionaryWithDictionary:newDict];
                 [self distributorToUpdatingNodesBLOBChunkTransferWithLosePackets];
             }else{
@@ -2746,7 +2747,7 @@
         self.retryCountInBLOBChunkTransfer = 0;
         [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
     } else if (self.blockIndex == self.allBlockCount - 1) {
-        // all blcoks had send
+        // all blocks had send
         TelinkLogVerbose(@"");
         [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
@@ -3274,9 +3275,9 @@
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                     TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
-                    UInt16 oldVid = [[weakSelf.oFirmwareInformations[@(source)] objectForKey:kVid] intValue];
-                    if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformations.allKeys containsObject:@(source)] && oldVid != vid)) {
-                        weakSelf.nFirmwareInformations[@(source)] = @{kPid:@(pid),kVid:@(vid)};
+                    UInt16 oldVid = [[weakSelf.oFirmwareInformation[@(source)] objectForKey:kVid] intValue];
+                    if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformation.allKeys containsObject:@(source)] && oldVid != vid)) {
+                        weakSelf.nFirmwareInformation[@(source)] = @{kPid:@(pid),kVid:@(vid)};
                         [SigDataSource.share updateNodeModelVidWithAddress:nodeAddress.intValue vid:vid];
                         receiveStatusDict[@(source)] = responseMessage;
                         [weakSelf callBackMeshOTASuccessAddress:source];

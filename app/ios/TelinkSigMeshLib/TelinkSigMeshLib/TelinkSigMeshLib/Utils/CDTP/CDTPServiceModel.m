@@ -85,7 +85,7 @@
 /// - seeAlso: https://classic.yarnpkg.com/en/package/cordova-plugin-ble-central#readme,l2cap.open.
 @property (nonatomic, strong) CBMutableCharacteristic *psmCharacteristic;
 /// Marks whether the Bluetooth service list has been initialized.
-@property (nonatomic, assign) BOOL hasInitServises;//标记是否已经初始化服务列表
+@property (nonatomic, assign) BOOL hasInitServices;//标记是否已经初始化服务列表
 /// Mark whether Bluetooth broadcast data needs to be sent.
 @property (nonatomic, assign) BOOL needAdvertise;//标记是否需要发送蓝牙广播数据
 /// A CBL2CAPChannel represents a live L2CAP connection to a remote device.
@@ -663,7 +663,7 @@
     if (self = [super init]) {
         /// Initialize self.
         [self setShareMeshDictionary:shareMeshDictionary];
-        _hasInitServises = NO;
+        _hasInitServices = NO;
         struct OACPFeatures feature = {};
         feature.value = 0;
         feature.OACPCreateOpCodeSupported = 1;
@@ -736,7 +736,7 @@
             NSLog(@"powered on");
             [peripheral publishL2CAPChannelWithEncryption:YES];
             isOpen = YES;
-            if (!self.hasInitServises) {
+            if (!self.hasInitServices) {
                 [self initServices];
             }
             break;
@@ -767,7 +767,7 @@
     if (error) {
         NSLog(@"error =%@",error.localizedDescription);
     }else{
-        self.hasInitServises = YES;
+        self.hasInitServices = YES;
         [self initCharacteristicValue];
         if (self.needAdvertise) {
             [self startAdvertising];
