@@ -37,7 +37,7 @@
 
 
 #import "GMEllipticCurveCrypto.h"
-
+static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (Byte) 0xDD, (Byte) 0x4A, (Byte) 0x84, (Byte) 0x6C, (Byte) 0xAE, (Byte) 0x0C, (Byte) 0x03, (Byte) 0x2B, (Byte) 0xF0, (Byte) 0x74, (Byte) 0x6F, (Byte) 0x44, (Byte) 0xF1, (Byte) 0xB8, (Byte) 0xCC, (Byte) 0x8C, (Byte) 0xE5, (Byte) 0xED, (Byte) 0xC5, (Byte) 0x7E, (Byte) 0x55, (Byte) 0xBE, (Byte) 0xED, (Byte) 0x49, (Byte) 0xC0};
 
 @interface CheckSampleData : XCTestCase
 
@@ -288,7 +288,7 @@
                         NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
                         XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
                         NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
+                        NSData *networkPduSegment2 = [NSData dataWithBytes:pduByte length:29];
                         XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 
                         NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);
@@ -396,7 +396,7 @@
                         NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
                         XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
                         NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
+                        NSData *networkPduSegment2 = [NSData dataWithBytes:pduByte length:29];
                         XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 
                         NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);
@@ -514,7 +514,7 @@
 //                        NSData *LowerTransportPDUSegment2 = [LibTools nsstringToHex:@"8026ac21cfdc18c52fdef772e0e17308"];
 //                        XCTAssertEqualObjects(LowerTransportPDUSegment1, LowerTransportPDUSegment2);
 //                        NSData *networkPduSegment1 = segmentedAccessMessage.networkPdu.pduData;
-//                        NSData *networkPduSegment2 = [LibTools nsstringToHex:@"681615B5DD4A846CAE0C032BF0746F44F1B8CC8CE5EDC57E55BEED49C0"];
+//                        NSData *networkPduSegment2 = [NSData dataWithBytes:pduByte length:29];
 //                        XCTAssertEqualObjects(networkPduSegment1, networkPduSegment2);
 //
 //                        NSLog(@"upperTransportPDUSegment1=%@,upperTransportPDUSegment2=%@",upperTransportPDUSegment1,upperTransportPDUSegment2);

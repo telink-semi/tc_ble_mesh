@@ -852,9 +852,9 @@
         UInt32 tem32 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem32, dataByte, 4);
-        struct SARTransmitterStructure SART = {};
-        SART.value = tem32;
-        _SARTransmitter = SART;
+        struct SARTransmitterStructure sarTransmitterStructure = {};
+        sarTransmitterStructure.value = tem32;
+        _SARTransmitter = sarTransmitterStructure;
     }
     return self;
 }

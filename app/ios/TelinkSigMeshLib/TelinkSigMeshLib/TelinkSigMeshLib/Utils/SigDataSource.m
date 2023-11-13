@@ -2428,7 +2428,7 @@
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
-    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrentProvisionerUUID_key];
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:self.getCurrentProvisionerUuidkey];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2439,11 +2439,16 @@
  */
 - (NSString *)getCurrentProvisionerUUID{
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *uuid = [defaults objectForKey:kCurrentProvisionerUUID_key];
+    NSString *uuid = [defaults objectForKey:self.getCurrentProvisionerUuidkey];
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
     return uuid;
+}
+
+/// Compatible with older versions of keys
+- (NSString *)getCurrentProvisionerUuidkey {
+    return [kCurrentProvisionerUUID_key stringByReplacingCharactersInRange:NSMakeRange(6, 1) withString:@""];
 }
 
 #pragma mark - deprecated API

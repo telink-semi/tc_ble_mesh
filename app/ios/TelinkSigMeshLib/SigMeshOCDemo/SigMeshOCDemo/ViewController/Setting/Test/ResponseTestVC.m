@@ -162,12 +162,12 @@
     }
     self.intervalTime = [self.intervalTimeTF.text integerValue];
     if (self.intervalTime == 0) {
-        [self showTips:@"Interval time cann′t be zero!"];
+        [self showTips:@"Interval time can not be zero!"];
         return;
     }
     self.totalCount = [self.totalCountTF.text integerValue];
     if (self.totalCount == 0) {
-        [self showTips:@"Total count cann′t be zero!"];
+        [self showTips:@"Total count can not be zero!"];
         return;
     }
     [self setUseEnable:NO];

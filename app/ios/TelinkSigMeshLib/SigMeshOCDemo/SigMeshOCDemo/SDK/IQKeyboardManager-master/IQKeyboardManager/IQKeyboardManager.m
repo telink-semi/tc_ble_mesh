@@ -214,7 +214,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
             
             //Setting it's initial values
             strongSelf.animationDuration = 0.25;
-            strongSelf.animationCurve = UIViewAnimationCurveEaseInOut;
+            strongSelf.animationCurve = 0;
             [self setEnable:YES];
 			[self setKeyboardDistanceFromTextField:10.0];
             [self setShouldPlayInputClicks:YES];
@@ -819,7 +819,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
 
                 CGFloat bottom = (kbSize.height-keyboardDistanceFromTextField)-(CGRectGetHeight(keyWindow.frame)-CGRectGetMaxY(lastScrollViewRect));
 
-                // Update the insets so that the scroll vew doesn't shift incorrectly when the offset is near the bottom of the scroll view.
+                // Update the insets so that the scroll view doesn't shift incorrectly when the offset is near the bottom of the scroll view.
                 UIEdgeInsets movedInsets = _lastScrollView.contentInset;
 
                 movedInsets.bottom = MAX(_startingContentInsets.bottom, bottom);
@@ -1088,7 +1088,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
         [self showLog:[NSString stringWithFormat:@"Saving %@ beginning origin: %@",[rootController _IQDescription] ,NSStringFromCGPoint(_topViewBeginOrigin)]];
     }
 
-    //If last restored keyboard size is different(any orientation accure), then refresh. otherwise not.
+    //If last restored keyboard size is different(any orientation accrue), then refresh. otherwise not.
     if (!CGSizeEqualToSize(_kbSize, oldKBSize))
     {
         //If _textFieldView is inside UIAlertView then do nothing. (Bug ID: #37, #74, #76)
@@ -1774,7 +1774,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
                 }
             }
 
-            //In case of UITableView (Special), the next/previous buttons has to be refreshed everytime.    (Bug ID: #56)
+            //In case of UITableView (Special), the next/previous buttons has to be refreshed every time.    (Bug ID: #56)
             //    If firstTextField, then previous should not be enabled.
             if (siblings.firstObject == textField)
             {
