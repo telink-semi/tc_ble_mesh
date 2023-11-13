@@ -37,7 +37,7 @@
 }
 
 /// Encodes given list of Key Indexes into a Data. As each Key Index is 12 bits long, a pair of them can fit 3 bytes. This method ensures that they are packed in compliance to the Bluetooth Mesh specification.
-/// @param limit Maximim number of Key Indexes to encode.
+/// @param limit Maximum number of Key Indexes to encode.
 /// @param indexes An array of 12-bit Key Indexes.
 /// @returns Key Indexes encoded to a Data.
 - (NSData *)encodeLimit:(int)limit indexes:(NSArray <NSNumber *>*)indexes {
@@ -85,7 +85,7 @@
 + (NSArray <NSNumber *>*)decodeLimit:(int)limit indexesFromData:(NSData *)data atOffset:(int)offset {
     NSInteger size = data.length - offset;
     if (limit == 0 || size < 2) {
-//        TeLogDebug(@"limit is 0, or data.length is short.");
+//        TelinkLogDebug(@"limit is 0, or data.length is short.");
         return [NSArray array];
     }
     if (limit == 1 || size == 2) {
@@ -634,18 +634,18 @@
             Byte *dataByte = (Byte *)parameters.bytes;
             memcpy(&tem, dataByte, 1);
             if (tem != 0) {
-                TeLogError(@"Other Pages are not supoprted.");
+                TelinkLogError(@"Other Pages are not supoprted.");
             }
 //            if (tem == 0) {
                 SigPage0 *page0 = [[SigPage0 alloc] initWithParameters:parameters];//001102010033306900070000001101000002000300040000FE01FE00FF01FF001002100410061007100013011303130413110200000000020002100613
                 if (page0) {
                     _page = page0;
                 } else {
-                    TeLogError(@"init page0 fail.");
+                    TelinkLogError(@"init page0 fail.");
                     return nil;
                 }
 //            } else {
-//                TeLogError(@"Other Pages are not supoprted.");
+//                TelinkLogError(@"Other Pages are not supoprted.");
 //                return nil;
 //            }
         }
@@ -3114,7 +3114,7 @@
 //        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionStatus class]]) {
 //            _address = ((SigConfigModelSubscriptionStatus *)request).address;
 //        }else{
-//            TeLogError(@"Unknown request class.");
+//            TelinkLogError(@"Unknown request class.");
 //            return nil;
 //        }
 //        self.elementAddress = request.elementAddress;
@@ -3136,7 +3136,7 @@
 //        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionVirtualAddressDelete class]]) {
 //            _address = [[SigMeshAddress alloc] initWithVirtualLabel:((SigConfigModelSubscriptionVirtualAddressDelete *)request).virtualLabel].address;
 //        }else{
-//            TeLogError(@"Unknown request class.");
+//            TelinkLogError(@"Unknown request class.");
 //            return nil;
 //        }
 //        self.elementAddress = request.elementAddress;
@@ -5687,9 +5687,9 @@
 //- (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys {
 //    if (self = [super init]) {
 //        self.opCode = SigOpCode_configNetKeyList;
-//        _networkKeyIndexs = [NSMutableArray array];
+//        _networkKeyIndexes = [NSMutableArray array];
 //        for (SigNetkeyModel *model in networkKeys) {
-//            [_networkKeyIndexs addObject:@(model.index)];
+//            [_networkKeyIndexes addObject:@(model.index)];
 //        }
 //    }
 //    return self;
@@ -5708,14 +5708,14 @@
         if (parameters == nil || parameters.length == 0) {
             return nil;
         }
-        _networkKeyIndexs = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:0]];
+        _networkKeyIndexes = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:0]];
     }
     return self;
 }
 
 /// Message parameters as Data.
 - (NSData *)parameters {
-    return [self encodeIndexes:_networkKeyIndexs];
+    return [self encodeIndexes:_networkKeyIndexes];
 }
 
 @end

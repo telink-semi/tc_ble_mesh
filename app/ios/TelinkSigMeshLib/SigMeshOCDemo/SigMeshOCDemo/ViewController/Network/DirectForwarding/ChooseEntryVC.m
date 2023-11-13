@@ -36,7 +36,7 @@
 @implementation ChooseEntryVC
 
 - (IBAction)clickConfirm:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (self.backAddressCallback) {
         self.backAddressCallback(self.selectAddresses);
         [self.navigationController popViewControllerAnimated:YES];
@@ -87,7 +87,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 #pragma mark - UITableView

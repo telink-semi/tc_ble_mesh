@@ -42,7 +42,7 @@ typedef enum : NSUInteger {
 
 @interface CustomShareAlert : UIView
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *tableVewHeightConstraint;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *tableViewHeightConstraint;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *closeBtn;
 
@@ -51,7 +51,7 @@ typedef enum : NSUInteger {
 
 @property (copy, nonatomic) void(^backClickIndexBlock)(NSInteger index);
 
-- (CGFloat)getAlertHightWithItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray;
+- (CGFloat)getAlertHeightWithItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray;
 
 @end
 

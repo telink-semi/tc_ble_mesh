@@ -98,7 +98,7 @@
  *
  */
 - (void)onDiscoverServicePeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
-    TeLogInfo(@"peripheral=%@ advertisementData=%@ RSSI=%@", peripheral, advertisementData, RSSI);
+    TelinkLogInfo(@"peripheral=%@ advertisementData=%@ RSSI=%@", peripheral, advertisementData, RSSI);
     ServiceModel *model = [[ServiceModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData RSSI:RSSI];
     if ([_serviceList containsObject:model]) {
         [_serviceList replaceObjectAtIndex:[_serviceList indexOfObject:model] withObject:model];
@@ -112,7 +112,7 @@
 /// @param progress The progress of write object. Range of progress is 0.0~1.0.
 - (void)onClientWriteProgress:(float)progress {
     if (self.isExportToGateway) {
-        TeLogInfo(@"progress=%f", progress);
+        TelinkLogInfo(@"progress=%f", progress);
         self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Write Progress: %0.f%%", progress * 100];
 //        if (progress == 1.0) {
 //            __weak typeof(self) weakSelf = self;
@@ -127,7 +127,7 @@
 /// @param progress The progress of read object. Range of progress is 0.0~1.0.
 - (void)onClientReadProgress:(float)progress {
     if (!self.isExportToGateway) {
-        TeLogInfo(@"progress=%f", progress);
+        TelinkLogInfo(@"progress=%f", progress);
         self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Read Progress: %0.f%%", progress * 100];
     }
 }
@@ -136,7 +136,7 @@
 /// @param error Error of Write progress.
 - (void)onClientWriteFinishWithError:(NSError * __nullable )error {
     if (self.isExportToGateway) {
-        TeLogInfo(@"error=%@", error)
+        TelinkLogInfo(@"error=%@", error)
         [self setStratButtonEnable:YES];
         if (error) {
             self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Write Error: %@", error.localizedDescription];
@@ -159,7 +159,7 @@
 /// @param error Error of read progress.
 - (void)onClientReadFinishWithData:(NSData * __nullable )data error:(NSError * __nullable )error {
     if (!self.isExportToGateway) {
-        TeLogInfo(@"data=%@ error=%@", data, error)
+        TelinkLogInfo(@"data=%@ error=%@", data, error)
         [self setStratButtonEnable:YES];
         __weak typeof(self) weakSelf = self;
         if (error) {
@@ -223,7 +223,7 @@
 }
 
 -(void)dealloc {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

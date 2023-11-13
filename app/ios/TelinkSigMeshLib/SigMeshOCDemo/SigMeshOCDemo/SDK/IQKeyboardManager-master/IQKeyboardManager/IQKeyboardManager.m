@@ -741,7 +741,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
             UIView *lastView = textFieldView;
             superScrollView = _lastScrollView;
 
-            //Looping in upper hierarchy until we don't found any scrollView in it's upper hirarchy till UIWindow object.
+            //Looping in upper hierarchy until we don't found any scrollView in it's upper hierarchy till UIWindow object.
             while (superScrollView &&
                    (move>0?(move > (-superScrollView.contentOffset.y-superScrollView.contentInset.top)):superScrollView.contentOffset.y>0) )
             {
@@ -848,7 +848,7 @@ NSInteger const kIQPreviousNextButtonToolbarTag     =   -1005;
     }
     
     {
-        //Special case for UITextView(Readjusting textView.contentInset when textView hight is too big to fit on screen)
+        //Special case for UITextView(Readjusting textView.contentInset when textView height is too big to fit on screen)
         //_lastScrollView       If not having inside any scrollView, (now contentInset manages the full screen textView.
         //[textFieldView isKindOfClass:[UITextView class]] If is a UITextView type
         if ([textFieldView isKindOfClass:[UITextView class]])

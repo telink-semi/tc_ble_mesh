@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     SigHearbeatMessage.m
+ * @file     SigHeartbeatMessage.m
  *
- * @brief    for TLSR chips
+ * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2019/9/16
+ * @date     2023/11/13
  *
- * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) [2023], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "SigHearbeatMessage.h"
+#import "SigHeartbeatMessage.h"
 #import "SigControlMessage.h"
 
-@implementation SigHearbeatMessage
+@implementation SigHeartbeatMessage
 
-/// Initialize SigHearbeatMessage object.
+/// Initialize SigHeartbeatMessage object.
 /// @param message The SigControlMessage object.
-/// @returns return `nil` when initialize SigHearbeatMessage object fail.
+/// @returns return `nil` when initialize SigHeartbeatMessage object fail.
 - (instancetype)initFromControlMessage:(SigControlMessage *)message {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
@@ -36,7 +36,7 @@
         _opCode = message.opCode;
         NSData *data = message.upperTransportPdu;
         if (_opCode != 0x0A || data.length != 3) {
-            TeLogError(@"SigHearbeatMessage initFromControlMessage fail.");
+            TelinkLogError(@"SigHeartbeatMessage initFromControlMessage fail.");
             return nil;
         }
         Byte *dataByte = (Byte *)data.bytes;
@@ -53,13 +53,13 @@
     return self;
 }
 
-/// Creates a Heartbeat message.
+/// Creates a heartbeat message.
 ///
 /// - parameter ttl:         Initial TTL used when sending the message.
 /// - parameter features:    Currently active features of the node.
 /// - parameter source:      The source address.
 /// - parameter destination: The destination address.
-- (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targettingDestination:(UInt16)destination {
+- (instancetype)initWithInitialTtl:(UInt8)ttl features:(SigFeatures)features fromSource:(UInt16)source targetingDestination:(UInt16)destination {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.

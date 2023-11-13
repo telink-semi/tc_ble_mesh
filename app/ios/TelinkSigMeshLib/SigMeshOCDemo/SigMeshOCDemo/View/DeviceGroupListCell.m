@@ -104,7 +104,7 @@
                                     isSuccess = YES;
                                 } else {
                                     isFail = YES;
-                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
                                     if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
                                         //资源不足，设备的组号已经添加满了。
                                         weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
@@ -130,7 +130,7 @@
                                     isSuccess = YES;
                                 } else {
                                     isFail = YES;
-                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
                                     if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
                                         //资源不足，设备的组号已经添加满了。
                                         weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];

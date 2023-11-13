@@ -57,15 +57,15 @@
 #pragma mark - 3.显示【多列】选择器
 + (void)showMultiPickerWithTitle:(NSString *)title
                    dataSourceArr:(NSArray *)dataSourceArr
-                    selectIndexs:(NSArray <NSNumber *>*)selectIndexs
+                    selectIndexes:(NSArray <NSNumber *>*)selectIndexes
                      resultBlock:(BRStringResultModelArrayBlock)resultBlock {
-    [self showMultiPickerWithTitle:title dataSourceArr:dataSourceArr selectIndexs:selectIndexs isAutoSelect:NO resultBlock:resultBlock];
+    [self showMultiPickerWithTitle:title dataSourceArr:dataSourceArr selectIndexes:selectIndexes isAutoSelect:NO resultBlock:resultBlock];
 }
 
 #pragma mark - 4.显示【多列】选择器
 + (void)showMultiPickerWithTitle:(NSString *)title
                    dataSourceArr:(NSArray *)dataSourceArr
-                    selectIndexs:(NSArray <NSNumber *>*)selectIndexs
+                    selectIndexes:(NSArray <NSNumber *>*)selectIndexes
                     isAutoSelect:(BOOL)isAutoSelect
                      resultBlock:(BRStringResultModelArrayBlock)resultBlock {
     // 创建选择器
@@ -73,7 +73,7 @@
     strPickerView.pickerMode = BRStringPickerComponentMulti;
     strPickerView.title = title;
     strPickerView.dataSourceArr = dataSourceArr;
-    strPickerView.selectIndexs = selectIndexs;
+    strPickerView.selectIndexes = selectIndexes;
     strPickerView.isAutoSelect = isAutoSelect;
     strPickerView.resultModelArrayBlock = resultBlock;
     
@@ -84,7 +84,7 @@
 #pragma mark - 5.显示【联动】选择器
 + (void)showLinkagePickerWithTitle:(nullable NSString *)title
                      dataSourceArr:(nullable NSArray *)dataSourceArr
-                      selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                      selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                       isAutoSelect:(BOOL)isAutoSelect
                        resultBlock:(nullable BRStringResultModelArrayBlock)resultBlock {
     // 创建选择器
@@ -92,7 +92,7 @@
     strPickerView.pickerMode = BRStringPickerComponentLinkage;
     strPickerView.title = title;
     strPickerView.dataSourceArr = dataSourceArr;
-    strPickerView.selectIndexs = selectIndexs;
+    strPickerView.selectIndexes = selectIndexes;
     strPickerView.isAutoSelect = isAutoSelect;
     strPickerView.resultModelArrayBlock = resultBlock;
     
@@ -154,12 +154,12 @@
         
     } else if (self.pickerMode == BRStringPickerComponentMulti) {
         self.mDataSourceArr = self.dataSourceArr;
-        NSMutableArray *selectIndexs = [[NSMutableArray alloc]init];
+        NSMutableArray *selectIndexes = [[NSMutableArray alloc]init];
         for (NSInteger i = 0; i < self.mDataSourceArr.count; i++) {
             NSInteger row = 0;
-            if (self.selectIndexs.count > 0) {
-                if (i < self.selectIndexs.count) {
-                    NSInteger index = [self.selectIndexs[i] integerValue];
+            if (self.selectIndexes.count > 0) {
+                if (i < self.selectIndexes.count) {
+                    NSInteger index = [self.selectIndexes[i] integerValue];
 //                    row = ((index > 0 && index < [self.mDataSourceArr[i] count]) ? index : 0);
                     row = ((index > 0 && index < [self.mDataSourceArr count]) ? index : 0);
                 }
@@ -183,13 +183,13 @@
                     }
                 }
             }
-            [selectIndexs addObject:@(row)];
+            [selectIndexes addObject:@(row)];
         }
-        self.selectIndexs = [selectIndexs copy];
+        self.selectIndexes = [selectIndexes copy];
         
     } else if (self.pickerMode == BRStringPickerComponentLinkage) {
         
-        NSMutableArray *selectIndexs = [[NSMutableArray alloc]init];
+        NSMutableArray *selectIndexes = [[NSMutableArray alloc]init];
         NSMutableArray *mDataSourceArr = [[NSMutableArray alloc]init];
         
         BRResultModel *selectModel = nil;
@@ -207,19 +207,19 @@
             }
             
             NSInteger selectIndex = 0;
-            if (self.selectIndexs.count > i && [self.selectIndexs[i] integerValue] < nextArr.count) {
-                selectIndex = [self.selectIndexs[i] integerValue];
+            if (self.selectIndexes.count > i && [self.selectIndexes[i] integerValue] < nextArr.count) {
+                selectIndex = [self.selectIndexes[i] integerValue];
             }
             selectModel = nextArr[selectIndex];
             
-            [selectIndexs addObject:@(selectIndex)];
+            [selectIndexes addObject:@(selectIndex)];
             [mDataSourceArr addObject:nextArr];
 
             i++;
             
         } while (hasNext);
         
-        self.selectIndexs = [selectIndexs copy];
+        self.selectIndexes = [selectIndexes copy];
         self.mDataSourceArr = [mDataSourceArr copy];
     }
 }
@@ -347,10 +347,10 @@
             break;
         case BRStringPickerComponentMulti:
         {
-            if (component < self.selectIndexs.count) {
-                NSMutableArray *mutableArr = [self.selectIndexs mutableCopy];
+            if (component < self.selectIndexes.count) {
+                NSMutableArray *mutableArr = [self.selectIndexes mutableCopy];
                 [mutableArr replaceObjectAtIndex:component withObject:@(row)];
-                self.selectIndexs = [mutableArr copy];
+                self.selectIndexes = [mutableArr copy];
             }
             
             // 滚动选择时执行 changeModelArrayBlock
@@ -368,18 +368,18 @@
             break;
         case BRStringPickerComponentLinkage:
         {
-            if (component < self.selectIndexs.count) {
-                NSMutableArray *selectIndexs = [[NSMutableArray alloc]init];
-                for (NSInteger i = 0; i < self.selectIndexs.count; i++) {
+            if (component < self.selectIndexes.count) {
+                NSMutableArray *selectIndexes = [[NSMutableArray alloc]init];
+                for (NSInteger i = 0; i < self.selectIndexes.count; i++) {
                     if (i < component) {
-                        [selectIndexs addObject:self.selectIndexs[i]];
+                        [selectIndexes addObject:self.selectIndexes[i]];
                     } else if (i == component) {
-                        [selectIndexs addObject:@(row)];
+                        [selectIndexes addObject:@(row)];
                     } else {
-                        [selectIndexs addObject:@(0)];
+                        [selectIndexes addObject:@(0)];
                     }
                 }
-                self.selectIndexs = [selectIndexs copy];
+                self.selectIndexes = [selectIndexes copy];
             }
             
             // 刷新选择器数据
@@ -423,7 +423,7 @@
 - (NSArray *)getResultModelArr {
     NSMutableArray *resultModelArr = [[NSMutableArray alloc]init];
     for (NSInteger i = 0; i < self.mDataSourceArr.count; i++) {
-        NSInteger index = [self.selectIndexs[i] integerValue];
+        NSInteger index = [self.selectIndexes[i] integerValue];
         NSArray *dataArr = self.mDataSourceArr[i];
         
         id item = index < dataArr.count ? dataArr[index] : nil;
@@ -456,8 +456,8 @@
     if (self.pickerMode == BRStringPickerComponentSingle) {
         [self.pickerView selectRow:self.selectIndex inComponent:0 animated:NO];
     } else if (self.pickerMode == BRStringPickerComponentMulti || self.pickerMode == BRStringPickerComponentLinkage) {
-        for (NSInteger i = 0; i < self.selectIndexs.count; i++) {
-            NSNumber *index = [self.selectIndexs objectAtIndex:i];
+        for (NSInteger i = 0; i < self.selectIndexes.count; i++) {
+            NSNumber *index = [self.selectIndexes objectAtIndex:i];
             [self.pickerView selectRow:[index integerValue] inComponent:i animated:NO];
         }
     }
@@ -546,11 +546,11 @@
     return _mDataSourceArr;
 }
 
-- (NSArray<NSNumber *> *)selectIndexs {
-    if (!_selectIndexs) {
-        _selectIndexs = [NSArray array];
+- (NSArray<NSNumber *> *)selectIndexes {
+    if (!_selectIndexes) {
+        _selectIndexes = [NSArray array];
     }
-    return _selectIndexs;
+    return _selectIndexes;
 }
 
 - (NSArray<NSString *> *)mSelectValues {

@@ -66,7 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// The Proxy Filter object will be informed about the success or a failure.
 ///
-/// - parameter message: The Proxy Confifuration message to be sent.
+/// - parameter message: The Proxy Configuration message to be sent.
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message;
 
 @end

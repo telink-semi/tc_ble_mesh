@@ -43,7 +43,7 @@
     //set recall scene block
     [cell setClickRecallBlock:^{
         [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
+            TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
             
         }];
@@ -117,7 +117,7 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             SigSceneModel *model = [self.source[indexPath.item] copy];
-            TeLogDebug(@"%@",indexPath);
+            TelinkLogDebug(@"%@",indexPath);
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%@",model.number];
             if (model.actionList) {
                 BOOL hasOutLine = NO;
@@ -163,7 +163,7 @@
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 ActionModel *curAction = delArray.firstObject;
                 [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
+                    TelinkLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
                     [delArray removeObject:curAction];
                     dispatch_semaphore_signal(semaphore);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -181,7 +181,7 @@
 }
 
 - (void)showDeleteSceneSuccess:(SigSceneModel *)scene{
-    TeLogDebug(@"delect success");
+    TelinkLogDebug(@"delect success");
     [[SigDataSource share] deleteSceneModelWithModel:scene];
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     dispatch_async(dispatch_get_main_queue(), ^{

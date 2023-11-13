@@ -90,7 +90,7 @@
 /// Encrypts the message with the Application Key and a Network Key bound to it, and sends to the given destination address.
 /// This method does not send nor return PDUs to be sent. Instead, for each created segment it calls transmitter's `send(:ofType)`,
 /// which should send the PDU over the air. This is in order to support retransmittion in case a packet was lost and needs to be sent
-/// again after block acknowlegment was received.
+/// again after block acknowledgment was received.
 ///
 /// @param message The message to be sent.
 /// @param element The source Element.

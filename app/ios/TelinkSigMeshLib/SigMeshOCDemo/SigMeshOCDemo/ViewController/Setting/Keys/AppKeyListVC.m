@@ -107,7 +107,7 @@
                     }
                 }
             }
-            TeLogDebug(@"%@",indexPath);
+            TelinkLogDebug(@"%@",indexPath);
             if (hadBound) {
                 [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t delete it!" sure:nil];
                 return;

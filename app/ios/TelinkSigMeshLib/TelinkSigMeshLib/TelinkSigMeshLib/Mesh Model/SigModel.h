@@ -24,7 +24,7 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu;
+@class SigNetkeyDerivatives,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu;
 
 //typedef void(^bleEnableCallback)(CBCentralManager *central,BOOL enable);
 //typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
@@ -49,7 +49,7 @@ typedef void(^bleScanSpecialPeripheralCallback)(CBPeripheral *peripheral, NSDict
 /// callback of ble Connect Peripheral
 typedef void(^bleConnectPeripheralCallback)(CBPeripheral *peripheral,BOOL successful);
 
-/// callback of ble Connect Peripheral wirh error
+/// callback of ble Connect Peripheral with error
 typedef void(^bleConnectPeripheralWithErrorCallback)(CBPeripheral *peripheral, NSError * _Nullable error);
 
 /// callback of ble Discover Services
@@ -878,7 +878,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,strong) NSString *address;
 /// Publication address for the model.
 @property (nonatomic,strong) SigMeshAddress *publicationAddress;//Warning: assuming hex address is valid!
-/// An Application Key index, indicating which Applicaiton Key to use for the publication.
+/// An Application Key index, indicating which Application Key to use for the publication.
 @property (nonatomic,assign) UInt16 index;
 /// An integer from 0 to 127 that represents the Time To Live (TTL) value for the outgoing publish message. 255 means default TTL value.
 @property (nonatomic,assign) UInt8 ttl;
@@ -1184,8 +1184,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, copy) NSString *timestamp;
 
 
-@property (nonatomic, strong) SigNetkeyDerivaties *keys;
-@property (nonatomic, strong) SigNetkeyDerivaties *oldKeys;
+@property (nonatomic, strong) SigNetkeyDerivatives *keys;
+@property (nonatomic, strong) SigNetkeyDerivatives *oldKeys;
 
 /// Network identifier.
 @property (nonatomic, assign) UInt8 nid;
@@ -1202,7 +1202,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// The Network ID derived from the old Network Key. This identifier is public information. It is set when `oldKey` is set.
 @property (nonatomic, strong) NSData *oldNetworkId;
 
-- (SigNetkeyDerivaties *)transmitKeys;
+- (SigNetkeyDerivatives *)transmitKeys;
 
 /// Returns whether the Network Key is the Primary Network Key.
 /// The Primary key is the one which Key Index is equal to 0.
@@ -1224,7 +1224,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @end
 
 /// 参考文档：MshPRFd1.1r14_clean.pdf，page200.
-@interface SigNetkeyDerivaties : NSObject
+@interface SigNetkeyDerivatives : NSObject
 
 @property (nonatomic, strong) NSData *identityKey;
 
@@ -1238,7 +1238,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// directed forwarding派生key
 @property (nonatomic, strong) NSData *directedSecurityPrivacyKey;
 
-- (SigNetkeyDerivaties *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper;
+- (SigNetkeyDerivatives *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper;
 
 @end
 
@@ -1297,7 +1297,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 - (instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID DEPRECATED_MSG_ATTRIBUTE("Use 'initWithExistProvisionerMaxHighAddressUnicast:andProvisionerUUID:' instead");
 
 /// Initialize SigProvisionerModel object.
-/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @param maxHighAddressUnicast The max height unicastAddress of `allocatedUnicastRange`.
 /// @param provisionerUUID The UUID of new provisioner.
 /// @returns return `nil` when initialize SigProvisionerModel object fail.
 - (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID;
@@ -1354,8 +1354,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// Get int number of low address.
 - (NSInteger)lowIntAddress;
 
-/// Get int number of hight address.
-- (NSInteger)hightIntAddress;
+/// Get int number of height address.
+- (NSInteger)heightIntAddress;
 
 /// Get dictionary from SigRangeModel object.
 /// @returns return dictionary object.
@@ -1366,7 +1366,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 - (void)setDictionaryToSigRangeModel:(NSDictionary *)dictionary;
 
 /// Initialize SigRangeModel object.
-/// @param maxHighAddressUnicast The max hight unicastAddress of `allocatedUnicastRange`.
+/// @param maxHighAddressUnicast The max height unicastAddress of `allocatedUnicastRange`.
 /// @returns return `nil` when initialize SigRangeModel object fail.
 - (instancetype)initWithMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast;
 
@@ -1444,7 +1444,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt8 aid;
 @property (nonatomic, assign) UInt8 oldAid;
 
-/// Get curent bound network key.
+/// Get current bound network key.
 - (nullable SigNetkeyModel *)getCurrentBoundNetKey;
 
 /// Get hex data appkey of SigAppkeyModel object.
@@ -1727,7 +1727,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 ///return node true brightness, range is 0~100
 - (UInt8)trueBrightness;
 
-///return node true color temperture, range is 0~100
+///return node true color temperature, range is 0~100
 - (UInt8)trueTemperature;
 
 ///update node status from api getOnlineStatusFromUUIDWithCompletation
@@ -2039,7 +2039,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// The publish property contains a publish object (see Section 2.1.4.6.1.1) that describes the
 /// configuration of this model’s publication.
 @property (nonatomic, strong, nullable) SigPublishModel *publish;
-/// An array of Appliaction Key indexes to which this model is bound.
+/// An array of Application Key indexes to which this model is bound.
 /// The bind property contains an array of integers that represents indexes of the application
 /// keys (see Section 2.1.3) to which this model is bound. Each application key index corresponds
 /// to the index values of one of the application key entries in the node’s appKeys array (see
@@ -2081,7 +2081,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// Adds the given Application Key Index to the bound keys.
 ///
-/// - paramter applicationKeyIndex: The Application Key index to bind.
+/// - parameter applicationKeyIndex: The Application Key index to bind.
 - (void)bindApplicationKeyWithIndex:(UInt16)applicationKeyIndex;
 
 /// Removes the Application Key binding to with the given Key Index

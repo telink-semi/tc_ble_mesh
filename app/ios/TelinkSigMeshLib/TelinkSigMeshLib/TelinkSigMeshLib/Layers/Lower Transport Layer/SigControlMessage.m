@@ -52,7 +52,7 @@
         UInt8 tem = 0;
         memcpy(&tem, dataByte, 1);
         if (data.length < 1 || (tem & 0x80) != 0) {
-            TeLogError(@"initFromUnsegmentedPdu fail.");
+            TelinkLogError(@"initFromUnsegmentedPdu fail.");
             return nil;
         }
         _opCode = tem & 0x7F;

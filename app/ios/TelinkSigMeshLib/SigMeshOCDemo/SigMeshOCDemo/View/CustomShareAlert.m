@@ -57,14 +57,14 @@
 
 - (void)setItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray {
     _itemArray = itemArray;
-    self.tableVewHeightConstraint.constant = [self getHightOfItemArray:itemArray];
+    self.tableViewHeightConstraint.constant = [self getHeightOfItemArray:itemArray];
 }
 
-- (CGFloat)getAlertHightWithItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray {
-    return [self getHightOfItemArray:itemArray] + 45;
+- (CGFloat)getAlertHeightWithItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray {
+    return [self getHeightOfItemArray:itemArray] + 45;
 }
 
-- (CGFloat)getHightOfItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray {
+- (CGFloat)getHeightOfItemArray:(NSMutableArray<ShareAlertItemModel *> *)itemArray {
     BOOL hasDelete = NO;
     NSInteger titleCount = 0;
     NSArray *array = [NSArray arrayWithArray:itemArray];
@@ -75,8 +75,8 @@
             titleCount += 1;
         }
     }
-    CGFloat hight = 45 * titleCount + 70 * (hasDelete ? 1 : 0);
-    return hight;
+    CGFloat height = 45 * titleCount + 70 * (hasDelete ? 1 : 0);
+    return height;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {

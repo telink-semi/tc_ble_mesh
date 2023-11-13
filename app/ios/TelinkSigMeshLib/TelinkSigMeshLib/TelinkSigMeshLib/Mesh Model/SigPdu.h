@@ -330,7 +330,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.4.1.6 Provisioning Confirmation
 /// - seeAlso: MshPRT_v1.1.pdf (page.582)
 @interface SigProvisioningConfirmationPdu : SigProvisioningPdu
-/// The values exchanged so far including the OOB Authentication M value. The szie is 16 or 32.
+/// The values exchanged so far including the OOB Authentication M value. The size is 16 or 32.
 /// If the PDU is sent by the Provisioner, the Confirmation field shall contain the ConfirmationProvisioner value.
 /// If the PDU is sent by the Provisionee, the Confirmation field shall contain the ConfirmationDevice value.
 /// The size of the Confirmation field, the ConfirmationProvisioner value, and the ConfirmationDevice value are
@@ -340,7 +340,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * @brief   Initialize SigProvisioningConfirmationPdu object.
  * @param   confirmation    The values exchanged so far including the OOB Authentication M value.
- * The szie is 16 or 32.
+ * The size is 16 or 32.
  * If the PDU is sent by the Provisioner, the Confirmation field shall contain the ConfirmationProvisioner value.
  * If the PDU is sent by the Provisionee, the Confirmation field shall contain the ConfirmationDevice value.
  * The size of the Confirmation field, the ConfirmationProvisioner value, and the ConfirmationDevice value are
@@ -395,7 +395,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigProvisioningDataPdu : SigProvisioningPdu
 /// An encrypted and authenticated network key, NetKey Index, Key Refresh Flag, IV Update Flag,
 /// current value of the IV Index, and unicast address of the primary element (see Section 5.4.2.5),
-/// the szie is 25.
+/// the size is 25.
 @property (nonatomic, strong) NSData *encryptedProvisioningData;
 /// PDU Integrity Check value, size is 8.
 @property (nonatomic, strong) NSData *provisioningDataMIC;
@@ -404,7 +404,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @brief   Initialize SigProvisioningRandomPdu object.
  * @param   encryptedProvisioningData    An encrypted and authenticated network key, NetKey Index,
  * Key Refresh Flag, IV Update Flag, current value of the IV Index, and unicast address of the primary element
- * (see Section 5.4.2.5),the szie is 25.
+ * (see Section 5.4.2.5),the size is 25.
  * @param   provisioningDataMIC    PDU Integrity Check value, size is 8.
  * @return  return `nil` when initialize SigProvisioningRandomPdu object fail.
  */

@@ -36,7 +36,7 @@
 @implementation SubnetBridgeListVC
 
 - (IBAction)addBridgingTable:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigBearer.share.isOpen) {
         if (self.model.state != DeviceStateOutOfLine) {
             [self pushToAddBridgingTableVC];
@@ -49,22 +49,22 @@
 }
 
 - (IBAction)clickEnable:(UISwitch *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"send request for subnetBridgeSet, but busy now.");
+        TelinkLogInfo(@"send request for subnetBridgeSet, but busy now.");
         [self showTips:@"app is busy now, try again later."];
         sender.on = !sender.on;
     } else {
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
-                TeLogInfo(@"send request for subnetBridgeSet, address:%d",self.model.address);
+                TelinkLogInfo(@"send request for subnetBridgeSet, address:%d",self.model.address);
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand subnetBridgeSetWithDestination:self.model.address subnetBridge:sender.on ? SigSubnetBridgeStateValues_enabled : SigSubnetBridgeStateValues_disabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSubnetBridgeStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     weakSelf.model.subnetBridgeEnable = sender.on;
                     [SigDataSource.share saveLocationData];
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 }];
             } else {
                 sender.on = !sender.on;
@@ -84,22 +84,22 @@
 }
 
 - (void)removeBridgeTable:(SigSubnetBridgeModel *)subnetBridge {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"send request for bridgeTableRemove, but busy now.");
+        TelinkLogInfo(@"send request for bridgeTableRemove, but busy now.");
         [self showTips:@"app is busy now, try again later."];
     } else {
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
-                TeLogInfo(@"send request for bridgeTableRemove, address:%d",self.model.address);
+                TelinkLogInfo(@"send request for bridgeTableRemove, address:%d",self.model.address);
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridge.netKeyIndex1 netKeyIndex2:subnetBridge.netKeyIndex2 address1:subnetBridge.address1 address2:subnetBridge.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"bridgeTableRemove=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"bridgeTableRemove=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         [weakSelf removeBridgeTableRemoveFromNode:subnetBridge];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 
                 }];
             } else {
@@ -196,7 +196,7 @@
     [ShowTipsHandle.share show:@"delete Subnet Bridge from node..."];
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridgeModel.netKeyIndex1 netKeyIndex2:subnetBridgeModel.netKeyIndex2 address1:subnetBridgeModel.address1 address2:subnetBridgeModel.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"delete Subnet Bridge responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"delete Subnet Bridge responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             [weakSelf.model.subnetBridgeList removeObject:subnetBridgeModel];
             [SigDataSource.share saveLocationData];
@@ -206,7 +206,7 @@
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete Subnet Bridge from node fail! error status=%d",responseMessage.status]];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete Subnet Bridge from node fail! error=%@",error]];

@@ -58,7 +58,7 @@
         if (SigDataSource.share.unicastAddressOfConnected == self.model.address) {
 //            [ConnectTools.share stopConnectToolsWithComplete:nil];
         } else {
-            TeLogInfo(@"===========endConnectTools");
+            TelinkLogInfo(@"===========endConnectTools");
             [ConnectTools.share endConnectTools];
         }
     } else {
@@ -159,7 +159,7 @@
         
         //4.发送pubSet指令
         [DemoCommand editPublishListWithPublishAddress:newPubAdr nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:newModelID companyIdentifier:newCompanyIdentifier periodSteps:SigDataSource.share.defaultPublishPeriodModel.numberOfSteps periodResolution:[LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel] retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"editPublishList callback");
+            TelinkLogDebug(@"editPublishList callback");
             if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
                 if (responseMessage.publish.publicationAddress.address == newPubAdr && newPubAdr != 0) {
                     model.publish = [[SigPublishModel alloc] init];

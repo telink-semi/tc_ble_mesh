@@ -64,9 +64,9 @@
 //        //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
 ////        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
 ////        [SDKLibCommand genericOnOffSetDestination:ele_adr.intValue isOn:swift.isOn transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-////            TeLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
+////            TelinkLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
 ////        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-////            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+////            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 ////        }];
     }];
     //Attention: panel has 8 onoff button, but node just has one onoff data, developer should fix that when your app has panel.
@@ -87,7 +87,7 @@
     [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
-+ (CGFloat)getOnOffModelCellHightOfItemCount:(NSInteger)itemCount {
++ (CGFloat)getOnOffModelCellHeightOfItemCount:(NSInteger)itemCount {
     CGRect rx = [UIScreen mainScreen].bounds;
     CGFloat a = floorf((rx.size.width - 8) / (CGFloat)(70 + 8));
     CGFloat  h = (70.0 + 8) * ceilf(itemCount/a);

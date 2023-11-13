@@ -113,7 +113,7 @@ typedef enum : NSUInteger {
  */
 - (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     self.unicastAddress = address;
-    TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
+    TelinkLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
     self.networkKey = networkKey;
     self.netkeyIndex = netkeyIndex;
     self.appkeyModel = appkeyModel;
@@ -282,7 +282,7 @@ typedef enum : NSUInteger {
 - (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel capabilitiesResponse:(addDevice_capabilitiesWithReturnCallBack)capabilitiesResponse provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     SigAppkeyModel *appkeyModel = [SigMeshLib.share.dataSource getAppkeyModelWithAppkeyIndex:configModel.appkeyIndex];
     if (!appkeyModel || ![appkeyModel.getDataKey isEqualToData:configModel.appKey]) {
-        TeLogVerbose(@"appKey is error.");
+        TelinkLogVerbose(@"appKey is error.");
         if (provisionFail) {
             NSError *err = [NSError errorWithDomain:@"appKey is error." code:-1 userInfo:nil];
             provisionFail(err);
@@ -325,7 +325,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)keybind{
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     self.addStatus = SigAddStatusKeyBinding;
     __weak typeof(self) weakSelf = self;
     CBPeripheral *peripheral = SigBearer.share.getCurrentPeripheral;
@@ -333,14 +333,14 @@ typedef enum : NSUInteger {
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (error) {
             if (weakSelf.retryCount > 0) {
-                TeLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
+                TelinkLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
                 weakSelf.retryCount --;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(checkToTryAgain:) object:weakSelf.curPeripheral];
                     [weakSelf performSelector:@selector(checkToTryAgain:) withObject:weakSelf.curPeripheral afterDelay:0.1];
                 });
             } else {
-                TeLogDebug(@"setFilter fail, so keybind fail.");
+                TelinkLogDebug(@"setFilter fail, so keybind fail.");
                 if (weakSelf.keyBindFailBlock) {
                     NSError *err = [NSError errorWithDomain:@"setFilter fail, so keybind fail." code:0 userInfo:nil];
                     weakSelf.keyBindFailBlock(err);
@@ -349,7 +349,7 @@ typedef enum : NSUInteger {
                 [weakSelf addPeripheralFail:peripheral];
             }
         } else {
-            TeLogInfo(@"start keyBind.");
+            TelinkLogInfo(@"start keyBind.");
             weakSelf.addStatus = SigAddStatusKeyBinding;
             KeyBindType currentKeyBindType = KeyBindType_Normal;
             if (weakSelf.keyBindType == KeyBindType_Fast) {
@@ -361,7 +361,7 @@ typedef enum : NSUInteger {
                     if (deviceType != nil) {
                         currentKeyBindType = KeyBindType_Fast;
                     } else {
-                        TeLogInfo(@"fast bind no support, bind Normal!!!");
+                        TelinkLogInfo(@"fast bind no support, bind Normal!!!");
                     }
                 }
             }
@@ -384,7 +384,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)startAddPeripheral:(CBPeripheral *)peripheral {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keybind) object:nil];
@@ -494,7 +494,7 @@ typedef enum : NSUInteger {
                         [weakSelf keybind];
                     });
                 }else{
-                    TeLogError(@"error addStatus=%d!!!!!!!!!",weakSelf.addStatus);
+                    TelinkLogError(@"error addStatus=%d!!!!!!!!!",weakSelf.addStatus);
                 }
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -515,7 +515,7 @@ typedef enum : NSUInteger {
             weakSelf.retryCount = 0;
         }
         if (weakSelf.retryCount > 0) {
-            TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
+            TelinkLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
             weakSelf.retryCount --;
             if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
                 //重试连接时如果断开连接超时会导致closeWithResult重复赋值。所以添加该延时。
@@ -565,7 +565,7 @@ typedef enum : NSUInteger {
                     if (rspModel.getIdentificationType == SigIdentificationType_nodeIdentity || rspModel.getIdentificationType == SigIdentificationType_privateNodeIdentity) {
                         SigEncryptedModel *encryptedModel = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:weakSelf.unicastAddress];
                         if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
-                            TeLogInfo(@"keyBind start connect macAddress:%@,uuid=%@",rspModel.macAddress,rspModel.uuid);
+                            TelinkLogInfo(@"keyBind start connect macAddress:%@,uuid=%@",rspModel.macAddress,rspModel.uuid);
                             [SigBluetooth.share stopScan];
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(keyBindByProxy) object:nil];
@@ -587,7 +587,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)addPeripheralFail:(CBPeripheral *)peripheral {
-    TeLogInfo(@"addPeripheralFail,uuid=%@",peripheral.identifier.UUIDString);
+    TelinkLogInfo(@"addPeripheralFail,uuid=%@",peripheral.identifier.UUIDString);
     NSString *uuid = peripheral.identifier.UUIDString;
     if (uuid && ![self.tempProvisionFailList containsObject:uuid]) {
         [self.tempProvisionFailList addObject:uuid];
@@ -636,9 +636,9 @@ typedef enum : NSUInteger {
 }
 
 - (void)refreshNextUnicastAddress {
-    TeLogInfo(@"更新自动添加节点的地址，更新前为0x%X",self.unicastAddress);
+    TelinkLogInfo(@"更新自动添加节点的地址，更新前为0x%X",self.unicastAddress);
     self.unicastAddress += SigProvisioningManager.share.provisioningCapabilities.numberOfElements;
-    TeLogInfo(@"更新自动添加节点的地址，更新后为0x%X",self.unicastAddress);
+    TelinkLogInfo(@"更新自动添加节点的地址，更新后为0x%X",self.unicastAddress);
 }
 
 @end

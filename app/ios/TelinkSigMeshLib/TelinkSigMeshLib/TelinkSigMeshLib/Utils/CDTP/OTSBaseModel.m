@@ -877,29 +877,29 @@
 
 #pragma mark - NSStreamDelegate
 - (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-    TeLogInfo(@"%@", aStream);
+    TelinkLogInfo(@"%@", aStream);
     uint8_t buf[1024];
     NSData * data;
     NSInteger len;
     NSError *theError;
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            TeLogInfo(@"NSStreamEventOpenCompleted");
+            TelinkLogInfo(@"NSStreamEventOpenCompleted");
             break;
         case NSStreamEventHasSpaceAvailable:
-            TeLogInfo(@"NSStreamEventHasSpaceAvailable");
+            TelinkLogInfo(@"NSStreamEventHasSpaceAvailable");
 //            [self sendStreamData];
             [self performSelector:@selector(sendStreamData) withObject:self afterDelay:0.03];
             break;
         case NSStreamEventHasBytesAvailable:
             len = [(NSInputStream *)aStream read:buf maxLength:1024];
-            TeLogInfo(@"NSStreamEventHasBytesAvailable (this %@), read %u bytes",aStream, (int) len);
+            TelinkLogInfo(@"NSStreamEventHasBytesAvailable (this %@), read %u bytes",aStream, (int) len);
             if(len) {
                 data = [NSData dataWithBytes:buf length:len];
-                TeLogInfo(@"%@", data);
+                TelinkLogInfo(@"%@", data);
                 if (self.readData.length < self.readSize) {
                     [self.readData appendData:data];
-                    TeLogInfo(@"pro=%f", self.readData.length/(float)self.readSize);
+                    TelinkLogInfo(@"pro=%f", self.readData.length/(float)self.readSize);
                     if (self.readProgressCallback) {
                         self.readProgressCallback(self.readData.length/(float)self.readSize);
                     }
@@ -913,10 +913,10 @@
             break;
         case NSStreamEventErrorOccurred:
             theError = [aStream streamError];
-            TeLogInfo(@"NSStreamEventErrorOccurred: %@", theError);
+            TelinkLogInfo(@"NSStreamEventErrorOccurred: %@", theError);
             break;
         case NSStreamEventEndEncountered:
-            TeLogInfo(@"NSStreamEventEndEncountered");
+            TelinkLogInfo(@"NSStreamEventEndEncountered");
             //service端关闭蓝牙，Client端回调这个枚举值
             [self closeStreamAction];
             if (self.readCompleteCallback) {
@@ -924,10 +924,10 @@
             }
             break;
         case NSStreamEventNone:
-            TeLogInfo(@"NSStreamEventNone");
+            TelinkLogInfo(@"NSStreamEventNone");
             break;
         default:
-            TeLogInfo(@"Other %02x", (int) eventCode);
+            TelinkLogInfo(@"Other %02x", (int) eventCode);
             break;
     }
 }

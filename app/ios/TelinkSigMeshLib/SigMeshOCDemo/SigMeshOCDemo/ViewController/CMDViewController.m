@@ -122,10 +122,10 @@
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand sendOpINIData:self.sendData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
             NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",(unsigned int)responseMessage.opCode,responseMessage.parameters];
-            TeLogVerbose(@"%@",str);
+            TelinkLogVerbose(@"%@",str);
             [weakSelf showNewLogMessage:str];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogVerbose(@"finish");
+            TelinkLogVerbose(@"finish");
         }];
         
 //        CBCharacteristic *otaCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOTA_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
@@ -134,9 +134,9 @@
 //        [SigBluetooth.share setBluetoothDidUpdateValueCallback:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic, NSError * _Nullable error) {
 //            if ([peripheral isEqual:SigBearer.share.getCurrentPeripheral] && [characteristic isEqual:otaCharacteristic]) {
 //                if (error == nil) {
-//                    TeLogDebug(@"CMD界面接收到数据<---0x%@",[LibTools convertDataToHexStr:characteristic.value]);
+//                    TelinkLogDebug(@"CMD界面接收到数据<---0x%@",[LibTools convertDataToHexStr:characteristic.value]);
 //                } else {
-//                    TeLogError(@"CMD界面接收到错误:%@",error);
+//                    TelinkLogError(@"CMD界面接收到错误:%@",error);
 //                }
 //            }
 //        }];
@@ -150,10 +150,10 @@
 //        IniCommandModel *ini = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyIndex:SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:1 address:2 opcode:0xC5 vendorId:kCompanyID responseOpcode:0xC4 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"7900383530333137536D6172745465616D2D50617373776F72642D322E34473034313233343062546573745F46616D696C793034313233343062546573745F46616D696C79313868747470733A2F2F7777772E6C656476616E63652E636F6D3030313368747470733A2F2F3139382E3132372E302E303034323262383031303030313031303432326238"]];
 //        [SDKLibCommand sendIniCommandModel:ini successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
 //            NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",responseMessage.opCode,responseMessage.parameters];
-//            TeLogVerbose(@"%@",str);
+//            TelinkLogVerbose(@"%@",str);
 //            [weakSelf showNewLogMessage:str];
 //        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//            TeLogVerbose(@"finish");
+//            TelinkLogVerbose(@"finish");
 //        }];
         
     } else {
@@ -245,7 +245,7 @@
 
 -(void)dealloc{
     SigBluetooth.share.bluetoothDidUpdateValueCallback = nil;
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

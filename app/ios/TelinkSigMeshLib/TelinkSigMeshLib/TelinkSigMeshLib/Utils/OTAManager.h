@@ -50,7 +50,7 @@ typedef void(^finishCallBack)(NSArray <SigNodeModel *>*successModels,NSArray <Si
  @param singleFailAction callback when single model OTA  fail
  @param singleProgressAction callback with single model OTA progress
  @param finishAction callback when all models OTA finish
- @return  ture when call API success;false when call API fail.
+ @return  true when call API success;false when call API fail.
  */
 - (BOOL)startOTAWithOtaData:(NSData *)otaData models:(NSArray <SigNodeModel *>*)models singleSuccessAction:(singleDeviceCallBack)singleSuccessAction singleFailAction:(singleDeviceCallBack)singleFailAction singleProgressAction:(singleProgressCallBack)singleProgressAction finishAction:(finishCallBack)finishAction;
 

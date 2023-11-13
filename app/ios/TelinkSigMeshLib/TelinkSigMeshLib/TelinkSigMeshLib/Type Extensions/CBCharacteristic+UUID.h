@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBCharacteristic (UUID)
 
-- (BOOL)isTheCharacteriticWithID:(NSString *)uuidString;
+- (BOOL)isTheCharacteristicWithID:(NSString *)uuidString;
 
 @end
 

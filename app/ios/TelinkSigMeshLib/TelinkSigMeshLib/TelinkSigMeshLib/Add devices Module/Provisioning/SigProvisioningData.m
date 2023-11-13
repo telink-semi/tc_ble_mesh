@@ -83,7 +83,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// @param data The device Public Key.
 - (void)provisionerDidObtainWithDevicePublicKey:(NSData *)data {
     if (data == nil || data.length == 0) {
-        TeLogError(@"current piblickey isn't specified.");
+        TelinkLogError(@"current piblickey isn't specified.");
         return;
     }
     self.sharedSecret = [SigECCEncryptHelper.share getSharedSecretWithDevicePublicKey:data];
@@ -107,7 +107,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// This method validates the received Provisioning Confirmation and matches it with one calculated locally based on the Provisioning Random received from the device and Auth Value.
 - (BOOL)validateConfirmation {
     if (!self.deviceRandom || self.deviceRandom.length == 0 || !self.authValue || self.authValue.length == 0 || !self.sharedSecret || self.sharedSecret.length == 0) {
-        TeLogDebug(@"provision info is lack.");
+        TelinkLogDebug(@"provision info is lack.");
         return NO;
     }
     NSData *confirmation = nil;
@@ -117,7 +117,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
         confirmation = [self calculate_HMAC_SHA256_ConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
     }
     if (confirmation != nil && ![self.deviceConfirmation isEqualToData:confirmation]) {
-        TeLogDebug(@"calculate Confirmation fail.");
+        TelinkLogDebug(@"calculate Confirmation fail.");
         return NO;
     }
     return YES;
@@ -185,7 +185,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
         _provisionerRandom = [LibTools createRandomDataWithLength:32];
     }
     _provisionerPublicKey = [SigECCEncryptHelper.share getPublicKeyData];
-//    TeLogInfo(@"app端的random=%@,publickey=%@",[LibTools convertDataToHexStr:_provisionerRandom],[LibTools convertDataToHexStr:_provisionerPublicKey]);
+//    TelinkLogInfo(@"app端的random=%@,publickey=%@",[LibTools convertDataToHexStr:_provisionerRandom],[LibTools convertDataToHexStr:_provisionerPublicKey]);
 }
 
 /// This method calculates the Provisioning Confirmation based on the Confirmation Inputs, 16-byte Random and 16-byte AuthValue.
@@ -194,7 +194,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// @returns The Provisioning Confirmation value.
 - (NSData *)calculateConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
     // Calculate the Confirmation Salt = s1(confirmationInputs).
-//    TeLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
+//    TelinkLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
     
     // Calculate the Confirmation Key = k1(ECDH Secret, confirmationSalt, 'prck')
@@ -210,7 +210,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 - (NSData *)calculate_HMAC_SHA256_ConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
     // Calculate the Confirmation Salt = s2(confirmationInputs).
-//    TeLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
+//    TelinkLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
     
     // Calculate the Confirmation Key = k5(ECDH Secret||Authvalue, confirmationSalt, 'prck256')

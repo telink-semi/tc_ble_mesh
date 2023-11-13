@@ -68,7 +68,7 @@
 ///
 /// - parameter networkPdu: The Network PDU received.
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu {
-    TeLogVerbose(@"receive:%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
+    TelinkLogVerbose(@"receive:%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
     @synchronized(self) {
         // Some validation, just to be sure. This should pass for sure.
         if (networkPdu.transportPdu.length <= 1) {
@@ -79,7 +79,7 @@
         dispatch_async(_mutex, ^{
             BOOL result = [weakSelf checkAgainstReplayAttackWithNetworkPdu:networkPdu];
             if (!result) {
-                TeLogError(@"LowerTransportError.replayAttack");
+                TelinkLogError(@"LowerTransportError.replayAttack");
                 return;
             }
 
@@ -87,7 +87,7 @@
                 //isReceiveSegmentPDUing=YES时，只接收sequenceNumber合法的ack包和networkPdu.isSegmented=YES的包
                 if (SigMeshLib.share.isReceiveSegmentPDUing) {
                     if (SigMeshLib.share.sourceOfReceiveSegmentPDU != networkPdu.source) {
-                        TeLogError(@"LowerTransportError.busy");
+                        TelinkLogError(@"LowerTransportError.busy");
                         [weakSelf sendBusySegmentAcknowledgmentMessageWithNetworkPdu:networkPdu];
                         return;
                     }
@@ -97,12 +97,12 @@
             // Lower Transport Messages can be Unsegmented or Segmented.
             // This information is stored in the most significant bit of the first octet.
             BOOL segmented = networkPdu.isSegmented;
-//            TeLogInfo(@"==========networkPdu.isSegmented=%d,networkPdu.type=%d",networkPdu.isSegmented,networkPdu.type);
+//            TelinkLogInfo(@"==========networkPdu.isSegmented=%d,networkPdu.type=%d",networkPdu.isSegmented,networkPdu.type);
             if (segmented) {
                 if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigSegmentedAccessMessage *segment = [[SigSegmentedAccessMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-//                        TeLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TelinkLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -112,12 +112,12 @@
 //                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
 //                        }
                     }else{
-                        TeLogError(@"segmented = nil.");
+                        TelinkLogError(@"segmented = nil.");
                     }
                 } else if (networkPdu.ctl == SigLowerTransportPduType_transportControlMessage) {
                     SigSegmentedControlMessage *segment = [[SigSegmentedControlMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-//                        TeLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TelinkLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -127,20 +127,20 @@
 //                            [SigMeshLib.share receiveNetworkPdu:networkPdu];
 //                        }
                     } else {
-                        TeLogError(@"segmented = nil.");
+                        TelinkLogError(@"segmented = nil.");
                     }
                 }else{
-                    TeLogError(@"networkPdu.type no exist.");
+                    TelinkLogError(@"networkPdu.type no exist.");
                 }
             }else{
                 if (networkPdu.ctl == SigLowerTransportPduType_accessMessage) {
                     SigAccessMessage *accessMessage = [[SigAccessMessage alloc] initFromUnsegmentedPdu:networkPdu];
                     if (accessMessage) {
-//                        TeLogVerbose(@"%@ receieved (decrypted using key: %@)",accessMessage,accessMessage.networkKey);
+//                        TelinkLogVerbose(@"%@ receieved (decrypted using key: %@)",accessMessage,accessMessage.networkKey);
                         // Unsegmented message is not acknowledged. Just pass it to higher layer.
                         [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:accessMessage];
                     } else {
-                        TeLogError(@"accessMessage = nil.");
+                        TelinkLogError(@"accessMessage = nil.");
                     }
                 }else if (networkPdu.ctl == SigLowerTransportPduType_transportControlMessage) {
                     UInt8 tem = 0;
@@ -150,23 +150,23 @@
                     if (opCode == 0x00) {
                         SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initFromNetworkPdu:networkPdu];
                         if (ack) {
-//                            TeLogVerbose(@"SigSegmentAcknowledgmentMessage receieved =%@ (decrypted using key: %@)",ack,ack.networkKey);
+//                            TelinkLogVerbose(@"SigSegmentAcknowledgmentMessage receieved =%@ (decrypted using key: %@)",ack,ack.networkKey);
                             [weakSelf handleSegmentAcknowledgmentMessage:ack];
                         } else {
-                            TeLogError(@"ack = nil.");
+                            TelinkLogError(@"ack = nil.");
                         }
                     } else {
                         SigControlMessage *controlMessage = [[SigControlMessage alloc] initFromNetworkPdu:networkPdu];
                         if (controlMessage) {
-                            TeLogVerbose(@"%@ receieved (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
+                            TelinkLogVerbose(@"%@ receieved (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
                             // Unsegmented message is not acknowledged. Just pass it to higher layer.
                             [weakSelf.networkManager.upperTransportLayer handleLowerTransportPdu:controlMessage];
                         } else {
-                            TeLogError(@"controlMessage = nil.");
+                            TelinkLogError(@"controlMessage = nil.");
                         }
                     }
                 }else{
-                    TeLogError(@"networkPdu.type no exist.");
+                    TelinkLogError(@"networkPdu.type no exist.");
                 }
             }
         });
@@ -176,7 +176,7 @@
 - (void)sendBusySegmentAcknowledgmentMessageWithNetworkPdu:(SigNetworkPdu *)networkPdu {
     SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initBusySegmentAcknowledgmentMessageWithNetworkPdu:networkPdu];
     dispatch_async(SigMeshLib.share.queue, ^{
-        TeLogInfo(@"sending busy ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x, ======sourceOfReceiveSegmentPDU=0x%x",ack,ack.source,ack.destination,ack.sequenceZero, SigMeshLib.share.sourceOfReceiveSegmentPDU);
+        TelinkLogInfo(@"sending busy ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x, ======sourceOfReceiveSegmentPDU=0x%x",ack,ack.source,ack.destination,ack.sequenceZero, SigMeshLib.share.sourceOfReceiveSegmentPDU);
         [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:SigMeshLib.share.defaultTtl ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex];
     });
 }
@@ -192,7 +192,7 @@
 - (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
     SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (provisionerNode == nil) {
-        TeLogError(@"curLocationNodeModel = nil.");
+        TelinkLogError(@"curLocationNodeModel = nil.");
         return;
     }
     UInt8 ttl = initialTtl;
@@ -219,7 +219,7 @@
 - (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
     SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (provisionerNode == nil) {
-        TeLogError(@"curLocationNodeModel = nil.");
+        TelinkLogError(@"curLocationNodeModel = nil.");
         return;
     }
     /// Last 13 bits of the sequence number are known as seqZero.
@@ -271,7 +271,7 @@
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu {
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
-    TeLogInfo(@"Cancelling sending segments with seqZero:0x%X",sequenceZero);
+    TelinkLogInfo(@"Cancelling sending segments with seqZero:0x%X",sequenceZero);
     [_outgoingSegments removeObjectForKey:@(sequenceZero)];
     [_segmentTtl removeObjectForKey:@(sequenceZero)];
     BackgroundTimer *timer = _segmentTransmissionTimers[@(sequenceZero)];
@@ -311,24 +311,24 @@
                 NSNumber *lastSeqZeroValue = seqZero.value;
                 NSMutableArray *lastSeqAuths = seqZero.seqAuths;
                 if (lastSeqZeroValue.intValue == receivedSeqZero && lastSeqAuths.count == 0) {
-                    TeLogError(@"Discarding packet (lastSeqZeroValue:0x%X, receivedSeqZero >0x%X, lastSeqAuths=%@)", lastSeqZeroValue.intValue, receivedSeqZero, lastSeqAuths);
+                    TelinkLogError(@"Discarding packet (lastSeqZeroValue:0x%X, receivedSeqZero >0x%X, lastSeqAuths=%@)", lastSeqZeroValue.intValue, receivedSeqZero, lastSeqAuths);
                     return NO;
                 }
                 if (lastSeqZeroValue.intValue > receivedSeqZero) {
-                    TeLogError(@"Discarding packet (lastSeqZeroValue:0x%X, receivedSeqZero >0x%X)", lastSeqZeroValue.intValue, receivedSeqZero);
+                    TelinkLogError(@"Discarding packet (lastSeqZeroValue:0x%X, receivedSeqZero >0x%X)", lastSeqZeroValue.intValue, receivedSeqZero);
                     return NO;
                 } else if (lastSeqZeroValue.intValue < receivedSeqZero) {
                     [lastSeqAuths removeAllObjects];
                 }
                 if ([lastSeqAuths containsObject:@(receivedSeqAuth)]) {
-                    TeLogError(@"Discarding packet (lastSeqAuths:%@, receivedSeqAuth >0x%X)", lastSeqAuths, receivedSeqAuth);
+                    TelinkLogError(@"Discarding packet (lastSeqAuths:%@, receivedSeqAuth >0x%X)", lastSeqAuths, receivedSeqAuth);
                     return NO;
                 }
                 [lastSeqAuths addObject:@(receivedSeqAuth)];
             } else {
                 // add cache of seqZero
                 if (lastSeqAuth > receivedSeqAuth) {
-                    TeLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
+                    TelinkLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
                     return NO;
                 }
                 SigNodeSeqZeroModel *seqZero = [[SigNodeSeqZeroModel alloc] initWithValue:@(receivedSeqZero) seqAuth:@(receivedSeqAuth)];
@@ -336,7 +336,7 @@
             }
         } else {
             if (lastSeqAuth > receivedSeqAuth) {
-                TeLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
+                TelinkLogError(@"Discarding packet (lastSeqAuth:0x%X, receivedSeqAuth >0x%X)", lastSeqAuth, receivedSeqAuth);
                 return NO;
             }
             nodeSequenceNumberCacheModel.seqAuth = @(receivedSeqAuth);
@@ -373,7 +373,7 @@
     if (lastAck && lastAck.sequenceZero == segment.sequenceZero) {
         SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
         if (provisionerNode) {
-            TeLogInfo(@"Message already acknowledged, sending ACK again.");
+            TelinkLogInfo(@"Message already acknowledged, sending ACK again.");
             UInt8 ttl = 0;
             if (networkPdu.ttl > 0) {
                 ttl = provisionerNode.defaultTTL;
@@ -406,7 +406,7 @@
         // A single segment message may immediately be acknowledged.
         SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
         if (provisionerNode == nil) {
-            TeLogError(@"curLocationNodeModel = nil.");
+            TelinkLogError(@"curLocationNodeModel = nil.");
             return nil;
         }
         if (networkPdu.destination == provisionerNode.address) {
@@ -417,7 +417,7 @@
                     ttl = _networkManager.defaultTtl;
                 }
             }
-            TeLogInfo(@"response last segment, sent ack.");
+            TelinkLogInfo(@"response last segment, sent ack.");
             [self sendAckForSegments:@[segment] withTtl:ttl];
         }
         message.networkPduModel = networkPdu;
@@ -434,7 +434,7 @@
         }
         if (_incompleteSegments[@(key)].count <= segment.index) {
             // Segment is invalid. We can stop here.
-            TeLogInfo(@"Invalid segment.");
+            TelinkLogInfo(@"Invalid segment.");
             return nil;
         }
         _incompleteSegments[@(key)][segment.index] = segment;
@@ -451,11 +451,11 @@
             } else {
                 message = [[SigControlMessage alloc] initFromSegments:(NSArray<SigSegmentedAccessMessage *> *)allSegments];
             }
-//            TeLogInfo(@"%@ received",message);
-            // If the access message was targetting directly the local Provisioner...
+//            TelinkLogInfo(@"%@ received",message);
+            // If the access message was targeting directly the local Provisioner...
             SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
             if (provisionerNode == nil) {
-                TeLogError(@"curLocationNodeModel = nil.");
+                TelinkLogError(@"curLocationNodeModel = nil.");
                 return nil;
             }
             if (networkPdu.destination == provisionerNode.address) {
@@ -488,18 +488,18 @@
             // send directly to it's Unicast Address.
             SigNodeModel *provisionerNode = SigMeshLib.share.dataSource.curLocationNodeModel;
             if (provisionerNode == nil) {
-                TeLogError(@"curLocationNodeModel = nil.");
+                TelinkLogError(@"curLocationNodeModel = nil.");
                 return nil;
             }
             if (networkPdu.destination != provisionerNode.address) {
-//                TeLogDebug(@"networkPdu.destination != provisionerNode.address");
+//                TelinkLogDebug(@"networkPdu.destination != provisionerNode.address");
                 return nil;
             }
             __weak typeof(self) weakSelf = self;
 
             
             
-            // If the Lower Transport Layer receives any segment while the acknowlegment
+            // If the Lower Transport Layer receives any segment while the acknowledgment
             // timer is inactive, it shall restart the timer. Active timer should not be restarted.
             if (_acknowledgmentTimers[@(key)] == nil) {
                 UInt8 ttl = provisionerNode.defaultTTL;
@@ -536,7 +536,7 @@
     }
     __weak typeof(self) weakSelf = self;
     BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-        TeLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
+        TelinkLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
         BackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
         if (timer1) {
             [timer1 invalidate];
@@ -569,7 +569,7 @@
     // 先判断发送的Segment字典内是否有对应这个ack.sequenceZero的SegmentedMessage，且这个SegmentedMessage未被设备返回ack
     SigSegmentedMessage *segment = [self firstNotAcknowledgedFrom:_outgoingSegments[@(ack.sequenceZero)]];
     if (segment == nil) {
-        TeLogError(@"No local SigSegmentedMessage of ack.sequenceZero=(0x%X),ack=%@",ack.sequenceZero,ack);
+        TelinkLogError(@"No local SigSegmentedMessage of ack.sequenceZero=(0x%X),ack=%@",ack.sequenceZero,ack);
         return;
     }
     // 取消这个SegmentedMessage的Transmission定时器
@@ -595,7 +595,7 @@
     }
     // If all the segments were acknowledged, notify the manager.
     if ([self segmentsArrayHasMore:_outgoingSegments[@(ack.sequenceZero)]] == NO) {
-        TeLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged. ack.sequenceZero = 0x%x, ack.blockAck=0x%x",ack.sequenceZero,ack.blockAck);
+        TelinkLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged. ack.sequenceZero = 0x%x, ack.blockAck=0x%x",ack.sequenceZero,ack.blockAck);
         UInt32 key = (UInt32)[self getKeyForAddress:ack.source sequenceZero:ack.sequenceZero];
         BackgroundTimer *timer1 = [self.incompleteTimers objectForKey:@(key)];
         if (timer1) {
@@ -607,7 +607,7 @@
         [_networkManager notifyAboutDeliveringMessage:segment.message fromLocalElement:segment.localElement toDestination:segment.destination];
         [_networkManager.upperTransportLayer lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:segment.destination];
     }else{
-        TeLogInfo(@"node response SegmentAcknowledgmentMessage,send again all packets that were not acknowledged.ack.blockAck=0x%x",ack.blockAck);
+        TelinkLogInfo(@"node response SegmentAcknowledgmentMessage,send again all packets that were not acknowledged.ack.blockAck=0x%x",ack.blockAck);
         // Else, send again all packets that were not acknowledged.
         [self sendSegmentsForSequenceZero:ack.sequenceZero limit:_networkManager.retransmissionLimit];
     }
@@ -634,11 +634,11 @@
 /// @param ttl Initial Time To Live (TTL) value.
 - (void)sendAckSigSegmentAcknowledgmentMessage:(SigSegmentAcknowledgmentMessage *)ack withTtl:(UInt8)ttl {
 //    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-//        TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
+//        TelinkLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
 //        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
 //    });
     dispatch_async(SigMeshLib.share.queue, ^{
-        TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
+        TelinkLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
         [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl  ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex];
     });
 }
@@ -648,7 +648,7 @@
 /// @param sequenceZero  The key to get segments from the map.
 /// @param limit  retry count of segment.
 - (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero limit:(int)limit {
-//    TeLogVerbose(@"sequenceZero=0x%x,limit=%d",sequenceZero,limit);
+//    TelinkLogVerbose(@"sequenceZero=0x%x,limit=%d",sequenceZero,limit);
     NSArray *array = _outgoingSegments[@(sequenceZero)];
     NSInteger count = array.count;
     UInt8 ttl = (UInt8)[_segmentTtl[@(sequenceZero)] intValue];
@@ -656,12 +656,12 @@
     if (count == 0 || provisionerNode == nil) {
         return;
     }
-    /// Segment Acknowledgment Message is expected when the message is targetting
+    /// Segment Acknowledgment Message is expected when the message is targeting
     /// a Unicast Address.
     BOOL ackExpected = NO;
 
     UInt16 destination = 0;
-//    TeLogVerbose(@"==========发送seg=%@开始",array);
+//    TelinkLogVerbose(@"==========发送seg=%@开始",array);
 
     // Send all the segments that have not been acknowledged yet.
     for (int i=0; i<count; i++) {
@@ -680,7 +680,7 @@
             //==========test==========//
         }
     }
-//    TeLogVerbose(@"==========发送seg count=%d结束",count);
+//    TelinkLogVerbose(@"==========发送seg count=%d结束",count);
     __weak typeof(self) weakSelf = self;
 
     //==========telink need this==========//
@@ -688,7 +688,7 @@
         [weakSelf.networkManager.upperTransportLayer lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:destination];
     }
     if (!SigBearer.share.isOpen) {
-        TeLogError(@"bearer is closed.");
+        TelinkLogError(@"bearer is closed.");
         SigSegmentedMessage *segment = array.firstObject;
         [_networkManager notifyAboutError:[NSError errorWithDomain:@"SigBearer.isClose" code:SigLowerTransportError_timeout userInfo:nil] duringSendingMessage:segment.message fromLocalElement:segment.localElement toDestination:segment.destination];
         return;

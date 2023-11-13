@@ -17,7 +17,7 @@
  二、自定义YZDisplayViewController
  三、添加所有子控制器，保存标题在子控制器中
  四、查看YZDisplayViewController头文件，找需要的效果设置
- 五、标题被点击或者内容滚动完成，会发出这个通知【"YZDisplayViewClickOrScrollDidFinsh"】，监听这个通知，可以做自己想要做的事情，比如加载数据
+ 五、标题被点击或者内容滚动完成，会发出这个通知【"YZDisplayViewClickOrScrollDidFinish"】，监听这个通知，可以做自己想要做的事情，比如加载数据
  */
 
 
@@ -55,7 +55,7 @@ static CGFloat const YZUnderLineH = 2;
 static CGFloat const margin = 20;
 
 // 标题被点击或者内容滚动完成，会发出这个通知，监听这个通知，可以做自己想要做的事情，比如加载数据
-static NSString * const YZDisplayViewClickOrScrollDidFinshNote = @"YZDisplayViewClickOrScrollDidFinshNote";
+static NSString * const YZDisplayViewClickOrScrollDidFinishNote = @"YZDisplayViewClickOrScrollDidFinishNote";
 
 // 重复点击通知
 static NSString * const YZDisplayViewRepeatClickTitleNote = @"YZDisplayViewRepeatClickTitleNote";

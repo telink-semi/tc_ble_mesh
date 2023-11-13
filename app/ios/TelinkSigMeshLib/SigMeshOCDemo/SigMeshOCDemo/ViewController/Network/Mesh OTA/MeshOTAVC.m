@@ -304,7 +304,7 @@
 
 - (IBAction)clickGetFwInfo:(UIButton *)sender {
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"send request for GetFwInfo, but busy now.");
+        TelinkLogInfo(@"send request for GetFwInfo, but busy now.");
         [self showTips:@"busy now."];
         return;
     }
@@ -344,12 +344,12 @@
                         if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                         vid = CFSwapInt16HostToBig(vid);
-                        TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                        TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                         [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(semaphore);
             }];
             //Most provide 4 seconds
@@ -371,12 +371,12 @@
                             if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                             if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                             vid = CFSwapInt16HostToBig(vid);
-                            TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                            TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                             [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(semaphore);
                 }];
                 //Most provide 4 seconds
@@ -618,7 +618,7 @@
         return;
     }
     
-    TeLogVerbose(@"选中的bin文件为%@",self.binStringArray[self.binIndex]);
+    TelinkLogVerbose(@"选中的bin文件为%@",self.binStringArray[self.binIndex]);
     NSData *data = [OTAFileSource.share getDataWithBinName:self.binStringArray[self.binIndex]];
     if (data == nil || data.length == 0) {
         [self showTips:@"APP can't load this Bin file."];
@@ -643,7 +643,7 @@
         return;
     }
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"click start MeshOTA, but busy now.");
+        TelinkLogInfo(@"click start MeshOTA, but busy now.");
         [self showTips:@"busy now."];
         return;
     }
@@ -692,7 +692,7 @@
 }
 
 - (void)showAdvDistributionProgressHandle:(SigFirmwareDistributionReceiversList *)responseMessage {
-//    TeLogInfo(@"adv responseMessage=%@",responseMessage);
+//    TelinkLogInfo(@"adv responseMessage=%@",responseMessage);
 //            if (responseMessage && responseMessage.receiversList && responseMessage.receiversList.count > 0) {
     if (responseMessage && responseMessage.receiversList) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -722,9 +722,9 @@
         [self showTips:tip];
         [self.tableView reloadData];
         if (self.successAddresses.count) {
-            TeLogVerbose(@"");
+            TelinkLogVerbose(@"");
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                TeLogVerbose(@"");
+                TelinkLogVerbose(@"");
                 [self clickGetFwInfo:self.getFWInfoButton];
             });
         }
@@ -791,6 +791,6 @@
 }
 
 -(void)dealloc{
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
 }
 @end

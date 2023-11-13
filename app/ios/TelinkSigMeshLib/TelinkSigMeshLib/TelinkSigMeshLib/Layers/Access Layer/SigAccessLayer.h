@@ -100,7 +100,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param accessPdu The Access PDU received.
 /// @param keySet The set of keys that the message was encrypted with.
-/// @param request The previosly sent request message, that the received message responds to, or `nil`, if no request has been sent.
+/// @param request The previously sent request message, that the received message responds to, or `nil`, if no request has been sent.
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(nullable SigAcknowledgedMeshMessage *)request;
 
 @end

@@ -94,7 +94,7 @@
     __weak typeof(self) weakSelf = self;
     //largeCompositionDataGet
     [SDKLibCommand largeCompositionDataGetWithPage:0xFF offset:0 destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLargeCompositionDataStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (responseMessage.totalSize == responseMessage.data.length) {
             UInt8 tem8 = responseMessage.page;
             NSMutableData *mData = [NSMutableData dataWithBytes:&tem8 length:1];
@@ -102,7 +102,7 @@
             weakSelf.model.compositionData = [[SigPage0 alloc] initWithParameters:mData];
             [SigDataSource.share saveLocationData];
         } else {
-            TeLogDebug(@"单次获取未完整，待完善！！！");
+            TelinkLogDebug(@"单次获取未完整，待完善！！！");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -121,14 +121,14 @@
     __weak typeof(self) weakSelf = self;
     //modelsMetadataGet
     [SDKLibCommand modelsMetadataGetWithMetadataPage:0xFF offset:0 destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigModelsMetadataStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (responseMessage.totalSize == responseMessage.data.length) {
             if (responseMessage.metadataPage == 0) {
                 SigModelsMetadataPage0Model *page0 = [[SigModelsMetadataPage0Model alloc] initWithParameters:responseMessage.data];
-                TeLogInfo(@"page0=%@",page0.getDescription);
+                TelinkLogInfo(@"page0=%@",page0.getDescription);
             }
         } else {
-            TeLogDebug(@"单次获取未完整，待完善！！！");
+            TelinkLogDebug(@"单次获取未完整，待完善！！！");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -147,7 +147,7 @@
     __weak typeof(self) weakSelf = self;
     //SARTransmitterGet
     [SDKLibCommand SARTransmitterGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSARTransmitterStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -167,7 +167,7 @@
     struct SARTransmitterStructure transmitter = {};
     transmitter.value = 0;
     [SDKLibCommand SARTransmitterSetWithSARTransmitter:transmitter destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSARTransmitterStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -185,7 +185,7 @@
     __weak typeof(self) weakSelf = self;
     //SARReceiverGet
     [SDKLibCommand SARReceiverGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSARReceiverStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -205,7 +205,7 @@
     struct SARReceiverStructure receiver = {};
     receiver.value = 0;
     [SDKLibCommand SARReceiverSetWithSARReceiver:receiver destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSARReceiverStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -225,7 +225,7 @@
 //    SigUnicastAddressRangeFormatModel *m = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:self.model.elements.count > 1 rangeStart:self.model.address rangeLength:self.model.elements.count];
     SigUnicastAddressRangeFormatModel *m = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:NO rangeStart:self.model.address rangeLength:0];
     [SDKLibCommand solicitationPduRplItemsClearWithAddressRange:m destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSolicitationPduRplItemsStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -261,7 +261,7 @@
     __weak typeof(self) weakSelf = self;
     //onDemandPrivateProxyGet
     [SDKLibCommand onDemandPrivateProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigOnDemandPrivateProxyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -279,7 +279,7 @@
     __weak typeof(self) weakSelf = self;
     //onDemandPrivateProxySet
     [SDKLibCommand onDemandPrivateProxySetWithOnDemandPrivateGATTProxy:0 destination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigOnDemandPrivateProxyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share hidden];
@@ -300,9 +300,9 @@
     }
     SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:self.model.address items:items];
     [SDKLibCommand sendSigOpcodesAggregatorSequenceMessage:message retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigOpcodesAggregatorStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"SigOpcodesAggregatorStatus=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogInfo(@"SigOpcodesAggregatorStatus=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
 }
 

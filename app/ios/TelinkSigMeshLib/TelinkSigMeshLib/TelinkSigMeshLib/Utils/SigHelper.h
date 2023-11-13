@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)share;
 
 /**
- * @brief   Determine whether the address is a valid address.(inVaild address range is 0xFF00~0xFFF8)
+ * @brief   Determine whether the address is a valid address.(inValid address range is 0xFF00~0xFFF8)
  * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
  * @return  YES means address is valid address, NO means address is invalid.
  * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param opCode opcode of send command.
 - (_Nullable Class)getMeshMessageWithOpCode:(SigOpCode)opCode;
 
-/// Get SigOpCodeType with hight byte opcode
+/// Get SigOpCodeType with height byte opcode
 /// @param opCode opcode of mesh message.
 - (SigOpCodeType)getOpCodeTypeWithOpcode:(UInt8)opCode;
 

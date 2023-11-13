@@ -47,7 +47,7 @@
 
 #pragma mark - Event
 - (void)startAddDevice{
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     self.refreshItem.enabled = NO;
     self.goBackButton.enabled = NO;
     [self.goBackButton setBackgroundColor:[UIColor lightGrayColor]];
@@ -60,16 +60,16 @@
     UInt16 provisionAddress = [SigDataSource.share provisionAddress];
 
     if (provisionAddress == 0) {
-        TeLogDebug(@"warning: address has run out.");
+        TelinkLogDebug(@"warning: address has run out.");
         return;
     }
     
     __weak typeof(self) weakSelf = self;
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
-        TeLogVerbose(@"successful=%d",successful);
+        TelinkLogVerbose(@"successful=%d",successful);
         if (successful) {
-            TeLogInfo(@"stop mesh success.");
+            TelinkLogInfo(@"stop mesh success.");
             __block UInt16 currentProvisionAddress = provisionAddress;
             __block NSString *currentAddUUID = nil;
             //旧接口，没有startConnect和startProvision。
@@ -78,11 +78,11 @@
 //                    currentAddUUID = identify;
 //                    currentProvisionAddress = address;
 //                    [weakSelf refreshUIOfProvisionSuccessWithUUID:identify address:address];
-//                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+//                    TelinkLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
 //                }
 //            } provisionFail:^(NSError * _Nonnull error) {
 //                [weakSelf refreshUIOfProvisionFailWithUUID:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
-//                TeLogInfo(@"addDevice provision fail error:%@",error);
+//                TelinkLogInfo(@"addDevice provision fail error:%@",error);
 //            } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
 //                if (identify && address != 0) {
 //                    currentProvisionAddress = address;
@@ -92,13 +92,13 @@
 //                        [SigDataSource.share saveLocationData];
 //                    }
 //                    [weakSelf refreshUIOfKeyBindSuccessWithUUID:identify address:address];
-//                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+//                    TelinkLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
 //                }
 //            } keyBindFail:^(NSError * _Nonnull error) {
 //                [weakSelf refreshUIOfKeyBindFailWithUUID:currentAddUUID address:currentProvisionAddress];
-//                TeLogInfo(@"addDevice keybind fail error:%@",error);
+//                TelinkLogInfo(@"addDevice keybind fail error:%@",error);
 //            } finish:^{
-//                TeLogInfo(@"addDevice finish.");
+//                TelinkLogInfo(@"addDevice finish.");
 //                [SDKLibCommand startMeshConnectWithComplete:nil];
 //                dispatch_async(dispatch_get_main_queue(), ^{
 //                    [weakSelf addDeviceFinish];
@@ -114,11 +114,11 @@
                     currentAddUUID = identify;
                     currentProvisionAddress = address;
                     [weakSelf refreshUIOfProvisionSuccessWithUUID:identify address:address];
-                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+                    TelinkLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
             } provisionFail:^(NSError * _Nullable error) {
                 [weakSelf refreshUIOfProvisionFailWithUUID:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
-                TeLogInfo(@"addDevice provision fail error:%@",error);
+                TelinkLogInfo(@"addDevice provision fail error:%@",error);
             } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
                     currentProvisionAddress = address;
@@ -128,20 +128,20 @@
                         [SigDataSource.share saveLocationData];
                     }
                     [weakSelf refreshUIOfKeyBindSuccessWithUUID:identify address:address];
-                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+                    TelinkLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
             } keyBindFail:^(NSError * _Nullable error) {
                 [weakSelf refreshUIOfKeyBindFailWithUUID:currentAddUUID address:currentProvisionAddress];
-                TeLogInfo(@"addDevice keybind fail error:%@",error);
+                TelinkLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
-                TeLogInfo(@"addDevice finish.");
+                TelinkLogInfo(@"addDevice finish.");
                 [SDKLibCommand startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf addDeviceFinish];
                 });
             }];
         } else {
-            TeLogInfo(@"stop mesh fail.");
+            TelinkLogInfo(@"stop mesh fail.");
         }
     }];
 }
@@ -259,7 +259,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 @end

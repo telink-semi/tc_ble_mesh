@@ -238,7 +238,7 @@
 /// 8.4.2.1 Firmware Distribution Receivers Add.
 /// - Parameters:
 ///   - destination: the unicastAddress of destination.
-///   - receiverEntrysList: The Firmware Distribution Receivers Add message shall contain at least one Receiver Entry.
+///   - receiverEntriesList: The Firmware Distribution Receivers Add message shall contain at least one Receiver Entry.
 /// For each Receiver Entry field in the message, the value of the Address field shall be unique.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
@@ -246,8 +246,8 @@
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)firmwareDistributionReceiversAddWithDestination:(UInt16)destination receiverEntrysList:(NSArray <SigReceiverEntryModel *>*)receiverEntrysList retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionReceiversStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigFirmwareDistributionReceiversAdd *message = [[SigFirmwareDistributionReceiversAdd alloc] initWithReceiverEntrysList:receiverEntrysList];
++ (SigMessageHandle *)firmwareDistributionReceiversAddWithDestination:(UInt16)destination receiverEntriesList:(NSArray <SigReceiverEntryModel *>*)receiverEntriesList retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionReceiversStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigFirmwareDistributionReceiversAdd *message = [[SigFirmwareDistributionReceiversAdd alloc] initWithReceiverEntriesList:receiverEntriesList];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseFirmwareDistributionReceiversStatusCallBack = successCallback;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
@@ -395,10 +395,10 @@
 ///   - distributionTimeoutBase: Used to compute the timeout of the firmware image distribution.
 /// The Distribution Timeout Base field shall contain the value that is used to
 /// calculate when firmware image distribution will be suspended.
-///   - distributionTransferMode: Mode of the transfer, szie is 2 bits.
+///   - distributionTransferMode: Mode of the transfer, size is 2 bits.
 /// The Distribution Transfer Mode field shall indicate the mode used to transfer
 /// the BLOB to the Updating node (see Section 7.2.1.4).
-///   - updatePolicy: Firmware update policy, szie is 1 bits.
+///   - updatePolicy: Firmware update policy, size is 1 bits.
 /// The Update Policy field shall indicate the update policy that the Firmware
 /// Distribution Server will use for this firmware image distribution.
 ///   - RFU: Reserved for Future Use. Size is 5 bits.
@@ -773,7 +773,7 @@
 /// <--- Response - Access PDU, source:(0012)->destination: (0001) Op Code: (0000007E), accessPdu=7E4000000001
 /// - Parameters:
 ///   - destination: the unicastAddress of destination.
-///   - transferMode: BLOB transfer mode, szie is 2 bits.
+///   - transferMode: BLOB transfer mode, size is 2 bits.
 /// The Transfer Mode field shall indicate the new value of the Transfer
 /// Mode state (see Section 7.2.1.4). The valid values of the field are
 /// Pull BLOB Transfer Mode and Push BLOB Transfer Mode.
@@ -906,7 +906,7 @@
 ///   - chunkNumber: Chunk number
 /// The Chunk Number field shall indicate the chunk’s number in a set
 /// of chunks in a block.
-///   - chunkData: Part of the BLOB data, szie is 1 to Chunk Size.
+///   - chunkData: Part of the BLOB data, size is 1 to Chunk Size.
 /// The Chunk Data field shall contain the chunk of the block identified by
 /// the Chunk Number. The size of the Chunk Data field shall be greater
 /// than 0 octets, and shall be less than or equal to the number of octets

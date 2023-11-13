@@ -103,7 +103,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 #pragma mark - ColorModelCellDelegate

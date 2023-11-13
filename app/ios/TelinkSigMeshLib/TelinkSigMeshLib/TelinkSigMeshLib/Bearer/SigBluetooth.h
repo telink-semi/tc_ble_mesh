@@ -34,10 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SigBluetooth : NSObject
 /// Default is NO.
-@property (nonatomic,assign) BOOL waitScanRseponseEnabel;
-/// new delagate function block since v3.2.3: all notify reporting by this block.
+@property (nonatomic,assign) BOOL waitScanRseponseEnable;
+/// new delegate function block since v3.2.3: all notify reporting by this block.
 @property (nonatomic,copy,nullable) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueCallback;
-/// new delagate function block since v3.2.3: notify writeWithResponse by this block.
+/// new delegate function block since v3.2.3: notify writeWithResponse by this block.
 @property (nonatomic,copy,nullable) bleDidWriteValueForCharacteristicCallback bluetoothDidWriteValueCallback;
 @property (nonatomic,copy,nullable) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic, weak) id <SigBluetoothDelegate>delegate;
@@ -119,7 +119,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)changeNotifyToState:(BOOL)state Peripheral:(CBPeripheral *)peripheral characteristic:(CBCharacteristic *)characteristic timeout:(NSTimeInterval)timeout resultBlock:(bleCharacteristicResultCallback)block;
 
-- (void)cancelAllConnecttionWithComplete:(bleCancelAllConnectCallback)complete;
+- (void)cancelAllConnectionWithComplete:(bleCancelAllConnectCallback)complete;
 - (void)cancelConnectionPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleCancelConnectCallback)block;
 
 - (void)readOTACharachteristicWithTimeout:(NSTimeInterval)timeout complete:(bleReadOTACharachteristicCallback)complete;

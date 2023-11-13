@@ -50,7 +50,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigProxyConfigurationMessage.h>
 #import <TelinkSigMeshLib/LibTools.h>
 #import <TelinkSigMeshLib/SigGenericMessage.h>
-#import <TelinkSigMeshLib/SigHearbeatMessage.h>
+#import <TelinkSigMeshLib/SigHeartbeatMessage.h>
 #import <TelinkSigMeshLib/OTAManager.h>
 #import <TelinkSigMeshLib/SigPublishManager.h>
 #import <TelinkSigMeshLib/TelinkHttpManager.h>

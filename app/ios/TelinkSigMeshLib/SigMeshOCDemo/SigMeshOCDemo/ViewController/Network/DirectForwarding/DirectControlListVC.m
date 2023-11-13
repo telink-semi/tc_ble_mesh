@@ -50,7 +50,7 @@
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [SDKLibCommand directControlSetWithNetKeyIndex:nodeKey.index directedForwarding:stateSwitch.isOn ? DirectedForwarding_enable : DirectedForwarding_disable directedRelay:stateSwitch.isOn ? DirectedRelay_enable : DirectedRelay_disable directedProxy:stateSwitch.isOn ? DirectedProxy_enable : DirectedProxy_disable directedProxyUseDirectedDefault:stateSwitch.isOn ? DirectedProxyUseDirectedDefault_enable : DirectedProxyUseDirectedDefault_ignore directedFriend:DirectedFriend_ignore destination:node.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigDirectControlStatus * _Nonnull responseMessage) {
-                        TeLogDebug(@"directControlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        TelinkLogDebug(@"directControlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                         if (source == node.address) {
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 if (responseMessage.status == SigConfigMessageStatus_success) {
@@ -67,7 +67,7 @@
                             });
                         }
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                        TeLogInfo(@"isResponseAll=%d,error=%@", isResponseAll, error);
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@", isResponseAll, error);
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if (error) {
                                 hadFail = YES;

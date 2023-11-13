@@ -112,7 +112,7 @@
         return;
     }
 
-    TeLogInfo(@"appkey input success!");
+    TelinkLogInfo(@"appkey input success!");
     if (self.netKeyModel) {
         BOOL hadExist = NO;
         NSArray *temNetkeys = [NSArray arrayWithArray:self.network.netKeys];

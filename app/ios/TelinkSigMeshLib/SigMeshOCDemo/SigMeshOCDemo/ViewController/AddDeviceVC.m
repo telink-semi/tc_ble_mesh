@@ -66,7 +66,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 #pragma mark - UITableViewDelegate,UITableViewDataSource
@@ -116,11 +116,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            TeLogDebug(@"close success.");
+            TelinkLogDebug(@"close success.");
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 if (unprovisioned) {
                     SigScanRspModel *m = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-                    TeLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d,advUuid=%@,macAddress=%@,calcUuid=%@",peripheral,advertisementData,RSSI,unprovisioned,m.advUuid,m.macAddress,[LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:m.macAddress]]]);
+                    TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d,advUuid=%@,macAddress=%@,calcUuid=%@",peripheral,advertisementData,RSSI,unprovisioned,m.advUuid,m.macAddress,[LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:m.macAddress]]]);
                     AddDeviceModel *model = [[AddDeviceModel alloc] init];
                     model.scanRspModel = m;
                     model.state = AddDeviceModelStateScanned;
@@ -141,7 +141,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                 [weakSelf performSelector:@selector(scanFinish) withObject:nil afterDelay:5.0];
             });
         } else {
-            TeLogDebug(@"close fail.");
+            TelinkLogDebug(@"close fail.");
             weakSelf.userEnable = YES;
             [weakSelf refreshTableView];
         }
@@ -298,7 +298,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                 }
             }];
         }else{
-            TeLogDebug(@"stop mesh fail.");
+            TelinkLogDebug(@"stop mesh fail.");
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             if (resultBlock) {
                 NSError *error = [NSError errorWithDomain:@"stop mesh fail." code:-1 userInfo:nil];

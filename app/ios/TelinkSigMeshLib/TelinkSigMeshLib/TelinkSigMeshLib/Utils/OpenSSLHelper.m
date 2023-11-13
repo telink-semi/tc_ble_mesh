@@ -88,7 +88,7 @@
     return output;
 }
 
-/// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
+/// RFC3610 defines the AES Counted with CBC-MAC (CCM).
 /// This method generates ciphertext and MIC (Message Integrity Check).
 /// @param someData The data to be encrypted and authenticated, also known as plaintext.
 /// @param key The 128-bit key.
@@ -191,7 +191,7 @@
     }
 }
 
-/// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
+/// Obfuscates given data by XORing it with PECB, which is calculated by encrypting
 /// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
 /// @param data The data to obfuscate.
 /// @param privacyRandom Data used as Privacy Random.
@@ -714,7 +714,7 @@
 //        ASN1_BIT_STRING *signature = nil;
 //        X509_get0_signature(&signature, &x509->sig_alg, x509);
 //        NSData *sig = [NSData dataWithBytes:signature->data length:signature->length];
-//        TeLogInfo(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
+//        TelinkLogInfo(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
 //        NSLog(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
 
         //验证证书签名(存在父证书的publicKey则使用父证书的publicKey验签，没有则使用自己的publicKey验签)
@@ -730,9 +730,9 @@
             //verify. result less than or 0 means not verified or some error.
             int verify = X509_verify(x509, key);
             if (verify == 1) {
-                TeLogInfo(@"Signature is valid");
+                TelinkLogInfo(@"Signature is valid");
             } else {
-                TeLogError(@"serial number check err,X509_verify=%d",verify);
+                TelinkLogError(@"serial number check err,X509_verify=%d",verify);
                 return nil;
             }
             EVP_PKEY_free(key);
@@ -740,7 +740,7 @@
 
         //比较版本号（值是0x2，对应的版本是3）
         if (version != 0x2) {
-            TeLogError(@"version check err,version=0x%lx",version);
+            TelinkLogError(@"version check err,version=0x%lx",version);
             return nil;
         }
         //比较有效期
@@ -750,11 +750,11 @@
         if (notBeforeResult == 1 && notAfterResult == -1) {
             //time is validity
         } else {
-            TeLogError(@"time check err,%@ ~~~> %@",notBefore,notAfter);
+            TelinkLogError(@"time check err,%@ ~~~> %@",notBefore,notAfter);
             return nil;
         }
 
-        TeLogInfo(@"check certificate success, publicKey=%@",[LibTools convertDataToHexStr:publicKey]);
+        TelinkLogInfo(@"check certificate success, publicKey=%@",[LibTools convertDataToHexStr:publicKey]);
         X509_free(x509);
         return publicKey;
     }
@@ -836,10 +836,10 @@
 }
 
 /// Verify the user certificate list using the root certificate.
-/// @param userCerDatas certificate data formatted by x509 DeviceCertificate der.
+/// @param userCerDataList certificate data formatted by x509 DeviceCertificate der.
 /// @param rootCerData certificate data formatted by x509 root der.
 /// @return YES means verify success, NO means verify fail.
-- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData {
+- (BOOL)checkUserCertificateDataList:(NSArray <NSData *>*)userCerDataList withRootCertificate:(NSData *)rootCerData {
     OpenSSL_add_all_algorithms();
     //x509证书验证示例,https://blog.csdn.net/chuicao4350/article/details/52875329
 
@@ -866,7 +866,7 @@
     }
 
     /* 需要校验的证书 */
-    for (NSData *userCerData  in userCerDatas) {
+    for (NSData *userCerData  in userCerDataList) {
         user = der_to_x509(userCerData.bytes, (unsigned int)userCerData.length);
 
         ret = X509_STORE_CTX_init(ctx, ca_store, user, ca_stack);

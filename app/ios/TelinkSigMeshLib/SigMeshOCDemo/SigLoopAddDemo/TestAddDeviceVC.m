@@ -83,7 +83,7 @@ static NSUInteger provisionAddress;
     self.delayOfDeleteTF.text = @"3";
     self.testCountTF.text = @"100";
     self.scanTimeoutTF.text = @"20";
-    self.title = @"TestAddDevcies";
+    self.title = @"TestAddDevices";
 
     //默认只添加一个特定MAC的设备，且修改后的短地址都是2.
     provisionAddress = 2;

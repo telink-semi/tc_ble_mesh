@@ -44,7 +44,7 @@
 }
 
 /**
- * @brief   Determine whether the address is a valid address.(inVaild address range is 0xFF00~0xFFF8)
+ * @brief   Determine whether the address is a valid address.(inValid address range is 0xFF00~0xFFF8)
  * @param   address    The network layer defines four basic types of addresses: unassigned, unicast, virtual, and group.
  * @return  YES means address is valid address, NO means address is invalid.
  * @note    3.4.2 Addresses, seeAlso: MshPRT_v1.1.pdf  (page.54)
@@ -629,7 +629,7 @@
             break;
             
         default:
-            TeLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
+            TelinkLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
             break;
     }
     return responseOpcode;
@@ -639,7 +639,7 @@
 /// @param opCode opcode of send command.
 - (_Nullable Class)getMeshMessageWithOpCode:(SigOpCode)opCode {
     Class messageType = nil;
-//    TeLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
+//    TelinkLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
     if ((opCode & 0xC00000) == 0xC00000) {
         // Vendor Messages
 //        MessageType = networkManager.meshNetworkManager.vendorTypes[opCode] ?? UnknownMessage.self
@@ -1745,7 +1745,7 @@
     return messageType;
 }
 
-/// Get SigOpCodeType with hight byte opcode
+/// Get SigOpCodeType with height byte opcode
 /// @param opCode opcode of mesh message.
 - (SigOpCodeType)getOpCodeTypeWithOpcode:(UInt8)opCode {
     if (opCode == SigOpCodeType_RFU) {

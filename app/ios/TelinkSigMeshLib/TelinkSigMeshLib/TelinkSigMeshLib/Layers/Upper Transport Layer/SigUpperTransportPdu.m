@@ -33,7 +33,7 @@
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-//        TeLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[LibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
+//        TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[LibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
         NSInteger micSize = accessMessage.transportMicSize;
         NSInteger encryptedDataSize = accessMessage.upperTransportPdu.length - micSize;
         NSData *encryptedData = [accessMessage.upperTransportPdu subdataWithRange:NSMakeRange(0, encryptedDataSize)];
@@ -59,7 +59,7 @@
             }
         }
         UInt32 tem5 = CFSwapInt32HostToBig(index);
-//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+//        TelinkLogVerbose(@"解密使用IvIndex=0x%x",index);
 
         [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
         [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
@@ -73,10 +73,10 @@
         NSData *decryptedData = [OpenSSLHelper.share calculateDecryptedCCM:encryptedData withKey:key nonce:nonce andMIC:mic withAdditionalData:additionalData];
         
         if (decryptedData == nil || decryptedData.length == 0) {
-            TeLogError(@"calculateDecryptedCCM fail.");
+            TelinkLogError(@"calculateDecryptedCCM fail.");
             return nil;
         }else{
-//            TeLogDebug(@"calculateDecryptedCCM success.");
+//            TelinkLogDebug(@"calculateDecryptedCCM success.");
         }
         _source = accessMessage.source;
         _destination = accessMessage.destination;
@@ -147,7 +147,7 @@
 }
 
 + (nullable NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork {
-//    TeLogDebug(@"accessMessage.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:accessMessage.transportPdu],accessMessage.transportPdu.length);
+//    TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:accessMessage.transportPdu],accessMessage.transportPdu.length);
     // Was the message signed using Application Key?
     UInt8 aid = accessMessage.aid;
     if (accessMessage.AKF) {
@@ -204,7 +204,7 @@
         // message was sent as a response to a Config Message sent by this Provisioner.
         SigNodeModel *node = [meshNetwork getNodeWithAddress:accessMessage.source];
         NSData *deviceKey = [LibTools nsstringToHex:node.deviceKey];
-//        TeLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
+//        TelinkLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
         SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:deviceKey];
         if (deviceKey && deviceKey.length > 0 && pdu) {
             SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:accessMessage.networkKey node:node];
@@ -220,7 +220,7 @@
             return @{@"SigUpperTransportPdu":pdu,@"SigKeySet":keySet};
         }
     }
-    TeLogError(@"Decryption failed.");
+    TelinkLogError(@"Decryption failed.");
     return nil;
 }
 

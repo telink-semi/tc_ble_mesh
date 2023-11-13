@@ -228,7 +228,7 @@
             }
         }
         if (self.phoneIsDistributor && self.advDistributionProgressBlock) {
-            TeLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
+            TelinkLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
             NSMutableArray *list = [NSMutableArray array];
             NSArray *allAddressArray = [NSArray arrayWithArray:self.allAddressArray];
             for (NSNumber *nodeAddress in allAddressArray) {
@@ -262,7 +262,7 @@
 /// @param bearer The Bearer.
 /// @param error The reason of closing the Bearer, or `nil` if closing was intended.
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     if (self.isMeshOTAing) {
         [self performSelector:@selector(cancelAllAfterDelay) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         if (self.semaphore) {
@@ -306,7 +306,7 @@
                         self.peripheralStateChangeBlock(bearer.getCurrentPeripheral);
                     }
                     [ConnectTools.share startConnectToolsWithNodeList:nodeList timeout:0xFFFFFFFF Complete:^(BOOL successful) {
-                        TeLogVerbose(@"successful=%d",successful);
+                        TelinkLogVerbose(@"successful=%d",successful);
                         if (successful) {
                             if (weakSelf.peripheralStateChangeBlock) {
                                 weakSelf.peripheralStateChangeBlock(bearer.getCurrentPeripheral);
@@ -337,11 +337,11 @@
 /// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
     if ([message isKindOfClass:[SigBLOBPartialBlockReport class]]) {
-        TeLogVerbose(@"MeshOTAManager Receive:%@,source=%d,destination=%d",[LibTools convertDataToHexStr:message.parameters],source,destination);
+        TelinkLogVerbose(@"MeshOTAManager Receive:%@,source=%d,destination=%d",[LibTools convertDataToHexStr:message.parameters],source,destination);
         self.BLOBPartialBlockReport = (SigBLOBPartialBlockReport *)message;
         if (self.isMeshOTAing && self.transferModeOfUpdateNodes == SigTransferModeState_pullBLOBTransferMode) {
             if (self.BLOBPartialBlockReport.encodedMissingChunks) {
-//                TeLogError(@"=====chunk，接收到地址%d需要发送的chunk=%@",source,self.BLOBPartialBlockReport.encodedMissingChunks);
+//                TelinkLogError(@"=====chunk，接收到地址%d需要发送的chunk=%@",source,self.BLOBPartialBlockReport.encodedMissingChunks);
                 self.losePacketsDict[@(source)] = self.BLOBPartialBlockReport.encodedMissingChunks;
                 [self stopLPNReachablleTimer];
                 [self handleLPNReportAction];
@@ -363,7 +363,7 @@
 
 /// 当前只能是pull模式才会调用这个接口，pull模式现在只支持一次升级一个节点，BLOBChunkTransfer使用的是节点的单播地址。
 - (void)sendBLOBChunkTransferByLosePacketsDict {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     if (![self isMeshOTAing]) {
         return;
     }
@@ -384,18 +384,18 @@
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * self.chunkIndex, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TeLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
         self.semaphore = dispatch_semaphore_create(0);
-        TeLogVerbose(@"send chunk index=%d,self.chunksCountofCurrentBlock=%d",self.chunkIndex,self.chunksCountofCurrentBlock);
+        TelinkLogVerbose(@"send chunk index=%d,self.chunksCountofCurrentBlock=%d",self.chunkIndex,self.chunksCountofCurrentBlock);
         
         //v3.3.0开始新增优化逻辑：当只有一个节点且为直连节点时，不再通过组地址进行OTA数据发送，只对直连节点进行OTA数据发送即可。
-//        TeLogError(@"=====chunk，开始给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
+//        TelinkLogError(@"=====chunk，开始给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
         
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:NO retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer, error=%@.",error.domain] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
                 dispatch_semaphore_signal(weakSelf.semaphore);
@@ -416,19 +416,19 @@
         }];
         //Most provide 24*60*60 seconds for BLOBChunkTransfer(Distributor->updating node(s)) in every chunk.
         dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
-//        TeLogError(@"=====chunk，完成给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
+//        TelinkLogError(@"=====chunk，完成给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
     }
-//    TeLogError(@"=====chunk，当前一轮chunk发送完成。");
+//    TelinkLogError(@"=====chunk，当前一轮chunk发送完成。");
     [self startLPNReachablleTimer];
 }
 
 - (void)startLPNReachablleTimer {
     [self stopLPNReachablleTimer];
     self.LPNReachablleTimerCounter = 0;
-    TeLogVerbose(@"self.LPNReachablleTimerCounter = %d",self.LPNReachablleTimerCounter);
+    TelinkLogVerbose(@"self.LPNReachablleTimerCounter = %d",self.LPNReachablleTimerCounter);
     __weak typeof(self) weakSelf = self;
     self.LPNReachablleTimer = [BackgroundTimer scheduledTimerWithTimeInterval:[self getSecondOfClientTimeoutBase:self.distributionTimeoutBase ttl:self.distributionTTL] repeats:YES block:^(BackgroundTimer * _Nonnull t) {
-        TeLogVerbose(@"self.LPNReachablleTimerCounter = %d",weakSelf.LPNReachablleTimerCounter);
+        TelinkLogVerbose(@"self.LPNReachablleTimerCounter = %d",weakSelf.LPNReachablleTimerCounter);
         if (weakSelf.LPNReachablleTimerCounter > [weakSelf getCounterOfBLOBPartialBlockReport]) {
             //总超时已经到，meshOTA失败
             [weakSelf stopLPNReachablleTimer];
@@ -455,7 +455,7 @@
 
 - (void)cancelAllAfterDelay {
     //meshOTA逻辑里面的查询版本号先取消掉
-    TeLogDebug(@"取消10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
+    TelinkLogDebug(@"取消10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGet) object:nil];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGetSuccessAction) object:nil];
     //meshOTA逻辑里面的查询进度先取消掉
@@ -475,7 +475,7 @@
 /// @param finishBlock 升级完成的回调
 /// @param errorBlock 升级失败的回调
 - (void)startFirmwareUpdateWithDeviceAddresses:(NSArray <NSNumber *>*)deviceAddresses otaData:(NSData *)otaData incomingFirmwareMetadata:(NSData *)incomingFirmwareMetadata gattDistributionProgressHandle:(ProgressBlock)gattDistributionProgressBlock advDistributionProgressHandle:(ProgressReceiversListBlock)advDistributionProgressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     
     [SigMeshLib.share cleanAllCommandsAndRetry];
     if (_meshOTAThread.isCancelled && !_meshOTAThread.isExecuting) {
@@ -538,7 +538,7 @@
                 [rssiArray addObject:@(source)];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             //1.按照回包顺序，越先返回状态的地址越后操作，未返回状态的地址再最前面。
             for (int i=0; i<rssiArray.count; i++) {
                 NSNumber *rssiSource = rssiArray[rssiArray.count - 1 - i];
@@ -564,7 +564,7 @@
 /// @param finishBlock 升级完成的回调
 /// @param errorBlock 升级失败的回调
 - (void)continueFirmwareUpdateWithDeviceAddresses:(NSArray <NSNumber *>*)deviceAddresses advDistributionProgressHandle:(ProgressReceiversListBlock)advDistributionProgressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     
     if (_meshOTAThread.isCancelled && !_meshOTAThread.isExecuting) {
         [_meshOTAThread start];
@@ -581,7 +581,7 @@
     [self.successAddressArray removeAllObjects];
     [self.failAddressArray removeAllObjects];
     [self.allAddressArray addObjectsFromArray:deviceAddresses];
-    TeLogInfo(@"meshOTA地址列表=%@",self.allAddressArray);
+    TelinkLogInfo(@"meshOTA地址列表=%@",self.allAddressArray);
     if (SigBearer.share.dataDelegate) {
         self.oldBearerDataDelegate = SigBearer.share.dataDelegate;
     }
@@ -608,7 +608,7 @@
                 [rssiArray addObject:@(source)];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             //1.按照回包顺序，越先返回状态的地址越后操作，未返回状态的地址再最前面。
             for (int i=0; i<rssiArray.count; i++) {
                 NSNumber *rssiSource = rssiArray[rssiArray.count - 1 - i];
@@ -630,7 +630,7 @@
 /// Stop Firmware Update
 /// @param completeBlock The handle of stop Firmware Update finish.
 - (void)stopFirmwareUpdateWithCompleteHandle:(CompleteBlock)completeBlock {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     if (self.oldBearerDataDelegate) {
         SigBearer.share.dataDelegate = self.oldBearerDataDelegate;
     }
@@ -663,12 +663,12 @@
             //这个block语句块在子线程中执行
             weakSelf.semaphore = dispatch_semaphore_create(0);
             weakSelf.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:weakSelf.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle) {
                     isSuccess = YES;
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
@@ -685,13 +685,13 @@
 }
 
 - (void)connectMeshOTAByFirmwareUpdateProgress {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     switch (self.firmwareUpdateProgress) {
         case SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue:
         {
             if (self.phoneIsDistributor) {
                 //如果外部配置设置phone作为distributor，则直接跳过DistributionCapabilitiesGet流程。
-                TeLogVerbose(@"外部配置设置phone作为distributor，则直接跳过DistributionCapabilitiesGet流程!");
+                TelinkLogVerbose(@"外部配置设置phone作为distributor，则直接跳过DistributionCapabilitiesGet流程!");
                 self.phoneIsDistributor = YES;
                 self.distributorAddress = SigMeshLib.share.dataSource.curLocationNodeModel.address;
                 [self performSelector:@selector(firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
@@ -750,18 +750,18 @@
 #pragma mark - Firmware update step1:checkLastFirmwareUpdateStatue(Initiator->Distributor,发送到直连节点)
 - (void)checkLastFirmwareUpdateStatueWithCompleteHandle:(CompleteBlock)completeBlock {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         weakSelf.semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand configNetworkTransmitGetWithDestination:SigMeshLib.share.dataSource.unicastAddressOfConnected retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"configNetworkTransmitGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x,count=0x%x,steps=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination,responseMessage.count,responseMessage.steps);
+            TelinkLogDebug(@"configNetworkTransmitGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x,count=0x%x,steps=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination,responseMessage.count,responseMessage.steps);
             SigMeshLib.share.networkTransmitCount = responseMessage.count;
             SigMeshLib.share.networkTransmitIntervalSteps = responseMessage.steps;
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         dispatch_semaphore_wait(weakSelf.semaphore, dispatch_semaphore_wait(weakSelf.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0)));
@@ -779,12 +779,12 @@
             if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
                 weakSelf.semaphore = dispatch_semaphore_create(0);
                 weakSelf.messageHandle = [SDKLibCommand firmwareUpdateGetWithDestination:node.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"firmwareUpdateGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"firmwareUpdateGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (source == nodeAddress.intValue && responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success && responseMessage.updatePhase != SigFirmwareUpdatePhaseType_idle) {
                         [cancelArray addObject:nodeAddress];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
                 //Most provide 3 seconds to firmwareUpdateGet every node.
@@ -798,11 +798,11 @@
                 reBoot = YES;
             }
             weakSelf.semaphore = dispatch_semaphore_create(0);
-            TeLogInfo(@"firmwareUpdateCancel=0x%x",address);
+            TelinkLogInfo(@"firmwareUpdateCancel=0x%x",address);
             weakSelf.messageHandle = [SDKLibCommand firmwareUpdateCancelWithDestination:address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareUpdateCancel(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"firmwareUpdateCancel(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateCancel(Distributor->updating node(s)) every node.
@@ -834,7 +834,7 @@
 #pragma mark - Firmware update step2:firmwareDistributionCapabilitiesGet(Initiator->Distributor,发送到直连节点)
 - (void)firmwareUpdateFirmwareDistributionCapabilitiesGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionCapabilitiesGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     if (self.gattDistributionProgressBlock) {
         self.gattDistributionProgressBlock(0);
@@ -845,9 +845,9 @@
     __weak typeof(self) weakSelf = self;
     self.semaphore = dispatch_semaphore_create(0);
     [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
         }
@@ -881,7 +881,7 @@
 #pragma mark - Firmware update step3:firmwareUpdateInformationGet(Initiator->updating node(s))
 - (void)firmwareUpdateFirmwareUpdateInformationGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareUpdateInformationGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     self.oFirmwareInformations = [NSMutableDictionary dictionary];
@@ -909,7 +909,7 @@
                         Byte *pu = (Byte *)[currentFirmwareID bytes];
                         if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
-                        TeLogDebug(@"initiator firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                        TelinkLogDebug(@"initiator firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                         weakSelf.oFirmwareInformations[@(source)] = @{kPid:@(pid),kVid:@(vid)};
                         if ([LibTools uint16From16String:node.vid] != vid) {
                             [SigDataSource.share updateNodeModelVidWithAddress:source vid:vid];
@@ -922,7 +922,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateInformationGet every node.
@@ -955,7 +955,7 @@
 #pragma mark - Firmware update step4:firmwareUpdateFirmwareMetadataCheck(Initiator->updating node(s))
 - (void)firmwareUpdateFirmwareMetadataCheck {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareUpdateFirmwareMetadataCheck;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -970,9 +970,9 @@
         SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
-            TeLogInfo(@"firmwareUpdateFirmwareMetadataCheckWithDestination=0x%x",node.address);
+            TelinkLogInfo(@"firmwareUpdateFirmwareMetadataCheckWithDestination=0x%x",node.address);
             self.messageHandle = [SDKLibCommand firmwareUpdateFirmwareMetadataCheckWithDestination:node.address updateFirmwareImageIndex:self.updateFirmwareImageIndex incomingFirmwareMetadata:self.incomingFirmwareMetadata retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateFirmwareMetadataStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
 //                            if (responseMessage.additionalInformation == SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData) {
@@ -993,7 +993,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateFirmwareMetadataCheck every node.
@@ -1026,7 +1026,7 @@
 #pragma mark - Firmware update step5:configModelSubscriptionAdd(Initiator->updating node(s))
 - (void)firmwareUpdateConfigModelSubscriptionAdd {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressSubscriptionAdd;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -1049,13 +1049,13 @@
                 self.semaphore = dispatch_semaphore_create(0);
                 self.messageHandle = [SDKLibCommand configModelSubscriptionAddWithDestination:node.address toGroupAddress:groupAddress elementAddress:eleAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
                     if (responseMessage.elementAddress == eleAddress && responseMessage.address == groupAddress) {
-                        TeLogDebug(@"initiator configModelSubscriptionAdd=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        TelinkLogDebug(@"initiator configModelSubscriptionAdd=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                         if (responseMessage.companyIdentifier == companyIdentifier && responseMessage.modelIdentifier == modelIdentifier) {
                             if (responseMessage.status == SigConfigMessageStatus_success) {
                                 hasSuccess = YES;
                             } else {
                                 weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in configModelSubscriptionAdd,SigConfigModelSubscriptionStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                                TeLogError(@"fail in configModelSubscriptionAdd,SigConfigModelSubscriptionStatus.status=0x%x",responseMessage.status);
+                                TelinkLogError(@"fail in configModelSubscriptionAdd,SigConfigModelSubscriptionStatus.status=0x%x",responseMessage.status);
                                 if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                                     [weakSelf.failAddressArray addObject:nodeAddress];
                                 }
@@ -1063,7 +1063,7 @@
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
                 //Most provide 3 seconds to configModelSubscriptionAdd every node.
@@ -1102,7 +1102,7 @@
 #pragma mark - Firmware update step6:firmwareDistributionReceiversAdd(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)firmwareUpdateFirmwareDistributionReceiversAdd {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __weak typeof(self) weakSelf = self;
     __block BOOL hasFail = NO;
@@ -1111,11 +1111,11 @@
     self.semaphore = dispatch_semaphore_create(0);
     __block SigFirmwareDistributionReceiversList *response = nil;
     [SDKLibCommand firmwareDistributionReceiversGetWithDestination:self.distributorAddress firstIndex:0 entriesLimit:1 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversList * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionReceiversGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionReceiversGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         response = responseMessage;
         weakSelf.firmwareDistributionReceiversList = responseMessage;
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
             weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
@@ -1135,12 +1135,12 @@
     if (response.receiversList && response.receiversList.count > 0) {
         self.semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand firmwareDistributionReceiversDeleteAllWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"firmwareDistributionReceiversDeleteAll=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogDebug(@"firmwareDistributionReceiversDeleteAll=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (source != weakSelf.distributorAddress) {
-                TeLogInfo(@"response from other node.");
+                TelinkLogInfo(@"response from other node.");
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 hasFail = YES;
                 weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
@@ -1174,10 +1174,10 @@
         SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
-            TeLogInfo(@"firmwareDistributionReceiversAdd=0x%x",node.address);
+            TelinkLogInfo(@"firmwareDistributionReceiversAdd=0x%x",node.address);
             SigReceiverEntryModel *model = [[SigReceiverEntryModel alloc] initWithAddress:nodeAddress.intValue updateFirmwareImageIndex:self.updateFirmwareImageIndex];
-            self.messageHandle = [SDKLibCommand firmwareDistributionReceiversAddWithDestination:self.distributorAddress receiverEntrysList:@[model] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareDistributionReceiversAdd=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            self.messageHandle = [SDKLibCommand firmwareDistributionReceiversAddWithDestination:self.distributorAddress receiverEntriesList:@[model] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversStatus * _Nonnull responseMessage) {
+                TelinkLogDebug(@"firmwareDistributionReceiversAdd=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == weakSelf.distributorAddress) {
                     if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
                         hasSuccess = YES;
@@ -1185,13 +1185,13 @@
                         hasFail = YES;
                         NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionReceiversAdd fail,status=0x%x",responseMessage.status];
                         weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                        TeLogInfo(@"%@",errorString);
+                        TelinkLogInfo(@"%@",errorString);
                     }
                 } else {
-                    TeLogInfo(@"response from other node.");
+                    TelinkLogInfo(@"response from other node.");
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 if (error) {
                     hasFail = YES;
                 }
@@ -1220,7 +1220,7 @@
 }
 
 - (void)createResponseSigFirmwareDistributionReceiversListOfAllAddressList {
-    TeLogInfo(@"create SigFirmwareDistributionReceiversList of AllAddresses by app.");
+    TelinkLogInfo(@"create SigFirmwareDistributionReceiversList of AllAddresses by app.");
     NSMutableArray *list = [NSMutableArray array];
     NSArray *allAddressArray = [NSArray arrayWithArray:self.allAddressArray];
     UInt16 receiversListCount = allAddressArray.count;
@@ -1238,7 +1238,7 @@
 }
 
 - (void)createResponseSigFirmwareDistributionReceiversStatus {
-    TeLogInfo(@"create SigFirmwareDistributionReceiversStatus by app.");
+    TelinkLogInfo(@"create SigFirmwareDistributionReceiversStatus by app.");
     SigFirmwareDistributionServerAndClientModelStatusType status = SigFirmwareDistributionServerAndClientModelStatusType_success;
     UInt16 receiversListCount = 1;
     SigFirmwareDistributionReceiversStatus *responseMessage = [[SigFirmwareDistributionReceiversStatus alloc] initWithStatus:status receiversListCount:receiversListCount];
@@ -1262,7 +1262,7 @@
 #pragma mark - Firmware update step7:firmwareDistributionUploadStart(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)firmwareUpdateFirmwareDistributionUploadStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionUploadStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
@@ -1270,7 +1270,7 @@
 
     self.semaphore = dispatch_semaphore_create(0);
     [SDKLibCommand firmwareDistributionUploadStartWithDestination:self.distributorAddress uploadTTL:self.uploadTTL uploadTimeoutBase:self.uploadTimeoutBase uploadBLOBID:self.updateBLOBID uploadFirmwareSize:(UInt32)self.otaData.length uploadFirmwareMetadataLength:self.incomingFirmwareMetadata.length uploadFirmwareMetadata:self.incomingFirmwareMetadata uploadFirmwareID:self.firmwareID retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionUploadStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionUploadStart=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionUploadStart=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
             if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
 
@@ -1278,13 +1278,13 @@
                 hasFail = YES;
                 NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionUploadStart fail,status=0x%x",responseMessage.status];
                 weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TeLogInfo(@"%@",errorString);
+                TelinkLogInfo(@"%@",errorString);
             }
         } else {
-            TeLogInfo(@"response from other node.");
+            TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
         }
@@ -1306,7 +1306,7 @@
 }
 
 - (void)createResponseSigFirmwareDistributionUploadStatus {
-    TeLogInfo(@"create SigFirmwareDistributionUploadStatus by app.");
+    TelinkLogInfo(@"create SigFirmwareDistributionUploadStatus by app.");
     SigFirmwareDistributionServerAndClientModelStatusType status = SigFirmwareDistributionServerAndClientModelStatusType_success;
     SigFirmwareUploadPhaseStateType uploadPhase = SigFirmwareUploadPhaseStateType_transferActive;
     UInt8 uploadProgress = 0;
@@ -1331,13 +1331,13 @@
 #pragma mark - Firmware update step8:BLOBTransferGet(initiator->Distributor)
 - (void)initiatorToDistributorBLOBTransferGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand BLOBTransferGetWithDestination:self.distributorAddress retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"BLOBTransferGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"BLOBTransferGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
 //                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
                 hasSuccess = YES;
@@ -1347,7 +1347,7 @@
 //                        }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1367,7 +1367,7 @@
 }
 
 - (void)createSigBLOBTransferStatus {
-    TeLogInfo(@"create SigBLOBTransferStatus by app.");
+    TelinkLogInfo(@"create SigBLOBTransferStatus by app.");
     SigBLOBTransferStatusType status = SigBLOBTransferStatusType_success;
     UInt8 RFU = 0;
     SigTransferModeState transferMode = SigTransferModeState_noActiveTransfer;
@@ -1397,14 +1397,14 @@
 #pragma mark - Firmware update step9:BLOBInformationGet(initiator->Distributor)
 - (void)initiatorToDistributorBLOBInformationGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBInformationGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     self.oBLOBInformations = [NSMutableDictionary dictionary];
     __weak typeof(self) weakSelf = self;
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand BLOBInformationGetWithDestination:self.distributorAddress retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBInformationStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"BLOBInformationGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"BLOBInformationGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress && [responseMessage isMemberOfClass:[SigBLOBInformationStatus class]]) {
             weakSelf.oBLOBInformations[@(source)] = responseMessage;
             if (responseMessage.supportedTransferMode.PushBLOBTransferModeBit) {
@@ -1424,7 +1424,7 @@
             hasSuccess = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1457,7 +1457,7 @@
 }
 
 - (void)createSigBLOBInformationStatus {
-    TeLogInfo(@"create SigBLOBInformationStatus by app.");
+    TelinkLogInfo(@"create SigBLOBInformationStatus by app.");
     //1212ed04 d0000000 03007c01 01
     UInt8 minBlockSizeLog = 0x12;
     UInt8 maxBlockSizeLog = 0x12;
@@ -1489,13 +1489,13 @@
 #pragma mark - Firmware update step10:BLOBTransferStart(initiator->Distributor)
 - (void)initiatorToDistributorBLOBTransferStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand BLOBTransferStartWithDestination:self.distributorAddress transferMode:self.transferModeOfDistributor BLOBID:self.updateBLOBID BLOBSize:(UInt32)self.otaData.length BLOBBlockSizeLog:self.blockSizeLog MTUSize:self.MTUSize retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"BLOBTransferStart(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"BLOBTransferStart(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
 //                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
                 hasSuccess = YES;
@@ -1505,7 +1505,7 @@
 //                        }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1540,7 +1540,7 @@
 #pragma mark - Firmware update step11:BLOBBlockStart(initiator->Distributor)
 - (void)initiatorToDistributorBLOBBlockStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -1553,16 +1553,16 @@
     self.currentBlockData = [self.otaData subdataWithRange:NSMakeRange(blockSize * self.blockIndex, currentBlockSize)];
     UInt32 blockChecksum = [LibTools getCRC32OfData:self.currentBlockData];
     NSData *blockChecksumValue = [NSData dataWithBytes:&blockChecksum length:4];
-    TeLogInfo(@"blockChecksum=0x%x,blockChecksumValue=%@",blockChecksum,blockChecksumValue);
+    TelinkLogInfo(@"blockChecksum=0x%x,blockChecksumValue=%@",blockChecksum,blockChecksumValue);
 
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand BLOBBlockStartWithDestination:self.distributorAddress blockNumber:self.blockIndex chunkSize:self.chunkSize retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"BLOBBlockStart(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"BLOBBlockStart(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
             hasSuccess = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1582,7 +1582,7 @@
 }
 
 - (void)createSigBLOBBlockStatus {
-    TeLogInfo(@"create SigBLOBBlockStatus by app.");
+    TelinkLogInfo(@"create SigBLOBBlockStatus by app.");
     //400000d0 00
     SigBLOBBlockStatusType status = SigBLOBBlockStatusType_success;
     UInt8 RFU = 0;
@@ -1611,7 +1611,7 @@
 #pragma mark - Firmware update step12:BLOBChunkTransfer(initiator->Distributor)
 - (void)initiatorToDistributorBLOBChunkTransfer {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
@@ -1633,7 +1633,7 @@
         }
         __weak typeof(self) weakSelf = self;
         if (!self.phoneIsDistributor) {
-            TeLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+            TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
         }
         [self showMeshOTAProgressWithCurrentChunkData:chunkData otaData:self.otaData progressBlock:self.gattDistributionProgressBlock];
         BOOL sendBySegmentPdu = NO;
@@ -1644,7 +1644,7 @@
         } else {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:self.distributorAddress chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 if (error) {
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 } else {
@@ -1679,7 +1679,7 @@
     if (progressBlock) {
         double progress = [self getProgressWithCurrentChunkData:chunkData otaData:otaData];
         NSInteger intPro = (NSInteger)progress;
-//        TeLogDebug(@"progress=%f,intPro=%ld",progress,(long)intPro);
+//        TelinkLogDebug(@"progress=%f,intPro=%ld",progress,(long)intPro);
         progressBlock(intPro);
     }
 }
@@ -1699,7 +1699,7 @@
 
 - (void)initiatorToDistributorBLOBChunkTransferWithLosePackets {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer;
-    TeLogInfo(@"\n\n==========firmware update:step%d.1\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d.1\n\n",self.firmwareUpdateProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
@@ -1719,10 +1719,10 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
                         weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer(initiator->Distributor), error=%@.",error.domain] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
@@ -1764,7 +1764,7 @@
 #pragma mark - Firmware update step13:BLOBBlockGet(initiator->Distributor)
 - (void)initiatorToDistributorBLOBBlockGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.losePacketsDict = [NSMutableDictionary dictionary];
     __block BOOL hasResponse = NO;
@@ -1773,7 +1773,7 @@
     __weak typeof(self) weakSelf = self;
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand BLOBBlockGetWithDestination:self.distributorAddress retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"BLOBBlockGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"BLOBBlockGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
             hasResponse = YES;
             /*BLOBBlockGet=80000000010600,source=2,destination=1*/
@@ -1783,19 +1783,19 @@
                     hasLost = YES;
                     NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                    TeLogInfo(@"%@",errorString);
+                    TelinkLogInfo(@"%@",errorString);
                     weakSelf.losePacketsDict[@(source)] = responseMessage.missingChunksList;
                 } else if (responseMessage.format == SigBLOBBlockFormatType_encodedMissingChunks && responseMessage.encodedMissingChunksList && responseMessage.encodedMissingChunksList.count > 0) {
                     hasLost = YES;
                     NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                    TeLogInfo(@"%@",errorString);
+                    TelinkLogInfo(@"%@",errorString);
                     weakSelf.losePacketsDict[@(source)] = responseMessage.encodedMissingChunksList;
                 } else if (responseMessage.format == SigBLOBBlockFormatType_allChunksMissing) {
                     hasLost = YES;
                     NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                    TeLogInfo(@"%@",errorString);
+                    TelinkLogInfo(@"%@",errorString);
                     NSMutableArray *chunkIndexs = [NSMutableArray array];
                     for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
                         [chunkIndexs addObject:@(i)];
@@ -1805,14 +1805,14 @@
             } else {
                 NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
                 weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TeLogInfo(@"%@",errorString);
+                TelinkLogInfo(@"%@",errorString);
                 if (![weakSelf.failAddressArray containsObject:@(weakSelf.distributorAddress)]) {
                     [weakSelf.failAddressArray addObject:@(weakSelf.distributorAddress)];
                 }
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1845,7 +1845,7 @@
                 } else {
                     newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexs;
                 }
-                TeLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
+                TelinkLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
                 self.losePacketsDict = [NSMutableDictionary dictionaryWithDictionary:newDict];
                 [self initiatorToDistributorBLOBChunkTransferWithLosePackets];
             }else{
@@ -1885,11 +1885,11 @@
 
 - (void)initiatorToDistributorBLOBBlockGetFailAction {
     if (self.retryCountInBLOBChunkTransfer < kRetryCountInBLOBChunkTransfer) {
-        TeLogInfo(@"retry send block.");
+        TelinkLogInfo(@"retry send block.");
         self.retryCountInBLOBChunkTransfer ++;
         [self performSelector:@selector(initiatorToDistributorBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        TeLogInfo(@"send block fail.");
+        TelinkLogInfo(@"send block fail.");
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -1903,7 +1903,7 @@
 #pragma mark - Firmware update step14:firmwareDistributionStart(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)firmwareUpdateFirmwareDistributionStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
@@ -1911,20 +1911,20 @@
 
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand firmwareDistributionStartWithDestination:self.distributorAddress distributionAppKeyIndex:self.distributionAppKeyIndex distributionTTL:self.distributionTTL distributionTimeoutBase:self.distributionTimeoutBase distributionTransferMode:SigTransferModeState_pushBLOBTransferMode updatePolicy:self.updatePolicy RFU:0 distributionFirmwareImageIndex:self.distributionFirmwareImageIndex distributionMulticastAddress:self.distributionMulticastAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionStart(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionStart(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
             if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
             } else {
                 hasFail = YES;
                 NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionStart(Initiator->Distributor) fail,status=0x%x",responseMessage.status];
                 weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TeLogInfo(@"%@",errorString);
+                TelinkLogInfo(@"%@",errorString);
             }
         } else {
-            TeLogInfo(@"response from other node.");
+            TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
         }
@@ -1946,7 +1946,7 @@
 }
 
 - (void)createResponseSigFirmwareDistributionStatusWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase {
-    TeLogInfo(@"create SigFirmwareDistributionStatus by app.");
+    TelinkLogInfo(@"create SigFirmwareDistributionStatus by app.");
     UInt16 distributionMulticastAddress = kMeshOTAGroupAddress;
     UInt16 distributionAppKeyIndex = self.distributionAppKeyIndex;
     UInt8 distributionTTL = self.distributionTTL;
@@ -1966,7 +1966,7 @@
     if (self.phoneIsDistributor) {
         [self performSelector:@selector(firmwareUpdateFirmwareUpdateStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        TeLogVerbose(@"");
+        TelinkLogVerbose(@"");
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
         });
@@ -1986,7 +1986,7 @@
 #pragma mark - Firmware update step15:firmwareUpdateStart(Distributor->updating node(s))
 - (void)firmwareUpdateFirmwareUpdateStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareUpdateStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -2001,9 +2001,9 @@
         SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
-            TeLogInfo(@"firmwareUpdateStartWithDestination=0x%x",node.address);
+            TelinkLogInfo(@"firmwareUpdateStartWithDestination=0x%x",node.address);
             self.messageHandle = [SDKLibCommand firmwareUpdateStartWithDestination:node.address updateTTL:self.updateTTL updateTimeoutBase:self.updateTimeoutBase updateBLOBID:self.updateBLOBIDForDistributor updateFirmwareImageIndex:self.updateFirmwareImageIndex incomingFirmwareMetadata:self.incomingFirmwareMetadata retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareUpdateStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"firmwareUpdateStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
 //                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_inProgress) {
@@ -2029,7 +2029,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
@@ -2063,7 +2063,7 @@
 #pragma mark - Firmware update step16:BLOBTransferGet(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBTransferGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -2079,7 +2079,7 @@
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand BLOBTransferGetWithDestination:node.address retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"BLOBTransferGet(Distributor->updating node(s))=%@,transferMode=%d,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],responseMessage.transferMode,source,destination);
+                TelinkLogDebug(@"BLOBTransferGet(Distributor->updating node(s))=%@,transferMode=%d,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],responseMessage.transferMode,source,destination);
                 if (source == nodeAddress.intValue) {
 //                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
                         hasSuccess = YES;
@@ -2093,7 +2093,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to BLOBTransferGet(Distributor->updating node(s)) every node.
@@ -2125,7 +2125,7 @@
 #pragma mark - Firmware update step17:BLOBInformationGet(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBInformationGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     self.oBLOBInformations = [NSMutableDictionary dictionary];
@@ -2142,10 +2142,10 @@
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand BLOBInformationGetWithDestination:node.address retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBInformationStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"BLOBInformationGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"BLOBInformationGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue && [responseMessage isMemberOfClass:[SigBLOBInformationStatus class]]) {
                     weakSelf.oBLOBInformations[@(source)] = responseMessage;
-                    TeLogDebug(@"supportedTransferMode.value=%d,weakSelf.transferModeOfUpdateNodes=%d",responseMessage.supportedTransferMode.value,weakSelf.transferModeOfUpdateNodes);
+                    TelinkLogDebug(@"supportedTransferMode.value=%d,weakSelf.transferModeOfUpdateNodes=%d",responseMessage.supportedTransferMode.value,weakSelf.transferModeOfUpdateNodes);
                     if (responseMessage.supportedTransferMode.PushBLOBTransferModeBit) {
                         //注意：当前版本只考虑一个节点的pull，不考虑多个节点的pull。（多个节点则使用最后一个节点的模式）
                         if (responseMessage.supportedTransferMode.PullBLOBTransferModeBit && weakSelf.allAddressArray.count == 1) {
@@ -2172,7 +2172,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to BLOBInformationGet(Distributor->updating node(s)) every node.
@@ -2228,7 +2228,7 @@
 #pragma mark - Firmware update step18:BLOBTransferStart(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBTransferStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -2243,9 +2243,9 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
                 self.semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"BLOBTransferStart->self.transferModeOfUpdateNodes=%d",self.transferModeOfUpdateNodes);
+                TelinkLogInfo(@"BLOBTransferStart->self.transferModeOfUpdateNodes=%d",self.transferModeOfUpdateNodes);
                 self.messageHandle = [SDKLibCommand BLOBTransferStartWithDestination:node.address transferMode:self.transferModeOfUpdateNodes BLOBID:self.updateBLOBIDForDistributor BLOBSize:(UInt32)self.firmwareDataOnDistributor.length BLOBBlockSizeLog:self.blockSizeLog MTUSize:self.MTUSize retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"BLOBTransferStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"BLOBTransferStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (source == nodeAddress.intValue) {
 //                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
                             hasSuccess = YES;
@@ -2259,7 +2259,7 @@
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
                 //Most provide 3 seconds to BLOBTransferStart(Distributor->updating node(s)) every node.
@@ -2295,7 +2295,7 @@
 #pragma mark - Firmware update step19:BLOBBlockStart(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBBlockStart {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.chunkIndex = 0;
     __block BOOL hasSuccess = NO;
@@ -2323,7 +2323,7 @@
             self.currentBlockData = [self.firmwareDataOnDistributor subdataWithRange:NSMakeRange(blockSize * self.blockIndex, currentBlockSize)];
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand BLOBBlockStartWithDestination:node.address blockNumber:self.blockIndex chunkSize:self.chunkSize retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"BLOBBlockStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"BLOBBlockStart(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     hasSuccess = YES;
                     if (responseMessage.status == SigBLOBBlockStatusType_success) {
@@ -2341,7 +2341,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to BLOBBlockStart(Distributor->updating node(s)) every node.
@@ -2388,7 +2388,7 @@
 #pragma mark - Firmware update step20:BLOBChunkTransfer(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBChunkTransfer {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     
     self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
@@ -2401,10 +2401,10 @@
             if (![self.failAddressArray containsObject:n]) {
                 //v3.3.0开始新增优化逻辑：当只有一个节点且为直连节点时.
                 if (n.intValue == SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-                    TeLogInfo(@"只存在一个设备，且是直连设备");
+                    TelinkLogInfo(@"只存在一个设备，且是直连设备");
                     destination = n.intValue;
                 } else {
-                    TeLogInfo(@"只存在一个设备，但不是直连设备");
+                    TelinkLogInfo(@"只存在一个设备，但不是直连设备");
                     SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:n.intValue];
                     if (node && node.isSensor) {
                         destination = n.intValue;
@@ -2431,7 +2431,7 @@
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TeLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
@@ -2447,7 +2447,7 @@
         
         BOOL sendBySegmentPdu = NO;
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 dispatch_semaphore_signal(weakSelf.semaphore);
             } else {
@@ -2458,7 +2458,7 @@
                     if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
                         interval = 0.280;
                     }
-                    TeLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
+                    TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         dispatch_semaphore_signal(weakSelf.semaphore);
                     });
@@ -2474,13 +2474,13 @@
                         } else {
                             interval = 0.120;
                         }
-                        TeLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                        TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                             dispatch_semaphore_signal(weakSelf.semaphore);
                         });
                     } else {
                         //直连不延时
-//                    TeLogInfo(@"distributor分发地址为单播地址，不延时");
+//                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
                         dispatch_semaphore_signal(weakSelf.semaphore);
                     }
                 }
@@ -2509,8 +2509,8 @@
 - (void)createSigFirmwareDistributionReceiversListWithCurrentChunkData:(NSData *)chunkData otaData:(NSData *)otaData {
     double progress = [self getProgressWithCurrentChunkData:chunkData otaData:otaData] / 2;//progress长度不足，应该返回0~50。
     NSInteger intPro = (NSInteger)progress;
-    TeLogDebug(@"adv progress=%f,intPro=%ld",progress,(long)intPro);
-    TeLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
+    TelinkLogDebug(@"adv progress=%f,intPro=%ld",progress,(long)intPro);
+    TelinkLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
     NSMutableArray *list = [NSMutableArray array];
     NSArray *allAddressArray = [NSArray arrayWithArray:self.allAddressArray];
     for (NSNumber *nodeAddress in allAddressArray) {
@@ -2529,7 +2529,7 @@
 
 - (void)distributorToUpdatingNodesBLOBChunkTransferWithLosePackets {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
-    TeLogInfo(@"\n\n==========firmware update:step%d.1\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d.1\n\n",self.firmwareUpdateProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
@@ -2549,11 +2549,11 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
                 
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
                         weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer(Distributor->updating node(s)), error=%@.",error.domain] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
@@ -2566,7 +2566,7 @@
                             if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
                                 interval = 0.280;
                             }
-                            TeLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
+                            TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                                 dispatch_semaphore_signal(weakSelf.semaphore);
                             });
@@ -2582,13 +2582,13 @@
                                 } else {
                                     interval = 0.120;
                                 }
-                                TeLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                                TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
                                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                                     dispatch_semaphore_signal(weakSelf.semaphore);
                                 });
                             } else {
                                 //直连不延时
-//                    TeLogInfo(@"distributor分发地址为单播地址，不延时");
+//                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
                                 dispatch_semaphore_signal(weakSelf.semaphore);
                             }
                         }
@@ -2620,7 +2620,7 @@
 #pragma mark - Firmware update step21:BLOBBlockGet(Distributor->updating node(s))
 - (void)distributorToUpdatingNodesBLOBBlockGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.losePacketsDict = [NSMutableDictionary dictionary];
     __block BOOL hasSuccess = NO;
@@ -2640,9 +2640,9 @@
         SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
-            TeLogInfo(@"self.blockIndex=%d",self.blockIndex);
+            TelinkLogInfo(@"self.blockIndex=%d",self.blockIndex);
             self.messageHandle = [SDKLibCommand BLOBBlockGetWithDestination:node.address retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"BLOBBlockGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"BLOBBlockGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     /*BLOBBlockGet=80000000010600,source=2,destination=1*/
                     if (responseMessage.status == SigBLOBBlockStatusType_success) {
@@ -2651,19 +2651,19 @@
                             hasLost = YES;
                             NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                             weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TeLogInfo(@"%@",errorString);
+                            TelinkLogInfo(@"%@",errorString);
                             weakSelf.losePacketsDict[@(source)] = responseMessage.missingChunksList;
                         } else if (responseMessage.format == SigBLOBBlockFormatType_encodedMissingChunks && responseMessage.encodedMissingChunksList && responseMessage.encodedMissingChunksList.count > 0) {
                             hasLost = YES;
                             NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                             weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TeLogInfo(@"%@",errorString);
+                            TelinkLogInfo(@"%@",errorString);
                             weakSelf.losePacketsDict[@(source)] = responseMessage.encodedMissingChunksList;
                         } else if (responseMessage.format == SigBLOBBlockFormatType_allChunksMissing) {
                             hasLost = YES;
                             NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
                             weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TeLogInfo(@"%@",errorString);
+                            TelinkLogInfo(@"%@",errorString);
                             NSMutableArray *chunkIndexs = [NSMutableArray array];
                             for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
                                 [chunkIndexs addObject:@(i)];
@@ -2673,14 +2673,14 @@
                     } else {
                         NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
                         weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                        TeLogInfo(@"%@",errorString);
+                        TelinkLogInfo(@"%@",errorString);
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 if (error) {
                     if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                         [weakSelf.failAddressArray addObject:nodeAddress];
@@ -2721,7 +2721,7 @@
                 } else {
                     newDict[@(kMeshOTAGroupAddress)] = newLoseChunkIndexs;
                 }
-                TeLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
+                TelinkLogInfo(@"newLoseChunkIndexs=%@",newLoseChunkIndexs);
                 self.losePacketsDict = [NSMutableDictionary dictionaryWithDictionary:newDict];
                 [self distributorToUpdatingNodesBLOBChunkTransferWithLosePackets];
             }else{
@@ -2747,7 +2747,7 @@
         [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
     } else if (self.blockIndex == self.allBlockCount - 1) {
         // all blcoks had send
-        TeLogVerbose(@"");
+        TelinkLogVerbose(@"");
         [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
         self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)), self.blockIndex > self.allBlockCount - 1."] code:-self.firmwareUpdateProgress userInfo:nil];
@@ -2757,11 +2757,11 @@
 
 - (void)distributorToUpdatingNodesBLOBBlockGetFailAction {
     if (self.retryCountInBLOBChunkTransfer < kRetryCountInBLOBChunkTransfer) {
-        TeLogInfo(@"retry send block.");
+        TelinkLogInfo(@"retry send block.");
         self.retryCountInBLOBChunkTransfer ++;
         [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        TeLogInfo(@"send block fail.");
+        TelinkLogInfo(@"send block fail.");
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -2777,7 +2777,7 @@
 #pragma mark - Firmware update step22:firmwareDistributionReceiversGet(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)fiemwareUpdateFirmwareDistributionReceiversGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionReceiversGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -2786,12 +2786,12 @@
     if (SigBearer.share.isOpen) {
         self.semaphore = dispatch_semaphore_create(0);
         self.messageHandle = [SDKLibCommand firmwareDistributionReceiversGetWithDestination:self.distributorAddress firstIndex:self.firstIndexOfFirmwareDistributionReceiversGet entriesLimit:1 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversList * _Nonnull responseMessage) {
-            TeLogDebug(@"firmwareDistributionReceiversGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogDebug(@"firmwareDistributionReceiversGet(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             response = responseMessage;
             weakSelf.firmwareDistributionReceiversList = responseMessage;
             [weakSelf callbackAdvDistributionProgressBlock];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
             }
@@ -2815,7 +2815,7 @@
                 //记录：直连节点返回0%-phase=4,B610010000000880010000,B61000000000080000C800
                 //B610010000000280010000,B61000000000020000C800
                 //记录：非直连节点0x403返回50%-phase=1,02000000038400C800
-                TeLogVerbose(@"SigUpdatingNodeEntryModel===%@",model.getDetailString);
+                TelinkLogVerbose(@"SigUpdatingNodeEntryModel===%@",model.getDetailString);
                 if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferError || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferCanceled || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_unknown) {
                     [self.failAddressArray addObject:@(model.address)];
                     needCheckNextIndex = YES;
@@ -2835,15 +2835,15 @@
             if (needCheckNextIndex) {
                 if (self.firstIndexOfFirmwareDistributionReceiversGet + 1 >= self.allAddressArray.count) {
                     //已经查询完所有的地址
-                    TeLogVerbose(@"");
+                    TelinkLogVerbose(@"");
                     [self firmwareDistributionReceiversGetFinishAction];
                 } else {
-                    TeLogVerbose(@"");
+                    TelinkLogVerbose(@"");
                     self.firstIndexOfFirmwareDistributionReceiversGet++;
                     [self fiemwareUpdateFirmwareDistributionReceiversGet];
                 }
             } else if (needReceiversGetAgain) {
-                TeLogVerbose(@"");
+                TelinkLogVerbose(@"");
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) object:nil];
                 });
@@ -2857,7 +2857,7 @@
     } else {
         //查询不到继续下一轮查询。
         if (self.isMeshOTAing) {
-            TeLogVerbose(@"");
+            TelinkLogVerbose(@"");
             dispatch_async(dispatch_get_main_queue(), ^{
                 [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) object:nil];
             });
@@ -2871,7 +2871,7 @@
         //所有设备都已经失败
         NSString *errorString = @"firmware update fail, firmwareDistributionReceiversGet(Initiator->Distributor) fail";
         self.failError = [NSError errorWithDomain:errorString code:-self.firmwareUpdateProgress userInfo:nil];
-        TeLogInfo(@"%@",errorString);
+        TelinkLogInfo(@"%@",errorString);
         [self fiemwareUpdateFirmwareDistributionReceiversGetFailAction];
     } else {
         //所有设备已经校验固件完成或者OTA失败，进行下一步
@@ -2881,7 +2881,7 @@
                 continue;
             }
             if (![self.successAddressArray containsObject:address]) {
-                TeLogVerbose(@"0x%X apply success!!!",address);
+                TelinkLogVerbose(@"0x%X apply success!!!",address);
                 [self.successAddressArray addObject:address];
             }
         }
@@ -2890,7 +2890,7 @@
 }
 
 - (void)createResponseSigFirmwareDistributionReceiversList {
-    TeLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
+    TelinkLogInfo(@"create SigFirmwareDistributionReceiversList by app.");
     UInt16 receiversListCount = 1;
     UInt16 firstIndex = self.firstIndexOfFirmwareDistributionReceiversGet;
     SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithAddress:self.distributorAddress retrievedUpdatePhase:SigFirmwareUpdatePhaseType_verificationSuccess updateStatus:SigFirmwareUpdateServerAndClientModelStatusType_success transferStatus:SigBLOBTransferStatusType_success transferProgress:50 updateFirmwareImageIndex:0];
@@ -2942,7 +2942,7 @@
 #pragma mark - Firmware update step23:firmwareDistributionApply(Initiator->Distributor)
 - (void)firmwareDistributionApply {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionApply;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     if (self.phoneIsDistributor && self.updatePolicy == SigUpdatePolicyType_verifyOnly) {
         [self firmwareUpdateFirmwareUpdateGet];
         return;
@@ -2954,7 +2954,7 @@
 
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand firmwareDistributionApplyWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionApply(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionApply(Initiator->Distributor)=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
             if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
                 
@@ -2962,7 +2962,7 @@
                 if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_wrongPhase && responseMessage.distributionPhase == SigDistributionPhaseState_transferActive) {
                     //可能只校验成功一部分设备，这里需要重试流程。
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        TeLogInfo(@"可能只校验成功一部分设备，这里需要10秒后重试firmwareDistributionApply流程!!!!!!");
+                        TelinkLogInfo(@"可能只校验成功一部分设备，这里需要10秒后重试firmwareDistributionApply流程!!!!!!");
                         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGetSuccessAction) object:nil];
                         [weakSelf performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGetSuccessAction) withObject:nil afterDelay:10.0];
                     });
@@ -2970,14 +2970,14 @@
                     hasFail = YES;
                     NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionApply(Initiator->Distributor) fail,status=0x%x",responseMessage.status];
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                    TeLogInfo(@"%@",errorString);
+                    TelinkLogInfo(@"%@",errorString);
                 }
             }
         } else {
-            TeLogInfo(@"response from other node.");
+            TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
         }
@@ -3015,7 +3015,7 @@
 #pragma mark - Firmware update step24:firmwareUpdateGet(Distributor->updating node(s))
 - (void)firmwareUpdateFirmwareUpdateGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareUpdateGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -3031,7 +3031,7 @@
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand firmwareUpdateGetWithDestination:node.address retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareUpdateGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"firmwareUpdateGet(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
 //                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_DFUReady) {
@@ -3057,7 +3057,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareUpdateGet(Distributor->updating node(s)) every node.
@@ -3088,7 +3088,7 @@
 #pragma mark - Firmware update step25:firmwareUpdateApply(Distributor->updating node(s))
 - (void)firmwareUpdateFirmwareUpdateApply {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareUpdateApply;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     if (!self.phoneIsDistributor) {
         //手机不作为Distributor的话，不需要发送firmwareUpdateFirmwareUpdateApply，直接成功。
@@ -3110,7 +3110,7 @@
         if (node.state != DeviceStateOutOfLine || node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand firmwareUpdateApplyWithDestination:node.address retryCount:10 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"firmwareUpdateApply(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"firmwareUpdateApply(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
                         if (responseMessage.updatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || responseMessage.updatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
@@ -3141,7 +3141,7 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to BLOBBlockStart every node.
@@ -3171,14 +3171,14 @@
 #pragma mark - Firmware update step26:firmwareDistributionGet(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)firmwareUpdateFirmwareDistributionGet {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionGet;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     
     if (![self isMeshOTAing]) {
-        TeLog(@"NO in meshOTA progress.");
+        TelinkLog(@"NO in meshOTA progress.");
         return;
     }
     if (!SigBearer.share.isOpen) {
-        TeLog(@"mesh is not connect.");
+        TelinkLog(@"mesh is not connect.");
         return;
     }
     __block BOOL needGetAgain  = YES;
@@ -3186,7 +3186,7 @@
     self.firmwareDistributionGetCount --;
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:self.distributorAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionGet(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionGet(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            if (responseMessage.distributionPhase == SigDistributionPhaseState_completed) {//Distributor apply完成但未重启
         if (responseMessage.distributionPhase == SigDistributionPhaseState_completed || responseMessage.distributionPhase == SigDistributionPhaseState_applyingUpdate || (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle)) {//Distributor apply完成但未重启 或者 Distributor 正在apply 或者 Distributor apply完成并重启
             needGetAgain = NO;
@@ -3194,7 +3194,7 @@
             weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareDistributionGet(Initiator->Distributor),SigFirmwareDistributionStatus.distributionPhase=0x%x",responseMessage.distributionPhase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -3225,12 +3225,12 @@
 }
 
 - (void)firmwareUpdateFirmwareDistributionGetSuccessAction {
-    TeLogDebug(@"立刻10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
+    TelinkLogDebug(@"立刻10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
     if (self.needCheckVersionAfterApply) {
         if (SigBearer.share.isOpen) {
             [self performSelector:@selector(firmwareUpdateInformationGetCheckVersion) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         } else {
-            TeLogDebug(@"Mesh has disconnect, waiting for connection.");
+            TelinkLogDebug(@"Mesh has disconnect, waiting for connection.");
         }
     } else {
         [self performSelector:@selector(firmwareUpdateFirmwareDistributionCancel) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
@@ -3244,7 +3244,7 @@
 #pragma mark - Firmware update step27:SigFirmwareUpdateInformationGetCheckVersion(Initiator->updating node(s))
 - (void)firmwareUpdateInformationGetCheckVersion {
     self.firmwareUpdateProgress = SigFirmwareUpdateInformationGetCheckVersion;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
@@ -3272,7 +3272,7 @@
                     Byte *pu = (Byte *)[currentFirmwareID bytes];
                     if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
-                    TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                    TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
                     UInt16 oldVid = [[weakSelf.oFirmwareInformations[@(source)] objectForKey:kVid] intValue];
                     if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformations.allKeys containsObject:@(source)] && oldVid != vid)) {
@@ -3285,7 +3285,7 @@
                 }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         //Most provide 3 seconds to firmwareUpdateInformationGet every node.
@@ -3303,7 +3303,7 @@
     if ((allAddressArray.count > self.failAddressArray.count + receiveStatusDict.allKeys.count) && self.checkVersionCount > 0) {
         //未获取完成，延时10秒后再重新获取一轮，一共6轮。
         [self performSelector:@selector(cancelAllAfterDelay) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
-        TeLogDebug(@"开始10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
+        TelinkLogDebug(@"开始10秒计时firmwareUpdateFirmwareDistributionGetSuccessAction");
         [self performSelector:@selector(firmwareUpdateFirmwareDistributionGetSuccessAction) withObject:nil afterDelay:10.0];
         return;
     }
@@ -3336,7 +3336,7 @@
 #pragma mark - Firmware update step28:firmwareDistributionCancel(Initiator->Distributor,发送到直连节点，需模拟回包)
 - (void)firmwareUpdateFirmwareDistributionCancel {
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressFirmwareDistributionCancel;
-    TeLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
+    TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
     [self performSelector:@selector(cancelAllAfterDelay) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     //当直连节点作为distributor但distributor不需要OTA时，需要给distributor发送cancel指令。
     __block BOOL hasFail = NO;
@@ -3345,9 +3345,9 @@
 
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionCancel(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"firmwareDistributionCancel(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
         }

@@ -68,9 +68,9 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 //    __weak typeof(self) weakSelf = self;
     [self getECCKeyPair:^(NSData * _Nonnull publicKey, NSData * _Nonnull privateKey) {
         if (@available(iOS 10.0, *)) {
-//            TeLogVerbose(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
+//            TelinkLogVerbose(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
         } else {
-//            TeLogVerbose(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
+//            TelinkLogVerbose(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
         }
     }];
 }
@@ -113,7 +113,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
         GMEllipticCurveCrypto *deviceKeyCrypto = [GMEllipticCurveCrypto cryptoForKey:devicePublicKeyData];
         deviceKeyCrypto.compressedPublicKey = YES;
         NSData *sharedSecretKeyData = [_crypto sharedSecretForPublicKey:deviceKeyCrypto.publicKey];
-    //    TeLogInfo(@"sharedSecretKeyData=%@",sharedSecretKeyData);
+    //    TelinkLogInfo(@"sharedSecretKeyData=%@",sharedSecretKeyData);
         return sharedSecretKeyData;
     }
 }
@@ -217,7 +217,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
             if (devicePublicKey) {
                 CFRelease(devicePublicKey);
             }
-            TeLogError(@"SecKeyCreateWithData fail.");
+            TelinkLogError(@"SecKeyCreateWithData fail.");
             return nil;
         }
         
@@ -233,7 +233,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
             if (sharedSecret) {
                 CFRelease(sharedSecret);
             }
-            TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
+            TelinkLogError(@"SecKeyCopyKeyExchangeResult fail.");
             return nil;
         }
                 

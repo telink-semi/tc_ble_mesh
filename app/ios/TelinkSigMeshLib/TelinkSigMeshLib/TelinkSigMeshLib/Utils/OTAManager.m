@@ -110,26 +110,26 @@ typedef enum : NSUInteger {
 
 /**
  OTA，can not call repeat when app is OTAing
-
+ 
  @param otaData data for OTA
  @param models models for OTA
  @param singleSuccessAction callback when single model OTA  success
  @param singleFailAction callback when single model OTA  fail
  @param singleProgressAction callback with single model OTA progress
  @param finishAction callback when all models OTA finish
- @return use API success is ture;user API fail is false.
+ @return  true when call API success;false when call API fail.
  */
 - (BOOL)startOTAWithOtaData:(NSData *)otaData models:(NSArray <SigNodeModel *>*)models singleSuccessAction:(singleDeviceCallBack)singleSuccessAction singleFailAction:(singleDeviceCallBack)singleFailAction singleProgressAction:(singleProgressCallBack)singleProgressAction finishAction:(finishCallBack)finishAction{
     if (_OTAing) {
-        TeLogInfo(@"OTAing, can't call repeated.");
+        TelinkLogInfo(@"OTAing, can't call repeated.");
         return NO;
     }
     if (!otaData || otaData.length == 0) {
-        TeLogInfo(@"OTA data is invalid.");
+        TelinkLogInfo(@"OTA data is invalid.");
         return NO;
     }
     if (models.count == 0) {
-        TeLogInfo(@"OTA devices list is invaid.");
+        TelinkLogInfo(@"OTA devices list is invaid.");
         return NO;
     }
     
@@ -192,7 +192,7 @@ typedef enum : NSUInteger {
 
 #pragma mark step1:startMeshConnectBeforeGATTOTA
 - (void)startMeshConnectBeforeGATTOTA {
-    TeLogInfo(@"\n\n==========GATT OTA:step1\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step1\n\n");
     self.progress = SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand startMeshConnectWithComplete:^(BOOL successful) {
@@ -217,13 +217,13 @@ typedef enum : NSUInteger {
 
 /// OTA前直连设备超时。
 - (void)meshConnectTimeoutBeforeGATTOTA {
-    TeLogInfo(@"OTA fail: startMeshConnect Timeout Before GATT OTA.");
+    TelinkLogInfo(@"OTA fail: startMeshConnect Timeout Before GATT OTA.");
     [self otaFailAction];
 }
 
 #pragma mark step2:nodeIdentitySetBeforeGATTOTA
 - (void)nodeIdentitySetBeforeGATTOTA {
-    TeLogInfo(@"\n\n==========GATT OTA:step2\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step2\n\n");
     self.progress = SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
@@ -232,13 +232,13 @@ typedef enum : NSUInteger {
         __block BOOL hasSuccess = NO;        
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigMeshLib.share.dataSource.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (!error) {
                 hasSuccess = YES;
             }
             dispatch_semaphore_signal(semaphore);
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         }];
         dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -247,7 +247,7 @@ typedef enum : NSUInteger {
                     [weakSelf startScanNodeIdentityBeforeGATTOTA];
                 } else {
                     NSString *errStr = @"OTA fail: nodeIdentitySet fail Before GATT OTA.";
-                    TeLogInfo(@"%@",errStr);
+                    TelinkLogInfo(@"%@",errStr);
                     [weakSelf otaFailAction];
                 }
             }
@@ -257,7 +257,7 @@ typedef enum : NSUInteger {
 
 #pragma mark step3:startScanNodeIdentityBeforeGATTOTA
 - (void)startScanNodeIdentityBeforeGATTOTA {
-    TeLogInfo(@"\n\n==========GATT OTA:step3\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step3\n\n");
     self.progress = SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
@@ -266,7 +266,7 @@ typedef enum : NSUInteger {
             if (rspModel.getIdentificationType == SigIdentificationType_nodeIdentity || rspModel.getIdentificationType == SigIdentificationType_privateNodeIdentity) {
                 SigEncryptedModel *encryptedModel = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:weakSelf.currentModel.address];
                 if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
-                    TeLogInfo(@"gatt ota start connect macAddress:%@",rspModel.macAddress);
+                    TelinkLogInfo(@"gatt ota start connect macAddress:%@",rspModel.macAddress);
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanNodeIdentityTimeoutBeforeGATTOTA) object:nil];
                     });
@@ -277,7 +277,7 @@ typedef enum : NSUInteger {
                     [weakSelf startConnectCBPeripheral:peripheral];
                 } else {
                     if ([rspModel.macAddress isEqualToString:@"A4C138BB9CF7"]) {
-                        TeLogInfo(@"encryptedModel=%@",encryptedModel);
+                        TelinkLogInfo(@"encryptedModel=%@",encryptedModel);
                     }
                 }
             }
@@ -295,7 +295,7 @@ typedef enum : NSUInteger {
 
 #pragma mark step4:startConnectCBPeripheral
 - (void)startConnectCBPeripheral:(CBPeripheral *)peripheral {
-    TeLogInfo(@"\n\n==========GATT OTA:step4\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step4\n\n");
     self.progress = SigGattOTAProgress_step4_startConnectCBPeripheral;
     __weak typeof(self) weakSelf = self;
     [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
@@ -313,19 +313,19 @@ typedef enum : NSUInteger {
 }
 
 - (void)connectCBPeripheralFail {
-    TeLogInfo(@"OTA fail: connectCBPeripheral fail Before GATT OTA.");
+    TelinkLogInfo(@"OTA fail: connectCBPeripheral fail Before GATT OTA.");
     [self otaFailAction];
 }
 
 #pragma mark step5:setFilter
 - (void)setFilter {
-    TeLogInfo(@"\n\n==========GATT OTA:step5\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step5\n\n");
     self.progress = SigGattOTAProgress_step5_setFilter;
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
             if (error) {
                 [weakSelf setFilterFail];
@@ -337,13 +337,13 @@ typedef enum : NSUInteger {
 }
 
 - (void)setFilterFail {
-    TeLogInfo(@"OTA fail: setFilter fail Before GATT OTA.");
+    TelinkLogInfo(@"OTA fail: setFilter fail Before GATT OTA.");
     [self otaFailAction];
 }
 
 #pragma mark step6:startSendGATTOTAPackets
 - (void)startSendGATTOTAPackets {
-    TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:step6\n\n");
     self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
     [self sendReadFirmwareVersionWithComplete:nil];
     [self sendStartOTAWithComplete:nil];
@@ -515,7 +515,7 @@ typedef enum : NSUInteger {
 #pragma mark - SigBearerDataDelegate
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:self.currentUUID]) {
         if (self.progress != SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA) {
             if (self.sendFinish) {
@@ -547,14 +547,14 @@ typedef enum : NSUInteger {
 - (void)sendReadFirmwareVersionWithComplete:(SendPacketsFinishCallback)complete {
     uint8_t buf[2] = {0x00,0xff};
     NSData *writeData = [NSData dataWithBytes:buf length:2];
-    TeLogInfo(@"sendReadFirmwareVersion -> length:%lu,%@",(unsigned long)writeData.length,writeData);
+    TelinkLogInfo(@"sendReadFirmwareVersion -> length:%lu,%@",(unsigned long)writeData.length,writeData);
     [_bearer sendOTAData:writeData complete:complete];
 }
 
 - (void)sendStartOTAWithComplete:(SendPacketsFinishCallback)complete {
     uint8_t buf[2] = {0x01,0xff};
     NSData *writeData = [NSData dataWithBytes:buf length:2];
-    TeLogInfo(@"sendStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
+    TelinkLogInfo(@"sendStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
     [_bearer sendOTAData:writeData complete:complete];
 }
 
@@ -571,9 +571,9 @@ typedef enum : NSUInteger {
     memcpy(resultBytes+2, &index, 2);
     memcpy(resultBytes+4, &negationIndex, 2);
     NSData *writeData = [NSData dataWithBytes:resultBytes length:6];
-    TeLogInfo(@"sendOTAEndData -> %04x ,length:%lu,%@", index,(unsigned long)writeData.length,writeData);
+    TelinkLogInfo(@"sendOTAEndData -> %04x ,length:%lu,%@", index,(unsigned long)writeData.length,writeData);
     [_bearer sendOTAData:writeData complete:complete];
-    TeLogInfo(@"\n\n==========GATT OTA:end\n\n");
+    TelinkLogInfo(@"\n\n==========GATT OTA:end\n\n");
 }
 
 @end

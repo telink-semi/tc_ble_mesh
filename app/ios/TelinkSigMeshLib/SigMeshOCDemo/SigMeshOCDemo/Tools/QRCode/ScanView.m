@@ -339,7 +339,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
             return;
         }
         //        NSData *data = [obj valueForKeyPath:@"BarcodeRawData"];
-//        TeLogDebug(@"metadataObject->%@", metadataObject.stringValue);
+//        TelinkLogDebug(@"metadataObject->%@", metadataObject.stringValue);
         if (self.scanDataBlock && metadataObject.stringValue) {
             self.scanDataBlock(metadataObject.stringValue);
             

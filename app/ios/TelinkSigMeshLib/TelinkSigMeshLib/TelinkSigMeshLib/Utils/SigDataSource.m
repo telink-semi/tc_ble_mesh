@@ -293,7 +293,7 @@
     BOOL tem = NO;
     NSMutableArray <SigRangeModel *>*mArray = [NSMutableArray arrayWithArray:provisioner.allocatedUnicastRange];
     for (SigRangeModel *range in mArray) {
-        if (range.lowIntAddress <= node.address && range.hightIntAddress >= node.address) {
+        if (range.lowIntAddress <= node.address && range.heightIntAddress >= node.address) {
             tem = YES;
             break;
         }
@@ -305,8 +305,8 @@
     NSInteger max = 0;
     NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
     for (SigProvisionerModel *provisioner in provisioners) {
-        if (max < provisioner.allocatedUnicastRange.firstObject.hightIntAddress) {
-            max = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
+        if (max < provisioner.allocatedUnicastRange.firstObject.heightIntAddress) {
+            max = provisioner.allocatedUnicastRange.firstObject.heightIntAddress;
         }
     }
     NSInteger count = (max >> 8) + 1;
@@ -696,7 +696,7 @@
  */
 - (UInt16)provisionAddress {
     if (!self.curProvisionerModel) {
-        TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
+        TelinkLogInfo(@"warning: Abnormal situation, there is not provisioner.");
         return kLocationAddress;
     } else {
         //2023年07月25日15:31:42
@@ -711,7 +711,7 @@
         NSMutableArray <SigNodeModel *>*nodeList = [NSMutableArray arrayWithArray:[self getNodesOfProvisioner:self.curProvisionerModel]];
         if (nodeList && nodeList.count > 0) {
             SigNodeModel *node = nodeList.lastObject;
-            if (node.address + node.elements.count <= range.hightIntAddress) {
+            if (node.address + node.elements.count <= range.heightIntAddress) {
                 maxAddr = node.address + node.elements.count;
             } else {
                 // allocatedUnicastRange of provisioner is depleted
@@ -738,8 +738,8 @@
     UInt16 maxUnicastAddress = rangeModel.lowIntAddress;
     NSArray *array = [NSArray arrayWithArray:_nodes];
     for (SigNodeModel *node in array) {
-        if (node.address >= rangeModel.lowIntAddress && node.lastUnicastAddress <= rangeModel.hightIntAddress) {
-            if ((node.lastUnicastAddress + elementCount) <= rangeModel.hightIntAddress) {
+        if (node.address >= rangeModel.lowIntAddress && node.lastUnicastAddress <= rangeModel.heightIntAddress) {
+            if ((node.lastUnicastAddress + elementCount) <= rangeModel.heightIntAddress) {
                 maxUnicastAddress = node.lastUnicastAddress + 1;
             } else {
                 // The allocatedUnicastRange of provision has been exhausted, need add a new allocatedUnicastRange.
@@ -879,7 +879,7 @@
 /**
  * @brief   Get the SigNodeSequenceNumberCacheModel from the match SequenceNumberCache through the unicastAddress of node..
  * @param   unicastAddress    the unicastAddress of node.
- * @return  A SigNodeSequenceNumberCacheModel that save NodeSequenceNumber infomation. nil means there are no SigNodeSequenceNumberCacheModel match this unicastAddress had been receive.
+ * @return  A SigNodeSequenceNumberCacheModel that save NodeSequenceNumber information. nil means there are no SigNodeSequenceNumberCacheModel match this unicastAddress had been receive.
  * @note    SDK will clean all SigNodeSequenceNumberCacheModel when connect mesh success, then SDK add SigNodeSequenceNumberCacheModel by all mesh message notify on current mesh.
  */
 - (SigNodeSequenceNumberCacheModel *)getSigNodeSequenceNumberCacheModelWithUnicastAddress:(UInt16)unicastAddress {
@@ -895,9 +895,9 @@
 }
 
 /**
- * @brief   Update ivIndex in local after SDK receivce a new vaild beacon.
+ * @brief   Update ivIndex in local after SDK receivce a new valid beacon.
  * @param   ivIndexUInt32    the new ivIndexUInt32.
- * @note    Callback this API when SDK receivce a new vaild beacon.
+ * @note    Callback this API when SDK receivce a new valid beacon.
  */
 - (void)updateIvIndexUInt32FromBeacon:(UInt32)ivIndexUInt32 {
     if ([self getIvIndexUInt32] != ivIndexUInt32) {
@@ -953,7 +953,7 @@
     if (!exist) {
         //don't exist mesh.json, create and init mesh
         [self initMeshData];
-        TeLogInfo(@"creat mesh_sample.json success");
+        TelinkLogInfo(@"creat mesh_sample.json success");
         [self saveLocationData];
     }else{
         //exist mesh.json, load json
@@ -979,7 +979,7 @@
     
     //2.Check if _curProvisionerModel exists?
     if (self.curProvisionerModel) {
-        TeLogInfo(@"exist local provisioner, needn't create");
+        TelinkLogInfo(@"exist local provisioner, needn't create");
     }else{
         //don't exist local provisioner, create and add to SIGDataSource.provisioners, then save location.
         //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
@@ -990,7 +990,7 @@
             _timestamp = [LibTools getNowTimeStringOfJson];
             [self saveLocationData];
         }else{
-            TeLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
+            TelinkLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
             return;
         }
     }
@@ -1171,8 +1171,8 @@
     NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
     for (SigProvisionerModel *provisioner in provisioners) {
         for (SigRangeModel *unicastRange in provisioner.allocatedUnicastRange) {
-            if (max < unicastRange.hightIntAddress) {
-                max = unicastRange.hightIntAddress;
+            if (max < unicastRange.heightIntAddress) {
+                max = unicastRange.heightIntAddress;
             }
         }
     }
@@ -1194,18 +1194,18 @@
                     [model addGroupID:groupAddress];
                     [self saveLocationData];
                 } else {
-                    TeLogInfo(@"groupID is exist, add group model fail.");
+                    TelinkLogInfo(@"groupID is exist, add group model fail.");
                 }
             } else {
                 if (![model.getGroupIDs containsObject:groupAddress]) {
-                    TeLogInfo(@"groupID is not exist, delete group model fail.");
+                    TelinkLogInfo(@"groupID is not exist, delete group model fail.");
                 } else {
                     [model deleteGroupID:groupAddress];
                     [self saveLocationData];
                 }
             }
         } else {
-            TeLogInfo(@"node no found, edit group model fail.");
+            TelinkLogInfo(@"node no found, edit group model fail.");
         }
     }
 }
@@ -1302,7 +1302,7 @@
 }
 
 /**
- * @brief   Add or Update the infomation of  SigSceneModel to _scenes..
+ * @brief   Add or Update the information of  SigSceneModel to _scenes..
  * @param   model    the SigSceneModel object.
  */
 - (void)saveSceneModelWithModel:(SigSceneModel *)model {
@@ -1341,8 +1341,8 @@
 /**
  * @brief   Get the SigEncryptedModel from the match advertisementDataServiceData cache through the unicastAddress of node..
  * @param   address    the unicastAddress of node.
- * @return  A SigEncryptedModel that save advertisementDataServiceData infomation. nil means there are no SigEncryptedModel match this unicastAddress had been scaned.
- * @note    SDK will cache the SigEncryptedModel when SDK scaned the nodeIdentity broadcast data of provisioned node or when SDK scaned the nodeIdentity broadcast data of provisioned node.
+ * @return  A SigEncryptedModel that save advertisementDataServiceData information. nil means there are no SigEncryptedModel match this unicastAddress had been scanned.
+ * @note    SDK will cache the SigEncryptedModel when SDK scanned the nodeIdentity broadcast data of provisioned node or when SDK scanned the nodeIdentity broadcast data of provisioned node.
  */
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {
     SigEncryptedModel *tem = nil;
@@ -1376,7 +1376,7 @@
  * @brief   Determine whether the SigScanRspModel is in current mesh network.
  * @param   model    the ScanRspModel object.
  * @return  `YES` means model belong to the network, `NO` means model does not belong to the network.
- * @note    The SigScanRspModel has all infomation of peripheral in Apple System.
+ * @note    The SigScanRspModel has all information of peripheral in Apple System.
  */
 - (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model {
     if (model && model.advertisementDataServiceData && model.advertisementDataServiceData.length) {
@@ -1403,7 +1403,7 @@
                 break;
             case SigIdentificationType_privateNetworkIdentity:
             {
-//                TeLogDebug(@"receive SigIdentificationType_privateNetworkIdentity");
+//                TelinkLogDebug(@"receive SigIdentificationType_privateNetworkIdentity");
                 if (model.advertisementDataServiceData.length >= 17) {
                     if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
                         return YES;
@@ -1415,7 +1415,7 @@
                 break;
             case SigIdentificationType_privateNodeIdentity:
             {
-//                TeLogDebug(@"receive SigIdentificationType_privateNodeIdentity");
+//                TelinkLogDebug(@"receive SigIdentificationType_privateNodeIdentity");
                 if (model.advertisementDataServiceData.length >= 17) {
                     if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
                         return YES;
@@ -1627,9 +1627,9 @@
 }
 
 /**
- * @brief   update the ScanRspModel object infomation to dataSource.
+ * @brief   update the ScanRspModel object information to dataSource.
  * @param   model    the ScanRspModel object.
- * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ * @note    The SigScanRspModel is the node bluetooth information of in Apple System.
  */
 - (void)updateScanRspModelToDataSource:(SigScanRspModel *)model {
     @synchronized(self) {
@@ -1663,7 +1663,7 @@
 /**
  * @brief   Get the ScanRspModel object through the peripheral UUIDString of node.
  * @param   peripheralUUIDString    the peripheral UUIDString of node.
- * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ * @note    The SigScanRspModel is the node bluetooth information of in Apple System.
  */
 - (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)peripheralUUIDString {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
@@ -1678,7 +1678,7 @@
 /**
  * @brief   Get the ScanRspModel object through the macAddress of node.
  * @param   macAddress    the macAddress of node.
- * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ * @note    The SigScanRspModel is the node bluetooth information of in Apple System.
  */
 - (SigScanRspModel *)getScanRspModelWithMacAddress:(NSString *)macAddress {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
@@ -1693,7 +1693,7 @@
 /**
  * @brief   Get the ScanRspModel object through the unicastAddress of node.
  * @param   unicastAddress    the unicastAddress of node.
- * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ * @note    The SigScanRspModel is the node bluetooth information of in Apple System.
  */
 - (SigScanRspModel *)getScanRspModelWithUnicastAddress:(UInt16)unicastAddress {
     NSArray *scanList = [NSArray arrayWithArray:_scanList];
@@ -1708,7 +1708,7 @@
 /**
  * @brief   Delete the ScanRspModel object through the unicastAddress of node.
  * @param   unicastAddress    the unicastAddress of node.
- * @note    The SigScanRspModel is the node bluetooth infomation of in Apple System.
+ * @note    The SigScanRspModel is the node bluetooth information of in Apple System.
  */
 - (void)deleteScanRspModelWithUnicastAddress:(UInt16)unicastAddress {
     @synchronized(self) {
@@ -1726,7 +1726,7 @@
 /**
  * @brief   Get the netKey object through the networkId of netKey.
  * @param   networkId    the networkId of netKey.
- * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this networkId in mesh network.
+ * @return  A SigNetkeyModel that save netKey information. nil means there are no netKey with this networkId in mesh network.
  */
 - (SigNetkeyModel * _Nullable)getNetkeyModelWithNetworkId:(NSData *)networkId {
     SigNetkeyModel *tem = nil;
@@ -1746,7 +1746,7 @@
 /**
  * @brief   Get the netKey object through the netKeyIndex of netKey.
  * @param   netKeyIndex    the netKeyIndex of netKey.
- * @return  A SigNetkeyModel that save netKey infomation. nil means there are no netKey with this netKeyIndex in mesh network.
+ * @return  A SigNetkeyModel that save netKey information. nil means there are no netKey with this netKeyIndex in mesh network.
  */
 - (SigNetkeyModel * _Nullable)getNetkeyModelWithNetkeyIndex:(NSInteger)netKeyIndex {
     SigNetkeyModel *tem = nil;
@@ -1763,7 +1763,7 @@
 /**
  * @brief   Get the appKey object through the appKeyIndex of appKey.
  * @param   appkeyIndex    the appKeyIndex of appKey.
- * @return  A SigAppkeyModel that save appKey infomation. nil means there are no appKey with this appKeyIndex in mesh network.
+ * @return  A SigAppkeyModel that save appKey information. nil means there are no appKey with this appKeyIndex in mesh network.
  */
 - (SigAppkeyModel * _Nullable)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
     SigAppkeyModel *model = nil;
@@ -1780,7 +1780,7 @@
 /**
  * @brief   Get the node object through the bluetooth PeripheralUUID of node.
  * @param   peripheralUUIDString    the bluetooth PeripheralUUID of node.
- * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @return  A SigNodeModel that save node information. nil means there are no node with this unicastAddress in mesh network.
  * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network. The bluetooth PeripheralUUID is the unique identifier of Apple System.
  */
 - (SigNodeModel * _Nullable)getNodeWithPeripheralUUIDString:(NSString *)peripheralUUIDString {
@@ -1796,7 +1796,7 @@
 /**
  * @brief   Get the node object through the unicastAddress of node.
  * @param   unicastAddress    the unicastAddress of node.
- * @return  A SigNodeModel that save node infomation. nil means there are no node with this unicastAddress in mesh network.
+ * @return  A SigNodeModel that save node information. nil means there are no node with this unicastAddress in mesh network.
  * @note    The unicastAddress is the unique identifier of the node in the mesh network, app config the unicastAddress of node in provision progress when app add node to the mesh network.
  */
 - (SigNodeModel * _Nullable)getNodeWithAddress:(UInt16)unicastAddress {
@@ -1817,7 +1817,7 @@
 
 /**
  * @brief   Get current connected node object.
- * @return  A SigNodeModel that save node infomation. nil means there are no connected node in the mesh network.
+ * @return  A SigNodeModel that save node information. nil means there are no connected node in the mesh network.
  */
 - (SigNodeModel * _Nullable)getCurrentConnectedNode {
     SigNodeModel *node = [self getNodeWithAddress:self.unicastAddressOfConnected];
@@ -1827,7 +1827,7 @@
 /**
  * @brief   Get the provisioner object through the provisioner node address.
  * @param   address    the unicastAddress of provisioner node.
- * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this unicastAddress.
+ * @return  A SigProvisionerModel that save povisioner information. nil means no povisioner information of this unicastAddress.
  */
 - (SigProvisionerModel * _Nullable)getProvisionerModelWithAddress:(UInt16)address {
     SigProvisionerModel *tem = nil;
@@ -1844,7 +1844,7 @@
 /**
  * @brief   Get the provisioner object through the provisionerUUID.
  * @param   provisionerUUIDString    The UUID String of provisioner.
- * @return  A SigProvisionerModel that save povisioner infomation. nil means no povisioner infomation of this UUID.
+ * @return  A SigProvisionerModel that save povisioner information. nil means no povisioner information of this UUID.
  */
 - (SigProvisionerModel * _Nullable)getProvisionerModelWithProvisionerUUIDString:(NSString *)provisionerUUIDString {
     SigProvisionerModel *tem = nil;
@@ -1861,7 +1861,7 @@
 /**
  * @brief   Get the modelID object through the modelID
  * @param   modelID    The id of model.
- * @return  A ModelIDModel that save model infomation. nil means no model infomation of this modelID.
+ * @return  A ModelIDModel that save model information. nil means no model information of this modelID.
  */
 - (ModelIDModel * _Nullable)getModelIDModel:(NSNumber *)modelID{
     ModelIDs *modelIDs = [[ModelIDs alloc] init];
@@ -1877,7 +1877,7 @@
 /**
  * @brief   Get the group object through the group address
  * @param   groupAddress    The address of group.
- * @return  A SigGroupModel that save group infomation. nil means no group infomation of this groupAddress.
+ * @return  A SigGroupModel that save group information. nil means no group information of this groupAddress.
  */
 - (SigGroupModel * _Nullable)getGroupModelWithGroupAddress:(UInt16)groupAddress {
     SigGroupModel *tem = nil;
@@ -1895,7 +1895,7 @@
  * @brief   Obtain the DeviceTypeModel through the PID and CID of the node.
  * @param   CID    The company id of node.
  * @param   PID    The product id of node.
- * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
+ * @return  A SigOOBModel that save oob  information. nil means no oob information of this UUID.
  * @note    This API is using to get the DeviceTypeModel through the PID and CID of the node, DeviceTypeModel has default composition data of node.
  */
 - (DeviceTypeModel * _Nullable)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID {
@@ -1915,7 +1915,7 @@
 /**
  * @brief   Add a oobModel cached by the SDK.
  * @param   oobModel    an oob object.
- * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ * @note    This API is using to add oob information of node, oob information is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
  */
 - (void)addAndUpdateSigOOBModel:(SigOOBModel *)oobModel {
     if ([self.OOBList containsObject:oobModel]) {
@@ -1930,7 +1930,7 @@
 /**
  * @brief   Add a list of oobModel cached by the SDK.
  * @param   oobModelList    a list of oob object.
- * @note    This API is using to add oob infomation of node, oob infomation is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
+ * @note    This API is using to add oob information of node, oob information is use for OOB provision. If there is an old OOB object that has same UUID, the SDK will replace it.
  */
 - (void)addAndUpdateSigOOBModelList:(NSArray <SigOOBModel *>*)oobModelList {
     for (SigOOBModel *oobModel in oobModelList) {
@@ -1947,7 +1947,7 @@
 /**
  * @brief   Delete one oobModel cached by the SDK.
  * @param   oobModel    The oob object.
- * @note    This API is using to delete oob infomation of node, oob infomation is use for OOB provision.
+ * @note    This API is using to delete oob information of node, oob information is use for OOB provision.
  */
 - (void)deleteSigOOBModel:(SigOOBModel *)oobModel {
     if ([self.OOBList containsObject:oobModel]) {
@@ -1958,7 +1958,7 @@
 
 /**
  * @brief   Remove all OOB data cached by the SDK.
- * @note    This API is using to delete oob infomation of all nodes, oob infomation is use for OOB provision.
+ * @note    This API is using to delete oob information of all nodes, oob information is use for OOB provision.
  */
 - (void)deleteAllSigOOBModel {
     [self.OOBList removeAllObjects];
@@ -1968,8 +1968,8 @@
 /**
  * @brief   Obtaining OOB information of node based on UUID of unprovision node.
  * @param   UUIDString    The UUID of unprovision node, app get UUID from scan unprovision node.
- * @return  A SigOOBModel that save oob  infomation. nil means no oob infomation of this UUID.
- * @note    This API is using to get oob infomation of node, oob infomation is use for OOB provision.
+ * @return  A SigOOBModel that save oob  information. nil means no oob information of this UUID.
+ * @note    This API is using to get oob information of node, oob information is use for OOB provision.
  */
 - (SigOOBModel *)getSigOOBModelWithUUID:(NSString *)UUIDString {
     SigOOBModel *tem = nil;
@@ -2003,12 +2003,12 @@
     UInt16 maxAddress = [self getMaxHighAllocatedUnicastAddress];
     if (maxAddress >= 0x7FFF) {
         //All addresses have been assigned.
-        TeLogError(@"All addresses have been assigned.");
+        TelinkLogError(@"All addresses have been assigned.");
         return NO;
     } else {
         SigRangeModel *rangeModel = [[SigRangeModel alloc] initWithMaxHighAddressUnicast:maxAddress];
         if (self.curProvisionerModel.allocatedUnicastRange) {
-            TeLogInfo(@"Provisioner.UUID:%@ add Range:%@~%@",self.curProvisionerModel.UUID,rangeModel.lowAddress,rangeModel.highAddress);
+            TelinkLogInfo(@"Provisioner.UUID:%@ add Range:%@~%@",self.curProvisionerModel.UUID,rangeModel.lowAddress,rangeModel.highAddress);
             [self.curProvisionerModel.allocatedUnicastRange addObject:rangeModel];
             //if add some thing to json, how does app update json to cloud.
             if ([self.delegate respondsToSelector:@selector(onUpdateAllocatedUnicastRange:ofProvisioner:)]) {
@@ -2035,7 +2035,7 @@
 
 /**
  * @brief   Clear all parameters in SigDataSource.share (including scanList, sequenceNumber, sequenceNumberOnDelegate) and randomly generate new default parameters.
- * @note    This API is using to clear all paramter of SigDataSource. The sequenceNumber of current provisioner of current mesh will save in NSUserDefaults for use next time.
+ * @note    This API is using to clear all parameter of SigDataSource. The sequenceNumber of current provisioner of current mesh will save in NSUserDefaults for use next time.
  */
 - (void)resetMesh {
     [self initMeshData];
@@ -2428,7 +2428,7 @@
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
-    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrentProvisionerUUID_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2439,7 +2439,7 @@
  */
 - (NSString *)getCurrentProvisionerUUID{
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *uuid = [defaults objectForKey:kCurrenProvisionerUUID_key];
+    NSString *uuid = [defaults objectForKey:kCurrentProvisionerUUID_key];
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
@@ -2451,7 +2451,7 @@
 /**
  * @brief   Get the node object through the bluetooth macAddress of node.
  * @param   macAddress    the bluetooth macAddress of node.
- * @return  A SigNodeModel that save node infomation. nil means there are no node with this macAddress in mesh network.
+ * @return  A SigNodeModel that save node information. nil means there are no node with this macAddress in mesh network.
  * @note    The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.
  */
 - (SigNodeModel * _Nullable)getDeviceWithMacAddress:(NSString *)macAddress {

@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
 
 /// A callback called when an unsegmented message was sent to the SigBearer, or when all
-/// segments of a segmented message targetting a Unicast Address were acknowledged by
+/// segments of a segmented message targeting a Unicast Address were acknowledged by
 /// the target Node.
 /// @param message The message that has been sent.
 /// @param localElement The local Element used as a source of this message.
@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// an acknowledged message hasn't been received before the time run out.
 /// For unsegmented unacknowledged messages this callback will be invoked when the
 /// SigBearer was closed.
-/// For segmented unacknowledged messages targetting a Unicast Address, besides that,
+/// For segmented unacknowledged messages targeting a Unicast Address, besides that,
 /// it may also be called when sending timed out before all of the segments were acknowledged
 /// by the target Node, or when the target Node is busy and not able to proceed the message
 /// at the moment.

@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Encodes given list of Key Indexes into a Data.
 /// As each Key Index is 12 bits long, a pair of them can fit 3 bytes.
 /// This method ensures that they are packed in compliance to the Bluetooth Mesh specification.
-/// @param limit Maximim number of Key Indexes to encode.
+/// @param limit Maximum number of Key Indexes to encode.
 /// @param indexes An array of 12-bit Key Indexes.
 /// @returns Key Indexes encoded to a Data.
 - (NSData *)encodeLimit:(int)limit indexes:(NSArray <NSNumber *>*)indexes;
@@ -2301,7 +2301,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Network Key Indexes known to the Node.
 /// The NetKeyIndexes field shall contain all NetKey Indexes that are known to the node.
 /// The NetKey Indexes shall be encoded as defined in Section 4.3.1.1.
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*networkKeyIndexs;//[KeyIndex]
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*networkKeyIndexes;//[KeyIndex]
 
 //- (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys;
 

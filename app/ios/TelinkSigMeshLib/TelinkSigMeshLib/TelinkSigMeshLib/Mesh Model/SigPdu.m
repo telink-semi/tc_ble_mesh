@@ -426,7 +426,7 @@
 /**
  * @brief   Initialize SigProvisioningConfirmationPdu object.
  * @param   confirmation    The values exchanged so far including the OOB Authentication M value.
- * The szie is 16 or 32.
+ * The size is 16 or 32.
  * If the PDU is sent by the Provisioner, the Confirmation field shall contain the ConfirmationProvisioner value.
  * If the PDU is sent by the Provisionee, the Confirmation field shall contain the ConfirmationDevice value.
  * The size of the Confirmation field, the ConfirmationProvisioner value, and the ConfirmationDevice value are
@@ -555,7 +555,7 @@
  * @brief   Initialize SigProvisioningRandomPdu object.
  * @param   encryptedProvisioningData    An encrypted and authenticated network key, NetKey Index,
  * Key Refresh Flag, IV Update Flag, current value of the IV Index, and unicast address of the primary element
- * (see Section 5.4.2.5),the szie is 25.
+ * (see Section 5.4.2.5),the size is 25.
  * @param   provisioningDataMIC    PDU Integrity Check value, size is 8.
  * @return  return `nil` when initialize SigProvisioningRandomPdu object fail.
  */
@@ -856,12 +856,12 @@
     if (self = [super init]) {
         /// Initialize self.
         if (pduType != SigPduType_networkPdu && pduType != SigPduType_proxyConfiguration) {
-            TeLogError(@"pdutype is not support.");
+            TelinkLogError(@"pdutype is not support.");
             return nil;
         }
         self.pduData = pdu;
         if (pdu.length < 14) {
-            TeLogDebug(@"Valid message must have at least 14 octets.");
+            TelinkLogDebug(@"Valid message must have at least 14 octets.");
             return nil;
         }
         
@@ -873,24 +873,24 @@
         _nid  = tem & 0x7F;
         // The NID must match.
         // If the Key Refresh procedure is in place, the received packet might have been encrypted using an old key. We have to try both.
-        NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
+        NSMutableArray <SigNetkeyDerivatives *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
-            TeLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
+            TelinkLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
         } else if (_nid == networkKey.directedSecurityNid) {
             networkKey.keys.privacyKey = networkKey.keys.directedSecurityPrivacyKey;
             networkKey.keys.encryptionKey = networkKey.keys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.keys];
-            TeLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
+            TelinkLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
             [keySets addObject:networkKey.oldKeys];
-            TeLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
+            TelinkLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
         } else if (networkKey.oldKeys != nil && networkKey.directedSecurityOldNid == _nid) {
             networkKey.oldKeys.privacyKey = networkKey.oldKeys.directedSecurityPrivacyKey;
             networkKey.oldKeys.encryptionKey = networkKey.oldKeys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.oldKeys];
-            TeLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
+            TelinkLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
         }
         if (keySets.count == 0) {
             return nil;
@@ -904,8 +904,8 @@
                 index -= 1;
             }
         }
-        TeLogVerbose(@"Decode IvIndex=0x%x", index);
-        for (SigNetkeyDerivaties *keys in keySets) {
+        TelinkLogVerbose(@"Decode IvIndex=0x%x", index);
+        for (SigNetkeyDerivatives *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
 
@@ -947,7 +947,7 @@
             }
             NSData *decryptedData = [OpenSSLHelper.share calculateDecryptedCCM:destAndTransportPdu withKey:keys.encryptionKey nonce:networkNonce andMIC:mic withAdditionalData:nil];
             if (decryptedData == nil || decryptedData.length == 0) {
-                TeLogError(@"decryptedData == nil");
+                TelinkLogError(@"decryptedData == nil");
                 continue;
             }
             
@@ -1026,7 +1026,7 @@
         [decryptedData appendData:_transportPdu];
         
         // The key set used for encryption depends on the Key Refresh Phase.
-        SigNetkeyDerivaties *keys = _networkKey.transmitKeys;
+        SigNetkeyDerivatives *keys = _networkKey.transmitKeys;
         UInt8 tem = [self getNonceIdOfSigPduType:pduType];
         data1 = [NSData dataWithBytes:&tem length:1];
         UInt16 tem16 = 0;
@@ -1131,7 +1131,7 @@
             return 0x03;
             break;
         default:
-            TeLogError(@"Unsupported PDU Type:%lu",(unsigned long)pduType);
+            TelinkLogError(@"Unsupported PDU Type:%lu",(unsigned long)pduType);
             break;
     }
     return 0;
@@ -1186,7 +1186,7 @@
         Byte *pduByte = (Byte *)pdu.bytes;
         memcpy(&tem, pduByte, 1);
         if (pdu.length != 22 || tem != 1) {
-            TeLogError(@"pdu data error, can not init decode.");
+            TelinkLogError(@"pdu data error, can not init decode.");
             return nil;
         }
         memcpy(&tem, pduByte+1, 1);
@@ -1200,14 +1200,14 @@
         if ([_networkId isEqualToData:networkKey.networkId]) {
             NSData *authenticationValue = [OpenSSLHelper.share calculateCMAC:[pdu subdataWithRange:NSMakeRange(1, 13)] andKey:networkKey.keys.beaconKey];
             if (![[authenticationValue subdataWithRange:NSMakeRange(0, 8)] isEqualToData:[pdu subdataWithRange:NSMakeRange(14, 8)]]) {
-                TeLogError(@"authenticationValue is not current networkID.");
+                TelinkLogError(@"authenticationValue is not current networkID.");
                 return nil;
             }
             _networkKey = networkKey;
         }else if (networkKey.oldNetworkId != nil && [networkKey.oldNetworkId isEqualToData:_networkId]) {
             NSData *authenticationValue = [OpenSSLHelper.share calculateCMAC:[pdu subdataWithRange:NSMakeRange(1, 13)] andKey:networkKey.oldKeys.beaconKey];
             if (![[authenticationValue subdataWithRange:NSMakeRange(0, 8)] isEqualToData:[pdu subdataWithRange:NSMakeRange(14, 8)]]) {
-                TeLogError(@"authenticationValue is not current old networkID.");
+                TelinkLogError(@"authenticationValue is not current old networkID.");
                 return nil;
             }
             _networkKey = networkKey;
@@ -1226,7 +1226,7 @@
  */
 + (instancetype)decodePdu:(NSData *)pdu meshDataSource:(SigDataSource *)meshDataSource {
     if (pdu == nil || pdu.length <= 1) {
-        TeLogError(@"decodePdu length is less than 1.");
+        TelinkLogError(@"decodePdu length is less than 1.");
         return nil;
     }
     UInt8 tem = 0;
@@ -1437,7 +1437,7 @@
         Byte *pduByte = (Byte *)pdu.bytes;
         memcpy(&tem, pduByte, 1);
         if (pdu.length != 27 || tem != SigBeaconType_meshPrivateBeacon) {
-            TeLogError(@"pdu data error, can not init decode.");
+            TelinkLogError(@"pdu data error, can not init decode.");
             return nil;
         }
         _randomData = [pdu subdataWithRange:NSMakeRange(1, 13)];
@@ -1473,7 +1473,7 @@
             }
         }
         if (authentication == NO) {
-            TeLogError(@"Mesh Private beacon authentication fail.");
+            TelinkLogError(@"Mesh Private beacon authentication fail.");
             return nil;
         }
     }
@@ -1488,7 +1488,7 @@
  */
 + (instancetype)decodePdu:(NSData *)pdu meshDataSource:(SigDataSource *)meshDataSource {
     if (pdu == nil || pdu.length <= 1) {
-        TeLogError(@"decodePdu length is less than 1.");
+        TelinkLogError(@"decodePdu length is less than 1.");
         return nil;
     }
     UInt8 tem = 0;
