@@ -1,3 +1,99 @@
+## V4.1.0.0
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 0a68e761eb91c310c1e79e6b4ad7976037e8946a
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* (Firmware)fix the issue of soft PA in extend adv mode.
+
+### Features
+
+* (Firmware/Android/iOS)support all features of mesh V1.1, mainly include:
+  - enhance provision auth: set PROV_EPA_EN to 1 to enable. enable as default.
+  - remote provision: provision the unprovision devices within one-hop or multi-hops. set MD_REMOTE_PROV to 1 to enable. disable as default.
+  - device firmware update: Upgrade the firmware of multiple nodes simultaneously through mesh. set MD_MESH_OTA_EN to 1 to enable. disable as default.
+  - directed forwarding: set MD_DF_CFG_SERVER_EN and MD_DF_CFG_CLIENT_EN to 1 to enable. disable as default.
+  - certificate-base provisioning: set CERTIFY_BASE_ENABLE to 1 to enable. disable as default.
+  - private beacons: set MD_PRIVACY_BEA and PRIVATE_PROXY_FUN_EN to 1 to enable. disable as default.
+  - subnet bridge: set MD_SBR_CFG_SERVER_EN and MD_SBR_CFG_CLIENT_EN to 1 to enable. disable as default.
+  - Opcodes Aggregator: aggregate multiple messages into a single message to send. set MD_OP_AGG_EN to 1 to enable. disable as default.
+  - NLC profiles: Network Lighting Control profiles. set one of NLCP_BLC_EN, NLCP_DIC_EN, NLCP_BSS_EN, NLCP_TYPE_ALS, NLCP_TYPE_OCS and NLCP_TYPE_ENM to 1 to enable the corresponding NLC profile. disable as default.
+* (Firmware)add support the SMP function. set BLE_REMOTE_SECURITY_ENABLE to 1 to enable. disable as default.
+* (Firmware)add support GATT 2M PHY. set BLE_GATT_2M_PHY_ENABLE to 1 to enable. disable as default.
+* (Android/iOS)Add support multi-network. users can create, delete, switch networks.
+* (Android/iOS)Add the network subpage to display network information and related control functions.
+
+### Performance Improvements
+
+* (Firmware)change the MCU default clock of mesh project from 16MHz to 32MHz.
+* (Android)change the network data store format from serialize to objectBox.
+* (Android/iOS)optimize the setting page to display different configuration items by category.
+
+### BREAKING CHANGES
+
+* (Firmware/Android/iOS)the opcode and model ID of mesh 1.1 new features, such as mesh OTA's, are changed compared with the version of the draft feature. Please pay attention to compatibility issues.
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### CodeSize
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 123.6 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 117.1 KB, RAM (22 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 130.6 KB, RAM (33 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 113.5 KB, RAM (24 KB + 3K stack),
+
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 0a68e761eb91c310c1e79e6b4ad7976037e8946a
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* (Firmware)修复扩展广播包模式下软件PA问题。
+
+### Features
+
+* (Firmware/Android/iOS)支持 mesh V1.1 的所有功能，主要包含：
+  - enhance provision auth：组网认证增强，设置 PROV_EPA_EN 等于 1来使能该功能，默认打开。
+  - remote provision：把距离provisioner一跳及多跳的未配网设备都能添加到网络中。设置 MD_REMOTE_PROV 等于 1来使能该功能，默认关闭。
+  - device firmware update：通过mesh方式对多个节点同时进行固件升级，设置 MD_MESH_OTA_EN 等于 1来使能该功能，默认关闭。
+  - directed forwarding：路由功能，设置 MD_DF_CFG_SERVER_EN 和 MD_DF_CFG_CLIENT_EN 等于 1来使能该功能，默认关闭。
+  - certificate-base provisioning：基于证书认证的组网模式，设置 CERTIFY_BASE_ENABLE 等于 1来使能该功能，默认关闭。
+  - private beacons：私有信标，设置 MD_PRIVACY_BEA 和 PRIVATE_PROXY_FUN_EN 等于 1来使能该功能，默认关闭。
+  - subnet bridge：子网桥接，设置 MD_SBR_CFG_SERVER_EN 和 MD_SBR_CFG_CLIENT_EN 等于 1来使能该功能，默认关闭。
+  - Opcodes Aggregator：多个消息组合成一条消息的功能，设置 MD_OP_AGG_EN 等于 1来使能该功能，默认关闭。
+  - NLC profiles: Network Lighting Control profiles, 分别设置 NLCP_BLC_EN, NLCP_DIC_EN, NLCP_BSS_EN, NLCP_TYPE_ALS, NLCP_TYPE_OCS, NLCP_TYPE_ENM 等于 1来使能对应功能，默认关闭。
+* (Firmware)增加 SMP 功能，设置 BLE_REMOTE_SECURITY_ENABLE等于 1来使能该功能，默认关闭。
+* (Firmware)增加 GATT 2M PHY功能，设置 BLE_GATT_2M_PHY_ENABLE等于 1来使能该功能，默认关闭。
+* (Android/iOS)添加多网络支持， 用户可以创建、删除、切换网络。
+* (Android/iOS)添加network子页面， 用于显示网络信息及相关控制功能。
+
+### Performance Improvements
+
+* (Firmware)更改mesh 工程的 MCU 默认时钟，由 16MHz 改为 32MHz。
+* (Android)更改网络数据存储格式，由serialize改为objectBox。
+* (Android/iOS)优化setting页面显示，分类显示不同的配置项。
+
+### BREAKING CHANGES
+
+* (Firmware/Android/iOS)mesh OTA 等功能 的 opcode 和 model ID 的值，相对于 draft feature的版本有更新，请注意兼容性问题。
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.3.6
 
 ### Dependency Updates

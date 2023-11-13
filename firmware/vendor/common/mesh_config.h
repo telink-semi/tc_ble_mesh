@@ -617,8 +617,8 @@ extern "C" {
 #endif
 
 /**
- * MD_REMOTE_PROV: .
- * refer to "" of spec "MshPRT_v1.1.pdf".
+ * MD_REMOTE_PROV: model of remote provision.
+ * refer to "4.4.5 Remote Provisioning Server model" and "4.4.6 Remote Provisioning Client model" of spec "MshPRT_v1.1.pdf".
  */
 #ifndef MD_REMOTE_PROV
 #if (WIN32)
