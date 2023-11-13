@@ -5687,9 +5687,9 @@
 //- (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys {
 //    if (self = [super init]) {
 //        self.opCode = SigOpCode_configNetKeyList;
-//        _networkKeyIndexs = [NSMutableArray array];
+//        _networkKeyIndexes = [NSMutableArray array];
 //        for (SigNetkeyModel *model in networkKeys) {
-//            [_networkKeyIndexs addObject:@(model.index)];
+//            [_networkKeyIndexes addObject:@(model.index)];
 //        }
 //    }
 //    return self;
@@ -5708,14 +5708,14 @@
         if (parameters == nil || parameters.length == 0) {
             return nil;
         }
-        _networkKeyIndexs = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:0]];
+        _networkKeyIndexes = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:0]];
     }
     return self;
 }
 
 /// Message parameters as Data.
 - (NSData *)parameters {
-    return [self encodeIndexes:_networkKeyIndexs];
+    return [self encodeIndexes:_networkKeyIndexes];
 }
 
 @end

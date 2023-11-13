@@ -2301,7 +2301,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Network Key Indexes known to the Node.
 /// The NetKeyIndexes field shall contain all NetKey Indexes that are known to the node.
 /// The NetKey Indexes shall be encoded as defined in Section 4.3.1.1.
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*networkKeyIndexs;//[KeyIndex]
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*networkKeyIndexes;//[KeyIndex]
 
 //- (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys;
 

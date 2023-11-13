@@ -30,7 +30,7 @@
 
 @implementation ProxyProtocolHandler
 
-- (SigPduType)getPduTypeFromeData:(NSData *)data {
+- (SigPduType)getPduTypeFromData:(NSData *)data {
     SigPduType type = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -57,7 +57,7 @@
     return type;
 }
 
-- (SAR)getSAPFromeData:(NSData *)data {
+- (SAR)getSAPFromData:(NSData *)data {
     SAR tem = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -128,8 +128,8 @@
         return nil;
     }
 
-    SAR sar = [self getSAPFromeData:data];
-    SigPduType messageType = [self getPduTypeFromeData:data];
+    SAR sar = [self getSAPFromData:data];
+    SigPduType messageType = [self getPduTypeFromData:data];
     
     // Ensure, that only complete message or the first segment may be processed if the buffer is empty.
     if ((_buffer == nil || _buffer.length == 0) && sar != SAR_completeMessage && sar != SAR_firstSegment) {

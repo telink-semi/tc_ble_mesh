@@ -460,7 +460,7 @@
 
 /**
  * @brief   Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!
- * @param   unicastRange Randge model had beed change.
+ * @param   unicastRange Randge model had been change.
  * @param   provisioner provisioner of unicastRange.
  * @note    The address of the last node may be out of range.
  */

@@ -71,7 +71,7 @@
     [SDKLibCommand configNetKeyGetWithDestination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyList * _Nonnull responseMessage) {
         TelinkLogInfo(@"NetKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         NSMutableArray *backList = [NSMutableArray array];
-        for (NSNumber *number in responseMessage.networkKeyIndexs) {
+        for (NSNumber *number in responseMessage.networkKeyIndexes) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:number.intValue updated:NO];
             [backList addObject:nodeKeyModel];
         }

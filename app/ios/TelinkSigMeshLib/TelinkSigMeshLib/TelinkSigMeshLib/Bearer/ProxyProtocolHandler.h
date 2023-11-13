@@ -28,9 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ProxyProtocolHandler : NSObject
 
-- (SigPduType)getPduTypeFromeData:(NSData *)data;
+- (SigPduType)getPduTypeFromData:(NSData *)data;
 
-- (SAR)getSAPFromeData:(NSData *)data;
+- (SAR)getSAPFromData:(NSData *)data;
 
 - (UInt8)getSARValueWithSAR:(SAR)sar;
 
