@@ -100,21 +100,21 @@ public abstract class FileSystem {
             return null;
         MeshLogger.d("obj file size: " + file.length());
         FileInputStream fis = null;
-        ObjectInputStream ois = null;
+        ObjectInputStream inputStream = null;
 
         Object result = null;
         try {
 
             fis = new FileInputStream(file);
-            ois = new ObjectInputStream(fis);
+            inputStream = new ObjectInputStream(fis);
 
-            result = ois.readObject();
+            result = inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             MeshLogger.w("read object error : " + e.toString());
         } finally {
             try {
-                if (ois != null)
-                    ois.close();
+                if (inputStream != null)
+                    inputStream.close();
             } catch (Exception e) {
             }
         }

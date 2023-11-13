@@ -284,7 +284,7 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     }
 
     private void enableOacpCcc() {
-        MeshLogger.d("enabel oacp ccc");
+        MeshLogger.d("enable oacp ccc");
         UUID serviceUUID = UUIDInfo.SERVICE_OTS;
         UUID characteristicUUID = UUIDInfo.CHARACTERISTIC_OACP;
         GattRequest cmd = GattRequest.newInstance();
