@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file    app_buffer.h
+ * @file    app_l2cap_coc.h
  *
  * @brief   This is the header file for BLE SDK
  *
