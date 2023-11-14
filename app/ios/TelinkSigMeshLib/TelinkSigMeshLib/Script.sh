@@ -3,8 +3,8 @@
 #
 # @brief    for TLSR chips
 #
-# @author     Telink, 梁家誌
-# @date         2019/12/13
+# @author   Telink, 梁家誌
+# @date     2019/12/13
 #
 # @par     Copyright (c) [2019], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
 #

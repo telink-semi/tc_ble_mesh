@@ -22,7 +22,7 @@
  *******************************************************************************************************/
 
 #import "AppDelegate.h"
-#import "SDK/IQKeyboardManager-master/IQKeyboardManager/IQKeyboardManager.h"
+#import "ThirdLibrary/IQKeyboardManager-master/IQKeyboardManager/IQKeyboardManager.h"
 #import "ColorManager.h"
 #import "UIButton+extension.h"
 

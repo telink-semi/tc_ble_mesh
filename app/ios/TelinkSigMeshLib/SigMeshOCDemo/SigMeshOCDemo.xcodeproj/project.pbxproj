@@ -367,7 +367,6 @@
 		25FE6CD227EC14D5009F7626 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
 		25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
 		912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */; };
-		914CCE142AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin in Resources */ = {isa = PBXBuildFile; fileRef = 914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */; };
 		9152A18F2AD8E9B500186969 /* SettingsItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9152A18D2AD8E9B500186969 /* SettingsItemCell.m */; };
 		9152A1902AD8E9B500186969 /* SettingsItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */; };
 		915958BE2AD521F500D85CA4 /* NetworkVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958BD2AD521F500D85CA4 /* NetworkVC.m */; };
@@ -769,7 +768,6 @@
 		25FE6CD127EC14D5009F7626 /* EntryCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EntryCell.xib; sourceTree = "<group>"; };
 		912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPExportVC.h; sourceTree = "<group>"; };
 		912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPExportVC.m; sourceTree = "<group>"; };
-		914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_V4.1.0.0_20230926.bin; sourceTree = "<group>"; };
 		9152A18C2AD8E9B500186969 /* SettingsItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsItemCell.h; sourceTree = "<group>"; };
 		9152A18D2AD8E9B500186969 /* SettingsItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsItemCell.m; sourceTree = "<group>"; };
 		9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingsItemCell.xib; sourceTree = "<group>"; };
@@ -916,7 +914,7 @@
 				25589A522721403D00F4F880 /* Tools */,
 				25589A702721403E00F4F880 /* View */,
 				25589AC62721403E00F4F880 /* ViewController */,
-				25589B582721403E00F4F880 /* SDK */,
+				25589B582721403E00F4F880 /* ThirdLibrary */,
 				25589A12272115D700F4F880 /* AppDelegate.h */,
 				25589A13272115D700F4F880 /* AppDelegate.m */,
 				25589A1B272115D700F4F880 /* Main.storyboard */,
@@ -1375,17 +1373,16 @@
 			path = SingleOTA;
 			sourceTree = "<group>";
 		};
-		25589B582721403E00F4F880 /* SDK */ = {
+		25589B582721403E00F4F880 /* ThirdLibrary */ = {
 			isa = PBXGroup;
 			children = (
 				25E05CC927EB0D5700E10E1B /* Reachability */,
 				259AA1DB27293FDE0046CEB1 /* BRPickerView */,
 				25589C57272140CF00F4F880 /* TelinkSigMeshLib.xcodeproj */,
 				25589B752721403E00F4F880 /* YZDisplayViewController */,
-				914CCE132AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin */,
 				25589B812721403E00F4F880 /* IQKeyboardManager-master */,
 			);
-			path = SDK;
+			path = ThirdLibrary;
 			sourceTree = "<group>";
 		};
 		25589B752721403E00F4F880 /* YZDisplayViewController */ = {
@@ -1813,7 +1810,6 @@
 				25589A1D272115D700F4F880 /* Main.storyboard in Resources */,
 				25589BC22721403F00F4F880 /* BridgeTableItemCell.xib in Resources */,
 				25589BCD2721403F00F4F880 /* ChooseModelIDCell.xib in Resources */,
-				914CCE142AD0ED690077C7D2 /* 8258_mesh_V4.1.0.0_20230926.bin in Resources */,
 				916FEF3629E6840200206FE6 /* FilterAddressCell.xib in Resources */,
 				25589BB82721403F00F4F880 /* InputItemCell.xib in Resources */,
 				25589BBF2721403F00F4F880 /* RemoteElementCell.xib in Resources */,
