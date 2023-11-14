@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceProvisionListAdapter.java
+ * @file CdtpServerListAdapter.java
  *
  * @brief for TLSR chips
  *

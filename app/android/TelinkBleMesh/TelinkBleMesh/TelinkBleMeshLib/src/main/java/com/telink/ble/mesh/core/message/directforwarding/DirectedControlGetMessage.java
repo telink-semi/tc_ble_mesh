@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file FirmwareUpdateGetMessage.java
+ * @file DirectedControlGetMessage.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ShareImportFragment.java
+ * @file ShareImportActivity.java
  *
  * @brief for TLSR chips
  *

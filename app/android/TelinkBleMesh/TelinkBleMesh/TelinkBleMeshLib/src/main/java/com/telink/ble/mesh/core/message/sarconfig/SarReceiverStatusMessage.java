@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CompositionDataStatusMessage.java
+ * @file SarReceiverStatusMessage.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CertDetailActivity.java
+ * @file CdtpExportToPhoneActivity.java
  *
  * @brief for TLSR chips
  *

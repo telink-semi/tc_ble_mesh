@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CompositionDataGetMessage.java
+ * @file OnDemandPrivateProxySetMessage.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SettingFragment.java
+ * @file NetworkFragment.java
  *
  * @brief for TLSR chips
  *

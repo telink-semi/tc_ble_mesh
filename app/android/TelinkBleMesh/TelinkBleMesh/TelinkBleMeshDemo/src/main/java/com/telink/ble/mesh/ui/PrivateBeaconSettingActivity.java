@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SubnetBridgeActivity.java
+ * @file PrivateBeaconSettingActivity.java
  *
  * @brief for TLSR chips
  *

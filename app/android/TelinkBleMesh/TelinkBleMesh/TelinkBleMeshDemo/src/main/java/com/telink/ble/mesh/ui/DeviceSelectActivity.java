@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file FUDeviceSelectActivity.java
+ * @file DeviceSelectActivity.java
  *
  * @brief for TLSR chips
  *

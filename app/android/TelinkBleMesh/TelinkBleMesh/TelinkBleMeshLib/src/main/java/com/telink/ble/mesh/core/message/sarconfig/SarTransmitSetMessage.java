@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CompositionDataGetMessage.java
+ * @file SarTransmitSetMessage.java
  *
  * @brief for TLSR chips
  *

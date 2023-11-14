@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DirectForwardingListAdapter.java
+ * @file DirectToggleListAdapter.java
  *
  * @brief for TLSR chips
  *

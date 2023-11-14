@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file OOBInfoActivity.java
+ * @file OobListActivity.java
  *
  * @brief for TLSR chips
  *

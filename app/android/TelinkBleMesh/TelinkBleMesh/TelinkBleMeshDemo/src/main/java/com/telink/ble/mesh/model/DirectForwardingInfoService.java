@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file GroupInfo.java
+ * @file DirectForwardingInfo.java
  *
  * @brief for TLSR chips
  *

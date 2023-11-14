@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SubnetBridgeActivity.java
+ * @file DirectForwardingActivity.java
  *
  * @brief for TLSR chips
  *

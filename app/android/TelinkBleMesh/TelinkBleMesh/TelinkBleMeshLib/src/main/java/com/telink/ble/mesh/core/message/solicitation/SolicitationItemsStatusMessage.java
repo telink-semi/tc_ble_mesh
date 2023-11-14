@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CompositionDataStatusMessage.java
+ * @file SolicitationItemsStatusMessage.java
  *
  * @brief for TLSR chips
  *

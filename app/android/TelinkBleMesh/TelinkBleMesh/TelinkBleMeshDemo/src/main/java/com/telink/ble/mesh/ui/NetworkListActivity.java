@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DirectToggleListActivity.java
+ * @file NetworkListActivity.java
  *
  * @brief for TLSR chips
  *

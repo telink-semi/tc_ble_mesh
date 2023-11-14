@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DirectedControlStatusMessage.java
+ * @file ForwardingTableStatusMessage.java
  *
  * @brief for TLSR chips
  *

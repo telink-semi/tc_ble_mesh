@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CompositionDataStatusMessage.java
+ * @file OnDemandPrivateProxyStatusMessage.java
  *
  * @brief for TLSR chips
  *

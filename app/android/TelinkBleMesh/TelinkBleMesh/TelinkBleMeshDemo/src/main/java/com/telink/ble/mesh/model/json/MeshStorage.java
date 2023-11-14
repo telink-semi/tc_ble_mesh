@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
-
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.entity.CompositionData;
