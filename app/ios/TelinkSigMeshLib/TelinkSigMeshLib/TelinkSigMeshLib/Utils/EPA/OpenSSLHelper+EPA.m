@@ -61,12 +61,12 @@
      opad is the 0x5C octet repeated 64 times
      SHA-256 is the secure hash algorithm defined in [30]
      */
-    
+
     //k0
     unsigned char tem[64] = {0x00};
     NSMutableData *k0 = [NSMutableData dataWithData:key];
     [k0 appendBytes:tem length:32];
-    
+
     //ipad
     memset(tem, 0x36, 64);
     NSData *ipad = [NSData dataWithBytes:tem length:64];
@@ -74,14 +74,14 @@
     //opad
     memset(tem, 0x5C, 64);
     NSData *opad = [NSData dataWithBytes:tem length:64];
-    
+
     NSMutableData *temData = [NSMutableData dataWithData:[self calculateXORWithFirstData:k0 secondData:ipad]];
     [temData appendData:someData];
     temData = [NSMutableData dataWithData:[self calculateSHA256:temData]];
     NSMutableData *input = [NSMutableData dataWithData:[self calculateXORWithFirstData:k0 secondData:opad]];
     [input appendData:temData];
     NSData *output = [self calculateSHA256:input];
-    
+
     return output;
 }
 

@@ -39,11 +39,11 @@
 }
 
 - (IBAction)addForwardingTable:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigBearer.share.isOpen) {
         [self pushToAddForwardingTableVC];
     } else {
-        [self showTips:@"The mesh is offline, app cann`t add forwarding table."];
+        [self showTips:@"The mesh is offline, app can not add forwarding table."];
     }
 }
 
@@ -54,9 +54,9 @@
 }
 
 - (void)removeForwardingTable:(SigForwardingTableModel *)forwardingTable {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"send request for ForwardingTableDelete, but busy now.");
+        TelinkLogInfo(@"send request for ForwardingTableDelete, but busy now.");
         [self showTips:@"app is busy now, try again later."];
     } else {
         if (SigBearer.share.isOpen) {
@@ -74,11 +74,11 @@
                 for (NSNumber *addressNumber in array) {
                     UInt16 address = addressNumber.intValue;
                     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                    TeLogInfo(@"send request for ForwardingTableDelete, address:%d", address);
+                    TelinkLogInfo(@"send request for ForwardingTableDelete, address:%d", address);
                     [SDKLibCommand forwardingTableDeleteWithNetKeyIndex:forwardingTable.netKeyIndex pathOrigin:pathOrigin pathDestination:pathDestination destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                        TeLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                         dispatch_semaphore_signal(semaphore);
                     }];
                     dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
@@ -86,7 +86,7 @@
                 [weakSelf removeForwardingTableFromDataSource:forwardingTable];
             }];
         } else {
-            [self showTips:@"The mesh is offline, app cann`t remove forwarding table."];
+            [self showTips:@"The mesh is offline, app can not remove forwarding table."];
         }
     }
 }
@@ -121,14 +121,14 @@
 
 //- (void)clickRefreshDirectControlStatus {
 //    [SDKLibCommand directControlGetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index destination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigDirectControlStatus * _Nonnull responseMessage) {
-//        TeLogInfo(@"directControlGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+//        TelinkLogInfo(@"directControlGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
 //        if (responseMessage.status == SigConfigMessageStatus_success) {
 //            [ShowTipsHandle.share show:@"directControlGet from node success!"];
 //        } else {
 //            [ShowTipsHandle.share show:[NSString stringWithFormat:@"directControlGet from node fail! error status=%d",responseMessage.status]];
 //        }
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            if (error) {
 //                [ShowTipsHandle.share show:[NSString stringWithFormat:@"directControlGet from node fail! error=%@",error]];
@@ -193,7 +193,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf removeForwardingTable:forwardingTableModel];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }

@@ -43,33 +43,33 @@
 
 - (void)configUI{
     self.title = @"Share Mesh";
-    
+
     [self setUpAllViewController];
-    
+
     __weak typeof(self) weakSelf = self;
-    double h = kGetRectNavAndStatusHight;
+    double h = kGetRectNavAndStatusHeight;
     [self setUpContentViewFrame:^(UIView *contentView) {
         contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
     }];
-    
+
     [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
         *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
         *selColor = [UIColor blackColor];
         *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
         *titleWidth = [UIScreen mainScreen].bounds.size.width / 2;
     }];
-    
+
     // 标题渐变
     // *推荐方式(设置标题渐变)
     [self setUpTitleGradient:^(YZTitleColorGradientStyle *titleColorGradientStyle, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor) {
-        
+
     }];
-    
+
     [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
         *underLineColor = UIColor.telinkButtonBlue;
         *isUnderLineEqualTitleWidth = YES;
     }];
-    
+
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
     UIButton *but = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, 30)];
@@ -86,7 +86,7 @@
     ShareOutVC *wordVc1 = (ShareOutVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareOutViewControllerID storyboard:@"Setting"];
     wordVc1.title = @"EXPORT";
     [self addChildViewController:wordVc1];
-    
+
     // ShareInVC
     ShareInVC *wordVc2 = (ShareInVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareInViewControllerID storyboard:@"Setting"];
     wordVc2.title = @"IMPORT";
@@ -104,14 +104,14 @@
     NSString *remoteHostName = @"www.apple.com";
     Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
     if (hostReachability.currentReachabilityStatus == NotReachable) {
-        TeLogDebug(@"无网络");
+        TelinkLogDebug(@"无网络");
     } else {
-        TeLogDebug(@"有网络");
+        TelinkLogDebug(@"有网络");
     }
 }
 
 -(void)dealloc {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

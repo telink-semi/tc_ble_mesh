@@ -30,7 +30,7 @@
 
 @implementation ProxyProtocolHandler
 
-- (SigPduType)getPduTypeFromeData:(NSData *)data {
+- (SigPduType)getPduTypeFromData:(NSData *)data {
     SigPduType type = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -57,7 +57,7 @@
     return type;
 }
 
-- (SAR)getSAPFromeData:(NSData *)data {
+- (SAR)getSAPFromData:(NSData *)data {
     SAR tem = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -128,9 +128,9 @@
         return nil;
     }
 
-    SAR sar = [self getSAPFromeData:data];
-    SigPduType messageType = [self getPduTypeFromeData:data];
-    
+    SAR sar = [self getSAPFromData:data];
+    SigPduType messageType = [self getPduTypeFromData:data];
+
     // Ensure, that only complete message or the first segment may be processed if the buffer is empty.
     if ((_buffer == nil || _buffer.length == 0) && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
@@ -140,7 +140,7 @@
     if (_bufferType != messageType && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
     }
-    
+
     // If a new message was received while the old one was processed, disregard the old one.
     if (_buffer != nil && (sar == SAR_completeMessage || sar == SAR_firstSegment)) {
         _buffer = nil;
@@ -153,7 +153,7 @@
         _buffer = [NSMutableData data];
     }
     [_buffer appendData:[data subdataWithRange:NSMakeRange(1, data.length-1)]];
-    
+
     // If the complete message was received, return it.
     if (sar == SAR_completeMessage || sar == SAR_lastSegment) {
         SigPudModel *model = [[SigPudModel alloc] init];

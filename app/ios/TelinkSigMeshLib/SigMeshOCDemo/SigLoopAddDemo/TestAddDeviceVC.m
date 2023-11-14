@@ -67,23 +67,23 @@ static NSUInteger provisionAddress;
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
+
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hiddenKB)];
     [self.view addGestureRecognizer:tap];
-    
+
     //界面默认显示的MAC和次数
     NSString *mac = [self getCurrentMac];
 //    NSString *mac = nil;
     if (mac == nil) {
         mac = @"C419D1B92236";
-        
+
         [self saveCurrentMac:mac];
     }
     self.macTF.text = mac;
     self.delayOfDeleteTF.text = @"3";
     self.testCountTF.text = @"100";
     self.scanTimeoutTF.text = @"20";
-    self.title = @"TestAddDevcies";
+    self.title = @"TestAddDevices";
 
     //默认只添加一个特定MAC的设备，且修改后的短地址都是2.
     provisionAddress = 2;
@@ -159,7 +159,7 @@ static NSUInteger provisionAddress;
     }
 }
 
-- (void)scanAndConnnectAndProvisionAndKeybind {
+- (void)scanAndConnectAndProvisionAndKeybind {
     [self showAndSaveLog:[NSString stringWithFormat:@"[Start] scan [%d]",_currentCount]];
     __weak typeof(self) weakSelf = self;
     __block BOOL scanSuccess = NO;
@@ -198,7 +198,7 @@ static NSUInteger provisionAddress;
                             [weakSelf refreshShowLabel];
                             [weakSelf showAndSaveLog:@"[Start] setFilter"];
                             [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                                
+
                             } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                                 if (error) {
                                     //添加setFilter失败
@@ -313,7 +313,7 @@ static NSUInteger provisionAddress;
     double connectT = (_averageConnectTime*_currentSuccessCount+_currentConnectTime)/(_currentSuccessCount+(_currentConnectTime==0?0:1));
     double provisionT = (_averageProvisionTime*_currentSuccessCount+_currentProvisionTime)/(_currentSuccessCount+(_currentProvisionTime==0?0:1));
     double keybindT = (_averageKeybindTime*_currentSuccessCount+_currentKeybindTime)/(_currentSuccessCount+(_currentKeybindTime==0?0:1));
-    NSString *str = [NSString stringWithFormat:@"success:%d fail:%d precent:%.2f%% kickout fail:%d\nscanT:%0.2fs connectT:%0.2fs provisionT:%0.2fs keybindT:%0.2fs allT:%0.2fs",_currentSuccessCount,_currentFailCount,100*(((double)_currentSuccessCount)/(_currentSuccessCount+_currentFailCount)),_currentKickoutFailCount,scanT,connectT,provisionT,keybindT,_averageScanTime+_averageConnectTime+_averageProvisionTime+_averageKeybindTime];
+    NSString *str = [NSString stringWithFormat:@"success:%d fail:%d percent:%.2f%% kickout fail:%d\nscanT:%0.2fs connectT:%0.2fs provisionT:%0.2fs keybindT:%0.2fs allT:%0.2fs",_currentSuccessCount,_currentFailCount,100*(((double)_currentSuccessCount)/(_currentSuccessCount+_currentFailCount)),_currentKickoutFailCount,scanT,connectT,provisionT,keybindT,_averageScanTime+_averageConnectTime+_averageProvisionTime+_averageKeybindTime];
     if (_currentScanTime != 0 && _currentConnectTime != 0 && _currentProvisionTime != 0 && _currentKeybindTime != 0) {
         _averageScanTime = scanT;
         _averageConnectTime = connectT;
@@ -337,7 +337,7 @@ static NSUInteger provisionAddress;
     [SigBearer.share stopMeshConnectWithComplete:nil];
     NSString *str = [NSString stringWithFormat:@"[Stop test] %@\n\n",[self getResultString]];
     [self showAndSaveLog:str];
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanTimeoutAction) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(deleteDeviceTimeout) object:nil];
@@ -378,7 +378,7 @@ static NSUInteger provisionAddress;
 
         [self refreshShowLabel];
 
-        [self scanAndConnnectAndProvisionAndKeybind];
+        [self scanAndConnectAndProvisionAndKeybind];
     }
 }
 
@@ -386,7 +386,7 @@ static NSUInteger provisionAddress;
     [self showAndSaveLog:@"[Start] delete device"];
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand resetNodeWithDestination:provisionAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-        
+
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (error) {
 

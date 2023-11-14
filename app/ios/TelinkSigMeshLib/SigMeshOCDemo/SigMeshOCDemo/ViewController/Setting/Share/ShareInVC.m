@@ -130,7 +130,7 @@
     __weak typeof(self) weakSelf = self;
     [vc setBackJsonData:^(NSData * _Nonnull jsonData, NSString * _Nonnull jsonName) {
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
-            TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+            TelinkLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
             [weakSelf loadJsonData:jsonData jaonName:jsonName];
         }];
     }];
@@ -150,7 +150,7 @@
         } else {
             NSString *tipString = [NSString stringWithFormat:@"import %@ fail!",name];
             [weakSelf showTips:tipString];
-            TeLogDebug(@"%@",tipString);
+            TelinkLogDebug(@"%@",tipString);
         }
     }];
 }
@@ -180,16 +180,16 @@
 - (void)getTelinkJsonWithUUID:(NSString *)uuid {
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
-        TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+        TelinkLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
         [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (err) {
                     NSString *errstr = [NSString stringWithFormat:@"%@",err];
-                    TeLogInfo(@"%@",errstr);
+                    TelinkLogInfo(@"%@",errstr);
                     [weakSelf showTips:errstr];
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
                 } else {
-                    TeLogInfo(@"result=%@",result);
+                    TelinkLogInfo(@"result=%@",result);
                     NSDictionary *dic = (NSDictionary *)result;
                     BOOL isSuccess = [dic[@"isSuccess"] boolValue];
                     if (isSuccess) {
@@ -210,7 +210,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

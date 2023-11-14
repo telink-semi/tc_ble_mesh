@@ -58,7 +58,7 @@
     }];
     [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
     [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        TeLogDebug(@"输入mesh name完成");
+        TelinkLogDebug(@"输入mesh name完成");
         UITextField *addressTF = inputAlertController.textFields.firstObject;
         //check input length
         if (addressTF.text.length == 0) {
@@ -122,7 +122,7 @@
         NSString *t = @"sending ivUpdate...";
         [ShowTipsHandle.share show:t];
     });
-    
+
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{

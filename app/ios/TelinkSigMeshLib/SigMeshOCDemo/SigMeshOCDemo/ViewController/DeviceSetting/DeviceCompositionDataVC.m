@@ -47,10 +47,10 @@
         [self performSelector:@selector(getCompositionDataTimeOut) withObject:nil afterDelay:10.0];
         [ShowTipsHandle.share show:Tip_GetComposition];
     });
-    TeLogDebug(@"getCompositionData 0x%02x",self.model.address);
+    TelinkLogDebug(@"getCompositionData 0x%02x",self.model.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.model.compositionData = [[SigPage0 alloc] initWithParameters:responseMessage.parameters];
         [SigDataSource.share saveLocationData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -77,7 +77,7 @@
 }
 
 - (void)showCompositionDataUI {
-    NSString *str = [NSString stringWithFormat:@"Composition Data:\ncid: 0x%04X\npid: 0x%04X\nvid: 0x%04X\ncrpl: 0x%04X\nfeatures: 0x%04X\n\trelay support: %@\n\tproxy support: %@\n\tfriend support: %@\n\tlow power support: %@\nelement count:%d\n%@",self.model.compositionData.companyIdentifier,self.model.compositionData.productIdentifier,CFSwapInt16HostToBig(self.model.compositionData.versionIdentifier),self.model.compositionData.minimumNumberOfReplayProtectionList,self.model.compositionData.features.rawValue,self.model.compositionData.features.relayFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.proxyFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.friendFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.lowPowerFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",(int)self.model.compositionData.elements.count,[self getElementsString]];
+    NSString *str = [NSString stringWithFormat:@"Composition Data:\ncid: 0x%04X\npid: 0x%04X\nvid: 0x%04X\ncrpl: 0x%04X\nfeatures: 0x%04X\n\trelay support: %@\n\tproxy support: %@\n\tfriend support: %@\n\tlow power support: %@\nelement count:%d\n%@",self.model.compositionData.companyIdentifier,self.model.compositionData.productIdentifier,CFSwapInt16HostToBig(self.model.compositionData.versionIdentifier),self.model.compositionData.minimumNumberOfReplayProtectionList,self.model.compositionData.features.rawValue,self.model.compositionData.features.relayFeature == SigNodeFeaturesState_notSupported ? @"false" : @"true",self.model.compositionData.features.proxyFeature == SigNodeFeaturesState_notSupported ? @"false" : @"true",self.model.compositionData.features.friendFeature == SigNodeFeaturesState_notSupported ? @"false" : @"true",self.model.compositionData.features.lowPowerFeature == SigNodeFeaturesState_notSupported ? @"false" : @"true",(int)self.model.compositionData.elements.count,[self getElementsString]];
     self.compositionDataTV.text = str;
 }
 

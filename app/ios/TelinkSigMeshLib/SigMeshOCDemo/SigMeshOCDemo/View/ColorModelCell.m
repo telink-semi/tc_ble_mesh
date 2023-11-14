@@ -155,7 +155,7 @@
         self.VSlider.value = self.hsvModel.value;
     }
     self.showVLabel.text = [NSString stringWithFormat:@"V(%.0f)",(self.hsvModel.value*100)];
-    
+
     if (!self.RSlider.isTracking) {
         self.RSlider.value = self.rgbModel.red;
     }

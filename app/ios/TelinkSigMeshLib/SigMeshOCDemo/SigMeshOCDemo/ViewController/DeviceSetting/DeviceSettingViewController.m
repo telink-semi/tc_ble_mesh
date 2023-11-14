@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceSettingViewController.m 
+ * @file     DeviceSettingViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -60,18 +60,18 @@
 @implementation DeviceSettingViewController
 
 - (IBAction)kickOut:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     //add a alert for kickout device.
     __weak typeof(self) weakSelf = self;
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:@"Confirm to remove device?" preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *action = [UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         weakSelf.hasClickKickout = YES;
         [ShowTipsHandle.share show:Tip_KickoutDevice];
-        
+
         if (weakSelf.model.hasPublishFunction && weakSelf.model.hasOpenPublish) {
             [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
         }
-        
+
         if (SigBearer.share.isOpen) {
             [weakSelf kickoutAction];
         } else {
@@ -86,20 +86,20 @@
 }
 
 - (void)kickoutAction{
-    TeLogDebug(@"send kickout.");
+    TelinkLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
     if (SigMeshLib.share.isBusyNow) {
-        TeLogInfo(@"send request for kick out, but busy now.");
+        TelinkLogInfo(@"send request for kick out, but busy now.");
         [self showTips:@"app is busy now, try again later."];
     } else {
-        TeLogInfo(@"send request for kick out address:%d",self.model.address);
+        TelinkLogInfo(@"send request for kick out address:%d",self.model.address);
         _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-            
+
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
-                TeLogDebug(@"kickout success.");
+                TelinkLogDebug(@"kickout success.");
             } else {
-                TeLogDebug(@"kickout fail.");
+                TelinkLogDebug(@"kickout fail.");
             }
             [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -202,7 +202,7 @@
         [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {
             /* 周期，20秒上报一次(periodSteps:kPublishIntervalOfDemo,:Range：0x01-0x3F; periodResolution:1) */
             BOOL result = [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:SigDataSource.share.defaultPublishPeriodModel.numberOfSteps periodResolution:[LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel] retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"editPublishList callback");
+                TelinkLogDebug(@"editPublishList callback");
                 if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
                     if (responseMessage.publish.publicationAddress.address == kMeshAddress_allNodes) {
                         [weakSelf.model openPublish];
@@ -330,7 +330,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

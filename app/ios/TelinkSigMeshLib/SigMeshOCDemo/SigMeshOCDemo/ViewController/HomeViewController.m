@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     HomeViewController.m 
+ * @file     HomeViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -69,20 +69,20 @@
         __weak typeof(self) weakSelf = self;
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Input IV index" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击输入ivIndex");
+            TelinkLogDebug(@"点击输入ivIndex");
             UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
             [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
                 textField.placeholder = @"Please input IV index in input box";
                 textField.text = @"0";
             }];
             [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"输入ivIndex完成");
+                TelinkLogDebug(@"输入ivIndex完成");
                 UITextField *ivIndex = inputAlertController.textFields.firstObject;
                 UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
                 [SigDataSource.share setIvIndexUInt32:ivIndexUInt32];
                 [SigDataSource.share setSequenceNumberUInt32:0];
                 [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
-                TeLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
+                TelinkLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
                 UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
                 [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Add Devices" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                     [weakSelf pushToAddDeviceVC];
@@ -90,12 +90,12 @@
                 [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
             }]];
             [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                TeLogDebug(@"点击取消");
+                TelinkLogDebug(@"点击取消");
             }]];
             [weakSelf presentViewController:inputAlertController animated:YES completion:nil];
         }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击取消");
+            TelinkLogDebug(@"点击取消");
         }]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
@@ -108,23 +108,23 @@
     [SigDataSource.share setAllDevicesOutline];
     ProvisionMode mode = [[[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode] intValue];
     if (mode == ProvisionMode_normalSelectable) {
-        TeLogVerbose(@"click normal selectable add device");
+        TelinkLogVerbose(@"click normal selectable add device");
         //先扫描，用户选择添加设备
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceVCID];
         [self.navigationController pushViewController:vc animated:YES];
     } else if (mode == ProvisionMode_normalAuto) {
-        TeLogVerbose(@"click normal auto add device");
+        TelinkLogVerbose(@"click normal auto add device");
         //自动添加多个设备
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AutoAddDeviceVCID];
         [self.navigationController pushViewController:vc animated:YES];
     } else if (mode == ProvisionMode_remoteProvision) {
         //remote Provision
-        TeLogVerbose(@"click remote provision add device");
+        TelinkLogVerbose(@"click remote provision add device");
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
         [self.navigationController pushViewController:vc animated:YES];
     } else if (mode == ProvisionMode_fastProvision) {
         //fast provision
-        TeLogVerbose(@"click fast provision add device");
+        TelinkLogVerbose(@"click fast provision add device");
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
         [self.navigationController pushViewController:vc animated:YES];
     }
@@ -147,7 +147,7 @@
     if (!SigBearer.share.isOpen) {
         return;
     }
-    
+
     BOOL hasKeyBindSuccess = NO;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *model in curNodes) {
@@ -163,7 +163,7 @@
     }
     self.shouldSetAllOffline = YES;
     [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogDebug(@"getOnlineStatus finish.");
+        TelinkLogDebug(@"getOnlineStatus finish.");
     }];
 }
 
@@ -211,7 +211,7 @@
 
 #pragma mark - UICollectionViewDelegate
 - (nonnull __kindof UICollectionViewCell *)collectionView:(nonnull UICollectionView *)collectionView cellForItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-//    TeLogDebug(@"==========Home cellForItemAtIndexPath");
+//    TelinkLogDebug(@"==========Home cellForItemAtIndexPath");
     HomeItemCell *item = [collectionView dequeueReusableCellWithReuseIdentifier:CellIdentifiers_HomeItemCellID forIndexPath:indexPath];
     SigNodeModel *model = self.source[indexPath.item];
     [item updateContent:model];
@@ -234,11 +234,11 @@
         [ShowTipsHandle.share delayHidden:2.0];
         return;
     }
-    
+
     [DemoCommand switchOnOffWithIsOn:!(model.state == DeviceStateOn) address:model.address responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 
@@ -262,7 +262,7 @@
         }else{
             [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
                 if (successful) {
-                    TeLogDebug(@"无设备，不需要连接。");
+                    TelinkLogDebug(@"无设备，不需要连接。");
                 } else {
                     [weakSelf workNormal];
                 }
@@ -345,7 +345,7 @@
             [self delayReloadCollectionView];
             [self blockState];
             [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogDebug(@"getOnlineStatus finish.");
+                TelinkLogDebug(@"getOnlineStatus finish.");
             }];
         }
     } else {
@@ -395,7 +395,7 @@
 
 - (void)blockState{
     [super blockState];
-    
+
     __weak typeof(self) weakSelf = self;
     //this block will callback when publish timer check offline.
     [SigPublishManager.share setDiscoverOutlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
@@ -406,7 +406,7 @@
         [weakSelf delayReloadCollectionView];
     }];
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
-        TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
+        TelinkLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
         if (state == CBCentralManagerStatePoweredOn) {
             [weakSelf workNormal];
         } else {
@@ -421,7 +421,7 @@
 
 #pragma  mark - SigBearerDataDelegate
 - (void)bearerDidConnectedAndDiscoverServices:(SigBearer *)bearer {
-//    TeLogInfo(@"bearer did Connected And Discover Services!");
+//    TelinkLogInfo(@"bearer did Connected And Discover Services!");
 }
 
 - (void)bearerDidOpen:(SigBearer *)bearer {
@@ -431,13 +431,13 @@
         if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]]) {
             [self freshOnline:nil];
         } else {
-            TeLogInfo(@"needn`t get status.%@",vc);
+            TelinkLogInfo(@"needn`t get status.%@",vc);
         }
     });
 }
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
-    TeLogVerbose(@"");
+    TelinkLogVerbose(@"");
     self.shouldSetAllOffline = NO;
     [SigDataSource.share setAllDevicesOutline];
     [self delayReloadCollectionView];
@@ -445,7 +445,7 @@
 
 #pragma  mark - SigDataSourceDelegate
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
-    TeLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
+    TelinkLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
 /**
@@ -460,13 +460,13 @@
 
 /**
  * @brief   Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!
- * @param   unicastRange Randge model had beed change.
+ * @param   unicastRange Randge model had been change.
  * @param   provisioner provisioner of unicastRange.
  * @note    The address of the last node may be out of range.
  */
 //- (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner {
 //    //注意：客户如果不想使用SDK分配的区间，可以从provisioner里面remove这个SDK创建的unicastRange。
-//    TeLogVerbose(@"当前provisioner的地址区间已经被分配完毕，SDK自动给provisioner.uuid=%@分配新的地址区间%@~~~>%@",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress);
+//    TelinkLogVerbose(@"当前provisioner的地址区间已经被分配完毕，SDK自动给provisioner.uuid=%@分配新的地址区间%@~~~>%@",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress);
 //}
 
 #pragma  mark LongPressGesture
@@ -510,13 +510,13 @@
 /// A callback called whenever a SigSecureNetworkBeacon Message has been received from the mesh network.
 /// @param message The received message.
 - (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message {
-    TeLogInfo(@"%@",message);
+    TelinkLogInfo(@"%@",message);
 }
 
 /// A callback called whenever a SigMeshPrivateBeacon Message has been received from the mesh network.
 /// @param message The received message.
 - (void)didReceiveSigMeshPrivateBeaconMessage:(SigMeshPrivateBeacon *)message {
-    TeLogInfo(@"%@",message);
+    TelinkLogInfo(@"%@",message);
 }
 
 #pragma mark - SigBluetoothDelegate
@@ -525,7 +525,7 @@
 //- (BOOL)needToBeFilteredNodeWithSigScanRspModel:(SigScanRspModel *)scanRspModel provisioned:(BOOL)provisioned peripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
 //    NSString *mac = @"A4C138093CD7";
 //    if ([scanRspModel.macAddress isEqualToString:mac]) {
-//        TeLogInfo(@"已经过滤掉设备%@",mac);
+//        TelinkLogInfo(@"已经过滤掉设备%@",mac);
 //        return YES;
 //    }
 //    return NO;

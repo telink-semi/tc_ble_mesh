@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     BaseViewController.m 
+ * @file     BaseViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -32,7 +32,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self normalSetting];
-    
+
 }
 
 -(void)viewWillAppear:(BOOL)animated{
@@ -114,7 +114,7 @@
     }
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
-    
+
     // 配置iOS13工具条
     if (@available(iOS 13.0, *)) {
         UITabBarAppearance *appearance = self.tabBarController.tabBar.standardAppearance.copy;
@@ -246,7 +246,7 @@
         //提示是否导入Mesh
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Mesh JSON receive complete, import data?" preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击确认");
+            TelinkLogDebug(@"点击确认");
             [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
             NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
             if (importCompleteAction.intValue == ImportSwitchMode_manual) {
@@ -254,12 +254,12 @@
                 __weak typeof(self) weakSelf = self;
                 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Share import success, switch to the new mesh?" preferredStyle:UIAlertControllerStyleAlert];
                 [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击确认");
+                    TelinkLogDebug(@"点击确认");
                     [weakSelf switchMeshActionWithMeshDictionary:dict];
                 }]];
                 [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                    TeLogDebug(@"点击取消");
-                    
+                    TelinkLogDebug(@"点击取消");
+
                 }]];
                 [weakSelf presentViewController:alertController animated:YES completion:nil];
             } else {
@@ -268,8 +268,8 @@
             }
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TeLogDebug(@"点击取消");
-            
+            TelinkLogDebug(@"点击取消");
+
         }]];
         [weakSelf presentViewController:alert animated:YES completion:nil];
     });

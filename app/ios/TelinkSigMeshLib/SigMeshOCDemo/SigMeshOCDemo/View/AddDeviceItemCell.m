@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     AddDeviceItemCell.m 
+ * @file     AddDeviceItemCell.m
  *
  * @brief    for TLSR chips
  *
@@ -48,7 +48,7 @@
         addressString = @"[Unallocated]";
     } else {
         addressString = [NSString stringWithFormat:@"0x%04X", model.scanRspModel.address];
-    }    
+    }
     _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nmac:%@",addressString,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
     _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
@@ -66,7 +66,7 @@
             _stateLabel.text = @"UNBIND";
             break;
         case AddDeviceModelStateScanned:
-            _stateLabel.text = @"SCANED";
+            _stateLabel.text = @"SCANNED";
             break;
         case AddDeviceModelStateConnecting:
             _stateLabel.text = @"CONNECTING";

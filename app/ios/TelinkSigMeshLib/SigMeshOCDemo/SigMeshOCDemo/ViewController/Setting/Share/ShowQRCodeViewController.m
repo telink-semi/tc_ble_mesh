@@ -44,7 +44,7 @@
         self.endDate = [NSDate dateWithTimeInterval:60 * 5 sinceDate:[NSDate date]];
         self.timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(refreshCountDownLabel) userInfo:nil repeats:YES];
         [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-        TeLogInfo(@"计时开始");
+        TelinkLogInfo(@"计时开始");
         [self.timer fire];
     } else {
         self.countDownLabel.hidden = YES;
@@ -76,14 +76,14 @@
 }
 
 - (void)refreshCountDownLabel {
-//    TeLogInfo(@"计时一次");
+//    TelinkLogInfo(@"计时一次");
     NSTimeInterval time = [_endDate timeIntervalSinceDate:[NSDate date]];
     int timeInt = ceil(time);
     self.countDownLabel.text = [NSString stringWithFormat:@"QR_Code available in %d seconds.",timeInt];
     if (timeInt <= 0) {
         [self.timer invalidate];
         self.timer = nil;
-        TeLogInfo(@"计时结束");
+        TelinkLogInfo(@"计时结束");
         __weak typeof(self) weakSelf = self;
         [self showTips:@"QR_Code is invalid!" sure:^(UIAlertAction *action) {
             [weakSelf.navigationController popViewControllerAnimated:YES];
@@ -92,7 +92,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 @end

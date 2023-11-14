@@ -28,7 +28,7 @@
 - (void)setBlock {
     __weak typeof(self) weakSelf = self;
     [self.bluetooth setBluetoothDidUpdateValueCallback:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic, NSError * _Nullable error) {
-        TeLogInfo(@"characteristic=%@ value=%@",characteristic.UUID.UUIDString,characteristic.value);
+        TelinkLogInfo(@"characteristic=%@ value=%@",characteristic.UUID.UUIDString,characteristic.value);
         if (characteristic.value) {
             if ([characteristic.UUID.UUIDString.uppercaseString isEqualToString:[NSString stringWithFormat:@"%04X",Bluetooth16BitsUUID_objectActionControlPoint]]) {
                 //OACP
@@ -71,7 +71,7 @@
     __weak typeof(self) weakSelf = self;
     BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
         [weakSelf cleanCommand:command];
-        TeLogDebug(@"timeout command:%@-%@",command.curOTSMessage,command.curOTSMessage.payload);
+        TelinkLogDebug(@"timeout command:%@-%@",command.curOTSMessage,command.curOTSMessage.payload);
         NSError *error = [NSError errorWithDomain:@"stop wait response, because command is timeout." code:-1 userInfo:nil];
         if (command && command.responseCallback) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -125,7 +125,7 @@
     [self setBlock];
     [self.commands addObject:command];
     if (_commands.count > 1) {
-        TeLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
+        TelinkLogInfo(@"The current command has been added to the queue, and there are %d %@ ahead. Please wait until the previous command processing is completed.",self.commands.count-1,self.commands.count-1>1?@"commands":@"command");
     } else {
         CBCharacteristic *c = [self getCBCharacteristicWithUUIDString:command.curOTSMessage.UUIDString ofPeripheral:self.peripheral];
         if (c) {
@@ -166,8 +166,8 @@
  */
 - (nullable CBCharacteristic *)getCBCharacteristicWithUUIDString:(NSString *)uuidString ofPeripheral:(CBPeripheral *)peripheral {
     CBCharacteristic *c = nil;
-    for (CBService *ser in peripheral.services) {
-        for (CBCharacteristic *cha in ser.characteristics) {
+    for (CBService *service in peripheral.services) {
+        for (CBCharacteristic *cha in service.characteristics) {
             if ([cha.UUID.UUIDString.uppercaseString isEqualToString:uuidString.uppercaseString]) {
                 c = cha;
                 break;

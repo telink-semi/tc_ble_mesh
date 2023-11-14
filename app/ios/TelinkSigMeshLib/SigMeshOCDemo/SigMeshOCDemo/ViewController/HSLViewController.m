@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     HSLViewController.m 
+ * @file     HSLViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -103,7 +103,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 #pragma mark - ColorModelCellDelegate

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceSubscriptionListViewController.m 
+ * @file     DeviceSubscriptionListViewController.m
  *
  * @brief    for TLSR chips
  *

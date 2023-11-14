@@ -61,7 +61,7 @@
 
 @interface IQKeyboardReturnKeyHandler ()<UITextFieldDelegate,UITextViewDelegate>
 
--(void)updateReturnKeyTypeOnTextField:(UIView*)textField;
+-(void)updateReturnKeyTypeWithTextField:(UIView*)textField;
 
 @end
 
@@ -164,7 +164,7 @@
     [textFieldInfoCache addObject:modal];
 }
 
--(void)updateReturnKeyTypeOnTextField:(UIView*)textField
+-(void)updateReturnKeyTypeWithTextField:(UIView*)textField
 {
     UIView *superConsideredView;
     
@@ -291,7 +291,7 @@
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-    [self updateReturnKeyTypeOnTextField:textField];
+    [self updateReturnKeyTypeWithTextField:textField];
 
     id<UITextFieldDelegate> delegate = self.delegate;
     
@@ -450,7 +450,7 @@
 
 - (void)textViewDidBeginEditing:(UITextView *)textView
 {
-    [self updateReturnKeyTypeOnTextField:textView];
+    [self updateReturnKeyTypeWithTextField:textView];
 
     id<UITextViewDelegate> delegate = self.delegate;
     

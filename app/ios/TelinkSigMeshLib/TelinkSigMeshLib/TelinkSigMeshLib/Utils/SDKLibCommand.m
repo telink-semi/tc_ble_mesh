@@ -431,7 +431,7 @@
 /*
  sample data
 ---> Sending - Access PDU, source:(0001)->destination: (0008) Op Code: (0000801B), parameters: (080000C000FF), accessPdu=801B080000C000FF
-<--- Response - Access PDU, source:(0008)->destination: (0001) Op Code: (0000801F), parameters: (00080000C000FF), accessPdu=801F00080000C000FF receieved (decrypted using key: <SigDeviceKeySet: 0x282840300>)
+<--- Response - Access PDU, source:(0008)->destination: (0001) Op Code: (0000801F), parameters: (00080000C000FF), accessPdu=801F00080000C000FF received (decrypted using key: <SigDeviceKeySet: 0x282840300>)
 */
 /**
  * @brief   Config Model Subscription Add.
@@ -1082,16 +1082,16 @@
     } else {
         message = [[SigGenericOnOffSetUnacknowledged alloc] initWithIsOn:isOn];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1127,16 +1127,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1193,16 +1193,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1254,16 +1254,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1315,16 +1315,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1389,16 +1389,16 @@
     } else {
         message = [[SigGenericDefaultTransitionTimeSetUnacknowledged alloc] initWithTransitionTime:defaultTransitionTime];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1447,16 +1447,16 @@
     } else {
         message = [[SigGenericOnPowerUpSetUnacknowledged alloc] initWithState:onPowerUp];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1513,16 +1513,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1617,16 +1617,16 @@
     } else {
         message = [[SigGenericPowerDefaultSetUnacknowledged alloc] initWithPower:power];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1655,16 +1655,16 @@
     } else {
         message = [[SigGenericPowerRangeSetUnacknowledged alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1849,16 +1849,16 @@
         message.cadenceData = cadenceData;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -1925,16 +1925,16 @@
     } else {
         message = [[SigSensorSettingSetUnacknowledged alloc] initWithPropertyID:propertyID settingPropertyID:settingPropertyID settingRaw:settingRaw];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2151,16 +2151,16 @@
     } else {
         message = [[SigSceneRecallUnacknowledged alloc] initWithSceneNumber:sceneNumber transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2221,16 +2221,16 @@
     } else {
         message = [[SigSceneStoreUnacknowledged alloc] initWithSceneNumber:sceneNumber];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2258,16 +2258,16 @@
     } else {
         message = [[SigSceneDeleteUnacknowledged alloc] initWithSceneNumber:sceneNumber];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2334,16 +2334,16 @@
     } else {
         message = [[SigSchedulerActionSetUnacknowledged alloc] initWithSchedulerModel:schedulerModel];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2394,16 +2394,16 @@
     } else {
         message = [[SigLightLightnessSetUnacknowledged alloc] initWithLightness:lightness transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2466,16 +2466,16 @@
     } else {
         message = [[SigLightLightnessLinearSetUnacknowledged alloc] initWithLightness:lightness transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2570,16 +2570,16 @@
     } else {
         message = [[SigLightLightnessDefaultSetUnacknowledged alloc] initWithLightness:lightness];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2608,16 +2608,16 @@
     } else {
         message = [[SigLightLightnessRangeSetUnacknowledged alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2670,16 +2670,16 @@
     } else {
         message = [[SigLightCTLSetUnacknowledged alloc] initWithCTLLightness:lightness CTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2762,16 +2762,16 @@
     } else {
         message = [[SigLightCTLTemperatureSetUnacknowledged alloc] initWithCTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2835,16 +2835,16 @@
     } else {
         message = [[SigLightCTLDefaultSetUnacknowledged alloc] initWithLightness:lightness temperature:temperature deltaUV:deltaUV];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2873,16 +2873,16 @@
     } else {
         message = [[SigLightCTLTemperatureRangeSetUnacknowledged alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -2950,16 +2950,16 @@
     } else {
         message = [[SigLightHSLHueSetUnacknowledged alloc] initWithHue:hue transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3022,16 +3022,16 @@
     } else {
         message = [[SigLightHSLSaturationSetUnacknowledged alloc] initWithSaturation:saturation transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3079,16 +3079,16 @@
     } else {
         message = [[SigLightHSLSetUnacknowledged alloc] initWithHSLLightness:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3187,16 +3187,16 @@
     } else {
         message = [[SigLightHSLDefaultSetUnacknowledged alloc] initWithLightness:light hue:hue saturation:saturation];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3227,16 +3227,16 @@
     } else {
         message = [[SigLightHSLRangeSetUnacknowledged alloc] initWithHueRangeMin:hueRangeMin hueRangeMax:hueRangeMax saturationRangeMin:saturationRangeMin saturationRangeMax:saturationRangeMax];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3289,16 +3289,16 @@
     } else {
         message = [[SigLightXyLSetUnacknowledged alloc] initWithXyLLightness:xyLLightness xyLX:xyLx xyLY:xyLy transitionTime:transitionTime delay:delay];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3397,16 +3397,16 @@
     } else {
         message = [[SigLightXyLDefaultSetUnacknowledged alloc] initWithLightness:lightness xyLX:xyLx xyLY:xyLy];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3437,16 +3437,16 @@
     } else {
         message = [[SigLightXyLRangeSetUnacknowledged alloc] initWithXyLXRangeMin:xyLxRangeMin xyLXRangeMax:xyLxRangeMax xyLYRangeMin:xyLyRangeMin xyLYRangeMax:xyLyRangeMax];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3498,16 +3498,16 @@
     } else {
         message = [[SigLightLCModeSetUnacknowledged alloc] initWithMode:enable?0x01:0x00];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3556,16 +3556,16 @@
     } else {
         message = [[SigLightLCOMSetUnacknowledged alloc] initWithMode:enable?0x01:0x00];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3624,16 +3624,16 @@
         message.delay = delay;
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3700,16 +3700,16 @@
     } else {
         message = [[SigLightLCPropertySetUnacknowledged alloc] initWithLightLCPropertyID:propertyID lightLCPropertyValue:propertyValue];
         if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
+            TelinkLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
         }
         if (retryCount != 0) {
-            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, retryCount need set to 0.");
             retryCount = 0;
         }
         if (responseMaxCount != 0) {
-            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            TelinkLogWarn(@"ack is NO, responseMaxCount need set to 0.");
             responseMaxCount = 0;
         }
     }
@@ -3783,10 +3783,10 @@
 + (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)failCallback {
     SigNodeModel *node = provisioner.node;
     if (!node) {
-        TeLogError(@"provisioner.node = nil.");
+        TelinkLogError(@"provisioner.node = nil.");
         return;
     }
-    
+
     //旧版本，开发者不可以自定义配置proxy filter.
     /*
     NSMutableArray *addresses = [NSMutableArray array];
@@ -3825,27 +3825,27 @@
             [weakSelf sendSecureNetworkBeacon];
         }
         [NSThread sleepForTimeInterval:0.1];
-        TeLogVerbose(@"filter addresses:%@",addresses);
+        TelinkLogVerbose(@"filter addresses:%@",addresses);
         [self setType:SigProxyFilerType_whitelist successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-//            TeLogVerbose(@"filter type:%@",responseMessage);
-            //逻辑1.for循环每次只添加一个地址            
+//            TelinkLogVerbose(@"filter type:%@",responseMessage);
+            //逻辑1.for循环每次只添加一个地址
             //逻辑2.一次添加多个地址
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-//                    TeLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
+//                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
                     SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
                     if (successCallback) {
                         successCallback(source,destination,responseMessage);
                     }
                 } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//                    TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
+//                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
                     if (failCallback) {
                         failCallback(error==nil,error);
                     }
                 }];
             });
         } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//            TeLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
+//            TelinkLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
             if (error != nil) {
                 if (failCallback) {
                     failCallback(NO,error);
@@ -3855,7 +3855,7 @@
 
     }];
      */
-    
+
     //v4.1.0.0及之后版本，开发者可以自定义配置proxy filter. 从SigMeshLib.share.dataSource.filterModel取出filter的配置。
     NSMutableArray *addresses = [NSMutableArray arrayWithArray:SigMeshLib.share.dataSource.filterModel.addressList];
     __weak typeof(self) weakSelf = self;
@@ -3867,27 +3867,27 @@
             [weakSelf sendSecureNetworkBeacon];
         }
         [NSThread sleepForTimeInterval:0.1];
-        TeLogVerbose(@"filter addresses:%@",addresses);
+        TelinkLogVerbose(@"filter addresses:%@",addresses);
         [self setType:SigMeshLib.share.dataSource.filterModel.filterType successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-            TeLogVerbose(@"filter type:%@",responseMessage);
+            TelinkLogVerbose(@"filter type:%@",responseMessage);
             //逻辑1.for循环每次只添加一个地址
             //逻辑2.一次添加多个地址
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-//                    TeLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
+//                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
                     SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
                     if (successCallback) {
                         successCallback(source,destination,responseMessage);
                     }
                 } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//                    TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
+//                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
                     if (failCallback) {
                         failCallback(error==nil,error);
                     }
                 }];
             });
         } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//            TeLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
+//            TelinkLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
             if (error != nil) {
                 if (failCallback) {
                     failCallback(NO,error);
@@ -3946,14 +3946,14 @@
     }
     if (model.vendorId > 0 && model.responseOpcode == 0) {
         model.retryCount = 0;
-        TeLogWarn(@"change retryCount to 0.");
+        TelinkLogWarn(@"change retryCount to 0.");
     }
     BOOL reliable = [self isReliableCommandWithOpcode:op vendorOpcodeResponse:model.responseOpcode];
     if ([SigHelper.share isUnicastAddress:model.address] && reliable && model.responseMax > 1) {
         model.responseMax = 1;
-        TeLogWarn(@"change responseMax to 1.");
+        TelinkLogWarn(@"change responseMax to 1.");
     }
-    TeLogVerbose(@"ini data:0x%@", [LibTools convertDataToHexStr:model.commandData]);
+    TelinkLogVerbose(@"ini data:0x%@", [LibTools convertDataToHexStr:model.commandData]);
     SigIniMeshMessage *message = [[SigIniMeshMessage alloc] initWithParameters:model.commandData];
     if (model.vendorId) {
         message.opCode = (op << 16) | ((model.vendorId & 0xff) << 8) | (model.vendorId >> 8);
@@ -4021,7 +4021,7 @@
             }
         }
         if (!has) {
-            TeLogError(@"%@",kSigMeshLibCommandInvalidNetKeyIndexErrorMessage);
+            TelinkLogError(@"%@",kSigMeshLibCommandInvalidNetKeyIndexErrorMessage);
             return nil;
         }
     }
@@ -4035,7 +4035,7 @@
             }
         }
         if (!has) {
-            TeLogError(@"%@",kSigMeshLibCommandInvalidAppKeyIndexErrorMessage);
+            TelinkLogError(@"%@",kSigMeshLibCommandInvalidAppKeyIndexErrorMessage);
             return nil;
         }
     }
@@ -4063,15 +4063,15 @@
 
     //初始化添加设备的参数
     [SigAddDeviceManager.share setNeedDisconnectBetweenProvisionToKeyBind:NO];
-    
+
     //初始化蓝牙
     [[SigBluetooth share] bleInit:^(CBCentralManager * _Nonnull central) {
-        TeLogInfo(@"finish init SigBluetooth.");
+        TelinkLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
     }];
-    
+
 //    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
-//    [SigBluetooth.share setWaitScanRseponseEnabel:YES];
+//    [SigBluetooth.share setWaitScanRseponseEnable:YES];
 }
 
 /**
@@ -4099,10 +4099,10 @@
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigMeshLib.share.dataSource.curNetkeyModel.networkId ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.secureNetworkBeacon = beacon;
         }
-        
+
     }
     SigSecureNetworkBeacon *beacon = SigMeshLib.share.secureNetworkBeacon;
-    TeLogInfo(@"send SecureNetworkBeacon=%@",beacon);
+    TelinkLogInfo(@"send SecureNetworkBeacon=%@",beacon);
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
@@ -4125,7 +4125,7 @@
         }
     }
     SigMeshPrivateBeacon *beacon = SigMeshLib.share.meshPrivateBeacon;
-    TeLogInfo(@"send meshPrivateBeacon=%@",beacon);
+    TelinkLogInfo(@"send meshPrivateBeacon=%@",beacon);
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
@@ -4135,7 +4135,7 @@
  */
 + (void)updateIvIndexWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
     SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:keyRefreshFlag ivUpdateActive:ivUpdateActive networkId:networkId ivIndex:ivIndex usingNetworkKey:networkKey];
-    TeLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
+    TelinkLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
@@ -4145,7 +4145,7 @@
  */
 + (void)statusNowTime {
     //time_auth = 1;//每次无条件接受这个时间指令。
-    UInt64 seconds = (UInt64)[LibTools secondsFrome2000];
+    UInt64 seconds = (UInt64)[LibTools secondsFrom2000];
     [NSTimeZone resetSystemTimeZone]; // 重置手机系统的时区
     NSInteger offset = [NSTimeZone localTimeZone].secondsFromGMT;
     UInt8 zoneOffset = (UInt8)(offset/60/15+64);//时区=分/15+64
@@ -4212,7 +4212,7 @@
         if (successful) {
             SigAppkeyModel *appkeyModel = [SigMeshLib.share.dataSource getAppkeyModelWithAppkeyIndex:appkeyIndex];
             if (!appkeyModel || ![appkeyModel.getDataKey isEqualToData:appkey] || netkeyIndex != appkeyModel.boundNetKey) {
-                TeLogVerbose(@"appkey is error.");
+                TelinkLogVerbose(@"appkey is error.");
                 if (fail) {
                     NSError *err = [NSError errorWithDomain:@"appkey is error." code:-1 userInfo:nil];
                     fail(err);

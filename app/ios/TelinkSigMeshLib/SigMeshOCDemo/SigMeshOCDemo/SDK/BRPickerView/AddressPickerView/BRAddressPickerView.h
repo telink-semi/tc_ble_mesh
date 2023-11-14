@@ -38,7 +38,7 @@ typedef void(^BRAddressResultBlock)(BRProvinceModel * _Nullable province, BRCity
 @property (nonatomic, assign) BRAddressPickerMode pickerMode;
 
 /** 默认选中的位置(1.传索引数组，如：@[@10, @0, @4]) */
-@property (nullable, nonatomic, copy) NSArray <NSNumber *> *selectIndexs;
+@property (nullable, nonatomic, copy) NSArray <NSNumber *> *selectIndexes;
 /** 默认选中的位置(2.传值数组，如：@[@"浙江省", @"杭州市", @"西湖区"]) */
 @property (nullable, nonatomic, copy) NSArray <NSString *> *selectValues;
 
@@ -84,24 +84,24 @@ typedef void(^BRAddressResultBlock)(BRProvinceModel * _Nullable province, BRCity
 /**
  *  1.显示地址选择器
  *
- *  @param selectIndexs             默认选中的值(传索引数组，如：@[@10, @0, @4])
+ *  @param selectIndexes             默认选中的值(传索引数组，如：@[@10, @0, @4])
  *  @param resultBlock              选择后的回调
  *
  */
-+ (void)showAddressPickerWithSelectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
++ (void)showAddressPickerWithSelectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                               resultBlock:(nullable BRAddressResultBlock)resultBlock;
 
 /**
  *  2.显示地址选择器
  *
  *  @param mode                     地址选择器显示类型
- *  @param selectIndexs             默认选中的值(传索引数组，如：@[@10, @0, @4])
+ *  @param selectIndexes             默认选中的值(传索引数组，如：@[@10, @0, @4])
  *  @param isAutoSelect             是否自动选择，即滚动选择器后就执行结果回调，默认为 NO
  *  @param resultBlock              选择后的回调
  *
  */
 + (void)showAddressPickerWithMode:(BRAddressPickerMode)mode
-                     selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                     selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                      isAutoSelect:(BOOL)isAutoSelect
                       resultBlock:(nullable BRAddressResultBlock)resultBlock;
 
@@ -110,14 +110,14 @@ typedef void(^BRAddressResultBlock)(BRProvinceModel * _Nullable province, BRCity
  *
  *  @param mode                     地址选择器显示类型
  *  @param dataSource               地区数据源
- *  @param selectIndexs             默认选中的值(传索引数组，如：@[@10, @0, @4])
+ *  @param selectIndexes             默认选中的值(传索引数组，如：@[@10, @0, @4])
  *  @param isAutoSelect             是否自动选择，即滚动选择器后就执行结果回调，默认为 NO
  *  @param resultBlock              选择后的回调
  *
  */
 + (void)showAddressPickerWithMode:(BRAddressPickerMode)mode
                        dataSource:(nullable NSArray *)dataSource
-                     selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                     selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                      isAutoSelect:(BOOL)isAutoSelect
                       resultBlock:(nullable BRAddressResultBlock)resultBlock;
 

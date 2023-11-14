@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SingleOTAViewController.m 
+ * @file     SingleOTAViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -62,7 +62,7 @@
         [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
         } cancel:^(UIAlertAction *action) {
-            
+
         }];
     } else {
         [self otaAction];
@@ -70,12 +70,12 @@
 }
 
 - (void)otaAction {
-    TeLogVerbose(@"clickStartOTA");
+    TelinkLogVerbose(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
     [self showOTATips:@"start connect..."];
-    
+
     __weak typeof(self) weakSelf = self;
     BOOL result = [OTAManager.share startOTAWithOtaData:self.localData models:@[self.model] singleSuccessAction:^(SigNodeModel *device) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -90,9 +90,9 @@
             [weakSelf showOTAProgress:progress];
         });
     } finishAction:^(NSArray<SigNodeModel *> *successModels, NSArray<SigNodeModel *> *fileModels) {
-        TeLogDebug(@"");
+        TelinkLogDebug(@"");
     }];
-    TeLogDebug(@"result = %d",result);
+    TelinkLogDebug(@"result = %d",result);
 }
 
 - (void)normalSetting{
@@ -139,7 +139,7 @@
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
     [SDKLibCommand startMeshConnectWithComplete:nil];
-    TeLogVerbose(@"otaSuccess");
+    TelinkLogVerbose(@"otaSuccess");
 }
 
 - (void)otaFailAction{
@@ -152,7 +152,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    TeLogVerbose(@"otaFail");
+    TelinkLogVerbose(@"otaFail");
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -189,7 +189,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

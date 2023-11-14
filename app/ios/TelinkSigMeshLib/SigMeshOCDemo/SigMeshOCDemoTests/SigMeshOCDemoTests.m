@@ -71,7 +71,7 @@
 //        }
 //        SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:maxHighAddressUnicast andProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
 //        NSLog(@"MaxHighAddressUnicast=0x%X,lowAddress=0x%@,highAddress=0x%@",maxHighAddressUnicast,provisioner.allocatedUnicastRange.firstObject.lowAddress,provisioner.allocatedUnicastRange.firstObject.highAddress);
-//        maxHighAddressUnicast = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
+//        maxHighAddressUnicast = provisioner.allocatedUnicastRange.firstObject.heightIntAddress;
 //    }
 //}
 //

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceSettingViewController.h 
+ * @file     DeviceSettingViewController.h
  *
  * @brief    for TLSR chips
  *

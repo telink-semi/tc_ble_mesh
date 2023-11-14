@@ -1203,7 +1203,7 @@
 				25589AE42721403E00F4F880 /* DeviceRemoteVC.h */,
 				25589AEE2721403E00F4F880 /* DeviceRemoteVC.m */,
 				25589ACC2721403E00F4F880 /* DeviceKeys */,
-				25589ADA2721403E00F4F880 /* Subnet bridge */,
+				25589ADA2721403E00F4F880 /* SubnetBridge */,
 				25589AE52721403E00F4F880 /* DeviceConfig */,
 			);
 			path = DeviceSetting;
@@ -1228,7 +1228,7 @@
 			path = DeviceKeys;
 			sourceTree = "<group>";
 		};
-		25589ADA2721403E00F4F880 /* Subnet bridge */ = {
+		25589ADA2721403E00F4F880 /* SubnetBridge */ = {
 			isa = PBXGroup;
 			children = (
 				25589ADB2721403E00F4F880 /* SubnetBridgeListVC.h */,
@@ -1236,7 +1236,7 @@
 				25589ADE2721403E00F4F880 /* AddBridgeTableVC.h */,
 				25589ADC2721403E00F4F880 /* AddBridgeTableVC.m */,
 			);
-			path = "Subnet bridge";
+			path = SubnetBridge;
 			sourceTree = "<group>";
 		};
 		25589AE52721403E00F4F880 /* DeviceConfig */ = {
@@ -1252,7 +1252,7 @@
 			path = DeviceConfig;
 			sourceTree = "<group>";
 		};
-		25589AF32721403E00F4F880 /* Mesh OTA */ = {
+		25589AF32721403E00F4F880 /* MeshOTA */ = {
 			isa = PBXGroup;
 			children = (
 				25589AF82721403E00F4F880 /* MeshOTAVC.h */,
@@ -1264,7 +1264,7 @@
 				25589AF72721403E00F4F880 /* UIButton+extension.h */,
 				25589AFB2721403E00F4F880 /* UIButton+extension.m */,
 			);
-			path = "Mesh OTA";
+			path = MeshOTA;
 			sourceTree = "<group>";
 		};
 		25589B0D2721403E00F4F880 /* Setting */ = {
@@ -1282,9 +1282,9 @@
 				25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */,
 				91ED317929236CAC003263D1 /* TipsVC.h */,
 				91ED317E29236CAC003263D1 /* TipsVC.m */,
-				25DD7D032728E5420029037A /* Root Certificate */,
+				25DD7D032728E5420029037A /* RootCertificate */,
 				25589B132721403E00F4F880 /* Test */,
-				25589B202721403E00F4F880 /* OOB Database */,
+				25589B202721403E00F4F880 /* OobDatabase */,
 				25589B322721403E00F4F880 /* Keys */,
 				25589B432721403E00F4F880 /* Share */,
 			);
@@ -1304,7 +1304,7 @@
 			path = Test;
 			sourceTree = "<group>";
 		};
-		25589B202721403E00F4F880 /* OOB Database */ = {
+		25589B202721403E00F4F880 /* OobDatabase */ = {
 			isa = PBXGroup;
 			children = (
 				25589B222721403E00F4F880 /* OOBListVC.h */,
@@ -1320,7 +1320,7 @@
 				25589B2C2721403E00F4F880 /* OOBItemCell.m */,
 				25589B262721403E00F4F880 /* OOBItemCell.xib */,
 			);
-			path = "OOB Database";
+			path = OobDatabase;
 			sourceTree = "<group>";
 		};
 		25589B322721403E00F4F880 /* Keys */ = {
@@ -1579,14 +1579,14 @@
 			path = AddressPickerView;
 			sourceTree = "<group>";
 		};
-		25DD7D032728E5420029037A /* Root Certificate */ = {
+		25DD7D032728E5420029037A /* RootCertificate */ = {
 			isa = PBXGroup;
 			children = (
 				25DD7D082728E58D0029037A /* CertificateListVC.h */,
 				25DD7D092728E58D0029037A /* CertificateListVC.m */,
 				25DD7D0A2728E58D0029037A /* CertificateListVC.xib */,
 			);
-			path = "Root Certificate";
+			path = RootCertificate;
 			sourceTree = "<group>";
 		};
 		25E05CC927EB0D5700E10E1B /* Reachability */ = {
@@ -1598,14 +1598,14 @@
 			path = Reachability;
 			sourceTree = "<group>";
 		};
-		9175844E29E53586008FE98A /* Proxy Filter */ = {
+		9175844E29E53586008FE98A /* ProxyFilter */ = {
 			isa = PBXGroup;
 			children = (
 				9175845329E535B7008FE98A /* ProxyFilterVC.h */,
 				9175845429E535B7008FE98A /* ProxyFilterVC.m */,
 				9175845529E535B7008FE98A /* ProxyFilterVC.xib */,
 			);
-			path = "Proxy Filter";
+			path = ProxyFilter;
 			sourceTree = "<group>";
 		};
 		917BE4AF2AD66E490073FC35 /* Network */ = {
@@ -1616,8 +1616,8 @@
 				91D769C12AEB895500A07E45 /* PrivateBeacon */,
 				917BE4B02AD66EFC0073FC35 /* Scenes */,
 				2541A38027E07D2B00CEA402 /* DirectForwarding */,
-				25589AF32721403E00F4F880 /* Mesh OTA */,
-				9175844E29E53586008FE98A /* Proxy Filter */,
+				25589AF32721403E00F4F880 /* MeshOTA */,
+				9175844E29E53586008FE98A /* ProxyFilter */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -2417,7 +2417,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -2462,7 +2462,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";

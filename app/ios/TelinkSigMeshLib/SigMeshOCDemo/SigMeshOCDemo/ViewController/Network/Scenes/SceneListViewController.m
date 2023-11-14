@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SceneListViewController.m 
+ * @file     SceneListViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -43,9 +43,9 @@
     //set recall scene block
     [cell setClickRecallBlock:^{
         [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
-            TeLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
+            TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }];
     //set edit scene block
@@ -54,7 +54,7 @@
         vc.model = model;
         [weakSelf.navigationController pushViewController:vc animated:YES];
     }];
-    
+
     for (UIView *view in cell.contentView.subviews) {
         if ([view isMemberOfClass:[DeviceElementItemView class]]) {
             [view removeFromSuperview];
@@ -84,7 +84,7 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    
+
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     [self.tableView reloadData];
 }
@@ -99,7 +99,7 @@
     //longpress to delete scene
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
-    
+
 }
 
 - (void)clickAdd{
@@ -117,7 +117,7 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             SigSceneModel *model = [self.source[indexPath.item] copy];
-            TeLogDebug(@"%@",indexPath);
+            TelinkLogDebug(@"%@",indexPath);
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%@",model.number];
             if (model.actionList) {
                 BOOL hasOutLine = NO;
@@ -137,7 +137,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteSceneAction:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -163,17 +163,17 @@
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 ActionModel *curAction = delArray.firstObject;
                 [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
+                    TelinkLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
                     [delArray removeObject:curAction];
                     dispatch_semaphore_signal(semaphore);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                    
+
                 }];
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
             }
             [weakSelf showDeleteSceneSuccess:scene];
         }];
-        
+
     }else{
         //needn't send packet, just need to change Datasource.
         [self showDeleteSceneSuccess:scene];
@@ -181,7 +181,7 @@
 }
 
 - (void)showDeleteSceneSuccess:(SigSceneModel *)scene{
-    TeLogDebug(@"delect success");
+    TelinkLogDebug(@"delect success");
     [[SigDataSource share] deleteSceneModelWithModel:scene];
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     dispatch_async(dispatch_get_main_queue(), ^{

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LibTools.h 
+ * @file     LibTools.h
  *
  * @brief    for TLSR chips
  *
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  NSData 转  十六进制string(大写)
- 
+
  @return NSString类型的十六进制string
  */
 + (NSString *)convertDataToHexStr:(NSData *)data;
@@ -47,10 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  计算2000.1.1 00:00:00 到现在的秒数
- 
+
  @return 返回2000.1.1 00:00:00 到现在的秒数
  */
-+ (NSInteger )secondsFrome2000;
++ (NSInteger )secondsFrom2000;
 
 /// 返回手机当前时间的时区
 + (NSInteger)currentTimeZoon;
@@ -179,7 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @return JSON字符串
  */
 + (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
- 
+
 /**
  *  字典数据转换成JSON字符串（有可读性）
  *
@@ -187,7 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @return JSON字符串
  */
 + (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
- 
+
 /**
  *  字典数据转换成JSON数据
  *
@@ -221,9 +221,9 @@ unsigned short crc16 (unsigned char *pD, int len);
 #pragma mark - AES相关
 
 /**
- * @brief   128 bit AES ECB encryption on speicified plaintext and keys
- * @param   inData    Pointer to speicified plaintext.
- * @param   in_len    The length of speicified plaintext.
+ * @brief   128 bit AES ECB encryption on specified plaintext and keys
+ * @param   inData    Pointer to specified plaintext.
+ * @param   in_len    The length of specified plaintext.
  * @param   key    keys to encrypt the plaintext.
  * @param   outData    Pointer to binary encrypted data.
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
@@ -231,7 +231,7 @@ unsigned short crc16 (unsigned char *pD, int len);
 int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
 
 /**
- * @brief   128 bit AES ECB decryption on speicified encrypted data and keys
+ * @brief   128 bit AES ECB decryption on specified encrypted data and keys
  * @param   inData    Pointer to encrypted data.
  * @param   in_len    The length of encrypted data.
  * @param   key    keys to decrypt the encrypted data.

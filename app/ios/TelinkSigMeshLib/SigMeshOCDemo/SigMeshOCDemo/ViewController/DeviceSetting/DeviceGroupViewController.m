@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceGroupViewController.m 
+ * @file     DeviceGroupViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -55,7 +55,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

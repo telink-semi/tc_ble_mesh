@@ -52,7 +52,7 @@
         [self setup];
     }
     return self;
-    
+
 }
 
 - (void)showCustomAlertView {

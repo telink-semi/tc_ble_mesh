@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceGroupListCell.m 
+ * @file     DeviceGroupListCell.m
  *
  * @brief    for TLSR chips
  *
@@ -40,10 +40,10 @@
 
 - (void)awakeFromNib {
     [super awakeFromNib];
-    
+
     self.options = SigDataSource.share.defaultGroupSubscriptionModels;
     self.temOptions = [[NSMutableArray alloc] init];
-    
+
 }
 
 //归属group
@@ -104,7 +104,7 @@
                                     isSuccess = YES;
                                 } else {
                                     isFail = YES;
-                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
                                     if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
                                         //资源不足，设备的组号已经添加满了。
                                         weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
@@ -130,7 +130,7 @@
                                     isSuccess = YES;
                                 } else {
                                     isFail = YES;
-                                    TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
                                     if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
                                         //资源不足，设备的组号已经添加满了。
                                         weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
@@ -169,7 +169,7 @@
     self.groupName.text = groupName;
     self.groupAddress = groupAddress.intValue;
     self.subToGroup.selected = [self.model.getGroupIDs containsObject:groupAddress];
-    
+
     // 根据defaultGroupSubscriptionModels过滤出当前设备存在的modelID，只绑定存在的modelID。
     NSMutableArray *temArray = [NSMutableArray array];
     NSArray *defaultGroupSubscriptionModels = [NSArray arrayWithArray:SigDataSource.share.defaultGroupSubscriptionModels];

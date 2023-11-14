@@ -62,9 +62,9 @@ typedef void(^BRStringResultModelArrayBlock)(NSArray <BRResultModel *> * _Nullab
 
 /**
  *  设置默认选中的位置【多列】
- *  推荐使用 selectIndexs，更加严谨，可以避免使用 selectValues 时，有名称相同的情况
+ *  推荐使用 selectIndexes，更加严谨，可以避免使用 selectValues 时，有名称相同的情况
  */
-@property (nullable, nonatomic, copy) NSArray <NSNumber *> *selectIndexs;
+@property (nullable, nonatomic, copy) NSArray <NSNumber *> *selectIndexes;
 @property (nullable, nonatomic, copy) NSArray <NSString *> *selectValues;
 
 /** 选择结果的回调【单列】 */
@@ -144,13 +144,13 @@ typedef void(^BRStringResultModelArrayBlock)(NSArray <BRResultModel *> * _Nullab
  *
  *  @param title               选择器标题
  *  @param dataSourceArr       数据源，格式：@[@[@"语文", @"数学", @"英语"], @[@"优秀", @"良好"]]，或直接传多维模型数组
- *  @param selectIndexs        默认选中的位置（传索引数组，如：@[@2, @1]）
+ *  @param selectIndexes        默认选中的位置（传索引数组，如：@[@2, @1]）
  *  @param resultBlock         选择后的回调
  *
  */
 + (void)showMultiPickerWithTitle:(nullable NSString *)title
                    dataSourceArr:(nullable NSArray *)dataSourceArr
-                    selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                    selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                      resultBlock:(nullable BRStringResultModelArrayBlock)resultBlock;
 
 /**
@@ -158,14 +158,14 @@ typedef void(^BRStringResultModelArrayBlock)(NSArray <BRResultModel *> * _Nullab
  *
  *  @param title               选择器标题
  *  @param dataSourceArr       数据源，格式：@[@[@"语文", @"数学", @"英语"], @[@"优秀", @"良好"]]，或直接传多维模型数组
- *  @param selectIndexs        默认选中的位置（传索引数组，如：@[@2, @1]）
+ *  @param selectIndexes        默认选中的位置（传索引数组，如：@[@2, @1]）
  *  @param isAutoSelect        是否自动选择，即滚动选择器后就执行结果回调，默认为 NO
  *  @param resultBlock         选择后的回调
  *
  */
 + (void)showMultiPickerWithTitle:(nullable NSString *)title
                    dataSourceArr:(nullable NSArray *)dataSourceArr
-                    selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                    selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                     isAutoSelect:(BOOL)isAutoSelect
                      resultBlock:(nullable BRStringResultModelArrayBlock)resultBlock;
 
@@ -174,14 +174,14 @@ typedef void(^BRStringResultModelArrayBlock)(NSArray <BRResultModel *> * _Nullab
  *
  *  @param title               选择器标题
  *  @param dataSourceArr       数据源，格式：直接传一维模型数组(NSArray <BRResultModel *>*)
- *  @param selectIndexs        默认选中的位置（传索引数组，如：@[@2, @1]）
+ *  @param selectIndexes        默认选中的位置（传索引数组，如：@[@2, @1]）
  *  @param isAutoSelect        是否自动选择，即滚动选择器后就执行结果回调，默认为 NO
  *  @param resultBlock         选择后的回调
  *
  */
 + (void)showLinkagePickerWithTitle:(nullable NSString *)title
                      dataSourceArr:(nullable NSArray *)dataSourceArr
-                      selectIndexs:(nullable NSArray <NSNumber *> *)selectIndexs
+                      selectIndexes:(nullable NSArray <NSNumber *> *)selectIndexes
                       isAutoSelect:(BOOL)isAutoSelect
                        resultBlock:(nullable BRStringResultModelArrayBlock)resultBlock;
 

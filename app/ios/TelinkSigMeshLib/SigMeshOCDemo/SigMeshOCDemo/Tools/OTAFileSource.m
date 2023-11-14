@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     OTAFileSource.m 
+ * @file     OTAFileSource.m
  *
  * @brief    for TLSR chips
  *
@@ -52,7 +52,7 @@
 
 - (NSArray <NSString *>*)getAllBinFile{
     [_fileSource removeAllObjects];
-    
+
     // 搜索bin文件的目录(工程内部添加的bin文件)
     NSArray *paths = [[NSBundle mainBundle] pathsForResourcesOfType:@"bin" inDirectory:nil];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -75,7 +75,7 @@
             [self addBinFileWithPath:path];
         }
     }
-    
+
     return _fileSource;
 }
 
@@ -108,7 +108,7 @@
 
 - (NSArray <NSString *>*)getAllMeshJsonFile{
     [_fileSource removeAllObjects];
-    
+
 //    // 搜索bin文件的目录(工程内部添加的bin文件)
 //    NSArray *paths = [[NSBundle mainBundle] pathsForResourcesOfType:@"json" inDirectory:nil];
 //    NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -126,7 +126,7 @@
             [_fileSource addObject:path];
         }
     }
-    
+
     return _fileSource;
 }
 
@@ -142,7 +142,7 @@
 //        data = fileHandle.readDataToEndOfFile;
 //    }
 //    return data;
-    
+
     //路径中间的UUID可能会改变。所以使用这种写法，解决上面读取失败的问题。
     NSArray *tem = [NSArray arrayWithArray:self.getAllBinFilePath];
     NSString *path = nil;

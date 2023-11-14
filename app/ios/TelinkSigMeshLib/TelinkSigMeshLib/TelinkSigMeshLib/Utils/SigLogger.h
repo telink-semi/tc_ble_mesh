@@ -26,75 +26,36 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
-/*
-log 写法1：测试验证线程
-*/
-//#define TeLog(fmt, ...) TelinkLogWithFile(YES,(@"[%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);
-//
-//#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
-//TelinkLogWithFile(SigLogger.share.logLevel & SigLogFlagError,(@"[Error][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//} else if (SigLogger.share.logLevel) {\
-//TelinkLogWithFile(NO,(@"[Error][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-//TelinkLogWithFile(YES,(@"[Warn][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//} else if (SigLogger.share.logLevel) {\
-//TelinkLogWithFile(NO,(@"[Warn][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-//TelinkLogWithFile(YES,(@"[Info][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//} else if (SigLogger.share.logLevel) {\
-//TelinkLogWithFile(NO,(@"[Info][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-//TelinkLogWithFile(YES,(@"[Debug][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//} else if (SigLogger.share.logLevel) {\
-//TelinkLogWithFile(NO,(@"[Debug][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-//TelinkLogWithFile(YES,(@"[Verbose][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//} else if (SigLogger.share.logLevel) {\
-//TelinkLogWithFile(NO,(@"[Verbose][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-//}
-
-
-
-
 /*
 log 写法2：
 */
-#define TeLog(fmt, ...) TelinkLogWithFile(YES,(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
+#define TelinkLog(fmt, ...) TelinkLogWithFile(YES,(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
 
-#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
+#define TelinkLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
 TelinkLogWithFile(SigLogger.share.logLevel & SigLogFlagError,(@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 } else if (SigLogger.share.logLevel) {\
 TelinkLogWithFile(NO,(@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
+#define TelinkLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
 TelinkLogWithFile(YES,(@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 } else if (SigLogger.share.logLevel) {\
 TelinkLogWithFile(NO,(@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
+#define TelinkLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
 TelinkLogWithFile(YES,(@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 } else if (SigLogger.share.logLevel) {\
 TelinkLogWithFile(NO,(@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
+#define TelinkLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
 TelinkLogWithFile(YES,(@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 } else if (SigLogger.share.logLevel) {\
 TelinkLogWithFile(NO,(@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
+#define TelinkLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
 TelinkLogWithFile(YES,(@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 } else if (SigLogger.share.logLevel) {\
 TelinkLogWithFile(NO,(@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\

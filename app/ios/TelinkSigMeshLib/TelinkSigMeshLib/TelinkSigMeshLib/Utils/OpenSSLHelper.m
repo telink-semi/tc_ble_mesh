@@ -88,7 +88,7 @@
     return output;
 }
 
-/// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
+/// RFC3610 defines the AES Counted with CBC-MAC (CCM).
 /// This method generates ciphertext and MIC (Message Integrity Check).
 /// @param someData The data to be encrypted and authenticated, also known as plaintext.
 /// @param key The 128-bit key.
@@ -135,7 +135,7 @@
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, micLength, outbuf + messageLength);
     // Clean up.
     EVP_CIPHER_CTX_free(ctx);
-    
+
     NSData *outputData = [[NSData alloc] initWithBytes: outbuf length: sizeof(outbuf)];
     return outputData;
 }
@@ -150,18 +150,18 @@
 - (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad {
     int outlen;
     unsigned char outbuf[1024];
-    
+
     int micLength     = (int) [mic length]      / sizeof(unsigned char);
     int messageLength = (int) [someData length] / sizeof(unsigned char);
     int nonceLength   = (int) [nonce length]    / sizeof(unsigned char);
     int aadLength     = (int) [aad length]      / sizeof(unsigned char);
-    
+
     unsigned char* keyBytes     = (unsigned char *)[key bytes];
     unsigned char* nonceBytes   = (unsigned char *)[nonce bytes];
     unsigned char* messageBytes = (unsigned char *)[someData bytes];
     unsigned char* micBytes     = (unsigned char *)[mic bytes];
     unsigned char* aadBytes     = (unsigned char *)[aad bytes];
-    
+
     // Create and initialise the context.
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     // Initialise the decryption operation.
@@ -191,7 +191,7 @@
     }
 }
 
-/// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
+/// Obfuscates given data by XORing it with PECB, which is calculated by encrypting
 /// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
 /// @param data The data to obfuscate.
 /// @param privacyRandom Data used as Privacy Random.
@@ -204,16 +204,16 @@
     NSData *pRandom = [privacyRandomSource subdataWithRange: NSMakeRange(0, 7)];
     NSMutableData *pecbInputs = [[NSMutableData alloc] init];
     const unsigned ivIndexBigEndian = CFSwapInt32HostToBig(ivIndex);
-    
+
     //Pad
     const char byteArray[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
     NSData *padding = [[NSData alloc] initWithBytes:byteArray length: 5];
     [pecbInputs appendData: padding];
     [pecbInputs appendData: [[NSData alloc] initWithBytes: &ivIndexBigEndian length: 4]];
     [pecbInputs appendData: pRandom];
-    
+
     NSData *pecb = [[self calculateECB: pecbInputs andKey: privacyKey] subdataWithRange:NSMakeRange(0, 6)];
-    
+
     NSData *obfuscatedData = [self calculateXORWithFirstData: data secondData: pecb];
     return obfuscatedData;
 }
@@ -229,7 +229,7 @@
     NSData *obfuscatedData = [data subdataWithRange: NSMakeRange(1, 6)];
     NSData *privacyRandom = [data subdataWithRange: NSMakeRange(7, 7)];
     const unsigned ivIndexBigEndian = CFSwapInt32HostToBig(ivIndex);
-    
+
     //Pad
     const char byteArray[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
     NSData *padding = [[NSData alloc] initWithBytes: byteArray length: 5];
@@ -237,9 +237,9 @@
     [pecbInputs appendData: padding];
     [pecbInputs appendData: [[NSData alloc] initWithBytes: &ivIndexBigEndian length: 4]];
     [pecbInputs appendData: privacyRandom];
-    
+
     NSData *pecb = [[self calculateECB:pecbInputs andKey: privacyKey] subdataWithRange: NSMakeRange(0, 6)];
-    
+
     //DeobfuscatedData = CTL, TTL, SEQ, SRC
     NSData *deobfuscatedData = [self calculateXORWithFirstData:obfuscatedData secondData:pecb];
     return deobfuscatedData;
@@ -264,10 +264,10 @@
      Private Beacon Data (5 octets) = Flags || IV Index
      P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
      */
-    
+
     NSData *authenticationTag = nil;
     NSMutableData *mData = [NSMutableData data];
-    
+
     //B0
     UInt8 tem8 = 0x19;
     UInt16 tem16 = CFSwapInt16BigToHost(0x0005);
@@ -277,7 +277,7 @@
     data = [NSData dataWithBytes:&tem16 length:2];
     [mData appendData:data];
     NSData *B0 = [NSData dataWithData:mData];
-    
+
     //C0
     mData = [NSMutableData data];
     tem8 = 0x01;
@@ -346,10 +346,10 @@
      Private Beacon Data (5 octets) = Flags || IV Index
      P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
      */
-    
+
     NSData *obfuscatedPrivateBeaconData = nil;
     NSMutableData *mData = [NSMutableData data];
-        
+
     //C1
     UInt8 tem8 = 0x01;
     UInt16 tem16 = CFSwapInt16BigToHost(0x0001);
@@ -403,7 +403,7 @@
      Private Beacon Data (5 octets) = Flags || IV Index
      P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
      */
-    
+
     //C1
     NSMutableData *mData = [NSMutableData data];
     UInt8 tem8 = 0x01;
@@ -444,7 +444,7 @@
     UInt8 tem8 = 0x01;
     NSMutableData *P = [NSMutableData dataWithData:[@"id128" dataUsingEncoding:NSASCIIStringEncoding]];
     [P appendData:[NSData dataWithBytes:&tem8 length:1]];
-    
+
     NSData *privateBeaconKey = [[OpenSSLHelper share] calculateK1WithN:networkKey salt:salt andP:P];
     return privateBeaconKey;
 }
@@ -480,39 +480,39 @@
     NSData *smk2String = [[NSData alloc] initWithBytes: byteArray length: 4];
     NSData *s1 = [self calculateSalt: smk2String];
     NSData *t = [self calculateCMAC: N andKey:s1];
-    
+
     const unsigned char* pBytes = [P bytes];
     // Create T1 => (T0 || P || 0x01).
     NSMutableData *t1Inputs = [[NSMutableData alloc] init];
     [t1Inputs appendBytes:pBytes length:P.length];
     uint8_t one = 1;
     [t1Inputs appendBytes:&one length:1];
-    
+
     NSData *t1 = [self calculateCMAC:t1Inputs andKey:t];
-    
+
     // Create T2 => (T1 || P || 0x02).
     NSMutableData *t2Inputs = [[NSMutableData alloc] init];
     [t2Inputs appendData: t1];
     [t2Inputs appendBytes: pBytes length: P.length];
     uint8_t two = 0x02;
     [t2Inputs appendBytes: &two length:1];
-    
+
     NSData *t2 = [self calculateCMAC: t2Inputs andKey: t];
-    
+
     // Create T3 => (T2 || P || 0x03).
     NSMutableData *t3Inputs = [[NSMutableData alloc] init];
     [t3Inputs appendData: t2];
     [t3Inputs appendBytes: pBytes length: P.length];
     uint8_t three = 0x03;
     [t3Inputs appendBytes: &three length: 1];
-    
+
     NSData *t3 = [self calculateCMAC:t3Inputs andKey:t];
-    
+
     NSMutableData *finalData = [[NSMutableData alloc] init];
     [finalData appendData: t1];
     [finalData appendData: t2];
     [finalData appendData: t3];
-    
+
     // data mod 2^264 (keeps last 14 bytes + 7 bits), as per K2 spec.
     const unsigned char* dataPtr = [finalData bytes];
     // We need only the first 7 bits from first octet, bitmask bit0 off.
@@ -523,7 +523,7 @@
     NSMutableData *output = [[NSMutableData alloc] init];
     [output appendBytes: &firstOffset length:1];
     [output appendData: finalData];
-    
+
     return output;
 }
 
@@ -540,12 +540,12 @@
     NSData *salt = [self calculateSalt: saltInputData];
     // T is calculated first using AES-CMAC N with SALT.
     NSData *t = [self calculateCMAC: N andKey: salt];
-    
+
     // id64 ascii => 0x69 0x64 0x36 0x34 || 0x01.
     const char cmacInput[] = { 0x69, 0x64, 0x36, 0x34, 0x01 }; // id64 string. || 0x01
     NSData *cmacInputData = [[NSData alloc] initWithBytes: cmacInput length: 5];
     NSData *finalData = [self calculateCMAC: cmacInputData andKey: t];
-    
+
     // Data mod 2^64 (keeps last 64 bits), as per K3 spec.
     NSData *output = (NSMutableData *)[finalData subdataWithRange: NSMakeRange(8, [finalData length] - 8)];
     return output;
@@ -564,12 +564,12 @@
     NSData *salt = [self calculateSalt: saltInputData];
     // T is calculated first using AES-CMAC N with SALT.
     NSData *t = [self calculateCMAC: N andKey: salt];
-    
+
     // id64 ascii => 0x69 0x64 0x36 || 0x01
     const char cmacInput[] = { 0x69, 0x64, 0x36, 0x01 }; // id64 string || 0x01
     NSData *cmacInputData = [[NSData alloc] initWithBytes: cmacInput length: 4];
     NSData *finalData = [self calculateCMAC: cmacInputData andKey: t];
-    
+
     // data mod 2^6 (keeps last 6 bits), as per K4 spec.
     const unsigned char* dataPtr = [finalData bytes];
     // We need only the last 6 bits from the octet, bitmask bit0 and bit1 off.
@@ -611,7 +611,7 @@
 
     X509* x509 = NULL;
     X509* superX509 = NULL;
-    
+
 //>>>>>>> release3.3.5
     @try {
 
@@ -635,7 +635,7 @@
         b = BIO_new(BIO_s_file());
         BIO_set_fp(b, stdout, BIO_NOCLOSE);
         X509_print(b, x509);
-        
+
 /*
  X509_verify_cert successful
  Certificate:
@@ -677,11 +677,11 @@
           9e:02:21:00:8d:81:6b:ee:11:c3:6c:dc:18:90:18:9e:db:85:
           df:9a:26:99:80:63:ea:c8:ea:55:33:0b:7f:75:00:3f:eb:98
 
- 
- 
+
+
  */
-        
-        
+
+
         //获取证书公钥
         NSData *publicKey = [NSData data];
         ASN1_BIT_STRING *string = X509_get0_pubkey_bitstr(x509);
@@ -695,7 +695,7 @@
 
         //获取证书版本号
         long version = X509_get_version(x509);
-        
+
         //获取证书有效时间
         ASN1_TIME* notBeforeASN1_TIME = X509_get_notBefore(x509);
         if (!notBeforeASN1_TIME) {
@@ -714,7 +714,7 @@
 //        ASN1_BIT_STRING *signature = nil;
 //        X509_get0_signature(&signature, &x509->sig_alg, x509);
 //        NSData *sig = [NSData dataWithBytes:signature->data length:signature->length];
-//        TeLogInfo(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
+//        TelinkLogInfo(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
 //        NSLog(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
 
         //验证证书签名(存在父证书的publicKey则使用父证书的publicKey验签，没有则使用自己的publicKey验签)
@@ -730,9 +730,9 @@
             //verify. result less than or 0 means not verified or some error.
             int verify = X509_verify(x509, key);
             if (verify == 1) {
-                TeLogInfo(@"Signature is valid");
+                TelinkLogInfo(@"Signature is valid");
             } else {
-                TeLogError(@"serial number check err,X509_verify=%d",verify);
+                TelinkLogError(@"serial number check err,X509_verify=%d",verify);
                 return nil;
             }
             EVP_PKEY_free(key);
@@ -740,7 +740,7 @@
 
         //比较版本号（值是0x2，对应的版本是3）
         if (version != 0x2) {
-            TeLogError(@"version check err,version=0x%lx",version);
+            TelinkLogError(@"version check err,version=0x%lx",version);
             return nil;
         }
         //比较有效期
@@ -750,11 +750,11 @@
         if (notBeforeResult == 1 && notAfterResult == -1) {
             //time is validity
         } else {
-            TeLogError(@"time check err,%@ ~~~> %@",notBefore,notAfter);
+            TelinkLogError(@"time check err,%@ ~~~> %@",notBefore,notAfter);
             return nil;
         }
 
-        TeLogInfo(@"check certificate success, publicKey=%@",[LibTools convertDataToHexStr:publicKey]);
+        TelinkLogInfo(@"check certificate success, publicKey=%@",[LibTools convertDataToHexStr:publicKey]);
         X509_free(x509);
         return publicKey;
     }
@@ -774,7 +774,7 @@
 
     X509* x509 = NULL;
     NSData *staticOOB = nil;
-    
+
     @try {
         const unsigned char* certificateData = [cerData bytes];
         long certificateDataLength = [cerData length];
@@ -783,7 +783,7 @@
             NSLog(@"Failed to read certificate, function: d2i_X509");
             @throw [NSException exceptionWithName:@"Failed to read certificate"   reason:@"crush's function: d2i_X509" userInfo:nil];
         }
-        
+
         //获取staticOOB数据
         int ExtCount = X509_get_ext_count(x509);
         for ( int k = 0; k < ExtCount; ++k ) {
@@ -836,10 +836,10 @@
 }
 
 /// Verify the user certificate list using the root certificate.
-/// @param userCerDatas certificate data formatted by x509 DeviceCertificate der.
+/// @param userCerDataList certificate data formatted by x509 DeviceCertificate der.
 /// @param rootCerData certificate data formatted by x509 root der.
 /// @return YES means verify success, NO means verify fail.
-- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData {
+- (BOOL)checkUserCertificateDataList:(NSArray <NSData *>*)userCerDataList withRootCertificate:(NSData *)rootCerData {
     OpenSSL_add_all_algorithms();
     //x509证书验证示例,https://blog.csdn.net/chuicao4350/article/details/52875329
 
@@ -866,7 +866,7 @@
     }
 
     /* 需要校验的证书 */
-    for (NSData *userCerData  in userCerDatas) {
+    for (NSData *userCerData  in userCerDataList) {
         user = der_to_x509(userCerData.bytes, (unsigned int)userCerData.length);
 
         ret = X509_STORE_CTX_init(ctx, ca_store, user, ca_stack);
@@ -875,7 +875,7 @@
             goto EXIT;
         }
     }
-    
+
     //openssl-1.0.1c/crypto/x509/x509_vfy.h
     ret = X509_verify_cert(ctx);
     if ( ret != 1 ) {

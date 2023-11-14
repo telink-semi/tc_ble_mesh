@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     NSString+extension.m 
+ * @file     NSString+extension.m
  *
  * @brief    for TLSR chips
  *
@@ -90,7 +90,7 @@
     if (jsonString == nil) {
         return nil;
     }
-    
+
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     NSError *err;
     NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
@@ -98,7 +98,7 @@
                                                           error:&err];
     if(err)
     {
-        TeLogDebug(@"json解析失败：%@",err);
+        TelinkLogDebug(@"json解析失败：%@",err);
         return nil;
     }
     return dic;

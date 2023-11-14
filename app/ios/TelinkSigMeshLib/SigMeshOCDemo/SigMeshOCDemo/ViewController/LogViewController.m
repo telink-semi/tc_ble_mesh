@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LogViewController.m 
+ * @file     LogViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -37,7 +37,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.contentText.text = nil;
         });
-        TeLogDebug(@"click clear");
+        TelinkLogDebug(@"click clear");
     }];
 }
 
@@ -65,7 +65,7 @@
 }
 
 - (void)dealloc {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
 }
 
 @end

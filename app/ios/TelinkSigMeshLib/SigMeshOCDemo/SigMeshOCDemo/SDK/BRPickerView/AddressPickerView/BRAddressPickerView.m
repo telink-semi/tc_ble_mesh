@@ -39,30 +39,30 @@
 @implementation BRAddressPickerView
 
 #pragma mark - 1.显示地址选择器
-+ (void)showAddressPickerWithSelectIndexs:(NSArray <NSNumber *>*)selectIndexs
++ (void)showAddressPickerWithSelectIndexes:(NSArray <NSNumber *>*)selectIndexes
                               resultBlock:(BRAddressResultBlock)resultBlock {
-    [self showAddressPickerWithMode:BRAddressPickerModeArea dataSource:nil selectIndexs:selectIndexs isAutoSelect:NO resultBlock:resultBlock];
+    [self showAddressPickerWithMode:BRAddressPickerModeArea dataSource:nil selectIndexes:selectIndexes isAutoSelect:NO resultBlock:resultBlock];
 }
 
 #pragma mark - 2.显示地址选择器
 + (void)showAddressPickerWithMode:(BRAddressPickerMode)mode
-                     selectIndexs:(NSArray <NSNumber *>*)selectIndexs
+                     selectIndexes:(NSArray <NSNumber *>*)selectIndexes
                      isAutoSelect:(BOOL)isAutoSelect
                       resultBlock:(BRAddressResultBlock)resultBlock {
-    [self showAddressPickerWithMode:mode dataSource:nil selectIndexs:selectIndexs isAutoSelect:isAutoSelect resultBlock:resultBlock];
+    [self showAddressPickerWithMode:mode dataSource:nil selectIndexes:selectIndexes isAutoSelect:isAutoSelect resultBlock:resultBlock];
 }
 
 
 #pragma mark - 3.显示地址选择器
 + (void)showAddressPickerWithMode:(BRAddressPickerMode)mode
                        dataSource:(NSArray *)dataSource
-                     selectIndexs:(NSArray <NSNumber *>*)selectIndexs
+                     selectIndexes:(NSArray <NSNumber *>*)selectIndexes
                      isAutoSelect:(BOOL)isAutoSelect
                       resultBlock:(BRAddressResultBlock)resultBlock {
     // 创建地址选择器
     BRAddressPickerView *addressPickerView = [[BRAddressPickerView alloc] initWithPickerMode:mode];
     addressPickerView.dataSourceArr = dataSource;
-    addressPickerView.selectIndexs = selectIndexs;
+    addressPickerView.selectIndexes = selectIndexes;
     addressPickerView.isAutoSelect = isAutoSelect;
     addressPickerView.resultBlock = resultBlock;
     // 显示
@@ -105,12 +105,12 @@
 #pragma mark - 获取模型数组
 - (NSArray <BRProvinceModel *>*)getProvinceModelArr:(NSArray *)dataSourceArr {
     NSMutableArray *tempArr1 = [NSMutableArray array];
-    for (NSDictionary *proviceDic in dataSourceArr) {
-        BRProvinceModel *proviceModel = [[BRProvinceModel alloc]init];
-        proviceModel.code = [proviceDic objectForKey:@"code"];
-        proviceModel.name = [proviceDic objectForKey:@"name"];
-        proviceModel.index = [dataSourceArr indexOfObject:proviceDic];
-        NSArray *cityList = [proviceDic.allKeys containsObject:@"cityList"] ? [proviceDic objectForKey:@"cityList"] : [proviceDic objectForKey:@"citylist"];
+    for (NSDictionary *provinceDic in dataSourceArr) {
+        BRProvinceModel *provinceModel = [[BRProvinceModel alloc]init];
+        provinceModel.code = [provinceDic objectForKey:@"code"];
+        provinceModel.name = [provinceDic objectForKey:@"name"];
+        provinceModel.index = [dataSourceArr indexOfObject:provinceDic];
+        NSArray *cityList = [provinceDic.allKeys containsObject:@"cityList"] ? [provinceDic objectForKey:@"cityList"] : [provinceDic objectForKey:@"citylist"];
         NSMutableArray *tempArr2 = [NSMutableArray array];
         for (NSDictionary *cityDic in cityList) {
             BRCityModel *cityModel = [[BRCityModel alloc]init];
@@ -129,8 +129,8 @@
             cityModel.arealist = [tempArr3 copy];
             [tempArr2 addObject:cityModel];
         }
-        proviceModel.citylist = [tempArr2 copy];
-        [tempArr1 addObject:proviceModel];
+        provinceModel.citylist = [tempArr2 copy];
+        [tempArr1 addObject:provinceModel];
     }
     return [tempArr1 copy];
 }
@@ -148,8 +148,8 @@
     }
     
     if (self.pickerMode == BRAddressPickerModeProvince || self.pickerMode == BRAddressPickerModeCity || self.pickerMode == BRAddressPickerModeArea) {
-        if (self.selectIndexs.count > 0) {
-            NSInteger provinceIndex = [self.selectIndexs[0] integerValue];
+        if (self.selectIndexes.count > 0) {
+            NSInteger provinceIndex = [self.selectIndexes[0] integerValue];
             self.provinceIndex = (provinceIndex > 0 && provinceIndex < self.provinceModelArr.count) ? provinceIndex : 0;
             self.selectProvinceModel = self.provinceModelArr.count > self.provinceIndex ? self.provinceModelArr[self.provinceIndex] : nil;
         } else {
@@ -169,8 +169,8 @@
     
     if (self.pickerMode == BRAddressPickerModeCity || self.pickerMode == BRAddressPickerModeArea) {
         self.cityModelArr = [self getCityModelArray:self.provinceIndex];
-        if (self.selectIndexs.count > 0) {
-            NSInteger cityIndex = self.selectIndexs.count > 1 ? [self.selectIndexs[1] integerValue] : 0;
+        if (self.selectIndexes.count > 0) {
+            NSInteger cityIndex = self.selectIndexes.count > 1 ? [self.selectIndexes[1] integerValue] : 0;
             self.cityIndex = (cityIndex > 0 && cityIndex < self.cityModelArr.count) ? cityIndex : 0;
             self.selectCityModel = self.cityModelArr.count > self.cityIndex ? self.cityModelArr[self.cityIndex] : nil;
         } else {
@@ -190,8 +190,8 @@
     
     if (self.pickerMode == BRAddressPickerModeArea) {
         self.areaModelArr = [self getAreaModelArray:self.provinceIndex cityIndex:self.cityIndex];
-        if (self.selectIndexs.count > 0) {
-            NSInteger areaIndex = self.selectIndexs.count > 2 ? [self.selectIndexs[2] integerValue] : 0;
+        if (self.selectIndexes.count > 0) {
+            NSInteger areaIndex = self.selectIndexes.count > 2 ? [self.selectIndexes[2] integerValue] : 0;
             self.areaIndex = (areaIndex > 0 && areaIndex < self.areaModelArr.count) ? areaIndex : 0;
             self.selectAreaModel = self.areaModelArr.count > self.areaIndex ? self.areaModelArr[self.areaIndex] : nil;
         } else {
@@ -537,11 +537,11 @@
     return _mSelectValues;
 }
 
-- (NSArray<NSNumber *> *)selectIndexs {
-    if (!_selectIndexs) {
-        _selectIndexs = [NSArray array];
+- (NSArray<NSNumber *> *)selectIndexes {
+    if (!_selectIndexes) {
+        _selectIndexes = [NSArray array];
     }
-    return _selectIndexs;
+    return _selectIndexes;
 }
 
 @end

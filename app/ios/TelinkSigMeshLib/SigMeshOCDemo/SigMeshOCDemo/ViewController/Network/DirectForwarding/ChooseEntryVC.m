@@ -36,7 +36,7 @@
 @implementation ChooseEntryVC
 
 - (IBAction)clickConfirm:(UIButton *)sender {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (self.backAddressCallback) {
         self.backAddressCallback(self.selectAddresses);
         [self.navigationController popViewControllerAnimated:YES];
@@ -55,7 +55,7 @@
     if (self.oldAddresses) {
         [self.selectAddresses addObjectsFromArray:self.oldAddresses];
     }
-    
+
     if (self.entryType == EntryType_tableEntry) {
         NSMutableArray *allNodes = [NSMutableArray array];
         NSArray *arr = [NSArray arrayWithArray:SigDataSource.share.curNodes];
@@ -87,7 +87,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 #pragma mark - UITableView
@@ -158,14 +158,14 @@
         [DemoCommand switchOnOffWithIsOn:YES address:address responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
 
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }];
     [cell.offButton addAction:^(UIButton *button) {
         [DemoCommand switchOnOffWithIsOn:NO address:address responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
 
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }];
     return cell;

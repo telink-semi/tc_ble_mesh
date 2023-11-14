@@ -67,7 +67,7 @@ public class LightnessDefaultGetMessage extends LightingMessage {
      */
     @Override
     public int getOpcode() {
-        return Opcode.LIGHTNESS_DEFULT_GET.value;
+        return Opcode.LIGHTNESS_DEFAULT_GET.value;
     }
 
     /**
@@ -77,6 +77,6 @@ public class LightnessDefaultGetMessage extends LightingMessage {
      */
     @Override
     public int getResponseOpcode() {
-        return Opcode.LIGHTNESS_DEFULT_STATUS.value;
+        return Opcode.LIGHTNESS_DEFAULT_STATUS.value;
     }
 }

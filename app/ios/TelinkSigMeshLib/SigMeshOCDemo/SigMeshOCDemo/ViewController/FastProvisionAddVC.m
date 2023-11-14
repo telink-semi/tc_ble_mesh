@@ -78,7 +78,7 @@
 //                            if (RSSI.intValue <= -70) {
 //                                return;
 //                            }
-                        TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
+                        TelinkLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
                         });
@@ -90,7 +90,7 @@
                                         [weakSelf startFastProvision];
                                     } else {
                                         NSString *str = @"connect fail.";
-                                        TeLogError(@"%@",str);
+                                        TelinkLogError(@"%@",str);
                                         [weakSelf showTips:str];
                                         [weakSelf userAbled:YES];
                                         weakSelf.isAdding = NO;
@@ -98,7 +98,7 @@
                                 }];
                             } else {
                                 NSString *str = @"change node fail.";
-                                TeLogError(@"%@",str);
+                                TelinkLogError(@"%@",str);
                                 [weakSelf showTips:str];
                                 [weakSelf userAbled:YES];
                                 weakSelf.isAdding = NO;
@@ -108,7 +108,7 @@
                 }];
             } else {
                 NSString *str = @"close fail.";
-                TeLogError(@"%@",str);
+                TelinkLogError(@"%@",str);
                 [weakSelf showTips:str];
                 [weakSelf userAbled:YES];
                 weakSelf.isAdding = NO;
@@ -127,14 +127,14 @@
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
     __weak typeof(self) weakSelf = self;
 //    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:sizeof(CTByte)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-//        [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//        [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } startProvisionCallback:^{
 //        [weakSelf updateStartProvision];
 //    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-//        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+//        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
 //        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } finish:^(NSError * _Nullable error) {
-//        TeLogInfo(@"error=%@",error);
+//        TelinkLogInfo(@"error=%@",error);
 //        [weakSelf addFinish];
 //        [SDKLibCommand startMeshConnectWithComplete:nil];
 //        [weakSelf userAbled:YES];
@@ -147,14 +147,14 @@
         [productIds addObject:@(model.PID)];
     }
     [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:productIds currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-        [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+        [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } startProvisionCallback:^{
         [weakSelf updateStartProvision];
     } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
         [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
-        TeLogInfo(@"error=%@",error);
+        TelinkLogInfo(@"error=%@",error);
         if (error) {
             [weakSelf showTips:error.domain];
         }
@@ -173,7 +173,7 @@
     });
 }
 
-- (void)updateScanedDeviceWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+- (void)updateScannedDeviceWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
     AddDeviceModel *model = [[AddDeviceModel alloc] init];
     SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
     scanModel.macAddress = macAddress;
@@ -253,7 +253,7 @@
         //        });
             } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error) {
-                    TeLogError(@"setFilter fail!!!");
+                    TelinkLogError(@"setFilter fail!!!");
                     //失败后逻辑：断开连接，再返回
                     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
                         dispatch_async(dispatch_get_main_queue(), ^{
@@ -283,7 +283,7 @@
     self.source = [[NSMutableArray alloc] init];
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    
+
 //    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
 //    self.navigationItem.rightBarButtonItem = self.refreshItem;
 
@@ -293,12 +293,12 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
-    
+
     [self startAddDevice];
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 @end

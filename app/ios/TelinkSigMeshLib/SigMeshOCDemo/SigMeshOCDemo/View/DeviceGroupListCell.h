@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceGroupListCell.h 
+ * @file     DeviceGroupListCell.h
  *
  * @brief    for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LibTools.m 
+ * @file     LibTools.m
  *
  * @brief    for TLSR chips
  *
@@ -62,7 +62,7 @@
 
 /**
  NSData 转  十六进制string(大写)
- 
+
  @return NSString类型的十六进制string
  */
 + (NSString *)convertDataToHexStr:(NSData *)data {
@@ -70,7 +70,7 @@
         return @"";
     }
     NSMutableString *string = [[NSMutableString alloc] initWithCapacity:[data length]];
-    
+
     [data enumerateByteRangesUsingBlock:^(const void *bytes, NSRange byteRange, BOOL *stop) {
         unsigned char *dataBytes = (unsigned char*)bytes;
         for (NSInteger i = 0; i < byteRange.length; i++) {
@@ -96,14 +96,14 @@
 
 /**
  计算2000-01-01-00:00:00 到现在的秒数
- 
+
  @return 返回2000-01-01-00:00:00 到现在的秒数
  */
-+ (NSInteger )secondsFrome2000{
++ (NSInteger )secondsFrom2000{
     NSInteger section = 0;
     //1970到现在的秒数-1970到2000的秒数
     section = [[NSDate date] timeIntervalSince1970] - 946684800;
-    //    TeLogInfo(@"new secondsFrome2000=%ld",(long)section);
+    //    TelinkLogInfo(@"new secondsFrom2000=%ld",(long)section);
     return section;
 }
 
@@ -184,11 +184,11 @@
     //原做法：生成的数据长度不足16，弃用
     //    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
     //    NSData *data = [NSData dataWithBytes: &time length: sizeof(time)];
-    //    TeLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
+    //    TelinkLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
     //    if (data.length > 16) {
     //        data = [data subdataWithRange:NSMakeRange(0, 16)];
     //    }
-    //    TeLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
+    //    TelinkLogInfo(@"NetworkKey.length = %lu",(unsigned long)data.length);
     //    return data;
     //新做法：与appkey生成规则一致。
     return [self createRandomDataWithLength:16];
@@ -212,9 +212,9 @@
         key[i] = arc4random() % 256;
     }
     NSData *data = [NSData dataWithBytes:key length:length];
-    //    TeLogInfo(@"createRandomData:%@",data);
+    //    TelinkLogInfo(@"createRandomData:%@",data);
     if (data.length == 0) {
-        TeLogInfo(@"ERROE : createRandomData fail");
+        TelinkLogInfo(@"ERROE : createRandomData fail");
     }
     return data;
 }
@@ -249,12 +249,12 @@
     NSAssert(fData.length <= 2, @"uint16FromBytes: (data length > 2)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-    
+
     UInt16 val0 = 0;
     UInt16 val1 = 0;
     [data getBytes:&val0 range:NSMakeRange(0, 1)];
     if (data.length > 1) [data getBytes:&val1 range:NSMakeRange(1, 1)];
-    
+
     UInt16 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00);
     return dstVal;
 }
@@ -264,7 +264,7 @@
     NSAssert(fData.length <= 4, @"uint32FromBytes: (data length > 4)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-    
+
     UInt32 val0 = 0;
     UInt32 val1 = 0;
     UInt32 val2 = 0;
@@ -273,7 +273,7 @@
     if (data.length > 1) [data getBytes:&val1 range:NSMakeRange(1, 1)];
     if (data.length > 2) [data getBytes:&val2 range:NSMakeRange(2, 1)];
     if (data.length > 3) [data getBytes:&val3 range:NSMakeRange(3, 1)];
-    
+
     UInt32 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00) + ((val2 << 16) & 0xff0000) + ((val3 << 24) & 0xff000000);
     return dstVal;
 }
@@ -283,7 +283,7 @@
     NSAssert(fData.length <= 8, @"uint64FromBytes: (data length > 8)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-    
+
     UInt64 val0 = 0;
     UInt64 val1 = 0;
     UInt64 val2 = 0;
@@ -300,7 +300,7 @@
     if (data.length > 5) [data getBytes:&val5 range:NSMakeRange(5, 1)];
     if (data.length > 6) [data getBytes:&val6 range:NSMakeRange(6, 1)];
     if (data.length > 7) [data getBytes:&val7 range:NSMakeRange(7, 1)];
-    
+
     UInt64 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00) + ((val2 << 16) & 0xff0000) + ((val3 << 24) & 0xff000000) + ((val4 << 32) & 0xff00000000) + ((val5 << 40) & 0xff0000000000) + ((val6 << 48) & 0xff000000000000) + ((val7 << 56) & 0xff00000000000000);
     return dstVal;
 }
@@ -539,9 +539,9 @@
  *  @return 字典数据
  */
 +(NSDictionary *)getDictionaryWithJSONData:(NSData*)data {
-    NSString *receiveStr = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
-    NSData * datas = [receiveStr dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:datas options:NSJSONReadingMutableLeaves error:nil];
+    NSString *receiveStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData *d = [receiveStr dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:d options:NSJSONReadingMutableLeaves error:nil];
     return jsonDict;
 }
 
@@ -586,7 +586,7 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
     uint32_t *table = malloc(sizeof(uint32_t) * 256);
     uint32_t crc = 0xffffffff;
     uint8_t *bytes = (uint8_t *)[data bytes];
-    
+
     for (uint32_t i=0; i<256; i++) {
         table[i] = i;
         for (int j=0; j<8; j++) {
@@ -597,12 +597,12 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
             }
         }
     }
-    
+
     for (int i=0; i<data.length; i++) {
         crc = (crc >> 8) ^ table[(crc & 0xff) ^ bytes[i]];
     }
     crc ^= 0xffffffff;
-    
+
     free(table);
     return crc;
 }
@@ -610,24 +610,24 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
 #pragma mark - AES相关
 
 /**
- * @brief   128 bit AES ECB encryption on speicified plaintext and keys
- * @param   inData    Pointer to speicified plaintext.
- * @param   in_len    The length of speicified plaintext.
+ * @brief   128 bit AES ECB encryption on specified plaintext and keys
+ * @param   inData    Pointer to specified plaintext.
+ * @param   in_len    The length of specified plaintext.
  * @param   key    keys to encrypt the plaintext.
  * @param   outData    Pointer to binary encrypted data.
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
  */
 int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData) {
-    size_t numBytesCrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesCrypted);
+    size_t numBytesEncrypted = 0;
+    CCCryptorStatus cryptStatus = CCCrypt(kCCEncrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesEncrypted);
     if (cryptStatus != kCCSuccess) {
         printf("aes128_ecb_encrypt fail!\n");
     }
-    return (int)numBytesCrypted;
+    return (int)numBytesEncrypted;
 }
 
 /**
- * @brief   128 bit AES ECB decryption on speicified encrypted data and keys
+ * @brief   128 bit AES ECB decryption on specified encrypted data and keys
  * @param   inData    Pointer to encrypted data.
  * @param   in_len    The length of encrypted data.
  * @param   key    keys to decrypt the encrypted data.
@@ -635,12 +635,12 @@ int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned c
  * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means decrypt success, other means fail.
  */
 int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData) {
-    size_t numBytesCrypted = 0;
-    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesCrypted);
+    size_t numBytesEncrypted = 0;
+    CCCryptorStatus cryptStatus = CCCrypt(kCCDecrypt, kCCAlgorithmAES128, kCCOptionECBMode, key, kCCKeySizeAES128, NULL, inData, in_len, outData, in_len, &numBytesEncrypted);
     if (cryptStatus != kCCSuccess) {
         printf("aes128_ecb_decrypt fail!\n");
     }
-    return (int)numBytesCrypted;
+    return (int)numBytesEncrypted;
 }
 
 #pragma mark - 正则表达式相关
@@ -762,7 +762,7 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
         return @[];
     }
     NSMutableArray *fileSource = [NSMutableArray array];
-    
+
     // 搜索bin文件的目录(工程内部添加的bin文件)
     NSArray *paths = [[NSBundle mainBundle] pathsForResourcesOfType:fileType inDirectory:nil];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -837,7 +837,7 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     macAddress = [LibTools turnOverData:macAddress];
     UInt8 input[15] = {0};
     memcpy(input, macAddress.bytes, 6);
-    
+
     //1: 创建一个MD5对象
     CC_MD5_CTX md5;
     //2: 初始化MD5

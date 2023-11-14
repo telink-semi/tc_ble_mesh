@@ -33,7 +33,7 @@
 
 - (void)normalSetting {
     [super normalSetting];
-    
+
     self.title = @"CDTP Export";
     self.service = [[CDTPServiceModel alloc] initWithShareMeshDictionary:self.meshDictionary];
     self.service.delegate = self;
@@ -49,7 +49,7 @@
 /// A callback called whenever the CDTP Client Read some object data from CDTP Service.
 /// @param progress The progress of read object. Range of progress is 0.0~1.0, 1.0 mean success.
 - (void)onServiceReadProgress:(float)progress {
-    TeLogInfo(@"progress=%f", progress);
+    TelinkLogInfo(@"progress=%f", progress);
     self.tipsLabel.text = [NSString stringWithFormat:@"Read Progress: %0.f%%", progress * 100];
     if (progress == 1.0) {
         __weak typeof(self) weakSelf = self;
@@ -64,7 +64,7 @@
 /// This method is called back when an exception is triggered when the CDTP Client write Object data to the CDTP Service.
 /// @param error Error of Write progress.
 //- (void)onServiceWriteError:(NSError *)error {
-//    TeLogInfo(@"error=%@", error);
+//    TelinkLogInfo(@"error=%@", error);
 //    self.tipsLabel.text = [NSString stringWithFormat:@"Write Error: %@", error.localizedDescription];
 //    __weak typeof(self) weakSelf = self;
 //    [self showTips:[NSString stringWithFormat:@"Write Error: %@", error.localizedDescription] sure:^(UIAlertAction *action) {
@@ -75,7 +75,7 @@
 /// This method is called back when an exception is triggered when the CDTP Client read Object data from the CDTP Service.
 /// @param error Error of Read progress.
 - (void)onServiceReadError:(NSError *)error {
-    TeLogInfo(@"error=%@", error);
+    TelinkLogInfo(@"error=%@", error);
     self.tipsLabel.text = [NSString stringWithFormat:@"Read Error: %@", error.localizedDescription];
     __weak typeof(self) weakSelf = self;
     [self showTips:[NSString stringWithFormat:@"Read Error: %@", error.localizedDescription] sure:^(UIAlertAction *action) {
@@ -84,7 +84,7 @@
 }
 
 -(void)dealloc {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

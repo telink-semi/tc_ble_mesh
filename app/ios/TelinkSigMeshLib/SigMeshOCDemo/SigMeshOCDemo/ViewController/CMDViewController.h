@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     CMDViewController.h 
+ * @file     CMDViewController.h
  *
  * @brief    for TLSR chips
  *

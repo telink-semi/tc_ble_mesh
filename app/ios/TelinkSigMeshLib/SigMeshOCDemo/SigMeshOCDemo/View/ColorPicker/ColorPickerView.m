@@ -262,7 +262,7 @@
                 hsb.alpha = a;
                 rgb = [ColorManager getRGBWithHSVColor:hsb];
             }
-            
+
             int i = 4 * (x + y * (int)size.width);
             bitmap[i] = (UInt8)(rgb.red * 0xFF);
             bitmap[i + 1] = (UInt8)(rgb.green * 0xFF);

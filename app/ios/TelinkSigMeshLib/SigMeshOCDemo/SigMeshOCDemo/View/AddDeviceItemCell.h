@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     AddDeviceItemCell.h 
+ * @file     AddDeviceItemCell.h
  *
  * @brief    for TLSR chips
  *

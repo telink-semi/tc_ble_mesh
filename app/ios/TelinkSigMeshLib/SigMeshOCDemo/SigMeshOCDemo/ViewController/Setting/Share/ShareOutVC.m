@@ -126,18 +126,18 @@
         [self showTips:@"Please select at least one network key!"];
         return;
     }
-    
+
     //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
     SigDataSource *exportDS = [[SigDataSource alloc] init];
     [exportDS setDictionaryToDataSource:self.network.getFormatDictionaryFromDataSource];
     exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
-    NSMutableArray *netkeyIndexs = [NSMutableArray array];
+    NSMutableArray *netkeyIndexes = [NSMutableArray array];
     for (SigNetkeyModel *model in exportDS.netKeys) {
-        [netkeyIndexs addObject:@(model.index)];
+        [netkeyIndexes addObject:@(model.index)];
     }
     NSMutableArray *apps = [NSMutableArray array];
     for (SigAppkeyModel *model in self.network.appKeys) {
-        if ([netkeyIndexs containsObject:@(model.boundNetKey)]) {
+        if ([netkeyIndexes containsObject:@(model.boundNetKey)]) {
             [apps addObject:model];
         }
     }
@@ -195,17 +195,17 @@
         [self showTips:@"The Internet connection appears to be offline."];
         return;
     }
-    
+
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
     [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (err) {
                 NSString *errstr = [NSString stringWithFormat:@"%@",err];
-                TeLogInfo(@"%@",errstr);
+                TelinkLogInfo(@"%@",errstr);
                 [weakSelf showTips:errstr];
             } else {
-                TeLogInfo(@"result=%@",result);
+                TelinkLogInfo(@"result=%@",result);
                 NSDictionary *dic = (NSDictionary *)result;
                 BOOL isSuccess = [dic[@"isSuccess"] boolValue];
                 if (isSuccess) {
@@ -226,7 +226,7 @@
     f.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];
     NSString *dstr = [f stringFromDate:date];
     NSString *jsonName = [NSString stringWithFormat:@"mesh-%@.json",dstr];
-    
+
     NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:jsonName];
 
     NSFileManager *manager = [[NSFileManager alloc] init];
@@ -239,14 +239,14 @@
             [handle truncateFileAtOffset:0];
             [handle writeData:tempData];
             [handle closeFile];
-            
+
             NSString *tipString = [NSString stringWithFormat:@"export %@ success!",jsonName];
             [self showTips:tipString];
-            TeLogDebug(@"%@",tipString);
+            TelinkLogDebug(@"%@",tipString);
         } else {
             NSString *tipString = [NSString stringWithFormat:@"export %@ fail!",jsonName];
             [self showTips:tipString];
-            TeLogDebug(@"%@",tipString);
+            TelinkLogDebug(@"%@",tipString);
         }
     }
 }
@@ -298,7 +298,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

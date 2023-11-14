@@ -406,7 +406,7 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
                 bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, size);
             } else if (characteristic.getUuid().equals(UUIDInfo.CHARACTERISTIC_OTS_FEATURE)) {
                 int oacpFeature = 0b00111111; // Create, Delete, Calculate Checksum, Execute, Read, Write
-                // olcp not suppport
+                // olcp not support
                 int olcpFeature = 0;
                 byte[] featuresData = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putInt(oacpFeature).putInt(olcpFeature).array();
                 bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, featuresData);

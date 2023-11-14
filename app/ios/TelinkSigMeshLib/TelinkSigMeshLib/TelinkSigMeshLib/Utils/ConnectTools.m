@@ -70,10 +70,10 @@ typedef enum : NSUInteger {
 /// @param timeout 超时时间
 /// @param complete 连接结果回调
 - (void)startConnectToolsWithNodeList:(NSArray <SigNodeModel *>*)nodeList timeout:(NSInteger)timeout Complete:(nullable startMeshConnectResultBlock)complete {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     if (nodeList == nil || nodeList.count == 0) {
         nodeList = SigDataSource.share.curNodes;
-        TeLogWarn(@"nodeList is nil, set nodeList with SigDataSource.share.curNodes!!!");
+        TelinkLogWarn(@"nodeList is nil, set nodeList with SigDataSource.share.curNodes!!!");
     }
     self.startMeshConnectCallback = complete;
     self.connectNodeList = [NSMutableArray arrayWithArray:nodeList];
@@ -83,9 +83,9 @@ typedef enum : NSUInteger {
     });
     self.isEnd = NO;
     self.isFirstScan = NO;
-    TeLogInfo(@"isAutoReconnect=%d,unicastAddressOfConnected=%d",SigBearer.share.isAutoReconnect,SigDataSource.share.unicastAddressOfConnected);
+    TelinkLogInfo(@"isAutoReconnect=%d,unicastAddressOfConnected=%d",SigBearer.share.isAutoReconnect,SigDataSource.share.unicastAddressOfConnected);
     for (SigNodeModel *node in nodeList) {
-        TeLogInfo(@"try to connect node:0x%X",node.address);
+        TelinkLogInfo(@"try to connect node:0x%X",node.address);
     }
     if (SigBearer.share.isOpen) {
         BOOL isConnected = NO;
@@ -108,7 +108,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)scanNode {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectPeripheral) object:nil];
@@ -120,7 +120,7 @@ typedef enum : NSUInteger {
         return;
     }
     [SDKLibCommand scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-        TeLogInfo(@"");
+        TelinkLogInfo(@"");
         if (!unprovisioned && !weakSelf.isEnd) {
             if (RSSI.intValue > weakSelf.maxRssi) {
                 self.peripheral = peripheral;
@@ -143,7 +143,7 @@ typedef enum : NSUInteger {
                     }
                 }
                 if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
-                    TeLogInfo(@"start connect address:0x%X macAddress:%@",rspModel.address,rspModel.macAddress);
+                    TelinkLogInfo(@"start connect address:0x%X macAddress:%@",rspModel.address,rspModel.macAddress);
                     weakSelf.peripheral = peripheral;
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(firstScanFinishAction) object:nil];
@@ -157,13 +157,13 @@ typedef enum : NSUInteger {
 }
 
 - (void)firstScanFinishAction {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     [SDKLibCommand stopScan];
     [self connectPeripheral];
 }
 
 - (void)connectPeripheral {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectPeripheral) object:nil];
     });
@@ -184,14 +184,14 @@ typedef enum : NSUInteger {
                     if (successful) {
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                             [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                                
+
                             } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                                 if (error) {
-                                    TeLogVerbose(@"setFilter失败");
+                                    TelinkLogVerbose(@"setFilter失败");
                                     [weakSelf scanNode];
                                 } else {
                                     UInt16 unicastAddressOfConnected = SigDataSource.share.unicastAddressOfConnected;
-                                    TeLogVerbose(@"setFilter成功，unicastAddressOfConnected=0x%X",unicastAddressOfConnected);
+                                    TelinkLogVerbose(@"setFilter成功，unicastAddressOfConnected=0x%X",unicastAddressOfConnected);
                                     BOOL success = NO;
                                     for (SigNodeModel *node in weakSelf.connectNodeList) {
                                         if (node.address == unicastAddressOfConnected) {
@@ -200,33 +200,33 @@ typedef enum : NSUInteger {
                                         }
                                     }
                                     if (success) {
-                                        TeLogVerbose(@"连接到正确的节点");
+                                        TelinkLogVerbose(@"连接到正确的节点");
                                         [weakSelf successAction];
                                     } else {
-                                        TeLogVerbose(@"未连接到正确的节点，开始setNodeIdentity");
+                                        TelinkLogVerbose(@"未连接到正确的节点，开始setNodeIdentity");
                                         [weakSelf setNodeIdentity];
                                     }
                                 }
                             }];
                         });
                     } else {
-                        TeLogVerbose(@"连接失败或者读服务失败");
+                        TelinkLogVerbose(@"连接失败或者读服务失败");
                         [weakSelf scanNode];
                     }
                 }];
             } else {
-                TeLogVerbose(@"断开连接失败");
+                TelinkLogVerbose(@"断开连接失败");
                 [weakSelf scanNode];
             }
         }];
     } else {
-        TeLogVerbose(@"扫描超时");
+        TelinkLogVerbose(@"扫描超时");
         [self scanNode];
     }
 }
 
 - (void)setNodeIdentity {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     if (self.isEnd) {
         return;
     }
@@ -241,12 +241,12 @@ typedef enum : NSUInteger {
                 }
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 SigNodeModel *node = array.firstObject;
-                TeLogVerbose(@"NodeIdentitySet:0x%X",node.address);
+                TelinkLogVerbose(@"NodeIdentitySet:0x%X",node.address);
                 [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     [array removeObject:node];
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(semaphore);
                 }];
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
@@ -254,17 +254,17 @@ typedef enum : NSUInteger {
             if (weakSelf.isEnd) {
                 return;
             }
-            TeLogVerbose(@"NodeIdentitySet完成");
+            TelinkLogVerbose(@"NodeIdentitySet完成");
             [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
-                TeLogVerbose(@"NodeIdentitySet完成后，断开连接完成");
+                TelinkLogVerbose(@"NodeIdentitySet完成后，断开连接完成");
                 if (weakSelf.isEnd) {
                     return;
                 }
-                TeLogVerbose(@"断开连接完成，开始下一轮设备扫描");
+                TelinkLogVerbose(@"断开连接完成，开始下一轮设备扫描");
                 [weakSelf scanNode];
             }];
         }];
-        
+
     }
 }
 
@@ -276,7 +276,7 @@ typedef enum : NSUInteger {
 
 /// demo 自定义连接工具类，用于停止连接指定的节点流程保持当前的连接。
 - (void)endConnectTools {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     self.isEnd = YES;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -284,7 +284,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)successAction {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     self.isEnd = YES;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -294,7 +294,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)endAction {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     self.isEnd = YES;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -306,7 +306,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)connectToolsTimeout {
-    TeLogInfo(@"");
+    TelinkLogInfo(@"");
     [self endAction];
 }
 

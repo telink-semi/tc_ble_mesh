@@ -62,7 +62,7 @@
 
 - (void)setItemArray:(NSMutableArray<AlertItemModel *> *)itemArray {
     _itemArray = itemArray;
-    self.tableVewHeightConstraint.constant = 45 * itemArray.count;
+    self.tableViewHeightConstraint.constant = 45 * itemArray.count;
 }
 
 - (void)setLeftBtnTitle:(NSString *)leftBtnTitle {

@@ -164,7 +164,7 @@ typedef enum : UInt8 {
 ///
 /// - seeAlso: 16-bit UUID Numbers Document.pdf  (page.12)
 typedef enum : UInt16 {
-    
+
     // Allocation type = GATT Descriptor
     Bluetooth16BitsUUID_PrimaryService = 0x2800,
     Bluetooth16BitsUUID_SecondaryService = 0x2801,
@@ -186,9 +186,9 @@ typedef enum : UInt16 {
     Bluetooth16BitsUUID_EnvironmentalSensingTriggerSetting = 0x290D,
     Bluetooth16BitsUUID_TimeTriggerSetting = 0x290E,
     Bluetooth16BitsUUID_CompleteBR_EDRTransportBlockData = 0x290F,
-    
+
     // Allocation type = GATT Characteristic and Object Type
-    
+
     Bluetooth16BitsUUID_DeviceName = 0x2A00,
     Bluetooth16BitsUUID_Appearance = 0x2A01,
     Bluetooth16BitsUUID_PeripheralPrivacyFlag = 0x2A02,

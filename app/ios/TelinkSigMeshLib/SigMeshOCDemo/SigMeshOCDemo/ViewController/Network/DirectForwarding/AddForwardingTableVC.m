@@ -42,7 +42,7 @@
 
 - (IBAction)addForwardingTable:(UIButton *)sender {
     //逻辑：一次性添加多个设备的table，第一个设备添加table成功后就添加table到SIGDataSource里面，中途出现添加失败，则跳过当前设备继续添加下一个，且不保存失败的设备到table里面，最后再提示部分成功、部分失败等情况，客户可以点击重试。
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     if (SigBearer.share.isOpen) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share show:self.isNew ? Tip_AddFrowardingTable : Tip_EditFrowardingTable];
@@ -61,31 +61,31 @@
                     }
                 }
             }
-            
+
             // delete table entry
             for (NSNumber *addressNumber in deleteArray) {
                 UInt16 address = addressNumber.intValue;
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"send request for forwardingTableDelete, address:%d", address);
+                TelinkLogInfo(@"send request for forwardingTableDelete, address:%d", address);
                 [SDKLibCommand forwardingTableDeleteWithNetKeyIndex:weakSelf.forwardingTableModel.netKeyIndex pathOrigin:weakSelf.forwardingTableModel.tableSource pathDestination:weakSelf.forwardingTableModel.tableDestination destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         hasSuccess = YES;
                     } else {
                         hasFail = YES;
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(semaphore);
                 }];
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 60.0));
             }
-            
+
             // add table entry
             for (NSNumber *addressNumber in addArray) {
                 UInt16 address = addressNumber.intValue;
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"send request for forwardingTableAdd, address:%d", address);
+                TelinkLogInfo(@"send request for forwardingTableAdd, address:%d", address);
                 UInt16 bearerTowardPathOrigin = weakSelf.forwardingTableModel.bearerTowardPathOrigin;
                 UInt16 bearerTowardPathTarget = weakSelf.forwardingTableModel.bearerTowardPathTarget;
                 if (address == weakSelf.forwardingTableModel.tableSource) {
@@ -95,14 +95,14 @@
                     bearerTowardPathTarget = 0;
                 }
                 [SDKLibCommand forwardingTableAddWithNetKeyIndex:weakSelf.forwardingTableModel.netKeyIndex unicastDestinationFlag:weakSelf.forwardingTableModel.unicastDestinationFlag backwardPathValidatedFlag:weakSelf.forwardingTableModel.backwardPathValidatedFlag pathOriginUnicastAddrRange:weakSelf.forwardingTableModel.pathOriginUnicastAddrRange pathTargetUnicastAddrRange:weakSelf.forwardingTableModel.pathTargetUnicastAddrRange multicastDestination:weakSelf.forwardingTableModel.multicastDestination bearerTowardPathOrigin:bearerTowardPathOrigin bearerTowardPathTarget:bearerTowardPathTarget destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"forwardingTableAdd=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"forwardingTableAdd=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         hasSuccess = YES;
                     } else {
                         hasFail = YES;
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
                     }
@@ -146,7 +146,7 @@
             });
         }];
     } else {
-        [self showTips:[NSString stringWithFormat:@"The mesh is offline, app cann`t %@ forwarding table.", self.isNew ? @"add" : @"edit"]];
+        [self showTips:[NSString stringWithFormat:@"The mesh is offline, app can not %@ forwarding table.", self.isNew ? @"add" : @"edit"]];
     }
 }
 
@@ -168,9 +168,9 @@
 }
 
 - (BOOL)validateInput {
-    
-    
-    
+
+
+
     return YES;
 }
 
@@ -184,9 +184,9 @@
 //        SigNodeModel *node1 = SigDataSource.share.curLocationNodeModel;
         SigNodeModel *node1 = SigDataSource.share.curNodes.firstObject;
         SigNodeModel *node2 = SigDataSource.share.curNodes.lastObject;
-        SigUnicastAddressRangeFormatModel *formt1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
-        SigUnicastAddressRangeFormatModel *formt2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
-        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:NO pathOriginUnicastAddrRange:formt1 pathTargetUnicastAddrRange:formt2 multicastDestination:0x8000 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
+        SigUnicastAddressRangeFormatModel *format1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
+        SigUnicastAddressRangeFormatModel *format2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
+        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:NO pathOriginUnicastAddrRange:format1 pathTargetUnicastAddrRange:format2 multicastDestination:0x8000 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
     } else {
         self.title = @"Edit Forwarding Table";
         [self.addButton setTitle:@"Edit Forwarding Table" forState:UIControlStateNormal];

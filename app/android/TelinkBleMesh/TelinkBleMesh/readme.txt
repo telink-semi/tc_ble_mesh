@@ -1,17 +1,22 @@
 
-
 version record:
 versionName - version code - date
 
 
 V4.1.0.0 - 7 - 20231108
 
-todo release notes
+- Add support for multi-network, users can create, delete, switch networks. The network data store format is changed from serialize to objectBox
+- Add the network subpage to display network information and related control functions.
+- Add support for private beacon and added related configuration page
+- Add support for enhanced feature: large cps, on-demand, sar and solicitation
+- Add the default root certificate for verifying certificate based devices
+- Optimize the setting page to display different configuration items by category
+- Improve code comments
 
 ----------------
 
 
-V3.3.3.7 - 6 - 20221130  暂时只发布在TelinkApps云端
+V3.3.3.7 - 6 - 20221130
 
 1. update icon
 2. update app name to TelinkSigMesh

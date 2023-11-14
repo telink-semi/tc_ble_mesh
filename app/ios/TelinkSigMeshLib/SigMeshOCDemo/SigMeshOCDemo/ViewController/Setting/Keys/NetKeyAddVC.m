@@ -92,7 +92,7 @@
             return;
         }
     }
-    
+
     if (![LibTools validateHex:self.indexTF.text.removeAllSapceAndNewlines] || self.indexTF.text.length > 4) {
         [self showTips:@"Please input `index` in range 0~0x0FFF."];
         return;
@@ -102,7 +102,7 @@
         [self showTips:@"Please input `index` in range 0~0x0FFF."];
         return;
     }
-    
+
     if (![LibTools validateHex:self.keyTF.text.removeAllSapceAndNewlines]) {
         [self showTips:@"Please enter 16 bytes hex key data."];
         return;
@@ -112,7 +112,7 @@
         return;
     }
 
-    TeLogInfo(@"appkey input success!");
+    TelinkLogInfo(@"appkey input success!");
     if (self.netKeyModel) {
         BOOL hadExist = NO;
         NSArray *temNetkeys = [NSArray arrayWithArray:self.network.netKeys];

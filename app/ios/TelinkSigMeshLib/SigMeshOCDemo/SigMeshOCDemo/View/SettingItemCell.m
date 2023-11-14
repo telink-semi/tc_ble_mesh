@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SettingItemCell.m 
+ * @file     SettingItemCell.m
  *
  * @brief    for TLSR chips
  *

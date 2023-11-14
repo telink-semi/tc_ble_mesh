@@ -56,15 +56,15 @@
 #pragma mark check outline timer
 - (void)setDeviceOffline:(NSNumber *)address{
     UInt16 adr = [address intValue];
-    
+
     [self stopCheckOfflineTimerWithAddress:@(adr)];
-    
+
     SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:adr];
     if (device) {
         if (device.hasPublishFunction && device.hasOpenPublish) {
             device.state = DeviceStateOutOfLine;
             NSString *str = [NSString stringWithFormat:@"======================device offline:0x%02X======================",adr];
-            TeLogInfo(@"%@",str);
+            TelinkLogInfo(@"%@",str);
             if (self.discoverOutlineNodeCallback) {
                 self.discoverOutlineNodeCallback(@(device.address));
             }

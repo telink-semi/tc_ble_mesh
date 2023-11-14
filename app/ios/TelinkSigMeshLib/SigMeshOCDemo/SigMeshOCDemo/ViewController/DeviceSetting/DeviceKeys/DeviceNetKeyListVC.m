@@ -69,9 +69,9 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configNetKeyGetWithDestination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyList * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"NetKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         NSMutableArray *backList = [NSMutableArray array];
-        for (NSNumber *number in responseMessage.networkKeyIndexs) {
+        for (NSNumber *number in responseMessage.networkKeyIndexes) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:number.intValue updated:NO];
             [backList addObject:nodeKeyModel];
         }
@@ -80,7 +80,7 @@
         [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
         [ShowTipsHandle.share show:@"get node NetKey list success!"];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"get node NetKey list fail! error=%@",error]];
         }
@@ -95,7 +95,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configNetKeyAddWithDestination:self.model.address networkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
             if (![weakSelf.model.netKeys containsObject:nodeKeyModel]) {
@@ -109,7 +109,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"add NetKey to node fail! error=%@",error]];
         }
@@ -124,7 +124,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configNetKeyDeleteWithDestination:self.model.address networkKeyIndex:netKey.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"NetKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
             [weakSelf.model deleteNetKeyDataFromNode:nodeKeyModel];
@@ -136,7 +136,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete NetKey from node fail! error=%@",error]];
         }
@@ -187,7 +187,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteNetKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }

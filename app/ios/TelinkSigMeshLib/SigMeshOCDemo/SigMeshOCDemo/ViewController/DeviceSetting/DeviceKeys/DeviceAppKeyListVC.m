@@ -80,7 +80,7 @@
         for (SigNodeKeyModel *tem in temList) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             [SDKLibCommand configAppKeyGetWithDestination:weakSelf.model.address networkKeyIndex:tem.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyList * _Nonnull responseMessage) {
-                TeLogInfo(@"AppKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+                TelinkLogInfo(@"AppKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
                 if (responseMessage.networkKeyIndex == tem.index) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         for (NSNumber *number in responseMessage.applicationKeyIndexes) {
@@ -129,7 +129,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configAppKeyAddWithDestination:self.model.address appkeyModel:appKey retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"AppKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"AppKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:responseMessage.applicationKeyIndex updated:NO];
             if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
@@ -143,7 +143,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"add AppKey to node fail! error=%@",error]];
         }
@@ -156,7 +156,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configAppKeyDeleteWithDestination:self.model.address appkeyModel:appKey retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"AppKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"AppKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:responseMessage.applicationKeyIndex updated:NO];
             [weakSelf.model.appKeys removeObject:nodeKeyModel];
@@ -168,7 +168,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete AppKey from node fail! error=%@",error]];
         }
@@ -217,7 +217,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteAppKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -243,7 +243,7 @@
         if (cpsData && cpsData.length > 0) {
             cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
         }
-        
+
         [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];

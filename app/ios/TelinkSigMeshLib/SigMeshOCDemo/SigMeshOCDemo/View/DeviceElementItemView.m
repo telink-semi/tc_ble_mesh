@@ -87,7 +87,7 @@
     } else {
         [self.selectButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
     }
-    
+
     //离线与关闭，亮度色温显示0
     self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@",model.address,state];
     if (node && node.sceneAddress.count == 0) {

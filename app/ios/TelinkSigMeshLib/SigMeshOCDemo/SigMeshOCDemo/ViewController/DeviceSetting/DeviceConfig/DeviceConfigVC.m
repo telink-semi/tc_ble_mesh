@@ -127,11 +127,11 @@
     UIImageView *turnImageView = [[UIImageView alloc] initWithFrame:CGRectMake(SCREENWIDTH - 50, 21, 12, 7)];
     turnImageView.image = [[UIImage imageNamed:@"fb_bottom"] imageWithRenderingMode:1];
     [backView addSubview:turnImageView];
-    
+
     backView.tag = 1000 + section;
     headView.backgroundColor = [UIColor clearColor];
     backView.backgroundColor = UIColor.telinkBackgroundWhite;
-    
+
     UILabel *titlelabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, SCREENWIDTH - 60, 50)];
     [backView addSubview:titlelabel];
     titlelabel.font = kFont(15);
@@ -199,16 +199,16 @@
         [ShowTipsHandle.share show:@"Get Default TTL..."];
         //Get Default TTL
         [SDKLibCommand configDefaultTtlGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configDefaultTtlGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configDefaultTtlGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigDefaultTtlStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Default TTL failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Default TTL successed!"];
+                [ShowTipsHandle.share show:@"Get Default TTL success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -218,16 +218,16 @@
         [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit..."];
         //Get Relay & RelayRetransmit
         [SDKLibCommand configRelayGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configRelayGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configRelayGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigRelayStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Relay & RelayRetransmit failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit successed!"];
+                [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -237,16 +237,16 @@
         [ShowTipsHandle.share show:@"Get Secure Network Beacon..."];
         //Get Secure Network Beacon
         [SDKLibCommand configBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigBeaconStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configBeaconGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configBeaconGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigBeaconStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Secure Network Beacon failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Secure Network Beacon successed!"];
+                [ShowTipsHandle.share show:@"Get Secure Network Beacon success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -256,16 +256,16 @@
         [ShowTipsHandle.share show:@"Get GATT Proxy..."];
         //Get GATT Proxy
         [SDKLibCommand configGATTProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigGATTProxyStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configGATTProxyGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configGATTProxyGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigGATTProxyStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get GATT Proxy failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get GATT Proxy successed!"];
+                [ShowTipsHandle.share show:@"Get GATT Proxy success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -275,16 +275,16 @@
         [ShowTipsHandle.share show:@"Get Node Identity..."];
         //Get Node Identity
         [SDKLibCommand configNodeIdentityGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configNodeIdentityGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configNodeIdentityGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigNodeIdentityStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Node Identity failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Node Identity successed!"];
+                [ShowTipsHandle.share show:@"Get Node Identity success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -294,16 +294,16 @@
         [ShowTipsHandle.share show:@"Get Friend..."];
         //Get Friend
         [SDKLibCommand configFriendGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigFriendStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configFriendGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configFriendGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigFriendStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Friend failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Friend successed!"];
+                [ShowTipsHandle.share show:@"Get Friend success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -313,7 +313,7 @@
         [ShowTipsHandle.share show:@"Get Key Refresh Phase..."];
        //Get Key Refresh Phase
         [SDKLibCommand configKeyRefreshPhaseGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigKeyRefreshPhaseStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configKeyRefreshPhaseGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configKeyRefreshPhaseGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 m.value = [NSString stringWithFormat:@"value: phase: %@",[SigHelper.share getDetailOfKeyRefreshPhase:responseMessage.phase]];
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -321,11 +321,11 @@
                 });
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Key Refresh Phase failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Key Refresh Phase successed!"];
+                [ShowTipsHandle.share show:@"Get Key Refresh Phase success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -335,16 +335,16 @@
         [ShowTipsHandle.share show:@"Get Network Transmit..."];
         //Get Network Transmit
         [SDKLibCommand configNetworkTransmitGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"configNetworkTransmitGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configNetworkTransmitGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigNetworkTransmitStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Network Transmit failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Network Transmit successed!"];
+                [ShowTipsHandle.share show:@"Get Network Transmit success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -354,16 +354,16 @@
         [ShowTipsHandle.share show:@"Get Mesh Private Beacon..."];
         //Get Mesh Private Beacon
         [SDKLibCommand privateBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"Mesh Private Beacon Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"Mesh Private Beacon Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigPrivateBeaconStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Mesh Private Beacon failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Mesh Private Beacon successed!"];
+                [ShowTipsHandle.share show:@"Get Mesh Private Beacon success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -373,16 +373,16 @@
         [ShowTipsHandle.share show:@"Get Private GATT Proxy..."];
         //Get Private GATT Proxy
         [SDKLibCommand privateGattProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"Private GATT Proxy Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"Private GATT Proxy Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigPrivateGattProxyStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get GATT Proxy failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get GATT Proxy successed!"];
+                [ShowTipsHandle.share show:@"Get GATT Proxy success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -392,16 +392,16 @@
         [ShowTipsHandle.share show:@"Get Private Node Identity..."];
         //Get Private Node Identity
         [SDKLibCommand privateNodeIdentityGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
-            TeLogInfo(@"Private Node Identity Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"Private Node Identity Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigPrivateNodeIdentityStatus:responseMessage andIndexPath:indexPath];
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Private Node Identity failed! error=%@",error]];
             } else {
-                [ShowTipsHandle.share show:@"Get Private Node Identity successed!"];
+                [ShowTipsHandle.share show:@"Get Private Node Identity success!"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share delayHidden:1.0];
@@ -443,19 +443,19 @@
                     [weakSelf showTips:@"The range of TTL is 0x00~0x7F!"];
                     return;
                 }
-                
+
                 [ShowTipsHandle.share show:@"Set Default TTL..."];
                 [SDKLibCommand configDefaultTtlSetWithDestination:weakSelf.model.address ttl:ttl retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigDefaultTtlStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Default TTL failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Default TTL successed!"];
+                        [ShowTipsHandle.share show:@"Set Default TTL success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -521,16 +521,16 @@
                 [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit..."];
                 SigNodeRelayState relayState = [alertView getSelectLeftOfRow:0]?SigNodeRelayState_notEnabled:SigNodeRelayState_enabled;
                 [SDKLibCommand configRelaySetWithDestination:weakSelf.model.address relay:relayState networkTransmitCount:count networkTransmitIntervalSteps:steps retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configRelaySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configRelaySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigRelayStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Relay & RelayRetransmit failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit successed!"];
+                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -557,16 +557,16 @@
                 [ShowTipsHandle.share show:@"Set Secure Network Beacon..."];
                 SigSecureNetworkBeaconState secureNetworkBeaconState = [alertView getSelectLeftOfRow:0]?SigSecureNetworkBeaconState_open:SigSecureNetworkBeaconState_close;
                 [SDKLibCommand configBeaconSetWithDestination:weakSelf.model.address secureNetworkBeaconState:secureNetworkBeaconState retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigBeaconStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configBeaconSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configBeaconSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigBeaconStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Secure Network Beacon failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Secure Network Beacon successed!"];
+                        [ShowTipsHandle.share show:@"Set Secure Network Beacon success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -593,16 +593,16 @@
                 [ShowTipsHandle.share show:@"Set GATT Proxy..."];
                 SigNodeGATTProxyState nodeGATTProxyState = [alertView getSelectLeftOfRow:0]?SigNodeGATTProxyState_notEnabled:SigNodeGATTProxyState_enabled;
                 [SDKLibCommand configGATTProxySetWithDestination:weakSelf.model.address nodeGATTProxyState:nodeGATTProxyState retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigGATTProxyStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configGATTProxySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configGATTProxySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigGATTProxyStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set GATT Proxy failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set GATT Proxy successed!"];
+                        [ShowTipsHandle.share show:@"Set GATT Proxy success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -629,16 +629,16 @@
                 [ShowTipsHandle.share show:@"Set Node Identity..."];
                 SigNodeIdentityState identity = [alertView getSelectLeftOfRow:0]?SigNodeIdentityState_notEnabled:SigNodeIdentityState_enabled;
                 [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:identity retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configNodeIdentitySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configNodeIdentitySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigNodeIdentityStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Node Identity failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Node Identity successed!"];
+                        [ShowTipsHandle.share show:@"Set Node Identity success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -665,21 +665,21 @@
                 [ShowTipsHandle.share show:@"Set Friend..."];
                 SigNodeFeaturesState nodeFeaturesState = [alertView getSelectLeftOfRow:0]?SigNodeFeaturesState_notEnabled:SigNodeFeaturesState_enabled;
                 [SDKLibCommand configFriendSetWithDestination:weakSelf.model.address nodeFeaturesState:nodeFeaturesState retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigFriendStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configFriendSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configFriendSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigFriendStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Friend failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Friend successed!"];
+                        [ShowTipsHandle.share show:@"Set Friend success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
                     });
-                }];                
+                }];
             } else {
                 //cancel
             }
@@ -731,16 +731,16 @@
 
                 [ShowTipsHandle.share show:@"Set Network Transmit..."];
                 [SDKLibCommand configNetworkTransmitSetWithDestination:weakSelf.model.address networkTransmitCount:count networkTransmitIntervalSteps:steps retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigNetworkTransmitStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Relay & RelayRetransmit failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit successed!"];
+                        [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -783,20 +783,20 @@
                     [weakSelf showTips:@"The range of retransmit count is 0x00~0xFF!"];
                     return;
                 }
-                
+
                 [ShowTipsHandle.share show:@"Set Mesh Private Beacon..."];
                 SigPrivateBeaconState privateBeaconState = [alertView getSelectLeftOfRow:0]?SigPrivateBeaconState_disable:SigPrivateBeaconState_enable;
                 [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeaconState randomUpdateIntervalSteps:randomUpdateIntervalSteps destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"Mesh Private Beacon Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"Mesh Private Beacon Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigPrivateBeaconStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Mesh Private Beacon failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Mesh Private Beacon successed!"];
+                        [ShowTipsHandle.share show:@"Set Mesh Private Beacon success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -823,16 +823,16 @@
                 [ShowTipsHandle.share show:@"Set Private GATT Proxy..."];
                 SigPrivateGattProxyState nodeGATTProxyState = [alertView getSelectLeftOfRow:0]?SigPrivateGattProxyState_disable:SigPrivateGattProxyState_enable;
                 [SDKLibCommand privateGattProxySetWithPrivateGattProxy:nodeGATTProxyState destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"Private GATT Proxy Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"Private GATT Proxy Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigPrivateGattProxyStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private GATT Proxy failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Private GATT Proxy successed!"];
+                        [ShowTipsHandle.share show:@"Set Private GATT Proxy success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -859,16 +859,16 @@
                 [ShowTipsHandle.share show:@"Set Private Node Identity..."];
                 SigPrivateNodeIdentityState identity = [alertView getSelectLeftOfRow:0]?SigPrivateNodeIdentityState_notEnabled:SigPrivateNodeIdentityState_enabled;
                 [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index privateIdentity:identity destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
-                    TeLogInfo(@"Private NodeIdentity Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"Private NodeIdentity Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigPrivateNodeIdentityStatus:responseMessage andIndexPath:indexPath];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private Node Identity failed! error=%@",error]];
                     } else {
-                        [ShowTipsHandle.share show:@"Set Private Node Identity successed!"];
+                        [ShowTipsHandle.share show:@"Set Private Node Identity success!"];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
@@ -983,14 +983,14 @@
 
 /** 设置分区圆角 */
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    
+
     //    if ([cell isKindOfClass:[LZRowTableViewCell class]]) {
-    
+
     // 圆角弧度半径
     CGFloat cornerRadius = 6.f;
     // 设置cell的背景色为透明，如果不设置这个的话，则原来的背景色不会被覆盖
     cell.backgroundColor = UIColor.clearColor;
-    
+
     // 创建一个shapeLayer
     CAShapeLayer *layer = [[CAShapeLayer alloc] init];
     CAShapeLayer *backgroundLayer = [[CAShapeLayer alloc] init]; //显示选中
@@ -999,16 +999,16 @@
     // 获取cell的size
     // 第一个参数,是整个 cell 的 bounds, 第二个参数是距左右两端的距离,第三个参数是距上下两端的距离
     CGRect bounds = CGRectInset(cell.bounds, 15, 0);
-    
+
     // CGRectGetMinY：返回对象顶点坐标
     // CGRectGetMaxY：返回对象底点坐标
     // CGRectGetMinX：返回对象左边缘坐标
     // CGRectGetMaxX：返回对象右边缘坐标
     // CGRectGetMidX: 返回对象中心点的X坐标
     // CGRectGetMidY: 返回对象中心点的Y坐标
-    
+
     // 这里要判断分组列表中的第一行，每组section的第一行，每组section的中间行
-    
+
     // CGPathAddRoundedRect(pathRef, nil, bounds, cornerRadius, cornerRadius);
     //        if ([tableView numberOfRowsInSection:indexPath.section] == 1) {
     //            CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMaxY(bounds));
@@ -1028,7 +1028,7 @@
     //            CGPathAddLineToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMaxY(bounds));
     //
     //        }
-    
+
     if (indexPath.row == [tableView numberOfRowsInSection:indexPath.section]-1) {
         // 初始起点为cell的左上角坐标
         CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMinY(bounds));
@@ -1048,7 +1048,7 @@
     // 按照shape layer的path填充颜色，类似于渲染render
     // layer.fillColor = [UIColor colorWithWhite:1.f alpha:0.8f].CGColor;
     layer.fillColor = UIColor.telinkBackgroundWhite.CGColor;
-    
+
     // view大小与cell一致
     UIView *roundView = [[UIView alloc] initWithFrame:bounds];
     // 添加自定义圆角后的图层到roundView中
@@ -1056,7 +1056,7 @@
     roundView.backgroundColor = UIColor.clearColor;
     // cell的背景view
     cell.backgroundView = roundView;
-    
+
     // 以上方法存在缺陷当点击cell时还是出现cell方形效果，因此还需要添加以下方法
     // 如果你 cell 已经取消选中状态的话,那以下方法是不需要的.
     //    UIView *selectedBackgroundView = [[UIView alloc] initWithFrame:bounds];

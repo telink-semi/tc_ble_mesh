@@ -29,7 +29,7 @@
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        
+
     }
     return self;
 }
@@ -46,7 +46,7 @@
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        
+
     }
     return self;
 }
@@ -63,7 +63,7 @@
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        
+
     }
     return self;
 }
@@ -99,11 +99,11 @@
 + (HSLModel *)getHSLWithColor:(UIColor *)color{
     CGFloat r=0,g=0,b=0,a=0;
     [color getRed:&r green:&g blue:&b alpha:&a];
-    
+
     CGFloat max = MAX(r, MAX(g, b));
     CGFloat min = MIN(r, MIN(g, b));
     CGFloat h,s,l;// h ∈ [0, 360）是角度的色相角，而 s, l ∈ [0,1] 是饱和度和亮度
-    
+
     if (max == min) {
         h = 0;
     }else if (max == r) {
@@ -117,9 +117,9 @@
     }else {
         h = 60 * (r - g)/(max - min) + 240;
     }
-    
+
     l = (max + min)/2.0;
-    
+
     if (l == 0 || max == min) {
         s = 0;
     }else if (l > 0 && l <= 1/2.0) {
@@ -127,7 +127,7 @@
     }else {
         s = (max - min) / (2 - 2 * l);
     }
-    
+
     HSLModel *tem = [[HSLModel alloc] init];
     tem.hue = h/360.0;
     tem.saturation = s;
@@ -138,19 +138,19 @@
 
 + (UIColor *)getRGBWithHSLColor:(HSLModel *)hsl{
     CGFloat h,s,l,q,p,Tr,Tg,Tb,COLOR_R,COLOR_G,COLOR_B;
-    
+
     h = hsl.hue;
     s = hsl.saturation;
     l = hsl.lightness;
-    
+
     if (h<0 || h>=1 || s<0 || s>1 || l<0 || l>1) {
-        TeLogDebug(@"警告：传入的HSLModel为非法值");
+        TelinkLogDebug(@"警告：传入的HSLModel为非法值");
         return [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0];
     }
     if (s == 0) {
         return [UIColor colorWithRed:l green:l blue:l alpha:1.0];
     }
-    
+
     if (l < 0.5) {
         q = l * (1 + s);
     }else{
@@ -160,7 +160,7 @@
     Tr = h + 1/3.0;
     Tg = h;
     Tb = h - 1/3.0;
-    
+
     if (Tr < 0) {
         Tr = Tr + 1.0;
     }else if (Tr > 1) {
@@ -176,7 +176,7 @@
     }else if (Tb > 1) {
         Tb = Tb - 1.0;
     }
-    
+
     if (Tr < 1/6.0) {
         COLOR_R = p + ((q - p) * 6 * Tr);
     }else if (Tr >= 1/6.0 && Tr < 1/2.0) {
@@ -186,7 +186,7 @@
     }else{
         COLOR_R = p;
     }
-    
+
     if (Tg < 1/6.0) {
         COLOR_G = p + ((q - p) * 6 * Tg);
     }else if (Tg >= 1/6.0 && Tg < 1/2.0) {
@@ -196,7 +196,7 @@
     }else{
         COLOR_G = p;
     }
-    
+
     if (Tb < 1/6.0) {
         COLOR_B = p + ((q - p) * 6 * Tb);
     }else if (Tb >= 1/6.0 && Tb < 1/2.0) {

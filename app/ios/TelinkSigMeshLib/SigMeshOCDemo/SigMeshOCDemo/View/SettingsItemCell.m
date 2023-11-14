@@ -65,7 +65,7 @@
     titleLabel.textColor = [UIColor telinkTitleBlack];
     titleLabel.font = [UIFont boldSystemFontOfSize:13.0];
     [self.bgView addSubview:titleLabel];
-    
+
     //tips button
     self.tipsButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.tipsButton setImage:[UIImage imageNamed:@"tishi"] forState:UIControlStateNormal];
@@ -78,7 +78,7 @@
         //switch button
         self.enableSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(self.bgView.frame.size.width-51-10, 10, 51, 31)];
         [self.bgView addSubview:self.enableSwitch];
-        
+
         //tips button
         self.tipsButton.frame = CGRectMake(self.enableSwitch.frame.origin.x-10-30, 10, 30, 30);
     }
