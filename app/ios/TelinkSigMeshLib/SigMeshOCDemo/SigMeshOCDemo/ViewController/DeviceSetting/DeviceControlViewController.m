@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceControlViewController.m 
+ * @file     DeviceControlViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -72,17 +72,17 @@ typedef enum : NSUInteger {
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    
+
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;
     self.nextBrightness = 0;
     self.hadChangeTempareture = NO;
     self.hasNextTempareture = NO;
     self.nextTempareture = 0;
-    
-    
-    
-    
+
+
+
+
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.allowsSelection = NO;
@@ -110,7 +110,7 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OnOffModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OnOffModelCellID];
     }
-    
+
     //注意：2.8.2发现RGB为255、0、0时，亮度调到100会设备颜色显示异常，暂时屏蔽亮度、色温
 
     if (self.model.lightnessAddresses.count > 0) {
@@ -127,7 +127,7 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_LevelAndSliderCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_LevelAndSliderCellID];
     }
-    
+
     [self getDeviceState];
 }
 
@@ -170,7 +170,7 @@ typedef enum : NSUInteger {
         [DemoCommand getHSLWithAddress:self.model.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
             [weakSelf performSelectorOnMainThread:@selector(HSLCallBack) withObject:nil waitUntilDone:YES];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }
 }
@@ -302,9 +302,9 @@ typedef enum : NSUInteger {
     if ([self canSend]) {
         UInt16 address = self.model.address;
         [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
-            
+
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
         self.hasNextHSLCMD = NO;
     } else {
@@ -337,11 +337,11 @@ typedef enum : NSUInteger {
     [self.onoffStateSource replaceObjectAtIndex:indexPath.item withObject:@(value)];
     ModelType *type = self.dataSource[[self.tableView indexPathForCell:cell].item];
     UInt16 elementAddress = [type.addresses[indexPath.item] intValue];
-    
+
     //0.不带渐变且无回包写法：
     //attention: resMax change to 0, because node detail vc needn't response.
 //    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-    
+
     //1.不带渐变写法：
     __weak typeof(self) weakSelf = self;
     __block BOOL needGetDeviceState = NO;
@@ -458,7 +458,7 @@ typedef enum : NSUInteger {
             [weakSelf.tableView reloadData];
         });
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 

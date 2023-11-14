@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     AppDelegate.m 
+ * @file     AppDelegate.m
  *
  * @brief    for TLSR chips
  *
@@ -55,7 +55,7 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     SigDataSource.share.addStaticOOBDeviceByNoOOBEnable = addStaticOOBDeviceByNoOOBEnable.boolValue;
-    
+
     //demo v3.3.3将原来的两种DLE模式修改3种Extend Bearer Mode。（客户定制功能）
     NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
     if (extendBearerMode == nil) {
@@ -119,7 +119,7 @@
             }
         }
     }
-    
+
 //    //(可选，旧判断)SDK的分组默认绑定5个modelID，可通过以下接口修改分组默认绑定的modelIDs
 //    SigDataSource.share.defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_GenericLevelServer_ID)]];
 ////    [SigDataSource.share.defaultGroupSubscriptionModels addObject:@(0x00000211)];//新增vendorModelID用于测试加组及vendor组控。
@@ -142,7 +142,7 @@
             [SigDataSource.share.defaultGroupSubscriptionModels removeObject:@(kSigModel_GenericLevelServer_ID)];
         }
     }
-    
+
     //(可选)SDK默认实现了PID为1、2、7、0x0201的设备的fast bind功能，其它类型的设备可通过以下接口添加该类型设备默认的nodeInfo以实现fast bind功能
 //    //示范代码：添加PID=8，composition data=TemByte的数据到SigDataSource.share.defaultNodeInfos。
 //    DeviceTypeModel *model = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:8];
@@ -153,7 +153,7 @@
 
     //v3.3.3.6版本开始，新增8278、8269、9518的cpsData.
     [self addMoreCompositionData];
-    
+
     //(可选)SDK默认publish周期为20秒，通过修改可以修改SDK的默认publish参数，或者客户自行实现publish检测机制。
 //    SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
 //    periodModel.numberOfSteps = kPublishIntervalOfDemo;
@@ -161,16 +161,16 @@
 //    periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
 //    SigDataSource.share.defaultPublishPeriodModel = periodModel;
 
-    
+
     SigMeshLib.share.transmissionTimerInterval = 0.600;
 //    SigDataSource.share.needPublishTimeModel = NO;
-    
+
     //(可选)v3.3.3新增配置项
 //    SigDataSource.share.defaultReliableIntervalOfLPN = kSDKLibCommandTimeout;
 //    SigDataSource.share.defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout * 2;
     //(可选)v3.3.3.6及之后新增配置项
 //    SigDataSource.share.aggregatorEnable = YES;
-    
+
     /// (可选) demo v3.3.3.6及之后新增配置项，标记APP端发送数据是否使用The directed security material进行加密，默认值是NO。
     /// (Optional) A new configuration item is added in demo v3.3.3.6 and later to mark whether the data sent by the APP is encrypted using The directed security material. The default value is NO.
     NSNumber *directedSecurityEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kDirectedSecurityEnable];
@@ -180,7 +180,7 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     SigDataSource.share.sendByDirectedSecurity = directedSecurityEnable.boolValue;
-    
+
     //(可选)v3.3.3.6及之后新增Demo配置项，用于传递bin到APP里面。
     [self createTelinkBinFolder];
 
@@ -197,7 +197,7 @@
 //    NSDictionary *dict = [LibTools getDictionaryWithJSONData:filterData];
 //    [filter setDictionaryToSigProxyFilterModel:dict];
 //    SigDataSource.share.filterModel = filter;
-    
+
     //demo v4.1.0.0新增Provision模式选择参数，demo默认使用可选设备的普通添加模式。
     NSNumber *provisionMode = [[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode];
     if (provisionMode == nil) {
@@ -217,7 +217,7 @@
     }
 
     [self configDefaultRootCertificateData];
-    
+
     return YES;
 }
 

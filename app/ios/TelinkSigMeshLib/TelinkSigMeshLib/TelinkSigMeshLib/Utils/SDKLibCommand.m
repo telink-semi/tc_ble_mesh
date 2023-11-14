@@ -3786,7 +3786,7 @@
         TelinkLogError(@"provisioner.node = nil.");
         return;
     }
-    
+
     //旧版本，开发者不可以自定义配置proxy filter.
     /*
     NSMutableArray *addresses = [NSMutableArray array];
@@ -3828,7 +3828,7 @@
         TelinkLogVerbose(@"filter addresses:%@",addresses);
         [self setType:SigProxyFilerType_whitelist successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
 //            TelinkLogVerbose(@"filter type:%@",responseMessage);
-            //逻辑1.for循环每次只添加一个地址            
+            //逻辑1.for循环每次只添加一个地址
             //逻辑2.一次添加多个地址
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
@@ -3855,7 +3855,7 @@
 
     }];
      */
-    
+
     //v4.1.0.0及之后版本，开发者可以自定义配置proxy filter. 从SigMeshLib.share.dataSource.filterModel取出filter的配置。
     NSMutableArray *addresses = [NSMutableArray arrayWithArray:SigMeshLib.share.dataSource.filterModel.addressList];
     __weak typeof(self) weakSelf = self;
@@ -4063,13 +4063,13 @@
 
     //初始化添加设备的参数
     [SigAddDeviceManager.share setNeedDisconnectBetweenProvisionToKeyBind:NO];
-    
+
     //初始化蓝牙
     [[SigBluetooth share] bleInit:^(CBCentralManager * _Nonnull central) {
         TelinkLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
     }];
-    
+
 //    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
 //    [SigBluetooth.share setWaitScanRseponseEnable:YES];
 }
@@ -4099,7 +4099,7 @@
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigMeshLib.share.dataSource.curNetkeyModel.networkId ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.secureNetworkBeacon = beacon;
         }
-        
+
     }
     SigSecureNetworkBeacon *beacon = SigMeshLib.share.secureNetworkBeacon;
     TelinkLogInfo(@"send SecureNetworkBeacon=%@",beacon);

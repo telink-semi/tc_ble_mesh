@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SceneDetailViewController.m 
+ * @file     SceneDetailViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -69,7 +69,7 @@
             [cell.contentView addSubview:view];
         }
     }
-    
+
     return cell;
 }
 
@@ -87,7 +87,7 @@
     //        [weakSelf reloadView];
     //    }];
     //    [self.navigationController pushViewController:vc animated:YES];
-    
+
     //===========test==========//
 //    ActionModel *model = self.allActions[indexPath.row];
 //    TelinkLogDebug(@"getCompositionData 0x%02x",model.address);
@@ -118,10 +118,10 @@
     [super normalSetting];
     self.title = @"Scene Setting";
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    
+
     self.selectActions = [NSMutableArray arrayWithArray:self.model.actionList];
     self.allNodes = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
-    
+
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
     [self reloadAllButton];
@@ -197,7 +197,7 @@
             [saveArray addObject:action];
         }
     }
-    
+
     //cancel choose, should send a delete packet.
     NSMutableArray *delArray = [[NSMutableArray alloc] init];
     for(ActionModel *action in self.model.actionList){
@@ -208,12 +208,12 @@
             }
         }
     }
-    
+
     if ((saveArray.count == 0 && delArray.count == 0)||self.selectActions.count == 0) {
         [self showTips:Tip_SelectScene];
         return;
     }
-    
+
     [ShowTipsHandle.share show:Tip_SaveScene];
 
     __weak typeof(self) weakSelf = self;
@@ -350,7 +350,7 @@
                 hasOnlineCount ++;
             }
         }
-    }    
+    }
     if (hasOnlineCount > 0) {
         self.allButton.selected = self.selectActions.count == hasOnlineCount;
     }

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     ActionViewController.m 
+ * @file     ActionViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -57,13 +57,13 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    
+
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)",self.model.trueBrightness];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)",self.model.trueTemperature];
     self.brightnessSlider.value = self.model.trueBrightness;
     self.temperatureSlider.value = self.model.trueTemperature;
     self.title = [NSString stringWithFormat:@"%d",self.model.address];
-    
+
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
 }

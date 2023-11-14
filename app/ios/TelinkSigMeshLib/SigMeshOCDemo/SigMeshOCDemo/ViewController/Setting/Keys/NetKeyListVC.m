@@ -127,7 +127,7 @@
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -143,7 +143,7 @@
     SigNetkeyModel *model = self.sourceArray[indexPath.row];
     [cell setNetKeyModel:model];
     __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {        
+    [cell.editButton addAction:^(UIButton *button) {
         NetKeyAddVC *vc = [[NetKeyAddVC alloc] init];
         vc.isAdd = NO;
         vc.network = weakSelf.network;
@@ -176,7 +176,7 @@
             SigDataSource.share.curNetkeyModel = model;
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         } cancel:^(UIAlertAction *action) {
-            
+
         }];
     }
 }

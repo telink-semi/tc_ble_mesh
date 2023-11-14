@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     CMDViewController.m 
+ * @file     CMDViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -106,7 +106,7 @@
         default:
             break;
     }
-    
+
     [self handleInTextView];
 }
 
@@ -117,7 +117,7 @@
     if (s && s.length > 0 && [self validateString:s]) {
         [self handleInTextView];
         [self handleSendString];
-        
+
         [self showNewLogMessage:[NSString stringWithFormat:@"Send: %@",self.sendData]];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand sendOpINIData:self.sendData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
@@ -127,7 +127,7 @@
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogVerbose(@"finish");
         }];
-        
+
 //        CBCharacteristic *otaCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOTA_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
 //        //注意：以下block使用完成后需要手动置为nil.
 //        //test1:接收到蓝牙数据的回调
@@ -144,8 +144,8 @@
 //        [SigBluetooth.share writeValue:self.sendData toPeripheral:SigBearer.share.getCurrentPeripheral forCharacteristic:otaCharacteristic type:CBCharacteristicWriteWithoutResponse];
 //        //test3:发送写蓝牙数据接口
 //        [SigBluetooth.share readCharachteristic:otaCharacteristic ofPeripheral:SigBearer.share.getCurrentPeripheral];
-    
-        
+
+
 //        IniCommandModel *ini = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyIndex:SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:1 address:2 opcode:0xC4 vendorId:kCompanyID responseOpcode:0xC4 needTid:NO tid:0 commandData:[LibTools nsstringToHex:@"383530333137536D6172745465616D2D50617373776F72642D322E34473034313233343062546573745F46616D696C793034313233343062546573745F46616D696C79313868747470733A2F2F7777772E6C656476616E63652E636F6D3030313368747470733A2F2F3139382E3132372E302E303034323262383031303030313031303432326238"]];
 //        IniCommandModel *ini = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyIndex:SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:1 address:2 opcode:0xC5 vendorId:kCompanyID responseOpcode:0xC4 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"7900383530333137536D6172745465616D2D50617373776F72642D322E34473034313233343062546573745F46616D696C793034313233343062546573745F46616D696C79313868747470733A2F2F7777772E6C656476616E63652E636F6D3030313368747470733A2F2F3139382E3132372E302E303034323262383031303030313031303432326238"]];
 //        [SDKLibCommand sendIniCommandModel:ini successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
@@ -155,7 +155,7 @@
 //        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //            TelinkLogVerbose(@"finish");
 //        }];
-        
+
     } else {
         [self showTips:@"Please enter a valid hexadecimal data."];
     }
@@ -211,7 +211,7 @@
     self.inTextView.layer.borderColor = [[UIColor darkGrayColor] CGColor];
     self.inTextView.delegate = self;
     self.showTextView.layoutManager.allowsNonContiguousLayout = NO;
-    
+
     UITapGestureRecognizer *gesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hiddenKeyboard:)];
     [self.view addGestureRecognizer:gesture];
 }

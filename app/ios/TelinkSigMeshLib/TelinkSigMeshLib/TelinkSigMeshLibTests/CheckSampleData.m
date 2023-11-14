@@ -459,7 +459,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     SigMeshLib.share.defaultTtl = 0x0b;//先取provisionerNode的ttl，如果该ttl无效，再取SigMeshLib.share.defaultTtl。
     SigMeshLib.share.dataSource = defaultMesh;
     SigMeshLib.share.dataSource.unicastAddressOfConnected = node.address;
-    
+
     IniCommandModel *m = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:defaultMesh.curNetkeyModel.index appkeyIndex:defaultMesh.curAppkeyModel.index retryCount:0 responseMax:0 address:node.address opcode:SigOpCode_configAppKeyStatus commandData:[LibTools nsstringToHex:@"00563412"]];
     m.curAppkey = defaultMesh.curAppkeyModel;
     m.curNetkey = defaultMesh.curNetkeyModel;
@@ -467,7 +467,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     m.meshAddressModel = [[SigMeshAddress alloc] initWithAddress:node.address];
     m.isEncryptByDeviceKey = YES;
     [SDKLibCommand sendIniCommandModel:m successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-        
+
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             NSData *accessPayload1 = SigNetworkManager.share.accessLayer.accessPdu.accessPdu;
@@ -478,7 +478,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
             XCTAssertEqualObjects(upperTransportPDU1, upperTransportPDU2);
             NSLog(@"accessPayload1=%@,accessPayload2=%@",accessPayload1,accessPayload2);
             NSLog(@"upperTransportPDU1=%@,upperTransportPDU2=%@",upperTransportPDU1,upperTransportPDU2);
-            
+
 //            if (SigNetworkManager.share.lowerTransportLayer.outgoingSegments && SigNetworkManager.share.lowerTransportLayer.outgoingSegments.count) {
 //                NSArray *array = [NSArray arrayWithArray:SigNetworkManager.share.lowerTransportLayer.outgoingSegments.allValues.firstObject];
 //                for (SigSegmentedAccessMessage *segmentedAccessMessage in array) {
@@ -532,13 +532,13 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
 //                    }
 //                }
 //            }
-            
+
             if (SigNetworkManager.share.lowerTransportLayer.unSegmentLowerTransportPdu) {
                 NSData *networkPduUnSegment1 = SigNetworkManager.share.lowerTransportLayer.unSegmentLowerTransportPdu.networkPdu.pduData;
                 NSData *networkPduUnSegment2 = [LibTools nsstringToHex:@"68e80e5da5af0e6b9be7f5a642f2f98680e61c3a8b47f228"];
                 XCTAssertEqualObjects(networkPduUnSegment1, networkPduUnSegment2);
             }
-            
+
             BOOL accessPayloadResult = [accessPayload1 isEqualToData:accessPayload2];
             XCTAssert(accessPayloadResult);
             BOOL upperTransportPDUResult = [upperTransportPDU1 isEqualToData:upperTransportPDU2];
@@ -558,7 +558,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     GMEllipticCurveCrypto *crypto = [GMEllipticCurveCrypto cryptoForKey:[LibTools nsstringToHex:@"06a516693c9aa31a6084545d0c5db641b48572b97203ddffb7ac73f7d0457663"]];
     crypto.compressedPublicKey = NO;
     NSLog(@"crypto.publicKey=%@,crypto.privateKey=%@",[LibTools convertDataToHexStr:crypto.publicKey],[LibTools convertDataToHexStr:crypto.privateKey]);
-    
+
     NSData *devicePublicKey = [LibTools nsstringToHex:@"f465e43ff23d3f1b9dc7dfc04da8758184dbc966204796eccf0d6cf5e16500cc0201d048bcbbd899eeefc424164e33c201c2b010ca6b4d43a8a155cad8ecb279"];
     UInt8 tem = 0x04;
     NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
@@ -592,7 +592,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     NSData *confirmationDevice  = [LibTools nsstringToHex:@"eeba521c196b52cc2e37aa40329f554e"];
     NSData *confirmationDeviceResult  = [OpenSSLHelper.share calculateCMAC:confirmationDeviceInput andKey:confirmationKey];
     XCTAssertEqualObjects(confirmationDevice, confirmationDeviceResult);
-    
+
     /*
      The Session key shall be derived using the formula:
      ProvisioningSalt = s1(ConfirmationSalt || RandomProvisioner || RandomDevice)
@@ -638,7 +638,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     GMEllipticCurveCrypto *crypto = [GMEllipticCurveCrypto cryptoForKey:[LibTools nsstringToHex:@"06a516693c9aa31a6084545d0c5db641b48572b97203ddffb7ac73f7d0457663"]];
     crypto.compressedPublicKey = NO;
     NSLog(@"crypto.publicKey=%@,crypto.privateKey=%@",[LibTools convertDataToHexStr:crypto.publicKey],[LibTools convertDataToHexStr:crypto.privateKey]);
-    
+
     NSData *devicePublicKey = [LibTools nsstringToHex:@"f465e43ff23d3f1b9dc7dfc04da8758184dbc966204796eccf0d6cf5e16500cc0201d048bcbbd899eeefc424164e33c201c2b010ca6b4d43a8a155cad8ecb279"];
     UInt8 tem = 0x04;
     NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
@@ -669,7 +669,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     NSData *confirmationDevice  = [LibTools nsstringToHex:@"56e3722d291373d38c995d6f942c02928c96abb015c233557d7974b6e2df662b"];
     NSData *confirmationDeviceResult  = [OpenSSLHelper.share calculateHMAC_SHA256:randomDevice andKey:confirmationKey];
     XCTAssertEqualObjects(confirmationDevice, confirmationDeviceResult);
-    
+
     /*
      The Session key shall be derived using the formula:
      ProvisioningSalt = s1(ConfirmationSalt || RandomProvisioner || RandomDevice)
@@ -699,7 +699,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     NSData *dataEncryptedMIC = [LibTools nsstringToHex:@"f9df98cbb736be1f600659ac4c37821a82db31e410a03de7693a2a0428fbdaf321"];
     NSData *dataEncryptedMICResult = [[OpenSSLHelper share] calculateCCM:data withKey:sessionKey nonce:sessionNonce andMICSize:8 withAdditionalData:nil];
     XCTAssertEqualObjects(dataEncryptedMIC, dataEncryptedMICResult);
-    
+
     NSData *deviceKey = [LibTools nsstringToHex:@"2770852a737cf05d8813768f22af3a2d"];
     NSData *deviceKeyResult = [OpenSSLHelper.share calculateK1WithN:sharedSecretKeyData salt:provisioningSalt andP:[@"prdk" dataUsingEncoding:NSASCIIStringEncoding]];
     XCTAssertEqualObjects(deviceKey, deviceKeyResult);
@@ -712,7 +712,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     SigOpcodesAggregatorItemModel *model3 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightHSLGet alloc] init]];
     NSArray *items = @[model1,model2,model3];
     SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:0x0002 items:items];
-    
+
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [SDKLibCommand sendSigOpcodesAggregatorSequenceMessage:message retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:items.count successCallback:^(UInt16 source, UInt16 destination, SigOpcodesAggregatorStatus * _Nonnull responseMessage) {
         TelinkLogInfo(@"SigOpcodesAggregatorSequence=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -781,7 +781,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     XCTAssertEqualObjects(beacon.authenticationTag, Authentication_Tag);
 }
 
-- (void)testReceiveMeshPrivateBeacon2 {    
+- (void)testReceiveMeshPrivateBeacon2 {
     SigNetkeyModel *model = [[SigNetkeyModel alloc] init];
     model.key = @"3bbb6f1fbd53e157417f308ce7aec58f";
     NSString *ivIndexString = @"00000000";

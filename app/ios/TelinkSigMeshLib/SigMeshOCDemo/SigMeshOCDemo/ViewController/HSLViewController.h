@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     HSLViewController.h 
+ * @file     HSLViewController.h
  *
  * @brief    for TLSR chips
  *

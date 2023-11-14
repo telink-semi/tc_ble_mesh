@@ -283,7 +283,7 @@
     self.source = [[NSMutableArray alloc] init];
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    
+
 //    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
 //    self.navigationItem.rightBarButtonItem = self.refreshItem;
 
@@ -293,7 +293,7 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
-    
+
     [self startAddDevice];
 }
 

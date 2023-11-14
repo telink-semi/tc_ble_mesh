@@ -63,7 +63,7 @@
         TelinkLogDebug(@"warning: address has run out.");
         return;
     }
-    
+
     __weak typeof(self) weakSelf = self;
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -240,13 +240,13 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    
+
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    
+
     self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
     self.navigationItem.rightBarButtonItem = self.refreshItem;
     self.title = @"Device Scan(Auto)";
-    
+
     self.source = [[NSMutableArray alloc] init];
 }
 
@@ -254,7 +254,7 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
-    
+
     [self startAddDevice];
 }
 

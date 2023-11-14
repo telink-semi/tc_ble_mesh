@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     UIViewController+Message.h 
+ * @file     UIViewController+Message.h
  *
  * @brief    for TLSR chips
  *
@@ -27,7 +27,7 @@
 
 /**
  弹出UIAlertController
- 
+
  @param title   标题
  @param message 消息
  @param sure    点击确定按钮
@@ -36,7 +36,7 @@
 
 /**
  弹出UIAlerController
- 
+
  @param title   标题
  @param message 消息
  @param sure    点击确定
@@ -47,7 +47,7 @@
 
 /**
  弹出UIAlertController
- 
+
  @param actionOneTitle 标题
  @param handlerOne     点击标题的事件
  */
@@ -55,7 +55,7 @@
 
 /**
  弹出UIAlerController
- 
+
  @param actionOneTitle 第一标题
  @param actionTwoTitle 第二个标题
  @param handlerOne     第一个标题点击事件

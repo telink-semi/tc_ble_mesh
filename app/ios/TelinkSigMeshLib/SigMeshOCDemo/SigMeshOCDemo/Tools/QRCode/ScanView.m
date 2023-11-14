@@ -57,7 +57,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         [self setupScanRect];
         [self addSubview: self.remind];
         self.layer.masksToBounds = YES;
-        
+
     }
     return self;
 }
@@ -67,12 +67,12 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (BOOL)isCameraAvailable{
     return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
 }
-  
+
 // 前面的摄像头是否可用
 - (BOOL)isFrontCameraAvailable{
     return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
 }
-  
+
 // 后面的摄像头是否可用
 - (BOOL)isRearCameraAvailable{
     return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
@@ -118,7 +118,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 {
     if (!_session) {
         _session = [AVCaptureSession new];
-        
+
         [_session setSessionPreset: AVCaptureSessionPreset1920x1080];    //高质量采集
         [self setupIODevice];
     }
@@ -186,7 +186,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         CGRect textRect = self.scanRect;
         textRect.origin.y += CGRectGetHeight(textRect) + 20;
         textRect.size.height = 50.f;
-        
+
         _remind = [[UILabel alloc] initWithFrame: textRect];
         _remind.font = [UIFont systemFontOfSize: 15.f * SCREEN_WIDTH / 375.f];
         _remind.textColor = [UIColor whiteColor];
@@ -210,7 +210,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         scanRect.origin.y -= 1;
         scanRect.size.width += 2;
         scanRect.size.height += 2;
-        
+
         _scanRectLayer = [CAShapeLayer layer];
         _scanRectLayer.path = [UIBezierPath bezierPathWithRect: scanRect].CGPath;
         _scanRectLayer.fillColor = [UIColor clearColor].CGColor;
@@ -260,25 +260,25 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         maskLayer.path = [UIBezierPath bezierPathWithRect: rect].CGPath;
         return maskLayer;
     }
-    
+
     CGFloat boundsInitX = CGRectGetMinX(rect);
     CGFloat boundsInitY = CGRectGetMinY(rect);
     CGFloat boundsWidth = CGRectGetWidth(rect);
     CGFloat boundsHeight = CGRectGetHeight(rect);
-    
+
     CGFloat minX = CGRectGetMinX(exceptRect);
     CGFloat maxX = CGRectGetMaxX(exceptRect);
     CGFloat minY = CGRectGetMinY(exceptRect);
     CGFloat maxY = CGRectGetMaxY(exceptRect);
     CGFloat width = CGRectGetWidth(exceptRect);
-    
+
     /** 添加路径*/
     UIBezierPath * path = [UIBezierPath bezierPathWithRect: CGRectMake(boundsInitX, boundsInitY, minX, boundsHeight)];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(minX, boundsInitY, width, minY)]];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(maxX, boundsInitY, boundsWidth - maxX, boundsHeight)]];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(minX, maxY, width, boundsHeight - maxY)]];
     maskLayer.path = path.CGPath;
-    
+
     return maskLayer;
 }
 
@@ -307,7 +307,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
     CGFloat minY = (SCREEN_HEIGHT - size) * 0.5 / SCREEN_HEIGHT;
     CGFloat maxY = (SCREEN_HEIGHT + size) * 0.5 / SCREEN_HEIGHT;
     self.output.rectOfInterest = CGRectMake(minY, SCANSPACEOFFSET, maxY, 1 - SCANSPACEOFFSET * 2);
-    
+
     [self.layer addSublayer: self.shadowLayer];
     [self.layer addSublayer: self.scanRectLayer];
 }
@@ -332,7 +332,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
     if (metadataObjects.count > 0) {
         [self stop];
-        
+
         AVMetadataMachineReadableCodeObject * metadataObject = metadataObjects[0];
         //        id obj = [metadataObject valueForKeyPath:@"_internal.basicDescriptor"];
         if (metadataObject.type != AVMetadataObjectTypeQRCode) {
@@ -342,7 +342,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 //        TelinkLogDebug(@"metadataObject->%@", metadataObject.stringValue);
         if (self.scanDataBlock && metadataObject.stringValue) {
             self.scanDataBlock(metadataObject.stringValue);
-            
+
 //            [self removeFromSuperview];
         } else {
             [[NSNotificationCenter defaultCenter] postNotificationName:SuccessScanQRCodeNotification object:self userInfo: @{ ScanQRCodeMessageKey: metadataObject.stringValue }];

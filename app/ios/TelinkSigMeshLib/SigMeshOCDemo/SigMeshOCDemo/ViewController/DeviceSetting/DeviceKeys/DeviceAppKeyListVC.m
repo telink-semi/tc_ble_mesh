@@ -217,7 +217,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteAppKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -243,7 +243,7 @@
         if (cpsData && cpsData.length > 0) {
             cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
         }
-        
+
         [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SingleDeviceViewController.h 
+ * @file     SingleDeviceViewController.h
  *
  * @brief    for TLSR chips
  *

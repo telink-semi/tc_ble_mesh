@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     GroupDetailViewController.m 
+ * @file     GroupDetailViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -154,7 +154,7 @@
     [DemoCommand changeBrightnessWithBrightness100:self.nextBrightness address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
 //        [weakSelf.collectionView reloadData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeBrightnessFinish) object:nil];
@@ -188,7 +188,7 @@
     [DemoCommand changeTemperatureWithTemperature100:self.nextTempareture address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
 //        [weakSelf.collectionView reloadData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinish) object:nil];
@@ -271,7 +271,7 @@
         [ShowTipsHandle.share delayHidden:2.0];
         return;
     }
-    
+
     __weak typeof(self) weakSelf = self;
     [DemoCommand switchOnOffWithIsOn:!(model.state == DeviceStateOn) address:model.address responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         if (responseMessage) {
@@ -279,7 +279,7 @@
         }
         [weakSelf.collectionView reloadData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 
@@ -303,7 +303,7 @@
 //            [weakSelf.tableView reloadData];
 //        });
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 

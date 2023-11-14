@@ -127,11 +127,11 @@
     UIImageView *turnImageView = [[UIImageView alloc] initWithFrame:CGRectMake(SCREENWIDTH - 50, 21, 12, 7)];
     turnImageView.image = [[UIImage imageNamed:@"fb_bottom"] imageWithRenderingMode:1];
     [backView addSubview:turnImageView];
-    
+
     backView.tag = 1000 + section;
     headView.backgroundColor = [UIColor clearColor];
     backView.backgroundColor = UIColor.telinkBackgroundWhite;
-    
+
     UILabel *titlelabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, SCREENWIDTH - 60, 50)];
     [backView addSubview:titlelabel];
     titlelabel.font = kFont(15);
@@ -443,7 +443,7 @@
                     [weakSelf showTips:@"The range of TTL is 0x00~0x7F!"];
                     return;
                 }
-                
+
                 [ShowTipsHandle.share show:@"Set Default TTL..."];
                 [SDKLibCommand configDefaultTtlSetWithDestination:weakSelf.model.address ttl:ttl retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
                     TelinkLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -679,7 +679,7 @@
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ShowTipsHandle.share delayHidden:1.0];
                     });
-                }];                
+                }];
             } else {
                 //cancel
             }
@@ -783,7 +783,7 @@
                     [weakSelf showTips:@"The range of retransmit count is 0x00~0xFF!"];
                     return;
                 }
-                
+
                 [ShowTipsHandle.share show:@"Set Mesh Private Beacon..."];
                 SigPrivateBeaconState privateBeaconState = [alertView getSelectLeftOfRow:0]?SigPrivateBeaconState_disable:SigPrivateBeaconState_enable;
                 [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeaconState randomUpdateIntervalSteps:randomUpdateIntervalSteps destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
@@ -983,14 +983,14 @@
 
 /** 设置分区圆角 */
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    
+
     //    if ([cell isKindOfClass:[LZRowTableViewCell class]]) {
-    
+
     // 圆角弧度半径
     CGFloat cornerRadius = 6.f;
     // 设置cell的背景色为透明，如果不设置这个的话，则原来的背景色不会被覆盖
     cell.backgroundColor = UIColor.clearColor;
-    
+
     // 创建一个shapeLayer
     CAShapeLayer *layer = [[CAShapeLayer alloc] init];
     CAShapeLayer *backgroundLayer = [[CAShapeLayer alloc] init]; //显示选中
@@ -999,16 +999,16 @@
     // 获取cell的size
     // 第一个参数,是整个 cell 的 bounds, 第二个参数是距左右两端的距离,第三个参数是距上下两端的距离
     CGRect bounds = CGRectInset(cell.bounds, 15, 0);
-    
+
     // CGRectGetMinY：返回对象顶点坐标
     // CGRectGetMaxY：返回对象底点坐标
     // CGRectGetMinX：返回对象左边缘坐标
     // CGRectGetMaxX：返回对象右边缘坐标
     // CGRectGetMidX: 返回对象中心点的X坐标
     // CGRectGetMidY: 返回对象中心点的Y坐标
-    
+
     // 这里要判断分组列表中的第一行，每组section的第一行，每组section的中间行
-    
+
     // CGPathAddRoundedRect(pathRef, nil, bounds, cornerRadius, cornerRadius);
     //        if ([tableView numberOfRowsInSection:indexPath.section] == 1) {
     //            CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMaxY(bounds));
@@ -1028,7 +1028,7 @@
     //            CGPathAddLineToPoint(pathRef, nil, CGRectGetMaxX(bounds), CGRectGetMaxY(bounds));
     //
     //        }
-    
+
     if (indexPath.row == [tableView numberOfRowsInSection:indexPath.section]-1) {
         // 初始起点为cell的左上角坐标
         CGPathMoveToPoint(pathRef, nil, CGRectGetMinX(bounds), CGRectGetMinY(bounds));
@@ -1048,7 +1048,7 @@
     // 按照shape layer的path填充颜色，类似于渲染render
     // layer.fillColor = [UIColor colorWithWhite:1.f alpha:0.8f].CGColor;
     layer.fillColor = UIColor.telinkBackgroundWhite.CGColor;
-    
+
     // view大小与cell一致
     UIView *roundView = [[UIView alloc] initWithFrame:bounds];
     // 添加自定义圆角后的图层到roundView中
@@ -1056,7 +1056,7 @@
     roundView.backgroundColor = UIColor.clearColor;
     // cell的背景view
     cell.backgroundView = roundView;
-    
+
     // 以上方法存在缺陷当点击cell时还是出现cell方形效果，因此还需要添加以下方法
     // 如果你 cell 已经取消选中状态的话,那以下方法是不需要的.
     //    UIView *selectedBackgroundView = [[UIView alloc] initWithFrame:bounds];

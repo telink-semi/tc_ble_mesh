@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SchedulerListViewController.m 
+ * @file     SchedulerListViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -56,7 +56,7 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    
+
     self.source = [[NSMutableArray alloc] initWithArray:self.model.schedulerList];
     [self.tableView reloadData];
 }

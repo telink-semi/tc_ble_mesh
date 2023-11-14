@@ -46,7 +46,7 @@ UIKIT_EXTERN NSString *const NotifyUpdateTestLogContent;
 
 /**
  log
- 
+
  @param data 存储本地的log数据，一般使用NSString类型
  */
 void saveTestLogData(id data);

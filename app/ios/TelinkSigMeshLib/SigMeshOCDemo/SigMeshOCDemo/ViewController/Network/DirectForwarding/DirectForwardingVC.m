@@ -193,7 +193,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf removeForwardingTable:forwardingTableModel];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }

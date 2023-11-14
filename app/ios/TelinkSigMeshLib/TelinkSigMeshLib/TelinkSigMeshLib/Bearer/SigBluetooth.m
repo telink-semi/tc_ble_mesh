@@ -409,7 +409,7 @@
 
 - (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
     NSMutableArray *identifierArray = [[NSMutableArray alloc] init];
-    
+
     [identifierArray addObject:[CBUUID UUIDWithString:uuidString]];
     NSArray *knownPeripherals = [self.manager retrievePeripheralsWithIdentifiers:identifierArray];
     if (knownPeripherals.count > 0) {
@@ -775,7 +775,7 @@
         RSSI = @(-90);
 //        TelinkLogDebug(@"将127修正为-90，防止APP扫描不到设备。peripheral.identifier.UUIDString=%@",peripheral.identifier.UUIDString);
     }
-    
+
     /// there is invalid node when RSSI is greater than or equal to 0.
     if (RSSI.intValue >=0) {
         return;
@@ -789,12 +789,12 @@
     if (![advertisementData.allKeys containsObject:CBAdvertisementDataServiceUUIDsKey]) {
         return;
     }
-    
+
     NSArray *suuids = advertisementData[CBAdvertisementDataServiceUUIDsKey];
     if (!suuids || suuids.count == 0) {
         return;
     }
-    
+
     NSString *suuidString = ((CBUUID *)suuids.firstObject).UUIDString;
     /// which means the device can be add to a new mesh(没有入网)
     BOOL provisionAble = [suuidString  isEqualToString:kPBGATTService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPBGATTService]];
@@ -806,7 +806,7 @@
     if (!provisionAble && !unProvisionAble && !isOtsService) {
         return;
     }
-    
+
     BOOL shouldReturn = YES;
     if (self.scanServiceUUIDs && ([self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPBGATTService]]) && provisionAble) {
         shouldReturn = NO;
@@ -820,16 +820,16 @@
     if (shouldReturn) {
         return;
     }
-    
+
     SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
-    
+
     if ([self.delegate respondsToSelector:@selector(needToBeFilteredNodeWithSigScanRspModel:provisioned:peripheral:advertisementData:RSSI:)]) {
         BOOL result = [self.delegate needToBeFilteredNodeWithSigScanRspModel:scanRspModel provisioned:unProvisionAble peripheral:peripheral advertisementData:advertisementData RSSI:RSSI];
         if (result) {
             return;
         }
     }
-    
+
 //    TelinkLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     BOOL shouldDelay = scanRspModel.macAddress == nil || scanRspModel.macAddress.length == 0;
     if (shouldDelay && self.waitScanRseponseEnable) {
@@ -852,12 +852,12 @@
 
     TelinkLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     [SigMeshLib.share.dataSource updateScanRspModelToDataSource:scanRspModel];
-    
+
     if (self.bluetoothScanPeripheralCallback) {
         self.bluetoothScanPeripheralCallback(peripheral,advertisementData,RSSI,provisionAble);
     }
-    
-    
+
+
 }
 
 /*!
@@ -1147,7 +1147,7 @@
  */
 -(void)peripheral:(CBPeripheral *)peripheral didOpenL2CAPChannel:(CBL2CAPChannel *)channel error:(NSError *)error {
     TelinkLogInfo(@"[%@->%@]",NSStringFromClass([self class]), NSStringFromSelector(_cmd));
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(openChannelOfPeripheralTimeout) object:nil];
     });

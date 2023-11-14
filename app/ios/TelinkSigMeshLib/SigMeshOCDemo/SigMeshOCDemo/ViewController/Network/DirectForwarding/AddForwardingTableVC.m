@@ -61,7 +61,7 @@
                     }
                 }
             }
-            
+
             // delete table entry
             for (NSNumber *addressNumber in deleteArray) {
                 UInt16 address = addressNumber.intValue;
@@ -80,7 +80,7 @@
                 }];
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 60.0));
             }
-            
+
             // add table entry
             for (NSNumber *addressNumber in addArray) {
                 UInt16 address = addressNumber.intValue;
@@ -168,9 +168,9 @@
 }
 
 - (BOOL)validateInput {
-    
-    
-    
+
+
+
     return YES;
 }
 

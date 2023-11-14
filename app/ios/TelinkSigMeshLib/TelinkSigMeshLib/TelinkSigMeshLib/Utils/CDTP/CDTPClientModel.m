@@ -223,7 +223,7 @@
     [operationQueue addOperationWithBlock:^{
         __block BOOL isFail = NO;
         weakSelf.semaphore = dispatch_semaphore_create(0);
-        
+
         [weakSelf.privateBluetooth readCharachteristicWithCharacteristic:weakSelf.objectSizeCharacteristic ofPeripheral:weakSelf.servicePeripheral timeout:60.0 complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
             if (characteristic == weakSelf.objectSizeCharacteristic) {
                 if (characteristic.value && characteristic.value.length >= 8) {
@@ -248,7 +248,7 @@
             [weakSelf respondsClientWriteFailWithError:error];
             return;
         }
-        
+
         [weakSelf writeOACPWriteWithObjectData:object.objectData offset:0 length:object.objectSize truncate:NO progress:^(float progress) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if ([weakSelf.delegate respondsToSelector:@selector(onClientWriteProgress:)]) {
@@ -305,7 +305,7 @@
                         weakSelf.objectPropertiesCharacteristic = [weakSelf.privateBluetooth getCharacteristicWithUUIDString:[NSString stringWithFormat:@"%04X",Bluetooth16BitsUUID_objectProperties] OfPeripheral:weakSelf.servicePeripheral];
                         weakSelf.objectActionControlPointCharacteristic = [weakSelf.privateBluetooth getCharacteristicWithUUIDString:[NSString stringWithFormat:@"%04X",Bluetooth16BitsUUID_objectActionControlPoint] OfPeripheral:weakSelf.servicePeripheral];
                         weakSelf.psmCharacteristic = [weakSelf.privateBluetooth getCharacteristicWithUUIDString:CBUUIDL2CAPPSMCharacteristicString OfPeripheral:weakSelf.servicePeripheral];
-                        
+
                         if (weakSelf.objectActionControlPointCharacteristic && ((weakSelf.objectActionControlPointCharacteristic.properties & CBCharacteristicPropertyNotify) || (weakSelf.objectActionControlPointCharacteristic.properties & CBCharacteristicPropertyIndicate))) {
                             [weakSelf.privateBluetooth changeNotifyToState:YES Peripheral:peripheral characteristic:weakSelf.objectActionControlPointCharacteristic timeout:60.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic, NSError * _Nullable error) {
                                 if (error == nil) {
@@ -700,7 +700,7 @@
     }
     if (self.servicePeripheral) {
         [self.privateBluetooth cancelConnectionPeripheral:self.servicePeripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-            
+
         }];
     }
     [OTSHandle.share cleanAllCommands];

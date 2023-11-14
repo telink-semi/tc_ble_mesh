@@ -67,16 +67,16 @@ static NSUInteger provisionAddress;
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
+
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hiddenKB)];
     [self.view addGestureRecognizer:tap];
-    
+
     //界面默认显示的MAC和次数
     NSString *mac = [self getCurrentMac];
 //    NSString *mac = nil;
     if (mac == nil) {
         mac = @"C419D1B92236";
-        
+
         [self saveCurrentMac:mac];
     }
     self.macTF.text = mac;
@@ -198,7 +198,7 @@ static NSUInteger provisionAddress;
                             [weakSelf refreshShowLabel];
                             [weakSelf showAndSaveLog:@"[Start] setFilter"];
                             [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                                
+
                             } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                                 if (error) {
                                     //添加setFilter失败
@@ -337,7 +337,7 @@ static NSUInteger provisionAddress;
     [SigBearer.share stopMeshConnectWithComplete:nil];
     NSString *str = [NSString stringWithFormat:@"[Stop test] %@\n\n",[self getResultString]];
     [self showAndSaveLog:str];
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanTimeoutAction) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(deleteDeviceTimeout) object:nil];
@@ -386,7 +386,7 @@ static NSUInteger provisionAddress;
     [self showAndSaveLog:@"[Start] delete device"];
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand resetNodeWithDestination:provisionAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-        
+
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (error) {
 

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SigDataSource.m 
+ * @file     SigDataSource.m
  *
  * @brief    for TLSR chips
  *
@@ -74,7 +74,7 @@
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
         /// Initialize the Singleton configure parameters.
-        shareDS = [[SigDataSource alloc] init];        
+        shareDS = [[SigDataSource alloc] init];
     });
     return shareDS;
 }
@@ -131,7 +131,7 @@
     _defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
     _telinkExtendBearerMode = SigTelinkExtendBearerMode_noExtend;
     _aggregatorEnable = NO;
-    
+
     //OOB
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSData *data = [defaults objectForKey:kOOBStoreKey];
@@ -244,7 +244,7 @@
     [_networkExclusions removeAllObjects];
     [_encryptedArray removeAllObjects];
     [_forwardingTableModelList removeAllObjects];
-    
+
     _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
     _schema = @"http://json-schema.org/draft-04/schema#";
     _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
@@ -947,7 +947,7 @@
     if (provisionerUUID == nil) {
         [self saveCurrentProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
     }
-    
+
     NSData *locationData = [self getLocationMeshData];
     BOOL exist = locationData.length > 0;
     if (!exist) {
@@ -976,7 +976,7 @@
     if (_encryptedArray) {
         [_encryptedArray removeAllObjects];
     }
-    
+
     //2.Check if _curProvisionerModel exists?
     if (self.curProvisionerModel) {
         TelinkLogInfo(@"exist local provisioner, needn't create");
@@ -994,7 +994,7 @@
             return;
         }
     }
-    
+
     // 3.config _filterModel.addressList
     // addresses is unicastAddress of curLocationNodeModel.
     SigNodeModel *node = self.curLocationNodeModel;
@@ -1032,7 +1032,7 @@
             }
         }
     }
-    
+
     if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
         //SequenceNumber add defaultSequenceNumberIncrement.
         SigDataSource.share.ivIndex = SigDataSource.share.getLocalIvIndexString;
@@ -1069,7 +1069,7 @@
     node.pid = @"0100";
     node.vid = @"0100";
     node.crpl = @"0100";
-    
+
     // add elements
     NSMutableArray *elements = [NSMutableArray array];
     SigElementModel *element = [[SigElementModel alloc] init];
@@ -1090,7 +1090,7 @@
     element.parentNodeAddress = node.address;
     [elements addObject:element];
     node.elements = elements;
-    
+
     NSData *devicekeyData = [LibTools createRandomDataWithLength:16];
     node.deviceKey = [LibTools convertDataToHexStr:devicekeyData];
     SigAppkeyModel *appkey = [self curAppkeyModel];

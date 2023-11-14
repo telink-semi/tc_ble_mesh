@@ -123,12 +123,12 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 - (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair {
     OSStatus status = noErr;
     if (keySize == 256 || keySize == 512 || keySize == 1024 || keySize == 2048) {
-        
+
         //定义dictionary，用于传递SecKeyGeneratePair函数中的第1个参数。
         NSMutableDictionary *privateKeyAttr = [[NSMutableDictionary alloc] init];
         NSMutableDictionary *publicKeyAttr = [[NSMutableDictionary alloc] init];
         NSMutableDictionary *keyPairAttr = [[NSMutableDictionary alloc] init];
-        
+
         //把第1步中定义的字符串转换为NSData对象。
         NSData * publicTag = [NSData dataWithBytes:publicKeyIdentifier
                                             length:strlen((const char *)publicKeyIdentifier)];
@@ -142,19 +142,19 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
         [keyPairAttr setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
         //设置密钥对的密钥长度为256。
         [keyPairAttr setObject:[NSNumber numberWithInt:keySize] forKey:(id)kSecAttrKeySizeInBits];
-        
+
         //设置私钥的持久化属性（即是否存入钥匙串）为YES。
         [privateKeyAttr setObject:[NSNumber numberWithBool:YES] forKey:(id)kSecAttrIsPermanent];
         [privateKeyAttr setObject:privateTag forKey:(id)kSecAttrApplicationTag];
-        
+
         //设置公钥的持久化属性（即是否存入钥匙串）为YES。
         [publicKeyAttr setObject:[NSNumber numberWithBool:YES] forKey:(id)kSecAttrIsPermanent];
         [publicKeyAttr setObject:publicTag forKey:(id)kSecAttrApplicationTag];
-        
+
         // 把私钥的属性集（dictionary）加到密钥对的属性集（dictionary）中。
         [keyPairAttr setObject:privateKeyAttr forKey:(id)kSecPrivateKeyAttrs];
         [keyPairAttr setObject:publicKeyAttr forKey:(id)kSecPublicKeyAttrs];
-        
+
         //生成密钥对
         status = SecKeyGeneratePair((CFDictionaryRef)keyPairAttr,&publicKey, &privateKey); // 13
         if (status == noErr && publicKey != NULL && privateKey != NULL) {
@@ -169,15 +169,15 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 
 - (NSData *)getPublicKeyBitsFromKey:(SecKeyRef)givenKey {
     NSData *publicTag = [[NSData alloc] initWithBytes:publicKeyIdentifier length:sizeof(publicKeyIdentifier)];
-    
+
     OSStatus sanityCheck = noErr;
     NSData * publicKeyBits = nil;
-    
+
     NSMutableDictionary * queryPublicKey = [[NSMutableDictionary alloc] init];
     [queryPublicKey setObject:(__bridge id)kSecClassKey forKey:(__bridge id)kSecClass];
     [queryPublicKey setObject:publicTag forKey:(__bridge id)kSecAttrApplicationTag];
     [queryPublicKey setObject:(__bridge id)kSecAttrKeyTypeEC forKey:(__bridge id)kSecAttrKeyType];
-    
+
     // Temporarily add key to the Keychain, return as data:
     NSMutableDictionary * attributes = [queryPublicKey mutableCopy];
     [attributes setObject:(__bridge id)givenKey forKey:(__bridge id)kSecValueRef];
@@ -186,11 +186,11 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
     sanityCheck = SecItemAdd((__bridge CFDictionaryRef) attributes, &result);
     if (sanityCheck == errSecSuccess) {
         publicKeyBits = CFBridgingRelease(result);
-        
+
         // Remove from Keychain again:
         (void)SecItemDelete((__bridge CFDictionaryRef) queryPublicKey);
     }
-    
+
     return publicKeyBits;
 }
 
@@ -205,11 +205,11 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
         UInt8 tem = 0x04;
         NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
         [devicePublicKeyData appendData:publicKey];
-        
+
         NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
         [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
         [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
-        
+
         CFErrorRef error = NULL;
         SecKeyRef devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, &error);
         if (error) {
@@ -220,7 +220,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
             TelinkLogError(@"SecKeyCreateWithData fail.");
             return nil;
         }
-        
+
         NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
         [exchangeResultParams setObject:@(32) forKey:(id)kSecKeyKeyExchangeParameterRequestedSize];
 
@@ -236,7 +236,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
             TelinkLogError(@"SecKeyCopyKeyExchangeResult fail.");
             return nil;
         }
-                
+
         return (__bridge_transfer NSData*)sharedSecret;
 
     } else {

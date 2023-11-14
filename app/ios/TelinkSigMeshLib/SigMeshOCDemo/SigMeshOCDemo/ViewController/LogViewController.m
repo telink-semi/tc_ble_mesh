@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LogViewController.m 
+ * @file     LogViewController.m
  *
  * @brief    for TLSR chips
  *

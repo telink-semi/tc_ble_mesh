@@ -282,7 +282,7 @@
         case SigOpCode_configNetKeyUpdate:
             responseOpcode = SigOpCode_configNetKeyStatus;
             break;
-        
+
         case SigOpCode_configNodeIdentityGet:
         case SigOpCode_configNodeIdentitySet:
             responseOpcode = SigOpCode_configNodeIdentityStatus;
@@ -297,7 +297,7 @@
         case SigOpCode_configVendorModelAppGet:
             responseOpcode = SigOpCode_configVendorModelAppList;
             break;
-            
+
             // remote provision
         case SigOpCode_remoteProvisioningScanCapabilitiesGet:
             responseOpcode = SigOpCode_remoteProvisioningScanCapabilitiesStatus;
@@ -312,7 +312,7 @@
         case SigOpCode_remoteProvisioningLinkClose:
             responseOpcode = SigOpCode_remoteProvisioningLinkStatus;
             break;
-            
+
             // private beacon message
         case SigOpCode_PrivateBeaconGet:
         case SigOpCode_PrivateBeaconSet:
@@ -507,7 +507,7 @@
         case SigOpCode_LightLCPropertySet:
             responseOpcode = SigOpCode_LightLCPropertyStatus;
             break;
-            
+
             // Firmware Update Messages
         case SigOpCode_FirmwareUpdateInformationGet:
             responseOpcode = SigOpCode_FirmwareUpdateInformationStatus;
@@ -563,13 +563,13 @@
         case SigOpCode_BLOBInformationGet:
             responseOpcode = SigOpCode_BLOBInformationStatus;
             break;
-            
+
             // On-demand proxy
         case SigOpCode_OnDemandPrivateProxyGet:
         case SigOpCode_OnDemandPrivateProxySet:
             responseOpcode = SigOpCode_OnDemandPrivateProxyStatus;
             break;
-            
+
             // SAR configuration
         case SigOpCode_SARTransmitterGet:
         case SigOpCode_SARTransmitterSet:
@@ -579,7 +579,7 @@
         case SigOpCode_SARReceiverSet:
             responseOpcode = SigOpCode_SARReceiverStatus;
             break;
-            
+
             // Opcodes aggregator
         case SigOpCode_OpcodesAggregatorSequence:
             responseOpcode = SigOpCode_OpcodesAggregatorStatus;
@@ -592,13 +592,13 @@
         case SigOpCode_ModelsMetadataGet:
             responseOpcode = SigOpCode_ModelsMetadataStatus;
             break;
-            
+
             // 4.3.7 Solicitation PDU RPL Configuration messages
             // 以下3个opcode未定，未找到文档。
         case SigOpCode_SolicitationPduRplItemsClear:
             responseOpcode = SigOpCode_SolicitationPduRplItemsStatus;
             break;
-            
+
             // subnet bridge Messages
         case SigOpCode_BridgingTableSizeGet:
             responseOpcode = SigOpCode_BridgingTableSizeStatus;
@@ -617,7 +617,7 @@
         case SigOpCode_SubnetBridgeSet:
             responseOpcode = SigOpCode_SubnetBridgeStatus;
             break;
-            
+
             // Direct Forwarding
         case SigOpCode_DirectControlGet:
         case SigOpCode_DirectControlSet:
@@ -627,7 +627,7 @@
         case SigOpCode_ForwardingTableDelete:
             responseOpcode = SigOpCode_ForwardingTableStatus;
             break;
-            
+
         default:
             TelinkLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
             break;
@@ -822,7 +822,7 @@
             case SigOpCode_configVendorModelSubscriptionList:
                 messageType = [SigConfigVendorModelSubscriptionList class];
                 break;
-                
+
                 // Low Power Node Poll Timeout
             case SigOpCode_configLowPowerNodePollTimeoutGet:
                 messageType = [SigConfigLowPowerNodePollTimeoutGet class];
@@ -932,7 +932,7 @@
             case SigOpCode_remoteProvisioningPDUReport:
                 messageType = [SigRemoteProvisioningPDUReport class];
                 break;
-                                
+
                 // private beacon message
             case SigOpCode_PrivateBeaconGet:
                 messageType = [SigPrivateBeaconGet class];
@@ -1096,7 +1096,7 @@
             case SigOpCode_sensorSeriesStatus:
                 messageType = [SigSensorSeriesStatus class];
                 break;
-                
+
                 //Sensor Setup
             case SigOpCode_sensorCadenceGet:
                 messageType = [SigSensorCadenceGet class];
@@ -1484,7 +1484,7 @@
             case SigOpCode_LightLCPropertyStatus:
                 messageType = [SigLightLCPropertyStatus class];
                 break;
-                
+
                 // Firmware Update Messages
             case SigOpCode_FirmwareUpdateInformationGet:
                 messageType = [SigFirmwareUpdateInformationGet class];
@@ -1579,7 +1579,7 @@
             case SigOpCode_FirmwareDistributionCapabilitiesStatus:
                 messageType = [SigFirmwareDistributionCapabilitiesStatus class];
                 break;
-                
+
                 // BLOB Transfer Messages
             case SigOpCode_BLOBTransferGet:
                 messageType = [SigBLOBTransferGet class];
@@ -1614,7 +1614,7 @@
             case SigOpCode_BLOBPartialBlockReport:
                 messageType = [SigBLOBPartialBlockReport class];
                 break;
-                
+
                 // On-demand proxy
             case SigOpCode_OnDemandPrivateProxyGet:
                 messageType = [NSClassFromString(@"SigOnDemandPrivateProxyGet") class];
@@ -1625,7 +1625,7 @@
             case SigOpCode_OnDemandPrivateProxyStatus:
                 messageType = [NSClassFromString(@"SigOnDemandPrivateProxyStatus") class];
                 break;
-                
+
                 // SAR configuration
             case SigOpCode_SARTransmitterGet:
                 messageType = [NSClassFromString(@"SigSARTransmitterGet") class];
@@ -1645,7 +1645,7 @@
             case SigOpCode_SARReceiverStatus:
                 messageType = [NSClassFromString(@"SigSARReceiverStatus") class];
                 break;
-                
+
                 // Opcodes aggregator
             case SigOpCode_OpcodesAggregatorSequence:
                 messageType = [NSClassFromString(@"SigOpcodesAggregatorSequence") class];
@@ -1653,7 +1653,7 @@
             case SigOpCode_OpcodesAggregatorStatus:
                 messageType = [NSClassFromString(@"SigOpcodesAggregatorStatus") class];
                 break;
-                
+
                 // Large Composition Data
             case SigOpCode_LargeCompositionDataGet:
                 messageType = [NSClassFromString(@"SigLargeCompositionDataGet") class];
@@ -1667,7 +1667,7 @@
             case SigOpCode_ModelsMetadataStatus:
                 messageType = [NSClassFromString(@"SigModelsMetadataStatus") class];
                 break;
-                
+
                 // 4.3.7 Solicitation PDU RPL Configuration messages
                 // 以下3个opcode未定，未找到文档。
             case SigOpCode_SolicitationPduRplItemsClear:
@@ -1679,7 +1679,7 @@
             case SigOpCode_SolicitationPduRplItemsStatus:
                 messageType = [NSClassFromString(@"SigSolicitationPduRplItemsStatus") class];
                 break;
-                
+
                 // subnet bridge Messages
             case SigOpCode_BridgingTableSizeGet:
                 messageType = [NSClassFromString(@"SigBridgingTableSizeGet") class];
@@ -1717,7 +1717,7 @@
             case SigOpCode_SubnetBridgeStatus:
                 messageType = [NSClassFromString(@"SigSubnetBridgeStatus") class];
                 break;
-                
+
                 // Direct Forwarding
             case SigOpCode_DirectControlGet:
                 messageType = [NSClassFromString(@"SigDirectControlGet") class];
@@ -1741,7 +1741,7 @@
                 break;
         }
     }
-    
+
     return messageType;
 }
 

@@ -122,9 +122,9 @@ typedef enum : UInt16 {
     /// delivered to all the instances of models that subscribe to this group address.
     MeshAddress_minGroupAddress                                                              = 0xC000,
     MeshAddress_maxGroupAddress                                                              = 0xFEFF,
-    
+
     //0xFF00–0xFFF8 RFU
-    
+
     /// all-ipt-border-routers(Add in mesh spec v1.1)
     MeshAddress_allIptBorderRouters                                                          = 0xFFF9,
     /// all-ipt-nodes(Add in mesh spec v1.1)

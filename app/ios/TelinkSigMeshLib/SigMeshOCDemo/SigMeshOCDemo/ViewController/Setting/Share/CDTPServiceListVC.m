@@ -47,7 +47,7 @@
     }
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
-    
+
     __weak typeof(self) weakSelf = self;
     self.client = [[CDTPClientModel alloc] initWithBleInitResult:^(CBCentralManager * _Nonnull central) {
         [weakSelf.client startScanCDTPService];
@@ -69,7 +69,7 @@
     }
     [self setStartButtonEnable:NO];
     ServiceModel *model = self.serviceList[self.selectIndex];
-    
+
     if (self.isExportToGateway) {
         [self.client startWriteMeshObject:self.meshObject toServicePeripheral:model.peripheral];
     } else {
@@ -194,7 +194,7 @@
     ServiceModel *model = self.serviceList[indexPath.row];
     itemCell.titleLabel.text = [NSString stringWithFormat:@"name:%@\nRSSI:%@\nuuid:%@\nadv:%@", model.showName, model.RSSI, model.peripheral.identifier.UUIDString, model.advertisementData];
     itemCell.selectButton.selected = indexPath.row == self.selectIndex;
-    
+
     [itemCell.selectButton addAction:^(UIButton *button) {
         button.selected = !button.selected;
         if (button.selected) {

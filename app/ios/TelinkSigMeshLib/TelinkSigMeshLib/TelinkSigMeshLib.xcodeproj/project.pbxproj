@@ -518,15 +518,15 @@
 				25D88BCC2361392100D4F0F7 /* SigNetworkManager.m */,
 				25151BF82362F2AC00967668 /* SigMessageHandle.h */,
 				25151BF92362F2AC00967668 /* SigMessageHandle.m */,
-				25335CB4235ED9EE006C79C1 /* Access Layer */,
-				25335CCE235ED9EE006C79C1 /* Upper Transport Layer */,
-				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
-				25335CBD235ED9EE006C79C1 /* Network Layer */,
+				25335CB4235ED9EE006C79C1 /* AccessLayer */,
+				25335CCE235ED9EE006C79C1 /* UpperTransportLayer */,
+				25335CC3235ED9EE006C79C1 /* LowerTransportLayer */,
+				25335CBD235ED9EE006C79C1 /* NetworkLayer */,
 			);
 			path = Layers;
 			sourceTree = "<group>";
 		};
-		25335CB4235ED9EE006C79C1 /* Access Layer */ = {
+		25335CB4235ED9EE006C79C1 /* AccessLayer */ = {
 			isa = PBXGroup;
 			children = (
 				25D88BEF2361456C00D4F0F7 /* SigAccessLayer.h */,
@@ -534,19 +534,19 @@
 				25D88BED2361456C00D4F0F7 /* SigAccessPdu.h */,
 				25D88BF02361456C00D4F0F7 /* SigAccessPdu.m */,
 			);
-			path = "Access Layer";
+			path = AccessLayer;
 			sourceTree = "<group>";
 		};
-		25335CBD235ED9EE006C79C1 /* Network Layer */ = {
+		25335CBD235ED9EE006C79C1 /* NetworkLayer */ = {
 			isa = PBXGroup;
 			children = (
 				25D88BE92361455C00D4F0F7 /* SigNetworkLayer.h */,
 				25D88BEA2361455C00D4F0F7 /* SigNetworkLayer.m */,
 			);
-			path = "Network Layer";
+			path = NetworkLayer;
 			sourceTree = "<group>";
 		};
-		25335CC3235ED9EE006C79C1 /* Lower Transport Layer */ = {
+		25335CC3235ED9EE006C79C1 /* LowerTransportLayer */ = {
 			isa = PBXGroup;
 			children = (
 				25D88BFA2361458400D4F0F7 /* SigAccessMessage.h */,
@@ -566,10 +566,10 @@
 				25D88C052361458400D4F0F7 /* SigSegmentedMessage.h */,
 				25D88BFD2361458400D4F0F7 /* SigSegmentedMessage.m */,
 			);
-			path = "Lower Transport Layer";
+			path = LowerTransportLayer;
 			sourceTree = "<group>";
 		};
-		25335CCE235ED9EE006C79C1 /* Upper Transport Layer */ = {
+		25335CCE235ED9EE006C79C1 /* UpperTransportLayer */ = {
 			isa = PBXGroup;
 			children = (
 				916B2B192B01C01A0014B8FF /* SigHeartbeatMessage.h */,
@@ -579,13 +579,13 @@
 				25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */,
 				25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */,
 			);
-			path = "Upper Transport Layer";
+			path = UpperTransportLayer;
 			sourceTree = "<group>";
 		};
-		25335CD5235ED9EE006C79C1 /* Mesh Messages */ = {
+		25335CD5235ED9EE006C79C1 /* MeshMessages */ = {
 			isa = PBXGroup;
 			children = (
-				25335D14235ED9EF006C79C1 /* Proxy Configuration */,
+				25335D14235ED9EF006C79C1 /* ProxyConfiguration */,
 				252ABF5E236057A60096563F /* SigMeshMessage.h */,
 				252ABF5F236057A60096563F /* SigMeshMessage.m */,
 				252ABF60236057A60096563F /* SigConfigMessage.h */,
@@ -593,16 +593,16 @@
 				25957EC8237AC6C100816137 /* SigGenericMessage.h */,
 				25957EC9237AC6C100816137 /* SigGenericMessage.m */,
 			);
-			path = "Mesh Messages";
+			path = MeshMessages;
 			sourceTree = "<group>";
 		};
-		25335D14235ED9EF006C79C1 /* Proxy Configuration */ = {
+		25335D14235ED9EF006C79C1 /* ProxyConfiguration */ = {
 			isa = PBXGroup;
 			children = (
 				2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */,
 				2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */,
 			);
-			path = "Proxy Configuration";
+			path = ProxyConfiguration;
 			sourceTree = "<group>";
 		};
 		25335D42235ED9EF006C79C1 /* Bearer */ = {
@@ -618,16 +618,16 @@
 			path = Bearer;
 			sourceTree = "<group>";
 		};
-		25335D58235ED9EF006C79C1 /* Third Library */ = {
+		25335D58235ED9EF006C79C1 /* ThirdLibrary */ = {
 			isa = PBXGroup;
 			children = (
 				255394A024907A9B0095B499 /* OpenSSL */,
 				25FF2F4E2446EFDC0084263F /* GMEllipticCurveCrypto */,
 			);
-			path = "Third Library";
+			path = ThirdLibrary;
 			sourceTree = "<group>";
 		};
-		25335DAC235ED9EF006C79C1 /* Type Extensions */ = {
+		25335DAC235ED9EF006C79C1 /* TypeExtensions */ = {
 			isa = PBXGroup;
 			children = (
 				25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */,
@@ -635,10 +635,10 @@
 				91C5EAE02A37195D0087C814 /* CBCharacteristic+UUID.h */,
 				91C5EAE12A37195D0087C814 /* CBCharacteristic+UUID.m */,
 			);
-			path = "Type Extensions";
+			path = TypeExtensions;
 			sourceTree = "<group>";
 		};
-		25335DB5235ED9F0006C79C1 /* Mesh Model */ = {
+		25335DB5235ED9F0006C79C1 /* MeshModel */ = {
 			isa = PBXGroup;
 			children = (
 				25335F35235EE2A7006C79C1 /* SigModel.h */,
@@ -646,22 +646,22 @@
 				25335F49235EEB92006C79C1 /* SigPdu.h */,
 				25335F48235EEB92006C79C1 /* SigPdu.m */,
 			);
-			path = "Mesh Model";
+			path = MeshModel;
 			sourceTree = "<group>";
 		};
 		25335DD4235ED9F0006C79C1 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
 				916964172AC56AEC0010D34A /* CDTP */,
-				916963FD2AC56AEC0010D34A /* Cert-Base Provision */,
-				916964102AC56AEC0010D34A /* Direct Forwarding */,
+				916963FD2AC56AEC0010D34A /* CertificateBaseProvision */,
+				916964102AC56AEC0010D34A /* DirectForwarding */,
 				916964002AC56AEC0010D34A /* EPA */,
 				916964062AC56AEC0010D34A /* MeshOTA */,
-				916964032AC56AEC0010D34A /* Minor ENH */,
-				9169640A2AC56AEC0010D34A /* Opcodes Aggregator */,
-				916963FA2AC56AEC0010D34A /* Private Beacon */,
-				916964132AC56AEC0010D34A /* Remote Provision */,
-				9169640D2AC56AEC0010D34A /* Subnet Bridge */,
+				916964032AC56AEC0010D34A /* MinorENH */,
+				9169640A2AC56AEC0010D34A /* OpcodesAggregator */,
+				916963FA2AC56AEC0010D34A /* PrivateBeacon */,
+				916964132AC56AEC0010D34A /* RemoteProvision */,
+				9169640D2AC56AEC0010D34A /* SubnetBridge */,
 				25772EB1262EBB3600014699 /* ConnectTools.h */,
 				25772EB0262EBB3500014699 /* ConnectTools.m */,
 				25335DD7235ED9F0006C79C1 /* SigLogger.h */,
@@ -692,7 +692,7 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
-		25335F5D235EF339006C79C1 /* Add devices Module */ = {
+		25335F5D235EF339006C79C1 /* AddDevicesModule */ = {
 			isa = PBXGroup;
 			children = (
 				25335F67235EF339006C79C1 /* SigAddDeviceManager.h */,
@@ -703,7 +703,7 @@
 				25335F5E235EF339006C79C1 /* Provisioning */,
 				25335F68235EF339006C79C1 /* KeyBind */,
 			);
-			path = "Add devices Module";
+			path = AddDevicesModule;
 			sourceTree = "<group>";
 		};
 		25335F5E235EF339006C79C1 /* Provisioning */ = {
@@ -873,13 +873,13 @@
 				25335F54235EEC61006C79C1 /* SigStruct.h */,
 				252ABF6623605B330096563F /* SigMeshLib.h */,
 				252ABF6723605B330096563F /* SigMeshLib.m */,
-				25335F5D235EF339006C79C1 /* Add devices Module */,
+				25335F5D235EF339006C79C1 /* AddDevicesModule */,
 				25335D42235ED9EF006C79C1 /* Bearer */,
 				25335CB3235ED9EE006C79C1 /* Layers */,
-				25335CD5235ED9EE006C79C1 /* Mesh Messages */,
-				25335DB5235ED9F0006C79C1 /* Mesh Model */,
-				25335D58235ED9EF006C79C1 /* Third Library */,
-				25335DAC235ED9EF006C79C1 /* Type Extensions */,
+				25335CD5235ED9EE006C79C1 /* MeshMessages */,
+				25335DB5235ED9F0006C79C1 /* MeshModel */,
+				25335D58235ED9EF006C79C1 /* ThirdLibrary */,
+				25335DAC235ED9EF006C79C1 /* TypeExtensions */,
 				25335DD4235ED9F0006C79C1 /* Utils */,
 				25C0AFDD235D597400846CFB /* Info.plist */,
 				25335C6D235EB046006C79C1 /* TelinkSigMeshLibPrefixHeader.pch */,
@@ -908,22 +908,22 @@
 			path = GMEllipticCurveCrypto;
 			sourceTree = "<group>";
 		};
-		916963FA2AC56AEC0010D34A /* Private Beacon */ = {
+		916963FA2AC56AEC0010D34A /* PrivateBeacon */ = {
 			isa = PBXGroup;
 			children = (
 				916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */,
 				916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */,
 			);
-			path = "Private Beacon";
+			path = PrivateBeacon;
 			sourceTree = "<group>";
 		};
-		916963FD2AC56AEC0010D34A /* Cert-Base Provision */ = {
+		916963FD2AC56AEC0010D34A /* CertificateBaseProvision */ = {
 			isa = PBXGroup;
 			children = (
 				916963FF2AC56AEC0010D34A /* SDKLibCommand+certificate.h */,
 				916963FE2AC56AEC0010D34A /* SDKLibCommand+certificate.m */,
 			);
-			path = "Cert-Base Provision";
+			path = CertificateBaseProvision;
 			sourceTree = "<group>";
 		};
 		916964002AC56AEC0010D34A /* EPA */ = {
@@ -935,13 +935,13 @@
 			path = EPA;
 			sourceTree = "<group>";
 		};
-		916964032AC56AEC0010D34A /* Minor ENH */ = {
+		916964032AC56AEC0010D34A /* MinorENH */ = {
 			isa = PBXGroup;
 			children = (
 				916964042AC56AEC0010D34A /* SDKLibCommand+minor_ENH.h */,
 				916964052AC56AEC0010D34A /* SDKLibCommand+minor_ENH.m */,
 			);
-			path = "Minor ENH";
+			path = MinorENH;
 			sourceTree = "<group>";
 		};
 		916964062AC56AEC0010D34A /* MeshOTA */ = {
@@ -955,41 +955,41 @@
 			path = MeshOTA;
 			sourceTree = "<group>";
 		};
-		9169640A2AC56AEC0010D34A /* Opcodes Aggregator */ = {
+		9169640A2AC56AEC0010D34A /* OpcodesAggregator */ = {
 			isa = PBXGroup;
 			children = (
 				9169640B2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.h */,
 				9169640C2AC56AEC0010D34A /* SDKLibCommand+opcodesAggregatorSequence.m */,
 			);
-			path = "Opcodes Aggregator";
+			path = OpcodesAggregator;
 			sourceTree = "<group>";
 		};
-		9169640D2AC56AEC0010D34A /* Subnet Bridge */ = {
+		9169640D2AC56AEC0010D34A /* SubnetBridge */ = {
 			isa = PBXGroup;
 			children = (
 				9169640E2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.h */,
 				9169640F2AC56AEC0010D34A /* SDKLibCommand+subnetBridge.m */,
 			);
-			path = "Subnet Bridge";
+			path = SubnetBridge;
 			sourceTree = "<group>";
 		};
-		916964102AC56AEC0010D34A /* Direct Forwarding */ = {
+		916964102AC56AEC0010D34A /* DirectForwarding */ = {
 			isa = PBXGroup;
 			children = (
 				916964112AC56AEC0010D34A /* SDKLibCommand+directForwarding.h */,
 				916964122AC56AEC0010D34A /* SDKLibCommand+directForwarding.m */,
 			);
-			path = "Direct Forwarding";
+			path = DirectForwarding;
 			sourceTree = "<group>";
 		};
-		916964132AC56AEC0010D34A /* Remote Provision */ = {
+		916964132AC56AEC0010D34A /* RemoteProvision */ = {
 			isa = PBXGroup;
 			children = (
 				916964142AC56AEC0010D34A /* SigRemoteAddManager.m */,
 				916964152AC56AEC0010D34A /* SDKLibCommand+remoteProvision.h */,
 				916964162AC56AEC0010D34A /* SDKLibCommand+remoteProvision.m */,
 			);
-			path = "Remote Provision";
+			path = RemoteProvision;
 			sourceTree = "<group>";
 		};
 		916964172AC56AEC0010D34A /* CDTP */ = {

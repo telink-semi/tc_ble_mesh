@@ -50,12 +50,12 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     self.tableView.tableFooterView = footerView;
     self.tableView.estimatedRowHeight = 50.0;
     self.tableView.allowsSelection = NO;
-    
+
     self.rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickScanButton)];
     self.navigationItem.rightBarButtonItem = self.rightItem;
     self.leftItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back"] style:UIBarButtonItemStylePlain target:self action:@selector(clickBackButton)];
     self.navigationItem.leftBarButtonItem = self.leftItem;
-    
+
     [self clickScanButton];
 }
 

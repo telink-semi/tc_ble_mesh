@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SettingItemCell.h 
+ * @file     SettingItemCell.h
  *
  * @brief    for TLSR chips
  *

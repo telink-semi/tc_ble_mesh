@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SingleOTAViewController.m 
+ * @file     SingleOTAViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -62,7 +62,7 @@
         [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
         } cancel:^(UIAlertAction *action) {
-            
+
         }];
     } else {
         [self otaAction];
@@ -75,7 +75,7 @@
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
     [self showOTATips:@"start connect..."];
-    
+
     __weak typeof(self) weakSelf = self;
     BOOL result = [OTAManager.share startOTAWithOtaData:self.localData models:@[self.model] singleSuccessAction:^(SigNodeModel *device) {
         dispatch_async(dispatch_get_main_queue(), ^{

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SettingViewController.m 
+ * @file     SettingViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -168,7 +168,7 @@
     self.detailSource = [NSMutableArray array];
     self.iconSource = [NSMutableArray array];
     self.vcIdentifiers = [NSMutableArray array];
-    
+
     [self.titleSource addObject:kManagerNetworkTitle];
     [self.detailSource addObject:@"Switch, Create/Delete, Import/Export..."];
     [self.iconSource addObject:@"setting_manage"];
@@ -192,7 +192,7 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:@""];
     }
-    
+
     //v3.3.3.6新增 How to import bin file?
     [self.titleSource addObject:@"How to import bin file?"];
     [self.detailSource addObject:@"prompt users on how to import Bin files into the app."];
@@ -214,7 +214,7 @@
 
 //    NSString *app_Version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     NSString *app_Version = kTelinkSigMeshLibVersion;
-    
+
 //#ifdef DEBUG
 //    NSString *appBundleVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
 //    self.versionLabel.text = [NSString stringWithFormat:@"%@ Build:%@",app_Version,appBundleVersion];

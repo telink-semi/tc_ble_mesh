@@ -46,7 +46,7 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.allowsSelection = NO;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_RemoteElementCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_RemoteElementCellID];
-    
+
     [self tryConnectRemote];
 }
 
@@ -125,7 +125,7 @@
             [weakSelf showTips:@"The remote is disconnected!"];
             return;
         }
-        
+
         //2.判断model合法性
         UInt16 newModelID;
         UInt16 newCompanyIdentifier = model.getIntCompanyIdentifier;
@@ -147,7 +147,7 @@
             [self showTips:@"Please enter the correct modelID!"];
             return;
         }
-        
+
         //3.判断pubAdr合法性
         UInt16 newPubAdr;
         if ([weakSelf validateString:cell.pubAdrTF.text.removeAllSapceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
@@ -156,7 +156,7 @@
             [self showTips:@"Please enter the correct pubAdr!"];
             return;
         }
-        
+
         //4.发送pubSet指令
         [DemoCommand editPublishListWithPublishAddress:newPubAdr nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:newModelID companyIdentifier:newCompanyIdentifier periodSteps:SigDataSource.share.defaultPublishPeriodModel.numberOfSteps periodResolution:[LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel] retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
             TelinkLogDebug(@"editPublishList callback");

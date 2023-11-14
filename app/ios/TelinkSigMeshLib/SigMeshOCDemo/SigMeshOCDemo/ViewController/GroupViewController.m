@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     GroupViewController.m 
+ * @file     GroupViewController.m
  *
  * @brief    for TLSR chips
  *

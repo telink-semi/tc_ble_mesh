@@ -151,7 +151,7 @@ struct ProvisioningCapabilities {
             struct InputOobActions inputOobActions;//2bytes
         };
     };
-    
+
 };
 
 struct Flags {

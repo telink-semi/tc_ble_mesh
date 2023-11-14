@@ -74,7 +74,7 @@ NSString *const NotifyUpdateTestLogContent = @"UpdateTestLogContent";
     NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:[TLog share].logFilePath];
     [handle truncateFileAtOffset:0];
     [handle closeFile];
-    
+
     NSString *contentS = @"";
     NSData *tempda = [contentS dataUsingEncoding:NSUTF8StringEncoding];
     [tempda writeToFile:kDocumentFilePath(@"content") atomically:YES];
@@ -93,7 +93,7 @@ void saveTestLogData(id data){
         NSString *tempString = [[NSString alloc] initWithFormat:@"%@ : Response-> %@\n",dstr,data];
         NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
         [handle writeData:tempData];
-        
+
     }else{
         NSString *tempString = [[NSString alloc] initWithFormat:@"%@ : %@\n",dstr,data];
         NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];

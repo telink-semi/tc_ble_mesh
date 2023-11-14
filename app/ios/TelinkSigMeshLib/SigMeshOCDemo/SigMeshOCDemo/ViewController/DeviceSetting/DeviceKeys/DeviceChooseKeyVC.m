@@ -74,7 +74,7 @@
             }
         }
     }
-    
+
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(DeviceKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(DeviceKeyCell.class)];
@@ -117,7 +117,7 @@
                 }
                 [weakSelf.navigationController popViewControllerAnimated:YES];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
         if (self.backAppKeyModel) {
@@ -129,7 +129,7 @@
                 }
                 [weakSelf.navigationController popViewControllerAnimated:YES];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
