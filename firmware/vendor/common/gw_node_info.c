@@ -29,7 +29,7 @@
 
 #if (IS_VC_PROJECT_MASTER || DONGLE_PROVISION_EN)
  /*************hci_tx_fifo_poll ***********************
- device key list save and read
+ device key list save and read 
  ******************************************************/ 
 
  #if DONGLE_PROVISION_EN
