@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     NetKeyAddVC.h
+ * @file     NetKeyAddVC.m
  *
  * @brief    Add or edit the NetKey of Mesh network.
  *
