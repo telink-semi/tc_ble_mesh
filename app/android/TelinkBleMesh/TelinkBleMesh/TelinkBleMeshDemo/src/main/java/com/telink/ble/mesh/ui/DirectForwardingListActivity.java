@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DirectForwardingActivity.java
+ * @file DirectForwardingListActivity.java
  *
  * @brief for TLSR chips
  *
