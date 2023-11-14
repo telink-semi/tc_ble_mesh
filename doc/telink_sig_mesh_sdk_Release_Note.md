@@ -16,10 +16,10 @@
   - enhance provision auth: set PROV_EPA_EN to 1 to enable. enable as default.
   - remote provision: provision the unprovision devices within one-hop or multi-hops. set MD_REMOTE_PROV to 1 to enable. disable as default.
   - device firmware update: Upgrade the firmware of multiple nodes simultaneously through mesh. set MD_MESH_OTA_EN to 1 to enable. disable as default.
-  - directed forwarding: set MD_DF_CFG_SERVER_EN and MD_DF_CFG_CLIENT_EN to 1 to enable. disable as default.
+  - directed forwarding: set MD_DF_CFG_SERVER_EN to 1 to enable. disable as default.
   - certificate-base provisioning: set CERTIFY_BASE_ENABLE to 1 to enable. disable as default.
   - private beacons: set MD_PRIVACY_BEA and PRIVATE_PROXY_FUN_EN to 1 to enable. disable as default.
-  - subnet bridge: set MD_SBR_CFG_SERVER_EN and MD_SBR_CFG_CLIENT_EN to 1 to enable. disable as default.
+  - subnet bridge: set MD_SBR_CFG_SERVER_EN to 1 to enable. disable as default.
   - Opcodes Aggregator: aggregate multiple messages into a single message to send. set MD_OP_AGG_EN to 1 to enable. disable as default.
   - NLC profiles: Network Lighting Control profiles. set one of NLCP_BLC_EN, NLCP_DIC_EN, NLCP_BSS_EN, NLCP_TYPE_ALS, NLCP_TYPE_OCS and NLCP_TYPE_ENM to 1 to enable the corresponding NLC profile. disable as default.
 * (Firmware)add support the SMP function. set BLE_REMOTE_SECURITY_ENABLE to 1 to enable. disable as default.
@@ -67,10 +67,10 @@
   - enhance provision auth：组网认证增强，设置 PROV_EPA_EN 等于 1来使能该功能，默认打开。
   - remote provision：把距离provisioner一跳及多跳的未配网设备都能添加到网络中。设置 MD_REMOTE_PROV 等于 1来使能该功能，默认关闭。
   - device firmware update：通过mesh方式对多个节点同时进行固件升级，设置 MD_MESH_OTA_EN 等于 1来使能该功能，默认关闭。
-  - directed forwarding：路由功能，设置 MD_DF_CFG_SERVER_EN 和 MD_DF_CFG_CLIENT_EN 等于 1来使能该功能，默认关闭。
+  - directed forwarding：路由功能，设置 MD_DF_CFG_SERVER_EN 等于 1来使能该功能，默认关闭。
   - certificate-base provisioning：基于证书认证的组网模式，设置 CERTIFY_BASE_ENABLE 等于 1来使能该功能，默认关闭。
   - private beacons：私有信标，设置 MD_PRIVACY_BEA 和 PRIVATE_PROXY_FUN_EN 等于 1来使能该功能，默认关闭。
-  - subnet bridge：子网桥接，设置 MD_SBR_CFG_SERVER_EN 和 MD_SBR_CFG_CLIENT_EN 等于 1来使能该功能，默认关闭。
+  - subnet bridge：子网桥接，设置 MD_SBR_CFG_SERVER_EN 等于 1来使能该功能，默认关闭。
   - Opcodes Aggregator：多个消息组合成一条消息的功能，设置 MD_OP_AGG_EN 等于 1来使能该功能，默认关闭。
   - NLC profiles: Network Lighting Control profiles, 分别设置 NLCP_BLC_EN, NLCP_DIC_EN, NLCP_BSS_EN, NLCP_TYPE_ALS, NLCP_TYPE_OCS, NLCP_TYPE_ENM 等于 1来使能对应功能，默认关闭。
 * (Firmware)增加 SMP 功能，设置 BLE_REMOTE_SECURITY_ENABLE等于 1来使能该功能，默认关闭。
