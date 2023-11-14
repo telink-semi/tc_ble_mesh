@@ -115,7 +115,7 @@
         [weakSelf.tableView reloadData];
         [weakSelf switchMeshActionWithMeshDictionary:[ds getDictionaryFromDataSource]];
     } cancel:^(UIAlertAction *action) {
-        
+
     }];
 }
 
@@ -143,7 +143,7 @@
     ShareAlertItemModel *item4 = [[ShareAlertItemModel alloc] init];
     item4.itemType = ShareItemType_button;
     item4.textString = @"DELETE";
-    
+
     __weak typeof(self) weakSelf = self;
     CustomShareAlertView *customAlertView = [[CustomShareAlertView alloc] initWithTitle:[NSString stringWithFormat:@"select action for: %@", network.meshName] itemArray:@[item1, item2, item3, item4] alertResult:^(NSInteger selectIndex) {
         if (selectIndex == 0) {
@@ -200,7 +200,7 @@
         [weakSelf saveMeshList];
         [weakSelf.tableView reloadData];
     } cancel:^(UIAlertAction *action) {
-        
+
     }];
 }
 

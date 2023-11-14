@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LibTools.h 
+ * @file     LibTools.h
  *
  * @brief    for TLSR chips
  *
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  NSData 转  十六进制string(大写)
- 
+
  @return NSString类型的十六进制string
  */
 + (NSString *)convertDataToHexStr:(NSData *)data;
@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  计算2000.1.1 00:00:00 到现在的秒数
- 
+
  @return 返回2000.1.1 00:00:00 到现在的秒数
  */
 + (NSInteger )secondsFrom2000;
@@ -179,7 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @return JSON字符串
  */
 + (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
- 
+
 /**
  *  字典数据转换成JSON字符串（有可读性）
  *
@@ -187,7 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @return JSON字符串
  */
 + (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
- 
+
 /**
  *  字典数据转换成JSON数据
  *

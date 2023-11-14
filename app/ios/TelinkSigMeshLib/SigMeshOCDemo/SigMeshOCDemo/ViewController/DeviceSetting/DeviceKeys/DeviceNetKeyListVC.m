@@ -187,7 +187,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteNetKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }

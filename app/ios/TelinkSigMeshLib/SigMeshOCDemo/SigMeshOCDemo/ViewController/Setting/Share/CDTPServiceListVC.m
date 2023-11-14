@@ -39,7 +39,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    [self setStratButtonEnable:YES];
+    [self setStartButtonEnable:YES];
     if (self.isExportToGateway) {
         self.title = @"CDTP Export To Gateway";
     } else {
@@ -47,7 +47,7 @@
     }
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
-    
+
     __weak typeof(self) weakSelf = self;
     self.client = [[CDTPClientModel alloc] initWithBleInitResult:^(CBCentralManager * _Nonnull central) {
         [weakSelf.client startScanCDTPService];
@@ -67,9 +67,9 @@
         [self showTips:@"Please select service."];
         return;
     }
-    [self setStratButtonEnable:NO];
+    [self setStartButtonEnable:NO];
     ServiceModel *model = self.serviceList[self.selectIndex];
-    
+
     if (self.isExportToGateway) {
         [self.client startWriteMeshObject:self.meshObject toServicePeripheral:model.peripheral];
     } else {
@@ -77,7 +77,7 @@
     }
 }
 
-- (void)setStratButtonEnable:(BOOL)enable {
+- (void)setStartButtonEnable:(BOOL)enable {
     self.startButton.backgroundColor = enable ? UIColor.telinkButtonBlue : [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
     self.tableView.userInteractionEnabled = enable;
 }
@@ -137,7 +137,7 @@
 - (void)onClientWriteFinishWithError:(NSError * __nullable )error {
     if (self.isExportToGateway) {
         TelinkLogInfo(@"error=%@", error)
-        [self setStratButtonEnable:YES];
+        [self setStartButtonEnable:YES];
         if (error) {
             self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Write Error: %@", error.localizedDescription];
             __weak typeof(self) weakSelf = self;
@@ -160,7 +160,7 @@
 - (void)onClientReadFinishWithData:(NSData * __nullable )data error:(NSError * __nullable )error {
     if (!self.isExportToGateway) {
         TelinkLogInfo(@"data=%@ error=%@", data, error)
-        [self setStratButtonEnable:YES];
+        [self setStartButtonEnable:YES];
         __weak typeof(self) weakSelf = self;
         if (error) {
             self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Read Error: %@", error.localizedDescription];
@@ -194,7 +194,7 @@
     ServiceModel *model = self.serviceList[indexPath.row];
     itemCell.titleLabel.text = [NSString stringWithFormat:@"name:%@\nRSSI:%@\nuuid:%@\nadv:%@", model.showName, model.RSSI, model.peripheral.identifier.UUIDString, model.advertisementData];
     itemCell.selectButton.selected = indexPath.row == self.selectIndex;
-    
+
     [itemCell.selectButton addAction:^(UIButton *button) {
         button.selected = !button.selected;
         if (button.selected) {

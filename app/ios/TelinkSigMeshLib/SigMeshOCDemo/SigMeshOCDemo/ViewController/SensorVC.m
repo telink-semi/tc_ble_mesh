@@ -55,12 +55,12 @@
     NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 82 01";
     NSString *string = [str.uppercaseString removeAllSapceAndNewlines];
     NSData *data = [LibTools nsstringToHex:string];
-    
+
     UInt8 *bytes = (UInt8 *)data.bytes;
     UInt16 address = self.model.address;
     memcpy(bytes+8, &address, 2);
     NSData *iniData = [NSData dataWithBytes:bytes length:data.length];
-    
+
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand sendOpINIData:iniData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",(unsigned int)responseMessage.opCode,responseMessage.parameters];
@@ -87,9 +87,9 @@
 //    TelinkLogDebug(@"");
 //    self.hasClickKickout = YES;
 //    [ShowTipsHandle.share show:Tip_KickoutDevice];
-//    
+//
 //    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-//    
+//
 //    if (SigBearer.share.isOpen) {
 //        [self kickoutAction];
 //    } else {
@@ -106,9 +106,9 @@
 //        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
 //        [weakSelf pop];
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//        
+//
 //    }];
-//    
+//
 //    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
 //        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
 //    } else {

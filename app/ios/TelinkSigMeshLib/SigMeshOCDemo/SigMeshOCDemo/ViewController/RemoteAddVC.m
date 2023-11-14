@@ -28,7 +28,7 @@
 #define kRSSIThresholdValue (-80)
 
 /*
- Developer can get more detail by read doucment named "SIG Mesh iOS APP(OC版本)使用以及开发手册.docx".
+ Developer can get more detail by read document named "SIG Mesh iOS APP(OC版本)使用以及开发手册.docx".
  */
 
 @interface RemoteAddVC ()<UICollectionViewDelegate,UICollectionViewDataSource>
@@ -300,7 +300,7 @@
 - (void)startAddDevice{
     [self setUserEnable:NO];
     [self.remoteSource removeAllObjects];
-    
+
     if (SigBearer.share.isOpen) {
         //remote add
         [self startRemoteProvisionScan];
@@ -437,11 +437,11 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    
+
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    
+
     self.title = @"Device Scan(Remote)";
-    
+
     self.source = [NSMutableArray array];
     self.remoteSource = [NSMutableArray array];
     self.failSource = [NSMutableArray array];
@@ -452,7 +452,7 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
-    
+
     [self startAddDevice];
 }
 

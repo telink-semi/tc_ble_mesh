@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     zipAndUnzip+zipString.m 
+ * @file     zipAndUnzip+zipString.m
  *
  * @brief    for TLSR chips
  *

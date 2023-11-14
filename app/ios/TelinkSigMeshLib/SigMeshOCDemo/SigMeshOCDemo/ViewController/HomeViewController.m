@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     HomeViewController.m 
+ * @file     HomeViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -147,7 +147,7 @@
     if (!SigBearer.share.isOpen) {
         return;
     }
-    
+
     BOOL hasKeyBindSuccess = NO;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *model in curNodes) {
@@ -234,11 +234,11 @@
         [ShowTipsHandle.share delayHidden:2.0];
         return;
     }
-    
+
     [DemoCommand switchOnOffWithIsOn:!(model.state == DeviceStateOn) address:model.address responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 
@@ -395,7 +395,7 @@
 
 - (void)blockState{
     [super blockState];
-    
+
     __weak typeof(self) weakSelf = self;
     //this block will callback when publish timer check offline.
     [SigPublishManager.share setDiscoverOutlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {

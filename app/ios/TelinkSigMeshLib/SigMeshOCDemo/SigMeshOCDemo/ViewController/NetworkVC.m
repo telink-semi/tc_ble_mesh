@@ -107,7 +107,7 @@
     self.source = [NSMutableArray array];
     self.iconSource = [NSMutableArray array];
     self.vcIdentifiers = [NSMutableArray array];
-    
+
     [self.source addObject:@"Mesh Info"];
     [self.iconSource addObject:@"ic_mesh_network"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_MeshInfoViewControllerID];

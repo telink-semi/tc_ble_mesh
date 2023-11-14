@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     GroupDetailViewController.h 
+ * @file     GroupDetailViewController.h
  *
  * @brief    for TLSR chips
  *

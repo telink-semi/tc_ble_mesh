@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SceneListViewController.m 
+ * @file     SceneListViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -45,7 +45,7 @@
         [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
             TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }];
     //set edit scene block
@@ -54,7 +54,7 @@
         vc.model = model;
         [weakSelf.navigationController pushViewController:vc animated:YES];
     }];
-    
+
     for (UIView *view in cell.contentView.subviews) {
         if ([view isMemberOfClass:[DeviceElementItemView class]]) {
             [view removeFromSuperview];
@@ -84,7 +84,7 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    
+
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     [self.tableView reloadData];
 }
@@ -99,7 +99,7 @@
     //longpress to delete scene
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
-    
+
 }
 
 - (void)clickAdd{
@@ -137,7 +137,7 @@
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteSceneAction:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -167,13 +167,13 @@
                     [delArray removeObject:curAction];
                     dispatch_semaphore_signal(semaphore);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                    
+
                 }];
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
             }
             [weakSelf showDeleteSceneSuccess:scene];
         }];
-        
+
     }else{
         //needn't send packet, just need to change Datasource.
         [self showDeleteSceneSuccess:scene];

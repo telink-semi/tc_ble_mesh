@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DemoCommand.m 
+ * @file     DemoCommand.m
  *
  * @brief    for TLSR chips
  *
@@ -33,7 +33,7 @@
 
 /// New API on demo since V2.8.1: Get Online device, publish use SigGenericOnOffGet, private use OnlineStatusCharacteristic
 + (BOOL)getOnlineStatusWithResponseMaxCount:(int)responseMaxCount successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    /*Attention: when demo open funcation getOnlinestatus on Mesh Info ViewController, and current node has OnlineStatusCharacteristic, that API will get online status privately; if not, that API will get online status publish. */
+    /*Attention: when demo open function getOnlinestatus on Mesh Info ViewController, and current node has OnlineStatusCharacteristic, that API will get online status privately; if not, that API will get online status publish. */
     if ([self isPrivatelyGetOnlineStatus]) {
         NSError *error = [SDKLibCommand telinkApiGetOnlineStatueFromUUIDWithResponseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         if (error) {
@@ -232,7 +232,7 @@
     } else {
         UInt16 temperature = [LibTools temp100ToTemp:temperature100];
         TelinkLogInfo(@"send request for change temperature100 value:%d,UInt16 temperature=%d",temperature100,temperature);
-        [SDKLibCommand lightCTLTemperatureSetWithDestination:address temperature:temperature deltaUV:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV comfirm later
+        [SDKLibCommand lightCTLTemperatureSetWithDestination:address temperature:temperature deltaUV:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV confirm later
         return YES;
     }
 }

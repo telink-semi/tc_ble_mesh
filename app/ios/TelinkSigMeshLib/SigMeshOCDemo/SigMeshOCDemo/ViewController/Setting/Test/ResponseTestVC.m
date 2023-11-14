@@ -34,12 +34,12 @@
 
 @interface ResponseTestVC ()
 @property (weak, nonatomic) IBOutlet UITextView *contentText;
-@property (weak, nonatomic) IBOutlet UIButton *autoScrollButtom;
-@property (weak, nonatomic) IBOutlet UIButton *commandButtom;
+@property (weak, nonatomic) IBOutlet UIButton *autoScrollButton;
+@property (weak, nonatomic) IBOutlet UIButton *commandButton;
 @property (weak, nonatomic) IBOutlet UITextField *intervalTimeTF;
 @property (weak, nonatomic) IBOutlet UITextField *totalCountTF;
-@property (weak, nonatomic) IBOutlet UIButton *clearLogButtom;
-@property (weak, nonatomic) IBOutlet UIButton *startButtom;
+@property (weak, nonatomic) IBOutlet UIButton *clearLogButton;
+@property (weak, nonatomic) IBOutlet UIButton *startButton;
 @property (nonatomic,strong) NSString *logString;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*allList;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*lostList;
@@ -56,8 +56,8 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    self.clearLogButtom.backgroundColor = UIColor.telinkButtonBlue;
-    self.startButtom.backgroundColor = UIColor.telinkButtonBlue;
+    self.clearLogButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.startButton.backgroundColor = UIColor.telinkButtonBlue;
     _commands = [NSMutableArray array];
     if (_isResponseTest) {
         self.title = @"Response Test";
@@ -87,9 +87,9 @@
     self.testing = NO;
     self.commandIndex = 0;
     [self refreshFirstCommandUI];
-    self.autoScrollButtom.selected = YES;
-    self.commandButtom.layer.borderWidth = 1;
-    self.commandButtom.layer.borderColor = UIColor.telinkButtonBlue.CGColor;
+    self.autoScrollButton.selected = YES;
+    self.commandButton.layer.borderWidth = 1;
+    self.commandButton.layer.borderColor = UIColor.telinkButtonBlue.CGColor;
     self.logString = @"";
     _allList = [NSMutableArray array];
     _lostList = [NSMutableArray array];
@@ -108,16 +108,16 @@
     _testing = NO;
 }
 
-- (IBAction)clickAutoScrollButtom:(UIButton *)sender {
+- (IBAction)clickAutoScrollButton:(UIButton *)sender {
     sender.selected = !sender.selected;
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.autoScrollButtom.selected) {
+        if (self.autoScrollButton.selected) {
             [self.contentText scrollRangeToVisible:NSMakeRange(self.contentText.text.length, 1)];
         }
     });
 }
 
-- (IBAction)clickCommandButtom:(UIButton *)sender {
+- (IBAction)clickCommandButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
     UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Select First Command" message:nil preferredStyle:UIAlertControllerStyleAlert];
     for (CommandModel *model in self.commands) {
@@ -128,7 +128,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    
+
     UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         NSLog(@"Cancel");
     }];
@@ -136,12 +136,12 @@
     [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
-- (IBAction)clickClearLogButtom:(UIButton *)sender {
+- (IBAction)clickClearLogButton:(UIButton *)sender {
     self.contentText.text = @"";
     self.logString = @"";
 }
 
-- (IBAction)clickStartButtom:(UIButton *)sender {
+- (IBAction)clickStartButton:(UIButton *)sender {
     [self.intervalTimeTF resignFirstResponder];
     [self.totalCountTF resignFirstResponder];
     if (self.intervalTimeTF.text.length == 0) {
@@ -162,12 +162,12 @@
     }
     self.intervalTime = [self.intervalTimeTF.text integerValue];
     if (self.intervalTime == 0) {
-        [self showTips:@"Interval time cann′t be zero!"];
+        [self showTips:@"Interval time can not be zero!"];
         return;
     }
     self.totalCount = [self.totalCountTF.text integerValue];
     if (self.totalCount == 0) {
-        [self showTips:@"Total count cann′t be zero!"];
+        [self showTips:@"Total count can not be zero!"];
         return;
     }
     [self setUseEnable:NO];
@@ -214,16 +214,16 @@
 
 - (void)setUseEnable:(BOOL)enable {
     _testing = !enable;
-    _commandButtom.enabled = enable;
+    _commandButton.enabled = enable;
     _intervalTimeTF.enabled = enable;
     _totalCountTF.enabled = enable;
-    _startButtom.enabled = enable;
-    [_startButtom setBackgroundColor:enable?UIColor.telinkButtonBlue:[UIColor lightGrayColor]];
+    _startButton.enabled = enable;
+    [_startButton setBackgroundColor:enable?UIColor.telinkButtonBlue:[UIColor lightGrayColor]];
 }
 
 - (void)refreshFirstCommandUI {
     CommandModel *model = self.commands[self.commandIndex];
-    [_commandButtom setTitle:model.name forState:UIControlStateNormal];
+    [_commandButton setTitle:model.name forState:UIControlStateNormal];
 }
 
 - (void)showNewLogMessage:(NSString *)msg{
@@ -233,7 +233,7 @@
     self.logString = [self.logString stringByAppendingString:[NSString stringWithFormat:@"%@ %@\n",[dformatter stringFromDate:[NSDate date]],msg]];
     dispatch_async(dispatch_get_main_queue(), ^{
         self.contentText.text = self.logString;
-        if (self.autoScrollButtom.selected) {
+        if (self.autoScrollButton.selected) {
             [self.contentText scrollRangeToVisible:NSMakeRange(self.contentText.text.length, 1)];
         }
     });

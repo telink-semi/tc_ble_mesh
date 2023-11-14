@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SceneDetailViewController.h 
+ * @file     SceneDetailViewController.h
  *
  * @brief    for TLSR chips
  *

@@ -156,7 +156,7 @@
     XCTAssertNotNil(defaultMesh.curNetkeyModel.name);
     XCTAssertEqualObjects(defaultMesh.curNetkeyModel.minSecurity, @"secure");
     XCTAssertEqualObjects(defaultMesh.curNetkeyModel.key, defaultMesh.meshUUID);
-    
+
     //2.appKey
     XCTAssertEqual(defaultMesh.appKeys.count, 1);
     XCTAssertEqualObjects(defaultMesh.appKeys.firstObject, defaultMesh.curAppkeyModel);
@@ -165,7 +165,7 @@
     XCTAssertNotNil(defaultMesh.curAppkeyModel.name);
     XCTAssertEqual(defaultMesh.curAppkeyModel.boundNetKey, 0);
     XCTAssertEqual(defaultMesh.curAppkeyModel.index, 0);
-    
+
     //3.provisioner
     XCTAssertEqual(defaultMesh.provisioners.count, 1);
     XCTAssertEqualObjects(defaultMesh.provisioners.firstObject, defaultMesh.curProvisionerModel);
@@ -181,7 +181,7 @@
     XCTAssertEqualObjects(defaultMesh.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
     XCTAssertEqualObjects(defaultMesh.curProvisionerModel.provisionerName, @"Telink iOS provisioner");
     XCTAssertEqualObjects(defaultMesh.curProvisionerModel.UUID, defaultMesh.getCurrentProvisionerUUID);
-    
+
     //4.node
     XCTAssertEqual(defaultMesh.nodes.count, 1);
     XCTAssertEqualObjects(defaultMesh.nodes.firstObject, defaultMesh.curLocationNodeModel);
@@ -198,21 +198,21 @@
     XCTAssertEqual(defaultMesh.curLocationNodeModel.elements.count, 1);
     XCTAssertEqual(defaultMesh.curLocationNodeModel.elements.firstObject.parentNodeAddress, 1);
     XCTAssertEqual(defaultMesh.curLocationNodeModel.deviceKey.length, 2*16);
-    
+
     //5.group
     XCTAssertEqual(defaultMesh.groups.count, 8);
-    
+
     //6.other
     XCTAssertEqualObjects(defaultMesh.schema, @"http://json-schema.org/draft-04/schema#");
     XCTAssertEqualObjects(defaultMesh.meshName, @"Default Mesh");
     XCTAssertEqualObjects(defaultMesh.version, @"1.0.0");
     XCTAssertNotNil(defaultMesh.timestamp);
     XCTAssertEqualObjects(defaultMesh.ivIndex, @"00000000");
-    
-    //7.scanLsit and sno
+
+    //7.scanList and sno
     XCTAssertEqual(defaultMesh.scanList.count, 0);
 //    XCTAssertEqual(defaultMesh.getSequenceNumberUInt32, 0);
-    
+
     NSLog(@"==========finish!");
 }
 
@@ -230,7 +230,7 @@
     XCTAssertNotNil(SigDataSource.share.curNetkeyModel.name);
     XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.minSecurity, @"secure");
     XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.key, SigDataSource.share.meshUUID);
-    
+
     //2.appKey
     XCTAssertEqual(SigDataSource.share.appKeys.count, 1);
     XCTAssertEqualObjects(SigDataSource.share.appKeys.firstObject, SigDataSource.share.curAppkeyModel);
@@ -239,7 +239,7 @@
     XCTAssertNotNil(SigDataSource.share.curAppkeyModel.name);
     XCTAssertEqual(SigDataSource.share.curAppkeyModel.boundNetKey, 0);
     XCTAssertEqual(SigDataSource.share.curAppkeyModel.index, 0);
-    
+
     //3.provisioner
     XCTAssertEqual(SigDataSource.share.provisioners.count, 1);
     XCTAssertEqualObjects(SigDataSource.share.provisioners.firstObject, SigDataSource.share.curProvisionerModel);
@@ -255,7 +255,7 @@
     XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
     XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.provisionerName, @"Telink iOS provisioner");
     XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.UUID, SigDataSource.share.getCurrentProvisionerUUID);
-    
+
     //4.node
     XCTAssertEqual(SigDataSource.share.nodes.count, 1);
     XCTAssertEqualObjects(SigDataSource.share.nodes.firstObject, SigDataSource.share.curLocationNodeModel);
@@ -272,21 +272,21 @@
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.count, 1);
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.firstObject.parentNodeAddress, 1);
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.deviceKey.length, 2*16);
-    
+
     //5.group
     XCTAssertEqual(SigDataSource.share.groups.count, 8*5);
-    
+
     //6.other
     XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
     XCTAssertEqualObjects(SigDataSource.share.meshName, @"Default Mesh");
     XCTAssertEqualObjects(SigDataSource.share.version, @"1.0.0");
     XCTAssertNotNil(SigDataSource.share.timestamp);
     XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");
-    
-    //7.scanLsit and sno
+
+    //7.scanList and sno
     XCTAssertEqual(SigDataSource.share.scanList.count, 0);
     XCTAssertEqual(SigDataSource.share.getSequenceNumberUInt32, 0);
-    
+
     NSLog(@"==========finish!");
 }
 
@@ -304,7 +304,7 @@
 - (void)testSARConfiguration {
     SigSARTransmitterGet *SARTransmitterGet = [[SigSARTransmitterGet alloc] init];
     XCTAssertEqualObjects(SARTransmitterGet.parameters, [LibTools nsstringToHex:@""]);
-    
+
     struct SARTransmitterStructure SARTransmitter = {};
     //1.
 //    NSData *data = [LibTools nsstringToHex:@"12345678"];
@@ -324,10 +324,10 @@
 
     SigSARTransmitterSet *SARTransmitterSet = [[SigSARTransmitterSet alloc] initWithSARTransmitter:SARTransmitter];
     XCTAssertEqualObjects(SARTransmitterSet.parameters, [LibTools nsstringToHex:@"12345678"]);
-    
+
     SigSARReceiverGet *SARReceiverGet = [[SigSARReceiverGet alloc] init];
     XCTAssertEqualObjects(SARReceiverGet.parameters, [LibTools nsstringToHex:@""]);
-    
+
     struct SARReceiverStructure SARReceiver = {};
     //1.
 //    NSData *data = [LibTools nsstringToHex:@"123456"];
@@ -353,13 +353,13 @@
     XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"000000"]);
     largeCompositionDataGet = [[SigLargeCompositionDataGet alloc] initWithPage:0x12 offset:0x6789];
     XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"128967"]);
-    
+
     SigLargeCompositionDataStatus *largeCompositionDataStatus = [[SigLargeCompositionDataStatus alloc] initWithParameters:[LibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
     XCTAssertEqual(largeCompositionDataStatus.page, 0x12);
     XCTAssertEqual(largeCompositionDataStatus.offset, 0x5634);
     XCTAssertEqual(largeCompositionDataStatus.totalSize, 0x8888);
     XCTAssertEqualObjects(largeCompositionDataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
-    
+
     SigModelsMetadataGet *modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0 offset:0];
     XCTAssertEqualObjects(modelsMetadataGet.parameters, [LibTools nsstringToHex:@"000000"]);
     modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0x12 offset:0x6789];

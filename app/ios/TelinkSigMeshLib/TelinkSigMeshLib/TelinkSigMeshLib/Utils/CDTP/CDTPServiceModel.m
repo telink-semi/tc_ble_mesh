@@ -85,7 +85,7 @@
 /// - seeAlso: https://classic.yarnpkg.com/en/package/cordova-plugin-ble-central#readme,l2cap.open.
 @property (nonatomic, strong) CBMutableCharacteristic *psmCharacteristic;
 /// Marks whether the Bluetooth service list has been initialized.
-@property (nonatomic, assign) BOOL hasInitServises;//标记是否已经初始化服务列表
+@property (nonatomic, assign) BOOL hasInitServices;//标记是否已经初始化服务列表
 /// Mark whether Bluetooth broadcast data needs to be sent.
 @property (nonatomic, assign) BOOL needAdvertise;//标记是否需要发送蓝牙广播数据
 /// A CBL2CAPChannel represents a live L2CAP connection to a remote device.
@@ -110,7 +110,7 @@
     _objectModel = [[ObjectModel alloc] initWithMeshDictionary:shareMeshDictionary];
 }
 
-- (void)initServices {    
+- (void)initServices {
     //create characteristic list: Table 3.1: Requirements for characteristics used in the Object Transfer Service
 
     // OTS Feature Characteristic
@@ -148,7 +148,7 @@
     // PSM
     self.psmCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:CBUUIDL2CAPPSMCharacteristicString] properties:CBCharacteristicPropertyRead value:nil permissions:CBAttributePermissionsReadEncryptionRequired];
     [self.psmCharacteristic setDescriptors:@[[[CBMutableDescriptor alloc] initWithType: [CBUUID UUIDWithString:CBUUIDCharacteristicUserDescriptionString] value:@"PSM"]]];
-    
+
     //2.service1初始化并加入两个characteristics
     CBMutableService *service1 = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:kObjectTransferService] primary:YES];
     [service1 setCharacteristics:@[self.otsFeatureCharacteristic, self.objectNameCharacteristic, self.objectTypeCharacteristic, self.objectSizeCharacteristic, self.objectFirstCreatedCharacteristic, self.objectLastModifiedCharacteristic, self.objectPropertiesCharacteristic, self.objectActionControlPointCharacteristic, self.psmCharacteristic]];
@@ -336,7 +336,7 @@
         [self responseInsufficientResourcesWithRequestOacpOpCode:OACPOpCode_Create];
         return;
     }
-    
+
     /*创建 Object 成功流程*/
     self.objectModel = [[ObjectModel alloc] init];
     self.objectModel.objectSize = tem32;
@@ -377,7 +377,7 @@
         [self responseObjectLockedWithRequestOacpOpCode:OACPOpCode_Delete];
         return;
     }
-    
+
     /*删除 Object 成功流程*/
     self.objectModel = [[ObjectModel alloc] init];
     [self responseSuccessWithRequestOacpOpCode:OACPOpCode_Delete];
@@ -419,7 +419,7 @@
         [self responseObjectLockedWithRequestOacpOpCode:OACPOpCode_CalculateChecksum];
         return;
     }
-    
+
     /*验证 Object 校验码 成功流程*/
     NSData *sourceData = [self.objectModel.objectData subdataWithRange:NSMakeRange(offset, length)];
     UInt32 checkSum = [LibTools getCRC32OfData:sourceData];
@@ -464,30 +464,30 @@
         [self responseInvalidParameterWithRequestOacpOpCode:OACPOpCode_Read];
         return;
     }
-    
+
     /*
      // The value of the Length parameter exceeds the number of octets that the Server has the capacity to read from the object.
      // Insufficient Resources
      read流程的资源不足，未弄清楚这个长度如何获取，后面在补充该判断。
      */
 #warning need to fix Insufficient Resources of READ
-    
+
     if (self.objectModel.objectLocked || self.objectModel.isReading || self.objectModel.isWriting) {
         // An object transfer is already in progress that is using the Current Object.
         // Object Locked
         [self responseObjectLockedWithRequestOacpOpCode:OACPOpCode_Read];
         return;
     }
-    
+
     /*读 Object 成功流程：1.返回成功。2.准备好数据，Client端会在接收到Read成功后再通过OACP Read指令来读取刚刚的数据*/
-    
+
     //可能上一次是中断的流程，流并未打开，所以在回复成功之前先确保流是打开的状态
     [self.channelModel openStreamAction];
 
     NSData *sourceData = [self.objectModel.objectData subdataWithRange:NSMakeRange(offset, length)];
     self.objectModel.objectLocked = YES;
     [self responseSuccessWithRequestOacpOpCode:OACPOpCode_Read];
-    
+
     //返回成功后延时100ms再发送流数据
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -514,7 +514,7 @@
                 });
             }
         }];
-        
+
     });
 }
 
@@ -542,7 +542,7 @@
      Patching was attempted but the object’s properties do not permit patching of the object contents.
      已尝试修补，但对象的属性不允许修补对象内容。
      */
-    
+
     Byte *dataByte = (Byte *)data.bytes;
     UInt8 tem8 = 0;
     if (data.length >= 10) {
@@ -584,12 +584,12 @@
             return;
         }
     }
-    
+
     /*
      //Insufficient Resources
      The value of the Length parameter exceeds the number of octets that the Server has the capacity to write to the object.
      */
-    
+
     if (self.objectModel.objectLocked || self.objectModel.isReading || self.objectModel.isWriting) {
         // The Current Object is locked by the Server.
         // An object transfer is already in progress that is using the Current Object.
@@ -597,16 +597,16 @@
         [self responseObjectLockedWithRequestOacpOpCode:OACPOpCode_Write];
         return;
     }
-    
+
     /*Write Object 指令成功流程：1.返回成功。2.准备好接收数据的buff，Client端会在接收到Write成功后再通过OACP Write指令来写数据到刚刚的buff*/
-    
+
     //可能上一次是中断的流程，流并未打开，所以在回复成功之前先确保流是打开的状态
     [self.channelModel openStreamAction];
-    
+
     self.objectModel.objectData = [NSMutableData data];
     self.objectModel.objectLocked = YES;
     [self responseSuccessWithRequestOacpOpCode:OACPOpCode_Write];
-    
+
     self.objectModel.isReading = YES;
     __weak typeof(self) weakSelf = self;
     [self.channelModel readStreamWithSize:length progress:^(float progress) {
@@ -645,7 +645,7 @@
         return;
     }
     [self.channelModel closeStreamAction];
-    
+
     /*Abort Object 指令成功流程：1.停止OACP Read的数据上报操作。2.返回abort成功*/
     self.objectModel.objectLocked = NO;
     [self responseSuccessWithRequestOacpOpCode:OACPOpCode_Abort];
@@ -663,7 +663,7 @@
     if (self = [super init]) {
         /// Initialize self.
         [self setShareMeshDictionary:shareMeshDictionary];
-        _hasInitServises = NO;
+        _hasInitServices = NO;
         struct OACPFeatures feature = {};
         feature.value = 0;
         feature.OACPCreateOpCodeSupported = 1;
@@ -736,7 +736,7 @@
             NSLog(@"powered on");
             [peripheral publishL2CAPChannelWithEncryption:YES];
             isOpen = YES;
-            if (!self.hasInitServises) {
+            if (!self.hasInitServices) {
                 [self initServices];
             }
             break;
@@ -767,7 +767,7 @@
     if (error) {
         NSLog(@"error =%@",error.localizedDescription);
     }else{
-        self.hasInitServises = YES;
+        self.hasInitServices = YES;
         [self initCharacteristicValue];
         if (self.needAdvertise) {
             [self startAdvertising];
@@ -838,11 +838,11 @@
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray *)requests{
     NSLog(@"callback didReceiveWriteRequests");
     CBATTRequest *request = requests[0];
-    
+
     //判断是否有写数据的权限
     if (request.characteristic.properties & CBCharacteristicPropertyWrite) {
         [self.peripheralManager respondToRequest:request withResult:CBATTErrorSuccess];
-        
+
         //需要转换成CBMutableCharacteristic对象才能进行写值
         CBMutableCharacteristic *c =(CBMutableCharacteristic *)request.characteristic;
         c.value = request.value;

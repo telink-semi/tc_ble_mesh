@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SingleOTAViewController.h 
+ * @file     SingleOTAViewController.h
  *
  * @brief    for TLSR chips
  *

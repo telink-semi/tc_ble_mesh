@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SchedulerCell.m 
+ * @file     SchedulerCell.m
  *
  * @brief    for TLSR chips
  *
@@ -31,7 +31,7 @@
 @implementation SchedulerCell{
     __weak IBOutlet UILabel *_nameLabel;
     __weak IBOutlet UILabel *_detailStateLabel;
-    
+
 }
 
 - (void)awakeFromNib {
@@ -135,7 +135,7 @@
     }else if (model.action == 0xF){
         action = @"No action";
     }
-    
+
     _detailStateLabel.text = [NSString stringWithFormat:@"Year:%@\nMonth:%@\nDay:%@\nHour:%@\nMinute:%@\nSecond:%@\nWeek:%@\nAction:%@",year,month,day,hour,minute,second,week,action];
 }
 

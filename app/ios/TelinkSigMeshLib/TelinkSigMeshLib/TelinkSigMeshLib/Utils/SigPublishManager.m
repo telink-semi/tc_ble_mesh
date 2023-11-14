@@ -56,9 +56,9 @@
 #pragma mark check outline timer
 - (void)setDeviceOffline:(NSNumber *)address{
     UInt16 adr = [address intValue];
-    
+
     [self stopCheckOfflineTimerWithAddress:@(adr)];
-    
+
     SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:adr];
     if (device) {
         if (device.hasPublishFunction && device.hasOpenPublish) {

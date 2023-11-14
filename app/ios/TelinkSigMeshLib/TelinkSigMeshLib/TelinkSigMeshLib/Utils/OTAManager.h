@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     OTAManager.h 
+ * @file     OTAManager.h
  *
  * @brief    for TLSR chips
  *
@@ -43,7 +43,7 @@ typedef void(^finishCallBack)(NSArray <SigNodeModel *>*successModels,NSArray <Si
 
 /**
  OTA，can not call repeat when app is OTAing
- 
+
  @param otaData data for OTA
  @param models models for OTA
  @param singleSuccessAction callback when single model OTA  success

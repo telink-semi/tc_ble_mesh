@@ -123,7 +123,7 @@
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -139,7 +139,7 @@
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
     [cell setAppKeyModel:model];
     __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {        
+    [cell.editButton addAction:^(UIButton *button) {
         AppKeyAddVC *vc = [[AppKeyAddVC alloc] init];
         vc.isAdd = NO;
         [vc setAppKeyModel:model];
@@ -172,7 +172,7 @@
             SigDataSource.share.curAppkeyModel = model;
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         } cancel:^(UIAlertAction *action) {
-            
+
         }];
     }
 }

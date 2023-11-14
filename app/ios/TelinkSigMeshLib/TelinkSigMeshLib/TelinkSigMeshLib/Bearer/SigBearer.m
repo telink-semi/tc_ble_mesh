@@ -120,7 +120,7 @@
     memcpy(&opcodeInt, byte, 1);
     memcpy(&statusDataLength, byte + 1, 1);
     statusCount = (UInt8)(data.length-4-2)/statusDataLength;//减去OPCode+length+snumber+CRC
-    
+
     for (int i=0; i<statusCount; i++) {
         UInt16 address = 0;
         memcpy(&address, byte + 4 + statusDataLength*i, 2);
@@ -503,7 +503,7 @@
             BOOL queueWasEmpty = _queue.count == 0;
             [_queue addObjectsFromArray:packets];
             self.characteristic = characteristic;
-            
+
             // Don't look at `basePeripheral.canSendWriteWithoutResponse`. If often returns `false` even when nothing was sent before and no callback is called afterwards. Just assume, that the first packet can always be sent.
             if (queueWasEmpty) {
                 NSData *packet = _queue.firstObject;
@@ -536,7 +536,7 @@
         TelinkLogError(@"current data is empty.");
         return;
     }
-    
+
     NSInteger mtu = [self.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
 //    NSInteger mtu = 20;
     NSArray *packets = [self.protocolHandler segmentWithData:pdu.pduData messageType:type mtu:mtu];

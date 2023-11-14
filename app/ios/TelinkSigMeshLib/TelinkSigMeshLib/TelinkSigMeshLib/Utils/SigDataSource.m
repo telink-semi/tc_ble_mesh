@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SigDataSource.m 
+ * @file     SigDataSource.m
  *
  * @brief    for TLSR chips
  *
@@ -74,7 +74,7 @@
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
         /// Initialize the Singleton configure parameters.
-        shareDS = [[SigDataSource alloc] init];        
+        shareDS = [[SigDataSource alloc] init];
     });
     return shareDS;
 }
@@ -131,7 +131,7 @@
     _defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
     _telinkExtendBearerMode = SigTelinkExtendBearerMode_noExtend;
     _aggregatorEnable = NO;
-    
+
     //OOB
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSData *data = [defaults objectForKey:kOOBStoreKey];
@@ -230,13 +230,13 @@
     [self addLocationNodeWithProvisioner:provisioner];
 
     //5.add default group
-    Groups *defultGroup = [[Groups alloc] init];
+    Groups *defaultGroup = [[Groups alloc] init];
     [_groups removeAllObjects];
-    for (int i=0; i<defultGroup.groupCount; i++) {
+    for (int i=0; i<defaultGroup.groupCount; i++) {
         SigGroupModel *group = [[SigGroupModel alloc] init];
         group.address = [NSString stringWithFormat:@"%04X",0xc000+i];
         group.parentAddress = [NSString stringWithFormat:@"%04X",0];
-        group.name = defultGroup.names[i];
+        group.name = defaultGroup.names[i];
         [_groups addObject: group];
     }
 
@@ -244,7 +244,7 @@
     [_networkExclusions removeAllObjects];
     [_encryptedArray removeAllObjects];
     [_forwardingTableModelList removeAllObjects];
-    
+
     _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
     _schema = @"http://json-schema.org/draft-04/schema#";
     _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
@@ -947,7 +947,7 @@
     if (provisionerUUID == nil) {
         [self saveCurrentProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
     }
-    
+
     NSData *locationData = [self getLocationMeshData];
     BOOL exist = locationData.length > 0;
     if (!exist) {
@@ -976,13 +976,13 @@
     if (_encryptedArray) {
         [_encryptedArray removeAllObjects];
     }
-    
+
     //2.Check if _curProvisionerModel exists?
     if (self.curProvisionerModel) {
         TelinkLogInfo(@"exist local provisioner, needn't create");
     }else{
         //don't exist local provisioner, create and add to SIGDataSource.provisioners, then save location.
-        //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
+        //Attention: the max local address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress can not bigger than 0x7fff.
         if (self.provisioners.count <= 0x7f) {
             SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:[self getMaxHighAllocatedUnicastAddress] andProvisionerUUID:[self getCurrentProvisionerUUID]];
             [_provisioners addObject:provisioner];
@@ -990,11 +990,11 @@
             _timestamp = [LibTools getNowTimeStringOfJson];
             [self saveLocationData];
         }else{
-            TelinkLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
+            TelinkLogInfo(@"warning: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
             return;
         }
     }
-    
+
     // 3.config _filterModel.addressList
     // addresses is unicastAddress of curLocationNodeModel.
     SigNodeModel *node = self.curLocationNodeModel;
@@ -1032,7 +1032,7 @@
             }
         }
     }
-    
+
     if (SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
         //SequenceNumber add defaultSequenceNumberIncrement.
         SigDataSource.share.ivIndex = SigDataSource.share.getLocalIvIndexString;
@@ -1069,7 +1069,7 @@
     node.pid = @"0100";
     node.vid = @"0100";
     node.crpl = @"0100";
-    
+
     // add elements
     NSMutableArray *elements = [NSMutableArray array];
     SigElementModel *element = [[SigElementModel alloc] init];
@@ -1090,7 +1090,7 @@
     element.parentNodeAddress = node.address;
     [elements addObject:element];
     node.elements = elements;
-    
+
     NSData *devicekeyData = [LibTools createRandomDataWithLength:16];
     node.deviceKey = [LibTools convertDataToHexStr:devicekeyData];
     SigAppkeyModel *appkey = [self curAppkeyModel];
@@ -2428,7 +2428,7 @@
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
-    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrentProvisionerUUID_key];
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:self.getCurrentProvisionerUuidkey];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2439,11 +2439,16 @@
  */
 - (NSString *)getCurrentProvisionerUUID{
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *uuid = [defaults objectForKey:kCurrentProvisionerUUID_key];
+    NSString *uuid = [defaults objectForKey:self.getCurrentProvisionerUuidkey];
     if (uuid.length == 32) {
         uuid = [LibTools UUIDToMeshUUID:uuid];
     }
     return uuid;
+}
+
+/// Compatible with older versions of keys
+- (NSString *)getCurrentProvisionerUuidkey {
+    return [kCurrentProvisionerUUID_key stringByReplacingCharactersInRange:NSMakeRange(6, 1) withString:@""];
 }
 
 #pragma mark - deprecated API

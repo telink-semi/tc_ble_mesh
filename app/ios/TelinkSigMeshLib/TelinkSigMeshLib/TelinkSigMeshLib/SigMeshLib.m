@@ -280,7 +280,7 @@ static SigMeshLib *shareLib = nil;
         }
         return nil;
     }
-    
+
     [self handleResponseMaxCommands];
     command.source = self.dataSource.curLocationNodeModel.elements.firstObject;
     command.destination = [[SigMeshAddress alloc] initWithAddress:destination];
@@ -383,7 +383,7 @@ static SigMeshLib *shareLib = nil;
         }
         return nil;
     }
-    
+
     [self handleResponseMaxCommands];
     command.source = source;
     command.destination = destination;
@@ -450,7 +450,7 @@ static SigMeshLib *shareLib = nil;
         }
         return nil;
     }
-    
+
     [self handleResponseMaxCommands];
     command.commandType = SigCommandType_proxyConfigurationMessage;
     [self addCommandToCacheListWithCommand:command];
@@ -485,7 +485,7 @@ static SigMeshLib *shareLib = nil;
         TelinkLogError(@"Send fail! Mesh Network not created");
         return [NSError errorWithDomain:kSigMeshLibNoCreateMeshNetworkErrorMessage code:kSigMeshLibNoCreateMeshNetworkErrorCode userInfo:nil];
     }
-    
+
     [self handleResponseMaxCommands];
     [self addCommandToCacheListWithCommand:command];
     CBCharacteristic *onlineStatusCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
@@ -593,7 +593,7 @@ static SigMeshLib *shareLib = nil;
     TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
     NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
     [self handleResultCallback:command error:error];
-    
+
 //    if (command.resultCallback && !command.hadReceiveAllResponse) {
 //        TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
 //        NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
@@ -659,7 +659,7 @@ static SigMeshLib *shareLib = nil;
 /// - Parameters:
 ///   - destination: An address may be a unicast address, a virtual address, or a group address.
 ///   There is also a special value to represent an unassigned address that is not used in messages.
-///   - responseMaxCount: The count of response message shoult response in this command.
+///   - responseMaxCount: The count of response message should response in this command.
 - (float)getReliableIntervalWithDestination:(UInt16)destination responseMaxCount:(NSInteger)responseMaxCount {
     int multiple = 1;
     if (self.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength > kUnsegmentedMessageLowerTransportPDUMaxLength) {
@@ -684,7 +684,7 @@ static SigMeshLib *shareLib = nil;
                 return self.dataSource.defaultReliableIntervalOfLPN;
             }
         }
-        
+
         if (responseMaxCount < 10) {
             return kCMDInterval * 4 * multiple;
         } else if (responseMaxCount <= 50) {
@@ -724,7 +724,7 @@ static SigMeshLib *shareLib = nil;
             [SigPublishManager.share startCheckOfflineTimerWithAddress:@(source)];
         }
     }
-    
+
     //update status to SigDataSource before callback.
     [self.dataSource updateNodeStatusWithBaseMeshMessage:message source:source];
     //非直连设备断电，再上电后设备端会主动上报0x824E。

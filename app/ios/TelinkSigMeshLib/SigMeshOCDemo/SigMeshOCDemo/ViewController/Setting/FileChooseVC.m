@@ -47,11 +47,11 @@
         [self showTips:@"this json file is empty, please choose other!"];
         return;
     }
-        
+
     if (self.backJsonData) {
         self.backJsonData(jsonData,jsonName);
     }
-    
+
     [self.navigationController popViewControllerAnimated:YES];
 }
 

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     NSString+extension.h 
+ * @file     NSString+extension.h
  *
  * @brief    for TLSR chips
  *

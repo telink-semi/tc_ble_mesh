@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     OTAManager.m 
+ * @file     OTAManager.m
  *
  * @brief    for TLSR chips
  *
@@ -88,20 +88,20 @@ typedef enum : NSUInteger {
 
 - (void)initData{
     _bearer = SigBearer.share;
-    
+
     _writeOTAInterval = 0.006;
     _readTimeoutInterval = 5.0;
-    
+
     _currentUUID = @"";
     _currentIndex = 0;
-    
+
     _OTAing = NO;
     _stopOTAFlag = NO;
     _offset = 0;
     _otaIndex = -1;
     _sendFinish = NO;
     _progress = SigGattOTAProgress_idle;
-    
+
     _allModels = [[NSMutableArray alloc] init];
     _successModels = [[NSMutableArray alloc] init];
     _failModels = [[NSMutableArray alloc] init];
@@ -110,7 +110,7 @@ typedef enum : NSUInteger {
 
 /**
  OTA，can not call repeat when app is OTAing
- 
+
  @param otaData data for OTA
  @param models models for OTA
  @param singleSuccessAction callback when single model OTA  success
@@ -129,10 +129,10 @@ typedef enum : NSUInteger {
         return NO;
     }
     if (models.count == 0) {
-        TelinkLogInfo(@"OTA devices list is invaid.");
+        TelinkLogInfo(@"OTA devices list is invalid.");
         return NO;
     }
-    
+
     _localData = otaData;
     [_allModels removeAllObjects];
     [_allModels addObjectsFromArray:models];
@@ -143,16 +143,16 @@ typedef enum : NSUInteger {
     _finishCallBack = finishAction;
     [_successModels removeAllObjects];
     [_failModels removeAllObjects];
-    
+
     if (_bearer.dataDelegate) {
         self.oldBearerDataDelegate = _bearer.dataDelegate;
     }
     _bearer.dataDelegate = self;
-    
+
     [self refreshCurrentModel];
     SigBearer.share.isAutoReconnect = NO;
     [self otaNext];
-    
+
     return YES;
 }
 
@@ -229,7 +229,7 @@ typedef enum : NSUInteger {
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        __block BOOL hasSuccess = NO;        
+        __block BOOL hasSuccess = NO;
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigMeshLib.share.dataSource.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
             TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -369,7 +369,7 @@ typedef enum : NSUInteger {
     }
     if (self.currentModel && _bearer.getCurrentPeripheral && _bearer.getCurrentPeripheral.state == CBPeripheralStateConnected) {
         NSInteger lastLength = _localData.length - _offset;
-        
+
         //OTA 结束包特殊处理
         if (lastLength == 0) {
             Byte byte[] = {0x02,0xff};
@@ -378,7 +378,7 @@ typedef enum : NSUInteger {
             self.sendFinish = YES;
             return;
         }
-        
+
         self.otaIndex ++;
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
         NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
@@ -400,14 +400,14 @@ typedef enum : NSUInteger {
     if (self.stopOTAFlag) {
         return;
     }
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(readTimeout) object:nil];
     });
-    
+
     if (self.currentModel && _bearer.getCurrentPeripheral && _bearer.getCurrentPeripheral.state == CBPeripheralStateConnected) {
         NSInteger lastLength = _localData.length - _offset;
-        
+
         //OTA 结束包特殊处理
         if (lastLength == 0) {
             Byte byte[] = {0x02,0xff};
@@ -416,18 +416,18 @@ typedef enum : NSUInteger {
             self.sendFinish = YES;
             return;
         }
-        
+
         self.otaIndex ++;
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
         NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
         [self sendOTAData:writeData index:(int)self.otaIndex complete:nil];
         self.offset += writeLength;
-        
+
         float progress = (self.offset * 100.0) / self.localData.length;
         if (self.singleProgressCallBack) {
             self.singleProgressCallBack(progress);
         }
-        
+
         if ((self.otaIndex + 1) % 8 == 0) {
             __weak typeof(self) weakSelf = self;
             [SDKLibCommand readOTACharachteristicWithTimeout:self.readTimeoutInterval complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
@@ -534,7 +534,7 @@ typedef enum : NSUInteger {
     int countIndex = index;
     Byte *tempBytes = (Byte *)[data bytes];
     Byte resultBytes[20];
-    
+
     memset(resultBytes, 0xff, 20);
     memcpy(resultBytes, &countIndex, 2);
     memcpy(resultBytes+2, tempBytes, data.length);
@@ -565,7 +565,7 @@ typedef enum : NSUInteger {
     int negationIndex = ~index;
     Byte *tempBytes = (Byte *)[data bytes];
     Byte resultBytes[6];
-    
+
     memset(resultBytes, 0xff, 6);
     memcpy(resultBytes, tempBytes, data.length);
     memcpy(resultBytes+2, &index, 2);

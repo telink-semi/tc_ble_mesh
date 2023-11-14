@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     ReKeyBindViewController.m 
+ * @file     ReKeyBindViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -38,7 +38,7 @@
     TelinkLogDebug(@"");
     self.hasClickKickout = YES;
     [ShowTipsHandle.share show:Tip_KickoutDevice];
-        
+
     if (SigBearer.share.isOpen) {
         [self kickoutAction];
     } else {
@@ -129,7 +129,7 @@
             TelinkLogDebug(@"stopMeshConnect fail");
         }
     }];
-    
+
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:Tip_ReKeyBindDeviceFail preferredStyle:UIAlertControllerStyleAlert];
     __weak typeof(self) weakSelf = self;
     UIAlertAction *action = [UIAlertAction actionWithTitle:@"confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
@@ -145,7 +145,7 @@
     TelinkLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
     _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-        
+
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (isResponseAll) {
             TelinkLogDebug(@"kickout success.");

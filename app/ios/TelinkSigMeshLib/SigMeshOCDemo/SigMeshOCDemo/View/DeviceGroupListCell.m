@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceGroupListCell.m 
+ * @file     DeviceGroupListCell.m
  *
  * @brief    for TLSR chips
  *
@@ -40,10 +40,10 @@
 
 - (void)awakeFromNib {
     [super awakeFromNib];
-    
+
     self.options = SigDataSource.share.defaultGroupSubscriptionModels;
     self.temOptions = [[NSMutableArray alloc] init];
-    
+
 }
 
 //归属group
@@ -169,7 +169,7 @@
     self.groupName.text = groupName;
     self.groupAddress = groupAddress.intValue;
     self.subToGroup.selected = [self.model.getGroupIDs containsObject:groupAddress];
-    
+
     // 根据defaultGroupSubscriptionModels过滤出当前设备存在的modelID，只绑定存在的modelID。
     NSMutableArray *temArray = [NSMutableArray array];
     NSArray *defaultGroupSubscriptionModels = [NSArray arrayWithArray:SigDataSource.share.defaultGroupSubscriptionModels];

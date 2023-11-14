@@ -184,7 +184,7 @@ typedef enum : NSUInteger {
                     if (successful) {
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                             [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                                
+
                             } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                                 if (error) {
                                     TelinkLogVerbose(@"setFilter失败");
@@ -264,7 +264,7 @@ typedef enum : NSUInteger {
                 [weakSelf scanNode];
             }];
         }];
-        
+
     }
 }
 

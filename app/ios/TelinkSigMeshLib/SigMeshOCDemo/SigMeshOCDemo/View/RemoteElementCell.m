@@ -38,10 +38,10 @@
 }
 
 - (IBAction)clickAddressList:(UIButton *)sender {
-    [self pushPublicAdressList];
+    [self pushPublicAddressList];
 }
 
-- (void)pushPublicAdressList {
+- (void)pushPublicAddressList {
     NSArray *groups = [NSArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
     //判断model合法性
     NSString *modelIdString = self.modelTF.text.removeAllSapceAndNewlines;

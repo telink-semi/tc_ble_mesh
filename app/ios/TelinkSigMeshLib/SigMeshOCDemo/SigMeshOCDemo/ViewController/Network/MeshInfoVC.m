@@ -122,7 +122,7 @@
         NSString *t = @"sending ivUpdate...";
         [ShowTipsHandle.share show:t];
     });
-    
+
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{

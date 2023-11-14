@@ -50,12 +50,12 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     self.tableView.tableFooterView = footerView;
     self.tableView.estimatedRowHeight = 50.0;
     self.tableView.allowsSelection = NO;
-    
+
     self.rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickScanButton)];
     self.navigationItem.rightBarButtonItem = self.rightItem;
     self.leftItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back"] style:UIBarButtonItemStylePlain target:self action:@selector(clickBackButton)];
     self.navigationItem.leftBarButtonItem = self.leftItem;
-    
+
     [self clickScanButton];
 }
 
@@ -170,8 +170,8 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     }
     if (mArray.count > 0) {
         __weak typeof(self) weakSelf = self;
-        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-        [oprationQueue addOperationWithBlock:^{
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+        [operationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             for (AddDeviceModel *model in mArray) {
@@ -212,8 +212,8 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
             if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
                 staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
             }
-            NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-            [oprationQueue addOperationWithBlock:^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            [operationQueue addOperationWithBlock:^{
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 __block NSError *error = nil;
                 if (model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning) {

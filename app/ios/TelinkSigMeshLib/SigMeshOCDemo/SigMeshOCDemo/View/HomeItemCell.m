@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     HomeItemCell.m 
+ * @file     HomeItemCell.m
  *
  * @brief    for TLSR chips
  *
@@ -28,7 +28,7 @@
 - (void)updateContent:(SigNodeModel *)model{
     UInt16 deviceAddress = 0;
     NSString *iconName = @"";
-    
+
     SigNodeModel *btModel = (SigNodeModel *)model;
     switch (btModel.state) {
         case DeviceStateOutOfLine:
@@ -67,14 +67,14 @@
     }else{
         tempType = [NSString stringWithFormat:@"Cid-%04X",[LibTools uint16From16String:btModel.cid]];
     }
-    
+
     //原做法：显示短地址+亮度+色温
 //    NSString *tempBrightness = [NSString stringWithFormat:@"%d",btModel.trueBrightness];
 //    NSString *tempTemperatrure = [NSString stringWithFormat:@"%d",btModel.trueTemperature];
 //    self.address.text = btModel.state == DeviceStateOn ? [NSString stringWithFormat:@"%@ : %@ : %@",tempAddress,tempBrightness,tempTemperatrure]:[NSString stringWithFormat:@"%@ : 0 : 0",tempAddress];
     //新做法：显示短地址+PID
     self.address.text = [NSString stringWithFormat:@"%@(%@)",tempAddress,tempType];
-    
+
     if (!btModel.isKeyBindSuccess) {
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }

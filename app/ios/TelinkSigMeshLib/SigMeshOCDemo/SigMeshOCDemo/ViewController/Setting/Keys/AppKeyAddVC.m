@@ -99,7 +99,7 @@
         [self showTips:@"Please input `index` in range 0~0x0FFF."];
         return;
     }
-    
+
     if (![LibTools validateHex:self.boundNetKeyTF.text.removeAllSapceAndNewlines]) {
         [self showTips:@"Please input `boundNetKey` in range 0~0x0FFF."];
         return;

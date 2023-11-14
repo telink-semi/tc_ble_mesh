@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SingleDeviceViewController.m 
+ * @file     SingleDeviceViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -36,7 +36,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
+
     [self configUI];
 }
 
@@ -65,29 +65,29 @@
 
 - (void)configUI{
     self.title = @"Device Setting";
-    
+
     // add sub vc
     [self setUpAllViewController];
-    
+
     __weak typeof(self) weakSelf = self;
     double h = kGetRectNavAndStatusHeight;
     [self setUpContentViewFrame:^(UIView *contentView) {
         contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
     }];
-    
+
     [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
         *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
         *selColor = [UIColor blackColor];
         *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
         *titleWidth = [UIScreen mainScreen].bounds.size.width / (weakSelf.model.isRemote ? 2 : 3);
     }];
-    
+
     // 标题渐变
     // *推荐方式(设置标题渐变)
     [self setUpTitleGradient:^(YZTitleColorGradientStyle *titleColorGradientStyle, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor) {
-        
+
     }];
-    
+
     [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
         *underLineColor = UIColor.telinkButtonBlue;
         *isUnderLineEqualTitleWidth = YES;
@@ -112,7 +112,7 @@
         wordVc1.model = self.model;
         [self addChildViewController:wordVc1];
     }
-    
+
     // group
     // 遥控器不需要分组界面
     if (self.model.isRemote == NO) {
@@ -121,7 +121,7 @@
         wordVc2.model = self.model;
         [self addChildViewController:wordVc2];
     }
-    
+
     // settings
     DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
     wordVc3.title = @"SETTINGS";

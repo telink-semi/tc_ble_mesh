@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceSettingViewController.m 
+ * @file     DeviceSettingViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -67,11 +67,11 @@
     UIAlertAction *action = [UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         weakSelf.hasClickKickout = YES;
         [ShowTipsHandle.share show:Tip_KickoutDevice];
-        
+
         if (weakSelf.model.hasPublishFunction && weakSelf.model.hasOpenPublish) {
             [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
         }
-        
+
         if (SigBearer.share.isOpen) {
             [weakSelf kickoutAction];
         } else {
@@ -94,7 +94,7 @@
     } else {
         TelinkLogInfo(@"send request for kick out address:%d",self.model.address);
         _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-            
+
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
                 TelinkLogDebug(@"kickout success.");

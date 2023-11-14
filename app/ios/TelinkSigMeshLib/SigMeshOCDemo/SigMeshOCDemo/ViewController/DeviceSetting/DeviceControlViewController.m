@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     DeviceControlViewController.m 
+ * @file     DeviceControlViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -72,24 +72,24 @@ typedef enum : NSUInteger {
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    
+
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;
     self.nextBrightness = 0;
     self.hadChangeTempareture = NO;
     self.hasNextTempareture = NO;
     self.nextTempareture = 0;
-    
-    
-    
-    
+
+
+
+
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.allowsSelection = NO;
     self.tableView.baseTableViewDelegate = self;
     self.dataSource = [NSMutableArray array];
     if (self.model.HSLAddresses.count > 0) {
-        self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+        self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
 
         ModelType *type = [[ModelType alloc] init];
         type.uiType = ModelUITypeHSL;
@@ -110,7 +110,7 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OnOffModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OnOffModelCellID];
     }
-    
+
     //注意：2.8.2发现RGB为255、0、0时，亮度调到100会设备颜色显示异常，暂时屏蔽亮度、色温
 
     if (self.model.lightnessAddresses.count > 0) {
@@ -127,7 +127,7 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_LevelAndSliderCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_LevelAndSliderCellID];
     }
-    
+
     [self getDeviceState];
 }
 
@@ -170,25 +170,25 @@ typedef enum : NSUInteger {
         [DemoCommand getHSLWithAddress:self.model.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
             [weakSelf performSelectorOnMainThread:@selector(HSLCallBack) withObject:nil waitUntilDone:YES];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }
 }
 
 - (void)HSLCallBack{
-    self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+    self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
-- (UIColor *)getColorWithH:(UInt8)h S:(UInt8)s L:(UInt8)l{
+- (UIColor *)getColorWithHue:(UInt8)hue saturation:(UInt8)saturation ligntness:(UInt8)ligntness {
     //注意：hsl四舍五入取两位小数，理论上hsl中h为[0~100)
-    if (h == 100) {
-        h = 99;
+    if (hue == 100) {
+        hue = 99;
     }
     HSLModel *hsl = [[HSLModel alloc] init];
-    hsl.hue = [NSString stringWithFormat:@"%d",h].div(@"100").floatValue;
-    hsl.saturation = [NSString stringWithFormat:@"%d",s].div(@"100").floatValue;
-    hsl.lightness = [NSString stringWithFormat:@"%d",l].div(@"100").floatValue;
+    hsl.hue = [NSString stringWithFormat:@"%d",hue].div(@"100").floatValue;
+    hsl.saturation = [NSString stringWithFormat:@"%d",saturation].div(@"100").floatValue;
+    hsl.lightness = [NSString stringWithFormat:@"%d",ligntness].div(@"100").floatValue;
     return [ColorManager getRGBWithHSLColor:hsl];
 }
 
@@ -302,9 +302,9 @@ typedef enum : NSUInteger {
     if ([self canSend]) {
         UInt16 address = self.model.address;
         [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
-            
+
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
         self.hasNextHSLCMD = NO;
     } else {
@@ -337,11 +337,11 @@ typedef enum : NSUInteger {
     [self.onoffStateSource replaceObjectAtIndex:indexPath.item withObject:@(value)];
     ModelType *type = self.dataSource[[self.tableView indexPathForCell:cell].item];
     UInt16 elementAddress = [type.addresses[indexPath.item] intValue];
-    
+
     //0.不带渐变且无回包写法：
     //attention: resMax change to 0, because node detail vc needn't response.
 //    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-    
+
     //1.不带渐变写法：
     __weak typeof(self) weakSelf = self;
     __block BOOL needGetDeviceState = NO;
@@ -453,12 +453,12 @@ typedef enum : NSUInteger {
         dispatch_async(dispatch_get_main_queue(), ^{
             //根据回包进行HSL的滑竿进行联动。
             if (weakSelf.model.HSLAddresses.count > 0) {
-                weakSelf.colorModel = [weakSelf getColorWithH:weakSelf.model.HSL_Hue100 S:weakSelf.model.HSL_Saturation100 L:weakSelf.model.HSL_Lightness100];
+                weakSelf.colorModel = [weakSelf getColorWithHue:weakSelf.model.HSL_Hue100 saturation:weakSelf.model.HSL_Saturation100 ligntness:weakSelf.model.HSL_Lightness100];
             }
             [weakSelf.tableView reloadData];
         });
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 

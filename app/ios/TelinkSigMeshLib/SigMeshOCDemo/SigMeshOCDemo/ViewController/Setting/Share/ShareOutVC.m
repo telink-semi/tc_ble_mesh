@@ -126,7 +126,7 @@
         [self showTips:@"Please select at least one network key!"];
         return;
     }
-    
+
     //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
     SigDataSource *exportDS = [[SigDataSource alloc] init];
     [exportDS setDictionaryToDataSource:self.network.getFormatDictionaryFromDataSource];
@@ -195,7 +195,7 @@
         [self showTips:@"The Internet connection appears to be offline."];
         return;
     }
-    
+
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
     [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
@@ -226,7 +226,7 @@
     f.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];
     NSString *dstr = [f stringFromDate:date];
     NSString *jsonName = [NSString stringWithFormat:@"mesh-%@.json",dstr];
-    
+
     NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:jsonName];
 
     NSFileManager *manager = [[NSFileManager alloc] init];
@@ -239,7 +239,7 @@
             [handle truncateFileAtOffset:0];
             [handle writeData:tempData];
             [handle closeFile];
-            
+
             NSString *tipString = [NSString stringWithFormat:@"export %@ success!",jsonName];
             [self showTips:tipString];
             TelinkLogDebug(@"%@",tipString);

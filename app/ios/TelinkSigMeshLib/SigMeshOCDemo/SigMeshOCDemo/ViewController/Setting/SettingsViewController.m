@@ -128,7 +128,7 @@
     [tipsTitles addObject:kExtendBearerModeTitle];
     [tipsMessage addObject:kExtendBearerModeMessage];
 
-    
+
     [array addObject:kUseNoOOBAutomatically];
     [items addObject:@[]];
     [tipsTitles addObject:kUseNoOOBAutomaticallyTitle];
@@ -148,7 +148,7 @@
     [items addObject:@[]];
     [tipsTitles addObject:kDirectedSecurityTitle];
     [tipsMessage addObject:kDirectedSecurityMessage];
-    
+
     _titleSource = array;
     _itemsSource = items;
     _tipsTitleSource = tipsTitles;
@@ -219,7 +219,7 @@
     }]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"点击取消");
-        
+
     }]];
     [self presentViewController:alertController animated:YES completion:nil];
 }
