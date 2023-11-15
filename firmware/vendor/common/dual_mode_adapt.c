@@ -145,7 +145,7 @@ void dual_mode_restore_TLK_4K()
     }
 }
 
-int UI_resotre_TLK_4K_with_check()
+int UI_restore_TLK_4K_with_check()
 {
     if(DUAL_MODE_NOT_SUPPORT != dual_mode_state){
         dual_mode_restore_TLK_4K();
@@ -318,14 +318,14 @@ const TBLCMDSET  setting_rf_250k[] = {
 	{0x0422, 0x1a,	TCMD_UNDER_BOTH | TCMD_WRITE},	// threshold
 	{0x0424, 0x52,	TCMD_UNDER_BOTH | TCMD_WRITE},	// number for sync: bit[6:4]
 	{0x042b, 0xf5,	TCMD_UNDER_BOTH | TCMD_WRITE},	// access code: 1
-	{0x042c, 0x88,	TCMD_UNDER_BOTH | TCMD_WRITE},	// maxiumum length 48-byte
+	{0x042c, 0x88,	TCMD_UNDER_BOTH | TCMD_WRITE},	// maximum length 48-byte
 
 	{0x0f03, 0x1e,	TCMD_UNDER_BOTH | TCMD_WRITE},	// bit3: crc2_en; normal 1e
 	{0x0060, 0x80,	TCMD_UNDER_BOTH | TCMD_WRITE},	// reset baseband
 	{0x0060, 0x00,	TCMD_UNDER_BOTH | TCMD_WRITE},	// reset baseband
 };
 
-/* set Rx mode, maxium receiver buffer size, enable Rx/Tx interrupt */
+/* set Rx mode, maximum receiver buffer size, enable Rx/Tx interrupt */
 #define ZB_RADIO_TRX_CFG(len)	do{				\
 									reg_dma2_ctrl = FLD_DMA_WR_MEM | ((len)>>4);   \
 									reg_dma_chn_irq_msk  &= ~(FLD_DMA_CHN_RF_RX|FLD_DMA_CHN_RF_TX); \
@@ -384,7 +384,7 @@ const TBLCMDSET  setting_rf_250k[] =
     {{0x465}, {0x78}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_5
 };
 
-/* set Rx mode, maxium receiver buffer size, enable Rx/Tx interrupt */
+/* set Rx mode, maximum receiver buffer size, enable Rx/Tx interrupt */
 #define ZB_RADIO_TRX_CFG(len)				do{\
 												reg_dma_rf_rx_size = FLD_DMA_WR_MEM | (len >> 4);\
 												dma_irq_disable(FLD_DMA_CHN_RF_RX|FLD_DMA_CHN_RF_TX); \
@@ -797,7 +797,7 @@ u8 dual_mode_proc()
                 val_settle = REG_ADDR8(0xf04);
 				dual_mode_zigbee_init();
 			}else{
-				#if 0	// comfirm later
+				#if 0	// confirm later
 				start_reboot();
 				#else
 				rf_mode = RF_MODE_BLE;

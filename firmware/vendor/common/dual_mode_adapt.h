@@ -129,7 +129,7 @@ int pair_dec_packet_mesh (u8 *ps);
 
 // telink mesh
 void dual_mode_restore_TLK_4K();
-int UI_resotre_TLK_4K_with_check();
+int UI_restore_TLK_4K_with_check();
 void tlk_mesh_access_code_backup(u32 ac);
 
 

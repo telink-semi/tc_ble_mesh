@@ -177,7 +177,7 @@ typedef struct{
 } mible_gatts_char_desc_db_t;
 
 // gatts characteristic
-// default:  no authentication ; no encrption; configurable authorization
+// default:  no authentication ; no encryption; configurable authorization
 
 typedef struct{
 	mible_uuid_t char_uuid;
@@ -186,8 +186,8 @@ typedef struct{
 	uint8_t char_value_len;
 	uint16_t char_value_handle;                        // [out] where the assigned handle be stored.
 	bool is_variable_len;
-	bool rd_author;                                    // read authorization. Enabel or Disable MIBLE_GATTS_READ_PERMIT_REQ event
-	bool wr_author;                                    // write authorization. Enabel or Disable MIBLE_GATTS_WRITE_PERMIT_REQ event
+	bool rd_author;                                    // read authorization. Enable or Disable MIBLE_GATTS_READ_PERMIT_REQ event
+	bool wr_author;                                    // write authorization. Enable or Disable MIBLE_GATTS_WRITE_PERMIT_REQ event
 	mible_gatts_char_desc_db_t char_desc_db;
 } mible_gatts_char_db_t;
 
@@ -307,7 +307,7 @@ typedef struct {
 } mible_gattc_clt_cfg_desc_disc_rsp;
 
 /*
- * MIBLE_GATTC_EVT_READ_CHAR_VALUE_BY_UUID_RESP event callback paramters
+ * MIBLE_GATTC_EVT_READ_CHAR_VALUE_BY_UUID_RESP event callback parameters
  * */
 typedef struct {
     uint16_t char_value_handle;

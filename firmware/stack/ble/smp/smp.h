@@ -51,7 +51,7 @@
 
 
 
-//define smp database(keys/peer device informations ...)
+//define smp database(keys/peer device information ...)
 #ifndef SMP_DATABASE_INFO_SOURCE
 #define SMP_DATABASE_INFO_SOURCE					SMP_INFO_STORAGE_IN_FLASH
 #endif
@@ -208,7 +208,7 @@ void blm_smp_registerSmpFinishCb (smp_finish_callback_t cb);
 extern u8 smpPkShftCnt;
 
 extern u32 smp_timeout_start_tick;
-extern u8 smpDistirbuteKeyOrder;
+extern u8 smpDistributeKeyOrder;
 extern smp_keyDistribution_t smp_DistributeKeyInit ;
 extern smp_keyDistribution_t smp_DistributeKeyResp ;
 
@@ -258,7 +258,7 @@ void 		blc_smp_preMakeEcdhKeysEnable(u8 enable);
 
 void 		blc_smp_setParingMethods (paring_methods_t  method);    //select paring methods
 
-void 		blc_smp_setSecurityParamters (  bonding_mode_t 		mode,
+void 		blc_smp_setSecurityParameters (  bonding_mode_t 		mode,
 											int 				MITM_en,
 											int 				OOB_en,
 											int				    keyPress_en,
@@ -311,7 +311,7 @@ smp_keyDistribution_t blc_smp_setInitiatorKey (u8 LTK_distributeEn, u8 IRK_distr
 smp_keyDistribution_t blc_smp_setResponderKey (u8 LTK_distributeEn, u8 IRK_distributeEn, u8 CSRK_DistributeEn);
 
 
-int 		blc_stack_smp_setSecurityParamters (  bonding_mode_t 		mode,
+int 		blc_stack_smp_setSecurityParameters (  bonding_mode_t 		mode,
 											paring_methods_t 	method,
 											int 				MITM_en,
 											int 				OOB_en,

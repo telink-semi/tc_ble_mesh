@@ -72,7 +72,7 @@ typedef union {
  *          [in] user_dlen   : user data length.
  * @return
  *          MI_SUCCESS:            Set successfully.
- *          MI_ERR_DATA_SIZE:      user data length excceed the maximun or 
+ *          MI_ERR_DATA_SIZE:      user data length excceed the maximum or 
  *                                 contains invalid adv struct.
  */
 mible_status_t mibeacon_adv_data_set(bool is_solicited, uint8_t mesh_stat,
@@ -80,7 +80,7 @@ mible_status_t mibeacon_adv_data_set(bool is_solicited, uint8_t mesh_stat,
 
 /**
  * @brief   Start adv mibeacon.
- * @param   [in] adv_interval_ms:  adv interval in millsecond.
+ * @param   [in] adv_interval_ms:  adv interval in millisecond.
  *
  * @return
  * @return  MI_SUCCESS             Successfully initiated advertising procedure.
@@ -123,7 +123,7 @@ mible_status_t mibeacon_adv_stop(void);
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv, uint8_t isUrgent);
+int mibeacon_obj_enqueue(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv, uint8_t isUrgent);
 
 
 /**
@@ -169,7 +169,7 @@ int mibeacon_property_changed(uint8_t siid, uint16_t piid, property_value_t *new
  *
  * @note    This function ONLY works when the device has been registered and has restored the keys.
  *
- * @note    spec v2 do not support lock event, secure product (eg. lock) should use mibeacon_obj_enque
+ * @note    spec v2 do not support lock event, secure product (eg. lock) should use mibeacon_obj_enqueue
  *
  * @note    Users should build properties value into parameter "val" in order
  *

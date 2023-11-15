@@ -269,7 +269,7 @@ void timer2_set_mode(TIMER_ModeTypeDef mode,unsigned int init_tick, unsigned int
 	}
 }
 /**
- * @brief     the specifed timer start working.
+ * @brief     the specified timer start working.
  * @param[in] type - select the timer to start.
  * @return    none
  */
@@ -291,7 +291,7 @@ void timer_start(TIMER_TypeDef type)
 	}
 }
 /**
- * @brief     the specifed timer stop working.
+ * @brief     the specified timer stop working.
  * @param[in] type - select the timer to stop.
  * @return    none
  */

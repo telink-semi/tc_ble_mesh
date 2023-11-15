@@ -117,7 +117,7 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
 #if 1   // ota
     if(is_valid_fw_bootloader(FLASH_ADR_UPDATE_NEW_FW)){
 		// Note: when it's not all ramcode cstartup,if enter here, it can't run none ramcode any more.
-		// fw size max alway 256 now
+		// fw size max always 256 now
         u32 fw_size_max = ((DUAL_MODE_FW_ADDR_SIGMESH == addr_load) ? DUAL_MODE_ZB_FW_SIZE_MAX_K/*FW_SIZE_MAX_K*/ : DUAL_MODE_ZB_FW_SIZE_MAX_K) *1024;
         u8 buff[256];
         flash_read_page (FLASH_ADR_UPDATE_NEW_FW, 256, buff);

@@ -46,9 +46,9 @@ model_vd_light_t       	model_vd_light;
 #if (DUAL_VENDOR_EN)
 STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff) != VENDOR_ID_MI);
 #if 1   // if not equal, please modify id value in traversal_cps_reset_vendor_id();
-STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_SER && 0xffff0000));
+STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_SRV && 0xffff0000));
 STATIC_ASSERT((VENDOR_MD_LIGHT_C && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_CLI && 0xffff0000));
-STATIC_ASSERT((VENDOR_MD_LIGHT_S2 && 0xffff0000) == (MIOT_VENDOR_MD_SER && 0xffff0000));
+STATIC_ASSERT((VENDOR_MD_LIGHT_S2 && 0xffff0000) == (MIOT_VENDOR_MD_SRV && 0xffff0000));
 #endif
 #endif
 /*
@@ -914,7 +914,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     #endif
 
 	#if DU_ENABLE
-	CMD_NO_STR(VD_LPN_REPROT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPROT),
+	CMD_NO_STR(VD_LPN_REPORT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPORT),
 	CMD_NO_STR(VD_TIME_REQ, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_req, STATUS_NONE),
 	CMD_NO_STR(VD_TIME_REQ_ACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_req_ack, STATUS_NONE),
 	CMD_NO_STR(VD_TIME_CMD, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_cmd, 0),
@@ -1057,7 +1057,7 @@ int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
         return -1;
     }
 	
-#if 0 // GATEWAY_ENABLE // use the way of INI to send command for gatway
+#if 0 // GATEWAY_ENABLE // use the way of INI to send command for gateway
 	u8 par[32] = {0};
 	mesh_bulk_vd_cmd_par_t *p_bulk_vd_cmd = (mesh_bulk_vd_cmd_par_t *)par;
 	p_bulk_vd_cmd->nk_idx = 0;

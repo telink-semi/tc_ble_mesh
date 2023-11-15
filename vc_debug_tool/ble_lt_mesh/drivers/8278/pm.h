@@ -74,7 +74,7 @@
 #define PM_LONG_SLEEP_WAKEUP_EN			    0 //if user need to make MCU sleep for a long time that is more than 268s, this macro need to be enabled and use "pm_long_sleep_wakeup" function
 
 /**
- * @brief analog register below can store infomation when MCU in deepsleep mode
+ * @brief analog register below can store information when MCU in deepsleep mode
  * 	      store your information in these ana_regs before deepsleep by calling analog_write function
  * 	      when MCU wakeup from deepsleep, read the information by by calling analog_read function
  * 	      Reset these analog registers only by power cycle

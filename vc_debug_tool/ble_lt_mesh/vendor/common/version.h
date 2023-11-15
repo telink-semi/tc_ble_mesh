@@ -98,16 +98,16 @@ user can be allowed to redefined PID and VID if needed.
 #if (WIN32)
 #define MESH_PID_SEL		(PID_LIGHT)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_GATEWAY)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_LPN__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_LPN__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_LPN)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_SWITCH__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_SWITCH__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_SWITCH)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_SPIRIT_LPN__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_SPIRIT_LPN__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_SPIRIT_LPN)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_8267_MASTER_KMA_DONGLE__)

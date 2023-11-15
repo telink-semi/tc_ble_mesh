@@ -289,7 +289,7 @@ typedef enum {
     ATT_ERR_ENQUEUE_FAILED,                              //!< register service failed when enqueue
     ATT_ERR_PREVIOUS_INDICATE_DATA_HAS_NOT_CONFIRMED,
     ATT_ERR_INVALID_PARAMETER,
-	ATT_ERR_SERVICE_DISCOVERY_TIEMOUT,
+	ATT_ERR_SERVICE_DISCOVERY_TIMEOUT,
     ATT_ERR_NOTIFY_INDICATION_NOT_PERMITTED,
     ATT_ERR_DATA_PENDING_DUE_TO_SERVICE_DISCOVERY_BUSY,
 
@@ -324,7 +324,7 @@ typedef enum {
     SMP_EER_LINK_IS_ENCY,
     SMP_EER_PAIRING_IS_GOING_ON,
     SMP_EER_SIG_VERIFY_FAIL,                            //!< The operation is time out 
-    SMP_EER_SIG_FAIL,                                   //!< The singature is failed
+    SMP_EER_SIG_FAIL,                                   //!< The signature is failed
     SMP_EER_NO_SIGN_KEY,
     SMP_EER_ADDR_RESOLVE_FAIL,                          //!< The operation is time out 
 
@@ -338,7 +338,7 @@ typedef enum {
 	BLE_ERR_INVALID_PARAMETER,
 	BLE_ERR_NO_RESOURCE,
 
-	NO_BONDED_MAC_ADDRESS_FOR_DIRCET_ADV,
+	NO_BONDED_MAC_ADDRESS_FOR_DIRECT_ADV,
 
 
 
@@ -433,7 +433,7 @@ typedef enum advChannelPDUType_e {
 	LL_TYPE_ADV_NONCONN_IND = 0x02,
 	LL_TYPE_SCAN_REQ = 0x03,
 	LL_TYPE_SCAN_RSP = 0x04,
-	LL_TYPE_CONNNECT_REQ = 0x05,
+	LL_TYPE_CONNECT_REQ = 0x05,
 	LL_TYPE_ADV_SCAN_IND = 0x06,
 } advChannelPDUType_t;
 

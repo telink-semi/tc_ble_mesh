@@ -216,7 +216,7 @@ AES_RETURN aes_encrypt(const unsigned char *in, unsigned char *out, const aes_en
 
 /* This code can work with the decryption key schedule in the   */
 /* order that is used for encrytpion (where the 1st decryption  */
-/* round key is at the high end ot the schedule) or with a key  */
+/* round key is at the high end of the schedule) or with a key  */
 /* schedule that has been reversed to put the 1st decryption    */
 /* round key at the low end of the schedule in memory (when     */
 /* AES_REV_DKS is defined)                                      */

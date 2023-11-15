@@ -60,7 +60,7 @@ int access_cmd_get_level(u16 adr,u32 rsp_max)
  * @brief       This function is API to send access command of generic level set/move message.
  * @param[in]   adr		- destination address
  * @param[in]   rsp_max	- max number of response expected from nodes which match destination address, after sending the opcode. 
- * @param[in]   level	- taget level
+ * @param[in]   level	- target level
  * @param[in]   ack		-  
  * @param[in]   trs_par	- parameter of transmit time and delay. NULL mean no parameter.
  * @param[in]   move_flag	- 1: will send generic level move message. 0: will send generic level set message.
@@ -86,7 +86,7 @@ static inline int access_cmd_set_level_or_move(u16 adr, u8 rsp_max, s16 level, i
  * @brief       This function is API to send access command of generic level set message.
  * @param[in]   adr	- destination address
  * @param[in]   rsp_max	- max number of response expected from nodes which match destination address, after sending the opcode. 
- * @param[in]   level	- taget level
+ * @param[in]   level	- target level
  * @param[in]   ack	-  
  * @param[in]   trs_par	- parameter of transmit time and delay. NULL mean no parameter.
  * @return      0: success, others: error code of tx_errno_e.
@@ -125,7 +125,7 @@ int access_cmd_set_delta(u16 adr, u8 rsp_max, s32 level, int ack, transition_par
  * @brief       This function is API to send access command of generic level move message.
  * @param[in]   adr	- destination address
  * @param[in]   rsp_max	- max number of response expected from nodes which match destination address, after sending the opcode. 
- * @param[in]   level	- taget level
+ * @param[in]   level	- target level
  * @param[in]   ack	-  
  * @param[in]   trs_par	- parameter of transmit time and delay. NULL mean no parameter.
  * @return      0: success, others: error code of tx_errno_e.

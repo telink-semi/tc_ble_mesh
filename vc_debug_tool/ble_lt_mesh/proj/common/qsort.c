@@ -82,7 +82,7 @@
  * This function performs a basic Quicksort.  This implementation is the
  * in-place version of the algorithm and is done in he following way:
  *
- * 1. In the middle of the array, we determine a pivot that we temporarly swap
+ * 1. In the middle of the array, we determine a pivot that we temporarily swap
  *    to the end.
  * 2. From the beginning to the end of the array, we swap any elements smaller
  *    than this pivot to the start, adjacent to other elements that were

@@ -101,7 +101,7 @@ typedef struct{
 typedef struct {
 	u32 smp_timeout_start_tick;//SMP 开启时间标记
 
-	u16 smpDistirbuteKeyOrder; //密钥分配启动标志
+	u16 smpDistributeKeyOrder; //密钥分配启动标志
 	smp_keyDistribution_t smp_DistributeKeyInit; //master distribute key transmit
 	smp_keyDistribution_t smp_DistributeKeyResp; //slave distribute key transmit
 

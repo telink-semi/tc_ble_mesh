@@ -64,7 +64,7 @@ static inline void usb_dp_pullup_en (int en)
 #define DEEPSLEEP_MODE	1
 
 
-//8267 analog register 0x34-0x3e can store infomation when MCU in deepsleep mode
+//8267 analog register 0x34-0x3e can store information when MCU in deepsleep mode
 //store your information in these ana_regs before deepsleep by calling analog_write function
 //when MCU wakeup from deepsleep, read the information by by calling analog_read function
 
@@ -78,7 +78,7 @@ static inline void usb_dp_pullup_en (int en)
 //these six below may have some problem when user enter deepsleep but ERR wakeup
 // for example, when set a GPIO PAD high wakeup deepsleep, but this gpio is high before
 // you call func cpu_sleep_wakeup, then deepsleep will be ERR wakeup, these 6 register
-//   infomation loss.
+//   information loss.
 #define DEEP_ANA_REG5    0x34
 #define DEEP_ANA_REG6    0x35
 #define DEEP_ANA_REG7    0x36

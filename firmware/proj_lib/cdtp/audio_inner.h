@@ -200,7 +200,7 @@ typedef struct{
 	
 	#if (BLC_AUDIO_MCS_EXTEND_SUPPORT_ENABLE)
 	u8  seekingSpeedValue;
-	u8  searchContrlStatus;
+	u8  searchControlStatus;
 	u16 seekingSpeedHandle;
 	u16 searchControlHandle;
 	u16 searchResultHandle;
@@ -306,16 +306,16 @@ typedef struct{
 	#if (BLC_AUDIO_SERVER_SDP_ENABLE)
 	blt_audio_sdp_t sdp;
 	#endif
-	#if !(BLC_AUDIO_MCP_ROLE_SWICH_ENABLE)
+	#if !(BLC_AUDIO_MCP_ROLE_SWITCH_ENABLE)
 		#if (BLC_AUDIO_MCS_ENABLE)
 		blt_audio_srv_t mcsSrv;
 		#endif //BLC_AUDIO_MCS_ENABLE
-	#endif //BLC_AUDIO_MCP_ROLE_SWICH_ENABLE
-	#if !(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+	#endif //BLC_AUDIO_MCP_ROLE_SWITCH_ENABLE
+	#if !(BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 		#if (BLC_AUDIO_OTS_ENABLE)
 		blt_audio_srv_t otsSrv;
 		#endif //BLC_AUDIO_OTS_ENABLE
-	#endif //BLC_AUDIO_OTP_ROLE_SWICH_ENABLE
+	#endif //BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE
 }blt_audio_server_t;
 
 typedef struct{

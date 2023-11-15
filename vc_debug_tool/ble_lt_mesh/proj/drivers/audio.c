@@ -49,7 +49,7 @@ static unsigned char adc_IOPowerSupplySet(unsigned char IOp){
 
 /**************************************************
 *
-*	@brief	battery check init function used when enabling audio, use 7 bits resolution, the adc refernce voltage
+*	@brief	battery check init function used when enabling audio, use 7 bits resolution, the adc reference voltage
 *			set to 1.428V.
 *
 *	@param	bcm_inputCh:		battery check mode and input channel selection, bit[7] indicates the battery check mode, if bit[7]
@@ -281,7 +281,7 @@ void Audio_FineTuneSampleRate(unsigned char fine_tune){
 
 /************************************************************************************
 *
-*	@brief	sdm set function, enabl or disable the sdm output, configure SDM output paramaters
+*	@brief	sdm set function, enabl or disable the sdm output, configure SDM output parameters
 *
 *	@param	audio_out_en:		audio output enable or disable set, '1' enable audio output; '0' disable output
 *			sdm_setp:		SDM clk divider
@@ -327,7 +327,7 @@ void Audio_SDMOutputSet(unsigned char audio_out_en,unsigned short sdm_step,unsig
 *
 *	@brief	audio input set function, select analog audio input channel, start the filters
 *
-*	@param	adc_ch:	if audio input as signle end mode, should identify an analog audio signal input channel, enum variable of ADCINPUTCH
+*	@param	adc_ch:	if audio input as single end mode, should identify an analog audio signal input channel, enum variable of ADCINPUTCH
 *
 *	@return	none
 */

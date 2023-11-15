@@ -63,9 +63,9 @@ void uart_Reset(void){
 *	
 *	@brief	clear error state of uart rx, maybe used when application detected UART not work
 *
-*	@parm	none
+*	@param	none
 *
-*	@return	'1' RX error flag rised and cleard success; '0' RX error flag not rised 
+*	@return	'1' RX error flag rose and cleard success; '0' RX error flag not rose 
 *
 */
 unsigned char uart_ErrorCLR(void){
@@ -155,12 +155,12 @@ unsigned char uart_Init(unsigned short uartCLKdiv, unsigned char bwpc,unsigned c
 	if(en_rx_irq){
 		reg_dma_chn_irq_msk |= 0x01;//open dma1 interrupt mask
 		reg_irq_mask |= 0x10;//open dma interrupt mask
-		//irq_enable(); // write_reg8(0x800643,0x01);//enable intterupt
+		//irq_enable(); // write_reg8(0x800643,0x01);//enable interrupt
 	}
 	if(en_tx_irq){
 		reg_dma_chn_irq_msk |= 0x02;//open dma1 interrupt mask
 		reg_irq_mask |= 0x10;//open dma interrupt mask
-		//irq_enable(); // write_reg8(0x800643,0x01);//enable intterupt
+		//irq_enable(); // write_reg8(0x800643,0x01);//enable interrupt
 	}
 	return 1;
 	

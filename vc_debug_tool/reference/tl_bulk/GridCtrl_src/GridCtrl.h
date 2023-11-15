@@ -584,7 +584,7 @@ protected:
 
 	void ValidateAndModifyCellContents(int nRow, int nCol, LPCTSTR strText);
 
-// Overrrides
+// Overrides
     // ClassWizard generated virtual function overrides
     //{{AFX_VIRTUAL(CGridCtrl)
     protected:
@@ -799,7 +799,7 @@ public:
 	void SetLayer(int* pLayer); // coming from a previous GetLayer (ignored if not same number of column, or the same revision number)
 	void ForceQuitFocusOnTab(bool b=true) { m_QuitFocusOnTab = b;} // use only if GetParent() is a CDialog
 	void AllowSelectRowInFixedCol(bool b=true) { m_AllowSelectRowInFixedCol = b;} // 
-//    allow acces?
+//    allow access?
 	intlist m_arRowOrder, m_arColOrder;
 	static CGridCtrl* m_This;
 protected:

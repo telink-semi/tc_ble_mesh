@@ -87,7 +87,7 @@
 #define L2CAP_USER_CB_HANDLER            1
 
 // l2cap pb flag type
-#define L2CAP_FRIST_PKT_H2C              0x00
+#define L2CAP_FIRST_PKT_H2C              0x00
 #define L2CAP_CONTINUING_PKT             0x01
 #define L2CAP_FIRST_PKT_C2H              0x02
 
@@ -143,7 +143,7 @@ void		blc_l2cap_register_handler (void *p);
 int 		blc_l2cap_packet_receive (u16 connHandle, u8 * p);
 int 		blc_l2cap_send_data (u16 cid, u8 *p, int n);
 
-void 		blc_l2cap_reg_att_sig_hander(void *p);//signaling pkt proc
+void 		blc_l2cap_reg_att_sig_handler(void *p);//signaling pkt proc
 
 
 

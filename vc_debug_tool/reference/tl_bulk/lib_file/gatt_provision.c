@@ -79,7 +79,7 @@ gatt_pro_para_mag  gatt_provision_mag;
 PB_GATT_ADV_DAT    gatt_provision_adv;
 
 
-// CTL_privision dialog
+// CTL_provision dialog
 unsigned char prov_newkey[16];
 unsigned char prov_key_index[2];
 unsigned char prov_ivi_update_flag=0;
@@ -103,13 +103,13 @@ u8 gatt_pro_psk[32]={0x06,0xa5,0x16,0x69,0x3c,0x9a,0xa3,0x1a, 0x60,0x84,0x54,0x5
 					   0xb4,0x85,0x72,0xb9,0x72,0x03,0xdd,0xff, 0xb7,0xac,0x73,0xf7,0xd0,0x45,0x76,0x63};
 u8 gatt_pro_edch[32];
 u8 gatt_pro_random[32];
-u8 gatt_pro_comfirm[32];
+u8 gatt_pro_confirm[32];
 u8 gatt_pro_input[0x91];
 u8  gatt_pro_auth[32] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-u8  gatt_pro_comfirm_key[16];
+u8  gatt_pro_confirm_key[16];
 
 u8 gatt_dev_random[32];
-u8 gatt_dev_comfirm[32];
+u8 gatt_dev_confirm[32];
 u8 gatt_pro_session_key[16];
 u8 gatt_pro_session_nonce_tmp[16];
 u8 gatt_pro_session_nonce[16];
@@ -220,44 +220,44 @@ void gatt_pro_para_mag_init()
 	gatt_para_len = sizeof(gatt_para_pro);
 	prov_timer_clr();
 }
-u8 gatt_set_pro_invite(mesh_pro_data_structer *p_str,u8 att_dura)
+u8 gatt_set_pro_invite(mesh_pro_data_t *p_str,u8 att_dura)
 {
 	set_pro_invite(p_str,att_dura);
 	return 1;
 }
-u8 gatt_set_pro_capa(mesh_pro_data_structer *p_str,u8 ele_num,u16 alogr,u8 keytype,
+u8 gatt_set_pro_capa(mesh_pro_data_t *p_str,u8 ele_num,u16 alogr,u8 keytype,
 				u8 outOOBsize,u16 outAct,u8 inOOBsize,u16 inOOBact)
 {
 	set_pro_capa(p_str,ele_num,alogr,keytype,outOOBsize,outAct,inOOBsize,inOOBact);
 	return 1;
 }
-u8 gatt_set_pro_start(mesh_pro_data_structer *p_str,u8 alogri,u8 pubkey,
+u8 gatt_set_pro_start(mesh_pro_data_t *p_str,u8 alogri,u8 pubkey,
 					u8 authmeth,u8 authact,u8 authsize )
 {
 	set_pro_start(p_str,alogri,pubkey,authmeth,authact,authsize);
 	return 1;
 }
-u8 gatt_set_pro_pub_key(mesh_pro_data_structer *p_str,u8 *p_pubkeyx,u8 *p_pubkeyy){
+u8 gatt_set_pro_pub_key(mesh_pro_data_t *p_str,u8 *p_pubkeyx,u8 *p_pubkeyy){
 	set_pro_pub_key(p_str,p_pubkeyx,p_pubkeyy);
 	return 1;
 }
 
 
-u8 gatt_set_pro_comfirm(mesh_pro_data_structer *p_str,u8 *p_comfirm,u8 len){
-	set_pro_comfirm(p_str,p_comfirm,len);
+u8 gatt_set_pro_confirm(mesh_pro_data_t *p_str,u8 *p_confirm,u8 len){
+	set_pro_confirm(p_str,p_confirm,len);
 	return 1;
 }
 
-u8 gatt_set_pro_random(mesh_pro_data_structer *p_str,u8 *p_random,u8 len){
+u8 gatt_set_pro_random(mesh_pro_data_t *p_str,u8 *p_random,u8 len){
 	set_pro_random(p_str,p_random,len);
 	return 1;
 }
 
-u8 gatt_set_pro_data(mesh_pro_data_structer *p_str, u8 *p_data,u8 *p_mic){
+u8 gatt_set_pro_data(mesh_pro_data_t *p_str, u8 *p_data,u8 *p_mic){
 	set_pro_data(p_str,p_data,p_mic);
 	return 1;
 }
-u8 gatt_set_pro_complete(mesh_pro_data_structer *p_str){
+u8 gatt_set_pro_complete(mesh_pro_data_t *p_str){
 	set_pro_complete(p_str);
 	return 1;
 }
@@ -291,7 +291,7 @@ u8 gatt_pkt_pb_gatt_data(u8 *p,u8 direct,u8 len,u8* proxy_buf,u16* p_proxy_len)
 		idx_num +=(l2cap_len-4);
 		mesh_proxy_sar_start();
 		return MSG_COMPOSITE_WAIT;
-	}else if(p_gatt->sar == SAR_CONTINUS){
+	}else if(p_gatt->sar == SAR_CONTINUE){
 		memcpy(proxy_buf+idx_num,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
 		mesh_proxy_sar_continue();
@@ -347,7 +347,7 @@ u8 prov_write_data_trans(u8 *p,u16 len,u8 msg_type)
 }
 void gatt_prov_send_invite()
 {
- 	mesh_pro_data_structer *p_str = (mesh_pro_data_structer *)(gatt_para_pro);
+ 	mesh_pro_data_t *p_str = (mesh_pro_data_t *)(gatt_para_pro);
 	gatt_set_pro_invite(p_str,0);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_str,sizeof(pro_trans_invite),"SEND:provisioner send invite cmd \r\n",0);
 	gatt_pro_input[0]=0;
@@ -372,7 +372,7 @@ void start_provision_record()
 {
 	gatt_pro_para_mag_init();
 	prov_timer_start();
-	mesh_pro_data_structer *p_str = (mesh_pro_data_structer *)(gatt_para_pro);
+	mesh_pro_data_t *p_str = (mesh_pro_data_t *)(gatt_para_pro);
 	gatt_prov_send_record_get(&(p_str->rec_get));
 	gatt_provision_mag.provison_send_state = STATE_PRO_REC_GET_ACK;
 	prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
@@ -425,7 +425,7 @@ int gatt_get_node_ele_cnt(u16 unicast)
 	return ele_cnt;
 }
 
-void gatt_prov_rcv_pro_fail(mesh_pro_data_structer *p_rcv)
+void gatt_prov_rcv_pro_fail(mesh_pro_data_t *p_rcv)
 {
     LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)&(p_rcv->invite),sizeof(pro_trans_invite),"RCV:rcv provision fail cmd \r\n",0);
 	mesh_proxy_master_terminate_cmd();
@@ -433,18 +433,18 @@ void gatt_prov_rcv_pro_fail(mesh_pro_data_structer *p_rcv)
 }
 
 
-void gatt_prov_rcv_capa(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_rcv_capa(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     memset(&prov_oob,0,sizeof(prov_oob));// clean the prov oob for gatt provision part 
 	memcpy(gatt_pro_input+1,&(p_rcv->capa.ele_num),11);
 	gatt_node_ele = p_rcv->capa.ele_num;
-	swap_mesh_pro_capa(p_rcv);// swap the endiness for the capa data 
+	swap_mesh_pro_capa(p_rcv);// swap the endianness for the capa data 
 	memcpy(&prov_oob.capa , &p_rcv->capa,sizeof(p_rcv->capa));
 	get_pubkey_oob_info_by_capa(&prov_oob);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.capa,sizeof(prov_oob.capa),"RCV:the provision capa data is \r\n",0);
 }    
 
-void gatt_prov_send_start(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	#if 1
 	set_start_para_by_capa(&prov_oob);
@@ -458,20 +458,20 @@ void gatt_prov_send_start(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *
 	#else
 	// just for the test 
 	pro_trans_start *p_start = &(prov_oob.start);
-	p_start->alogrithms = 0;
+	p_start->algorithms = 0;
 	p_start->pubKey =  MESH_PUB_KEY_WITHOUT_OOB;
 	p_start->authMeth = MESH_NO_OOB;
 	p_start->authAct =0;
     p_start->authSize = 0;
 	#endif
 	set_pro_start_simple(p_send,&(prov_oob.start));
-	memcpy(gatt_pro_input+12,&(p_send->start.alogrithms),5);
+	memcpy(gatt_pro_input+12,&(p_send->start.algorithms),5);
 	gatt_para_len = sizeof(pro_trans_start);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.start,sizeof(prov_oob.start),"SEND:the provision start is \r\n",0);
 
 }
 
-void gatt_prov_send_pubkey(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_send_pubkey(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     // send the pub_key pkt 
 	gatt_set_pro_pub_key(p_send,gatt_pro_ppk,gatt_pro_ppk+32);
@@ -480,7 +480,7 @@ void gatt_prov_send_pubkey(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer 
 	
 }
 
-void gatt_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv)
+void gatt_prov_rcv_pubkey(mesh_pro_data_t *p_rcv)
 {
 	memcpy(gatt_pro_input+0x11,gatt_pro_ppk,sizeof(gatt_pro_ppk));
 	memcpy(gatt_pro_input+0x11+64,p_rcv->pubkey.pubKeyX,64);
@@ -488,49 +488,49 @@ void gatt_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv)
 	tn_p256_dhkey_fast(gatt_pro_edch, gatt_pro_psk,gatt_pro_input+0x11+0x40 ,gatt_pro_input+0x11+0x60);    
 }
 
-void gatt_prov_send_comfirm(mesh_pro_data_structer *p_send)
+void gatt_prov_send_confirm(mesh_pro_data_t *p_send)
 {
-	mesh_sec_prov_confirmation_sec (gatt_pro_comfirm, gatt_pro_input, 
+	mesh_sec_prov_confirmation_sec (gatt_pro_confirm, gatt_pro_input, 
 								145, gatt_pro_edch, gatt_pro_random, gatt_pro_auth);
-	gatt_set_pro_comfirm(p_send,gatt_pro_comfirm,get_prov_comfirm_value_len());
-	gatt_para_len =get_prov_comfirm_len();
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's comfirm is \r\n",0);    
+	gatt_set_pro_confirm(p_send,gatt_pro_confirm,get_prov_confirm_value_len());
+	gatt_para_len =get_prov_confirm_len();
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's confirm is \r\n",0);    
 }
 
-void gatt_prov_rcv_comfirm(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_rcv_confirm(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
-	pro_trans_comfirm *p_comfirm = &(p_rcv->comfirm);
+	pro_trans_confirm *p_confirm = &(p_rcv->confirm);
 	#if PROV_AUTH_LEAK_REFLECT_EN
-	if(prov_comfirm_check_same_or_not(p_comfirm->comfirm,gatt_pro_comfirm)){
+	if(prov_confirm_check_same_or_not(p_confirm->confirm,gatt_pro_confirm)){
 		mesh_proxy_master_terminate_cmd();
 	}
 	#endif
 	// store the dev comfrim part 
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_comfirm->comfirm,get_prov_comfirm_value_len(),"RCV:the device's comfirm is \r\n",0);
-	memcpy(gatt_dev_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());    
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_confirm->confirm,get_prov_confirm_value_len(),"RCV:the device's confirm is \r\n",0);
+	memcpy(gatt_dev_confirm,p_confirm->confirm,get_prov_confirm_value_len());    
 }
 
-void gatt_prov_send_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_send_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     gatt_set_pro_random(p_send,gatt_pro_random,get_prov_random_len()-1);
 	gatt_para_len = get_prov_random_len();
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's random is \r\n",0);    
 }
 
-void gatt_prov_rcv_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_rcv_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	memcpy(gatt_dev_random,p_rcv->random.random,get_prov_random_value_len());
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->random.random,get_prov_random_value_len(),"RCV:the device's random is \r\n",0);
-	// caculate the dev comfirm part ,and compare the comfirm 
+	// calculate the dev confirm part ,and compare the confirm 
 	
-	u8 gatt_dev_comfirm_tmp[32];
-	mesh_sec_prov_confirmation_sec (gatt_dev_comfirm_tmp, gatt_pro_input, 
+	u8 gatt_dev_confirm_tmp[32];
+	mesh_sec_prov_confirmation_sec (gatt_dev_confirm_tmp, gatt_pro_input, 
 							145, gatt_pro_edch, gatt_dev_random, gatt_pro_auth);
-	if(prov_comfirm_check_right_or_not(gatt_dev_comfirm,gatt_dev_comfirm_tmp)){
-		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_comfirm_tmp,16,"provision comfirm fail\r\n",0);
+	if(prov_confirm_check_right_or_not(gatt_dev_confirm,gatt_dev_confirm_tmp)){
+		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_confirm_tmp,16,"provision confirm fail\r\n",0);
 		mesh_proxy_master_terminate_cmd();
 	}
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device comfirm check is success",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device confirm check is success",0);
 	//calculate the dev_key part 
 	u8 prov_salt[16];
 	mesh_sec_prov_salt_fun(prov_salt,gatt_pro_input,gatt_pro_random,gatt_dev_random,is_prov_oob_hmac_sha256());
@@ -539,7 +539,7 @@ void gatt_prov_rcv_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *
 	   
 }
 
-void gatt_prov_send_pro_data(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gatt_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     gatt_provision_net_info_callback();
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_pro_dat,25,"SEND:the provisioner's device info is  \r\n",0);
@@ -583,7 +583,7 @@ void gatt_prov_rcv_record_list(pro_trans_record_list *p_rec_list,u8 len)
 {
 	prov_clear_all_rec();
 	int rec_cnt = (len -3)/2;
-	// switch the endiness first 
+	// switch the endianness first 
 	for(int i=0;i<rec_cnt;i++){
 		endianness_swap_u16((u8*)(p_rec_list->rec_id+i));
 	}
@@ -605,7 +605,7 @@ void gatt_prov_send_record_request(pro_trans_record_request *p_rec_req)
 
 int gatt_prov_rcv_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 rec_data_len)
 {
-	// need to swap endinesss first 
+	// need to swap endiannesss first 
 	u16 max_size,frag_off;
 	if(p_rec_rsp->sts != RECORD_PROV_SUC){
 		return 2;
@@ -639,8 +639,8 @@ u8 win32_prov_working()
 
 void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 {
-	mesh_pro_data_structer *p_rcv = (mesh_pro_data_structer *)(p);
-	mesh_pro_data_structer *p_send = (mesh_pro_data_structer *)gatt_para_pro;
+	mesh_pro_data_t *p_rcv = (mesh_pro_data_t *)(p);
+	mesh_pro_data_t *p_send = (mesh_pro_data_t *)gatt_para_pro;
 	if(p_rcv->invite.header.type == PRO_FAIL){
 		gatt_prov_rcv_pro_fail(p_rcv);
 	}
@@ -674,7 +674,7 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 					gatt_prov_send_record_request(&(p_send->rec_req));
 					prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 				}else if (ret == 2){
-					LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"provision comfirm fail\r\n",0);
+					LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"provision confirm fail\r\n",0);
 		    		mesh_proxy_master_terminate_cmd();
 				}
 			}break;
@@ -693,13 +693,13 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 				gatt_provision_mag.provison_send_state = STATE_PRO_PUB_KEY_ACK;
 				if(certify_base_en){
 					// proc the pubkey part 
-					mesh_pro_data_structer cert_pubkey;
+					mesh_pro_data_t cert_pubkey;
 					cert_pubkey.pubkey.header.type = PRO_PUB_KEY;
 					prov_use_rec_id_get_pubkey(DEV_CERTIFY_ID,cert_pubkey.pubkey.pubKeyX);
 					// for it will change to the pubkey in the cert .
 					memcpy(gatt_pro_ppk,gatt_pro_cert_ppk_oob,64);
 					gatt_prov_rcv_pubkey(&cert_pubkey);
-                	gatt_prov_send_comfirm(p_send);
+                	gatt_prov_send_confirm(p_send);
 					prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 					gatt_provision_mag.provison_send_state = STATE_PRO_CONFIRM_ACK;
 				}
@@ -708,14 +708,14 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 		case STATE_PRO_PUB_KEY_ACK:
 			if(p_rcv->invite.header.type == PRO_PUB_KEY){
                 gatt_prov_rcv_pubkey(p_rcv);
-                gatt_prov_send_comfirm(p_send);
+                gatt_prov_send_confirm(p_send);
 				prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 				gatt_provision_mag.provison_send_state = STATE_PRO_CONFIRM_ACK;
 			}
 			break;
 		case STATE_PRO_CONFIRM_ACK:
 			if(p_rcv->invite.header.type == PRO_CONFIRM){
-                gatt_prov_rcv_comfirm(p_rcv,p_send);
+                gatt_prov_rcv_confirm(p_rcv,p_send);
 				gatt_prov_send_random(p_rcv,p_send);
 				prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 				gatt_provision_mag.provison_send_state = STATE_PRO_RANDOM_ACK;

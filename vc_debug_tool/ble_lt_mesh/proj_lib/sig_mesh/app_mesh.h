@@ -301,7 +301,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define G_LEVEL_STATUS		            0x0882
 #define G_DELTA_SET		                0x0982 // When the Generic Level state is bound to another state, the overflow/underflow handling shall be defined by the wrap-around behavior of the bound state. refer to "3.3.2.2 Generic Level state behavior".
 #define G_DELTA_SET_NOACK		        0x0A82
-#define G_MOVE_SET		                0x0B82 // difference with delta set is: (1) no action if transition time is 0 or undefined. (2) transition speed is fixed(delta value / transition time), and it will not stop untill reaching max or min value, or wrap-around without stop which user can defined. 2. wrap-around behavior is the same as level delta set. (3) stop when receive onoff or level set message.
+#define G_MOVE_SET		                0x0B82 // difference with delta set is: (1) no action if transition time is 0 or undefined. (2) transition speed is fixed(delta value / transition time), and it will not stop until reaching max or min value, or wrap-around without stop which user can defined. 2. wrap-around behavior is the same as level delta set. (3) stop when receive onoff or level set message.
 #define G_MOVE_SET_NOACK		        0x0C82
 
 #define G_DEF_TRANS_TIME_GET		    0x0D82
@@ -1190,7 +1190,7 @@ void mesh_seg_tx_set_one_pkt_completed(mesh_tx_seg_dst_type dst_type);
 #define LPN_MIN_CACHE_SIZE_LOG      (1)     // at lease 2 messages
 #define LPN_POLL_TIMEOUT_100MS      (10*10) // unit: 100ms, 0x0A~0x34BBFF
 #define FRI_POLL_INTERVAL_MS        (2000)	// auto send poll interval
-#define FRI_POLL_INTERVAL_MS_MESH_OTA	(400)		// used when mesh ota actived
+#define FRI_POLL_INTERVAL_MS_MESH_OTA	(400)		// used when mesh ota activated
 
 #define FRI_REQ_TIMEOUT_MS          (2000)  // must larger than 1100ms
 #define FRI_REQ_RETRY_IDLE_MS       (FRI_REQ_TIMEOUT_MS - FRI_ESTABLISH_PERIOD_MS)	// auto trigger next FRI_REQ_RETRY_MAX request interval 
@@ -1201,7 +1201,7 @@ void mesh_seg_tx_set_one_pkt_completed(mesh_tx_seg_dst_type dst_type);
 
 #define LPN_ADV_EN                  0
 #define LPN_ADV_INTERVAL_MS         (2000)
-#define LPN_ADV_INTERVAL_EN         0 // (LPN_ADV_INTERVAL_MS <= FRI_REQ_TIMEOUT_MS /2) // if enable, it would be some err when BLE disconnect, comfirm later.
+#define LPN_ADV_INTERVAL_EN         0 // (LPN_ADV_INTERVAL_MS <= FRI_REQ_TIMEOUT_MS /2) // if enable, it would be some err when BLE disconnect, confirm later.
 
 enum{
     FRI_ST_IDLE = 0,
@@ -1507,7 +1507,7 @@ typedef struct{
     cb_pub_st_t cb_pub_st;
     u16 size;       // sizeof model[0]
     u8 model_cnt;   // 
-    u8 multy_flag;  // if 0, means only one in a node.
+    u8 multi_flag;  // if 0, means only one in a node.
 }mesh_model_resource_t;
 
 typedef struct{
@@ -1561,7 +1561,7 @@ void friend_ship_establish_ok_cb_lpn();
 void friend_ship_disconnect_cb_lpn();
 int is_friend_ship_link_ok_fn(u8 lpn_idx);
 int is_friend_ship_link_ok_lpn();
-void iv_update_set_with_update_flag_ture(u32 iv_idx, u32 search_mode);
+void iv_update_set_with_update_flag_true(u32 iv_idx, u32 search_mode);
 int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *p_iv_idx);
 u32 get_poll_timeout_fn(u16 lpn_adr);
 u32 get_current_poll_timeout_timer_fn(u16 lpn_adr);
@@ -1659,11 +1659,11 @@ typedef enum{
 	MESH_CFG_STS_INVALID_MOD,
 	MESH_CFG_STS_INVALID_APPKEY_IND,
 	MESH_CFG_STS_INVALID_NETKEY_IND,
-	MESH_CFG_STS_INSUFFICENT_RES,
+	MESH_CFG_STS_INSUFFICIENT_RES,
 	MESH_CFG_STS_KEY_IND_STORED,
 	MESH_CFG_STS_INVALID_PUB_PARA,
 	MESH_CFG_STS_NOT_SUB_MOD,
-	MESH_CFG_STS_SOTRAGE_FAIL,
+	MESH_CFG_STS_STORAGE_FAIL,
 	MESH_CFG_STS_FEATURE_NOT_SUP,
 	MESH_CFG_STS_CAN_NOT_UPDATE,
 	MESH_CFG_STS_CAN_NOT_REMOVE,
@@ -1671,7 +1671,7 @@ typedef enum{
 	MESH_CFG_STS_TMP_CHANGE_STATE,
 	MESH_CFG_STS_CAN_NOT_SET,
 	MESH_CFG_STS_UNSPECIFY_ERR,
-	MESH_CFG_STS_INVAILD_BINDING,
+	MESH_CFG_STS_INVALID_BINDING,
 	MESH_CFG_STS_RFU,
 }mesh_sts_code_e;
 #endif
@@ -1814,7 +1814,7 @@ int mesh_rc_data_layer_network (u8 *p_payload, int src_type, u8 need_proxy_and_t
 int mesh_tx_cmd2_access(material_tx_cmd_t *p, int reliable, mesh_match_type_t *p_match_type);
 void mesh_rc_data_action(mesh_cmd_nw_t *p_nw, u8 len_nw);
 void keyboard_handle_mesh();
-int mesh_tx_cmd_layer_acccess(u8 *p_ac_hci, u32 len_ac, u16 adr_src, u16 adr_dst, int reliable, mesh_match_type_t *p_match_type);
+int mesh_tx_cmd_layer_access(u8 *p_ac_hci, u32 len_ac, u16 adr_src, u16 adr_dst, int reliable, mesh_match_type_t *p_match_type);
 void mesh_match_group_mac(mesh_match_type_t *p_match_type, u16 adr_dst, u32 op_ut, int app_tx, u16 adr_src);
 u16 mesh_mac_match_friend(u16 adr);
 u16 mesh_group_match_friend(u16 adr);

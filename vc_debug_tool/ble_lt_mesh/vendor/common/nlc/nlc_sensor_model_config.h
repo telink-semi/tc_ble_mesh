@@ -32,7 +32,7 @@ extern "C" {
 #include "../mesh_config.h"
 
 /**
- * Note: do not define enum or struct here. beacause this file will be included in cStartup.S.
+ * Note: do not define enum or struct here. because this file will be included in cStartup.S.
  */
 
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)

@@ -69,9 +69,9 @@ Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 #define SENSOR_SETTING_PROP_ID1			PROP_ID_SENSOR_GAIN
 #endif
 
-#define SENSOR_SETTING_RAW0_LEN			3 // Sensor Setting Raw lenghth of SENSOR_SETTING_PROP_ID0
+#define SENSOR_SETTING_RAW0_LEN			3 // Sensor Setting Raw length of SENSOR_SETTING_PROP_ID0
 #if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
-#define SENSOR_SETTING_RAW1_LEN			4 // Sensor Setting Raw lenghth of SENSOR_SETTING_PROP_ID1
+#define SENSOR_SETTING_RAW1_LEN			4 // Sensor Setting Raw length of SENSOR_SETTING_PROP_ID1
 #endif
 
 #define SENSOR_SETTING_RAW0_START		0
@@ -84,7 +84,7 @@ Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 
 // sensor data length, reference to Mesh Device Properties
 #if (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)
-#define SENSOR_DATA_RAW0_LEN			3 // Sensor Measured Raw lenghth of SENSOR_PROP_ID
+#define SENSOR_DATA_RAW0_LEN			3 // Sensor Measured Raw length of SENSOR_PROP_ID
 #elif (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS)
 	#if (SENSOR_PROP_ID == PROP_ID_PEOPLE_COUNT)
 #define SENSOR_DATA_RAW0_LEN			2
@@ -148,7 +148,7 @@ typedef struct{
 	u16 delta_up;
 	u8 min_interval;
 	u32 cadence_low:(SENSOR_DATA_RAW_MAX_LEN*8);
-	u32 cadence_hight:(SENSOR_DATA_RAW_MAX_LEN*8);
+	u32 cadence_high:(SENSOR_DATA_RAW_MAX_LEN*8);
 }cadence_unitless_t; // for tx message 
 
 typedef struct{
@@ -156,7 +156,7 @@ typedef struct{
 	u32 delta_up;
 	u8 min_interval;
 	u32 cadence_low;
-	u32 cadence_hight;
+	u32 cadence_high;
 }cadence_unit_t; // for save setting.
 
 typedef struct{

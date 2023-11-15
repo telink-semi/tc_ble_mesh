@@ -231,7 +231,7 @@ void set_ota_reboot_flag(u8 flag)
 
 int otaWrite(void * p)
 {
-#if 0 // DUAL_VENDOR_EN	// comfirm later
+#if 0 // DUAL_VENDOR_EN	// confirm later
     return 0;
 #endif
 
@@ -287,11 +287,11 @@ int otaWrite(void * p)
 		//if no index_max check, set ota success directly, otherwise we check if any index_max match
 		if( req->l2cap == 9 && (adrIndex_max ^ adrIndex_max_check) == 0xffff){  //index_max valid, we can check
 			if(adrIndex_max != ota_adr_index){  //last one or more packets missed
-				err_flg = OTA_DATA_UNCOMPLETE;
+				err_flg = OTA_DATA_INCOMPLETE;
 			}
 		}
 		if(ota_pkt_total != ota_adr_index + 1){
-			err_flg = OTA_DATA_UNCOMPLETE;
+			err_flg = OTA_DATA_INCOMPLETE;
 		}
 
 		blt_ota_finished_flag_set(err_flg);
@@ -649,7 +649,7 @@ int ais_ota_rc_report(u8 frame_desc, u32 trans_size)
 	ais_msg_t ais_msg_result;
 	memset(&ais_msg_result, 0x00, sizeof(ais_msg_result));		
 
-	ais_msg_result.msg_type = AIS_OTA_RECEVIED;
+	ais_msg_result.msg_type = AIS_OTA_RECEIVED;
 	ais_msg_result.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_receive_t);
 	ais_msg_result.ais_ota_rcv.seg_index = frame_desc;
 	ais_msg_result.ais_ota_rcv.trans_size_last = trans_size;

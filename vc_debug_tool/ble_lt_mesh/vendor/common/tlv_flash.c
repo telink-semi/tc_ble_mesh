@@ -208,7 +208,7 @@ u8 get_tlv_record_adr(u32 record_id,u32 *rec_adr,u32 *rec_last,u32 *p_rec_len)
 			continue;
 		}
 		else{
-			// if exist unvalid block ,we should jump one by one until find valid 
+			// if exist invalid block ,we should jump one by one until find valid 
 			skip_flag =1;
 		}
 		if((start+TLV_CONTENT_LEN)>=(TLV_SECTOR_START(start)+TLV_FLASH_SECTOR_END_ADR)){
@@ -280,7 +280,7 @@ u8 flash_sector_is_unfinish(u32 start_adr)
 	}
 }
 
-void tlv_unvalid_sector_get(u32* p_first)
+void tlv_invalid_sector_get(u32* p_first)
 {
 	for(int i=0;i<(TLV_FLASH_MAX_INTER/TLV_SEC_SIZE);i++){
 		if(flash_sector_is_unfinish(TLV_FLASH_START_ADR+i*TLV_SEC_SIZE)){
@@ -306,7 +306,7 @@ u32 get_tlv_end_by_inter(u32 start,u32 end)
 			wd_clear(); //clear watch dog
 			#endif
 		}else{
-			// if exist unvalid block ,we should jump one by one until find valid 
+			// if exist invalid block ,we should jump one by one until find valid 
 			skip_flag = 1;
 		}	
 		if((start+TLV_CONTENT_LEN)>=end){
@@ -358,16 +358,16 @@ void tlv_init()
 		tlv_rec.recycle_adr = first_empty;
 	}else if(cnt == 0){
 		// suppose the recycle error ,when recycle not accomplish ,and it power off 
-		u32 unvalid_adr =0;
-		tlv_unvalid_sector_get(&unvalid_adr);
-		if(unvalid_adr == 0){
-			unvalid_adr = TLV_FLASH_LAST_SECTOR;// if can not find select last sector
+		u32 invalid_adr =0;
+		tlv_invalid_sector_get(&invalid_adr);
+		if(invalid_adr == 0){
+			invalid_adr = TLV_FLASH_LAST_SECTOR;// if can not find select last sector
 			tlv_rec_err_proc(2);// must at least have one sector
 		}
-		flash_erase_sector(unvalid_adr);
-		tlv_rec.start = tlv_get_round_adr(unvalid_adr+TLV_SEC_SIZE);//move the pre adr to find.
-		tlv_rec.end = unvalid_adr;
-		tlv_rec.recycle_adr = unvalid_adr;
+		flash_erase_sector(invalid_adr);
+		tlv_rec.start = tlv_get_round_adr(invalid_adr+TLV_SEC_SIZE);//move the pre adr to find.
+		tlv_rec.end = invalid_adr;
+		tlv_rec.recycle_adr = invalid_adr;
 	}
 	// need to find the first empty adr for the valid sector,only find in one sector
 	if(cnt != TLV_FLASH_MAX_INTER/TLV_SEC_SIZE){
@@ -458,7 +458,7 @@ void tlv_recycle_by_adr()
 					wd_clear(); //clear watch dog
 					#endif
 				}else{
-					// if exist unvalid block ,we should jump one by one until find valid 
+					// if exist invalid block ,we should jump one by one until find valid 
 					skip_flag =1;
 				}
 			}else{
@@ -489,7 +489,7 @@ void tlv_recycle_proc(u16 len)
 {
 	// current sector is enough or not 
 	while((tlv_rec.end+len+TLV_CONTENT_LEN) > (TLV_SECTOR_START(tlv_rec.end)+TLV_FLASH_SECTOR_END_ADR)){
-		// if not have enough space it will trriger the recycle ,until it have enough space
+		// if not have enough space it will trigger the recycle ,until it have enough space
 		tlv_recycle_by_adr();
 	}
 }

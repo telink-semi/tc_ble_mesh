@@ -27,6 +27,10 @@
 #include "subnet_bridge.h"
 #include "solicitation_rpl_cfg_model.h"
 
+#if MD_DF_CFG_CLIENT_EN
+STATIC_ASSERT(MD_CLIENT_EN);
+#endif
+
 //--------------------network layer callback------------------------------//
 #if !WIN32
 #if (MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN)
@@ -1094,12 +1098,12 @@ void update_forwarding_entry_by_path_reply(u8 netkey_offset, u8 src_type, non_fi
 	}
 }
 
-non_fixed_entry_t * get_forwarding_entry_correspond2_path_confirm(u16 netkey_offset, mesh_ctl_path_confirmation_t *p_path_comfirm)
+non_fixed_entry_t * get_forwarding_entry_correspond2_path_confirm(u16 netkey_offset, mesh_ctl_path_confirmation_t *p_path_confirm)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
 			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && (p_path_comfirm->path_origin == p_fwd_entry->entry.path_origin) && (p_path_comfirm->path_target == p_fwd_entry->entry.destination)){
+			if((0 == p_fwd_entry->entry.fixed_path) && (p_path_confirm->path_origin == p_fwd_entry->entry.path_origin) && (p_path_confirm->path_target == p_fwd_entry->entry.destination)){
 				p_fwd_entry->entry.backward_path_validated = 1;
 				model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
 				return p_fwd_entry;
@@ -1109,7 +1113,7 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_confirm(u16 netkey_off
 	return 0;
 }
 
-void update_forwarding_entry_by_path_confirm(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry, mesh_ctl_path_confirmation_t *p_path_comfirm)
+void update_forwarding_entry_by_path_confirm(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry, mesh_ctl_path_confirmation_t *p_path_confirm)
 {
 	model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
 	p_fwd_entry->entry.backward_path_validated = 1;
@@ -1767,7 +1771,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 	}
 	else if(identifier_exist && (p_dependents_get->up_id != fwd_tbl_id)){
 		dependengts_get_sts.status = ST_OBSOLETE_INFO;
-		cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, dependent_origion_size);
+		cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, dependent_origin_size);
 	}
 
 	if(ST_SUCCESS == dependengts_get_sts.status){
@@ -1811,7 +1815,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 				via_par_len += get_dependent_addr_range_list(&dependengts_get_sts.range_list[via_par_len], p_fwd_entry->dependent_target, target_start_index);
 			}
 			
-			dependengts_get_sts.dependent_origion_size = origin_num;
+			dependengts_get_sts.dependent_origin_size = origin_num;
 			dependengts_get_sts.dependent_target_size = target_num;
 			dependengts_get_sts.up_id = fwd_tbl_id;
 		}					
@@ -2349,14 +2353,14 @@ u8 mesh_pub_policy_search_and_set(u16 ele_adr, u8 *par_set, u32 model_id, bool4 
     st = find_ele_support_model_and_match_dst(&adr_list, ele_adr, model_id, sig_model);
 	if(st != ST_SUCCESS) return st;
 	
-	int change_falg = 0;
+	int change_flag = 0;
     if(adr_list.adr_cnt){
         u8 model_idx = 0;
         model_common_t *p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, model_id, sig_model,&model_idx, 0);
         if(p_model && (!is_use_device_key(model_id, sig_model))){
         	st = ST_SUCCESS;
 			if(p_model->directed_pub_policy != p_policy_set->directed_pub_policy){
-				change_falg = 1;
+				change_flag = 1;
 			}
         	p_model->directed_pub_policy = p_policy_set->directed_pub_policy;
         }else{
@@ -2364,7 +2368,7 @@ u8 mesh_pub_policy_search_and_set(u16 ele_adr, u8 *par_set, u32 model_id, bool4 
         }
     }
 
-    if((ST_SUCCESS == st) && change_falg){
+    if((ST_SUCCESS == st) && change_flag){
 		mesh_model_store(sig_model, model_id);
     }
 
@@ -2776,13 +2780,13 @@ void discovery_table_timing_proc(u16 netkey_offset)
 	}
 }
 
-int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt)
+int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_endpoint, u16 dependent_addr, u8 dependent_ele_cnt)
 {
 	int err = -1;
 	mesh_ctl_dependent_node_update_t dependent_node_update;
 	memset(&dependent_node_update, 0x00, sizeof(dependent_node_update));
 	dependent_node_update.type = type;
-	dependent_node_update.path_endpoint = path_enpoint;	
+	dependent_node_update.path_endpoint = path_endpoint;	
 	if(dependent_ele_cnt>1){
 		dependent_node_update.dependent_addr.range_start_b = dependent_addr;
 		dependent_node_update.dependent_addr.length_present_b = 1;

@@ -31,11 +31,11 @@
 #if !WIN32
 extern const char num2char[17];
 #endif
-extern u32 con_product_id;// little endiness 
+extern u32 con_product_id;// little endianness 
 #if ((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE))
-extern const u8 con_mac_address[6];//small endiness
+extern const u8 con_mac_address[6];//small endianness
 #else
-extern u8  con_mac_address[6];//small endiness
+extern u8  con_mac_address[6];//small endianness
 #endif
 extern u8 con_sec_data[16];
 
@@ -46,7 +46,7 @@ typedef struct{
 		u8 pid;
 		struct{
 		u8	adv_ver:4;
-		u8 	ser_fun:1;
+		u8 	auth_en:1;
 		u8  ota_en:1;
 		u8  ble_ver:2;
 		};
@@ -75,12 +75,12 @@ void set_sha256_init_para_mode(u8 mode);
 void set_dev_uuid_for_sha256();
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
 void create_sha256_input_string_node(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
-void caculate_sha256_to_create_static_oob();
-void caculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random);
-void caculate_sha256_node_auth_value(u8 *auth_value);
+void calculate_sha256_to_create_static_oob();
+void calculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random);
+void calculate_sha256_node_auth_value(u8 *auth_value);
 int ais_write_pipe(void *p);
 void ais_gatt_auth_init();
-void caculate_sha256_node_oob(u8 *p_oob ,u8 *p_random);
+void calculate_sha256_node_oob(u8 *p_oob ,u8 *p_random);
 void mesh_ais_global_var_set();
 void calculate_auth_value();
 

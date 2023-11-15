@@ -129,7 +129,7 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 }
 
 /**
- * @brief  Send serial datas.
+ * @brief  Send serial data.
  * @param  p: Data pointer to send.
  * @param  len: Data length to send.
  * @retval None

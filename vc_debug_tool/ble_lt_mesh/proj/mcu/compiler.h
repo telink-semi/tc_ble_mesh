@@ -46,7 +46,7 @@
 
 /*
  * _align_4_: for eclipse, can save code size and ramcode size,
- *            if add align when extern gloabal variable with struct, because other file will take this gloabal variable as not align.
+ *            if add align when extern global variable with struct, because other file will take this global variable as not align.
  *            no need to add align for u32/u26, because eclipse has already taken it as 16/32 bit align.
  */
 #define _align_4_				__attribute__((aligned(4))) // 

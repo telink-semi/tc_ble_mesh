@@ -51,7 +51,7 @@ int database_normal_to_static()
 
 int database_static_to_normal()
 {
-	extern u8 ble_moudle_id_is_gateway();
+	extern u8 ble_module_id_is_gateway();
 	u32 sno = json_use_uuid_to_get_sno(vc_uuid); // get the sno of the provisioner first 
 	memcpy(&json_database,&json_db_static,sizeof(json_db_static)-MAX_MESH_NODE_NUM*(sizeof(mesh_node_static_str)));
 	// get the provisioner's sno 
@@ -280,7 +280,7 @@ int json_add_provisioner_info(provison_net_info_str *p_net_info,u8 *p_uuid)
     }
     return 1;
 }
-extern unsigned char ble_moudle_id_is_gateway();
+extern unsigned char ble_module_id_is_gateway();
 extern unsigned char gw_dev_key[16];
 int json_add_net_info_doc(u8 *p_guid,u8 *p_mac)
 {
@@ -291,7 +291,7 @@ int json_add_net_info_doc(u8 *p_guid,u8 *p_mac)
 	// set the network info data
 	json_add_network_info(net_info);
 	// set the node info data 
-    if(ble_moudle_id_is_gateway()){
+    if(ble_module_id_is_gateway()){
         json_add_node_info(net_info,p_guid,p_mac,gw_dev_key);
 		LOG_MSG_INFO(TL_LOG_WIN32,0,0,"json_add_net_info_doc",0);
     }else{
@@ -1077,7 +1077,7 @@ u8 json_mesh_netkey_del(u16 idx,u8 *p_key)
 {
     mesh_json_netkeys_str *p_netkey = json_database.netKeys;
     int net_idx =0;
-    /* wait to be comfirm
+    /* wait to be confirm
     net_idx = json_mesh_netkey_get_same_idx(idx,p_netkey);
     if(net_idx < MAX_NETKEY_TOTAL_NUM){
         memset(&p_netkey[net_idx],0,sizeof(mesh_json_netkeys_str));
@@ -1091,7 +1091,7 @@ u8 json_mesh_netkey_update(u16 idx,u8 *p_key)
 {
     mesh_json_netkeys_str *p_netkey = json_database.netKeys;
     int net_idx =0;
-    /* wait to be comfirm 
+    /* wait to be confirm 
     net_idx = json_mesh_netkey_get_same_idx(idx,p_netkey);
     if(net_idx < MAX_NETKEY_TOTAL_NUM){
         mesh_json_netkeys_str *p_netkey = &p_netkey[net_idx];
@@ -1531,8 +1531,8 @@ int mesh_rsp_handle_proc_win32(mesh_rc_rsp_t *p_rsp)
 	#if !JSON_FILE_ENABLE
     return 1;
 	#endif
-	extern unsigned char ble_moudle_id_is_gateway();
-	if(ble_moudle_id_is_gateway()){
+	extern unsigned char ble_module_id_is_gateway();
+	if(ble_module_id_is_gateway()){
         return 1;
 	}
     return mesh_rsp_handle_proc_fun(p_rsp,&mesh_tx_reliable);

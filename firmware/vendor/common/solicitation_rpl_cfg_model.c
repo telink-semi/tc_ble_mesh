@@ -36,7 +36,7 @@
 soli_rpl_t soli_rpl[SOLI_RPL_MAX];
 
 #if PTS_TEST_EN
-soli_ser_dat_t soli_service_data;
+soli_srv_dat_t soli_service_data;
 u32 soli_sno_tx = 0;
 int soli_pdu_adv_cnt = 0;
 #endif

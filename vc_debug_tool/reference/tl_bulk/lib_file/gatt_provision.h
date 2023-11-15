@@ -38,7 +38,7 @@
 enum{
 	PROV_NORMAL_RET =0,
 	PROV_TIMEOUT_RET =1,
-	PROV_COMFIRM_ERR =2,
+	PROV_confirm_ERR =2,
 	PROV_FAIL_CMD_ERR =3,
 };
 
@@ -139,9 +139,9 @@ extern void set_provision_mag_oob_info(u8 oob_type, u8 *p_oob,u8 len );
 
 int mesh_set_prov_cloud_para(u8 *p_pid,u8 *p_mac);
 
-int mesh_sec_prov_cloud_comfirm(u8* p_comfirm,u8 *p_comfirm_key,u8 *p_random);
+int mesh_sec_prov_cloud_confirm(u8* p_confirm,u8 *p_confirm_key,u8 *p_random);
 
-int mesh_cloud_dev_comfirm_check(u8 *p_comfirm_key,u8* p_dev_random,u8*p_dev_comfirm);
+int mesh_cloud_dev_confirm_check(u8 *p_confirm_key,u8* p_dev_random,u8*p_dev_confirm);
 void set_gatt_provision_net_info(u8 p_netkey[16],u16*p_key_index,u8*p_flag,u8 p_ivi[4],u16*p_unicast);
 void gatt_provision_net_info_callback();
 extern void prov_timer_start();
@@ -152,16 +152,16 @@ void mesh_rp_client_para_reset();
 // gatt provision step function proc part 
 void start_provision_invite();
 void gatt_prov_send_invite();
-void gatt_prov_rcv_pro_fail(mesh_pro_data_structer *p_rcv);
-void gatt_prov_rcv_capa(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_send_start(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_send_pubkey(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv);
-void gatt_prov_send_comfirm(mesh_pro_data_structer *p_send);
-void gatt_prov_rcv_comfirm(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_send_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_rcv_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
-void gatt_prov_send_pro_data(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send);
+void gatt_prov_rcv_pro_fail(mesh_pro_data_t *p_rcv);
+void gatt_prov_rcv_capa(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_send_pubkey(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_rcv_pubkey(mesh_pro_data_t *p_rcv);
+void gatt_prov_send_confirm(mesh_pro_data_t *p_send);
+void gatt_prov_rcv_confirm(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_send_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_rcv_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
+void gatt_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send);
 void gatt_prov_rcv_pro_complete();
 u8 win32_prov_working();
 void gatt_prov_send_record_get(pro_trans_record_get *p_rec_get);

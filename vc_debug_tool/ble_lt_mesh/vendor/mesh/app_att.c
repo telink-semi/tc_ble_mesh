@@ -249,7 +249,7 @@ const u8  my_userderdefine[4] = {'U', 'S', 'E','R'};
 const u8  my_userdefine_UUID[16]= TELINK_USERDEFINE_UUID;
 #endif
 
-const u16  mi_gerneric_service  = SERVICE_UUID_GENERIC_ATTRIBUTE;
+const u16  mi_generic_service  = SERVICE_UUID_GENERIC_ATTRIBUTE;
 const u16 mi_service_change_uuid = 0x2a05;
 static u8 mi_service_change_prop = CHAR_PROP_INDICATE;
 static u8 mi_service_change_buf[4];
@@ -290,7 +290,7 @@ u8 mi_version_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 const u16 mi_ctrlp_uuid = BLE_UUID_MI_CTRLP;
 static u8 mi_ctrlp_prop = CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY;
 static u8 mi_ctrlp_buf[4];
-const u8 mi_ctrlp_str[]="contrl point";
+const u8 mi_ctrlp_str[]="control point";
 u8 mi_sec_ctrlp_ccc[2]=	{0x00,0x00};
 u8 mi_sec_ctrlp_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_sec_ctrlp_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
@@ -428,8 +428,8 @@ u8 ais_data_buf[2];
 #endif
 
 #if(ONLINE_STATUS_EN)
-const u8 online_st_service_uuid[16] = TELINK_ONLINE_ST_UUID_SERVICE;  // comfirm later
-const u8 online_st_data_uuid[16] = TELINK_ONLINE_ST_DATA_UUID;               // comfirm later
+const u8 online_st_service_uuid[16] = TELINK_ONLINE_ST_UUID_SERVICE;  // confirm later
+const u8 online_st_data_uuid[16] = TELINK_ONLINE_ST_DATA_UUID;               // confirm later
 const u8 online_st_prop = CHAR_PROP_READ | CHAR_PROP_WRITE | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY;
 const u8 online_st_service_desc[]="Online Status";
 
@@ -621,7 +621,7 @@ const u8 NMW_CONTROL_HANDLE = ATT_NUM_START_NMW + 2;
 #endif
 
 #define MY_ATTRIBUTE_SERVICE_CHANGE                        \
-	{MAX_SERVICE_CHANGE_ATT_NUM,&att_perm_auth_read,2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_gerneric_service), 0},\
+	{MAX_SERVICE_CHANGE_ATT_NUM,&att_perm_auth_read,2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_generic_service), 0},\
 	{0,&mi_service_change_char_perm, 2, 1,(u8*)(&my_characterUUID), 	(u8*)(&mi_service_change_prop), 0}, /*prop*/   \
 	{0,&mi_service_change_buf_perm, 2,sizeof(mi_service_change_buf),(u8*)(&mi_service_change_uuid), (mi_service_change_buf), 0, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_service_change_str),(u8*)(&userdesc_UUID), (u8*)(mi_service_change_str), 0},	\

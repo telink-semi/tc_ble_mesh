@@ -288,14 +288,14 @@ u32 mesh_time_tick = 0;
 
 int mesh_time_set(time_status_t *p_set)
 {
-    #if 1 //(!PTS_TEST_TIME_EN)   // beacuse PTS send test command should be 40bit in BV 01
+    #if 1 //(!PTS_TEST_TIME_EN)   // because PTS send test command should be 40bit in BV 01
     if(PTS_TEST_EN || (((0 == p_set->TAI_sec_rsv) || p_set->time_auth) && is_valid_TAI_second(p_set->TAI_sec)))
     #endif
     {
         memcpy(&mesh_time.time, p_set, sizeof(time_status_t));  // include g_TAI_sec = xxxx
         mesh_time_tick = clock_time();
         
-        rebulid_schd_nearest_and_check_event(1, get_local_TAI());
+        rebuild_schd_nearest_and_check_event(1, get_local_TAI());
         return 0;
     }
     return -1;
@@ -315,7 +315,7 @@ void mesh_time_proc()
     }
 
     u32 clock_tmp = clock_time();
-    u32 t_delta = (u32)(clock_tmp - mesh_time_tick);    // should be differrent from system_time_tick_
+    u32 t_delta = (u32)(clock_tmp - mesh_time_tick);    // should be different from system_time_tick_
     if(t_delta >= MESH_TIME_CHECK_INTERVAL){
         u32 interval_cnt = t_delta / MESH_TIME_CHECK_INTERVAL;
         foreach(i,interval_cnt){

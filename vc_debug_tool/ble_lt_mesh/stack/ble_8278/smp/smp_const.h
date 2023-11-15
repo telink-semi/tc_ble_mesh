@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     smp_const.h 
+ * @file	smp_const.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 public@telink-semi.com;
- * @date     Sep. 18, 2015
+ * @author	BLE Group
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 /*
  * smp_const.h
@@ -54,12 +57,6 @@
 #define 		SMP_TRANSPORT_SPECIFIC_KEY_START    0xEF
 #define 		SMP_TRANSPORT_SPECIFIC_KEY_END      0
 
-#define IO_CAPABLITY_DISPLAY_ONLY					0x00
-#define IO_CAPABLITY_DISPLAY_YESNO					0x01
-#define IO_CAPABLITY_KEYBOARD_ONLY					0x02
-#define IO_CAPABLITY_NO_IN_NO_OUT					0x03
-#define IO_CAPABLITY_KEYBOARD_DISPLAY				0x04
-
 #define PASSKEY_TYPE_ENTRY_STARTED					0x00
 #define PASSKEY_TYPE_DIGIT_ENTERED					0x01
 #define PASSKEY_TYPE_DIGIT_ERASED					0x02
@@ -76,19 +73,19 @@
 #define PARING_FAIL_REASON_CMD_NOT_SUPPORT			0x07
 #define PARING_FAIL_REASON_UNSPECIFIED_REASON		0x08
 #define PARING_FAIL_REASON_REPEATED_ATTEMPT			0x09
-#define PARING_FAIL_REASON_INVAILD_PARAMETER		0x0A
+#define PARING_FAIL_REASON_INVALID_PARAMETER		0x0A
 #define PARING_FAIL_REASON_DHKEY_CHECK_FAIL			0x0B
 #define PARING_FAIL_REASON_NUMUERIC_FAILED			0x0C
 #define PARING_FAIL_REASON_BREDR_PARING				0x0D
 #define PARING_FAIL_REASON_CROSS_TRANSKEY_NOT_ALLOW	0x0E
 
-//teLink define
-#define PARING_FAIL_REASON_PARING_TIEMOUT			0x80
+//Telink define
+#define PARING_FAIL_REASON_PARING_TIMEOUT			0x80
 #define PARING_FAIL_REASON_CONN_DISCONNECT			0x81
 #define PARING_FAIL_REASON_SUPPORT_NC_ONLY			0x82
 
-#define	ENCRYPRION_KEY_SIZE_MAXINUM				16
-#define	ENCRYPRION_KEY_SIZE_MINIMUN				7
+#define	ENCRYPRION_KEY_SIZE_MAXIMUM				16
+#define	ENCRYPRION_KEY_SIZE_MINIMUM				7
 
 
 
@@ -235,7 +232,7 @@ typedef union{
 
 typedef struct{
 	u8 code;  //req = 0x01; rsp = 0x02;
-	u8 ioCapablity;
+	u8 ioCapability;
 	u8 oobDataFlag;
 	smp_authReq_t authReq;
 	u8 maxEncrySize;

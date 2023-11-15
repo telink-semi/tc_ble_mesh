@@ -176,7 +176,7 @@ void get_iv_update_key_refresh_flag(mesh_ctl_fri_update_flag_t *p_flag_out, u8 *
 	get_iv_big_endian(iv_idx_out, (u8 *)&iv_idx_st.iv_cur);
 }
 
-void iv_update_set_with_update_flag_ture(u32 iv_idx, u32 search_mode)
+void iv_update_set_with_update_flag_true(u32 iv_idx, u32 search_mode)
 {
     u32 iv_save = iv_idx - 1;			// -1
     int rst_sno = (iv_save != iv_idx_st.iv_cur);
@@ -245,7 +245,7 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
                     set_iv_update_rx_flag();
                     iv_idx_st.searching_flag = 0;    // for spec "3.10.6 IV Index Recovery procedure", it should exist searching mode and keep current step for 96 hours
                 }else{
-                    iv_update_set_with_update_flag_ture(iv_idx, 1); // active at once, regardless of rx segment busy state.
+                    iv_update_set_with_update_flag_true(iv_idx, 1); // active at once, regardless of rx segment busy state.
                     iv_idx_st.searching_flag = 0;
                 }
             }else{
@@ -317,8 +317,8 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
 				if(iv_idx == iv_idx_st.iv_cur){
 					// enter normal mode at once ?
 					if(IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag){
-					    #if 0 // for which case ??? comfirm later
-                        int searching_trigger_update = (0 == memcmp(iv_idx_st.tx, iv_idx_st.cur, 4)); // should never ture
+					    #if 0 // for which case ??? confirm later
+                        int searching_trigger_update = (0 == memcmp(iv_idx_st.tx, iv_idx_st.cur, 4)); // should never true
                         if(searching_trigger_update){   // why ?? 
                             LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"into step2, and reset sno ",0);
     						mesh_iv_update_enter_update2normal();    // enter step2 // attention: will reset sno
@@ -353,6 +353,13 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
     return 0;
 }
 
+/**
+ * @brief       This function server to decrypt and process security beacon.
+ * @param[in]   p_payload	- pointer of security beacon.
+ * @param[in]   t			- unused.
+ * @return      0: success. other: failure.
+ * @note        
+ */
 int mesh_rc_data_beacon_sec (u8 *p_payload, u32 t)
 {
 	int err = 0;

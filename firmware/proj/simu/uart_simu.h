@@ -137,11 +137,11 @@ extern "C"
  *
  * @param baudRate specify the uart baud rate to transfer
  *
- * @param parity specifiy ODD/EVEN/NONE parity
+ * @param parity specify ODD/EVEN/NONE parity
  *
- * @param stopBits specifiy the stop bits
+ * @param stopBits specify the stop bits
  *
- * @param mode specifiy the transfer mode
+ * @param mode specify the transfer mode
  *
  * @return length field and header only
  *

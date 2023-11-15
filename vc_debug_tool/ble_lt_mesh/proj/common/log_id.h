@@ -26,7 +26,7 @@
 
 /*
 	ID == -1 is invalid
-	if you want to shut down logging a specified id,  assigne -1 to it
+	if you want to shut down logging a specified id,  assign -1 to it
 */
 
 

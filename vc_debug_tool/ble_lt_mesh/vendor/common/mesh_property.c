@@ -39,7 +39,7 @@ model_property_t	model_sig_property;
 u32 mesh_md_property_addr = FLASH_ADR_MD_PROPERTY;
 #if MD_SERVER_EN
 
-#define PROP_ID_TEST_PTS    (0x004E)        // comfirm later
+#define PROP_ID_TEST_PTS    (0x004E)        // confirm later
 #define PROP_HEAD_LEN       (OFFSETOF(mesh_property_t,val) - 1)
 
 void mesh_property_global_init()
@@ -204,7 +204,7 @@ int mesh_property_st_publish_ll(u8 idx, u16 op_rsp)
     	
     	u32 max = 0;
         mesh_property_t *p_prop = get_property_base(op_rsp, &max);
-        u16 prop_id = p_prop[0].id; // comfirm later
+        u16 prop_id = p_prop[0].id; // confirm later
     	return mesh_tx_cmd_property_st(idx, ele_adr, pub_adr, uuid, p_com_md, prop_id, op_rsp, 0);
 	}
 	
@@ -255,7 +255,7 @@ int mesh_cmd_sig_property_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 if((par_len <= sizeof(mesh_property_set_user_t)) && (par_len >= OFFSETOF(mesh_property_set_user_t,data))){
                     mesh_property_set_user_t *p_set = (mesh_property_set_user_t *)par;
                     u8 len_val_set = par_len - OFFSETOF(mesh_property_set_user_t,data);
-                    if(p_prop->len_val == len_val_set){ // valid parameters check, comfirm later
+                    if(p_prop->len_val == len_val_set){ // valid parameters check, confirm later
                         if((MESH_ACCESS_WRITE == p_prop->access)||(MESH_ACCESS_RW == p_prop->access)){
                             memset(p_prop->val, 0, sizeof(p_prop->val));
                             p_prop->len_val = len_val_set;
@@ -269,7 +269,7 @@ int mesh_cmd_sig_property_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 if((par_len <= sizeof(mesh_property_set_admin_t)) && (par_len >= OFFSETOF(mesh_property_set_admin_t,data))){
                     mesh_property_set_admin_t *p_set = (mesh_property_set_admin_t *)par;
                     u8 len_val_set = par_len - OFFSETOF(mesh_property_set_admin_t,data);
-                    if((p_prop->len_val == len_val_set) && (p_set->access < MESH_ACCESS_MAX)){ // valid parameters check, comfirm later
+                    if((p_prop->len_val == len_val_set) && (p_set->access < MESH_ACCESS_MAX)){ // valid parameters check, confirm later
                         p_prop->access = p_set->access;
                         memset(p_prop->val, 0, sizeof(p_prop->val));
                         p_prop->len_val = len_val_set;

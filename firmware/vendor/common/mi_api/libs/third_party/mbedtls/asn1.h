@@ -167,7 +167,7 @@ mbedtls_asn1_named_data;
  *
  * \return      0 if successful, MBEDTLS_ERR_ASN1_OUT_OF_DATA on reaching
  *              end of data, MBEDTLS_ERR_ASN1_INVALID_LENGTH if length is
- *              unparseable.
+ *              unparsable.
  */
 int mbedtls_asn1_get_len( unsigned char **p,
                   const unsigned char *end,
@@ -237,7 +237,7 @@ int mbedtls_asn1_get_bitstring( unsigned char **p, const unsigned char *end,
  *
  * \param p     The position in the ASN.1 data
  * \param end   End of data
- * \param len   Length of the actual bit/octect string in bytes
+ * \param len   Length of the actual bit/octet string in bytes
  *
  * \return      0 if successful or a specific ASN.1 error code.
  */

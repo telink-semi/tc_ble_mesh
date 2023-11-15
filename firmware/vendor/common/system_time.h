@@ -64,5 +64,5 @@ void system_time_run();
 u32 clock_time_exceed_ms(u32 ref, u32 span_ms);
 u32 clock_time_exceed_100ms(u32 ref, u32 span_100ms);
 u32 clock_time_exceed_s(u32 ref, u32 span_s);
-void switch_triger_iv_search_mode(int force);
+void switch_trigger_iv_search_mode(int force);
 

@@ -514,7 +514,7 @@ void user_init()
 	#endif
 #endif
 	#if ADC_ENABLE
-	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
@@ -548,7 +548,7 @@ void user_init()
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
-	mi_sevice_init();
+	mi_service_init();
 	//mi_scheduler_init(20, mi_schd_event_handler, NULL, NULL, NULL);
 #endif 
 	system_time_init();

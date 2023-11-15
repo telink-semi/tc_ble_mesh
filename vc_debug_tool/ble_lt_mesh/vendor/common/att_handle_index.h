@@ -26,7 +26,7 @@
 #define _ATT_HANDLE_INDEX_
 
 ////////////////////////////////////////////////////////////////////
-// corrseponding to my_Attributes[]
+// corresponding to my_Attributes[]
 #if VIN_TEST_MODE 
 #define MAX_ATT_FUNC				74
 #else

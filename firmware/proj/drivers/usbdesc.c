@@ -573,7 +573,7 @@ const USB_Descriptor_Configuration_t
 				},
 				// mic_audio_stream
 				{	{	sizeof(USB_Audio_Descriptor_Interface_AS_t), DTYPE_CSInterface},
-					AUDIO_DSUBTYPE_CSInterface_General, 6, // TerminalLink #6USB USB Streaming OT
+					AUDIO_DSUBTYPE_CSInterface_General, 6, // TerminalLink #6USB USB Streaming OUT
 					1, // FrameDelay
 					{	USB_AUDIO_FORMAT_PCM & 0xff, (USB_AUDIO_FORMAT_PCM >> 8)& 0xff}
 				},
@@ -581,7 +581,7 @@ const USB_Descriptor_Configuration_t
 				{	{	sizeof(USB_Audio_Descriptor_Format_t)
 						+ sizeof(USB_Audio_SampleFreq_t), DTYPE_CSInterface},
 					AUDIO_DSUBTYPE_CSInterface_FormatType, USB_AUDIO_FORMAT_PCM, // FormatType
-					MIC_CHANNLE_COUNT, // Channels
+					MIC_CHANNEL_COUNT, // Channels
 					2, // SubFrameSize
 					MIC_RESOLUTION_BIT, // BitsResolution
 					1 // TotalDiscreteSampleRates

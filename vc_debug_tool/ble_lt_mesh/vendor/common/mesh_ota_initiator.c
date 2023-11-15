@@ -207,7 +207,7 @@ int is_initiator_all_receivers_invalid()
 }
 
 #if (DEBUG_SHOW_VC_SELF_EN && DISTRIBUTOR_NO_UPDATA_START_2_SELF)
-int is_only_initiator_as_reveiver()
+int is_only_initiator_as_receiver()
 {
 	if(1 == fw_initiator_proc.node_cnt){
 		return (is_own_ele(fw_initiator_proc.list[0].adr));
@@ -811,7 +811,7 @@ void mesh_ota_initiator_proc()
             	if(INITIATOR_ALL_RECEIVER_INVALID_ERR_NO == index){
 					distr_proc->node_num = 0;
             		#if (DEBUG_SHOW_VC_SELF_EN && DISTRIBUTOR_NO_UPDATA_START_2_SELF)
-            		if(is_only_initiator_as_reveiver()){
+            		if(is_only_initiator_as_receiver()){
                     	mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_PRE_APPLY);
             		}else
             		#endif

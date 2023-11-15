@@ -322,8 +322,8 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
         remote_prov_link_report *p_link_rep = (remote_prov_link_report *)p_rp_data;
         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_link_rep,sizeof(remote_prov_link_report),"CLIENT:REMOTE_PROV_LINK_REPORT",0);
     }else if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT || REMOTE_PROV_PDU_REPORT){
-        mesh_pro_data_structer *p_send = (mesh_pro_data_structer *)gatt_para_pro;
-        mesh_pro_data_structer *p_rcv = (mesh_pro_data_structer *)p_event->ProvisioningPDU;
+        mesh_pro_data_t *p_send = (mesh_pro_data_t *)gatt_para_pro;
+        mesh_pro_data_t *p_rcv = (mesh_pro_data_t *)p_event->ProvisioningPDU;
 		if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT){
 			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_event->InboundPDUNumber),1,"REMOTE_PROV_PDU_REPORT,inbound num is %d",p_event->InboundPDUNumber);
 		}else if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
@@ -335,7 +335,7 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
             // reset all the status part 
             LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PRO_FAIL",0);
             mesh_rp_client_para_reset();
-            mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECT_ERROR);        
+            mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECTED_ERROR);        
         }
         //prov the rp sts ,and the rp opcode part 
         switch(p_rp->prov_sts){
@@ -392,31 +392,31 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
                     if(prov_code == PRO_PUB_KEY){
                         gatt_prov_rcv_pubkey(p_rcv);
                         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_PUBKEY_RSP",0);
-                        mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_CMD);
-						gatt_prov_send_comfirm(p_send);
+                        mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_CMD);
+						gatt_prov_send_confirm(p_send);
                 		mesh_cmd_sig_rp_cli_send_pdu(gatt_para_pro,gatt_para_len);
-                		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_CMD",0);
-						mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_CMD_ACK);
+                		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_CMD",0);
+						mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_CMD_ACK);
                     }else{
                         break;
                     }
                 }else{
                     break;
                 }
-			case RP_PROV_COMFIRM_CMD_ACK:
+			case RP_PROV_CONFIRM_CMD_ACK:
 				if((p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT) && 
 					(p_event->InboundPDUNumber == rp_client.outbound) ){
 					mesh_rp_pdu_retry_clear();
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_CMD_ACK",0);
-                    mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_RSP);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_CMD_ACK",0);
+                    mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_RSP);
                 }
                 break;
-            case RP_PROV_COMFIRM_RSP:
+            case RP_PROV_CONFIRM_RSP:
                 if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
                     // receive the pubkey from the node 
                     if(prov_code == PRO_CONFIRM){
-                        gatt_prov_rcv_comfirm(p_rcv,p_send);
-                        LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_RSP",0);
+                        gatt_prov_rcv_confirm(p_rcv,p_send);
+                        LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_RSP",0);
                         mesh_rp_client_set_prov_sts(RP_PROV_RANDOM_CMD);
 						gatt_prov_send_random(p_rcv,p_send);
                 		mesh_cmd_sig_rp_cli_send_pdu(gatt_para_pro,gatt_para_len);
@@ -514,8 +514,8 @@ void mesh_prov_dev_candi_store_proc(u16 cmd_src)
 u8 rp_pro_input[0x91];
 u8 rp_dev_random[32];
 u8 rp_pro_random[32];
-u8 rp_pro_dev_comfirm[32];
-u8 rp_pro_comfirm[32];
+u8 rp_pro_dev_confirm[32];
+u8 rp_pro_confirm[32];
 u8 rp_ecdh_secret[32];
 u8 rp_node_ele_cnt =0;
 u8 rp_gw_ppk[64];
@@ -544,7 +544,7 @@ void gw_rp_timeout_proc()
 		gw_rp_tick = 0;
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gw_rp_timeout_proc,link adr is %d",rp_client.node_adr);
         mesh_rp_client_para_reset();
-        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECT_ERROR);  
+        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECTED_ERROR);  
 	}
 }
 
@@ -569,7 +569,7 @@ void mesh_prov_dev_candi_store_proc(u16 cmd_src)
 
 void gw_rp_send_invite()
 {
-	mesh_pro_data_structer *p_send = (mesh_pro_data_structer *)(para_pro);
+	mesh_pro_data_t *p_send = (mesh_pro_data_t *)(para_pro);
 	set_pro_invite(p_send,0);
 	para_len = sizeof(pro_trans_invite);
 	mesh_cmd_sig_cp_cli_send_invite(para_pro,para_len);
@@ -577,19 +577,19 @@ void gw_rp_send_invite()
 	gw_rp_time_set();
 }
 
-void gw_prov_rcv_capa(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_rcv_capa(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     memset(&prov_oob,0,sizeof(prov_oob));// clean the prov oob for gatt provision part 
 	memcpy(rp_pro_input+1,&(p_rcv->capa.ele_num),11);
 	rp_node_ele_cnt = p_rcv->capa.ele_num;
 	gateway_upload_node_ele_cnt(rp_node_ele_cnt);
-	swap_mesh_pro_capa(p_rcv);// swap the endiness for the capa data 
+	swap_mesh_pro_capa(p_rcv);// swap the endianness for the capa data 
 	memcpy(&prov_oob.capa , &p_rcv->capa,sizeof(p_rcv->capa));
 	get_pubkey_oob_info_by_capa(&prov_oob);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.capa,sizeof(prov_oob.capa),"RCV:the provision capa data is \r\n",0);
 }  
 
-void gw_prov_send_start(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	set_start_para_by_capa(&prov_oob);
 	if(mesh_prov_oob_auth_data(&prov_oob)){
@@ -600,13 +600,13 @@ void gw_prov_send_start(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_
 		}
 	}
 	set_pro_start_simple(p_send,&(prov_oob.start));
-	memcpy(rp_pro_input+12,&(p_send->start.alogrithms),5);
+	memcpy(rp_pro_input+12,&(p_send->start.algorithms),5);
 	para_len = sizeof(pro_trans_start);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.start,sizeof(prov_oob.start),"SEND:the provision start is \r\n",0);
 	gw_rp_time_set();
 }
 
-void gw_prov_send_pubkey(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_send_pubkey(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     // send the pub_key pkt 
 	get_public_key(rp_gw_ppk);
@@ -616,7 +616,7 @@ void gw_prov_send_pubkey(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p
 	
 }
 
-void gw_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv)
+void gw_prov_rcv_pubkey(mesh_pro_data_t *p_rcv)
 {
 	get_private_key(rp_gw_psk);
 	memcpy(rp_pro_input+0x11,rp_gw_ppk,sizeof(rp_gw_ppk));
@@ -625,54 +625,54 @@ void gw_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv)
 	tn_p256_dhkey_fast(rp_ecdh_secret, rp_gw_psk,rp_pro_input+0x11+0x40 ,rp_pro_input+0x11+0x60);    
 }
 
-void gw_prov_send_comfirm(mesh_pro_data_structer *p_send)
+void gw_prov_send_confirm(mesh_pro_data_t *p_send)
 {
 	
-	mesh_sec_prov_confirmation_sec (rp_pro_comfirm, rp_pro_input, 
+	mesh_sec_prov_confirmation_sec (rp_pro_confirm, rp_pro_input, 
 								145, rp_ecdh_secret, rp_pro_random, pro_auth);
-	set_pro_comfirm(p_send,rp_pro_comfirm,get_prov_comfirm_value_len());
-	para_len =get_prov_comfirm_len();
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,para_pro+1,(u8)para_len-1,"SEND:the provisioner's comfirm is \r\n",0);    
+	set_pro_confirm(p_send,rp_pro_confirm,get_prov_confirm_value_len());
+	para_len =get_prov_confirm_len();
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,para_pro+1,(u8)para_len-1,"SEND:the provisioner's confirm is \r\n",0);    
 }
 
-void gw_prov_rcv_comfirm(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_rcv_confirm(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
-	pro_trans_comfirm *p_comfirm = &(p_rcv->comfirm);
+	pro_trans_confirm *p_confirm = &(p_rcv->confirm);
 	#if PROV_AUTH_LEAK_REFLECT_EN
-	if(prov_comfirm_check_same_or_not(p_comfirm->comfirm,rp_pro_comfirm)){
+	if(prov_confirm_check_same_or_not(p_confirm->confirm,rp_pro_confirm)){
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PRO_FAIL",0);
         mesh_rp_client_para_reset();
-        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECT_ERROR); 
+        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECTED_ERROR); 
 		gw_rp_time_clear();
 	}
 	#endif
 	// store the dev comfrim part 
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_comfirm->comfirm,get_prov_comfirm_value_len(),"RCV:the device's comfirm is \r\n",0);
-	memcpy(rp_pro_dev_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());    
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_confirm->confirm,get_prov_confirm_value_len(),"RCV:the device's confirm is \r\n",0);
+	memcpy(rp_pro_dev_confirm,p_confirm->confirm,get_prov_confirm_value_len());    
 }
 
-void gw_prov_send_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_send_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     set_pro_random(p_send,rp_pro_random,get_prov_random_len()-1);
 	para_len = get_prov_random_len();
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,para_pro+1,(u8)para_len-1,"SEND:the provisioner's random is \r\n",0);    
 }
 
-void gw_prov_rcv_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_rcv_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	memcpy(rp_dev_random,p_rcv->random.random,get_prov_random_value_len());
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->random.random,get_prov_random_value_len(),"RCV:the device's random is \r\n",0);
-	u8 pro_dev_comfirm_tmp[32];
-	mesh_sec_prov_confirmation_sec (pro_dev_comfirm_tmp, rp_pro_input, 
+	u8 pro_dev_confirm_tmp[32];
+	mesh_sec_prov_confirmation_sec (pro_dev_confirm_tmp, rp_pro_input, 
 							145, rp_ecdh_secret, rp_dev_random, pro_auth);
-	if(prov_comfirm_check_right_or_not(rp_pro_dev_comfirm,pro_dev_comfirm_tmp)){
-		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,pro_dev_comfirm_tmp,get_prov_comfirm_value_len(),"provision comfirm fail\r\n",0);
+	if(prov_confirm_check_right_or_not(rp_pro_dev_confirm,pro_dev_confirm_tmp)){
+		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,pro_dev_confirm_tmp,get_prov_confirm_value_len(),"provision confirm fail\r\n",0);
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PRO_FAIL",0);
         mesh_rp_client_para_reset();
-        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECT_ERROR);
+        mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECTED_ERROR);
 		gw_rp_time_clear();
 	}
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device comfirm check is success",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device confirm check is success",0);
 	//calculate the dev_key part 
 	u8 prov_salt[16];
 	mesh_sec_prov_salt_fun(prov_salt,rp_pro_input,rp_pro_random,rp_dev_random,is_prov_oob_hmac_sha256());
@@ -681,7 +681,7 @@ void gw_prov_rcv_random(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_
 	   
 }
 
-void gw_prov_send_pro_data(mesh_pro_data_structer *p_rcv,mesh_pro_data_structer *p_send)
+void gw_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	u8 pro_session_key[16];
 	u8 pro_session_nonce_tmp[16];
@@ -764,8 +764,8 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
         p_link_rep = p_link_rep;
         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_link_rep,sizeof(remote_prov_link_report),"CLIENT:REMOTE_PROV_LINK_REPORT",0);
     }else if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT || REMOTE_PROV_PDU_REPORT){
-		mesh_pro_data_structer *p_send = (mesh_pro_data_structer *)(para_pro);
-		mesh_pro_data_structer *p_rcv = (mesh_pro_data_structer *)p_event->ProvisioningPDU;
+		mesh_pro_data_t *p_send = (mesh_pro_data_t *)(para_pro);
+		mesh_pro_data_t *p_rcv = (mesh_pro_data_t *)p_event->ProvisioningPDU;
 		if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT){
 			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_event->InboundPDUNumber),1,"REMOTE_PROV_PDU_REPORT,inbound num is %d",p_event->InboundPDUNumber);
 		}else if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
@@ -777,7 +777,7 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
             // reset all the status part 
             LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PRO_FAIL",0);
             mesh_rp_client_para_reset();
-            mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECT_ERROR);        
+            mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,UNEXPECTED_ERROR);        
         }
         //prov the rp sts ,and the rp opcode part 
         switch(p_rp->prov_sts){
@@ -843,33 +843,33 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
 						gateway_upload_prov_cmd((u8 *)p_rcv,PRO_PUB_KEY);
                         gw_prov_rcv_pubkey(p_rcv);
                         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_PUBKEY_RSP",0);
-                        mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_CMD);
-						gw_prov_send_comfirm(p_send);
+                        mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_CMD);
+						gw_prov_send_confirm(p_send);
 						gateway_upload_prov_cmd((u8 *)p_send,PRO_CONFIRM);
                 		mesh_cmd_sig_rp_cli_send_pdu(para_pro,para_len);
-                		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_CMD",0);
-						mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_CMD_ACK);
+                		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_CMD",0);
+						mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_CMD_ACK);
                     }else{
                         break;
                     }
                 }else{
                     break;
                 }
-			case RP_PROV_COMFIRM_CMD_ACK:
+			case RP_PROV_CONFIRM_CMD_ACK:
 				if((p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT) && 
 					(p_event->InboundPDUNumber == rp_client.outbound) ){
 					mesh_rp_pdu_retry_clear();
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_CMD_ACK",0);
-                    mesh_rp_client_set_prov_sts(RP_PROV_COMFIRM_RSP);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_CMD_ACK",0);
+                    mesh_rp_client_set_prov_sts(RP_PROV_CONFIRM_RSP);
                 }
                 break;
-            case RP_PROV_COMFIRM_RSP:
+            case RP_PROV_CONFIRM_RSP:
                 if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
                     // receive the pubkey from the node 
                     if(prov_code == PRO_CONFIRM){
 						gateway_upload_prov_cmd((u8 *)p_rcv,PRO_CONFIRM);
-                        gw_prov_rcv_comfirm(p_rcv,p_send);
-                        LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMFIRM_RSP",0);
+                        gw_prov_rcv_confirm(p_rcv,p_send);
+                        LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_CONFIRM_RSP",0);
                         mesh_rp_client_set_prov_sts(RP_PROV_RANDOM_CMD);
 						gw_prov_send_random(p_rcv,p_send);
 						gateway_upload_prov_cmd((u8 *)p_send,PRO_RANDOM);

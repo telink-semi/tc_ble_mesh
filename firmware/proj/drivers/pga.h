@@ -130,7 +130,7 @@ static inline unsigned char postGainAdjust(enum POSTAMPValue posGV){
 /**************************************************************
 *
 *	@brief	pga initiate function, call this function to enable the PGA module
-*			the input channel deafult set to ANA_C<3> and ANA_C<2>
+*			the input channel default set to ANA_C<3> and ANA_C<2>
 *
 *	@para	None
 *

@@ -655,7 +655,7 @@ enum{
 #define reg_usb_irq				REG_ADDR8(0x139)
 #define reg_usb_mask			REG_ADDR8(0x13a)
 #define reg_usb_ep8_send_max	REG_ADDR8(0x13b)
-#define reg_usb_ep8_send_thre	REG_ADDR8(0x13c)
+#define reg_usb_ep8_send_thres	REG_ADDR8(0x13c)
 #define reg_usb_ep8_fifo_mode	REG_ADDR8(0x13d)
 #define reg_usb_ep_max_size		REG_ADDR8(0x13e)
 
@@ -1158,7 +1158,7 @@ enum{
 	FLD_GP7_RXADC_CLK	=	BIT(3),
 	FLD_RP_T0			=	BIT(4),
 	FLD_RN_T1			=	BIT(5),
-	FLD_GP6_TE			=	BIT(6),
+	FLD_GP6_TIME_EVT	=	BIT(6),
 	FLD_GP7_MDC			=	BIT(7),
 };
 #define reg_gpio_config_func2 REG_ADDR8(0x5b2)
@@ -1214,7 +1214,7 @@ enum{
 	FLD_TMR2_STA =				BIT(26),
 	FLD_CLR_WD =				BIT(27),
 };
-#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
+#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definition, 0x622
 
 #define WATCHDOG_DISABLE	( reg_tmr_ctrl &= ~FLD_TMR_WD_EN )
 

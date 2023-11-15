@@ -46,7 +46,7 @@
 
 _PRINT_FUN_RAMCODE_ static void printchar(char **str, int c) {
 	if (str) {
-		if(PP_GET_PRINT_BUF_LEN_FALG != str){
+		if(PP_GET_PRINT_BUF_LEN_FLAG != str){
 			**str = c;
 			++(*str);
 		}
@@ -429,7 +429,7 @@ _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 		}
 	}
 	if (out){
-		if((PP_GET_PRINT_BUF_LEN_FALG == out)){
+		if((PP_GET_PRINT_BUF_LEN_FLAG == out)){
 			++pc;
 		}else{
 			**out = '\0';
@@ -486,7 +486,7 @@ _PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, 
 	}
 
 	if(lpD_len_max >= d+2){
-    	lpD[d++] = '\r';    // lpS is always ture here. so can't distinguish whether there is buffer or not.
+    	lpD[d++] = '\r';    // lpS is always true here. so can't distinguish whether there is buffer or not.
     	lpD[d++] = '\n';
         // lpD[d++] = '\0';        // can't add 0, because some UART Tool will show error.
     }

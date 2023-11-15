@@ -97,7 +97,7 @@ u8 uartTxPending;
 static void uartTx(){
 	DEBUG_GPIO(GPIO_PC2, 0);
 	u8* buf = uartTxBufs[uartTxRptr];
-	reg_dma_uart_tx_addr = (u16)(u32)(buf); 		//	DMA_SET_UART_TX_SRC_SIZE(128+1);	//one byte for lenght
+	reg_dma_uart_tx_addr = (u16)(u32)(buf); 		//	DMA_SET_UART_TX_SRC_SIZE(128+1);	//one byte for length
 	reg_dma_tx_rdy0 |= FLD_DMA_CHN_UART_TX; 			//	DMA Packet0 Channel 1(TX) ready for transfer, this bit will be cleared automatically
 	++uartTxRptr;
 	if(uartTxRptr == UART_TX_BUF_CNT){

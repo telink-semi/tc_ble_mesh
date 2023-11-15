@@ -33,7 +33,7 @@ class CGridCtrl;
 #include "GridCellBase.h"
 
 // Each cell contains one of these. Fields "row" and "column" are not stored since we
-// will usually have acces to them in other ways, and they are an extra 8 bytes per
+// will usually have access to them in other ways, and they are an extra 8 bytes per
 // cell that is probably unnecessary.
 
 class CGridCell : public CGridCellBase

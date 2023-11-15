@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file	CTL_privision.cpp
+ * @file	CTL_provision.cpp
  *
  * @brief	for TLSR chips
  *
@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-// CTL_privision.cpp : implementation file
+// CTL_provision.cpp : implementation file
 //
 #include "stdafx.h"
 #include "tl_ble_module.h"
@@ -30,14 +30,14 @@
 #include "tl_ble_moduleDlg.h"
 #include "TLMeshDlg.h"
 #include "usbprt.h"
-#include "CTL_privision.h"
+#include "CTL_provision.h"
 #include "rapid_json_interface.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-CTL_privision *p_ctl_pro;
+CTL_provision *p_ctl_pro;
 CComboBox* cFil_Type_Sel;
 CEdit *ce_mac_list;	
 /////////////////////////////////////////////////////////////////////////////
@@ -80,17 +80,17 @@ void set_dkri_check_proc(u8 en)
 	dkri_check_en = en;
 }
 
-CTL_privision::CTL_privision(CWnd* pParent /*=NULL*/)
-	: CDialog(CTL_privision::IDD, pParent)
+CTL_provision::CTL_provision(CWnd* pParent /*=NULL*/)
+	: CDialog(CTL_provision::IDD, pParent)
 	, m_fast_prov_mode(FALSE)
 {
-	//{{AFX_DATA_INIT(CTL_privision)
+	//{{AFX_DATA_INIT(CTL_provision)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 	p_ctl_pro =this;
 }
 int vc_ivi_update_flag =0;
-void CTL_privision::DoDataExchange(CDataExchange* pDX)
+void CTL_provision::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_NETWORK_KEY, csNetKey);
@@ -117,7 +117,7 @@ void CTL_privision::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Text(pDX, IDC_NODE_ADR,csNode_adr);
 	DDV_MaxChars(pDX, csNode_adr, 256);
-	//{{AFX_DATA_MAP(CTL_privision)
+	//{{AFX_DATA_MAP(CTL_provision)
 	// NOTE: the ClassWizard will add DDX and DDV calls here
 	//}}AFX_DATA_MAP
 	//set_unicast_dlg_part();
@@ -130,27 +130,27 @@ void CTL_privision::DoDataExchange(CDataExchange* pDX)
 
 #define MSG_UPDATE_DATA   12345
 
-BEGIN_MESSAGE_MAP(CTL_privision, CDialog)
-	//{{AFX_MSG_MAP(CTL_privision)
+BEGIN_MESSAGE_MAP(CTL_provision, CDialog)
+	//{{AFX_MSG_MAP(CTL_provision)
 	ON_BN_CLICKED(IDC_PROVISION_START, OnProvisionStart)
 	ON_BN_CLICKED(IDC_PRO_DISCONNECT, OnProDisconnect)
 	ON_BN_CLICKED(IDC_START_SEND, OnStartSend)
 	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDC_BUT_ADD_MAC, &CTL_privision::OnBnClickedButAddMac)
-	ON_BN_CLICKED(IDC_BUT_RM_MAC, &CTL_privision::OnBnClickedButRmMac)
-	ON_BN_CLICKED(IDC_BUT_GET_FILTER_STS, &CTL_privision::OnBnClickedButGetFilterSts)
-	ON_BN_CLICKED(IDC_BUT_SET_FILTER_TYPE, &CTL_privision::OnBnClickedButSetFilterType)
-	ON_BN_CLICKED(IDC_SET_PRO, &CTL_privision::OnBnClickedSetPro)
-	ON_BN_CLICKED(IDC_APPKEY_BIND_ALL, &CTL_privision::OnBnClickedAppkeyBindAll)
-	ON_BN_CLICKED(IDC_DKRI_PROV, &CTL_privision::OnBnClickedDkriProv)
-	ON_BN_CLICKED(IDC_CANDI_EN, &CTL_privision::OnBnClickedCandiEn)
+	ON_BN_CLICKED(IDC_BUT_ADD_MAC, &CTL_provision::OnBnClickedButAddMac)
+	ON_BN_CLICKED(IDC_BUT_RM_MAC, &CTL_provision::OnBnClickedButRmMac)
+	ON_BN_CLICKED(IDC_BUT_GET_FILTER_STS, &CTL_provision::OnBnClickedButGetFilterSts)
+	ON_BN_CLICKED(IDC_BUT_SET_FILTER_TYPE, &CTL_provision::OnBnClickedButSetFilterType)
+	ON_BN_CLICKED(IDC_SET_PRO, &CTL_provision::OnBnClickedSetPro)
+	ON_BN_CLICKED(IDC_APPKEY_BIND_ALL, &CTL_provision::OnBnClickedAppkeyBindAll)
+	ON_BN_CLICKED(IDC_DKRI_PROV, &CTL_provision::OnBnClickedDkriProv)
+	ON_BN_CLICKED(IDC_CANDI_EN, &CTL_provision::OnBnClickedCandiEn)
 	ON_MESSAGE(MSG_UPDATE_DATA, &OnUpdateData)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CTL_privision message handlers
+// CTL_provision message handlers
 
-LRESULT CTL_privision::OnUpdateData(WPARAM wparam, LPARAM lparam)
+LRESULT CTL_provision::OnUpdateData(WPARAM wparam, LPARAM lparam)
 {
 	UpdateData(TRUE);
 	return 0;
@@ -184,10 +184,10 @@ u8 set_provision_key_data()
 	return 1;
 }
 
-BOOL CTL_privision::SetButton_sts()
+BOOL CTL_provision::SetButton_sts()
 {
 	GetDlgItem(IDC_APPKEY_BIND_ALL)->EnableWindow(0);
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		if(pro_self_flag){
 				((CButton*)GetDlgItem(IDC_SET_PRO))->EnableWindow(0);
 				((CButton*)GetDlgItem(IDC_PROVISION_START))->EnableWindow(1);
@@ -266,7 +266,7 @@ BOOL CTL_privision::SetButton_sts()
 	return TRUE;
 }
 
-void CTL_privision::update_ivi_edit(u8 *p_ivi)
+void CTL_provision::update_ivi_edit(u8 *p_ivi)
 {
 	provison_net_info_str *p_net = &net_info;
 	memcpy(p_net->iv_index,p_ivi,sizeof(p_net->iv_index));
@@ -278,7 +278,7 @@ void CTL_privision::update_ivi_edit(u8 *p_ivi)
 
 
 
-BOOL CTL_privision::OnInitDialog() 
+BOOL CTL_provision::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
 	rp_dkri_para_init();
@@ -288,7 +288,7 @@ BOOL CTL_privision::OnInitDialog()
 	return TRUE;
 }
 
-int CTL_privision::GetProvision_para()
+int CTL_provision::GetProvision_para()
 {
 	unsigned char tmp_str[128];
 	sprintf_s ((char *)tmp_str, sizeof(tmp_str), "%s", (const char*)csUnicast);
@@ -367,7 +367,7 @@ int send_static_oob2gateway_with_check(u8 *node_uuid)
 	return oob_len;
 }
 
-void CTL_privision::OnProvisionStart() 
+void CTL_provision::OnProvisionStart() 
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(TRUE);
@@ -379,7 +379,7 @@ void CTL_privision::OnProvisionStart()
 		return ;
 	}
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"start provision for the device");
-	if(!ble_moudle_id_is_gateway()&&!m_fast_prov_mode){
+	if(!ble_module_id_is_gateway()&&!m_fast_prov_mode){
 
 	//json_del_mesh_vc_node_info(sigmesh_node_uuid);
 		if(is_provision_working()){
@@ -440,7 +440,7 @@ void CTL_privision::OnProvisionStart()
 		}
 	}
 
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		if(m_fast_prov_mode){
 			cfg_cmd_ak_add(ele_adr_primary, netidx, ak_idx, app_key);
 			gateway_start_fast_provision(0xffff, net_info.unicast_address);
@@ -468,7 +468,7 @@ void CTL_privision::OnProvisionStart()
 	p_ctl_pro->UpdateData();
 }
 
-void CTL_privision::OnProDisconnect() 
+void CTL_provision::OnProDisconnect() 
 {
 	// TODO: Add your control notification handler code here
 	clear_all_white_list();
@@ -480,14 +480,14 @@ void CTL_privision::OnProDisconnect()
 
 }
 
-BOOL CTL_privision::PreTranslateMessage(MSG* pMsg)
+BOOL CTL_provision::PreTranslateMessage(MSG* pMsg)
 {
 	// TODO: 在此添加专用代码和/或调用基类
 
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-void CTL_privision::OnStartSend() 
+void CTL_provision::OnStartSend() 
 {
 	// TODO: Add your control notification handler code here
 	u8 len;
@@ -499,7 +499,7 @@ void CTL_privision::OnStartSend()
 	return;
 
 }
-void CTL_privision::SendCmd(u8 opcode){
+void CTL_provision::SendCmd(u8 opcode){
 	UpdateData();
 	u8 filter_type;
 	filter_type =cFil_Type_Sel->GetCurSel();
@@ -510,21 +510,21 @@ void CTL_privision::SendCmd(u8 opcode){
 	mesh_proxy_set_filter_cmd(opcode,filter_type,Cmd_dat,tmp_cmd_len);
 }
 
-void CTL_privision::OnBnClickedButAddMac()
+void CTL_provision::OnBnClickedButAddMac()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	SendCmd(PROXY_FILTER_ADD_ADR);
 }
 
 
-void CTL_privision::OnBnClickedButRmMac()
+void CTL_provision::OnBnClickedButRmMac()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	SendCmd(PROXY_FILTER_RM_ADR);
 }
 
 
-void CTL_privision::OnBnClickedButGetFilterSts()
+void CTL_provision::OnBnClickedButGetFilterSts()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//PROXY_FILTER_STATUS
@@ -533,7 +533,7 @@ void CTL_privision::OnBnClickedButGetFilterSts()
 //	mesh_tx_cmd_layer_cfg_primary(PROXY_FILTER_STATUS,cmd_dat,1,0x7755);
 
 }
-void CTL_privision::SetFilterSts(u8 *p_dat,u8 len)
+void CTL_provision::SetFilterSts(u8 *p_dat,u8 len)
 {
 	//the first byte is filter type
 	cFil_Type_Sel->SetCurSel(p_dat[1]);
@@ -544,13 +544,13 @@ void CTL_privision::SetFilterSts(u8 *p_dat,u8 len)
 	ce_mac_list->SetWindowTextA(csMac);
 }
 
-void CTL_privision::OnBnClickedButSetFilterType()
+void CTL_provision::OnBnClickedButSetFilterType()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	SendCmd(PROXY_FILTER_SET_TYPE);
 
 }
-void CTL_privision::Restore_provision_data()
+void CTL_provision::Restore_provision_data()
 {
 	int i=0;
 	provison_net_info_str *p_net;
@@ -580,7 +580,7 @@ void CTL_privision::Restore_provision_data()
 	((CEdit *)GetDlgItem(IDC_NETWORK_KEY))->SetWindowText(csNetKey);
 	//UpdateData(FALSE);
 }
-void CTL_privision::set_unicast_dlg_part()
+void CTL_provision::set_unicast_dlg_part()
 {
 	BYTE prov_str[30];
 	Bin2Text(prov_str,(u8 *)(&(net_info.unicast_address)),2);
@@ -589,7 +589,7 @@ void CTL_privision::set_unicast_dlg_part()
 	ce_dlg->SetWindowTextA(csUnicast);
 }
 
-void CTL_privision::set_provision_dlg_part(u8 *data,int len ,CString *cs_edit,int id)
+void CTL_provision::set_provision_dlg_part(u8 *data,int len ,CString *cs_edit,int id)
 {
 	BYTE prov_str[256];
 	Bin2Text(prov_str,data,len);
@@ -598,7 +598,7 @@ void CTL_privision::set_provision_dlg_part(u8 *data,int len ,CString *cs_edit,in
 	ce_dlg->SetWindowTextA(*cs_edit);
 }
 
-void CTL_privision::OnBnClickedSetPro() // provision self
+void CTL_provision::OnBnClickedSetPro() // provision self
 {
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
@@ -633,7 +633,7 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 	provison_net_info_str *p_net_str = &net_info_tab;
 	set_provision_dat((u8 *)(p_net_str));
 #if JSON_FILE_ENABLE	
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		gateway_set_provisioner_para((u8 *)(p_net_str));//provision the gateway part 
 		gateway_set_prov_devkey(p_net_str->unicast_address,vc_dev_key);
 	}
@@ -661,7 +661,7 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"Set internal provision success");
 	GetDlgItem(IDC_SET_PRO)->EnableWindow(FALSE);
 	// update the net info part 
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		g_ele_cnt = vc_node_ele_cnt;
 	}
 	memcpy(&net_info,(u8 *)(p_net_str),sizeof(provison_net_info_str));
@@ -677,7 +677,7 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 	VC_node_dev_key_save(ele_adr_primary, mesh_key.dev_key,g_ele_cnt);
 	VC_node_cps_save(gp_page0, ele_adr_primary, SIZE_OF_PAGE0_LOCAL);
 #if JSON_FILE_ENABLE
-    if(ble_moudle_id_is_gateway()){
+    if(ble_module_id_is_gateway()){
          mesh_json_set_node_info(ele_adr_primary,gw_mac);
     }else{
         // we can use the tbl_mac as the mac adr 
@@ -693,12 +693,12 @@ void CTL_privision::OnBnClickedSetPro() // provision self
 	GetDlgItem(IDC_APPKEY_INDEX)->EnableWindow(FALSE);
 	UpdateData(FALSE);
 }
-void CTL_privision::set_keybind_window_enable(u8 en)
+void CTL_provision::set_keybind_window_enable(u8 en)
 {
 	GetDlgItem(IDC_APPKEY_BIND_ALL)->EnableWindow(en);
 }
 
-void CTL_privision::set_provision_window_enable(u8 en)
+void CTL_provision::set_provision_window_enable(u8 en)
 {
 	GetDlgItem(IDC_PROVISION_START)->EnableWindow(en);
 }
@@ -707,7 +707,7 @@ void provision_end_callback(u8 reason)
 {
 	if(reason == PROV_NORMAL_RET){
 		u16 adr_max;
-		if(ble_moudle_id_is_gateway() && !p_ctl_pro->m_fast_prov_mode){
+		if(ble_module_id_is_gateway() && !p_ctl_pro->m_fast_prov_mode){
 			adr_max = net_info.unicast_address + vc_node_ele_cnt;
 		}else{
 			adr_max = net_info.unicast_address +gatt_get_node_ele_cnt(net_info.unicast_address);
@@ -731,7 +731,7 @@ void provision_end_callback(u8 reason)
 
 		// add the information into the doc part
 #if JSON_FILE_ENABLE
-		if(ble_moudle_id_is_gateway()){
+		if(ble_module_id_is_gateway()){
             json_add_net_info_doc(gw_dev_uuid,gw_dev_mac);// doult for the node adr part 
 		}else{
 			LOG_MSG_INFO(TL_LOG_WIN32,0,0,"provision_end_callback PROV_NORMAL_RET",0);
@@ -793,7 +793,7 @@ void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid)
 #endif
 
 	p_net_info->unicast_address = node_addr;  
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		memcpy(gw_dev_uuid, dev_uuid_fast, 16);
 		memcpy(gw_dev_mac, dev_key, 6);
 		memcpy(gw_dev_key, dev_key, 16);	
@@ -909,7 +909,7 @@ int App_key_bind_end_callback(u8 event)
 		{	
 			net_info.unicast_address= prov_unicast_address[0]|(prov_unicast_address[1]<<8);
 			//use the ele cnt 
-			if(ble_moudle_id_is_gateway()){
+			if(ble_module_id_is_gateway()){
 				net_info.unicast_address += vc_node_ele_cnt;
 			}else{
 				net_info.unicast_address += gatt_get_node_ele_cnt(net_info.unicast_address);
@@ -945,7 +945,7 @@ u8 vc_get_bind_mode_by_uuid(u8 fast_bind,u8 *p_uuid)
 }
 
 
-void CTL_privision::OnBnClickedAppkeyBindAll()
+void CTL_provision::OnBnClickedAppkeyBindAll()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//UpdateData(TRUE);
@@ -990,7 +990,7 @@ void CTL_privision::OnBnClickedAppkeyBindAll()
 		return ;
 	}
 	#endif
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
         bind_mode = vc_get_bind_mode_by_uuid(g_module_dlg->m_fastbind,gatt_provision_mag.device_uuid);
 		gateway_set_start_keybind(bind_mode,(u8 *)(&ak_idx),app_key);		
 	}else{
@@ -1000,7 +1000,7 @@ void CTL_privision::OnBnClickedAppkeyBindAll()
 	}
 }
 
-void CTL_privision::rp_dkri_para_init()
+void CTL_provision::rp_dkri_para_init()
 {
 	((CComboBox*)GetDlgItem(IDC_RP_DKRI))->AddString("KEY_REFRESH");
 	((CComboBox*)GetDlgItem(IDC_RP_DKRI))->AddString("ADR_REFRESH");
@@ -1008,7 +1008,7 @@ void CTL_privision::rp_dkri_para_init()
 	((CComboBox*)GetDlgItem(IDC_RP_DKRI))->SetCurSel(0);
 }
 
-u16 CTL_privision::Getunicast_adr_in_edit()
+u16 CTL_provision::Getunicast_adr_in_edit()
 {
 	UpdateData(TRUE);
 	// get the unicast adr .
@@ -1028,7 +1028,7 @@ u16 CTL_privision::Getunicast_adr_in_edit()
 	return prov_unicast_temp;
 }
 
-u16 CTL_privision::Get_node_adr_in_edit()
+u16 CTL_provision::Get_node_adr_in_edit()
 {
 	UpdateData(TRUE);
 	// get the unicast adr .
@@ -1050,7 +1050,7 @@ u16 CTL_privision::Get_node_adr_in_edit()
 }
 
 
-void CTL_privision::OnBnClickedDkriProv()
+void CTL_provision::OnBnClickedDkriProv()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
@@ -1075,7 +1075,7 @@ void CTL_privision::OnBnClickedDkriProv()
 	#if JSON_FILE_ENABLE
 	if(dkri == RP_DKRI_NODE_ADR_REFRESH){
 		u8 *p_uuid = json_get_uuid(node_adr);
-		if(ble_moudle_id_is_gateway()){
+		if(ble_module_id_is_gateway()){
 			memcpy(gw_dev_uuid,p_uuid,16);
 			memcpy(gw_dev_mac,p_uuid+10,6);
 		}else{
@@ -1094,7 +1094,7 @@ void CTL_privision::OnBnClickedDkriProv()
 }
 
 
-void CTL_privision::OnBnClickedCandiEn()
+void CTL_provision::OnBnClickedCandiEn()
 {
 	UpdateData(TRUE);
 	// TODO: 在此添加控件通知处理程序代码

@@ -227,10 +227,10 @@ void mesh_friend_ship_proc_init_lpn()
 
 void mesh_friend_ship_clear_LPN()
 {
-    mesh_ctl_fri_req_t req_bacup;
-    memcpy(&req_bacup, &mesh_lpn_par.req, sizeof(req_bacup));
+    mesh_ctl_fri_req_t req_backup;
+    memcpy(&req_backup, &mesh_lpn_par.req, sizeof(req_backup));
     memset(&mesh_lpn_par, 0, sizeof(mesh_lpn_par));
-    memcpy(&mesh_lpn_par.req, &req_bacup, sizeof(req_bacup));
+    memcpy(&mesh_lpn_par.req, &req_backup, sizeof(req_backup));
 }
 
 int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int ready)
@@ -358,7 +358,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
     
     static u32 t_rec_delay_and_win = 0;
     u32 poll_retry_interval_ms = t_rec_delay_and_win;
-	u32 timeout_ms = (poll_retry_interval_ms*1000) * (2*2+1)/2;    // comfirm later
+	u32 timeout_ms = (poll_retry_interval_ms*1000) * (2*2+1)/2;    // confirm later
     #if (0 == DEBUG_PROXY_FRIEND_SHIP && PTS_TEST_EN)
     if(fri_ship_proc_lpn.status){
         // retry poll should be more quicklier during establish friend ship.
@@ -1064,7 +1064,7 @@ void mesh_lpn_state_proc()
 				gatt_adv_send_flag = GATT_LPN_EN;				
 				mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
 				if(BLS_LINK_STATE_CONN == blt_state){
-					bls_ll_terminateConnection(0x13); // disconnet to establish friendship
+					bls_ll_terminateConnection(0x13); // disconnect to establish friendship
 				}
     	    }
 	    }
@@ -1083,7 +1083,7 @@ void mesh_lpn_pm_proc()
 {
 	extern u8 blt_busy;
 	if((BLS_LINK_STATE_CONN != blt_state)){	    
-		blt_busy = 0; 								// triger pm in blt_sdk_main_loop to save power. (blt_busy will 1 after cpu_sleep_wakeup return STATUS_GPIO_ERR_NO_ENTER_PM while key pressing, and will not enter sleep in this interval.)
+		blt_busy = 0; 								// trigger pm in blt_sdk_main_loop to save power. (blt_busy will 1 after cpu_sleep_wakeup return STATUS_GPIO_ERR_NO_ENTER_PM while key pressing, and will not enter sleep in this interval.)
 	}
 	
 	if(lpn_provision_ok){ 
@@ -1164,7 +1164,7 @@ void lpn_mode_set(int mode)
         mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // start to send friend request flow
         lpn_mode_tick = 0;
 		gatt_adv_send_flag = 0;
-        // cfg_led_event_stop();	// can't stop like this, becasue LED state needs to be recovered.
+        // cfg_led_event_stop();	// can't stop like this, because LED state needs to be recovered.
     }
 	mesh_lpn_adv_interval_update(1);
 }

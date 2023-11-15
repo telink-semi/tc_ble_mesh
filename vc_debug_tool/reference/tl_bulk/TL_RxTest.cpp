@@ -238,7 +238,7 @@ void CTL_RxTest::OnTimer(UINT_PTR nIDEvent)
 			}
 			unsigned char cmd_buf[sizeof(mesh_bulk_cmd_par_t) + HCI_CMD_LEN];
 
-			if(ble_moudle_id_is_gateway()){
+			if(ble_module_id_is_gateway()){
 				cmd_buf[0]= HCI_GATEWAY_CMD_MESH_RX_TEST & 0xFF;
 				cmd_buf[1]= (HCI_GATEWAY_CMD_MESH_RX_TEST >> 8) & 0xFF;
 			}else{
@@ -256,7 +256,7 @@ void CTL_RxTest::OnTimer(UINT_PTR nIDEvent)
 			cmd_buf[9] = (u8)filter_address;
 			cmd_buf[10] = filter_address>>8;
 
-			if (ble_moudle_id_is_gateway()) {
+			if (ble_module_id_is_gateway()) {
 				void gateway_VC_send_cmd(u8 cmd, u8 * data, int len);
 				gateway_VC_send_cmd(HCI_GATEWAY_CMD_MESH_RX_TEST, cmd_buf, 11);
 			}

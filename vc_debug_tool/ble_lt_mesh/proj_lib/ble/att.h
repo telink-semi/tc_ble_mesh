@@ -48,8 +48,8 @@
 #define ATT_OP_EXCHANGE_MTU_RSP             0x03 //!< Exchange MTU Response op code
 #define ATT_OP_FIND_INFO_REQ                0x04 //!< Find Information Request op code
 #define ATT_OP_FIND_INFO_RSP                0x05 //!< Find Information Response op code
-#define ATT_OP_FIND_BY_TYPE_VALUE_REQ       0x06 //!< Find By Type Vaue Request op code
-#define ATT_OP_FIND_BY_TYPE_VALUE_RSP       0x07 //!< Find By Type Vaue Response op code
+#define ATT_OP_FIND_BY_TYPE_VALUE_REQ       0x06 //!< Find By Type Value Request op code
+#define ATT_OP_FIND_BY_TYPE_VALUE_RSP       0x07 //!< Find By Type Value Response op code
 #define ATT_OP_READ_BY_TYPE_REQ             0x08 //!< Read By Type Request op code
 #define ATT_OP_READ_BY_TYPE_RSP             0x09 //!< Read By Type Response op code
 #define ATT_OP_READ_REQ                     0x0a //!< Read Request op code
@@ -209,7 +209,7 @@ typedef struct
 } findByTypeValueReq_t;
 
 /**
- * Handles Infomation list element
+ * Handles Information list element
  */
 typedef struct
 {
@@ -223,7 +223,7 @@ typedef struct
 typedef struct
 {
   u8 handleInfoNum;                                       //!< Number of handles information below
-  handleInfo_t handleInfo[1] ; //!< A list of 1 or more Handle Informations
+  handleInfo_t handleInfo[1] ; //!< A list of 1 or more Handle Information
 } findByTypeValueRsp_t;
 
 /**
@@ -406,7 +406,7 @@ typedef struct attProtocolReqPdu{
     union reqPdu {
         exchangeMTUReq_t exchangeMTUReq;                 //!< Exchange MTU Req
         findInformationReq_t findInfoReq;                //!< Find Information Req
-        findByTypeValueReq_t findByTypeValueReq;         //!< Find By Type Vaue Req
+        findByTypeValueReq_t findByTypeValueReq;         //!< Find By Type Value Req
         readByTypeReq_t readByTypeReq;                   //!< Read By Type Req
         readReq_t readReq;                               //!< Read Req
         readBlobReq_t readBlobReq;                       //!< Read Blob Req
@@ -426,7 +426,7 @@ typedef struct attProtocolRspPdu{
         errorRsp_t errorRsp;                             //!< Error Rsp
         exchangeMTURsp_t exchangeMTURsp;                 //!< Exchange MTU Rsp
         findInformationRsp_t findInfoRsp;                //!< Find Information Rsp
-        findByTypeValueRsp_t findByTypeValueRsp;         //!< Find By Type Vaue Rsp
+        findByTypeValueRsp_t findByTypeValueRsp;         //!< Find By Type Value Rsp
         readByTypeRsp_t readByTypeRsp;                   //!< Read By Type Rsp
         readRsp_t readRsp;                               //!< Read Rsp
         readBlobRsp_t readBlobRsp;                       //!< Read Blob Rsp

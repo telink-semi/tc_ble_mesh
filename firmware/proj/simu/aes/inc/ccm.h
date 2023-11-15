@@ -170,7 +170,7 @@ u32 ccm_decrypt_message(                   /* decrypt an entire message    */
 
 /* The following calls handle messages in a sequence of operations followed by  */
 /* tag computation after the sequence has been completed. In these calls the    */
-/* user is responsible for verfiying the computed tag on decryption             */
+/* user is responsible for verifying the computed tag on decryption             */
 
 u32 ccm_init_message(                      /* initialise a new message     */
             const unsigned char iv[],           /* the initialisation vector    */

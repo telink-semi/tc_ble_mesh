@@ -210,7 +210,7 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 }
 
 #if (!WIN32)
-#if 1 // KEEP_ONOFF_STATE_AFTER_OTA // alway on, because lpn need to set in gatt adv mode after ota reboot.
+#if 1 // KEEP_ONOFF_STATE_AFTER_OTA // always on, because lpn need to set in gatt adv mode after ota reboot.
 #define OTA_REBOOT_CHECK_FLAG			(KEEP_ONOFF_STATE_AFTER_OTA ? FLD_OTA_REBOOT_FLAG : 0)
 
 
@@ -515,7 +515,7 @@ void light_par_save_proc()
 	// save proc
 	if(tick_light_save && clock_time_exceed(tick_light_save, 3*1000*1000)){
 		tick_light_save = 0;
-		if(!is_actived_factory_test_mode()){
+		if(!is_activated_factory_test_mode()){
 		    mesh_common_store(FLASH_ADR_SW_LEVEL);
 		}
 	}
@@ -1332,7 +1332,7 @@ u8 temp_to_temp100_hw(u16 temp) // use for driver pwm, 0--100 is absolute value,
  */
 u8 temp_to_temp100(u16 temp)
 {
-	return temp_to_temp100_hw(temp);   // comfirm later, related with temp range
+	return temp_to_temp100_hw(temp);   // confirm later, related with temp range
 }
 
 /**
@@ -1441,14 +1441,14 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
                     u32 mod = abs_delta % abs_step;
                     u32 remain_t_ms_org = p_trans->remain_t_ms; // max value is (RES_10MIN * 64)
                     u32 val = 0;
-                    u32 multy_value = 1;
+                    u32 multi_value = 1;
                     if(remain_t_ms_org >= (65536 * 2)){
-                    	multy_value = 1024;
-                    	remain_t_ms_org /= multy_value;
+                    	multi_value = 1024;
+                    	remain_t_ms_org /= multi_value;
                     }
 
                     val = (remain_t_ms_org * mod) / abs_step;
-                    p_trans->remain_t_ms = ((remain_t_ms_org * abs_delta) / abs_step) * multy_value + val;
+                    p_trans->remain_t_ms = ((remain_t_ms_org * abs_delta) / abs_step) * multi_value + val;
 					//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"move time, result: %d, remain_t_ms_org: %d, delta: %d, step: %d, val: %d", p_trans->remain_t_ms, remain_t_ms_org, abs_delta, abs_step, val);
                 }else{
 					s32 delta = (p_trans->target - p_trans->present);
@@ -1615,7 +1615,7 @@ s16 light_get_next_level(int idx, int st_trans_type)
 	}else
 	#endif
 	{
-        result = get_val_with_check_range(result, LEVEL_OFF, p_save->max, st_trans_type, G_LEVEL_SET_NOACK); // use LEVEL_MIN but not p_save->min, because it is during transition proccess.
+        result = get_val_with_check_range(result, LEVEL_OFF, p_save->max, st_trans_type, G_LEVEL_SET_NOACK); // use LEVEL_MIN but not p_save->min, because it is during transition process.
         if((LEVEL_OFF == result) && (ST_TRANS_LIGHTNESS == st_trans_type) && (p_trans->step_1p32768 > 0)){
         	// result = LEVEL_OFF + 1; //
         }

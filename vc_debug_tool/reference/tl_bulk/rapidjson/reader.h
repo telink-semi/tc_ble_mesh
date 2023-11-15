@@ -687,7 +687,7 @@ public:
         return IsIterativeParsingCompleteState(state_);
     }
 
-    //! Whether a parse error has occured in the last parsing.
+    //! Whether a parse error has occurred in the last parsing.
     bool HasParseError() const { return parseResult_.IsError(); }
 
     //! Get the \ref ParseErrorCode of last parsing.
@@ -910,7 +910,7 @@ private:
             return false;
     }
 
-    // Helper function to parse four hexidecimal digits in \uXXXX in ParseString().
+    // Helper function to parse four hexadecimal digits in \uXXXX in ParseString().
     template<typename InputStream>
     unsigned ParseHex4(InputStream& is, size_t escapeOffset) {
         unsigned codepoint = 0;
@@ -1011,13 +1011,13 @@ private:
 //!@endcond
 
         for (;;) {
-            // Scan and copy string before "\\\"" or < 0x20. This is an optional optimzation.
+            // Scan and copy string before "\\\"" or < 0x20. This is an optional optimization.
             if (!(parseFlags & kParseValidateEncodingFlag))
                 ScanCopyUnescapedString(is, os);
 
             Ch c = is.Peek();
             if (RAPIDJSON_UNLIKELY(c == '\\')) {    // Escape
-                size_t escapeOffset = is.Tell();    // For invalid escaping, report the inital '\\' as error offset
+                size_t escapeOffset = is.Tell();    // For invalid escaping, report the initial '\\' as error offset
                 is.Take();
                 Ch e = is.Peek();
                 if ((sizeof(Ch) == 1 || unsigned(e) < 256) && RAPIDJSON_LIKELY(escape[static_cast<unsigned char>(e)])) {
@@ -1999,7 +1999,7 @@ private:
         case IterativeParsingObjectInitialState:
         case IterativeParsingArrayInitialState:
         {
-            // Push the state(Element or MemeberValue) if we are nested in another array or value of member.
+            // Push the state(Element or MemberValue) if we are nested in another array or value of member.
             // In this way we can get the correct state on ObjectFinish or ArrayFinish by frame pop.
             IterativeParsingState n = src;
             if (src == IterativeParsingArrayInitialState || src == IterativeParsingElementDelimiterState)

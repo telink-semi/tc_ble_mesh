@@ -307,7 +307,7 @@ int OTS_coc_datacb(u8 *pData, u16 dataLen)
 			if(Z_OK == err){
 				vc_file_write_with_new_or_rewrite(CDTP_object_uncompress_data, len_uncomp, CDTP_UNCOMPRESS_FILE_NAME);
 				// input json
-				if(ble_moudle_id_is_gateway()){
+				if(ble_module_id_is_gateway()){
 					p_cdtp->cal_crc_tx = crc;
 					OTS_send_checksum2gateway(crc);
 					CDTP_inputdb_trigger();

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file	CTL_privision.h
+ * @file	CTL_provision.h
  *
  * @brief	for TLSR chips
  *
@@ -22,15 +22,15 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#if !defined(AFX_CTL_PRIVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_)
-#define AFX_CTL_PRIVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_
+#if !defined(AFX_CTL_PROVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_)
+#define AFX_CTL_PROVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_
 #include "./lib_file/gatt_provision.h"
 #include "Sig_mesh_json_info.h"
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// CTL_privision.h : header file
+// CTL_provision.h : header file
 //
 extern int netidx ;
 extern provison_net_info_str net_info;
@@ -45,13 +45,13 @@ typedef enum{
 }PROV_MODE_ENUM;
 
 /////////////////////////////////////////////////////////////////////////////
-// CTL_privision dialog
+// CTL_provision dialog
 
-class CTL_privision : public CDialog
+class CTL_provision : public CDialog
 {
 // Construction
 public:
-	CTL_privision(CWnd* pParent = NULL);   // standard constructor
+	CTL_provision(CWnd* pParent = NULL);   // standard constructor
 	BOOL OnInitDialog();
 	void SendCmd(u8 opcode);
 	void SetFilterSts(u8 *p_dat,u8 len);
@@ -67,7 +67,7 @@ public:
 	int GetProvision_para();
 	LRESULT OnUpdateData(WPARAM wparam, LPARAM lparam);
 // Dialog Data
-	//{{AFX_DATA(CTL_privision)
+	//{{AFX_DATA(CTL_provision)
 	enum { IDD = IDD_PROVISION };
 		// NOTE: the ClassWizard will add data members here
 	//}}AFX_DATA
@@ -75,7 +75,7 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CTL_privision)
+	//{{AFX_VIRTUAL(CTL_provision)
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
@@ -84,7 +84,7 @@ public:
 protected:
 
 	// Generated message map functions
-	//{{AFX_MSG(CTL_privision)
+	//{{AFX_MSG(CTL_provision)
 	afx_msg void OnProvisionStart();
 	afx_msg void OnProDisconnect();
 	afx_msg void OnStartSend();
@@ -110,4 +110,4 @@ int send_static_oob2gateway_with_check(u8* node_uuid);
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_CTL_PRIVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_)
+#endif // !defined(AFX_CTL_PROVISION_H__4DB5BB1C_112D_4478_AF05_E137ABFCA738__INCLUDED_)

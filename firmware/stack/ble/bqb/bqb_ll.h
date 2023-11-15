@@ -198,8 +198,8 @@ void	tp_flip_access_address (int n);
 void	tp_set_test_data (u8 type, u8 len, u8 d, int pkts);
 void	tp_set_manual_timeout (u32 timeout);
 void 	tp_disable_more_data(u8 disable);
-void 	tp_enbale_print_rcvd_data_connect(u8 en);
-void 	tp_enbale_rcvd_l2cap_data_callback(u8 en);
+void 	tp_enable_print_rcvd_data_connect(u8 en);
+void 	tp_enable_rcvd_l2cap_data_callback(u8 en);
 void 	tp_disable_data_len_exchange(u8 en);
 void 	tp_set_brx_missing_time(u32 time_ms);
 void 	tp_set_brx_missing_delay_intervals(int interval_num);
@@ -215,7 +215,7 @@ void 	tp_phy_req_skip(u8 en);
 void 	tp_phy_req_nochange(u8 en);
 void 	tp_phy_no_common(u8 en);
 void 	tp_set_test_data (u8 type, u8 len, u8 d, int pkts);
-void 	tp_enbale_rcvd_l2cap_data_callback(u8 en);
+void 	tp_enable_rcvd_l2cap_data_callback(u8 en);
 
 
 

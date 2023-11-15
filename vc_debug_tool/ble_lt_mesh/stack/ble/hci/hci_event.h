@@ -270,7 +270,7 @@ typedef struct {
 typedef struct {
 	u8         subEventCode;
 	u16        connHandle;
-	u8		   channel_selection_algotihm;
+	u8		   channel_selection_algorithm;
 } hci_le_chnSelectAlgorithmEvt_t;
 
 
@@ -292,7 +292,7 @@ void hci_le_connectionUpdateComplete_evt(u8 status, u16 connHandle, u16 connInte
         									u16 connLatency, u16 supervisionTimeout);
 void hci_le_readRemoteFeaturesComplete_evt(u8 status, u16 connHandle, u8 * feature);
 
-void hci_le_chennel_selection_algorithm_evt(u16 connhandle, u8 channel_selection_alg);
+void hci_le_channel_selection_algorithm_evt(u16 connhandle, u8 channel_selection_alg);
 void hci_le_phyUpdateComplete_evt(u16 connhandle,u8 status, u8 new_phy);
 void hci_le_data_len_update_evt(u16 connhandle,u16 effTxOctets, u16 effRxOctets, u16 maxtxtime, u16 maxrxtime);
 

@@ -45,7 +45,7 @@
     unsigned char status = IIC_EVT_XFER_DONE;
     
 	reg_i2c_id	 = (Slave_addr<<1)&(~FLD_I2C_WRITE_READ_BIT); //SlaveID & 0xfe,.i.e write data. R:High  W:Low
-    //lanuch start /id    start
+    //launch start /id    start
     reg_i2c_ctrl = (FLD_I2C_CMD_START );// when addr=0,other (not telink) iic device no need start signal
 	sleep_us(50);
 	reg_i2c_ctrl =  FLD_I2C_CMD_ID;
@@ -108,7 +108,7 @@ unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, 
     if(reg_i2c_status & FLD_I2C_NAK){
         status = IIC_EVT_ADDRESS_NACK;
 
-    	//termiante
+    	//terminate
     	reg_i2c_ctrl = FLD_I2C_CMD_STOP; //launch stop cycle
     	while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
 
@@ -134,7 +134,7 @@ unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, 
 	while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
 	dataBuf[bufIndex] = reg_i2c_di;
 
-	//termiante
+	//terminate
 	reg_i2c_ctrl = FLD_I2C_CMD_STOP; //launch stop cycle
 	while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
 	irq_restore(r);

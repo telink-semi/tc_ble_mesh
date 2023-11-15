@@ -130,7 +130,7 @@ void ev_process_event(){
 	loop->fired_index = (loop->fired_index + fired_count) & EV_FIRED_EVENT_MAX_MASK;
 }
 
-// calulate how much time elapse till the timer fired
+// calculate how much time elapse till the timer fired
 static u32 inline ev_cal_timer_distant(u32 t, u32 now){
 	if((u32)(now - t) < EV_TIMER_SAFE_MARGIN)
 		return 0;
@@ -167,25 +167,25 @@ int ev_timer_expired(ev_time_event_t *e){
 
 static ev_time_event_t *ev_search_nearest_timer()
 {
-    ev_time_event_t *te = loop->timer_head;
+    ev_time_event_t *p_time_evt = loop->timer_head;
     ev_time_event_t *nearest = 0;
 	u32 now = clock_time();
 
-    while(te) {
-		if(!nearest || ev_cmp_timer(te, nearest, now) < 0){
-			nearest = te;
+    while(p_time_evt) {
+		if(!nearest || ev_cmp_timer(p_time_evt, nearest, now) < 0){
+			nearest = p_time_evt;
 		}
-        te = te->next;
+        p_time_evt = p_time_evt->next;
     }
     return nearest;
 }
 
 u8 ev_timer_exist(const ev_time_event_t * e){
-	ev_time_event_t *te = loop->timer_head;
-	while(te){
-	    if (te == e)
+	ev_time_event_t *p_time_evt = loop->timer_head;
+	while(p_time_evt){
+	    if (p_time_evt == e)
 	        return 1;
-	    te = te->next;
+	    p_time_evt = p_time_evt->next;
 	}
 	return 0;
 }
@@ -248,38 +248,38 @@ static void ev_process_timer(){
 	if(!loop->timer_nearest || !ev_is_timer_expired(loop->timer_nearest, now))
 		return;
 	#endif
-	ev_time_event_t *te = loop->timer_head;
-	ev_time_event_t *prev_head = te;
-	while(te){
-		if(ev_is_timer_expired(te, now)){
+	ev_time_event_t *p_time_evt = loop->timer_head;
+	ev_time_event_t *prev_head = p_time_evt;
+	while(p_time_evt){
+		if(ev_is_timer_expired(p_time_evt, now)){
 			int t =0;
 
 #if(__LOG_RT_ENABLE__)
-			if(te->id < TR_T_TIMER_E){
-				LOG_TICK(te->id, t = te->cb(te->data));
+			if(p_time_evt->id < TR_T_TIMER_E){
+				LOG_TICK(p_time_evt->id, t = p_time_evt->cb(p_time_evt->data));
 			}else
 #endif
             
-			if(te->mode == MIBLE_TIMER_SINGLE_SHOT){
-				ev_unon_timer(te);		// delete timer
-				te->cb(te->data);
-			}else if (te->mode == MIBLE_TIMER_REPEATED){
-				te->cb(te->data);
-				te->t = now + te->interval;	// becare of overflow
+			if(p_time_evt->mode == MIBLE_TIMER_SINGLE_SHOT){
+				ev_unon_timer(p_time_evt);		// delete timer
+				p_time_evt->cb(p_time_evt->data);
+			}else if (p_time_evt->mode == MIBLE_TIMER_REPEATED){
+				p_time_evt->cb(p_time_evt->data);
+				p_time_evt->t = now + p_time_evt->interval;	// becare of overflow
 			}else{
-				te->cb(te->data);
-				te->interval = t * CLOCK_SYS_CLOCK_1US;
-				te->t = now + te->interval;	// becare of overflow
+				p_time_evt->cb(p_time_evt->data);
+				p_time_evt->interval = t * CLOCK_SYS_CLOCK_1US;
+				p_time_evt->t = now + p_time_evt->interval;	// becare of overflow
 			}
 			if(prev_head != loop->timer_head){
 				// restart the whole from timer_head.  because the head could be changed within the loop
-				te = loop->timer_head;
-				prev_head = te;
+				p_time_evt = loop->timer_head;
+				prev_head = p_time_evt;
 			}else{
-				te = te->next;
+				p_time_evt = p_time_evt->next;
 			}
 		}else{
-			te = te->next;
+			p_time_evt = p_time_evt->next;
 		}
 	}
 	// recalculate the nearest timer

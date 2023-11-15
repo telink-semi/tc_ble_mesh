@@ -32,7 +32,7 @@ extern "C" {
 #include "../mesh_config.h"
 
 /**
- * Note: do not define enum or struct here. beacause this file will be included in cStartup.S.
+ * Note: do not define enum or struct here. because this file will be included in cStartup.S.
  */
 
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_CTRL_CLIENT)
@@ -49,7 +49,7 @@ extern "C" {
 #define NLC_PROFILE_ID				NLC_PROFILE_ID_BSSMP
 	#endif
 #endif
-#define SWITCH_ALWAYS_MODE_GATT_EN	1	// PTS require relay feature, TO BE COMFIRMED later.
+#define SWITCH_ALWAYS_MODE_GATT_EN	1	// PTS require relay feature, TO BE CONFIRMED later.
 
 // ------------------------- model config --------------
 #define LIGHT_TYPE_CT_EN            0

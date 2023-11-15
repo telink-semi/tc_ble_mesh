@@ -38,7 +38,7 @@
 
 /**
  * \file
- * Implementation of local continuations based on switch() statment
+ * Implementation of local continuations based on switch() statement
  *
  * This implementation of local continuations uses the C switch()
  * statement to resume execution of a function somewhere inside the
@@ -105,7 +105,7 @@ typedef struct {
  * This macro is used to declare the starting point of a
  * protothread. It should be placed at the start of the function in
  * which the protothread runs. All C statements above the PT_BEGIN()
- * invokation will be executed each time the protothread is scheduled.
+ * invocation will be executed each time the protothread is scheduled.
  *
  * \param pt A pointer to the protothread control structure.
  *
@@ -230,7 +230,7 @@ typedef struct {
 /**
  * Schedule a protothread.
  *
- * This function shedules a protothread. The return value of the
+ * This function schedules a protothread. The return value of the
  * function is non-zero if the protothread is running or zero if the
  * protothread has exited.
  *

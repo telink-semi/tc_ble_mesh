@@ -204,7 +204,7 @@ int get_ccc_handle(u16 start_handle, u16 end_handle)
 	att_req_find_info (dat, start_handle, end_handle);
 	if (host_att_service_wait_event(current_connHandle, dat, 1000000))
 	{
-		return  ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+		return  ATT_ERR_SERVICE_DISCOVERY_TIMEOUT;			//timeout
 	}
 
 	att_findInfoRsp_t *p_rsp = (att_findInfoRsp_t *) dat;
@@ -241,14 +241,14 @@ int get_fw_version()
 	if (host_att_service_wait_event(current_connHandle, dat, 1000000))
 	{
 		app_host_smp_sdp_pending = tmp;
-		return	ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+		return	ATT_ERR_SERVICE_DISCOVERY_TIMEOUT;			//timeout
 	}
 	app_host_smp_sdp_pending = tmp;
 
 	att_readRsp_t *pr = (att_readRsp_t *) dat;
 	if (pr->opcode == ATT_OP_READ_RSP)
 	{
-		tc_set_fifo(DONGLE_REPROT_FW_VERSION, pr->value, pr->l2capLen-1);
+		tc_set_fifo(DONGLE_REPORT_FW_VERSION, pr->value, pr->l2capLen-1);
 	}
 	return BLE_SUCCESS;
 }
@@ -425,7 +425,7 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 		}
 		else if (pAtt->opcode == ATT_OP_READ_RSP){
 			// the read rsp is opcode ,value.
-			tc_set_fifo(DONGLE_REPROT_READ_RSP,(u8*)&(pAtt->opcode)+1,pAtt->l2capLen-1);
+			tc_set_fifo(DONGLE_REPORT_READ_RSP,(u8*)&(pAtt->opcode)+1,pAtt->l2capLen-1);
 		}
 		else if(pAtt->opcode == ATT_OP_HANDLE_VALUE_NOTI)  //slave handle notify
 		{
@@ -506,7 +506,7 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 			if( interval_us <= VALID_INTERVAL_MAX && long_suspend_us < 5000000 && (long_suspend_us*2<=timeout_us) )
 			{
 				//when master host accept slave's conn param update req, should send a conn param update response on l2cap
-				//with CONN_PARAM_UPDATE_ACCEPT; if not accpet,should send  CONN_PARAM_UPDATE_REJECT
+				//with CONN_PARAM_UPDATE_ACCEPT; if not accept,should send  CONN_PARAM_UPDATE_REJECT
 				blc_l2cap_SendConnParamUpdateResponse(current_connHandle, CONN_PARAM_UPDATE_ACCEPT);  //send SIG Connection Param Update Response
 
 
@@ -575,7 +575,7 @@ int app_event_callback (u32 h, u8 *p, int n)
 		{
 			event_disconnection_t	*pd = (event_disconnection_t *)p;
 			tmp_ble_sts =0;
-			tc_set_fifo(MESH_CONNECTION_STS_REPROT, &tmp_ble_sts, 1);
+			tc_set_fifo(MESH_CONNECTION_STS_REPORT, &tmp_ble_sts, 1);
 			//terminate reason
 			//connection timeout
 			if(pd->reason == HCI_ERR_CONN_TIMEOUT){
@@ -655,7 +655,7 @@ int app_event_callback (u32 h, u8 *p, int n)
 			{
 				//after controller is set to initiating state by host (blc_ll_createConnection(...) )
 				//it will scan the specified device(adr_type & mac), when find this adv packet, send a connection request packet to slave
-				//and enter to connection state, send connection complete evnet. but notice that connection complete not
+				//and enter to connection state, send connection complete event. but notice that connection complete not
 				//equals to connection establish. connection complete measn that master controller set all the ble timing
 				//get ready, but has not received any slave packet, if slave rf lost the connection request packet, it will
 				//not send any packet to master controller
@@ -884,7 +884,7 @@ void user_init()
 	usb_dp_pullup_en (1);  //open USB enum
 
 	///////////////// SDM /////////////////////////////////
-#if (AUDIO_SDM_ENBALE)
+#if (AUDIO_SDM_ENABLE)
 	u16 sdm_step = config_sdm  (buffer_sdm, TL_SDM_BUFFER_SIZE, 16000, 4);
 #endif
 
@@ -978,7 +978,7 @@ void user_init()
 
 
 
-	//set scan paramter and scan enable
+	//set scan parameter and scan enable
 	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, SCAN_INTERVAL_100MS, SCAN_INTERVAL_100MS,
 							  OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
 	blc_ll_setScanEnable (BLC_SCAN_ENABLE, 0);
@@ -1198,7 +1198,7 @@ void set_ccc_by_master()
 			tmp_uuid[3]= proxy_in_handle;
 			tc_set_fifo(DONGLE_REPORT_PROXY_UUID, tmp_uuid, sizeof(tmp_uuid));
 			u8 tmp_ble_sts =1;
-			tc_set_fifo(MESH_CONNECTION_STS_REPROT, &tmp_ble_sts, 1);
+			tc_set_fifo(MESH_CONNECTION_STS_REPORT, &tmp_ble_sts, 1);
 		}
 
 		get_fw_version();		

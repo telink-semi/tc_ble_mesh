@@ -1125,7 +1125,7 @@ local uInt longest_match(
         /* Skip to next match if the match length cannot increase
          * or if the match length is less than 2.  Note that the checks below
          * for insufficient lookahead only occur occasionally for performance
-         * reasons.  Therefore uninitialized memory will be accessed, and
+         * reasons.  Therefore uninitialized memory will be accesssed, and
          * conditional jumps will be made that depend on those values.
          * However the length of the match is limited to the lookahead, so
          * the output of deflate is not affected by the uninitialized values.

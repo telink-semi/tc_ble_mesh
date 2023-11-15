@@ -66,8 +66,8 @@ offset (0xf04): valid flag.
 #define CERT_VALID_FLAG					0xa5a55a5a
 
 #define CERT_IS_VALID					1
-#define CERT_IS_UNVALID_PROV			2
-#define CERT_IS_UNVALID_UNPROV			3
+#define CERT_IS_INVALID_PROV			2
+#define CERT_IS_INVALID_UNPROV			3
 
 
 typedef enum{

@@ -209,7 +209,7 @@ int is_support_op(mesh_op_resource_t *op_res, u16 op, u16 adr_dst, u8 tx_flag)
     if(0 == mesh_search_model_id_by_op(op_res, op, tx_flag)){
         if(!is_unicast_adr(adr_dst)){
         	if(is_cfg_model(op_res->id, op_res->sig)){
-        	    if(!is_actived_factory_test_mode() || !is_valid_cfg_op_when_factory_test(op)){
+        	    if(!is_activated_factory_test_mode() || !is_valid_cfg_op_when_factory_test(op)){
         	        #if (! __PROJECT_MESH_PRO__ && !DEBUG_CFG_CMD_GROUP_AK_EN && !DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2)			
                     return 0;   // must unicast for config model
                     #endif
@@ -368,7 +368,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
                                 LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"should not use app key to decryption config model",0);
                     		    return OP_AGG_WRONG_KEY;	// may be attacked.
                 	        }
-                	    }else if(!is_actived_factory_test_mode() && (mesh_key.devkey_self_dec != DEC_BOTH_TWO_DEV_KEY)){
+                	    }else if(!is_activated_factory_test_mode() && (mesh_key.devkey_self_dec != DEC_BOTH_TWO_DEV_KEY)){
                 	        /*(!(((SIG_MD_CFG_SERVER == op_res.id) && (1 == mesh_key.devkey_self_dec))
                 	                            &&((SIG_MD_CFG_CLIENT == op_res.id) && (0 == mesh_key.devkey_self_dec))))*/
                 	        if(op_res.id == mesh_key.devkey_self_dec){	// model id is for RX node
@@ -379,7 +379,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
                 	}
                 	
                 	if(is_cfg_model(op_res.id, op_res.sig) && !is_valid_cfg_op_when_factory_test(op)){
-                        LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"factory mode unsupport this op:0x%04x",op);
+                        LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"factory mode unsupported this op:0x%04x",op);
                 	    return -1;
                 	}
                 }else{
@@ -391,7 +391,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
 							LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"should not use device for op:0x%04x",op);
 							return OP_AGG_WRONG_KEY; 
 						}
-	                    // just compare old key is enough, because bind key of old key is alway valid and same with new, if existed.
+	                    // just compare old key is enough, because bind key of old key is always valid and same with new, if existed.
 						mesh_app_key_t *app_key = &mesh_key.net_key[mesh_key.netkey_sel_dec][0].app_key[mesh_key.appkey_sel_dec];
 		                if(!is_exist_bind_key(p_model, app_key->index) && !is_exist_bind_key_extend_op(app_key->index)){
 	                        LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"model 0x%4x did't bind this key in element index %d",op_res.id, i);
