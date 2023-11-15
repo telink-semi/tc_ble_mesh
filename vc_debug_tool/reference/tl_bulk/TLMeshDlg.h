@@ -66,7 +66,7 @@ public:
 	void InitOnlineStatusOffline ();
 	u32 GetOnlineStatusRspMax ();
 	void UpdateGroupStatus ();
-	void UpdateSheduleStatus ();
+	void UpdateScheduleStatus ();
 	void UpdateSceneStatus ();
 	void SendOpPara (u8 *cmd, int par_len);
 	void InitStatus ();
@@ -81,19 +81,19 @@ public:
 	int	mesh_num;
 	int	mesh_sel;
 	int	mLite;
-	int current_shedule;
+	int current_schedule;
 	int current_scene;
-	int shedule_init;
+	int schedule_init;
 	time_status_t UI_time;
 	void setcheckmonth();
 	void setcheckweek();
-	void get_time_shedule_proc();
+	void get_time_schedule_proc();
 	scheduler_t get_current_scheduler();
-	void ShowSchedule(int shedule_index);
+	void ShowSchedule(int schedule_index);
 	void refresh_time_ui();
 	enum { IDD = IDD_TL_MESH_DLG };
 	CString	m_Light;
-	CGridCtrl m_Grid, m_GridGroup;//, m_GridShedule, m_GridScene;
+	CGridCtrl m_Grid, m_GridGroup;//, m_GridSchedule, m_GridScene;
 
 	void SetItem(int group, int row, int col, int type, char *text, int image);
 // Overrides
@@ -119,7 +119,7 @@ protected:
     afx_msg void OnGridDblClick(NMHDR *pNotifyStruct, LRESULT* pResult);
     afx_msg void OnGridClick(NMHDR *pNotifyStruct, LRESULT* pResult);
     afx_msg void OnGridRClick(NMHDR *pNotifyStruct, LRESULT* pResult);
-	afx_msg void OnGridSheduleClick(NMHDR *pNotifyStruct, LRESULT* pResult);
+	afx_msg void OnGridScheduleClick(NMHDR *pNotifyStruct, LRESULT* pResult);
 	afx_msg void OnGridSceneClick(NMHDR *pNotifyStruct, LRESULT* pResult);
     afx_msg void OnGridGroupDblClick(NMHDR *pNotifyStruct, LRESULT* pResult);
     afx_msg void OnGridGroupClick(NMHDR *pNotifyStruct, LRESULT* pResult);
@@ -168,7 +168,7 @@ public:
 //	int m_r;
 	BOOL m_friday;
 	CGridCtrl m_GridScene;
-	CGridCtrl m_GridShedule;
+	CGridCtrl m_GridSchedule;
 	BOOL m_monday;
 	BOOL m_saturday;
 	BOOL m_sunday;

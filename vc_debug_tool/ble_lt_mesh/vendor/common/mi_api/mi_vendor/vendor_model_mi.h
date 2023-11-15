@@ -126,9 +126,9 @@ typedef struct{
 	u8 value6;
 }vd_mi_event_report_str;
 
-#define MIOT_SEPC_VENDOR_MODEL_SER	((0x0000<<16) | (VENDOR_ID_MI))
+#define MIOT_SEPC_VENDOR_MODEL_SRV	((0x0000<<16) | (VENDOR_ID_MI))
 #define MIOT_SEPC_VENDOR_MODEL_CLI	((0x0001<<16) | (VENDOR_ID_MI)) 
-#define MIOT_VENDOR_MD_SER			((0x0002<<16) | (VENDOR_ID_MI))	
+#define MIOT_VENDOR_MD_SRV			((0x0002<<16) | (VENDOR_ID_MI))	
 
 //------0xE0 ~ 0xFF for customer
 

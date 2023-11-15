@@ -71,7 +71,7 @@
 
      Class AESencrypt  for encryption
 
-      Construtors:
+      Constructors:
           AESencrypt(void)
           AESencrypt(const unsigned char *key) - 128 bit key
       Members:
@@ -81,7 +81,7 @@
           AES_RETURN encrypt(const unsigned char *in, unsigned char *out) const
 
       Class AESdecrypt  for encryption
-      Construtors:
+      Constructors:
           AESdecrypt(void)
           AESdecrypt(const unsigned char *key) - 128 bit key
       Members:
@@ -296,9 +296,9 @@
 /*  7. INTERNAL STATE VARIABLE FORMAT
 
     The internal state of Rijndael is stored in a number of local 32-bit
-    word varaibles which can be defined either as an array or as individual
+    word variables which can be defined either as an array or as individual
     names variables. Include this section if you want to store these local
-    varaibles in arrays. Otherwise individual local variables will be used.
+    variables in arrays. Otherwise individual local variables will be used.
 */
 #if 1
 #define ARRAYS
@@ -316,10 +316,10 @@
 
 /*  9. TABLE ALIGNMENT
 
-    On some sytsems speed will be improved by aligning the AES large lookup
+    On some systems speed will be improved by aligning the AES large lookup
     tables on particular boundaries. This define should be set to a power of
     two giving the desired alignment. It can be left undefined if alignment
-    is not needed.  This option is specific to the Microsft VC++ compiler -
+    is not needed.  This option is specific to the Microsoft VC++ compiler -
     it seems to sometimes cause trouble for the VC++ version 6 compiler.
 */
 
@@ -427,7 +427,7 @@
    a column number c to the way the state array variable is to be held.
    The first define below maps the state into an array x[c] whereas the
    second form maps the state into a number of individual variables x0,
-   x1, etc.  Another form could map individual state colums to machine
+   x1, etc.  Another form could map individual state columns to machine
    register names.
 */
 

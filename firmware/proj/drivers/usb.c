@@ -29,7 +29,7 @@
 //#define FLOW_NO_OS         0
 //#define USB_MOUSE_ENABLE   1
 
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE || USB_ID_AND_STRING_CUSTOM)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE || USB_ID_AND_STRING_CUSTOM)
 	#include "vendor/8267_multi_mode/dongle_usb.h"
 #endif
 
@@ -125,7 +125,7 @@ void usb_prepare_desc_data(void) {
 		break;
 
 	case DTYPE_Configuration:
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)  //for km dongle customization (add by sihui)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)  //for km dongle customization (add by sihui)
 		g_response = (u8*) (&configuration_km_desc);
 		g_response_len = configuration_km_desc[2];  //the third element is the len
 #else
@@ -143,8 +143,8 @@ void usb_prepare_desc_data(void) {
 			g_response = (u8*) (&vendor_desc_km);
 			g_response_len = vendor_desc_km.Size;
 		} else if (USB_STRING_PRODUCT == value_l) {
-			g_response = (u8*) (&prodct_desc_km);
-			g_response_len = prodct_desc_km.Size;
+			g_response = (u8*) (&product_desc_km);
+			g_response_len = product_desc_km.Size;
 		} else if (USB_STRING_SERIAL == value_l) {
 			g_response = (u8*) (&serial_desc_km);
 			g_response_len = serial_desc_km.Size;
@@ -203,7 +203,7 @@ void usb_handle_std_intf_req() {
 		}
 #endif
 #if(USB_MOUSE_ENABLE)
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 		if (index_l == mouse_interface_number)
 		{
 			g_response = (u8*) (&configuration_desc_mouse[9]);
@@ -219,7 +219,7 @@ void usb_handle_std_intf_req() {
 #endif
 #endif
 #if(USB_KEYBOARD_ENABLE)
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 		if (index_l == keyboard_interface_number)
 		{
 			g_response = (u8*) (&configuration_desc_keyboard[9]);
@@ -251,14 +251,14 @@ void usb_handle_std_intf_req() {
 		}
 #endif
 #if(USB_MOUSE_ENABLE)
-		if (index_l == (USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE ? mouse_interface_number : USB_INTF_MOUSE)) {   //for km dongle customization (add by sihui)
+		if (index_l == (USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE ? mouse_interface_number : USB_INTF_MOUSE)) {   //for km dongle customization (add by sihui)
 			//mouse
 			g_response = (u8*) usbmouse_get_report_desc();
 			g_response_len = usbmouse_get_report_desc_size();
 		}
 #endif
 #if(USB_KEYBOARD_ENABLE)
-		else if (index_l == (USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE ? keyboard_interface_number : USB_INTF_KEYBOARD)) {   //for km dongle customization (add by sihui)
+		else if (index_l == (USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE ? keyboard_interface_number : USB_INTF_KEYBOARD)) {   //for km dongle customization (add by sihui)
 			//keyboard
 			g_response = (u8*) usbkb_get_report_desc();
 			g_response_len = usbkb_get_report_desc_size();
@@ -280,7 +280,7 @@ void usb_handle_std_intf_req() {
 			g_stall = 1;
 		}
 		break;
-	case 0x23:// Phisical Descriptor
+	case 0x23:// Physical Descriptor
 		// TODO
 		break;
 
@@ -312,7 +312,7 @@ void usb_handle_out_class_intf_req(int data_request) {
 		case HID_REPORT_ITEM_In:
 			break;
 		case HID_REPORT_ITEM_Out:
-			// usb_hid_set_report_ouput();
+			// usb_hid_set_report_output();
 			break;
 		case HID_REPORT_ITEM_Feature:
 			if (data_request) {
@@ -552,7 +552,7 @@ void usb_handle_set_intf() {
 	if(USB_INTF_MIC == intf_index && value_l){
 //		usbhw_reset_ep_ptr(USB_EDP_MIC);
 //		reg_usb_ep_ptr(USB_EDP_MIC) = USB_MIC_CHANNELS_LEN;
-//		reg_usb_ep_ctrl(USB_EDP_MIC) = (MIC_CHANNLE_COUNT == 2 ? 0x81 : 0xc1);
+//		reg_usb_ep_ctrl(USB_EDP_MIC) = (MIC_CHANNEL_COUNT == 2 ? 0x81 : 0xc1);
 		reg_usb_ep_ptr(USB_EDP_MIC) = 0;
 		reg_usb_ep_ctrl(USB_EDP_MIC) = BIT(0);		//ACK first packet
 	}
@@ -562,7 +562,7 @@ void usb_handle_set_intf() {
 	if(USB_INTF_SPEAKER == intf_index && value_l){
 //		usbhw_reset_ep_ptr(USB_EDP_MIC);
 //		reg_usb_ep_ptr(USB_EDP_MIC) = USB_MIC_CHANNELS_LEN;
-//		reg_usb_ep_ctrl(USB_EDP_MIC) = (MIC_CHANNLE_COUNT == 2 ? 0x81 : 0xc1);
+//		reg_usb_ep_ctrl(USB_EDP_MIC) = (MIC_CHANNEL_COUNT == 2 ? 0x81 : 0xc1);
 		reg_usb_ep_ptr(USB_EDP_SPEAKER) = 0;
 		reg_usb_ep_ctrl(USB_EDP_SPEAKER) = BIT(0);		//ACK first packet
 	}
@@ -757,7 +757,7 @@ void usb_handle_irq(void) {
 		usb_has_suspend_irq = 0;
 	}
 
-#if (!USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if (!USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 	if ((reg_irq_src & FLD_IRQ_USB_PWDN_EN))
 	{
 		return;

@@ -76,7 +76,7 @@ typedef enum {
  * @param[in] none
  * @return none
  */
-static inline void reset_i2c_moudle(void)
+static inline void reset_i2c_module(void)
 {
 	reg_rst0 |= FLD_RST0_I2C;
 	reg_rst0 &= (~FLD_RST0_I2C);
@@ -112,8 +112,8 @@ void i2c_gpio_set(I2C_GPIO_GroupTypeDef i2c_pin_group);
 
 /**
  * @brief      This function serves to set the id of slave device and the speed of I2C interface
- *             note: the param ID contain the bit of writting or reading.
- *             eg:the parameter 0x5C. the reading will be 0x5D and writting 0x5C.
+ *             note: the param ID contain the bit of writing or reading.
+ *             eg:the parameter 0x5C. the reading will be 0x5D and writing 0x5C.
  * @param[in]  SlaveID - the id of slave device.it contains write or read bit,the lsb is write or read bit.
  *                       ID|0x01 indicate read. ID&0xfe indicate write.
  * @param[in]  DivClock - the division factor of I2C clock,

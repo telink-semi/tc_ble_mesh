@@ -10,10 +10,10 @@
  * |   0   | Leaf certificate in DER.             |
  * |   1   | Intermediate certificate in DER.     |
  * |   2   | Root certificate in DER.             |
- * |   3   | Product Infomation, see table below. |
+ * |   3   | Product Information, see table below. |
  * +-------+--------------------------------------+
  *
- * Product Infomation
+ * Product Information
  * +------+-----------+---------------------------+
  * | ITEM | SIZE/BYTE | REMARKS                   |
  * +------+-----------+---------------------------+
@@ -141,7 +141,7 @@ extern UINT16 mjac_cmd_build_generate_random(
 
 /**
  * @brief hibernate to low power consumption.
- *        cause chip will hibernate immediatly, you SHOULD just read MJAC_SZ_HEAD_TAIL once.
+ *        cause chip will hibernate immediately, you SHOULD just read MJAC_SZ_HEAD_TAIL once.
  *
  * @param cmd - out buffer.
  *
@@ -219,7 +219,7 @@ extern UINT16 mjac_cmd_build_generate_key(
         UINT8 *cmd, UINT16 cmd_sz);
 
 /**
- * @brief query chip infomation.
+ * @brief query chip information.
  *        format as TLV, Length 1 byte, Tag as below:
  *        +--------------------------------+
  *        | Serial Number            | 02h |

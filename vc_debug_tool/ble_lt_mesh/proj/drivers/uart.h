@@ -186,9 +186,9 @@ typedef struct{
 *
 *	@brief	clear error state of uart rx, maybe used when application detected UART not work
 *
-*	@parm	none
+*	@param	none
 *
-*	@return	'1' RX error flag rised and cleard success; '0' RX error flag not rised
+*	@return	'1' RX error flag rose and cleard success; '0' RX error flag not rose
 *
 */
 unsigned char uart_ErrorCLR(void);

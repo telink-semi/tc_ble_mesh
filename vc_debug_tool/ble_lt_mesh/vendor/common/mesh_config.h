@@ -163,7 +163,7 @@ extern "C" {
 #define MESH_GN_ENABLE 		    	4
 #define MESH_MI_ENABLE          	5
 #define MESH_MI_SPIRIT_ENABLE   	6   // dual vendor
-#define MESH_IRONMAN_MENLO_ENABLE   7   // inclue boot_loader.bin and light.bin
+#define MESH_IRONMAN_MENLO_ENABLE   7   // include boot_loader.bin and light.bin
 #define MESH_ZB_BL_DUAL_ENABLE      8   // mesh && zigbee normal dual mode with bootloader
 #define MESH_PIPA_ENABLE        	9   // 
 #define MESH_TAIBAI_ENABLE			10
@@ -434,7 +434,7 @@ extern "C" {
 
 #define DRAFT_FEATURE_VENDOR_TYPE_NONE          0
 #define DRAFT_FEATURE_VENDOR_TYPE_ONE_OP        1   // only use "C0"
-#define DRAFT_FEATURE_VENDOR_TYPE_MULTY_OP      2
+#define DRAFT_FEATURE_VENDOR_TYPE_MULTI_OP      2
 
 #if (WIN32)
 #define DEBUG_VENDOR_CMD_EN 		    0		// must 0, if 1, debug vendor id as server node.
@@ -465,7 +465,7 @@ extern "C" {
 
 
 
-#define DRAFT_FEAT_VD_MD_EN             (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_MULTY_OP)
+#define DRAFT_FEAT_VD_MD_EN             (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_MULTI_OP)
 
 #define LIGHT_TYPE_NONE				0
 #define LIGHT_TYPE_CT				1
@@ -617,8 +617,8 @@ extern "C" {
 #endif
 
 /**
- * MD_REMOTE_PROV: .
- * refer to "" of spec "MshPRT_v1.1.pdf".
+ * MD_REMOTE_PROV: model of remote provision.
+ * refer to "4.4.5 Remote Provisioning Server model" and "4.4.6 Remote Provisioning Client model" of spec "MshPRT_v1.1.pdf".
  */
 #ifndef MD_REMOTE_PROV
 #if (WIN32)
@@ -658,7 +658,7 @@ extern "C" {
 #endif
 
 /**
- * MD_MESH_OTA_EN: model mesh OTA enabel. OTA is the same as DFU(device firmware update).
+ * MD_MESH_OTA_EN: model mesh OTA enable. OTA is the same as DFU(device firmware update).
  * refer to spec MshDFU_v1.0(mesh device firmware update) and MshMBT_v1.0(The Mesh Binary Large Object Transfer) profile.
  */
 #ifndef MD_MESH_OTA_EN
@@ -712,9 +712,9 @@ extern "C" {
 #endif
 
 /**
- * MD_PRIVACY_BEA: the full name is model private beacon. for privte security network beacon.
+ * MD_PRIVACY_BEA: the full name is model private beacon. for private security network beacon.
  *                 refer to "3.10.4 Mesh Private beacon" of spec "MshPRT_v1.1.pdf".
- * PRIVATE_PROXY_FUN_EN: the full name is private proxy function enable. for privte .
+ * PRIVATE_PROXY_FUN_EN: the full name is private proxy function enable. for private .
  *                 refer to "3.4.6.6 Private Proxy functionality" and "3.4.6.8 Private Node Identity functionality" of spec "MshPRT_v1.1.pdf".
  */
 #if WIN32
@@ -870,9 +870,9 @@ extern "C" {
 #define	MD_LOCATION_EN				0	// location,sensor,battery use same flash addr, but one sector max store 6 models
 #define MD_BATTERY_EN				0
 #define MD_DF_CFG_SERVER_EN			0   // directed forwarding server model.
-#define MD_DF_CFG_CLIENT_EN			0
+#define MD_DF_CFG_CLIENT_EN			(0 || MD_DF_CFG_SERVER_EN)
 #define MD_SBR_CFG_SERVER_EN		0   // subnet bridge server model.
-#define MD_SBR_CFG_CLIENT_EN		0
+#define MD_SBR_CFG_CLIENT_EN		(0 || MD_SBR_CFG_SERVER_EN)
 #define MD_SAR_EN					0
 #define MD_ON_DEMAND_PROXY_EN		0
 #define	MD_OP_AGG_EN				0
@@ -967,13 +967,13 @@ extern "C" {
 #else
     #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 2, comfirm later
+#define ELE_CNT_EVERY_LIGHT         1   // 2, confirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         2
         #endif
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 3, comfirm later
+#define ELE_CNT_EVERY_LIGHT         1   // 3, confirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         3
         #endif
@@ -981,7 +981,7 @@ extern "C" {
 #define ELE_CNT_EVERY_LIGHT         3
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE || LLSYNC_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 4, comfirm later
+#define ELE_CNT_EVERY_LIGHT         1   // 4, confirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         4
         #endif
@@ -1013,7 +1013,7 @@ extern "C" {
 #define LOG_PROVISION_EN 			0
 #endif
 
-// feture part ,enable or disable to cut down the ram cost 
+// feature part ,enable or disable to cut down the ram cost 
 #if (__PROJECT_MESH_LPN__ && (!WIN32))
 #define FEATURE_FRIEND_EN 		0
 #define FEATURE_LOWPOWER_EN		1
@@ -1042,12 +1042,12 @@ extern "C" {
 	#if DU_ENABLE
 #define FEATURE_FRIEND_EN		0
 	#else
-#define FEATURE_FRIEND_EN 		1   // WIN 32 should be suport disable: model_sig_cfg_s.frid
+#define FEATURE_FRIEND_EN 		1   // WIN 32 should be support disable: model_sig_cfg_s.frid
 	#endif
 #define FEATURE_LOWPOWER_EN		0
 #define FEATURE_PROV_EN 		1
     #if (0 == NODE_CAN_SEND_ADV_FLAG)
-#define FEATURE_RELAY_EN		0	// must 0, because it must be proxyed by another node. and messages havee been relay by this node.
+#define FEATURE_RELAY_EN		0	// must 0, because it must be proxyed by another node. and messages have been relay by this node.
 #define FEATURE_PROXY_EN 		0	// must 0, 
     #else
 #define FEATURE_RELAY_EN		1

@@ -55,7 +55,7 @@ extern void flash_erase_512K();
 
 u32 vc_file_read_all(u8* data_out, u32 out_len_max, const char* filename);
 errno_t vc_file_write_with_new_or_rewrite(u8* data_in, u32 len, const char* filename);
-unsigned char ble_moudle_id_is_gateway();
+unsigned char ble_module_id_is_gateway();
 void gateway_VC_factory_reset();
 void gateway_VC_factory_reset_and_del_JSON();
 #endif 

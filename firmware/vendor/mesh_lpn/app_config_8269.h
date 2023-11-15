@@ -79,7 +79,7 @@ extern "C" {
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
 
 #define	KB_LINE_HIGH_VALID				0   //dirve pin output 0 when keyscan, scanpin read 0 is valid
-#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back trigged by key press, in case key loss
+#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back triggered by key press, in case key loss
 #define KEYSCAN_IRQ_TRIGGER_MODE		0
 #define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
 

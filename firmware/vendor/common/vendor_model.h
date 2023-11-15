@@ -77,7 +77,7 @@
     #endif
 
 	#if DU_ENABLE
-#define VD_LPN_REPROT					0xF9// report event .
+#define VD_LPN_REPORT					0xF9// report event .
 #define VD_TIME_REQ						0xF8// TIME REQ
 #define VD_TIME_REQ_ACK					0xFA// TIME REQ ACK
 #define VD_TIME_CMD						0xFD// client send time proc 
@@ -116,8 +116,8 @@
 
 //------0xE0 ~ 0xFF for customer
     #if LPN_VENDOR_SENSOR_EN
-#define VD_LPN_SENSOR_GET               0xE0    // user can use this op code for other fuction
-#define VD_LPN_SENSOR_STATUS            0xE1    // user can use this op code for other fuction
+#define VD_LPN_SENSOR_GET               0xE0    // user can use this op code for other function
+#define VD_LPN_SENSOR_STATUS            0xE1    // user can use this op code for other function
     #endif
 
 //------ end

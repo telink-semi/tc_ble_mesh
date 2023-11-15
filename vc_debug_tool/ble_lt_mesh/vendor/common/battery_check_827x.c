@@ -239,7 +239,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 threshold_deep_vol_mv, u16 
 
 
 	adc_reset_adc_module();
-#if (!MANNUAL_MODE_GET_ADC_SAMPLE_RESULT)
+#if (!MANUAL_MODE_GET_ADC_SAMPLE_RESULT)
 	u32 t0 = clock_time();
 
 #if (DBG_ADC_SAMPLE_DAT)
@@ -459,7 +459,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
 
 	adc_reset_adc_module();
-#if (!MANNUAL_MODE_GET_ADC_SAMPLE_RESULT)
+#if (!MANUAL_MODE_GET_ADC_SAMPLE_RESULT)
 	u32 t0 = clock_time();
 
 #if (DBG_ADC_SAMPLE_DAT)

@@ -542,7 +542,7 @@ enum{
 #define reg_ana_data			REG_ADDR8(0xb9)
 #define reg_ana_ctrl			REG_ADDR8(0xba)
 
-// document about this is not corect, please use the following definition
+// document about this is not correct, please use the following definition
 enum{
 	FLD_ANA_BUSY  = 			BIT(0),
 	FLD_ANA_RSV	=				BIT(4),
@@ -672,7 +672,7 @@ enum{
 #define reg_usb_irq				REG_ADDR8(0x139)
 #define reg_usb_mask			REG_ADDR8(0x13a)
 #define reg_usb_ep8_send_max	REG_ADDR8(0x13b)
-#define reg_usb_ep8_send_thre	REG_ADDR8(0x13c)
+#define reg_usb_ep8_send_thres	REG_ADDR8(0x13c)
 #define reg_usb_ep8_fifo_mode	REG_ADDR8(0x13d)
 #define reg_usb_ep_max_size		REG_ADDR8(0x13e)
 
@@ -1186,7 +1186,7 @@ enum{
 	FLD_GP7_RXADC_CLK	=	BIT(3),
 	FLD_RP_T0			=	BIT(4),
 	FLD_RN_T1			=	BIT(5),
-	FLD_GP6_TE			=	BIT(6),
+	FLD_GP6_TIME_EVT	=	BIT(6),
 	FLD_GP7_MDC			=	BIT(7),
 };
 #define reg_gpio_config_func2 REG_ADDR8(0x5b2)
@@ -1242,7 +1242,7 @@ enum{
 	FLD_TMR2_STA =				BIT(26),
 	FLD_CLR_WD =				BIT(27),
 };
-#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
+#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definition, 0x622
 
 #define WATCHDOG_DISABLE	( reg_tmr_ctrl &= ~FLD_TMR_WD_EN )
 
@@ -1594,7 +1594,7 @@ static inline void config_adc (int chn_mic, int chn_adc, int sample) {
      	reg_adc_period_chn0 = 208;//374;//374;//208;//77
 	 	reg_adc_period_chn12= 8;//8;
         reg_adc_ctrl          = 0x15;
-        reg_aud_alc_vol       = 0x12;//0x24;0x1c;//0x19; // 0xb06[5:0]: manual volume , corespond to  reg0xb04[6:4]
+        reg_aud_alc_vol       = 0x12;//0x24;0x1c;//0x19; // 0xb06[5:0]: manual volume , correspond to  reg0xb04[6:4]
 
 	}
 	else if(sample == SYS_16M_AMIC_16K){
@@ -1606,7 +1606,7 @@ static inline void config_adc (int chn_mic, int chn_adc, int sample) {
         reg_adc_period_chn12  = 4;     // reg0x32 T5 = 4x16 = 64 , just T5 no T6, single channel
 
         reg_adc_ctrl          = 0x15;
-        reg_aud_alc_vol       = 0x24;  //0x1c;//0x19; // 0xb06[5:0]: manual volume , corespond to  reg0xb04[6:4]
+        reg_aud_alc_vol       = 0x24;  //0x1c;//0x19; // 0xb06[5:0]: manual volume , correspond to  reg0xb04[6:4]
 #else
         //16000/(72+8*16)/5 = 16000/200/5 = 16 K
         reg_dfifo_scale       = 0x44; //down scale by 5
@@ -1614,7 +1614,7 @@ static inline void config_adc (int chn_mic, int chn_adc, int sample) {
        	reg_adc_period_chn12  = 8;
 
         reg_adc_ctrl          = 0x15;  // reg0x33[1] = 0 , disable T6 , mono mode[4]/L channel enable[3]/audio enable[1],  talk to zhidong.mao for detail
-        reg_aud_alc_vol       = 0x1c;  // reg0xb06 0x19; // 0xb06[5:0]: manual volume , corespond to  reg0xb04[6:4]
+        reg_aud_alc_vol       = 0x1c;  // reg0xb06 0x19; // 0xb06[5:0]: manual volume , correspond to  reg0xb04[6:4]
 #endif
 	}
 	else if(sample == SYS_48M_AMIC_16K){

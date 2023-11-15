@@ -40,27 +40,27 @@ STATIC_ASSERT(sizeof(sha256_dev_uuid_str) <= 16);   // because sizeof dev uuid i
 // sha256 init for three parameters 
 #if ALI_NEW_PROTO_EN
 	u32 con_product_id = 9873;
-	//u8 con_mac_address[6]={0xf8,0xa7,0x63,0x6e,0x46,0x49};// in the flash ,is big endiness 
-	u8 con_mac_address[6]={0x49,0x46,0x6e,0x63,0xa7,0xf8};// in the demo ,switch to small endiness .
+	//u8 con_mac_address[6]={0xf8,0xa7,0x63,0x6e,0x46,0x49};// in the flash ,is big endianness 
+	u8 con_mac_address[6]={0x49,0x46,0x6e,0x63,0xa7,0xf8};// in the demo ,switch to small endianness .
 	u8 con_sec_data[16]={0xc5,0xa2,0x78,0xcf, 0x21,0x4b,0x84,0x63, 0xc7,0xb4,0x70,0xe2, 0x83,0x7d,0x55,0xb5};
 	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 	#else
 #if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
-u32 con_product_id=192941;// little endiness 
+u32 con_product_id=192941;// little endianness 
 	#if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
 const
 	#endif
-u8 con_mac_address[6]={0xee,0x11,0x33,0x55,0x77,0x03};//small endiness
+u8 con_mac_address[6]={0xee,0x11,0x33,0x55,0x77,0x03};//small endianness
 //char con_sec_data[]="claoePqYe1avDpmf8Jcm4jF52kVOLS1Q";
 char con_sec_data[32];
 #define  SIZE_CON_SEC_DATA  32
 
 #elif((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE))
-u32 con_product_id=0x00000002;// little endiness 
+u32 con_product_id=0x00000002;// little endianness 
 #if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
 const
 #endif
-u8  con_mac_address[6]={0x9e,0x16,0x11,0x07,0xda,0x78};//small endiness
+u8  con_mac_address[6]={0x9e,0x16,0x11,0x07,0xda,0x78};//small endianness
     #if 0 // need to open it to make the init three para enable 
 u8 con_sec_data[16]={ 0x04,0x6e,0x68,0x11,0x27,0xed,0xe6,0x70,
 					  0x94,0x44,0x18,0xdd,0xb1,0xb1,0x7b,0xdc};
@@ -70,13 +70,13 @@ u8 con_sec_data[16];
 #define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 #elif((MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE))
 	#if 0
-	u32 con_product_id=7003001;// little endiness 
-	u8  con_mac_address[6]={0x6e,0x79,0x12,0x75,0x60,0xd4};//small endiness
+	u32 con_product_id=7003001;// little endianness 
+	u8  con_mac_address[6]={0x6e,0x79,0x12,0x75,0x60,0xd4};//small endianness
 	u8 con_sec_data[16];
 	#else
 		#if DU_LPN_EN
 			#if LPN_CONTROL_EN
-	u32 con_product_id=DU_PID;// little endiness 
+	u32 con_product_id=DU_PID;// little endianness 
 	//48f3f3bf28b0
 	u8  con_mac_address[6]={0xb0,0x28,0xbf,0xf3,0xf3,0x48};
 	//e2458e28034096672f7a4cc5dcae47a5
@@ -84,9 +84,9 @@ u8 con_sec_data[16];
 						 0x2f,0x7a,0x4c,0xc5,	0xdc,0xae,0x47,0xa5};			
 			#else
 	//006ae731
-	u32 con_product_id=DU_PID;// little endiness 
+	u32 con_product_id=DU_PID;// little endianness 
 	//882d53f66826
-	u8  con_mac_address[6]={0xc1,0x2d,0x6f,0xda,0xe0,0xcc};//little endiness
+	u8  con_mac_address[6]={0xc1,0x2d,0x6f,0xda,0xe0,0xcc};//little endianness
 	//968829854b47b5dfb09d9edfcc8b9a0f
 	u8 con_sec_data[16]={0x54,0x26,0x27,0xd3,	0x60,0x58,0x94,0xcf,
 						 0x48,0xa9,0xc8,0x1c,	0x8b,0x8c,0x78,0xc0};
@@ -96,8 +96,8 @@ u8 con_sec_data[16];
 		u8  con_mac_address[6]={0xb6,0x8c,0x12,0x75,0x60,0xd4};
 		u8 con_sec_data[16]={0x7b,0x45,0xe1,0x86,0xe0,0x84,0xc2,0xca,0xdb,0xe3,0x73,0x7c,0x8e,0x9a,0xd4,0x8f};
 		#else
-	u32 con_product_id=DU_PID;// little endiness 
-	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//little endiness
+	u32 con_product_id=DU_PID;// little endianness 
+	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//little endianness
 	u8 con_sec_data[16]={0x49,0x22,0xeb,0x7a,	0x0a,0x45,0x81,0x8d,
 						 0xa4,0x34,0x7c,0xd4,	0xed,0x1b,0x4c,0xf9};
 
@@ -105,8 +105,8 @@ u8 con_sec_data[16];
 	#endif
 	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 #elif((MESH_USER_DEFINE_MODE == MESH_NMW_ENABLE))
-	u32 con_product_id=0x324a584c;// little endiness
-	u8	con_mac_address[6]={0x20,0x00,0x00,0x38,0xc1,0xa4};//little endiness
+	u32 con_product_id=0x324a584c;// little endianness
+	u8	con_mac_address[6]={0x20,0x00,0x00,0x38,0xc1,0xa4};//little endianness
     #if 0 // need to open it to make the init three para enable 
 	u8 con_sec_data[16]={0x30,0x4b,0xbc,0x95,0xeb,0x2b,0xc9,0x82,0xce,0xba,0xc4,0x37,0xce,0x07,0xcf,0x23};
     #else
@@ -176,7 +176,7 @@ void set_dev_uuid_for_sha256()
 	memset(p_uuid,0,sizeof(sha256_dev_uuid_str));
 	p_uuid->cid = VENDOR_ID;
 	p_uuid->adv_ver = 0x01;
-	p_uuid->ser_fun = 1;
+	p_uuid->auth_en = 1;
 	p_uuid->ota_en =1;
 	p_uuid->ble_ver = BLE_4_2;
 	memcpy(p_uuid->product_id,&con_product_id,sizeof(con_product_id));
@@ -246,14 +246,14 @@ void ali_new_create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_se
 #endif
 
 
-void caculate_sha256_node_oob(u8 *p_oob ,u8 *p_random)
+void calculate_sha256_node_oob(u8 *p_oob ,u8 *p_random)
 {
 	#if ALI_NEW_PROTO_EN
 	char sha256_in[87];
 	#else
 	char sha256_in[54];
 	#endif
-	// caculate the tbl_mac address part ,use big endian
+	// calculate the tbl_mac address part ,use big endian
 	u8 mac_address_sha256[6];
 	#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
 	swap48(mac_address_sha256,con_mac_address);
@@ -273,29 +273,29 @@ void caculate_sha256_node_oob(u8 *p_oob ,u8 *p_random)
 	mbedtls_sha256((u8 *)sha256_in,sizeof(sha256_in),p_oob,0);
 }
 
-void caculate_sha256_node_auth_value(u8 *auth_value)
+void calculate_sha256_node_auth_value(u8 *auth_value)
 {
-	#ifndef WIN32		// comfirm later
+	#ifndef WIN32		// confirm later
 	u8 sha256_out[32];
-	caculate_sha256_node_oob(sha256_out,0);
+	calculate_sha256_node_oob(sha256_out,0);
 	memcpy(auth_value, sha256_out, 16);
 	#endif
 }
 
-void caculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random)
+void calculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random)
 {
 	#ifndef WIN32 
 	u8 sha256_out[32];
-	caculate_sha256_node_oob(sha256_out,random);
+	calculate_sha256_node_oob(sha256_out,random);
 	memcpy(pro_auth,sha256_out,16);
 	#endif
 }
 
-void caculate_sha256_to_create_static_oob()
+void calculate_sha256_to_create_static_oob()
 {
-	#if !WIN32		// comfirm later
+	#if !WIN32		// confirm later
 	u8 sha256_out[32];
-	caculate_sha256_node_oob(sha256_out,dev_random);
+	calculate_sha256_node_oob(sha256_out,dev_random);
 	mesh_set_dev_auth(sha256_out, 16);
 	#endif
 }
@@ -364,7 +364,7 @@ int ais_write_pipe(void *p)
 #else
 void set_sha256_init_para_mode(u8 mode){}
 void set_dev_uuid_for_sha256(){}
-void caculate_sha256_to_create_static_oob(){}
+void calculate_sha256_to_create_static_oob(){}
 
 #endif
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)

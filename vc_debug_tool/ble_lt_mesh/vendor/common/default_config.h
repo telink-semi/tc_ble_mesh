@@ -32,7 +32,7 @@ extern "C" {
 
 #include "proj/mcu/config.h"
 
-//////////// product  Infomation  //////////////////////////////
+//////////// product  Information  //////////////////////////////
 #ifndef ID_VENDOR
 #define ID_VENDOR			0x248a			// for report 
 #endif
@@ -270,8 +270,8 @@ extern "C" {
 #define FLAG_BUTTON_MIDDLE		0x04
 #endif
 
-#ifndef	FLAG_BUTTON_FOWARD
-#define FLAG_BUTTON_FOWARD		0x10
+#ifndef	FLAG_BUTTON_FORWARD
+#define FLAG_BUTTON_FORWARD		0x10
 #endif
 
 #ifndef	FLAG_BUTTON_BACKWARD
@@ -519,7 +519,7 @@ extern "C" {
 #define RF_CHANNEL_DEBUG 	 	0	// using debug channel,  no hopping
 #endif
 
-#define RF_PKT_BUFF_LEN			256			// telink proprietary protocal
+#define RF_PKT_BUFF_LEN			256			// telink proprietary protocol
 
 #define RF_RX_PKT_BUFF_COUNT	4		//  pingpong mode, use 2 buffers
 #define RF_RX_USE_DMA_IRQ		0		//  pingpong mode, use 2 buffers
@@ -840,12 +840,12 @@ enum{
 #ifndef USB_MASS_STORAGE_ENABLE
 #define USB_MASS_STORAGE_ENABLE  	0
 #endif
-#ifndef MIC_CHANNLE_COUNT
-#define MIC_CHANNLE_COUNT  			2
+#ifndef MIC_CHANNEL_COUNT
+#define MIC_CHANNEL_COUNT  			2
 #endif
 
-#ifndef USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE
-#define USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE  			0
+#ifndef USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE
+#define USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE  			0
 #endif
 
 #ifndef USB_ID_AND_STRING_CUSTOM

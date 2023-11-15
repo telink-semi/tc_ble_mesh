@@ -89,7 +89,7 @@ void write_dongle_cmd_fifo_poll()
 			#else
 			// should not happen for IOS / ANDROID
 			#endif 
-			if(ble_moudle_id_is_kmadongle()){
+			if(ble_module_id_is_kmadongle()){
 			    u8 *p_hci_data = fifo->data;
 			    if(HCI_TYPE_ACL_DATA == p_hci_data[0]){ //
 			        u16 l2cap_len = p_hci_data[5] + p_hci_data[6]*256;
@@ -278,8 +278,8 @@ int SendOpByINI(u8 *ini_buf, u32 len)
 	}
 
 #if VC_APP_ENABLE
-    extern u8 ble_moudle_id_is_gateway();
-    if(ble_moudle_id_is_gateway()){
+    extern u8 ble_module_id_is_gateway();
+    if(ble_module_id_is_gateway()){
         ini_buf[0] =  HCI_CMD_GATEWAY_CMD & 0xFF;
         ini_buf[1] = (HCI_CMD_GATEWAY_CMD >> 8) & 0xFF;
 		LOG_MSG_INFO (TL_LOG_COMMON, ini_buf, len, "VC send to gateway is", 0);

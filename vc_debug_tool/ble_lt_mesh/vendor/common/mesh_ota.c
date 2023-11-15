@@ -92,8 +92,8 @@ u32 set_bit_by_cnt(u8 *out, u32 len, u32 cnt)
 model_mesh_ota_t        model_mesh_ota;
 u32 mesh_md_mesh_ota_addr = FLASH_ADR_MD_MESH_OTA;
 
-#if UPLOAD_MULTY_FW_TEST_EN
-upload_multy_fw_id_t upload_multy_fw_id = {0};
+#if UPLOAD_MULTI_FW_TEST_EN
+upload_multi_fw_id_t upload_multi_fw_id = {0};
 #endif
 
 extern _align_4_ fw_update_srv_proc_t    fw_update_srv_proc;
@@ -230,7 +230,7 @@ void mesh_ota_check_and_set_lpn_retry_intv(mesh_bulk_cmd_par_t *p_cmd, int len_c
 	if(FW_DISTRIBUT_START == get_op_u16(&p_cmd->op)){
 		if(fw_distribut_srv_proc.st_distr){
 			#if DISTRIBUTOR_START_TLK_EN
-			if(is_par_distribut_start_tlk(p_cmd->par+1, len_cmd - OFFSETOF(mesh_bulk_cmd_par_t,par) -1)){ // -1, due to distrubute start is 2 bytes command.
+			if(is_par_distribute_start_tlk(p_cmd->par+1, len_cmd - OFFSETOF(mesh_bulk_cmd_par_t,par) -1)){ // -1, due to distribute start is 2 bytes command.
 				if(p_cmd->retry_cnt >= 10){ // because default cnt is 2.
 					fw_distribut_srv_proc.retry_intv_for_lpn_100ms = get_transition_100ms((trans_time_t *)&p_cmd->retry_cnt);
 				}
@@ -405,7 +405,7 @@ void distribut_srv_proc_init(int keep_new_fw_size_flag)
 
 int is_distribute_st_with_optional_par(u8 st_response)
 {
-	return (!((DISTRIBUT_PHASE_IDLE == fw_distribut_srv_proc.distribut_update_phase) && (DISTRIBUT_ST_SUCCESS == st_response)) // FD/BV-35: if completed, should not report optional par in the last setp of distribution cancle.
+	return (!((DISTRIBUT_PHASE_IDLE == fw_distribut_srv_proc.distribut_update_phase) && (DISTRIBUT_ST_SUCCESS == st_response)) // FD/BV-35: if completed, should not report optional par in the last setp of distribution cancel.
 	     && (fw_distribut_srv_proc.adr_group || (fw_distribut_srv_proc.st_distr >= MASTER_OTA_ST_DISTRIBUT_START))); // adr_group may be zero. 
 }
 
@@ -414,7 +414,7 @@ int mesh_tx_cmd_fw_distribut_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st)
 	fw_distribut_status_t rsp = {0};
 	rsp.st = st;
 	rsp.distrib_phase = fw_distribut_srv_proc.suspend_flag ? DISTRIBUT_PHASE_TRANSFER_SUSPEND : fw_distribut_srv_proc.distribut_update_phase;
-	#if 0 // TEST_BV45_EN // TODO: PTS beta version expect a phase which is diffrent from "TS doc". 
+	#if 0 // TEST_BV45_EN // TODO: PTS beta version expect a phase which is different from "TS doc". 
 	if(DISTRIBUT_PHASE_APPLYING_UPDATE == rsp.distrib_phase){
 		rsp.distrib_phase = DISTRIBUT_PHASE_TRANSFER_SUCCESS;
 	}
@@ -507,7 +507,7 @@ void fw_distribut_update_list_init(fw_update_list_t *p_update_list, u32 update_n
 }
 
 #if DISTRIBUTOR_START_TLK_EN
-int is_par_distribut_start_tlk(u8 *par, int par_len)
+int is_par_distribute_start_tlk(u8 *par, int par_len)
 {
 	#if (GATEWAY_ENABLE || WIN32)
     fw_distribut_start_tlk_t *p_start_tlk = (fw_distribut_start_tlk_t *)par;
@@ -563,7 +563,7 @@ int mesh_cmd_sig_fw_distribut_start_tlk(u8 *par, int par_len, mesh_cb_fun_par_t 
     if(update_node_cnt > MESH_OTA_UPDATE_NODE_MAX || update_node_cnt == 0){
         LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"update node cnt error: %d", update_node_cnt);
     	st = DISTRIBUT_ST_INSUFFICIENT_RESOURCE;
-    }else if(fw_distribut_srv_proc.st_distr){   // comfirm later
+    }else if(fw_distribut_srv_proc.st_distr){   // confirm later
         #if 0
         int retransmit = (0 == memcmp(p_start,&fw_distribut_srv_proc.fw_id, OFFSETOF(fw_distribut_start_tlk_t,update_list)));
         if(retransmit){
@@ -587,7 +587,7 @@ int mesh_cmd_sig_fw_distribut_start_tlk(u8 *par, int par_len, mesh_cb_fun_par_t 
 
         fw_distribut_srv_proc.adr_group = p_start->adr_group;
 		#if WIN32
-        if(ble_moudle_id_is_kmadongle()){
+        if(ble_module_id_is_kmadongle()){
             if((1 == update_node_cnt) && (p_start->adr_group != GROUP_VAL_FW_INFO_GET_ALL)){
                 if((p_start->update_list[0] == APP_get_GATT_connect_addr())
                 #if DEBUG_SHOW_VC_SELF_EN
@@ -759,7 +759,7 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 {
 	//u8 st = DISTRIBUT_ST_INTERNAL_ERROR;
 	#if DISTRIBUTOR_START_TLK_EN
-	if(is_par_distribut_start_tlk(par, par_len)){
+	if(is_par_distribute_start_tlk(par, par_len)){
 		fw_distribut_srv_proc.suspend_flag = 0;
 	    return mesh_cmd_sig_fw_distribut_start_tlk(par, par_len, cb_par);
 	}else
@@ -840,7 +840,7 @@ int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb
     u8 phase_backup = fw_distribut_srv_proc.distribut_update_phase;
     u8 st_distr_backup = fw_distribut_srv_proc.st_distr;
 
-    if(fw_distribut_srv_proc.st_distr && fw_distribut_srv_proc.st_distr != MASTER_OTA_ST_MAX){	// when ST MAX, fw update apply or cancle have been sent, so that can not send update cancel command to other nodes here.
+    if(fw_distribut_srv_proc.st_distr && fw_distribut_srv_proc.st_distr != MASTER_OTA_ST_MAX){	// when ST MAX, fw update apply or cancel have been sent, so that can not send update cancel command to other nodes here.
         abort_flag = 1;
     }
 
@@ -895,7 +895,7 @@ int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 			        memset(&mesh_tx_reliable, 0, sizeof(mesh_tx_reliable));
 					#endif
 					#if PTS_TEST_OTA_EN
-					fw_distribut_srv_proc.update_cancle_addr = chunk_cmd_dst_addr;
+					fw_distribut_srv_proc.update_cancel_addr = chunk_cmd_dst_addr;
 					#endif
 			        access_cmd_fw_update_control(chunk_cmd_dst_addr, FW_UPDATE_CANCEL, min(fw_distribut_srv_proc.node_cnt, 0xff));
 		        }
@@ -1267,7 +1267,7 @@ fw_receiver_list_t * get_fw_node_receiver_list(u16 node_adr)
     return 0;
 }
 
-int is_all_valid_reveiver_applying_ok()
+int is_all_valid_receiver_applying_ok()
 {
     foreach(i,fw_distribut_srv_proc.node_cnt){
         fw_receiver_list_t *p_list = &fw_distribut_srv_proc.list[i];
@@ -1382,7 +1382,7 @@ int mesh_cmd_sig_fw_distribut_receivers_add(u8 *par, int par_len, mesh_cb_fun_pa
 	            p_list->update_fw_image_idx = p_add->entry[i].update_fw_image_idx;
 	            #if DISTRIBUTOR_NO_UPDATA_START_2_SELF
 	            if(is_own_ele(p_list->adr)){
-	                p_list->skip_flag = 1;    // because no handle in is_tx_status_cmd2self(), and hanle in the apply setp is enough.
+	                p_list->skip_flag = 1;    // because no handle in is_tx_status_cmd2self(), and handle in the apply setp is enough.
 	            }
 	            #endif
 	        }else{
@@ -1528,10 +1528,10 @@ int mesh_cmd_sig_fw_distribut_upload_start(u8 *par, int par_len, mesh_cb_fun_par
 	    	if(DISTRIBUT_ST_KEEP_CURRENT == st){
 	    		st = DISTRIBUT_ST_SUCCESS;
 	    	}else if(DISTRIBUT_ST_SUCCESS == st){
-	    		#if UPLOAD_MULTY_FW_TEST_EN
+	    		#if UPLOAD_MULTI_FW_TEST_EN
 	    		if(cover_allow){
-	    			upload_multy_fw_id.upload_1st_en = 1;
-					memcpy(&upload_multy_fw_id.fw_id_1st, &fw_distribut_srv_proc.upload_start.fw_id, sizeof(upload_multy_fw_id.fw_id_1st));
+	    			upload_multi_fw_id.upload_1st_en = 1;
+					memcpy(&upload_multi_fw_id.fw_id_1st, &fw_distribut_srv_proc.upload_start.fw_id, sizeof(upload_multi_fw_id.fw_id_1st));
 	    		}
 	    		#endif
 	    		
@@ -1674,11 +1674,11 @@ int mesh_fw_distribut_fw_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st, u8 entry_cnt, 
 	return mesh_tx_cmd_rsp(FW_DISTRIBUT_FW_STATUS, (u8 *)p_rsp, rsp_len, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
-#if UPLOAD_MULTY_FW_TEST_EN
+#if UPLOAD_MULTI_FW_TEST_EN
 int is_match_upload_1st_fw_id(fw_id_t *p_fw_id, int len, int del_flag)
 {
-	if ((upload_multy_fw_id.upload_1st_en || del_flag) 
-	&& (0 == memcmp(&upload_multy_fw_id.fw_id_1st, p_fw_id, len))){
+	if ((upload_multi_fw_id.upload_1st_en || del_flag) 
+	&& (0 == memcmp(&upload_multi_fw_id.fw_id_1st, p_fw_id, len))){
 	   return 1;
 	}
 
@@ -1695,7 +1695,7 @@ int is_fw_id_exist_in_distributor(fw_id_t *p_fw_id, int len, int del_flag)
 		 	return 1;
 		 }
 
-		 #if UPLOAD_MULTY_FW_TEST_EN
+		 #if UPLOAD_MULTI_FW_TEST_EN
 		 return is_match_upload_1st_fw_id(p_fw_id, len, del_flag);
 		 #endif
 	 }
@@ -1707,8 +1707,8 @@ u8 get_fw_entry_cnt_store_on_distributor()
 {
 	u8 cnt = (is_rx_upload_start_before() ? 1 : 0);
 	
-#if UPLOAD_MULTY_FW_TEST_EN
-	if(cnt && upload_multy_fw_id.upload_1st_en){
+#if UPLOAD_MULTI_FW_TEST_EN
+	if(cnt && upload_multi_fw_id.upload_1st_en){
 		cnt++;
 	}
 #endif
@@ -1729,8 +1729,8 @@ int mesh_cmd_sig_fw_distribut_fw_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 	u8 entry_cnt = get_fw_entry_cnt_store_on_distributor();
 	if(is_fw_id_exist_in_distributor(&p_get->fw_id, par_len, 0)){
 		image_idx = 0;	// only support one image now
-#if UPLOAD_MULTY_FW_TEST_EN
-		if(upload_multy_fw_id.upload_1st_en && !is_match_upload_1st_fw_id(&p_get->fw_id, par_len, 0)){
+#if UPLOAD_MULTI_FW_TEST_EN
+		if(upload_multi_fw_id.upload_1st_en && !is_match_upload_1st_fw_id(&p_get->fw_id, par_len, 0)){
 		   image_idx = 1;
 		}
 #endif
@@ -1751,15 +1751,15 @@ int mesh_cmd_sig_fw_distribut_fw_get_by_idx(u8 *par, int par_len, mesh_cb_fun_pa
 	
 	image_idx = p_get->dist_fw_image_idx; // SR/BV23 20211108
 	if(is_rx_upload_start_before()){
-		#if UPLOAD_MULTY_FW_TEST_EN
-		if(upload_multy_fw_id.upload_1st_en){
+		#if UPLOAD_MULTI_FW_TEST_EN
+		if(upload_multi_fw_id.upload_1st_en){
 			entry_cnt = 2;
 			image_idx = p_get->dist_fw_image_idx;
 			if(1 == p_get->dist_fw_image_idx){
 				len_id = fw_distribut_srv_proc.len_fw_id_upload_start;
 				st = DISTRIBUT_ST_SUCCESS;
 			}else if(0 == p_get->dist_fw_image_idx){
-				len_id = sizeof(upload_multy_fw_id.fw_id_1st);
+				len_id = sizeof(upload_multi_fw_id.fw_id_1st);
 				st = DISTRIBUT_ST_SUCCESS;
 			}
 		}else
@@ -1798,9 +1798,9 @@ int mesh_cmd_sig_fw_distribut_fw_del(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 			len_id = 0;
 			st = DISTRIBUT_ST_BUSY_WITH_DISTRIBUTION;
 		}else{
-			#if UPLOAD_MULTY_FW_TEST_EN
+			#if UPLOAD_MULTI_FW_TEST_EN
 			if(is_match_upload_1st_fw_id(&p_del->fw_id, par_len, 1)){
-				upload_multy_fw_id.upload_1st_en = 0; // memset(&upload_multy_fw_id, 0, sizeof(upload_multy_fw_id));
+				upload_multi_fw_id.upload_1st_en = 0; // memset(&upload_multi_fw_id, 0, sizeof(upload_multi_fw_id));
 				image_idx = FW_IMAGE_IDX_NOT_LISTED;
 			}else
 			#endif
@@ -2027,8 +2027,8 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                 next_st = 1;
             }else if(MASTER_OTA_ST_UPDATE_GET == distr_proc->st_distr){
                 next_st = 1;
-                #if PTS_TEST_OTA_EN // comfirm later: FD/BV-25: why distribute get is before set phase in master proc.
-                if((distr_proc->node_num + 1 >= distr_proc->node_cnt) && is_all_valid_reveiver_applying_ok()){
+                #if PTS_TEST_OTA_EN // confirm later: FD/BV-25: why distribute get is before set phase in master proc.
+                if((distr_proc->node_num + 1 >= distr_proc->node_cnt) && is_all_valid_receiver_applying_ok()){
                 	if(DISTRIBUT_PHASE_TRANSFER_ACTIVE == fw_distribut_srv_proc.distribut_update_phase){
 						fw_distribut_srv_proc.distribut_update_phase = DISTRIBUT_PHASE_TRANSFER_SUCCESS;
 					}
@@ -2041,7 +2041,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 				}
 				APP_report_mesh_ota_apply_status(rsp->src, p);
 				if(UPDATE_ST_SUCCESS == p->st && is_apply_phase_success(p->update_phase)){
-                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply sucess!!!",0);
+                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply success!!!",0);
 				}else{
                     LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!",0);
                 }
@@ -2314,7 +2314,7 @@ void mesh_ota_master_proc()
                     LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_ota_master_proc wait for distributor apply, state: 0x%02x, wait flag:%d",distr_proc->st_distr,distr_proc->st_wait_flag);
                 }else if(distr_proc->st_distr == MASTER_OTA_ST_DISTRIBUT_CANCEL){
     	            log_normal = 0;
-                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_ota_master_proc wait for distributor cancle, state: 0x%02x, wait flag:%d",distr_proc->st_distr,distr_proc->st_wait_flag);
+                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_ota_master_proc wait for distributor cancel, state: 0x%02x, wait flag:%d",distr_proc->st_distr,distr_proc->st_wait_flag);
                 }
     	    }
     	    
@@ -2415,7 +2415,7 @@ void mesh_ota_master_proc()
 			int no_group_flag = is_unicast_adr(fw_distribut_srv_proc.adr_group);
 			if(no_group_flag){
 				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "no need to set subscription",0);
-				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "only one updating node and it is GATT connected, so use unicast address to send chuncks",0);
+				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "only one updating node and it is GATT connected, so use unicast address to send chunks",0);
 			}
 			
 		    if((distr_proc->node_num < distr_proc->node_cnt) && (!is_rx_upload_start_before()) && !no_group_flag){
@@ -2757,7 +2757,7 @@ void mesh_ota_master_proc()
     	        }
 	        }else{
                 distr_proc->node_num = 0;
-                if(0 == is_all_valid_reveiver_applying_ok()){
+                if(0 == is_all_valid_receiver_applying_ok()){
                 	// retry update get cycle. // just valid for PTS now
                 }else{
 	                u8 next_st = MASTER_OTA_ST_UPDATE_APPLY;
@@ -2955,7 +2955,7 @@ int mesh_cmd_sig_fw_distribut_fw_status(u8 *par, int par_len, mesh_cb_fun_par_t 
 #if 1
 fw_update_srv_proc_t    fw_update_srv_proc = {0};         // for updater
 #if PTS_TEST_OTA_EN
-u8 A_2_blob_tranfer_BV_31_C  = 0;
+u8 A_2_blob_transfer_BV_31_C  = 0;
 // TEST_BT_BV07_EN
 #endif
 
@@ -3175,7 +3175,7 @@ void fw_update_srv_proc_init_keep_start_par_and_crc()
     u8 add_info_backup = fw_update_srv_proc.additional_info;
     memset(&fw_update_srv_proc, 0, sizeof(fw_update_srv_proc));
     memcpy(&fw_update_srv_proc.start, &start_backup, sizeof(fw_update_srv_proc.start)); // don't clear to handle retransmit here 
-    if(BIN_CRC_DONE_OK == crc_backup){				  // sometimes need to caculate crc twice
+    if(BIN_CRC_DONE_OK == crc_backup){				  // sometimes need to calculate crc twice
         fw_update_srv_proc.bin_crc_done = crc_backup; // sometimes apply twice
     }
 	fw_update_srv_proc.additional_info = add_info_backup;
@@ -3273,9 +3273,9 @@ void mesh_ota_proc()
 	#define PTS_CANCELING_TIME_COST_MS	(3000) // 5000 // FD/BV-34-C need 2.5s between cancel and start again.
 	if(fw_distribut_srv_proc.tick_dist_canceling && clock_time_exceed(fw_distribut_srv_proc.tick_dist_canceling, PTS_CANCELING_TIME_COST_MS*1000)){
 		#if PTS_TEST_OTA_EN
-		if(fw_distribut_srv_proc.update_cancle_addr){
-			// BV38: PTS need to reveive update cancle after distribute status. but distribute status is segment packt,need to make sure distribute status send completely before sending update cancel.
-			access_cmd_fw_update_control(fw_distribut_srv_proc.update_cancle_addr, FW_UPDATE_CANCEL, 0);
+		if(fw_distribut_srv_proc.update_cancel_addr){
+			// BV38: PTS need to receive update cancel after distribute status. but distribute status is segment packet,need to make sure distribute status send completely before sending update cancel.
+			access_cmd_fw_update_control(fw_distribut_srv_proc.update_cancel_addr, FW_UPDATE_CANCEL, 0);
 		}
 		#endif
 		distribut_srv_proc_init(0); // include clear fw_distribut_srv_proc.tick_dist_canceling_
@@ -3576,7 +3576,7 @@ int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
             fw_update_srv_proc.update_phase = UPDATE_PHASE_TRANSFER_ACTIVE;
             #if FW_UPDATE_START_NOT_COMPARE_TTL_EN
             if(fw_update_srv_proc.start.ttl != p_start->ttl){
-            	fw_update_srv_proc.start.ttl = p_start->ttl;	// because not comapre ttl.
+            	fw_update_srv_proc.start.ttl = p_start->ttl;	// because not compare ttl.
             }
             #endif
             recover_blob_trans_phase_from_suspend();
@@ -3584,7 +3584,7 @@ int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
         }
     }else{
         fw_update_srv_proc.blob_trans_rx_start_error = 0; // init
-        /* must check again but not just compare meta data with the data reveived in meta data check.
+        /* must check again but not just compare meta data with the data received in meta data check.
             because master may skip the meta data check to pass the check*/
         if((!force_flag) && fw_update_srv_proc.blob_trans_busy){
     	    st = UPDATE_ST_BLOB_TRANSFER_BUSY;
@@ -3818,7 +3818,7 @@ int mesh_tx_cmd_blob_transfer_st(mesh_cb_fun_par_t *cb_par, u8 st)
 	rsp.transfer_phase = fw_update_srv_proc.blob_trans_phase;
 
     u32 rsp_len = OFFSETOF(blob_transfer_status_t, blob_id);
-    /*MMDL/SR/BT/BV-04-C(BLOB Transfer Timeout), BV-07-C(BLOB Transfer Cancel-IUT in Waiting for Next Block Phase) : no blob id for cancle command*/
+    /*MMDL/SR/BT/BV-04-C(BLOB Transfer Timeout), BV-07-C(BLOB Transfer Cancel-IUT in Waiting for Next Block Phase) : no blob id for cancel command*/
     /*MMDL/SR/BT/BV-29-C(BLOB Transfer Cancel-Invalid Parameters), BLOB_TRANS_ST_WRONG_BLOB_ID need blob id if active before*/
 	if(/*is_blob_st_optional_C2(st) && */(fw_update_srv_proc.blob_trans_busy)){
 	    rsp_len = OFFSETOF(blob_transfer_status_t, bk_not_receive);
@@ -3892,7 +3892,7 @@ int mesh_cmd_sig_blob_transfer_handle(u8 *par, int par_len, mesh_cb_fun_par_t *c
                         if(p_start->transfer_mode & MESH_OTA_TRANSFER_MODE_SEL){
                             return -1; // should not response: MMDL/SR/BT/BI-02-C Prohibited Transfer Mode
                         }else{
-                            st = BLOB_TRANS_ST_UNSUPPORT_TRANS_MODE;
+                            st = BLOB_TRANS_ST_UNSUPPORTED_TRANS_MODE;
                         }
                     }else{
                         #if BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN
@@ -4072,14 +4072,14 @@ int mesh_cmd_sig_blob_block_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
     
     u8 st = blob_block_start_par_check(p_start);
     if((BLOB_TRANS_ST_SUCCESS == st)
-    #if 1 // when MBT_BV_26_TEST_EN, need to set to #if 0. BV26(Block Start,IUT in Complete Phase, Pull Mode) need to report chunk missing even though reveived all before when PTS resend block start again.
+    #if 1 // when MBT_BV_26_TEST_EN, need to set to #if 0. BV26(Block Start,IUT in Complete Phase, Pull Mode) need to report chunk missing even though received all before when PTS resend block start again.
     && (p_start->block_num == updater_get_block_rx_ok_cnt()) // but why BV25(push mode) need to report no missing when received all ?
     #endif
     ){
         memcpy(&fw_update_srv_proc.block_start, p_start, sizeof(fw_update_srv_proc.block_start));
         blob_block_erase(p_start->block_num);
         #if 0 // PTS_TEST_OTA_EN// only test for BLOB Transfer Server model, can't enable in FW update serve.
-        if(0 == A_2_blob_tranfer_BV_31_C){ // MMDL/SR/BT/BV-31-C Chunk Transfer-Invalid Parameters must disable.
+        if(0 == A_2_blob_transfer_BV_31_C){ // MMDL/SR/BT/BV-31-C Chunk Transfer-Invalid Parameters must disable.
             memset(fw_update_srv_proc.miss_mask, 0, sizeof(fw_update_srv_proc.miss_mask));
         }else
         #endif

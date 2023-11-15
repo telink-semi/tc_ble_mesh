@@ -351,7 +351,7 @@ void audio_buff_init(AudioRate_Typedef Audio_Rate)
 }
 
  /**
- *	@brief	   sdm setting function, enable or disable the sdm output, configure SDM output paramaters.
+ *	@brief	   sdm setting function, enable or disable the sdm output, configure SDM output parameters.
  *	@param[in]	InType -	  SDM input type, such as AMIC,DMIC,I2S_IN,USB_IN.
  *	@param[in]	Audio_Rate - audio sampling rate, such as 16K,32k etc.
  *	@param[in]	audio_out_en - audio output enable or disable set, '1' enable audio output; '0' disable output.
@@ -372,7 +372,7 @@ void audio_set_sdm_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate
 									FLD_PWM_ENABLE,				0,\
 									FLD_LINER_INTERPOLATE_EN,	1,\
 									FLD_LEFT_SHAPING_EN,		0,\
-									FLD_RIGTH_SHAPING_EN,		0);
+									FLD_RIGHT_SHAPING_EN,		0);
 
 		reg_pn2_right &= SDM_LEFT_CHN_CONST_EN;		//enable pn
 
@@ -570,7 +570,7 @@ void audio_i2s_init(void)
 
 /**
  *
- * @brief	   	i2s setting function, enable or disable the i2s output, configure i2s output paramaters
+ * @brief	   	i2s setting function, enable or disable the i2s output, configure i2s output parameters
  * @param[in] 	InType		- select audio input type including amic ,dmic ,i2s and usb
  * @param[in] 	Audio_Rate 	- select audio rate, which will decide on which adc sampling rate and relative decimation configuration will be chosen.
  * @return	  	none
@@ -593,7 +593,7 @@ void audio_set_i2s_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate
 								FLD_PWM_ENABLE,				0,\
 								FLD_LINER_INTERPOLATE_EN,	1,\
 								FLD_LEFT_SHAPING_EN,		0,\
-								FLD_RIGTH_SHAPING_EN,		0);
+								FLD_RIGHT_SHAPING_EN,		0);
 
 
 	if(InType==AMIC)

@@ -286,7 +286,7 @@
 #define UPLOAD_OOB_START_FUN_EN		1
 #else
 #define UPLOAD_OOB_START_FUN_EN		PTS_TEST_OTA_EN
-#define UPLOAD_MULTY_FW_TEST_EN		PTS_TEST_OTA_EN
+#define UPLOAD_MULTI_FW_TEST_EN		PTS_TEST_OTA_EN
 #endif
 
 #if MD_MESH_OTA_EN
@@ -643,7 +643,7 @@ enum{ // include BLOB transfer get and BLOB block get, etc.
 	BLOB_TRANS_ST_INVALID_PAR         	= 5,
 	BLOB_TRANS_ST_WRONG_BLOB_ID        	= 6,
 	BLOB_TRANS_ST_BLOB_TOO_LARGE       	= 7,
-	BLOB_TRANS_ST_UNSUPPORT_TRANS_MODE 	= 8,
+	BLOB_TRANS_ST_UNSUPPORTED_TRANS_MODE 	= 8,
 	BLOB_TRANS_ST_INTERNAL_ERROR       	= 9,
 	BLOB_TRANS_ST_INFO_UNAVAILABLE      = 0x0A,
 	BLOB_TRANS_ST_MAX
@@ -798,11 +798,11 @@ enum{
 };
 #endif
 
-#if UPLOAD_MULTY_FW_TEST_EN
+#if UPLOAD_MULTI_FW_TEST_EN
 typedef struct{
 	u8 upload_1st_en;
 	fw_id_t fw_id_1st;
-}upload_multy_fw_id_t;
+}upload_multi_fw_id_t;
 #endif
 
 typedef struct{
@@ -869,14 +869,14 @@ typedef struct{
 #if PTS_TEST_OTA_EN
     u8 distribut_update_phase_keep_flag; // not use now, to be removed.  //can not clear phase, even receive distribute cancel many times.
     u32 tick_dist_canceling;
-    u16 update_cancle_addr;
+    u16 update_cancel_addr;
     #if PTS_TEST_BLOB_TRANSFER_FLOW_EN
     u8 blob_flow_flag;
     #endif
 #endif
 	u8 retry_intv_for_lpn_100ms;	// unit:100ms, reliable retry interval, usually used for LPN.
 	u8 percent_last;    // distribute progress
-	u8 suspend_flag;  	// should not set phase to suspend, because need to restore. also pause mesh ota tx flow when GATT disconnect, untill APP resume. 
+	u8 suspend_flag;  	// should not set phase to suspend, because need to restore. also pause mesh ota tx flow when GATT disconnect, until APP resume. 
 	u8 st_wait_flag;
 	u8 st_distr;
 	u8 ota_rcv_flag;    // step 1: private method of receiving update address list,
@@ -937,7 +937,7 @@ typedef struct{
 	u8 upload_ttl;
     u16 upload_timeout_base;
     u8 upload_blob_id[8];
-    //u16 adr_receivers_lsit[];
+    //u16 adr_receivers_list[];
 }fw_initiator_start_t;  // vendor struct
 
 typedef struct{
@@ -955,7 +955,7 @@ typedef struct{
 	u32 bk_size_current;
 	u16 chunk_num;
 	u8 percent_last;    // progress
-	u8 pause_flag;  // pause mesh ota tx flow when GATT disconnect, untill APP resume.
+	u8 pause_flag;  // pause mesh ota tx flow when GATT disconnect, until APP resume.
 	u8 st_wait_flag;
 	u8 st_initiator;
 }fw_initiator_proc_t;
@@ -1105,7 +1105,7 @@ void mesh_ota_read_data(u32 adr, u32 len, u8 * buf);
 void mesh_ota_proc();
 int is_blob_chunk_transfer_ready();
 void mesh_fw_distibut_set(u8 en);
-int is_par_distribut_start_tlk(u8 *par, int par_len);
+int is_par_distribute_start_tlk(u8 *par, int par_len);
 int get_fw_metadata(fw_metadata_t *metadata_out);
 u16 get_chunk_cmd_dst_addr();
 int is_fw_update_start_before();

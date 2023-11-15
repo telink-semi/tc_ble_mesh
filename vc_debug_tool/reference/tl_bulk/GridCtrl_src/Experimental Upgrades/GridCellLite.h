@@ -77,21 +77,21 @@ public:
 protected:
     DWORD    m_nFormat;     // Cell format
     COLORREF m_crBkClr;     // Background colour (or CLR_DEFAULT)
-    COLORREF m_crFgClr;     // Forground colour (or CLR_DEFAULT)
+    COLORREF m_crFgClr;     // Foreground colour (or CLR_DEFAULT)
     LOGFONT  m_lfFont;      // Cell font
     UINT     m_nMargin;     // Internal cell margin
 
 protected:
     static DWORD    m_nDefFormat;     // Cell format
     static COLORREF m_crDefBkClr;     // Background colour (or CLR_DEFAULT)
-    static COLORREF m_crDefFgClr;     // Forground colour (or CLR_DEFAULT)
+    static COLORREF m_crDefFgClr;     // Foreground colour (or CLR_DEFAULT)
     static LOGFONT  m_lfDefFont;      // Cell font
     static UINT     m_nDefMargin;     // Internal cell margin
 };
 #endif
 
 // Each cell contains one of these. Fields "row" and "column" are not stored since we
-// will usually have acces to them in other ways, and they are an extra 8 bytes per
+// will usually have access to them in other ways, and they are an extra 8 bytes per
 // cell that is probably unnecessary.
 
 class CGridCell : public CGridCellBase

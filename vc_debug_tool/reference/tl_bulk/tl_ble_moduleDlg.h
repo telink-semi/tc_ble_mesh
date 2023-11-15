@@ -41,7 +41,7 @@
 
 #include "TLMeshDlg.h"
 #include "TL_RxTest.h"
-#include "CTL_privision.h"
+#include "CTL_provision.h"
 #include "ScanDlg.h"
 
 #include "afxmt.h"
@@ -58,7 +58,7 @@ extern u8 vc_node_ele_cnt ;
 extern int m_status;
 /////////////////////////////////////////////////////////////////////////////
 // CTl_ble_moduleDlg dialog
-class CTL_privision;
+class CTL_provision;
 class CScanDlg;
 class CTLMeshDlg;
 class CTL_RxTest;
@@ -198,7 +198,7 @@ public:
 	INT m_ExtendAdvOption;
 
     CTLMeshDlg m_MeshDlg;
-    CTL_privision m_ProDlg;
+    CTL_provision m_ProDlg;
     CTL_RxTest m_RxTestDlg;
 	CScanDlg m_ScanDlg;
 
@@ -268,7 +268,7 @@ typedef struct{
 extern provision_mac_str_t mac_str;
 #define TEST_ENABLE 	0
 extern CTLMeshDlg * m_pMeshDlg;
-extern CTL_privision *  m_proDlg;
+extern CTL_provision *  m_proDlg;
 extern CTL_RxTest *  m_pRxTestDlg;
 extern unsigned char connect_flag_debug_mesh;
 extern CString ota_filename;
@@ -278,7 +278,7 @@ int get_auth_value_by_uuid(u8 *uuid_in,u8 *oob_out);
 // gateway fun
 void gateway_VC_provision_start();
 void gateway_VC_provision_stop();
-unsigned char ble_moudle_id_is_gateway();
+unsigned char ble_module_id_is_gateway();
 void gateway_vc_set_adv_filter(unsigned char  *p_mac);
 void gateway_set_provisioner_para(unsigned char *p_net_info);
 void gateway_set_node_provision_para(unsigned char *p_net_info);
@@ -330,7 +330,7 @@ void gateway_set_extend_seg_mode(u8 mode);
 void gateway_send_cmd_to_del_node_info(u16 uni);
 void vc_get_dev_key(u8 *p_devkey);
 void gateway_set_prov_devkey(u16 unicast,u8 *p_devkey);
-unsigned char ble_moudle_id_is_kmadongle();
+unsigned char ble_module_id_is_kmadongle();
 void    gw_json_update(int node_idx);
 u8 unicast_is_in_range_or_not(u16 unicast,u8* p_uuid);
 void read_version_rsp();

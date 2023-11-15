@@ -58,11 +58,11 @@ class CGridCtrl;
 typedef struct _GV_ITEM {
     int      row,col;     // Row and Column of item
     UINT     mask;        // Mask for use in getting/setting cell data
-    UINT     nState;      // cell state (focus/hilighted etc)
+    UINT     nState;      // cell state (focus/highlighted etc)
     DWORD    nFormat;     // Format of cell
     int      iImage;      // index of the list view item's icon
     COLORREF crBkClr;     // Background colour (or CLR_DEFAULT)
-    COLORREF crFgClr;     // Forground colour (or CLR_DEFAULT)
+    COLORREF crFgClr;     // Foreground colour (or CLR_DEFAULT)
     LPARAM   lParam;      // 32-bit value to associate with item
     LOGFONT  lfFont;      // Cell font
     UINT     nMargin;     // Internal cell margin
@@ -71,7 +71,7 @@ typedef struct _GV_ITEM {
 
 
 // Each cell contains one of these. Fields "row" and "column" are not stored since we
-// will usually have acces to them in other ways, and they are an extra 8 bytes per
+// will usually have access to them in other ways, and they are an extra 8 bytes per
 // cell that is probably unnecessary.
 
 class CGridCellBase : public CObject

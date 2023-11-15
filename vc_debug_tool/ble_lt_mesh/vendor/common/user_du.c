@@ -214,7 +214,7 @@ void cert_rand_rsp_auth(u8 *pbuf)
 }
 
 
-void read_dev_rsp_verison(u8 *pbuf)
+void read_dev_rsp_version(u8 *pbuf)
 {
 	du_dev_version_rsp_str rsp;
 	rsp.dev_type = 3;// mesh type
@@ -578,7 +578,7 @@ u8  du_get_bind_flag(void)
 }
 
 /*
-it is used to contrl the mcu to be low power mode when du provision have complete.
+it is used to control the mcu to be low power mode when du provision have complete.
 the last cmd is different by every pid ,it should be check by yourself.
 for example : the pid is 0x006b2d1d,the last cmd is HEARTBEAT_PUB_SET.
 */
@@ -759,7 +759,7 @@ void du_normal_send_demo_event()
 	p_htp->power= 100;
 	
 	while(retry_times--){
-		mesh_tx_cmd2normal(VD_LPN_REPROT,(u8*)&htp_str,sizeof(vd_du_event_str),ele_adr_primary,du_get_gateway_adr(),0);
+		mesh_tx_cmd2normal(VD_LPN_REPORT,(u8*)&htp_str,sizeof(vd_du_event_str),ele_adr_primary,du_get_gateway_adr(),0);
 	}
 	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du_vd_htp_event_proc",0);
 
@@ -870,7 +870,7 @@ int	du_ctl_Write (void *p)
 			cert_rand_rsp_auth(p_cmd->buf);
 			break;
 		case DU_READ_DEV_VERSION_CMD:
-   			read_dev_rsp_verison(p_cmd->buf);
+   			read_dev_rsp_version(p_cmd->buf);
    			break;
 		case DU_TRANS_RESUME_BREAK_CMD:
 			resume_break_proc(p_cmd->buf);
@@ -935,7 +935,7 @@ void du_prov_bind_check()
 
 int du_vd_event_send(u8*p_buf,u8 len,u16 dst)
 {
-	return mesh_tx_cmd2normal(VD_LPN_REPROT, (u8 *)p_buf, len,ele_adr_primary,dst,0);
+	return mesh_tx_cmd2normal(VD_LPN_REPORT, (u8 *)p_buf, len,ele_adr_primary,dst,0);
 }
 
 u8 du_time_tid =0;
@@ -1032,7 +1032,7 @@ void du_vd_send_loop_proc()
 
 #if DU_ULTRA_PROV_EN
 #define dev_key_pad		pro_random
-#define randomc_pad		pro_comfirm
+#define randomc_pad		pro_confirm
 void mesh_du_ultra_prov_loop()
 {
 	if(genie_nw_cache.tick && clock_time_exceed(genie_nw_cache.tick, 2*1000*1000)){//genie APP rx timeout 
@@ -1045,7 +1045,7 @@ void mesh_du_ultra_prov_loop()
 	}
 }
 
-void create_sha256_input_string_wihout_comma(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
+void create_sha256_input_string_without_comma(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
 {
 	u8 idx =0;
 	u8 con_product_id_rev[4];
@@ -1131,7 +1131,7 @@ int mesh_du_rcv_random(u8 *p_payload)
 	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in+16);
 	u8 mac[6];
 	swap48(mac, tbl_mac);
-	create_sha256_input_string_wihout_comma(shar256_in+32, (u8 *)&con_product_id, mac, con_sec_data);
+	create_sha256_input_string_without_comma(shar256_in+32, (u8 *)&con_product_id, mac, con_sec_data);
 	mbedtls_sha256((u8 *)shar256_in, 84, shar256_out, 0);
 	memcpy(S1, shar256_out, 16);
 	#if DU_SAMPLE_DATA_TEST_EN
@@ -1139,20 +1139,20 @@ int mesh_du_rcv_random(u8 *p_payload)
 	#endif
 // K1	
 	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in);
-	create_sha256_input_string_wihout_comma(shar256_in+16, (u8 *)&con_product_id, mac, con_sec_data);
+	create_sha256_input_string_without_comma(shar256_in+16, (u8 *)&con_product_id, mac, con_sec_data);
 	mbedtls_sha256((u8 *)shar256_in, 68, shar256_out, 0);
 	#if DU_SAMPLE_DATA_TEST_EN
 	LOG_USER_MSG_INFO( shar256_out, 16, "K1:", 0);
 	#endif
 // D1
-	tn_aes_cmac(shar256_out, S1, 16, dev_comfirm);
+	tn_aes_cmac(shar256_out, S1, 16, dev_confirm);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO( dev_comfirm, 16, "D1:", 0);
+	LOG_USER_MSG_INFO( dev_confirm, 16, "D1:", 0);
 	#endif
 // device key
 	convert_num2_char(p_du_random->random_a, 0, 8, shar256_in);
 	#if 1
-	// have copyed in K1, no need to copy again to save code size.
+	// have copied in K1, no need to copy again to save code size.
 	#else
 	create_sha256_input_string(shar256_in+16, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
 	#endif
@@ -1163,7 +1163,7 @@ int mesh_du_rcv_random(u8 *p_payload)
 	du_rancomc_t *p_rancomc = (du_rancomc_t *) p_manu_data;
 	p_rancomc->mac[0] = tbl_mac[0];
 	p_rancomc->mac[1] = tbl_mac[1];
-	memcpy(p_rancomc->device_confirm, dev_comfirm, 16);
+	memcpy(p_rancomc->device_confirm, dev_confirm, 16);
 	p_rancomc->randomC = RandomC;
 	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad:", 0);
 	mesh_du_ble_adv(p_manu_data->data_type+1, p_rancomc->mac, sizeof(du_rancomc_t)-OFFSETOF(du_rancomc_t, mac));
@@ -1194,7 +1194,7 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 // s4 
 	u8 salt[] = "XiaoduIoTTinyMesh";
 	memcpy(shar256_in, salt, sizeof(salt)-1);
-	convert_num2_char(dev_comfirm, 0, 16, shar256_in+sizeof(salt)-1);
+	convert_num2_char(dev_confirm, 0, 16, shar256_in+sizeof(salt)-1);
 	mbedtls_sha256((u8 *)shar256_in, sizeof(salt)-1+32, shar256_out, 0);
 	#if DU_SAMPLE_DATA_TEST_EN
 	LOG_USER_MSG_INFO(shar256_out, 23, "S4:", 0);

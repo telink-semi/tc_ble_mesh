@@ -32,7 +32,7 @@
 #include "./lib_file/gatt_provision.h"
 #include "./lib_file/hw_fun.h"
 #include "./lib_file/host_fifo.h"
-#include "CTL_privision.h"
+#include "CTL_provision.h"
 #include "TL_RxTest.h"
 #include <stdio.h>
 #include "../../ble_lt_mesh/vendor/common/app_provison.h"

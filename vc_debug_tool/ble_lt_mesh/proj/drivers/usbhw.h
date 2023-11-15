@@ -34,7 +34,7 @@
 #endif
 
 enum {
-	USB_EDP_PRINTER_IN = 8, // endpoint 8 is alias of enpoint 0,  becareful.  // default hw buf len = 64
+	USB_EDP_PRINTER_IN = 8, // endpoint 8 is alias of endpoint 0,  becareful.  // default hw buf len = 64
 	USB_EDP_MOUSE = 2,			// default hw buf len = 8
 	USB_EDP_KEYBOARD_IN = 1,	// default hw buf len = 8
 	USB_EDP_KEYBOARD_OUT = 3,	// default hw buf len = 16

@@ -30,7 +30,7 @@
 #define MESH_INVALID_IV_INDEX	0xffffffff
 
 /**
- * @brief       This function service to judge wether the iv index is valid or not. 
+ * @brief       This function service to judge whether the iv index is valid or not. 
  				If not valid, need update by receiving the network beacon from the network.
  * @return      1:iv index invalid. 0:iv index valid.
  * @note        

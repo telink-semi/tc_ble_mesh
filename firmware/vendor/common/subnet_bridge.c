@@ -24,6 +24,11 @@
  *******************************************************************************************************/
 #include "subnet_bridge.h"
 #include "directed_forwarding.h"
+
+#if MD_SBR_CFG_CLIENT_EN
+STATIC_ASSERT(MD_CLIENT_EN);
+#endif
+
 #if (MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN || MD_SOLI_PDU_RPL_EN)
 model_g_df_sbr_t model_sig_g_df_sbr_cfg;
 u32 mesh_md_df_sbr_addr = FLASH_ADR_MD_DF_SBR;
@@ -278,7 +283,7 @@ int mesh_cmd_sig_cfg_bridging_tbl_get(u8 *par, int par_len, mesh_cb_fun_par_t *c
 	u8 addr_cnt = 0;
 	memcpy((u8 *)&tbl_list+1, p_tbl_get, 5);
 	if(0 == model_sig_g_df_sbr_cfg.bridge_cfg.srv.bridge_en){
-		//wether delete table or not
+		//whether delete table or not
 	}
 	else if(is_mesh_net_key_exist(p_tbl_get->netkey_index1) && is_mesh_net_key_exist(p_tbl_get->netkey_index2)){
 		for(u8 i=p_tbl_get->start_index; i<MAX_BRIDGE_ENTRIES; i++){

@@ -157,7 +157,7 @@ void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cf
 }
 
 
-int mesh_sec_prov_comfirmation_key_fun(unsigned char *key, unsigned char *input, int n, unsigned char ecdh[32],unsigned char auth[32],u8 hmac)
+int mesh_sec_prov_confirmation_key_fun(unsigned char *key, unsigned char *input, int n, unsigned char ecdh[32],unsigned char auth[32],u8 hmac)
 {
 	#if PROV_EPA_EN
 	if(hmac){
@@ -991,7 +991,7 @@ int is_exist_mesh_appkey_idx(u16 appkey_idx)
 {
 	foreach(i,NET_KEY_MAX){
 		foreach(j,APP_KEY_MAX){
-		    // just compare old key is enough, because appkey_idx of old key is alway valid and same with new, if existed.
+		    // just compare old key is enough, because appkey_idx of old key is always valid and same with new, if existed.
 			mesh_app_key_t *p = &(mesh_key.net_key[i][0].app_key[j]);
 			if(p->valid && (p->index == appkey_idx)){
 				return 1;
@@ -1174,7 +1174,7 @@ int mesh_cmd_sig_cfg_bind_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 int mesh_cmd_sig_cfg_node_reset(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u32 rsp_flag = node_reset_start(cb_par->adr_src);
-	if(is_actived_factory_test_mode() && (0 == rsp_flag)){
+	if(is_activated_factory_test_mode() && (0 == rsp_flag)){
         return 0;
     }
     
@@ -1423,7 +1423,7 @@ u8 mesh_pub_search_and_set(u16 ele_adr, u8 *pub_set, u32 model_id, bool4 sig_mod
     //LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"xxx,adr:0x%04x,st:0x%x,",ele_adr,st);
 	if(st != ST_SUCCESS) return st;
 
-	int change_falg = 0;
+	int change_flag = 0;
     if(adr_list.adr_cnt){
         u8 model_idx = 0;
         model_common_t *p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, model_id, sig_model,&model_idx, 0);
@@ -1435,7 +1435,7 @@ u8 mesh_pub_search_and_set(u16 ele_adr, u8 *pub_set, u32 model_id, bool4 sig_mod
 				memcpy(&pub_set_temp.pub_par, &p_pub_set_vr->pub_par, sizeof(mesh_model_pub_par_t));
 				st = mesh_pub_par_check(p_model, &pub_set_temp);
 				if(ST_SUCCESS == st){
-				    change_falg = mesh_save_pub_and_refresh_tick(p_model, &pub_set_temp, p_pub_set_vr->pub_uuid);
+				    change_flag = mesh_save_pub_and_refresh_tick(p_model, &pub_set_temp, p_pub_set_vr->pub_uuid);
 				}
         	}else{
 				mesh_cfg_model_pub_set_t *p_pub_set = (mesh_cfg_model_pub_set_t *)pub_set;
@@ -1445,7 +1445,7 @@ u8 mesh_pub_search_and_set(u16 ele_adr, u8 *pub_set, u32 model_id, bool4 sig_mod
 	        	}else{
 	        		st = mesh_pub_par_check(p_model, p_pub_set);
 					if(ST_SUCCESS == st){
-                        change_falg = mesh_save_pub_and_refresh_tick(p_model, p_pub_set, 0);
+                        change_flag = mesh_save_pub_and_refresh_tick(p_model, p_pub_set, 0);
 		            }
 	            }
             }
@@ -1454,7 +1454,7 @@ u8 mesh_pub_search_and_set(u16 ele_adr, u8 *pub_set, u32 model_id, bool4 sig_mod
         }
     }
 
-    if((ST_SUCCESS == st) && change_falg){
+    if((ST_SUCCESS == st) && change_flag){
 		mesh_model_store(sig_model, model_id);
     }
     //LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"zzz:0x%x,",st);

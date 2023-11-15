@@ -69,7 +69,7 @@ ev_queue_t    usb_uart_txPendingQ;
   * @brief   Internal rx handler from usb_cdc module. This function is 
   *          called from USB interrupt.
   *          In this function, the user reigsted handler will be called 
-  *          through task mechnism, and then allocate a new buffer for 
+  *          through task mechanism, and then allocate a new buffer for 
   *          usb driver to continue receive.
   *
   * @param   pData - The received usb-uart packets
@@ -171,7 +171,7 @@ usbcdc_sts_t usb_uart_write(u8* buf, u8 len)
 {
 	usb_uart_txPendingEvt_t* pEvt;
 
-    /* Check the usb status first. If it is idle, send data dirctly.
+    /* Check the usb status first. If it is idle, send data directly.
     If it is busy, put data to the pending queue and send it after
     current operation done. */
     if (usbcdc_isAvailable()) {

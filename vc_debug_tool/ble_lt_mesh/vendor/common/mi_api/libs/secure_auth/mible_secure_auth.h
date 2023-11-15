@@ -139,7 +139,7 @@ int get_mi_device_id(uint8_t did[8]);
  *          [out] p_last_otp : pointer the memory that last valid OTP to be stored.
  *@return    0 : successful
             -1 : device is unregistered.
-            -2 : invaild parameters.
+            -2 : invalid parameters.
  */
 int get_mi_one_time_passwd(uint32_t refresh_interval, mi_otp_t *p_otp, mi_otp_t *p_last_otp);
 

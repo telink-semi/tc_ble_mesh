@@ -47,7 +47,7 @@
 #define		EN_MANUALM			write_reg8(0x800033,0x00)
 
 
-//Start sampling and conversion process for mannual mode
+//Start sampling and conversion process for manual mode
 #define		STARTSAMPLING		write_reg8(0x800035,0x80)
 
 //Read sampling data
@@ -155,7 +155,7 @@ static unsigned char adc_IOPowerSupplySet(unsigned char IOp){
 
 /********************************************************
 *
-*	@brief		set ADC input channel mode - signle-end or differential mode
+*	@brief		set ADC input channel mode - single-end or differential mode
 *
 *	@param		adcCha - enum variable adc channel.
 *				inM - enum variable of ADCINPUTMODE.
@@ -173,7 +173,7 @@ void adc_AnaModeSet( enum ADCINPUTMODE inM){
 
 /**********************************************************************
 *	@brief	ADC initiate function, set the ADC clock details (4MHz) and start the ADC clock.
-*			ADC clock relys on PLL, if the FHS isn't selected to 192M PLL (probably modified
+*			ADC clock relies on PLL, if the FHS isn't selected to 192M PLL (probably modified
 *			by other parts codes), adc initiation function will returns error.
 *
 *	@param	None
@@ -240,7 +240,7 @@ void adc_BatteryCheckInit(unsigned char checkM){
 	/***3.set adc reference voltage***/
 	adc_RefVoltageSet(RV_1P428);     //Set reference voltage (V_REF)as  1.428V
 
-	/***4.set adc resultion***/
+	/***4.set adc resolution***/
 	adc_ResSet(RES14);               //Set adc resolution to 14 bits, bit[14] to bit bit[1]
 
 	/***5.set adc sample time***/
@@ -294,7 +294,7 @@ void adc_TemSensorInit(void){
 	/***2. set adc reference voltage***/
 	adc_RefVoltageSet(RV_AVDD);
 
-	/***3.set adc resultion***/
+	/***3.set adc resolution***/
 	adc_ResSet(RES14);
 
 	/***4.set adc sample time***/

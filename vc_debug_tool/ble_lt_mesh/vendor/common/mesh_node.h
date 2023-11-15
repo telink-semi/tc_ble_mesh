@@ -123,7 +123,7 @@ enum{
 };
 
 enum{
-	NET0_APP0 = 0x88,	// must not 0, beacuse PTS use 0 as default.
+	NET0_APP0 = 0x88,	// must not 0, because PTS use 0 as default.
 	NET0_APP1 = 1,
 	NET0_APP2 = 2,
 	NET0_APP3 = 3,
@@ -1308,7 +1308,7 @@ typedef struct{
 
 
 typedef struct{
-	u32 battery_leve:8;
+	u32 battery_level:8;
 	u32 discharge_time:24;
 	u32 charge_time:24;
 	u32 battery_flag:8;
@@ -1707,7 +1707,7 @@ void mesh_misc_store();
 void mesh_factory_test_mode_en(u8 en);
 void mesh_adv_txrx_to_self_en(u8 en);
 int is_valid_cfg_op_when_factory_test(u16 op);
-int is_actived_factory_test_mode();
+int is_activated_factory_test_mode();
 void APP_set_vd_id_mesh_save_map(u16 vd_id);
 int is_mesh_latency_window();
 void proc_node_reset();
@@ -1757,7 +1757,7 @@ u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data);
 u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
-unsigned char ble_moudle_id_is_kmadongle();
+unsigned char ble_module_id_is_kmadongle();
 void mesh_blc_ll_initExtendedAdv();
 u8 mesh_blc_ll_setExtAdvParamAndEnable();
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);

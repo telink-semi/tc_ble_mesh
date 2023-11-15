@@ -72,7 +72,7 @@
 
 //#define TR_T_master_createConn		40
 //#define TR_T_master_init			41
-//#define TR_T_master_connnect		42
+//#define TR_T_master_connect		42
 //#define TR_T_master_terminate		43
 //#define TR_T_master_btx				44
 //#define TR_T_master_scan			45

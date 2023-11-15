@@ -153,7 +153,7 @@ STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_lpn[0])
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_fn[0]));
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(directed_key[0]));
 STATIC_ASSERT(NET0 == 0);
-STATIC_ASSERT(ELE_CNT <= ELE_CNT_MAX_LIB);  // don't cancle this assert
+STATIC_ASSERT(ELE_CNT <= ELE_CNT_MAX_LIB);  // don't cancel this assert
 STATIC_ASSERT((NET_KEY_MAX <= 255) && (APP_KEY_MAX <= 255));          // only one byte for array index
 STATIC_ASSERT(MD_SERVER_EN || MD_CLIENT_EN);
 STATIC_ASSERT((BUILD_VERSION & 0x00FF0000) != 0x00A50000);  // because ram[840004] is a special flag which is 0xA5, in cstartup_S.
@@ -338,7 +338,7 @@ STATIC_ASSERT(MD_ONOFF_EN == 1);
 
 #if MD_SERVER_EN
     #if (VENDOR_MD_MI_EN)	// default use vendor mi for dual vendor.
-#define MD_ID_ARRAY_VENDOR_SERVER1       MIOT_SEPC_VENDOR_MODEL_SER,
+#define MD_ID_ARRAY_VENDOR_SERVER1       MIOT_SEPC_VENDOR_MODEL_SRV,
     #elif (VENDOR_MD_NORMAL_EN)
 #define MD_ID_ARRAY_VENDOR_SERVER1       VENDOR_MD_LIGHT_S,
     #endif
@@ -358,7 +358,7 @@ STATIC_ASSERT(MD_ONOFF_EN == 1);
 
 #if MD_VENDOR_2ND_EN
     #if (VENDOR_MD_MI_EN)
-#define MD_ID_ARRAY_VENDOR2     MIOT_VENDOR_MD_SER,
+#define MD_ID_ARRAY_VENDOR2     MIOT_VENDOR_MD_SRV,
     #elif (VENDOR_MD_NORMAL_EN)
 #define MD_ID_ARRAY_VENDOR2     VENDOR_MD_LIGHT_S2,
     #endif
@@ -738,7 +738,7 @@ typedef struct{
 #endif
 
 typedef struct{
-	page0_local_t page0;     // differrent page with differrent struct, so can not use array.
+	page0_local_t page0;     // different page with different struct, so can not use array.
 }mesh_composition_data_local_t;
 
 #if (ELE_CNT_EVERY_LIGHT == 1)
@@ -1409,7 +1409,7 @@ u8 get_ele_offset_by_model(mesh_page0_t * p_page0, u32 len_page0, u16 node_adr, 
 #if (IS_VC_PROJECT_MASTER)
 int is_support_model_dst(u16 adr_dst, u32 model_id, bool4 sig_model)
 {
-    // not use 'get_ele_offset_by_model_VC_node_info_()', because should not ouput ERR log.
+    // not use 'get_ele_offset_by_model_VC_node_info_()', because should not output ERR log.
     VC_node_info_t * p_info = get_VC_node_info(adr_dst, 0);
     if(p_info){
         u8 offset = get_ele_offset_by_model((mesh_page0_t *)(&p_info->cps.page0_head), p_info->cps.len_cps, p_info->node_adr, adr_dst, model_id, sig_model);
@@ -1596,14 +1596,14 @@ u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *p
 		sensor_data_t *p_sensor_data = get_sensor_data(model_sig_sensor.sensor_states[0].prop_id);
 		memcpy(&sensor_val, p_sensor_data->p_raw, min2(sizeof(sensor_val), p_sensor_data->len_raw));
 		
-		if((p_cadence->cadence_unit.cadence_hight >= p_cadence->cadence_unit.cadence_low)){
-			if((sensor_val < p_cadence->cadence_unit.cadence_hight) && 
+		if((p_cadence->cadence_unit.cadence_high >= p_cadence->cadence_unit.cadence_low)){
+			if((sensor_val < p_cadence->cadence_unit.cadence_high) && 
 			(sensor_val > p_cadence->cadence_unit.cadence_low)){
 				fast_candence = 1;
 			}
 		}
 		else{
-			if((sensor_val < p_cadence->cadence_unit.cadence_hight) || 
+			if((sensor_val < p_cadence->cadence_unit.cadence_high) || 
 			(sensor_val > p_cadence->cadence_unit.cadence_low)){
 				fast_candence = 1;
 			}
@@ -2136,7 +2136,7 @@ u32 get_all_appkey_cnt()
     u8 cnt =0;
 	foreach(i,NET_KEY_MAX){
 		foreach(j,APP_KEY_MAX){
-		    // just compare old key is enough, because appkey_idx of old key is alway valid and same with new, if existed.
+		    // just compare old key is enough, because appkey_idx of old key is always valid and same with new, if existed.
 			mesh_app_key_t *p = &(mesh_key.net_key[i][0].app_key[j]);
 			if(p->valid){
 				cnt++;
@@ -2233,7 +2233,7 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	
 	key->index = key_idx;
 	key->valid = KEY_VALID;
-	caculate_proxy_adv_hash(key);
+	calculate_proxy_adv_hash(key);
 #if (MD_DF_CFG_SERVER_EN && !WIN32)
 	if(get_net_key_cnt()>1){
 		int key_offset = get_mesh_net_key_offset(key_idx);
@@ -2354,8 +2354,8 @@ void mesh_sec_get_nid_ek_pk_friend(u8 lpn_idx, u8 *nid, u8 *ek, u8 *pk, u8 *nk)
 
 u8 GetNKArrayIdxByPointer(mesh_net_key_t *key)
 {
-    u8 nk_arry_idx = (((((u32)key)-((u32)&mesh_key.net_key))/sizeof(mesh_net_key_t))/2)%NET_KEY_MAX;
-    return nk_arry_idx;
+    u8 nk_array_idx = (((((u32)key)-((u32)&mesh_key.net_key))/sizeof(mesh_net_key_t))/2)%NET_KEY_MAX;
+    return nk_array_idx;
 }
 
 void mesh_friend_key_refresh(mesh_net_key_t *new_key)
@@ -2650,7 +2650,7 @@ int mesh_tx_cmd_reliable(material_tx_cmd_t *p)
         mesh_tx_reliable.invl_ms = t_ms;
 
         err = mesh_tx_cmd2_access(p, 1, &match_type);
-        if(err){	// cancle reliable flow
+        if(err){	// cancel reliable flow
 			memset(&mesh_tx_reliable, 0, sizeof(mesh_tx_reliable));
         }
     }else{
@@ -2706,7 +2706,7 @@ void mesh_tx_reliable_finish()
 	}
 #endif
 	if(mesh_tx_reliable.busy){
-    	if((NODE_RESET == mesh_tx_reliable.mat.op) && is_actived_factory_test_mode()){
+    	if((NODE_RESET == mesh_tx_reliable.mat.op) && is_activated_factory_test_mode()){
     	    client_node_reset_cb(mesh_tx_reliable.mat.adr_dst);
     	}
     }
@@ -2894,7 +2894,7 @@ void mesh_adv_txrx_to_self_en(u8 en)
 	mesh_adv_txrx_self_en = en;
 }
 
-int is_actived_factory_test_mode()
+int is_activated_factory_test_mode()
 {
     return (factory_test_mode_en && (!is_provision_success()));
 }
@@ -2902,7 +2902,7 @@ int is_actived_factory_test_mode()
 int is_valid_cfg_op_when_factory_test(u16 op)
 {
 #if (!__PROJECT_MESH_PRO__)
-    if(is_actived_factory_test_mode()){
+    if(is_activated_factory_test_mode()){
         foreach_arr(i,factory_test_cfg_op_array){
             if(op == factory_test_cfg_op_array[i]){
                 return 1;
@@ -3302,7 +3302,7 @@ int mesh_provision_par_set(provison_net_info_str *p_prov_data)
 	}else{
 	}
 	
-    if(factory_test_mode_en && !is_provision_success()){ // is_actived_factory_test_mode 
+    if(factory_test_mode_en && !is_provision_success()){ // is_activated_factory_test_mode 
         factory_test_key_bind(0);
     }
     
@@ -3335,7 +3335,7 @@ int mesh_provision_par_set_dir(provison_net_info_str *p_prov_data)
 {
 	int err =-1;
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
-	mesh_key_retrieve(); //provision.cfg may change after network retrive
+	mesh_key_retrieve(); //provision.cfg may change after network retrieve
 	//restore provision para 
 	err = mesh_provision_par_set(p_prov_data);
 	APP_set_self_dev_key2node_info();
@@ -3514,7 +3514,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
     
     #if 0 // (WIN32 && MD_SERVER_EN)
     #if VC_APP_ENABLE
-    if(ble_moudle_id_is_kmadongle()) // there is only client in gateway 
+    if(ble_module_id_is_kmadongle()) // there is only client in gateway 
     #endif
     {
         if(!is_own_ele(adr_dst)){
@@ -3602,9 +3602,9 @@ const
 #endif
 mesh_md_adr_map_t mesh_md_adr_map[] = {
 #if (DUAL_VENDOR_EN)
-    {0, {MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SER, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2}, FLASH_ADR_MD_VD_LIGHT}, // must first
+    {0, {MIOT_SEPC_VENDOR_MODEL_SRV, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SRV, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #elif (MI_API_ENABLE)
-    {0, {MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SER, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
+    {0, {MIOT_SEPC_VENDOR_MODEL_SRV, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SRV, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #else// (VENDOR_MD_NORMAL_EN)
 	{0, {VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #endif
@@ -4076,8 +4076,8 @@ void mesh_common_reset_all()
 	
 	mesh_global_var_init();
 	mesh_set_ele_adr_ll(ele_adr_primary, 0, 0);
-	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrive light_res_sw_save
-	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrive oob
+	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrieve light_res_sw_save
+	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrieve oob
 	#if MD_SERVER_EN
 	mesh_model_cb_pub_st_register();	
 	#endif
@@ -4139,7 +4139,7 @@ int mesh_misc_retrieve(){
 	
     if(!err){
         mesh_adv_tx_cmd_sno_last = mesh_adv_tx_cmd_sno = misc_save.sno + MESH_CMD_SNO_SAVE_DELTA;
-        if(!is_actived_factory_test_mode()){
+        if(!is_activated_factory_test_mode()){
             ct_flag = misc_save.ct_flag;
         }
 
@@ -4432,7 +4432,7 @@ int mesh_key_retrieve(){
 int mesh_model_retrieve_and_store(bool4 sig_model, u32 md_id, int save)
 {    
 	int err = -1;
-    if(is_actived_factory_test_mode() && save){
+    if(is_activated_factory_test_mode() && save){
         return 0;
     }
     
@@ -4558,7 +4558,7 @@ int is_mesh_latency_window()
 #if (__TL_LIB_8269__ || (MCU_CORE_TYPE == MCU_CORE_8269))
     #if (!FEATURE_LOWPOWER_EN)
     if(loop_interval_us){
-        static u32 tick_loop = BIT(31); // make sure actived when power on
+        static u32 tick_loop = BIT(31); // make sure activated when power on
         if(clock_time_exceed(tick_loop, loop_interval_us)){
             tick_loop = clock_time();
             return 0;
@@ -4644,7 +4644,7 @@ int mesh_notifyfifo_rxfifo()
 			return -1;
 		}
 	}else{
-		// clear the blt_nofity fifo part 
+		// clear the blt_notify fifo part 
 		blt_notify_fifo.rptr = blt_notify_fifo.wptr;
 		return 0;
 	}
@@ -4654,19 +4654,19 @@ int mesh_notifyfifo_rxfifo()
 }
 
 #if FEATURE_RELAY_EN
-#define FULL_REALY_PROC_ENABLE	1
+#define FULL_RELAY_PROC_ENABLE	1
 
 int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random for relay transmit
 {
     my_fifo_t *p_fifo = &mesh_adv_fifo_relay;
-#if FULL_REALY_PROC_ENABLE
+#if FULL_RELAY_PROC_ENABLE
     my_fifo_poll_relay(p_fifo);   // must before get buffer.
     mesh_relay_buf_t *p_relay = my_fifo_get_relay(p_fifo);
     if(p_relay){ // means that need to send packet now.
 		#if (__PROJECT_MESH_SWITCH__ && SWITCH_ALWAYS_MODE_GATT_EN) 
 		// BSSMP/BSS/FEAT/BV-01-I,need relay interval 80ms, but this function pool interval is 160ms, 
 		// so no need to tick count down. 
-		// if want to acurate interval, should use softtimer to send relay, such as soft_timer_mesh_adv_proc().
+		// if want to accurate interval, should use softtimer to send relay, such as soft_timer_mesh_adv_proc().
     	p_relay->tick_10ms = 0;
     	#endif
 		
@@ -4693,7 +4693,7 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random fo
                 #endif
             }
         }else{
-            if(p_relay->tick_10ms){ // not neccessary to check not zero, but should be better.
+            if(p_relay->tick_10ms){ // not necessary to check not zero, but should be better.
                 p_relay->tick_10ms--;   // start tick
                 if(rand_en){
                     set_random_adv_delay(1);    // random 10~20ms
@@ -4825,11 +4825,11 @@ static u16 del_node_delay_ms = 0;
 
 /*********************************
 cb_node_reset() will be called by Node_RESET command
-return value: noly factory mode actived, return 0 means no response. return 1 with response.
+return value: noly factory mode activated, return 0 means no response. return 1 with response.
 */
 u32 node_reset_start(u16 adr_src)
 {
-	del_node_delay_ms = is_own_ele(adr_src) ? 0:1500;	// 	trriger at once if command if from self.
+	del_node_delay_ms = is_own_ele(adr_src) ? 0:1500;	// 	trigger at once if command if from self.
 	del_node_tick = clock_time()|1;
 	return 1;
 }
@@ -4921,11 +4921,11 @@ void mesh_service_change_report()
         // dual_mode_TLK_service_change
         if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
             rf_packet_att_data_t pkt_srv = {13, 2, 11, 7, 4, ATT_OP_HANDLE_VALUE_IND};
-            pkt_srv.hl = 0x28; // hanle of service change in telink mesh SDK 
+            pkt_srv.hl = 0x28; // handle of service change in telink mesh SDK 
             if(sizeof(pkt_srv.dat) >= sizeof(service_data)){
                 memcpy(pkt_srv.dat, service_data, sizeof(service_data));
             }
-            bls_ll_pushTxFifo(BLS_CONN_HANDLE, (u8 *)&pkt_srv.type);    // no need to check indication comfirm
+            bls_ll_pushTxFifo(BLS_CONN_HANDLE, (u8 *)&pkt_srv.type);    // no need to check indication confirm
         }
         #endif
         #endif
@@ -5322,7 +5322,7 @@ void mesh_init_all()
     u8 node_ident_random[8];    // because it will be used in both mesh_flash_retrieve_()->mesh_net_key_set_() and mesh_provision_para_init_()
 	prov_random_proc(node_ident_random);
     // read parameters
-    mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
+    mesh_flash_retrieve();	// should be first, get unicast addr from config model.
     mesh_key_node_identity_init();// should be after key retrieve .
     provision_random_data_init();
 	mesh_provision_para_init(node_ident_random);
@@ -5418,7 +5418,7 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	}else
 	#endif
 	{
-	    // GATT may be a long packet, and the 'len' is caculated from payload length, so it's no need to check
+	    // GATT may be a long packet, and the 'len' is calculated from payload length, so it's no need to check
 	}
 	
 	u8 adv_type = p_br->type;
@@ -5476,6 +5476,12 @@ int mesh_is_proxy_ready()
 }
 
     #if (!IS_VC_PROJECT)
+/**
+ * @brief       This function server to process network PDU from proxy service.
+ * @param[in]   p_bear	- pointer of network PDU.
+ * @return      none
+ * @note        
+ */
 void mesh_nw_pdu_from_gatt_handle(u8 *p_bear)	// adv from app or VC to 8269 proxy node
 {
 	#if DEBUG_MESH_DONGLE_IN_VC_EN
@@ -5984,7 +5990,7 @@ unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned l
 
 u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data)
 {
-    //split 16 bytes OTA data into 32 half bytes to caculate CRC.
+    //split 16 bytes OTA data into 32 half bytes to calculate CRC.
     u8 ota_dat[32];
     for(int i=0;i<16;i++){
         ota_dat[i*2] = data[i]&0x0f;
@@ -6465,12 +6471,12 @@ int get_cpu_wakeup_source()
 
 #if (/*MD_MESH_OTA_EN && */(DISTRIBUTOR_UPDATE_SERVER_EN || FEATURE_LOWPOWER_EN))
 #if !WIN32
-STATIC_ASSERT(!(DISTRIBUTOR_UPDATE_SERVER_EN && FEATURE_LOWPOWER_EN)); // FLD_MESH_OTA_100 FLAG is gatt connected flag bofore OTA reboot for LPN.
+STATIC_ASSERT(!(DISTRIBUTOR_UPDATE_SERVER_EN && FEATURE_LOWPOWER_EN)); // FLD_MESH_OTA_100 FLAG is gatt connected flag before OTA reboot for LPN.
 
 /**
  * @brief       This function set mesh ota distribute 100% flag for none LPN.
  * @return      none
- * @note        for LPN it is used for gatt connected flag bofore OTA reboot.
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
 void set_mesh_ota_distribute_100_flag()
 {
@@ -6480,7 +6486,7 @@ void set_mesh_ota_distribute_100_flag()
 /**
  * @brief       This function clear mesh ota distribute 100% flag for none LPN.
  * @return      none
- * @note        for LPN it is used for gatt connected flag bofore OTA reboot.
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
 void clr_mesh_ota_distribute_100_flag()
 {
@@ -6490,7 +6496,7 @@ void clr_mesh_ota_distribute_100_flag()
 /**
  * @brief       This function get mesh ota distribute 100% flag for none LPN.
  * @return      1: yes, 0: no.
- * @note        for LPN it is used for gatt connected flag bofore OTA reboot.
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
 int is_mesh_ota_distribute_100_flag()
 {

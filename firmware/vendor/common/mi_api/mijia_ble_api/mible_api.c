@@ -192,7 +192,7 @@ __WEAK mible_status_t mible_gap_address_get(mible_addr_t mac)
 
 /**
  * @brief   Start scanning
- * @param   [in] scan_type: passive or active scaning
+ * @param   [in] scan_type: passive or active scanning
  *          [in] scan_param: scan parameters including interval, windows
  * and timeout
  * @return  MI_SUCCESS             Successfully initiated scanning procedure.
@@ -309,7 +309,7 @@ __WEAK mible_status_t mible_gap_connect(mible_gap_scan_param_t scan_param,
  * @brief   Disconnect from peer
  * @param   [in] conn_handle: the connection handle
  * @return  MI_SUCCESS             Successfully disconnected.
- *          MI_ERR_INVALID_STATE   Not in connnection.
+ *          MI_ERR_INVALID_STATE   Not in connection.
  *          MIBLE_ERR_INVALID_CONN_HANDLE
  * @note    This function can be used by both central role and periphral
  * role.
@@ -474,7 +474,7 @@ __WEAK mible_status_t mible_gatts_rw_auth_reply(uint16_t conn_handle,
 /**
  * @brief   Discover primary service by service UUID.
  * @param   [in] conn_handle: connect handle
- *          [in] handle_range: search range for primary sevice
+ *          [in] handle_range: search range for primary service
  *discovery procedure
  *          [in] p_srv_uuid: pointer to service uuid
  * @return  MI_SUCCESS             Successfully started or resumed the Primary
@@ -482,7 +482,7 @@ __WEAK mible_status_t mible_gatts_rw_auth_reply(uint16_t conn_handle,
  *          MI_ERR_INVALID_ADDR    Invalid pointer supplied.
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE  Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE  Invalid connection handle.
  * @note    The response is given through
  *MIBLE_GATTC_EVT_PRIMARY_SERVICE_DISCOVER_RESP event
  * */
@@ -505,7 +505,7 @@ __WEAK mible_status_t mible_gattc_primary_service_discover_by_uuid(
  *          MI_ERR_INVALID_ADDR    Invalid pointer supplied.
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE   Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE   Invalid connection handle.
  * @note    The response is given through
  * MIBLE_GATTC_CHR_DISCOVER_BY_UUID_RESP event
  * */
@@ -524,7 +524,7 @@ __WEAK mible_status_t mible_gattc_char_discover_by_uuid(uint16_t conn_handle,
  *          MI_ERR_INVALID_ADDR    Invalid pointer supplied.
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE   Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE   Invalid connection handle.
  * @note    Maybe run the charicteristic descriptor discover procedure firstly,
  * then pick up the client configuration descriptor which att type is 0x2092
  *          The response is given through MIBLE_GATTC_CCCD_DISCOVER_RESP
@@ -540,14 +540,14 @@ __WEAK mible_status_t mible_gattc_clt_cfg_descriptor_discover(
 
 /**
  * @brief   Read characteristic value by UUID
- * @param   [in] conn_handle: connnection handle
+ * @param   [in] conn_handle: connection handle
  *          [in] handle_range: search range
  *          [in] p_char_uuid: pointer to characteristic uuid
  * @return  MI_SUCCESS             Successfully started or resumed the Read
  * using Characteristic UUID procedure.
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE   Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE   Invalid connection handle.
  * @note    The response is given through
  * MIBLE_GATTC_EVT_READ_CHR_VALUE_BY_UUID_RESP event
  * */
@@ -569,7 +569,7 @@ __WEAK mible_status_t mible_gattc_read_char_value_by_uuid(uint16_t conn_handle,
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_INVALID_LENGTH   Invalid length supplied.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE   Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE   Invalid connection handle.
  * @note    The response is given through MIBLE_GATTC_EVT_WRITE_RESP event
  *
  * */
@@ -590,7 +590,7 @@ __WEAK mible_status_t mible_gattc_write_with_rsp(uint16_t conn_handle,
  *          MI_ERR_INVALID_STATE   Invalid Connection State.
  *          MI_ERR_INVALID_LENGTH   Invalid length supplied.
  *          MI_ERR_BUSY            Procedure already in progress.
- *          MIBLE_ERR_INVALID_CONN_HANDLE  Invaild connection handle.
+ *          MIBLE_ERR_INVALID_CONN_HANDLE  Invalid connection handle.
  * @note    no response
  * */
 __WEAK mible_status_t mible_gattc_write_cmd(uint16_t conn_handle,
@@ -757,7 +757,7 @@ __WEAK mible_status_t mible_record_write(uint16_t record_id, const uint8_t* p_da
  */
 
 /**
- * @brief   Get ture random bytes .
+ * @brief   Get true random bytes .
  * @param   [out] p_buf: pointer to data
  *          [in] len: Number of bytes to take from pool and place in
  * p_buff
@@ -891,7 +891,7 @@ __WEAK void mible_iic_uninit(void)
  *          after the transfer has completed successfully (allowing for a repeated start in the next transfer).
  * @return  MI_SUCCESS              The command was accepted.
  *          MI_ERR_BUSY             If a transfer is ongoing.
- *          MI_ERR_INVALID_PARAM    p_out is not vaild address.
+ *          MI_ERR_INVALID_PARAM    p_out is not valid address.
  * @note    This function should be implemented in non-blocking mode.
  *          When tx procedure complete, the handler provided by mible_iic_init() should be called,
  * and the iic event should be passed as a argument. 
@@ -927,7 +927,7 @@ bool no_stop)
  *          [in] len:    Data length
  * @return  MI_SUCCESS              The command was accepted.
  *          MI_ERR_BUSY             If a transfer is ongoing.
- *          MI_ERR_INVALID_PARAM    p_in is not vaild address.
+ *          MI_ERR_INVALID_PARAM    p_in is not valid address.
  * @note    This function should be implemented in non-blocking mode.
  *          When rx procedure complete, the handler provided by mible_iic_init() should be called,
  * and the iic event should be passed as a argument. 
@@ -1044,7 +1044,7 @@ __WEAK mible_status_t mible_nvm_write(void * p_data, uint32_t length, uint32_t a
 		}
 	}
 	if(address == ota_program_offset){
-		p_buf[8]=0xff;// change it to unvalid flag
+		p_buf[8]=0xff;// change it to invalid flag
 	}
 	telink_mible_nvm_write((u8 *)p_data,length,address);
     if(address == ota_program_offset){

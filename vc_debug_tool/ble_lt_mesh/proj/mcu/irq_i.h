@@ -33,7 +33,7 @@
 #include "../common/assert.h"
 
 // NOTE("If irq switches changed, pls change IRQ_INIT_VALUE accordingly.");
-// enalbe interrupt
+// enable interrupt
 #ifndef WIN32
 #if(__TL_LIB_8258__ || MCU_CORE_TYPE == MCU_CORE_8258)
 #include "drivers/8258/irq.h"

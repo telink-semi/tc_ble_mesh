@@ -222,7 +222,7 @@ typedef enum{
 	BLT_AUDIO_OTP_OLCP_ERRCODE_INVALID_PARAMETER    = 0x03, //Response if Parameter received does not meet the requirements of the service.
 	BLT_AUDIO_OTP_OLCP_ERRCODE_OPERATION_FAILED     = 0x04, //Response if the requested procedure failed for a reason other than those enumerated below.
 	BLT_AUDIO_OTP_OLCP_ERRCODE_OUT_OF_BOUNDS        = 0x05, //Response if the requested procedure attempted to select an object beyond the first object or beyond the last object in the current list.
-	BLT_AUDIO_OTP_OLCP_ERRCODE_TOO_MANY_OBJECS      = 0x06, //Response if the requested procedure failed due to too many objects in the current list.
+	BLT_AUDIO_OTP_OLCP_ERRCODE_TOO_MANY_OBJECTS     = 0x06, //Response if the requested procedure failed due to too many objects in the current list.
 	BLT_AUDIO_OTP_OLCP_ERRCODE_NO_OBJECT            = 0x07, //Response if the requested procedure failed due to there being zero objects in the current list.
 	BLT_AUDIO_OTP_OLCP_ERRCODE_OBJID_NOT_FOUND      = 0x08, //Response if the requested procedure failed due to there being no object with the requested Object ID.
 }BLT_AUDIO_OTP_OLCP_ERRCODE_ENUM;

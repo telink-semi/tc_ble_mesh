@@ -141,7 +141,7 @@ typedef struct{
 typedef struct{
 	u32 break_point;
 	u32 rand_code;
-	u32 seg_size;// supose the segbuf is 244
+	u32 seg_size;// suppose the segbuf is 244
 	u32 buf_size;
 	u32 buf_idx;
 	u32 image_size;

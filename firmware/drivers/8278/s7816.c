@@ -102,7 +102,7 @@ void s7816_set_pin(S7816_TRx_PinDef Pin_7816_TRX)
 
 /**
  * @brief      	This function is used to send data to ID card,after succeeding in getting ATR
- * @param[in]  	*TransAddr	- data is waitting to send
+ * @param[in]  	*TransAddr	- data is waiting to send
  * @return     	none
  */
 unsigned char s7816_dma_send(unsigned char *TransAddr)

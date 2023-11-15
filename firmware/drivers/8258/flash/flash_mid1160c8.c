@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "flash_type.h"
- 
+
 #if FLASH_LOCK_EN
 /**
  * @brief 		This function reads the status of flash.

@@ -99,7 +99,7 @@ enum{
 
 	//0x04
 	OTA_WRITE_FLASH_ERR,					//write OTA data to flash ERR
- 	OTA_DATA_UNCOMPLETE,					//lost last one or more OTA PDU
+ 	OTA_DATA_INCOMPLETE,					//lost last one or more OTA PDU
  	OTA_FLOW_ERR,		    				//peer device send OTA command or OTA data not in correct flow
  	OTA_FW_CHECK_ERR,						//firmware CRC check error
 
@@ -112,11 +112,11 @@ enum{
 	//0x0C
 	OTA_DATA_PACKET_TIMEOUT,	   			//time interval between two consequent packet exceed a value(user can adjust this value)
  	OTA_TIMEOUT,							//OTA flow total timeout
- 	OTA_FAIL_DUE_TO_CONNECTION_TERMIANTE,	//OTA fail due to current connection terminate(maybe connection timeout or local/peer device terminate connection)
+ 	OTA_FAIL_DUE_TO_CONNECTION_TERMINATE,	//OTA fail due to current connection terminate(maybe connection timeout or local/peer device terminate connection)
 	OTA_MCU_NOT_SUPPORTED,					//MCU does not support this OTA mode
 
 	//0x10
-	OTA_LOGIC_ERR,							//software logic error, please contact FAE of TeLink
+	OTA_LOGIC_ERR,							//software logic error, please contact FAE of Telink
 
 	OTA_SUCCESS_DEBUG,						//success
 	OTA_REBOOT_NO_LED,						// no LED indication, for quickly reboot.
@@ -186,7 +186,7 @@ typedef struct{
 #define AIS_FW_VERSION_RSP		0x21
 #define	AIS_OTA_REQ				0x22
 #define	AIS_OTA_RSP				0x23
-#define	AIS_OTA_RECEVIED		0x24
+#define	AIS_OTA_RECEIVED		0x24
 #define	AIS_OTA_END				0x25
 #define	AIS_OTA_RESULT			0x26
 #define	AIS_OTA_DATA			0x2f

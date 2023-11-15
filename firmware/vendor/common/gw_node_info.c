@@ -29,7 +29,7 @@
 
 #if (IS_VC_PROJECT_MASTER || DONGLE_PROVISION_EN)
  /*************hci_tx_fifo_poll ***********************
- device key list save and read 
+ device key list save and read
  ******************************************************/ 
 
  #if DONGLE_PROVISION_EN
@@ -195,7 +195,7 @@ void clear_gw_node_info(u16 addr, int is_must_primary)
 		int idx = get_gw_node_info_idx(addr, is_must_primary);
 		if(-1 != idx){
 			u8 zero[2]={0};
-			flash_write_page(FLASH_ADR_VC_NODE_INFO + gw_node_info[idx].index*sizeof(VC_node_info_t), sizeof(zero), zero); // write 0 to set unvalid
+			flash_write_page(FLASH_ADR_VC_NODE_INFO + gw_node_info[idx].index*sizeof(VC_node_info_t), sizeof(zero), zero); // write 0 to set invalid
 			gw_node_info[idx].node_adr = 0;
 		}
 	}
@@ -400,7 +400,7 @@ int VC_node_dev_key_save(u16 adr, u8 *dev_key,u8 ele_cnt)
  
 u8* VC_master_get_other_node_dev_key(u16 adr)
 {
-     if(is_actived_factory_test_mode()){
+     if(is_activated_factory_test_mode()){
          return mesh_key.dev_key;
      }
      
@@ -477,7 +477,7 @@ int VC_node_replace_devkey_candi_adr(u16 adr, u16 new_adr,u8 *dev_key_cadi)
 
 u8* VC_master_get_other_node_dev_key_candi(u16 adr)
 {
-     if(is_actived_factory_test_mode()){
+     if(is_activated_factory_test_mode()){
          return mesh_key.dev_key;
      }
      

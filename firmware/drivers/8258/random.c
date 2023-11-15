@@ -209,7 +209,7 @@ void random_generator_init(void)
 void random_generator_init(void)
 {
 	rng.rng32 = 0x0000ffff;
-	//ADC modle init
+	//ADC module init
 	adc_init();
 	rng_init();
 	//After setting the ADC parameters, turn on the ADC power supply control bit

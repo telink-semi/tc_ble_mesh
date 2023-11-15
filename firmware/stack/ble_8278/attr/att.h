@@ -45,8 +45,8 @@
 #define ATT_OP_EXCHANGE_MTU_RSP             0x03 //!< Exchange MTU Response op code
 #define ATT_OP_FIND_INFO_REQ                0x04 //!< Find Information Request op code
 #define ATT_OP_FIND_INFO_RSP                0x05 //!< Find Information Response op code		----Information Data 4 to (ATT_MTU-2)
-#define ATT_OP_FIND_BY_TYPE_VALUE_REQ       0x06 //!< Find By Type Vaue Request op code			Attribute Value 0 to (ATT_MTU-7)
-#define ATT_OP_FIND_BY_TYPE_VALUE_RSP       0x07 //!< Find By Type Vaue Response op code	----Handles Information List 4 to (ATT_MTU-1)
+#define ATT_OP_FIND_BY_TYPE_VALUE_REQ       0x06 //!< Find By Type Value Request op code			Attribute Value 0 to (ATT_MTU-7)
+#define ATT_OP_FIND_BY_TYPE_VALUE_RSP       0x07 //!< Find By Type Value Response op code	----Handles Information List 4 to (ATT_MTU-1)
 #define ATT_OP_READ_BY_TYPE_REQ             0x08 //!< Read By Type Request op code
 #define ATT_OP_READ_BY_TYPE_RSP             0x09 //!< Read By Type Response op code			----Attribute Data List 2 to (ATT_MTU- 2)
 #define ATT_OP_READ_REQ                     0x0a //!< Read Request op code
@@ -239,7 +239,7 @@ typedef struct
 } findByTypeValueReq_t;
 
 /**
- * Handles Infomation list element
+ * Handles Information list element
  */
 typedef struct
 {
@@ -253,7 +253,7 @@ typedef struct
 typedef struct
 {
   u8 handleInfoNum;                                       //!< Number of handles information below
-  handleInfo_t handleInfo[1] ; //!< A list of 1 or more Handle Informations
+  handleInfo_t handleInfo[1] ; //!< A list of 1 or more Handle Information
 } findByTypeValueRsp_t;
 
 /**

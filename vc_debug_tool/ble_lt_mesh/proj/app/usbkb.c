@@ -57,7 +57,7 @@ static vk_ext_t vk_media_map[VK_MEDIA_CNT] = {
     {VK_W_SRCH_V},
     {VK_WEB_V},
     {VK_W_BACK_V},
-    {VK_W_FORWRD_V},
+    {VK_W_FORWARD_V},
     {VK_W_STOP_V},
     {VK_W_REFRESH_V},
     {VK_W_FAV_V},

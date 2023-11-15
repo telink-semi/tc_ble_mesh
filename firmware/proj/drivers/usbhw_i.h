@@ -35,7 +35,7 @@
 #endif
 
 static inline void usbhw_set_printer_threshold(u8 th) {
-	reg_usb_ep8_send_thre = th;
+	reg_usb_ep8_send_thres = th;
 }
 
 static inline u32 usbhw_get_ctrl_ep_irq(void) {

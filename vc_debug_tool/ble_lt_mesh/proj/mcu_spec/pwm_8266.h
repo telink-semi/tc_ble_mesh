@@ -60,7 +60,7 @@ enum{
 	NORMAL_MODE = 0,			//!<PWM0~PWM5 all support normal(continuous)mode.
 								//!<In this mode,PWM#n continuously sends out signal frames.
 	COUNT_MODE = 1,				//!<Only PWM0 and PWM1 support Counting mode.
-								//!<In this mode,PWM#n(n=0,1)sends out specified number of signal frames which defined as a pluse group.
+								//!<In this mode,PWM#n(n=0,1)sends out specified number of signal frames which defined as a pulse group.
 	IR_MODE = 3,				//!<Only PWM0 and PWM1 support Counting mode.
 								//!<In this mode,specified number of frames is defined as one pulse group.In contrast to Counting mode  where PWM#n(n=0,1) stop after pulse  group finishes PWM#n will constantly send pulse groups in IR mode.
 }PWM_MODE;
@@ -108,7 +108,7 @@ void pwm_set_duty(PWM_ID id, u16 max_tick, u16 cmp_tick);
  *
  * @param[in]	mode - Specify PWM mode.PWM mode should selected from enumerate PWM_MODE.
  *
- * @param[in]	pluse_num - Set the corresponding PWM channel pulse number.
+ * @param[in]	pulse_num - Set the corresponding PWM channel pulse number.
  *
  * @return 		None
  */

@@ -85,7 +85,7 @@ MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 16);  // some phones may not support D
 	#if DU_LPN_EN
 #define BLT_TX_FIFO_CNT			32// low down the rentention cost part .
 	#else
-#define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 128) // set to 128 in extend mode, because there is no blt_notify_fifo_
+#define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 128) // set to >= 64 in extend mode, because there is no blt_notify_fifo_, and DLE length set to 40 but not 251, and some phones may not support DLE.
 	#endif
 MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, BLT_TX_FIFO_CNT);  // some phones may not support DLE, so use the same count with no DLE.
 #endif
@@ -764,7 +764,7 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 		}
 		break;
 
-		case GAP_EVT_SMP_TK_DISPALY:
+		case GAP_EVT_SMP_TK_DISPLAY:
 		{
 			u32 pinCode = *(u32*)para;
 			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "TK display:%d", pinCode);
@@ -958,7 +958,7 @@ void user_init()
 	#endif
 #endif
 	#if ADC_ENABLE
-	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
@@ -981,7 +981,7 @@ void user_init()
 	#endif	
 	{
 		#if MI_API_ENABLE
-			//fix the mi ota ,when uncomplete ,it need to goon after power on 
+			//fix the mi ota ,when incomplete ,it need to goon after power on 
 			u32 adr_record;
 			if(!find_record_adr(RECORD_DFU_INFO,&adr_record)){
 				bls_ota_clearNewFwDataArea(0);

@@ -41,7 +41,7 @@ typedef int (*ll_conn_phy_update_callback_t)(void);
 typedef int (*ll_conn_phy_switch_callback_t)(void);
 
 extern 	ll_conn_phy_update_callback_t	ll_conn_phy_update_cb;
-extern 	ll_conn_phy_switch_callback_t	ll_conn_phy_swicth_cb;
+extern 	ll_conn_phy_switch_callback_t	ll_conn_phy_switch_cb;
 
 #endif
 

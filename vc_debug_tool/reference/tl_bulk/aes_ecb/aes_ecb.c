@@ -556,14 +556,14 @@ static void getArrayFrom4W(int i, int array[4][4]) {
  
 /**
  * 参数 c: 密文的字符串数组。
- * 参数 clen: 密文的长度。
+ * 参数 c_len: 密文的长度。
  * 参数 key: 密钥的字符串数组。
  */
-void deAes(char *c, int clen, char *key) {
+void deAes(char *c, int c_len, char *key) {
  
     int keylen = strlen(key);
-    if(clen == 0 || clen % 16 != 0) {
-        printf("Ciphertext characters must be a multiple of 16! Now the length is zero:%d\n",clen);
+    if(c_len == 0 || c_len % 16 != 0) {
+        printf("Ciphertext characters must be a multiple of 16! Now the length is zero:%d\n",c_len);
         exit(0);
     }
  
@@ -575,7 +575,7 @@ void deAes(char *c, int clen, char *key) {
     extendKey(key);//扩展密钥
     int cArray[4][4];
 	int i,k;
-    for(k = 0; k < clen; k += 16) {
+    for(k = 0; k < c_len; k += 16) {
         convertToIntArray(c + k, cArray);
  
  

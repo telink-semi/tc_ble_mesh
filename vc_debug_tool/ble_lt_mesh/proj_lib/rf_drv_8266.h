@@ -52,7 +52,7 @@ enum{
 
 #define RF_CHN_AUTO_CAP 	0xff00
 #define RF_CHN_TABLE 		0x8000
-#define RF_SET_TX_MANAUL	0x4000
+#define RF_SET_TX_MANUAL	0x4000
 
 #define FRE_OFFSET 	0
 #define FRE_STEP 	5
@@ -147,7 +147,7 @@ static inline void rf_set_ble_access_code_value (u32 ac)
 
 static inline void rf_set_ble_access_code_adv ()
 {
-#if (TEST_SPECAIL_ADV_ACCESS_CODE)
+#if (TEST_SPECIAL_ADV_ACCESS_CODE)
 	write_reg32 (0x800408, 0x12345678);
 #else
 	write_reg32 (0x800408, 0xd6be898e);
@@ -226,11 +226,11 @@ static inline u16 light_proc_conflict_ac_16(u16 ac)
 
 static inline u32 rf_access_code_16to32 (u16 code)
 {
-    u16 conver_code = light_proc_conflict_ac_16(code);
+    u16 convert_code = light_proc_conflict_ac_16(code);
 	u32 r = 0;
 	for (int i=0; i<16; i++) {
 		r = r << 2;
-		r |= conver_code & BIT(i) ? 1 : 2;
+		r |= convert_code & BIT(i) ? 1 : 2;
 	}
 	return r;
 }
@@ -334,7 +334,7 @@ void	rf_send_packet (void* addr, u16 rx_waittime, u8 retry);
 void 	rf_multi_receiving_init (u8 channel_mask);
 void	rf_multi_receiving_start  (signed char chn, unsigned short set);
 void	rf_set_ack_packet  (void* addr);
-void 	rf_receiving_pipe_enble(u8 channel_mask);
+void 	rf_receiving_pipe_enable(u8 channel_mask);
 
 void 	rf_update_tp_value (u8 tp0, u8 tp1);
 

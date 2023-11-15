@@ -66,13 +66,13 @@
 MYFIFO_INIT(blt_rxfifo, 64, BLT_RX_BUF_NUM);
 MYFIFO_INIT(blt_txfifo, 40, 16);
 
-#define SLEEP_MAX_S						(32*60*60)	// max 37 hours,but use 32 to be multipled of SWITCH_IV_SEARCHING_INVL_S
+#define SLEEP_MAX_S						(32*60*60)	// max 37 hours,but use 32 to be multiplied of SWITCH_IV_SEARCHING_INVL_S
 #if IV_UPDATE_TEST_EN
 #define SWITCH_IV_SEARCHING_INTERVLAL_S	(IV_UPDATE_KEEP_TMIE_MIN_RX_S)
 #else
 #define SWITCH_IV_SEARCHING_INTERVLAL_S	(96*60*60)	// keep searching for SWITCH_IV_RCV_WINDOW_S(10s default)
 #endif
-#define SWITCH_IV_SEARCHING_INVL_S		(SWITCH_IV_SEARCHING_INTERVLAL_S - 1)	// -1 to make sure "clock time exceed" is ture when time is just expired.
+#define SWITCH_IV_SEARCHING_INVL_S		(SWITCH_IV_SEARCHING_INTERVLAL_S - 1)	// -1 to make sure "clock time exceed" is true when time is just expired.
 #define SWITCH_LONG_SLEEP_TIME_S		(min(SLEEP_MAX_S, SWITCH_IV_SEARCHING_INTERVLAL_S))
 #define SWITCH_IV_RCV_WINDOW_S			(10)
 
@@ -81,7 +81,7 @@ u32 switch_mode_tick = 0;
 u8 switch_provision_ok = 0;
 u32 switch_iv_updata_s = 0;
 
-STATIC_ASSERT(SWITCH_IV_SEARCHING_INTERVLAL_S % SWITCH_LONG_SLEEP_TIME_S == 0); // must be multipled.
+STATIC_ASSERT(SWITCH_IV_SEARCHING_INTERVLAL_S % SWITCH_LONG_SLEEP_TIME_S == 0); // must be multiplied.
 
 //----------------------- UI ---------------------------------------------
 #if (BLT_SOFTWARE_TIMER_ENABLE)
@@ -114,7 +114,7 @@ int soft_timer_rcv_beacon_timeout()
 	return -1;
 }
 
-void switch_triger_iv_search_mode(int force)
+void switch_trigger_iv_search_mode(int force)
 {	
 	if(force || clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){
 		LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch enter iv update search mode time_s:%d", clock_time_s());
@@ -222,7 +222,7 @@ void switch_send_publish_command(u32 ele_offset, bool4 onoff, u32 select_pub_mod
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_CTRL_CLIENT)
 	dicmp_switch_send_publish_command(ele_offset, onoff, select_pub_model_key);
 #else
-	u32 pub_model_id_sig = SIG_MD_G_ONOFF_C; // always send generic onoff commad
+	u32 pub_model_id_sig = SIG_MD_G_ONOFF_C; // always send generic onoff command
 	u16 pub_addr = SWITCH_GROUP_ADDR_START;
 	model_common_t *p_model;
 	u8 model_idx = 0;
@@ -307,87 +307,93 @@ void mesh_proc_keyboard ()
 			switch_mode_set(SWITCH_MODE_NORMAL); // press any key can exit adv mode
 		}
 		#endif
-		/////////////////////////// key pressed  /////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////////////
-		if (kb_event.keycode[0]) {
-		    mesh_active_time = clock_time();
-            if ((kb_event.keycode[0] == RC_KEY_A_ON && kb_event.keycode[1] == RC_KEY_1_OFF) ||
-                (kb_event.keycode[1] == RC_KEY_A_ON && kb_event.keycode[0] == RC_KEY_1_OFF))
-		    {
-		    	// trigger the adv mode ,enterring configuration mode
-		    	
-			}else if ((kb_event.keycode[0] == RC_KEY_A_ON && kb_event.keycode[1] == RC_KEY_4_OFF) ||
-                (kb_event.keycode[1] == RC_KEY_A_ON && kb_event.keycode[0] == RC_KEY_4_OFF))
-		    {
-                //irq_disable();
-		    }else{
-		    	#if KB_LINE_MODE
-				if (kb_event.keycode[0] == KEY_CMD){
-					static u8 sw_onoff_cnt;
-					u8 sw_onoff_flag = (sw_onoff_cnt++) & 1;	// light OFF first
-					access_cmd_onoff(ADR_ALL_NODES, 0, sw_onoff_flag, CMD_NO_ACK, 0);
-				}
-				#else
-				static u8 last_lum = 100;
-				static u8 last_tmp = 100;
-				
-				static u8 select_pub_model_key_last = RC_KEY_A_ON;
-				u8 key_pressed = kb_event.keycode[0];
-				if((RC_KEY_A_ON == key_pressed)||(RC_KEY_A_OFF == key_pressed) ||
-					(RC_KEY_UP == key_pressed)||(RC_KEY_DN == key_pressed) ||
-					(RC_KEY_L == key_pressed)||(RC_KEY_R == key_pressed)){
-					select_pub_model_key_last = key_pressed;
-				}
-				
-    			if (kb_event.keycode[0] == RC_KEY_1_ON){	
-					switch_send_publish_command(0, G_ON, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_2_ON){
-					switch_send_publish_command(1, G_ON, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_3_ON){
-					switch_send_publish_command(2, G_ON, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_4_ON){
-					switch_send_publish_command(3, G_ON, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_A_ON){
-					access_cmd_onoff(ADR_ALL_NODES, 0, G_ON, CMD_NO_ACK, 0);
-    			}else if (kb_event.keycode[0] == RC_KEY_1_OFF){
-					switch_send_publish_command(0, G_OFF, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_2_OFF){
-					switch_send_publish_command(1, G_OFF, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_3_OFF){
-					switch_send_publish_command(2, G_OFF, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_4_OFF){
-					switch_send_publish_command(3, G_OFF, select_pub_model_key_last);
-    			}else if (kb_event.keycode[0] == RC_KEY_A_OFF){
-    				// send all off cmd
-					access_cmd_onoff(ADR_ALL_NODES, 0, G_OFF, CMD_NO_ACK, 0);
-    			}else if (kb_event.keycode[0] == RC_KEY_UP){
-					last_lum += 20;
-					if(last_lum > 100){
-						last_lum = 100;
+		
+		if(kb_event.cnt)
+		{
+			
+			/////////////////////////// key pressed  /////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////////////////
+			if (kb_event.keycode[0]) {			
+			    mesh_active_time = clock_time();
+	            if ((kb_event.keycode[0] == RC_KEY_A_ON && kb_event.keycode[1] == RC_KEY_1_OFF) ||
+	                (kb_event.keycode[1] == RC_KEY_A_ON && kb_event.keycode[0] == RC_KEY_1_OFF))
+			    {
+			    	// trigger the adv mode ,enterring configuration mode
+			    	
+				}else if ((kb_event.keycode[0] == RC_KEY_A_ON && kb_event.keycode[1] == RC_KEY_4_OFF) ||
+	                (kb_event.keycode[1] == RC_KEY_A_ON && kb_event.keycode[0] == RC_KEY_4_OFF))
+			    {
+	                //irq_disable();
+			    }else{
+			    	#if KB_LINE_MODE
+					if (kb_event.keycode[0] == KEY_CMD){
+						static u8 sw_onoff_cnt;
+						u8 sw_onoff_flag = (sw_onoff_cnt++) & 1;	// light OFF first
+						access_cmd_onoff(ADR_ALL_NODES, 0, sw_onoff_flag, CMD_NO_ACK, 0);
 					}
-					access_set_lum(ADR_ALL_NODES, 0, last_lum, 0);
-    			}else if (kb_event.keycode[0] == RC_KEY_DN){
-					last_lum = (last_lum>20)?(last_lum-20):1;
-					access_set_lum(ADR_ALL_NODES, 0, last_lum, 0);
-    			}else if (kb_event.keycode[0] == RC_KEY_L){
-					last_tmp = (last_tmp>20)?(last_tmp-20):0;
-					access_cmd_set_light_ctl_temp_100(ADR_ALL_NODES, 0, last_tmp, 0);
-    			}else if (kb_event.keycode[0] == RC_KEY_R){
-					last_tmp += 20;
-					if(last_tmp > 100){
-						last_tmp = 100;
+					#else
+					static u8 last_lum = 100;
+					static u8 last_tmp = 100;
+					
+					static u8 select_pub_model_key_last = RC_KEY_A_ON;
+					u8 key_pressed = kb_event.keycode[0];
+					if((RC_KEY_A_ON == key_pressed)||(RC_KEY_A_OFF == key_pressed) ||
+						(RC_KEY_UP == key_pressed)||(RC_KEY_DN == key_pressed) ||
+						(RC_KEY_L == key_pressed)||(RC_KEY_R == key_pressed)){
+						select_pub_model_key_last = key_pressed;
 					}
-					access_cmd_set_light_ctl_temp_100(ADR_ALL_NODES, 0, last_tmp, 0);
-    			}else{
-    				// invalid key
-    				memset4(&kb_event, 0, sizeof(kb_event));
-					key_released = 0;
-    				return;
-    			}
-				#endif
-                rf_link_light_event_callback(LGT_CMD_SWITCH_CMD);
+					
+	    			if (kb_event.keycode[0] == RC_KEY_1_ON){	
+						switch_send_publish_command(0, G_ON, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_2_ON){
+						switch_send_publish_command(1, G_ON, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_3_ON){
+						switch_send_publish_command(2, G_ON, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_4_ON){
+						switch_send_publish_command(3, G_ON, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_A_ON){
+						access_cmd_onoff(ADR_ALL_NODES, 0, G_ON, CMD_NO_ACK, 0);
+	    			}else if (kb_event.keycode[0] == RC_KEY_1_OFF){
+						switch_send_publish_command(0, G_OFF, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_2_OFF){
+						switch_send_publish_command(1, G_OFF, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_3_OFF){
+						switch_send_publish_command(2, G_OFF, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_4_OFF){
+						switch_send_publish_command(3, G_OFF, select_pub_model_key_last);
+	    			}else if (kb_event.keycode[0] == RC_KEY_A_OFF){
+	    				// send all off cmd
+						access_cmd_onoff(ADR_ALL_NODES, 0, G_OFF, CMD_NO_ACK, 0);
+	    			}else if (kb_event.keycode[0] == RC_KEY_UP){
+						last_lum += 20;
+						if(last_lum > 100){
+							last_lum = 100;
+						}
+						access_set_lum(ADR_ALL_NODES, 0, last_lum, 0);
+	    			}else if (kb_event.keycode[0] == RC_KEY_DN){
+						last_lum = (last_lum>20)?(last_lum-20):1;
+						access_set_lum(ADR_ALL_NODES, 0, last_lum, 0);
+	    			}else if (kb_event.keycode[0] == RC_KEY_L){
+						last_tmp = (last_tmp>20)?(last_tmp-20):0;
+						access_cmd_set_light_ctl_temp_100(ADR_ALL_NODES, 0, last_tmp, 0);
+	    			}else if (kb_event.keycode[0] == RC_KEY_R){
+						last_tmp += 20;
+						if(last_tmp > 100){
+							last_tmp = 100;
+						}
+						access_cmd_set_light_ctl_temp_100(ADR_ALL_NODES, 0, last_tmp, 0);
+	    			}else{
+	    				// invalid key
+	    				memset4(&kb_event, 0, sizeof(kb_event));
+						key_released = 0;
+	    				return;
+	    			}
+					#endif
+	                rf_link_light_event_callback(LGT_CMD_SWITCH_CMD);
+				}
+				key_released = 0;
+				// LOG_USER_MSG_INFO(0, 0, "key press:%d", kb_event.keycode[0]);
 			}
-			key_released = 0;
 		}
 		///////////////////////////   key released  ///////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////////////
@@ -751,7 +757,7 @@ void user_init()
 	#endif
 #endif
 #if ADC_ENABLE
-	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 #endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
@@ -775,7 +781,7 @@ void user_init()
 #if SWITCH_ALWAYS_MODE_GATT_EN
 	switch_mode_set(SWITCH_MODE_GATT);
 #endif
-	switch_triger_iv_search_mode(1);
+	switch_trigger_iv_search_mode(1);
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
@@ -810,8 +816,11 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	if(!iv_idx_st.update_proc_flag){
 		iv_idx_st.searching_flag = 1;// always in search mode to process security beacon
 	}
-	deep_wakeup_proc();// fast detect key when powerup
+
 	DBG_CHN0_HIGH;    //debug
+#if UI_KEYBOARD_ENABLE
+	deep_wakeup_proc();// fast detect key when powerup
+#endif
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 #endif

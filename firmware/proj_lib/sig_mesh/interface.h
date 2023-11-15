@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-// gerneral defination 
+// general definition 
 #include "../../../reference/tl_bulk/lib_file/Gatt_provision.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
@@ -259,7 +259,7 @@ ret: none
 void master_terminate_ble_callback();
 
 /************************** set_gatt_pro_cloud_en **************************
-function :set the cloud caculate mode part    
+function :set the cloud calculate mode part    
 para:
 ret: none
 ****************************************************************************/
@@ -443,7 +443,7 @@ para:
         pbuf: the printf data part 
         len: the length of print data 
         log_str: the string about the log
-        format: the prinf special char part ,such as %d
+        format: the printf special char part ,such as %d
         list: the parameter list part 
 return :
         none
@@ -468,7 +468,7 @@ para:
        reason:
            PROV_NORMAL_RET =0,
 	    PROV_TIMEOUT_RET =1,
-	    PROV_COMFIRM_ERR =2,
+	    PROV_CONFIRM_ERR =2,
 	    PROV_FAIL_CMD_ERR =3,
 return :
         not define 
@@ -491,38 +491,38 @@ return :
         not define 
 **************************************************************/
 extern int mesh_set_prov_cloud_para(u8 *p_pid,u8 *p_mac);
-/**************************mesh_sec_prov_cloud_comfirm***************************
-function : use the para of the provision comfirm  key and the provision random to caculate the  comfirm value
+/**************************mesh_sec_prov_cloud_confirm***************************
+function : use the para of the provision confirm  key and the provision random to calculate the confirm value
 para:
-	p_comfirm: the result of the comfirm value (16 bytes) (out)
-	p_comfirm_key: the pointer of the comfirm key (16 bytes)(in)
+	p_confirm: the result of the confirm value (16 bytes) (out)
+	p_confirm_key: the pointer of the confirm key (16 bytes)(in)
 	p_random: the pointer of the random value (16 bytes)(in)
 ret: 1  means OK 
 	not use the return 
-notice: it should wait the result of the comfirm value before the function return ,or the flow will be error
+notice: it should wait the result of the confirm value before the function return ,or the flow will be error
 	
 ******************************************************************************/
-extern int mesh_sec_prov_cloud_comfirm(u8* p_comfirm,u8 *p_comfirm_key,u8 *p_random);
-/**************************mesh_cloud_dev_comfirm_check***************************
-function : use the para of the comfirm key and the dev random to calculate the device random ,and compare with the random
+extern int mesh_sec_prov_cloud_confirm(u8* p_confirm,u8 *p_confirm_key,u8 *p_random);
+/**************************mesh_cloud_dev_confirm_check***************************
+function : use the para of the confirm key and the dev random to calculate the device random ,and compare with the random
 		value receive from the device .
 para:
-	p_comfirm_key: the pointer of the comfirm key (16 bytes)(in)
+	p_confirm_key: the pointer of the confirm key (16 bytes)(in)
 	p_dev_random: the device random send by the device(16 bytes)(in)
 	pro_random: the pointer of the random value (16 bytes)(in)
 ret: 1  means OK 
 	0  will terminate the gatt connection 
-notice: it should wait the result of the comfirm value before the function return ,or the flow will be error
+notice: it should wait the result of the confirm value before the function return ,or the flow will be error
 	
 ******************************************************************************/
-extern int mesh_cloud_dev_comfirm_check(u8 *p_comfirm_key,u8* p_dev_random,
-								u8*p_dev_comfirm);
+extern int mesh_cloud_dev_confirm_check(u8 *p_confirm_key,u8* p_dev_random,
+								u8*p_dev_confirm);
 /**************************gatt_provision_net_info_callback***************************
 function : when the provision enter the provision data send ,it will cause this callback ,will used to set 
 		the provision data para ,and we will use the gatt_provision_net_info_callback to set .
 para:
 ret: void
-notice: it should wait the result of the comfirm value before the function return ,or the flow will be error
+notice: it should wait the result of the confirm value before the function return ,or the flow will be error
 	
 ******************************************************************************/
 extern void gatt_provision_net_info_callback();
@@ -535,7 +535,7 @@ para:
 	p_ivi: the pointer of the ivi index (4 bytes)(in)
 	p_unicast: the pointer of the unicast address(2 bytes)(in)
 ret: void
-notice: it should wait the result of the comfirm value before the function return ,or the flow will be error
+notice: it should wait the result of the confirm value before the function return ,or the flow will be error
 ******************************************************************************/
 extern void set_gatt_provision_net_info(u8 p_netkey[16],u16*p_key_index,u8*p_flag,u8 p_ivi[4],u16*p_unicast);
 
@@ -546,7 +546,7 @@ key_bind_list_buf: the list of the models filter
 p_list_cnt: the cnt of the models need to bind 
 max_cnt: the max cnt need to bind 
 ret:not concern
-notice: should add 1 byte header for divided message, use the hanlde according to the msg_type for write transation
+notice: should add 1 byte header for divided message, use the handle according to the msg_type for write transaction
 ******************************************************************************/
 extern u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8 max_cnt);
 
@@ -567,7 +567,7 @@ p:pointer to message
 len: message length
 msg_type:message type
 ret:not concern
-notice: should add 1 byte header for divided message, use the hanlde according to the msg_type for write transation
+notice: should add 1 byte header for divided message, use the handle according to the msg_type for write transaction
 ******************************************************************************/
 extern int gatt_write_transaction_callback(u8 *p,u16 len,u8 msg_type);
 /**************************mesh_par_retrieve_store_win32***************************

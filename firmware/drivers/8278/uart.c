@@ -28,7 +28,7 @@
 #include "tl_common.h" // add by weixiong in mesh
 
 /**
- * @brief     This function is used to look for the prime.if the prime is finded,it will
+ * @brief     This function is used to look for the prime.if the prime is fined,it will
  * 			  return 1, or return 0.
  * @param[in] the value to judge
  * @return    none
@@ -53,7 +53,7 @@ static unsigned char IsPrime(unsigned int n)
 }
 
 /**
- * @brief  		This funciton serves to calculate the best bwpc(bit width) .i.e reg0x96
+ * @brief  		This function serves to calculate the best bwpc(bit width) .i.e reg0x96
  * @param[in] 	baut_rate:The value of the baut rate to set.
  * @param[in] 	tmp_sysclk:The system clock
  *    			algorithm: BaudRate*(div+1)*(bwpc+1)=system clock
@@ -496,9 +496,9 @@ void uart_clear_parity_error(void)
 *	
 *	@brief	clear error state of uart rx, maybe used when application detected UART not work
 *
-*	@parm	none
+*	@param	none
 *
-*	@return	'1' RX error flag rised and cleard success; '0' RX error flag not rised 
+*	@return	'1' RX error flag rose and cleard success; '0' RX error flag not rose 
 *
 */
 unsigned char uart_ErrorCLR(void){

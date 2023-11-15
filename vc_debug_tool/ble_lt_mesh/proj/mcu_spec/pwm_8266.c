@@ -122,17 +122,17 @@ void pwm_example_normalMode(u8 pwm_id){
 
 	sleep_us(10*1000*1000);
 
-	/*diable PWM0 output*/
+	/*disable PWM0 output*/
 	pwm_stop(pwm_id);
 }
 void pwm_example_countMode(u8 pwm_id){
-	u16 pluse_num = 100;
+	u16 pulse_num = 100;
 	// set pwm gpio as PWM mode
 	gpio_set_func(pwmGpio[pwm_id],AS_PWM);
 	/*power on pwm module and setting pwm_module_clock = 2Mhz */
 	pwm_clk(2000000);
 	/*set pwm0 mode to NORMAL MODE*/
-	pwm_set_mode(pwm_id,COUNT_MODE,pluse_num);
+	pwm_set_mode(pwm_id,COUNT_MODE,pulse_num);
 	/*Set PWM0_output_frequency = 2khz and high_time_duty_ratio = 20%*/
 	/*max_tick = pwm_module_clock / PWM0_output_frequency = 2MHz / 2kHz = 1000 */
 	/*cmp_tick = max_tick * high_time_duty_ratio = 1000 * 20% = 200 */
@@ -145,13 +145,13 @@ void pwm_example_countMode(u8 pwm_id){
 	pwm_start(pwm_id);
 }
 void pwm_example_irMode(u8 pwm_id){
-	u16 pluse_num = 100;
+	u16 pulse_num = 100;
 	// set pwm gpio as PWM mode
 	gpio_set_func(pwmGpio[pwm_id],AS_PWM);
 	/*power on pwm module and setting pwm_module_clock = 2Mhz */
 	pwm_clk(2000000);
 	/*set pwm0 mode to NORMAL MODE*/
-	pwm_set_mode(pwm_id,IR_MODE,pluse_num);
+	pwm_set_mode(pwm_id,IR_MODE,pulse_num);
 	/*Set PWM0_output_frequency = 2khz and high_time_duty_ratio = 20%*/
 	/*max_tick = pwm_module_clock / PWM0_output_frequency = 2MHz / 2kHz = 1000 */
 	/*cmp_tick = max_tick * high_time_duty_ratio = 1000 * 20% = 200 */

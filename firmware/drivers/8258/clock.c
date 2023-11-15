@@ -241,7 +241,7 @@ void dmic_prob_32k(unsigned char src)
 
 void doubler_calibration(void)
 {
-	 analog_write(0x86,0xbb);//power on duty cycle cal moudle
+	 analog_write(0x86,0xbb);//power on duty cycle cal module
 	 analog_write(0x82,analog_read(0x82)&0x7f);
 	 analog_write(0x87,(analog_read(0x87)&0xfc)|0x02);
 	 analog_write(0x87,analog_read(0x87)|0x04);

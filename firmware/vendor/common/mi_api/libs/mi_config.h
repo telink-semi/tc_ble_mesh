@@ -44,7 +44,7 @@
 #define HAVE_OTP_PKI               0
 #endif
 #else
-#error "No MI_BLE_ENABLED or MI_MESH_ENABLED is defined. Should add one of them in the preprocesser symbols."
+#error "No MI_BLE_ENABLED or MI_MESH_ENABLED is defined. Should add one of them in the preprocessor symbols."
 #endif
 
 #define MIBLE_DEVELOPER_VERSION         CONCAT_DEVELOPER_VERSION(DEVELOPER_VERSION)

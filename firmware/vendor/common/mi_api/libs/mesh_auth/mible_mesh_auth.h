@@ -15,12 +15,12 @@ extern "C" {
 #define MESH_REG_SUCCESS                    (MESH_REG_TYPE+1)
 #define MESH_REG_FAILED                     (MESH_REG_TYPE+2)
 #define MESH_REG_VERIFY_SUCC                (MESH_REG_TYPE+3)
-#define MESH_REG_S_CERT_INVAILD             (MESH_REG_TYPE+4)
-#define MESH_REG_S_PUBKEY_INVAILD           (MESH_REG_TYPE+5)
-#define MESH_REG_S_SIGN_INVAILD             (MESH_REG_TYPE+6)
-#define MESH_REG_D_CERT_INVAILD             (MESH_REG_TYPE+7)
-#define MESH_REG_D_PUBKEY_INVAILD           (MESH_REG_TYPE+8)
-#define MESH_REG_D_SIGN_INVAILD             (MESH_REG_TYPE+9)
+#define MESH_REG_S_CERT_INVALID             (MESH_REG_TYPE+4)
+#define MESH_REG_S_PUBKEY_INVALID           (MESH_REG_TYPE+5)
+#define MESH_REG_S_SIGN_INVALID             (MESH_REG_TYPE+6)
+#define MESH_REG_D_CERT_INVALID             (MESH_REG_TYPE+7)
+#define MESH_REG_D_PUBKEY_INVALID           (MESH_REG_TYPE+8)
+#define MESH_REG_D_SIGN_INVALID             (MESH_REG_TYPE+9)
 
 #define MESH_LOGIN_TYPE                     0x50UL
 #define MESH_ADMIN_LOGIN_START              (MESH_LOGIN_TYPE)

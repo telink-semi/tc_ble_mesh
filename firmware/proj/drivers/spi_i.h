@@ -34,7 +34,7 @@
 #else
 
 // use static inline, because, spi flash code must reside in memory..
-// these code may be embedd in flash code
+// these code may be embed in flash code
 
 static inline void mspi_wait(void){
 	while(reg_master_spi_ctrl & FLD_MASTER_SPI_BUSY)

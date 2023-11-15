@@ -647,7 +647,7 @@ int cfg_cmd_subnet_bridge_get(u16 dst_addr);
 function :send subnet bridge set message 
 para:
 	dst_addr: address of the destination  
-	en:0 diasble, 1 enable
+	en:0 disable, 1 enable
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/

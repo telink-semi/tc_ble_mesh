@@ -328,7 +328,7 @@ do {                                                                            
 #define HASH_EMIT_KEY(hh,head,keyptr,fieldlen)                    
 #endif
 
-/* default to Jenkin's hash unless overridden e.g. DHASH_FUNCTION=HASH_SAX */
+/* default to Jenkins's hash unless overridden e.g. DHASH_FUNCTION=HASH_SAX */
 #ifdef HASH_FUNCTION 
 #define HASH_FCN HASH_FUNCTION
 #else

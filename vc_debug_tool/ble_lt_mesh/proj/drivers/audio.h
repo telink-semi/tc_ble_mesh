@@ -78,7 +78,7 @@ extern void Audio_Init(unsigned char mFlag,unsigned char checkM,enum AUDIOINPUTC
 *
 *	@brief	audio input set function, select analog audio input channel, start the filters
 *
-*	@param	adc_ch:	if audio input as signle end mode, should identify an analog audio signal input channel, enum variable of ADCINPUTCH
+*	@param	adc_ch:	if audio input as single end mode, should identify an analog audio signal input channel, enum variable of ADCINPUTCH
 *
 *	@return	none
 */
@@ -87,7 +87,7 @@ extern void Audio_InputSet(unsigned char adc_ch);
 
 /************************************************************************************
 *
-*	@brief	sdm set function, enabl or disable the sdm output, configure SDM output paramaters
+*	@brief	sdm set function, enabl or disable the sdm output, configure SDM output parameters
 *
 *	@param	audio_out_en:		audio output enable or disable set, '1' enable audio output; '0' disable output
 *			sdm_setp:		SDM clk divider

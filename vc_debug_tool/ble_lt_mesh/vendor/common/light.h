@@ -198,7 +198,7 @@ typedef struct{
 
 typedef struct{
 	u8 st[ST_TRANS_MAX + 1];    // + 1: for onoff publish flag
-// follwing parmeters is for inputting.	
+// following parameters is for inputting.	
 	u8 no_dim_refresh_flag;     // input parameter
 	u8 hsl_set_cmd_flag;        //
 }st_pub_list_t;  // st_level_set_pub_list_t

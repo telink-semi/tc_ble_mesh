@@ -69,7 +69,7 @@ void usbaud_hid_report(char format, char volume) {
 #endif
 
 
-#if(USB_SPEAKER_ENABLE || USB_MIC_ENABLE)	//  use for volumn control, mute, next, prev track,  move to mouse hid
+#if(USB_SPEAKER_ENABLE || USB_MIC_ENABLE)	//  use for volume control, mute, next, prev track,  move to mouse hid
 int usbaud_hid_report(u8 cmd, u8 vol){
 	if (usbhw_is_ep_busy(USB_EDP_AUDIO_IN))
 		return 0;
@@ -277,7 +277,7 @@ int usbaud_handle_get_mic_cmd(int req, int type) {
 	return 0;
 }
 void usbaud_init(void) {
-	if (USB_MIC_ENABLE && 1 == MIC_CHANNLE_COUNT) {
+	if (USB_MIC_ENABLE && 1 == MIC_CHANNEL_COUNT) {
 		usbaud_set_audio_mode(1, 1);
 	}
 #if (USB_SPEAKER_ENABLE)

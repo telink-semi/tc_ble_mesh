@@ -281,9 +281,9 @@ void mesh_smart_provision_proc()
 				smart_provision_gateway_devkey_set();
 			}
 			smart_provision_scan_start();
-			mesh_smart_provision_st_set(SMART_CONFIG_SCANING);
+			mesh_smart_provision_st_set(SMART_CONFIG_SCANNING);
 			break;
-		case SMART_CONFIG_SCANING:		
+		case SMART_CONFIG_SCANNING:		
 			if(smart_white_list_cnt){
 				mesh_smart_provision_st_set(SMART_CONFIG_PROV_START);
 			}

@@ -72,8 +72,8 @@ void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 		u16 adr_dst = 0;
 		#if FEATURE_LOWPOWER_EN
 		fri_clear.LPNAdr = mesh_lpn_par.LPNAdr;
-		fri_clear.LPNCounter = 2;       // comfirm later, should use parameters in last request command.
-		adr_dst = mesh_lpn_par.FriAdr;  // comfirm later, should use parameters in last request command.
+		fri_clear.LPNCounter = 2;       // confirm later, should use parameters in last request command.
+		adr_dst = mesh_lpn_par.FriAdr;  // confirm later, should use parameters in last request command.
 		#elif FEATURE_FRIEND_EN
 		fri_clear.LPNAdr = fn_other_par[lpn_idx].LPNAdr;
 		fri_clear.LPNCounter = fn_req[lpn_idx].LPNCounter;
@@ -413,7 +413,7 @@ int mesh_tx_cmd_add_packet_fn2lpn(u8 *p_bear)
     #else
     mesh_cmd_bear_t *p = (mesh_cmd_bear_t *)p_bear;
     if(PTS_TEST_EN || fn2lpn_no_retransmit){
-	    p->trans_par_val = 0x10;    // FN-BV16 / BV19 require no more than NW PDU. comfirm later.
+	    p->trans_par_val = 0x10;    // FN-BV16 / BV19 require no more than NW PDU. confirm later.
 	}
 	LOG_MSG_INFO(TL_LOG_MESH,0, 0,"mesh_tx_cmd_add_packet_fn2lpn",0);
     int err = my_fifo_push_adv(&mesh_adv_fifo_fn2lpn, p_bear, mesh_bear_len_get(p), 0);
@@ -671,7 +671,7 @@ static inline int is_change_iv_just_before_push_cache(fn_ctl_rsp_delay_t *p_dela
 {
 	int iv_change_flag = 0;
 #if 0
-	// can not use this method, becasue "poll" may be retry, and then iv_tx will not be the same as iv before, 
+	// can not use this method, because "poll" may be retry, and then iv_tx will not be the same as iv before, 
 	// then mesh_friend_set_delay_par_poll_ will not record correct iv_low, then fail to return iv_change_flag as 1.
 	if(p_delay->iv_low != (iv_idx_st.iv_tx & 0xff))
 #else
@@ -800,7 +800,7 @@ void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unseg
 	        }
 
 	        if(proc_fn->clear_by_lpn_tick && clock_time_exceed(proc_fn->clear_by_lpn_tick, 5*1000*1000)){
-	            // because LPN may retry send clear command when not receive clear comfirm.
+	            // because LPN may retry send clear command when not receive clear confirm.
                 friend_ship_disconnect_fn(i, FS_DISCONNECT_TYPE_CLEAR);
 	        }
 	    }else{

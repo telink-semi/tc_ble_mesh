@@ -340,7 +340,7 @@ int factory_reset_handle ()
         irq_disable();
         factory_reset();
             #if DUAL_MODE_WITH_TLK_MESH_EN
-        UI_resotre_TLK_4K_with_check();
+        UI_restore_TLK_4K_with_check();
             #endif
             #if FACTORY_RESET_LOG_EN
         LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0,0,"factory reset success\r\n",0);
@@ -353,7 +353,7 @@ int factory_reset_handle ()
 	return 0;
 }
 
-#define VALID_POWER_ON_TIME_US 	(50*1000)	// will not start checking flow of factory reset count untill after this time to avoid unstable power supply.
+#define VALID_POWER_ON_TIME_US 	(50*1000)	// will not start checking flow of factory reset count until after this time to avoid unstable power supply.
 
 /**
  * @brief       This function is a poll flow to check power on serials.
@@ -556,7 +556,7 @@ void kick_out(int led_en){
 	#endif
 	
     #if DUAL_MODE_WITH_TLK_MESH_EN
-    UI_resotre_TLK_4K_with_check();
+    UI_restore_TLK_4K_with_check();
     #endif
 #if 0 // not erase network info, user can revert network info by reboot or call mesh_revert_network()
 	mesh_reset_network(1);

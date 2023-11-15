@@ -240,7 +240,7 @@ void adc_old_temp_init(void)
 	adc_set_ref_voltage(ADC_VREF_1P2V);//set channel Vref,
 	adc_set_vref_vbat_divider(ADC_VBAT_DIVIDER_OFF);//set Vbat divider select,
 
-	adc_set_ain_channel_differential_mode(TEMSENSORP, TEMSENSORN);
+	adc_set_ain_channel_differential_mode(TEMPERATURE_SENSOR_P, TEMPERATURE_SENSOR_N);
 	adc_set_resolution(RES14);
 	adc_set_tsample_cycle(SAMPLING_CYCLES_6);
 	adc_set_ain_pre_scaler(ADC_PRESCALER_1);//adc scaling factor is 1 or 1/8
@@ -266,7 +266,7 @@ void adc_temp_init(void)
 	adc_set_ref_voltage(ADC_VREF_1P2V);//set channel Vref,
 	adc_set_vref_vbat_divider(ADC_VBAT_DIVIDER_OFF);//set Vbat divider select,
 
-	adc_set_ain_channel_differential_mode(TEMSENSORP_EE, TEMSENSORN_EE);
+	adc_set_ain_channel_differential_mode(TEMPERATURE_SENSOR_P_EE, TEMPERATURE_SENSOR_N_EE);
 	adc_set_resolution(RES14);
 	adc_set_tsample_cycle(SAMPLING_CYCLES_6);
 	adc_set_ain_pre_scaler(ADC_PRESCALER_1);//adc scaling factor is 1 or 1/8

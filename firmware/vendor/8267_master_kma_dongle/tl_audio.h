@@ -27,8 +27,8 @@
 
 #include "tl_common.h"
 
-#ifndef		TL_NOISE_SUPRESSION_ENABLE
-#define		TL_NOISE_SUPRESSION_ENABLE			0
+#ifndef		TL_NOISE_SUPPRESSION_ENABLE
+#define		TL_NOISE_SUPPRESSION_ENABLE			0
 #endif
 
 #ifndef		TL_MIC_PACKET_BUFFER_NUM
@@ -65,7 +65,7 @@ extern int md_im;
 extern int md_noise;
 extern int md_gain;
 
-static inline int noise_supression (s16 md) {
+static inline int noise_suppression (s16 md) {
 
 	static int md_th =384;
 	//static int md_long =0;

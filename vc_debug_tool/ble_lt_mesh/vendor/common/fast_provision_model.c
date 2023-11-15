@@ -63,7 +63,7 @@ int mesh_reset_network(u8 provision_enable)
 	mesh_iv_idx_init(IV_IDX_CUR, 0, 0);
 //init model info
 	mesh_common_reset_all();
-	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all	
+	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrieve in mesh_common_reset_all	
 	if(!provision_enable){
 		mesh_gatt_adv_beacon_enable(0);
 	}else{
@@ -258,7 +258,7 @@ void mesh_fast_prov_reliable_finish_handle()
 			break;
 		case FAST_PROV_SET_ADDR:
 			if(mesh_tx_reliable.mat.op == VD_MESH_ADDR_SET){				
-				// for default address conflict, assume set addr must succcess
+				// for default address conflict, assume set addr must success
 				u8 device_key[16];
 				memset(device_key, 0x00, sizeof(device_key));
 				memcpy(device_key, fast_prov_mac_buf[fast_prov_r_idx-1].mac, OFFSETOF(fast_prov_mac_st,pid));

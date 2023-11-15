@@ -66,7 +66,7 @@ static int pkt_rd = 0;
 #define RF_SIMU_PKT_INIT(pkt)        rf_simu_pkt_init(&pkt[0], ARRAY_SIZE(pkt))
 static void rf_simu_pkt_init(u8 *pkt, u32 len){
 
-    // set the packet verification charaters
+    // set the packet verification characters
     u8 * p = pkt;
     p[0] = (u8)len - 2;
     p[4] = 60;        //  == (60 - 110) == -50dbm
@@ -79,7 +79,7 @@ static void rf_simu_pkt_init(u8 *pkt, u32 len){
     p += 13;    // len of first element
     *p = (u8)(len - 30);
     assert(len / 4 * 4 == len);    // 保证每个 TLV 都是从 32 bit 开始
-    // end: set the packet verification charaters
+    // end: set the packet verification characters
 
     int next = pkt_wr + 1;
     if(next >= RF_PKT_BUFF_CNT) next = 0;
@@ -88,7 +88,7 @@ static void rf_simu_pkt_init(u8 *pkt, u32 len){
         pkt_wr = next;
     }
 }
-// init packets with len, mac, ip etc. for convinience
+// init packets with len, mac, ip etc. for convenience
 static void rf_simu_pkts_init(void){
 //    RF_SIMU_PKT_INIT(pkt_beacon_req);
     RF_SIMU_PKT_INIT(pkt_speaker_req);

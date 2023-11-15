@@ -217,7 +217,7 @@ MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, HCI_TX_FIFO_NUM); // include adv pkt 
 MYFIFO_INIT(hci_rx_fifo, 512, 4);   // max play load 382
 #else
 #define UART_DATA_SIZE              (EXTENDED_ADV_ENABLE ? 280 : 72)    // increase or decrease 16bytes for each step.
-#define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve(can't reveive valid data, because UART_DATA_SIZE is max value of DMA len)
+#define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve(can't receive valid data, because UART_DATA_SIZE is max value of DMA len)
 STATIC_ASSERT(HCI_RX_FIFO_SIZE % 16 == 0);
 
 MYFIFO_INIT(hci_rx_fifo, HCI_RX_FIFO_SIZE, 4);
@@ -231,7 +231,7 @@ __WEAK void function_null_compile(const void *p){}// just for avoid being optimi
 /**
  * key_encode_bin : Encryption key for OTA firmware.
  * eclipse will create two firmwares: *.bin and *_enc.bin . "*_enc.bin" is only used for OTA.
- * The key is used to encrypte in eclipse and decrypte in firmware.
+ * The key is used to encrypted in eclipse and decrypted in firmware.
  * Key size must be 16 bytes in hex and should never be changed any more for this product.
 */
 #ifndef ENCODE_BIN_USER_KEY     // please define in "user_app_config.h"
@@ -279,7 +279,7 @@ u32 g_vendor_md_light_vc_c = VENDOR_MD_LIGHT_C;
 u32 g_vendor_md_light_vc_s2 = VENDOR_MD_LIGHT_S2;
     #endif
 #endif
-u8  mesh_user_define_mode = MESH_USER_DEFINE_MODE;  // for libary use
+u8  mesh_user_define_mode = MESH_USER_DEFINE_MODE;  // for library use
 u16	current_connHandle = BLE_INVALID_CONNECTION_HANDLE;	 //	handle of  connection
 
 u16 mesh_tx_with_random_delay_ms = 0; // max 12000
@@ -786,7 +786,7 @@ void mesh_tid_save(int ele_idx)
 }
 
 #if !WIN32
-// adv_filter has been deleted, if want to change filter rules, pleae set in user_adv_filter_proc().
+// adv_filter has been deleted, if want to change filter rules, please set in user_adv_filter_proc().
 u8 adv_mesh_en_flag = 0;
 u8 mesh_kr_filter_flag =0;
 u8 mesh_provisioner_buf_enable =0;
@@ -1049,7 +1049,7 @@ _attribute_ram_code_ void rp_active_scan_req_proc()
 			if(!memcmp(temp_uuid, p_pb_adv->uuid_pb_uuid, sizeof(temp_uuid))&&
 				!memcmp(rp_mag.rp_extend[0].uuid, p_pb_adv->service_data, sizeof(p_pb_adv->service_data))){
 				memcpy(scan_req_mac,p_adv->advA,sizeof(p_adv->advA));
-				// remeber the mac adr which we will send the scan_req
+				// remember the mac adr which we will send the scan_req
 				
 			}else{
 				STOP_RF_STATE_MACHINE;
@@ -1241,7 +1241,7 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 				}
 			#if __PROJECT_MESH_PRO__
 			}else if(mesh_kr_filter_flag){
-				// keybind filter flag ,to improve the envirnment of the gateway part
+				// keybind filter flag ,to improve the environment of the gateway part
 				if( mesh_msg_type != MESH_ADV_TYPE_MESSAGE || (fifo_free_cnt < 4)){
 					next_buffer = 0;
 				}
@@ -1387,7 +1387,7 @@ const u16 sub_share_model_sig_others_server_extend[][3] = { // model list for ot
 	{SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_SETUP_S},
 	#endif
 	#if MD_PROPERTY_EN
-	{SIG_MD_G_USER_PROP_S, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_MFG_PROP_S}, // SIG_MD_G_CLIENT_PROP_S is root model and is not extended by anyother model.
+	{SIG_MD_G_USER_PROP_S, SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_MFG_PROP_S}, // SIG_MD_G_CLIENT_PROP_S is root model and is not extended by any other model.
 	#endif
 	#if MD_SENSOR_EN
 	{SIG_MD_SENSOR_S, SIG_MD_SENSOR_SETUP_S},
@@ -1580,6 +1580,18 @@ int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,boo
 /**
  * @brief       This function is callback function for provision event of mesh node.
  * @param[in]   evt_code	- event code
+ *Provisionee:	EVENT_MESH_NODE_RC_LINK_CLOSE: link close.
+ *				EVENT_MESH_NODE_RC_LINK_START: link establish, enter provisioning state 
+ *				EVENT_MESH_NODE_RC_LINK_FAIL_CODE: link close by provision fail.
+ *				EVENT_MESH_NODE_RC_LINK_TIMEOUT: link close by timeout.
+ *				EVENT_MESH_NODE_RC_LINK_SUC: link close success, means provision complete.
+ *
+ *Provisioner:  EVENT_MESH_PRO_RC_LINK_START: provision link establish.
+ *              EVENT_MESH_PRO_RC_LINK_TIMEOUT: provision link close by timeout.
+ *              EVENT_MESH_PRO_RC_LINK_SUC: provision link close success, means provision complete.
+ *
+ *pb_gatt:		EVENT_MESH_NODE_CONNECT: ble gatt connect.
+ *              EVENT_MESH_NODE_DISCONNECT: ble gatt disconnect.
  * @return     	none 
  * @note        
  */
@@ -1767,7 +1779,7 @@ void cmd_ota_mesh_hk_login_handle(const u8 auth_app[16])
 }
 #endif
 
-#if 1 // process flash parameter when OTA between diffrent SDK.
+#if 1 // process flash parameter when OTA between different SDK.
 
 /**
  * @brief       This function set firmware type
@@ -1969,12 +1981,12 @@ void mesh_ota_reboot_check_refresh()
 void mesh_ota_reboot_proc()
 {
     #if PTS_TEST_OTA_EN
-    #define MESH_OTA_REBOOT_STANDY_MS   (9000) // stay enough time before reboot, because PTS will sent firmware start after firmware apply.
+    #define MESH_OTA_REBOOT_STANDBY_MS   (9000) // stay enough time before reboot, because PTS will sent firmware start after firmware apply.
     #else
-    #define MESH_OTA_REBOOT_STANDY_MS   (3000)
+    #define MESH_OTA_REBOOT_STANDBY_MS   (3000)
     #endif
 
-	u32 reboot_standby_ms = MESH_OTA_REBOOT_STANDY_MS;
+	u32 reboot_standby_ms = MESH_OTA_REBOOT_STANDBY_MS;
     #if (DISTRIBUTOR_UPDATE_SERVER_EN)
     if(is_rx_upload_start_before()){
     	reboot_standby_ms = max2(reboot_standby_ms, 6000);
@@ -2107,7 +2119,7 @@ void mesh_ble_disconnect_cb(u8 reason)
 int app_func_before_suspend(u32 wakeup_tick)
 {
 	if((wakeup_tick-clock_time() > 10*CLOCK_SYS_CLOCK_1MS)){// makesure enough time
-		mesh_notifyfifo_rxfifo(); // Quick response in next interval, expecially for long connect interval.
+		mesh_notifyfifo_rxfifo(); // Quick response in next interval, especially for long connect interval.
 	}
 	return 1;
 }
@@ -2874,7 +2886,7 @@ void mesh_ota_reboot_check_refresh(){}
  * @param[in]   n	- length of buffer
  * @param[in]   ow	- if 1: means can be over write the oldest buffer in fifo when fifo if full.
  * @return      0: success. others: fail.
- * @note        diffrent between my_fifo_push and my_fifo_push_adv:
+ * @note        different between my_fifo_push and my_fifo_push_adv:
  *              my_fifo_push:          no len in data, add len when push.
  *              my_fifo_push_adv: have len in data,  just use for mesh_cmd_bear.
  */
@@ -3007,8 +3019,8 @@ void vendor_id_check_and_update() //confirm cps and vendor model
 #endif
 
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-//STATIC_ASSERT(STATIC_ADDR_MAC_MESH == (STATIC_DEV_INFO_ADR + 0x09));        // just for comfirm, make sure not change
-//STATIC_ASSERT(STATIC_ADDR_MESH_STATIC_OOB == (STATIC_DEV_INFO_ADR + 0x17)); // just for comfirm, make sure not change
+//STATIC_ASSERT(STATIC_ADDR_MAC_MESH == (STATIC_DEV_INFO_ADR + 0x09));        // just for confirm, make sure not change
+//STATIC_ASSERT(STATIC_ADDR_MESH_STATIC_OOB == (STATIC_DEV_INFO_ADR + 0x17)); // just for confirm, make sure not change
 
 /**
  * this update the tx power by reading from flash offset
@@ -3032,7 +3044,7 @@ void app_txPowerCal()
 
 /*
 mesh_global_var_init(): run in mesh_init_all() and before read parameters in flash.
-                                  it's used to set default vaule for compilation.
+                                  it's used to set default value for compilation.
 */
 void mesh_global_var_init()
 {
@@ -3044,7 +3056,7 @@ void mesh_global_var_init()
     user_mesh_cps_init();
     u8 dev_key_def[16] = DEVKEY_DEF;
     memcpy(mesh_key.dev_key, dev_key_def, sizeof(mesh_key.dev_key));
-#if (SECURE_NETWORK_BEACON_LOOP_DISABLE || GATT_LPN_EN)
+#if (SECURE_NETWORK_BEACON_LOOP_DISABLE || __PROJECT_MESH_SWITCH__ || GATT_LPN_EN)
 	model_sig_cfg_s.sec_nw_beacon = NW_BEACON_NOT_BROADCASTING;
 #else
 	model_sig_cfg_s.sec_nw_beacon = SEC_NW_BC_BROADCAST_DEFAULT; // (NODE_CAN_SEND_ADV_FLAG) ? SEC_NW_BC_BROADCAST_DEFAULT : NW_BEACON_NOT_BROADCASTING;
@@ -3062,7 +3074,7 @@ void mesh_global_var_init()
 	#endif
 #else
 	#if (NODE_CAN_SEND_ADV_FLAG)
-		#if MI_API_ENABLE // beacauses mi mode have many mode ,it hard to distingwish the mode .
+		#if MI_API_ENABLE // because mi mode have many mode ,it hard to distingwish the mode .
 	model_sig_cfg_s.frid = FRIEND_NOT_SUPPORT;
 		#else
 	model_sig_cfg_s.frid = FEATURE_FRIEND_EN ? FRIEND_SUPPORT_ENABLE : FRIEND_NOT_SUPPORT;
@@ -3085,11 +3097,11 @@ void mesh_global_var_init()
 	
 #if MESH_MODEL_MISC_SAVE_EN
 	#if (/*MD_PRIVACY_BEA &&  */MD_SERVER_EN && !WIN32) 	//  can not use MD_PRIVACY_BEA,  due to OTA.
-	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
-	//p_beacon_ser->beacon_sts = PRIVATE_BEACON_DISABLE;			// default value of globle has been 0. no need set again to save code.
-	p_beacon_ser->random_inv_step = 0x3c;	// 10 min
-	//p_beacon_ser->proxy_sts = PRIVATE_PROXY_DISABLE; 				// default value of globle has been 0. no need set again to save code.
-	//p_beacon_ser->identity_sts = PRIVATE_NODE_IDENTITY_DISABLE; 	// default value of globle has been 0. no need set again to save code.
+	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
+	//p_beacon_srv->beacon_sts = PRIVATE_BEACON_DISABLE;			// default value of globle has been 0. no need set again to save code.
+	p_beacon_srv->random_inv_step = 0x3c;	// 10 min
+	//p_beacon_srv->proxy_sts = PRIVATE_PROXY_DISABLE; 				// default value of globle has been 0. no need set again to save code.
+	//p_beacon_srv->identity_sts = PRIVATE_NODE_IDENTITY_DISABLE; 	// default value of globle has been 0. no need set again to save code.
 	#endif
 
 	#if 1 // can not use MD_SAR_EN, because if disable MD_SAR_EN first, then OTA a new firmware with enable MD_SAR_EN will cause that all parameters will be 0.
@@ -3659,7 +3671,7 @@ int mesh_seg_block_ack_cb(const mesh_cmd_bear_t *p_bear_ack, st_block_ack_t st)
 	p_lt_ctl_seg_ack = p_lt_ctl_seg_ack;	// will be optimized
 	if(ST_BLOCK_ACK_BUSY == st){
 		mesh_tx_segment_finished();			// spec define to cancel in "Segmentation behavior" // if not cancel, it will cause too much block busy ack.
-		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"RX node segment is busy,so tx flow cancle",0);
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"RX node segment is busy,so tx flow cancel",0);
 	}
 
 	return 0;
@@ -3720,7 +3732,7 @@ int gateway_sar_pkt_reassemble(u8 *buf,int len )
 		memcpy(gateway_seg_buf,buf+1,len-1);
 		gateway_seg_buf_len += len-1;
 		return PACKET_WAIT_COMPLETE;
-	}else if (type == SAR_CONTINUS){
+	}else if (type == SAR_CONTINUE){
 		memcpy(gateway_seg_buf+gateway_seg_buf_len,buf+1,len-1);
 		gateway_seg_buf_len += len-1;
 		if(gateway_seg_buf_len >= MAX_SEG_NUM_CNT){
@@ -3771,8 +3783,8 @@ int gateway_sar_pkt_segment(u8 *p_par,int par_len, u16 valid_fifo_size, u8 *p_he
 
 	seg_par_len = valid_fifo_size - 2;
 	while(par_len){
-		if(par_len > seg_par_len){//continus packet 
-			head[1] = SAR_CONTINUS;
+		if(par_len > seg_par_len){//continue packet 
+			head[1] = SAR_CONTINUE;
 			#if VC_APP_ENABLE
 			WriteFile_handle(p_par,seg_par_len, head, head_len);
 			#else

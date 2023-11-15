@@ -27,7 +27,7 @@
 #define MIBLE_GATT_SPEC_OP_PROPERTY_CHANGED         0x04
 #define MIBLE_GATT_SPEC_OP_ACTION                   0x05
 #define MIBLE_GATT_SPEC_OP_ACTION_RSP               0x06
-#define MIBLE_GATT_SPEC_OP_EVENT_OCCURED            0x07
+#define MIBLE_GATT_SPEC_OP_EVENT_OCCURRED            0x07
 
 #define MIBLE_GATT_SPEC_OP_PROTOCOL_EXCHANGE        0xF0
 

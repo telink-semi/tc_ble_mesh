@@ -147,7 +147,7 @@ int mesh_cmd_sig_schd_action_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 	p_save->valid_flag_or_idx = 1;	// save as valid flag
 	mesh_model_store(1, SIG_MD_SCHED_SETUP_S);
 
-	rebulid_schd_nearest_and_check_event(1, get_local_TAI());
+	rebuild_schd_nearest_and_check_event(1, get_local_TAI());
 	
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_schd_action_st_rsp(cb_par, schd_idx);
@@ -521,7 +521,7 @@ int schd_event_check(u32 TAI_local)
     return act;
 }
 
-void rebulid_schd_nearest_and_check_event(int rebuild, u32 TAI_local)
+void rebuild_schd_nearest_and_check_event(int rebuild, u32 TAI_local)
 {
     if(!g_TAI_sec){
         return ;
@@ -549,7 +549,7 @@ void mesh_scheduler_proc()
         }
     }
 
-    rebulid_schd_nearest_and_check_event(rebuild_nearest, TAI_local);
+    rebuild_schd_nearest_and_check_event(rebuild_nearest, TAI_local);
 }
 #endif
 #endif
