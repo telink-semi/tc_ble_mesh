@@ -35,7 +35,7 @@
 
 ### BREAKING CHANGES
 
-* (Firmware/Android/iOS)the opcode and model ID of mesh 1.1 new features, such as mesh OTA's, are changed compared with the version of the draft feature. Please pay attention to compatibility issues.
+* (Firmware/Android/iOS)the opcode and model ID of mesh 1.1 new features, such as mesh OTA's, are changed compared with the version of the draft feature. Please pay attention to compatibility issues if you develop base on draft feature version before.
 
 ### Notes
 
@@ -86,7 +86,7 @@
 
 ### BREAKING CHANGES
 
-* (Firmware/Android/iOS)mesh OTA 等功能 的 opcode 和 model ID 的值，相对于 draft feature的版本有更新，请注意兼容性问题。
+* (Firmware/Android/iOS)mesh OTA 等功能 的 opcode 和 model ID 的值，相对于 draft feature的版本有更新，如果之前有基于draft feature的版本进行开发，请注意兼容性问题。
 
 ### Notes
 
