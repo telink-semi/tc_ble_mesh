@@ -70,7 +70,10 @@ oss:
   stage: oss
   dependencies: []
   script:
-    - cd app
+    - cd app/ios
+    - oss_checking .
+    - cd -
+    - cd app/android
     - oss_checking .
     - cd -
     - cd firmware
@@ -82,7 +85,8 @@ oss:
   artifacts:
     name: "opensource_scan_result"
     paths:
-    - ./app/scan_result
+    - ./app/ios/scan_result
+    - ./app/android/scan_result
     - ./firmware/scan_result
     - ./vc_debug_tool/scan_result
   when: manual      
