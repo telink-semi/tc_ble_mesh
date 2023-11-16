@@ -44,7 +44,6 @@
 ### CodeSize
 
 * Flash and RAM (default target):
-
   - 8258_mesh:_________Flash 123.6 KB, RAM (28 KB + 3K stack),
   - 8258_mesh_LPN:____Flash 117.1 KB, RAM (22 KB + 3K stack),
   - 8258_mesh_gw:_____Flash 130.6 KB, RAM (33 KB + 3K stack),
@@ -125,7 +124,6 @@
 ### CodeSize
 
 * Flash and RAM (default target):
-
   - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
   - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
   - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
