@@ -523,6 +523,7 @@
 ./vc_debug_tool/ble_lt_mesh/vendor/common/generic_model.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/common/lighting_model_HSL.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/common/remote_prov.c		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/vendor/common/tc32_std_lib_api.c		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/common/scene.c		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/common/tlv_flash.c		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/common/vendor_model.c		TELINK_APACHE
@@ -584,6 +585,9 @@
 ./vc_debug_tool/ble_lt_mesh/vendor/user_app/user_app_default.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/user_app/user_app.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app_config_8269.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app_l2cap_coc.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/mesh_cdtp.h		TELINK_BSD
+./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app_l2cap_coc.c		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app_att.c		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/vendor/mesh_provision/app_config_8278.h		TELINK_APACHE
@@ -678,6 +682,11 @@
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ble_controller.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ble_common.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/l2cap/l2cap.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/smp/smp_peripheral.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/smp/smp_const.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/smp/smp.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/smp/smp_storage.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/smp/smp_central.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ble_format.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ll/ll_init.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ll/ll_scan.h		TELINK_APACHE
@@ -694,6 +703,8 @@
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ll/ll_whitelist.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/trace.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/ble.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/phy/phy.h		TELINK_APACHE
+./vc_debug_tool/ble_lt_mesh/stack/ble_8278/phy/phy_test.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/gap/gap_event.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/stack/ble_8278/gap/gap.h		TELINK_APACHE
 ./vc_debug_tool/ble_lt_mesh/tl_common.h		TELINK_APACHE
@@ -758,10 +769,11 @@
 ./vc_debug_tool/reference/tl_bulk/GridCtrl_src/MemDC.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/GridCtrl_src/GridCtrl.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/rapid_json_interface.h		TELINK_APACHE
-./vc_debug_tool/reference/tl_bulk/CTL_privision.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/TL_RxTest.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/usbprt.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/ScanDialog.h		TELINK_APACHE
+./vc_debug_tool/reference/tl_bulk/resource.h		TELINK_APACHE
+./vc_debug_tool/reference/tl_bulk/CTL_provision.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/ScanDlg.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/SerialPort.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/StdAfx.h		TELINK_APACHE
@@ -771,6 +783,7 @@
 ./vc_debug_tool/reference/tl_bulk/NewCellTypes/GridURLCell.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/NewCellTypes/GridCellNumeric.h		TELINK_APACHE
 ./vc_debug_tool/reference/tl_bulk/NewCellTypes/GridCellDateTime.h		TELINK_APACHE
+./vc_debug_tool/reference/tl_bulk/Remote_scan_dlg.h		TELINK_APACHE
 ./firmware/drivers/8278/i2c.h		TELINK_APACHE
 ./firmware/drivers/8278/random.c		TELINK_APACHE
 ./firmware/drivers/8278/qdec.c		TELINK_APACHE
@@ -841,6 +854,7 @@
 ./firmware/drivers/8258/pga.h		TELINK_APACHE
 ./firmware/drivers/8258/flash/flash_mid1460c8.h		TELINK_APACHE
 ./firmware/drivers/8258/flash/flash_mid136085.c		TELINK_APACHE
+./firmware/drivers/8258/flash/flash_mid1160c8.c		TELINK_APACHE
 ./firmware/drivers/8258/flash/flash_mid14325e.c		TELINK_APACHE
 ./firmware/drivers/8258/flash/flash_mid011460c8.c		TELINK_APACHE
 ./firmware/drivers/8258/flash/flash_mid1460c8.c		TELINK_APACHE
@@ -1291,6 +1305,7 @@
 ./firmware/vendor/common/generic_model.h		TELINK_APACHE
 ./firmware/vendor/common/lighting_model_HSL.h		TELINK_APACHE
 ./firmware/vendor/common/remote_prov.c		TELINK_APACHE
+./firmware/vendor/common/tc32_std_lib_api.c		TELINK_APACHE
 ./firmware/vendor/common/scene.c		TELINK_APACHE
 ./firmware/vendor/common/tlv_flash.c		TELINK_APACHE
 ./firmware/vendor/common/vendor_model.c		TELINK_APACHE
@@ -1447,6 +1462,11 @@
 ./firmware/stack/ble_8278/ble_controller.h		TELINK_APACHE
 ./firmware/stack/ble_8278/ble_common.h		TELINK_APACHE
 ./firmware/stack/ble_8278/l2cap/l2cap.h		TELINK_APACHE
+./firmware/stack/ble_8278/smp/smp_peripheral.h		TELINK_APACHE
+./firmware/stack/ble_8278/smp/smp_const.h		TELINK_APACHE
+./firmware/stack/ble_8278/smp/smp.h		TELINK_APACHE
+./firmware/stack/ble_8278/smp/smp_storage.h		TELINK_APACHE
+./firmware/stack/ble_8278/smp/smp_central.h		TELINK_APACHE
 ./firmware/stack/ble_8278/ble_format.h		TELINK_APACHE
 ./firmware/stack/ble_8278/ll/ll_init.h		TELINK_APACHE
 ./firmware/stack/ble_8278/ll/ll_scan.h		TELINK_APACHE
@@ -1463,6 +1483,8 @@
 ./firmware/stack/ble_8278/ll/ll_whitelist.h		TELINK_APACHE
 ./firmware/stack/ble_8278/trace.h		TELINK_APACHE
 ./firmware/stack/ble_8278/ble.h		TELINK_APACHE
+./firmware/stack/ble_8278/phy/phy.h		TELINK_APACHE
+./firmware/stack/ble_8278/phy/phy_test.h		TELINK_APACHE
 ./firmware/stack/ble_8278/gap/gap_event.h		TELINK_APACHE
 ./firmware/stack/ble_8278/gap/gap.h		TELINK_APACHE
 ./firmware/tl_common.h		TELINK_APACHE
