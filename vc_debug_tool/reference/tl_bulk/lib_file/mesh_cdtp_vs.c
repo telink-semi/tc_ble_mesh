@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 
 #include "../../../ble_lt_mesh/proj_lib/sig_mesh/app_mesh.h"
-#include "third_party/zlib/zlib.h"
+//#include "third_party/zlib/zlib.h"
 #include "./hw_fun.h"
 #include "../../../ble_lt_mesh/proj_lib/cdtp/audio_otp.h"
 #include "./mesh_cdtp_vs.h"
@@ -233,7 +233,7 @@ u32 CDTP_get_buff_of_json()
 #endif
 
 	unsigned long len_compress = sizeof(CDTP_object_data);
-	int err = compress(CDTP_object_data, &len_compress, CDTP_object_uncompress_data, len_read);
+	int err = -1; // TODO: import zlib. // compress(CDTP_object_data, &len_compress, CDTP_object_uncompress_data, len_read);
 	if( 0 == err){
 		CDTP_object_ready = 1;
 		LOG_MSG_INFO(TL_LOG_GATEWAY,0, 0,"CDTP get buffer of json success", 0); 
@@ -303,8 +303,8 @@ int OTS_coc_datacb(u8 *pData, u16 dataLen)
 		LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0,"CDTP rx data all, checksum is: 0x%08x", crc); 
 		if(1){ // TODO: CRC ok
 			unsigned long len_uncomp = sizeof(CDTP_object_uncompress_data);
-			int err = uncompress(CDTP_object_uncompress_data, &len_uncomp, CDTP_object_data, p_cdtp->write_len);
-			if(Z_OK == err){
+			int err = -1; // TODO: import zlib. // uncompress(CDTP_object_uncompress_data, &len_uncomp, CDTP_object_data, p_cdtp->write_len);
+			if(0 == err){ // Z_OK == 0
 				vc_file_write_with_new_or_rewrite(CDTP_object_uncompress_data, len_uncomp, CDTP_UNCOMPRESS_FILE_NAME);
 				// input json
 				if(ble_module_id_is_gateway()){
