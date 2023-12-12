@@ -238,9 +238,8 @@
             </androidx.cardview.widget.CardView>
 
 
-            <!--  private beacon  -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/view_private_beacon"
+                android:id="@+id/view_sol"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -259,24 +258,26 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:src="@drawable/ic_private_beacon"
+                        android:src="@drawable/ic_sol"
                         android:tint="@color/gray" />
 
                     <TextView
+                        android:id="@+id/tv_sol"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Private Beacon" />
+                        android:text="Proxy Solicitation" />
 
-                    <ImageView
+                    <ProgressBar
+                        android:id="@+id/pb_sol"
+                        style="?android:attr/progressBarStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="@color/gray" />
-
+                        android:visibility="gone" />
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
+
 
 
         </LinearLayout>

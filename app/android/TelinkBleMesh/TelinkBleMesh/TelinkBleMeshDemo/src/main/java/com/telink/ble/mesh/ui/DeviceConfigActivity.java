@@ -65,6 +65,9 @@ import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.RelayGetMessage;
 import com.telink.ble.mesh.core.message.config.RelaySetMessage;
 import com.telink.ble.mesh.core.message.config.RelayStatusMessage;
+import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyGetMessage;
+import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxySetMessage;
+import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -134,6 +137,7 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
 
         TelinkMeshApplication.getInstance().addEventListener(RelayStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(NodeIdentityStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(OnDemandPrivateProxyStatusMessage.class.getName(), this);
 
         refreshUI();
     }
@@ -176,6 +180,9 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 case NETWORK_TRANSMIT:
                     deviceConfig.desc = getNetworkTransmitDesc(deviceInfo.networkRetransmit);
                     break;
+                case ON_DEMAND_PRIVATE_GATT_PROXY:
+                    deviceConfig.desc = getOnDemandDesc(deviceInfo.onDemandPrivateGattProxy);
+                    break;
             }
             deviceConfigList.add(deviceConfig);
         }
@@ -183,6 +190,10 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
 
     private String getTTLDesc(byte ttl) {
         return String.format("%02X", ttl);
+    }
+
+    private String getOnDemandDesc(byte value) {
+        return String.format("%02X", value);
     }
 
     private String getRelayDesc(boolean relayEnable, byte relayRetransmit) {
@@ -257,6 +268,9 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
             case NETWORK_TRANSMIT:
                 meshMessage = new NetworkTransmitGetMessage(adr);
                 break;
+            case ON_DEMAND_PRIVATE_GATT_PROXY:
+                meshMessage = new OnDemandPrivateProxyGetMessage(adr);
+                break;
         }
         boolean cmdSent = MeshService.getInstance().sendMeshMessage(meshMessage);
         if (cmdSent) {
@@ -293,6 +307,10 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
             case NETWORK_TRANSMIT:
                 showNetworkInputDialog(builder);
                 break;
+
+            case ON_DEMAND_PRIVATE_GATT_PROXY:
+                showOnDemandInputDialog(builder);
+                break;
             default:
                 return;
         }
@@ -300,9 +318,6 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
     }
 
 
-    /*
-
-     */
     private void showDefaultTTLInputDialog(AlertDialog.Builder builder) {
         View view = LayoutInflater.from(this).inflate(R.layout.layout_config_ttl, null);
         final EditText et_input = view.findViewById(R.id.et_input);
@@ -465,6 +480,28 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
         });
     }
 
+    private void showOnDemandInputDialog(AlertDialog.Builder builder) {
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_config_on_demand, null);
+        final EditText et_input = view.findViewById(R.id.et_input);
+        builder.setView(view).setPositiveButton("confirm", (dialog, which) -> {
+            dialog.dismiss();
+            String ttlInput = et_input.getText().toString().trim();
+            if (TextUtils.isEmpty(ttlInput)) {
+                toastMsg("input empty");
+                return;
+            }
+            byte value = Byte.parseByte(ttlInput, 16);
+            OnDemandPrivateProxySetMessage setMessage = new OnDemandPrivateProxySetMessage(deviceInfo.meshAddress);
+            setMessage.privateProxy = value;
+            boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
+            if (cmdSent) {
+                showSendWaitingDialog("setting On-Demand Private GATT Proxy ...");
+            } else {
+                toastMsg("set message send error ");
+            }
+        });
+    }
+
 
     private void initSpinner(AppCompatSpinner spinner, String[] values, AdapterView.OnItemSelectedListener itemSelectedListener) {
         spinner.setDropDownWidth(400);
@@ -565,6 +602,14 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 config = getDeviceConfig(ConfigState.NETWORK_TRANSMIT);
                 if (config != null) {
                     config.desc = getNetworkTransmitDesc(deviceInfo.networkRetransmit);
+                }
+            } else if (event.getType().equals(OnDemandPrivateProxyStatusMessage.class.getName())) {
+                OnDemandPrivateProxyStatusMessage statusMessage = (OnDemandPrivateProxyStatusMessage) notificationMessage.getStatusMessage();
+                deviceInfo.onDemandPrivateGattProxy = statusMessage.privateProxy;
+
+                config = getDeviceConfig(ConfigState.ON_DEMAND_PRIVATE_GATT_PROXY);
+                if (config != null) {
+                    config.desc = getOnDemandDesc(deviceInfo.onDemandPrivateGattProxy);
                 }
             }
             deviceInfo.save();

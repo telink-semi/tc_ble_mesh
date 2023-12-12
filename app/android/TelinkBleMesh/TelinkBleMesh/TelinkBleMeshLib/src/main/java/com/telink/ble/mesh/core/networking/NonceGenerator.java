@@ -55,6 +55,11 @@ public class NonceGenerator {
      */
     private static final byte NONCE_TYPE_PROXY = 0x03;
 
+    /**
+     * Used with an encryption key for proxy authentication and encryption
+     */
+    private static final byte NONCE_TYPE_SOLICITATION = 0x04;
+
     private static final byte NONCE_PADDING = 0x00;
 
     public static byte[] generateNetworkNonce(byte ctlTTL, byte[] sequenceNumber, int src, int ivIndex) {
@@ -90,13 +95,26 @@ public class NonceGenerator {
      * output proxy nonce
      */
     public static byte[] generateProxyNonce(byte[] sequenceNumber, int src, int ivIndex) {
-        ByteBuffer applicationNonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
-        applicationNonceBuffer.put(NONCE_TYPE_PROXY); //Nonce typeValue
-        applicationNonceBuffer.put(NONCE_PADDING); //PAD
-        applicationNonceBuffer.put(sequenceNumber);
-        applicationNonceBuffer.putShort((short) src);
-        applicationNonceBuffer.put(new byte[]{NONCE_PADDING, NONCE_PADDING});
-        applicationNonceBuffer.putInt(ivIndex);
-        return applicationNonceBuffer.array();
+        ByteBuffer nonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
+        nonceBuffer.put(NONCE_TYPE_PROXY); //Nonce typeValue
+        nonceBuffer.put(NONCE_PADDING); //PAD
+        nonceBuffer.put(sequenceNumber);
+        nonceBuffer.putShort((short) src);
+        nonceBuffer.put(new byte[]{NONCE_PADDING, NONCE_PADDING});
+        nonceBuffer.putInt(ivIndex);
+        return nonceBuffer.array();
+    }
+
+    /**
+     * output proxy nonce
+     */
+    public static byte[] generateSolicitationNonce(byte[] sequenceNumber, int src) {
+        ByteBuffer nonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
+        nonceBuffer.put(NONCE_TYPE_SOLICITATION); //Nonce typeValue
+        nonceBuffer.put(NONCE_PADDING); //PAD
+        nonceBuffer.put(sequenceNumber);
+        nonceBuffer.putShort((short) src);
+        nonceBuffer.put(new byte[6]);
+        return nonceBuffer.array();
     }
 }

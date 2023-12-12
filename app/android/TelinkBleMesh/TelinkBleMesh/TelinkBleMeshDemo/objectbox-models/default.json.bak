@@ -270,7 +270,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "31:7083973705940019782",
+      "lastPropertyId": "35:3031241088902285045",
       "name": "NodeInfo",
       "properties": [
         {
@@ -426,6 +426,26 @@
           "id": "31:7083973705940019782",
           "name": "name",
           "type": 9
+        },
+        {
+          "id": "32:1250097596279928258",
+          "name": "privateBeaconOpened",
+          "type": 1
+        },
+        {
+          "id": "33:8426405745807769616",
+          "name": "privateGattProxyEnable",
+          "type": 1
+        },
+        {
+          "id": "34:5174897416773049846",
+          "name": "onDemandPrivateGattProxy",
+          "type": 2
+        },
+        {
+          "id": "35:3031241088902285045",
+          "name": "solSeq",
+          "type": 5
         }
       ],
       "relations": [

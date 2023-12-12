@@ -43,7 +43,7 @@ public class BleAdvertiser {
     /**
      * default advertise period, unit: ms
      */
-    private static final long MIN_ADV_TIMEOUT = 60 * 1000; // ms
+    private static final long MIN_ADV_TIMEOUT = 2 * 1000; // ms
 
     private AdvertiserCallback advertiserCallback;
 
@@ -77,7 +77,7 @@ public class BleAdvertiser {
         AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
         settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY);
         settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH);
-        settingsBuilder.setConnectable(true);
+        settingsBuilder.setConnectable(false);
         settingsBuilder.setTimeout(0);
         advertiseSettings = settingsBuilder.build();
     }
@@ -107,12 +107,38 @@ public class BleAdvertiser {
     }
 
 
+    public void startAdvertise(ParcelUuid uuid, byte[] data, long timeout) {
+        if (advertiser == null) {
+            MeshLogger.d("advertiser null");
+            return;
+        }
+        if (timeout <= MIN_ADV_TIMEOUT) {
+            timeout = MIN_ADV_TIMEOUT;
+        }
+        mDelayHandler.removeCallbacks(ADV_TIMEOUT_TASK);
+        mDelayHandler.postDelayed(ADV_TIMEOUT_TASK, timeout);
+        AdvertiseData advData = buildAdvertiseData(uuid, data);
+        advertiser.stopAdvertising(ADV_CB);
+        advertiser.startAdvertising(advertiseSettings, advData, ADV_CB);
+    }
+
+
     private AdvertiseData buildAdvertiseData(ParcelUuid uuid) {
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
         BluetoothAdapter.getDefaultAdapter().setName("tlk");
         dataBuilder.setIncludeDeviceName(true);
 //        dataBuilder.addManufacturerData(APPLE_CID, data);
         dataBuilder.addServiceUuid(uuid);
+        return dataBuilder.build();
+    }
+
+
+    private AdvertiseData buildAdvertiseData(ParcelUuid uuid, byte[] data) {
+        AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
+//        BluetoothAdapter.getDefaultAdapter().setName("tlk");
+//        dataBuilder.setIncludeDeviceName(true);
+//        dataBuilder.addServiceUuid(uuid);
+        dataBuilder.addServiceData(uuid, data);
         return dataBuilder.build();
     }
 
