@@ -355,27 +355,27 @@ typedef struct{
 }rp_mag_str;
 // remote provision server sts 
 typedef enum{
-    RP_SER_IDLE =0,
-    RP_SER_LINK_OPEN_SEND,
-    RP_SER_LINK_OPEN_ACK,
-    RP_SER_INVITE_SEND,
-    RP_SER_INVITE_ACK,
-    PR_SER_CAPA_RCV,
-    RP_SER_START_SEND,
-    RP_SER_START_ACK,
-    RP_SER_PUBKEY_SEND,
-    PR_SER_PUBKEY_ACK,
-    PR_SER_PUBKEY_RSP,
-    PR_SER_COMFIRM_SEND,
-    PR_SER_COMFIRM_SEND_ACK,
-    PR_SER_COMFIRM_RSP,
-    PR_SER_RANDOM_SEND,
-    PR_SER_RANDOM_SEND_ACK,
-    PR_SER_RANDOM_RSP,
-    PR_SER_DATA_SEND,
-    PR_SER_DATA_SEND_ACK,
-    PR_SER_COMPLETE_RSP,
-    PR_SER_COMPLETE_SUC,
+    RP_SRV_IDLE =0,
+    RP_SRV_LINK_OPEN_SEND,
+    RP_SRV_LINK_OPEN_ACK,
+    RP_SRV_INVITE_SEND,
+    RP_SRV_INVITE_ACK,
+    PR_SRV_CAPA_RCV,
+    RP_SRV_START_SEND,
+    RP_SRV_START_ACK,
+    RP_SRV_PUBKEY_SEND,
+    PR_SRV_PUBKEY_ACK,
+    PR_SRV_PUBKEY_RSP,
+    PR_SRV_CONFIRM_SEND,
+    PR_SRV_CONFIRM_SEND_ACK,
+    PR_SRV_CONFIRM_RSP,
+    PR_SRV_RANDOM_SEND,
+    PR_SRV_RANDOM_SEND_ACK,
+    PR_SRV_RANDOM_RSP,
+    PR_SRV_DATA_SEND,
+    PR_SRV_DATA_SEND_ACK,
+    PR_SRV_COMPLETE_RSP,
+    PR_SRV_COMPLETE_SUC,
 }REMOTE_PROV_SERVER_ENUM;
 
 
@@ -441,9 +441,9 @@ typedef enum{
     RP_PROV_PUBKEY_CMD,
     RP_PROV_PUBKEY_CMD_ACK,
     RP_PROV_PUBKEY_RSP,
-    RP_PROV_COMFIRM_CMD,
-    RP_PROV_COMFIRM_CMD_ACK,
-    RP_PROV_COMFIRM_RSP,
+    RP_PROV_CONFIRM_CMD,
+    RP_PROV_CONFIRM_CMD_ACK,
+    RP_PROV_CONFIRM_RSP,
     RP_PROV_RANDOM_CMD,
     RP_PROV_RANDOM_CMD_ACK,
     RP_PROV_RANDOM_RSP,
@@ -484,7 +484,7 @@ void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);
 void mesh_rp_pdu_retry_clear();
 void mesh_rp_server_pdu_reset();
 void mesh_rp_server_prov_end_cb();
-void mesh_rp_ser_tick_reset();
+void mesh_rp_srv_tick_reset();
 u8 get_remote_prov_scan_sts();
 void remote_prov_scan_en(u8 en);
 int mesh_cmd_send_link_report(u8 status,u8 RPState,u8 reason,u8 len);

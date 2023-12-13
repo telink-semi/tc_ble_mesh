@@ -122,8 +122,8 @@
 
 #define SIG_MESH_ATT_UNUSED					{0xdd,0x7f}
 
-#define SIG_MESH_PROVISION_SER_VAL			0x1827
-#define SIG_MESH_PROXY_SER_VAL				0x1828
+#define SIG_MESH_PROVISION_SRV_VAL			0x1827
+#define SIG_MESH_PROXY_SRV_VAL				0x1828
 #define SIG_MESH_PROXY_SOLI_VAL				0x1859
 
 /** @addtogroup  GATT_UUID_Variables GATT UUID variables

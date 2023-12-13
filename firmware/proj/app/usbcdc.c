@@ -121,7 +121,7 @@ void CDC_Device_ProcessControlRequest(u8 bRequest, u16 wValue, u16 wIndex, u16 w
 			
 		case CDC_REQ_SetControlLineState:
 			CDCInterfaceInfo->State.ControlLineStates.HostToDevice = wValue;
-			//EVENT_CDC_Device_ControLineStateChanged(CDCInterfaceInfo);
+			//EVENT_CDC_Device_ControlLineStateChanged(CDCInterfaceInfo);
 			break;
 			
 		case CDC_REQ_SendBreak:

@@ -82,7 +82,7 @@ static void usb_simu_pkt_init(u8 *pkt, u32 len){
     *((u16*)pkt) = (u16)(len - 4);                                // len, endpoint
     pkt_send_buffer[pkt_buffer_count++] = pkt;
 }
-// init packets with len, mac, ip etc. for convinience
+// init packets with len, mac, ip etc. for convenience
 static void usb_simu_pkts_init(void){
 //    USB_SIMU_PKT_INIT(pkt_get_device_desc_req);
 //    USB_SIMU_PKT_INIT(pkt_get_device_desc_req2);

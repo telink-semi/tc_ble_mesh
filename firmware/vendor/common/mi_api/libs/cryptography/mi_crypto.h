@@ -43,7 +43,7 @@ int mi_crypto_init(void);
  *
  * @param[out]  pk   Public key. Pointer must be aligned to a 4-byte boundary.
  *
- * @retval      3:  Key pair successfuly created.
+ * @retval      3:  Key pair successfully created.
  * @retval     -1:  NULL pointer provided.
  * @retval     -2:  Unaligned pointer provided.
  */
@@ -54,7 +54,7 @@ int mi_crypto_ecc_keypair_gen(ecc_curve_t curve, ecc256_pk_t pk);
  * @param[in]   p_sk   Private key. Pointer must be aligned to a 4-byte boundary.
  * @param[out]  p_pk   Public key. Pointer must be aligned to a 4-byte boundary.
  *
- * @retval      3:  Public key successfuly created.
+ * @retval      3:  Public key successfully created.
  * @retval     -1:  NULL pointer provided.
  * @retval     -2:  Unaligned pointer provided.
  */
@@ -65,7 +65,7 @@ int mi_crypto_ecc_pubkey_compute(ecc_curve_t curve, const ecc256_sk_t sk, ecc256
  * @param[in]   p_pk   Public key. Pointer must be aligned to a 4-byte boundary.
  * @param[out]  p_ss   Shared secret. Pointer must be aligned to a 4-byte boundary.
  *
- * @retval      3:  Shared secret successfuly created.
+ * @retval      3:  Shared secret successfully created.
  * @retval     -1:  NULL pointer provided.
  * @retval     -2:  Unaligned pointer provided.
  */
@@ -76,7 +76,7 @@ int mi_crypto_ecc_shared_secret_compute(ecc_curve_t curve, const ecc256_pk_t pk,
  * @param[in]   p_hash Hash. Pointer must be aligned to a 4-byte boundary.
  * @param[out]  p_sig  Signature. Pointer must be aligned to a 4-byte boundary.
  *
- * @retval      3:  Signature successfuly created.
+ * @retval      3:  Signature successfully created.
  * @retval     -1:  NULL pointer provided.
  * @retval     -2:   Unaligned pointer provided.
  */

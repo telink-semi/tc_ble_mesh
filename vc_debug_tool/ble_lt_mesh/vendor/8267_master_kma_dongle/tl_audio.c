@@ -267,7 +267,7 @@ void mic_to_adpcm_split (signed short *ps, int len, signed short *pds, int start
 /*  name ADPCM to pcm
     signed short *ps -> pointer to the adpcm source buffer
     signed short *pd -> pointer to the pcm destination buffer
-    int len          -> decorded size
+    int len          -> decoded size
 */
 void adpcm_to_pcm (signed short *ps, signed short *pd, int len){
 	int i;
@@ -357,7 +357,7 @@ u8		buffer_mic_pkt_rptr;
 u32		adb_t2;
 
 
-#define TL_NOISE_SUPRESSION_ENABLE 0 // TODO : too much calculation can have packet drop
+#define TL_NOISE_SUPPRESSION_ENABLE 0 // TODO : too much calculation can have packet drop
 #if 	IIR_FILTER_ENABLE
 int c1[5] = {5751, 895, 1010, 253, -187};//filter all 
 int c2[5] = {4294, -6695, 3220, 1674, -855};//filter 1.2khz 
@@ -403,10 +403,10 @@ void	proc_mic_encoder (void)
 		log_task_begin (TR_T_adpcm);
 
 		s16 *ps = buffer_mic + buffer_mic_rptr;
-#if 	TL_NOISE_SUPRESSION_ENABLE
+#if 	TL_NOISE_SUPPRESSION_ENABLE
         // for FIR adc sample data, only half part data are effective
 		for (int i=0; i<TL_MIC_ADPCM_UNIT_SIZE*2; i++) {
-			ps[i] = noise_supression (ps[i]);
+			ps[i] = noise_suppression (ps[i]);
         }
 #endif
 #if 	IIR_FILTER_ENABLE
@@ -483,9 +483,9 @@ void	proc_mic_encoder (void)
 		log_task_begin (TR_T_adpcm);
 		s16 *ps = buffer_mic + buffer_mic_rptr;
 
-#if 	TL_NOISE_SUPRESSION_ENABLE
+#if 	TL_NOISE_SUPPRESSION_ENABLE
 		for (int i=0; i<128; i++) {
-			ps[i] = noise_supression (ps[i] >> 16) << 16;
+			ps[i] = noise_suppression (ps[i] >> 16) << 16;
 		}
 #endif
 		mic_to_adpcm_split (	ps,	128,

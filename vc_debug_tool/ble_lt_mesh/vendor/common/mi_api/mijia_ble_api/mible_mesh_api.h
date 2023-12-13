@@ -622,7 +622,7 @@ int mible_mesh_device_get_relay(uint8_t *enabled, uint8_t *count, uint8_t *step)
 /**
  *@brief    get seq number.
  *@param    [in] element : model element
- *@param    [out] seq : current sequence numer
+ *@param    [out] seq : current sequence number
  *@param    [out] iv_index : current IV Index
  *@param    [out] flags : IV Update Flag
  *@return   0: success, negetive value: failure

@@ -258,7 +258,7 @@ void register_access_layer_dst_addr_callback(void* p);
  * @brief  the callback function for register_access_layer_dst_addr_callback
  *   gateway can set the dst addr valid by return true even not subscribe the addr
  * @param  p_nw: point to network message
- * @return: 0:invaild,  1:valid
+ * @return: 0:invalid,  1:valid
  */
 u8 mesh_access_layer_dst_addr_valid(mesh_cmd_nw_t *p_nw);
 #endif

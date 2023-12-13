@@ -83,7 +83,7 @@ typedef struct ev_loop_ctrl_t{
 	int						fired_index;
 /*
 	Pool callbacks can be added and removed frequently. We could use double-linked list instead.
-	But it may be less than several vaiable poll events, use array is faster.
+	But it may be less than several variable poll events, use array is faster.
 */	
 	ev_poll_t				poll[EV_POLL_MAX];
 /*
@@ -104,7 +104,7 @@ typedef struct ev_loop_ctrl_t{
 	int						fired_index;
 /*
 	Pool callbacks can be added and removed frequently. We could use double-linked list instead.
-	But it may be less than several vaiable poll events, use array is faster.
+	But it may be less than several variable poll events, use array is faster.
 */	
 	ev_poll_t				poll[1];
 /*

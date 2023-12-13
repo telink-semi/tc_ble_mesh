@@ -64,7 +64,7 @@ void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy)
 
 int mesh_private_cmd_st_rsp(u16 op_code,u8 *p_rsp,u8 len ,mesh_cb_fun_par_t *cb_par)
 {
-    model_private_beacon_ser_t *p_model = (model_private_beacon_ser_t *)cb_par->model;
+    model_private_beacon_srv_t *p_model = (model_private_beacon_srv_t *)cb_par->model;
     return mesh_tx_cmd_rsp(op_code,p_rsp,len,p_model->com.ele_adr,cb_par->adr_src,0,0);
 }
 
@@ -79,7 +79,7 @@ void mesh_update_node_identity_val()
 		if(KEY_REFRESH_PHASE2 == key_phase){
 			p_netkey_base += 1;		// use new key
 		}
-		caculate_proxy_adv_hash(p_netkey_base);
+		calculate_proxy_adv_hash(p_netkey_base);
 	}
 }
 void mesh_node_identity_refresh_private()
@@ -140,7 +140,13 @@ u8 private_beacon_auth_cache_proc(u8 *p_auth)
 	return 0;// not find ,and add the tag into the cache auth part 
 }
 
-
+/**
+ * @brief       This function server to decrypt and process private beacon.
+ * @param[in]   p_payload	- pointer of private beacon.
+ * @param[in]   t			- unused.
+ * @return      0: success. other: failure.
+ * @note        
+ */
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 {
 	int err = 0;
@@ -177,8 +183,8 @@ int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 #if MD_SERVER_EN
 void mesh_private_proxy_sts_init()
 {
-	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
-	mesh_private_proxy_change_by_gatt_proxy(p_beacon_ser->proxy_sts, &(p_beacon_ser->proxy_sts)); // check Binding with GATT Proxy.
+	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
+	mesh_private_proxy_change_by_gatt_proxy(p_beacon_srv->proxy_sts, &(p_beacon_srv->proxy_sts)); // check Binding with GATT Proxy.
 	mesh_prov_para_random_generate();
 }
 
@@ -337,10 +343,10 @@ int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par
 void mesh_prov_para_random_proc()
 {
 #if !WIN32
-	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
+	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
 	if(	is_provision_success()){
-		if(clock_time_exceed_s(prov_para.priv_rand_gen_s,p_beacon_ser->random_inv_step*10)){
-			mesh_prov_para_random_generate();// update priv_random ,and the calculate will excute every time 
+		if(clock_time_exceed_s(prov_para.priv_rand_gen_s,p_beacon_srv->random_inv_step*10)){
+			mesh_prov_para_random_generate();// update priv_random ,and the calculate will execute every time 
 		}
 		// update the random for about 10min 
 		if(clock_time_exceed_s(prov_para.rand_gen_s,600)){
@@ -371,8 +377,8 @@ int mesh_tx_private_beacon_enable(mesh_net_key_t *p_netkey)
 
 void mesh_key_add_trigger_beacon_send(u8 idx)
 {
-	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
-	if(p_beacon_ser->beacon_sts == PRIVATE_BEACON_ENABLE){
+	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
+	if(p_beacon_srv->beacon_sts == PRIVATE_BEACON_ENABLE){
 		mesh_tx_sec_privacy_beacon(&mesh_key.net_key[idx][0], 1);	
 	}	
 }
@@ -380,11 +386,11 @@ void mesh_key_add_trigger_beacon_send(u8 idx)
 int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 {
 	int err = 0;    // default success.
-	mesh_privacy_beacon_save_t *p_beacon_ser = &g_mesh_model_misc_save.privacy_bc;
+	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
 	if(!is_provision_success()||MI_API_ENABLE){// if not provisioned it will not send private beacon .
 		return err;
 	}
-	if(blt_sts == 0 && p_beacon_ser->beacon_sts != PRIVATE_BEACON_ENABLE){ // in the adv state
+	if(blt_sts == 0 && p_beacon_srv->beacon_sts != PRIVATE_BEACON_ENABLE){ // in the adv state
 		return 0;
 	}
 	foreach(i,NET_KEY_MAX){
@@ -398,8 +404,8 @@ int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 			}
 		}
 		// if the random_inv_step is 0 ,the beacon should change every time .
-		if(p_beacon_ser->random_inv_step == 0){
-			mesh_prov_para_random_generate();// update priv_random ,and the calculate will excute every time 
+		if(p_beacon_srv->random_inv_step == 0){
+			mesh_prov_para_random_generate();// update priv_random ,and the calculate will execute every time 
 		}
 		#if TESTCASE_FLAG_ENABLE
 			/* in the pts private beacon proxy bv-08c , it should not send 
@@ -413,8 +419,8 @@ int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 		#endif
 
 		#if 0
-		if(special_PRB_BV01 && p_beacon_ser->random_inv_step != 0){
-			p_beacon_ser->beacon_sts = PRIVATE_BEACON_DISABLE;
+		if(special_PRB_BV01 && p_beacon_srv->random_inv_step != 0){
+			p_beacon_srv->beacon_sts = PRIVATE_BEACON_DISABLE;
 		}
 		#endif
 	}

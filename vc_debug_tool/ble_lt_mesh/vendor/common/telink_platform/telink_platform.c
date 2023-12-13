@@ -42,7 +42,7 @@ typedef struct{
 	// -- Protocol Feature end
 	u16 tc_cid; 			// TC company ID, Telink assign. 0x0000 for reserve, 0x0001 ~ 0x000f for telink, 0x0010 ~ 0xfffe will be assigned to coustomer.
 	u16 pid;				// product ID of composition data. // App will get model list by PID and VID of cps.
-	u8	mac[6];				// mac address, little endianess // TODO: set random value to the highest 3 bytes of mac to enhance uniqueness of device UUID ? make no sense, because APP will failed to do GATT connect if there is two nodes with the same mac.
+	u8	mac[6];				// mac address, little endianness // TODO: set random value to the highest 3 bytes of mac to enhance uniqueness of device UUID ? make no sense, because APP will failed to do GATT connect if there is two nodes with the same mac.
 	u8 	rfu[2];				// 
 	u8 	check_sum;
 }platform_telink_dev_uuid_t;

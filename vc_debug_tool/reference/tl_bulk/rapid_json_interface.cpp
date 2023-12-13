@@ -888,7 +888,7 @@ int json_db_get_nodes_data(Document& doc, mesh_node_str *p_js_node)
 		json_db_get_string2data_uuid(doc, nodes_object[i],"UUID",p_node->uuid);
 		// mac address need to store by swap 
 		json_db_get_string2data(doc, nodes_object[i],"macAddress",p_node->macAddress);
-		// need to do endiness swap 
+		// need to do endianness swap 
 		endianness_swap_u48(p_node->macAddress);
 		json_db_get_string(doc, nodes_object[i],"name",p_node->name);
 		json_db_get_string2data(doc, nodes_object[i],"deviceKey",p_node->deviceKey);
@@ -926,7 +926,7 @@ int json_db_get_nodes_data_static(Document& doc, mesh_node_static_str *p_js_node
 		json_db_get_string2data_uuid(doc, nodes_object[i],"UUID",p_node->uuid);
 		// mac address need to store by swap 
 		json_db_get_string2data(doc, nodes_object[i],"macAddress",p_node->macAddress);
-		// need to do endiness swap 
+		// need to do endianness swap 
 		endianness_swap_u48(p_node->macAddress);
 		json_db_get_string(doc, nodes_object[i],"name",p_node->name);
 		json_db_get_string2data(doc, nodes_object[i],"deviceKey",p_node->deviceKey);
@@ -1623,7 +1623,7 @@ int json_db_set_nodes_data(Document& doc, mesh_node_str  *p_js_node)
 		if(p_nodes->valid){
 			Value int_object(kObjectType);
 			json_db_set_data_string_uuid(doc, int_object,"UUID",p_nodes->uuid,sizeof(p_nodes->uuid));
-			// because  it will store by the big endiness .
+			// because  it will store by the big endianness .
 			u8 mac[6];
 			swap48(mac,p_nodes->macAddress);
 			json_db_set_data_string(doc, int_object,"macAddress",mac,sizeof(mac));
@@ -1680,7 +1680,7 @@ int json_db_set_nodes_data_static(Document& doc, mesh_node_static_str  *p_js_nod
 		if(p_nodes->valid){
 			Value int_object(kObjectType);
 			json_db_set_data_string_uuid(doc, int_object,"UUID",p_nodes->uuid,sizeof(p_nodes->uuid));
-			// because  it will store by the big endiness .
+			// because  it will store by the big endianness .
 			u8 mac[6];
 			swap48(mac,p_nodes->macAddress);
 			//json_db_set_data_string(doc, int_object,"macAddress",mac,sizeof(mac));

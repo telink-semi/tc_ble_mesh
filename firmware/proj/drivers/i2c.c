@@ -409,7 +409,7 @@ void i2c_sim_stop(void)
 	i2c_sim_sda_out(1);
 }
 
-static void i2c_sim_wirte_bit(int bit)
+static void i2c_sim_write_bit(int bit)
 {
 	i2c_sim_scl_out(0);
 	i2c_sim_sda_out(bit);
@@ -419,14 +419,14 @@ static void i2c_sim_wirte_bit(int bit)
 
 // Read a bit from I2C bus
 static int i2c_sim_read_bit(void){
-	i2c_sim_wirte_bit(1);
+	i2c_sim_write_bit(1);
 	return i2c_sim_sda_in();
 }
 
 int i2c_sim_write_byte(u8 dat){
 	int i = 0x80;
 	while(i){
-		i2c_sim_wirte_bit((dat & i));
+		i2c_sim_write_bit((dat & i));
 		i = i >> 1;
 	}
 	return i2c_sim_read_bit();
@@ -435,14 +435,14 @@ int i2c_sim_write_byte(u8 dat){
 u8 i2c_sim_read_byte(int last){
 	u8 dat = 0;
 	foreach(i, 8){
-		i2c_sim_wirte_bit(1);
+		i2c_sim_write_bit(1);
 		if(i2c_sim_sda_in()){
 			dat =(dat << 1) | 0x01;
 		}else{
 			dat = dat << 1;
 		}
 	}
-	i2c_sim_wirte_bit(last);
+	i2c_sim_write_bit(last);
 	return dat;
 }
 

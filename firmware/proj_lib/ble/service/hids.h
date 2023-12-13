@@ -110,7 +110,7 @@
 /** @} end of group HID_PROTOCOL_MODE */
 
 
-/** @addtogroup  HID_INFOR_FLAGS Hid Information Flags
+/** @addtogroup  HID_INFO_FLAGS Hid Information Flags
  *  @{
  */
 /**
@@ -119,7 +119,7 @@
 #define HID_FLAGS_REMOTE_WAKE                           0x01      // RemoteWake
 #define HID_FLAGS_NORMALLY_CONNECTABLE                  0x02      // NormallyConnectable
 
-/** @} end of group HID_INFOR_FLAGS */
+/** @} end of group HID_INFO_FLAGS */
 
 #define HID_KEYCODE_CC_RELEASE                          0x00
 #define HID_KEYCODE_CC_VOL_UP                           0x01

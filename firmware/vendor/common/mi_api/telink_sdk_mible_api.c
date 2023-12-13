@@ -387,7 +387,7 @@ mible_status_t telink_ble_mi_gatts_service_init(mible_gatts_db_t *p_server_db)
 
 }
 
-// user function ,and wil call by the mi api
+// user function ,and will call by the mi api
 u8 get_uuid_is_character_or_not(u8 *p)
 {
 	u16 uuid=0;
@@ -520,7 +520,7 @@ mible_status_t telink_mi_timer_create(void** p_timer_id,
 {
 	ev_time_event_t *p_ev = NULL;
 	p_ev = find_ev_event_by_cb(timeout_handler);
-	if(p_ev){// alredy exist 
+	if(p_ev){// already exist 
 		p_ev->interval = 0;
 		p_ev->mode = mode;
 		*p_timer_id = p_ev;
@@ -942,7 +942,7 @@ mible_status_t telink_record_write(uint16_t record_id, uint8_t* p_data,uint8_t l
 		telink_write_flash(&flash_idx_adr,p_buf,total_len+3);
 		total_len = 0;
 	}
-	// write the continus part 
+	// write the continue part 
 	while(total_len >0){
 		memset(p_buf,0,sizeof(telink_record_t));
 		if(total_len>sizeof(telink_record_t)){
@@ -1083,7 +1083,7 @@ void mi_testboard_init()
 	gpio_set_output_en(GPIO_PC4,1);
 	gpio_write(GPIO_PC4,0);
 }
-void mi_dectect_reset_proc()
+void mi_detect_reset_proc()
 {
 	// demo code to read the io part 
 	if(!gpio_read(GPIO_PD2)){

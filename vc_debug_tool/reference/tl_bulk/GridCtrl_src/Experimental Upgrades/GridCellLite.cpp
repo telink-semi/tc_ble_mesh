@@ -74,7 +74,7 @@ DWORD    CGridCellAttr::m_nDefFormat = DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPRE
 #endif
                                        ;
 COLORREF CGridCellAttr::m_crDefBkClr = CLR_DEFAULT;     // Background colour (or CLR_DEFAULT)
-COLORREF CGridCellAttr::m_crDefFgClr = CLR_DEFAULT;     // Forground colour (or CLR_DEFAULT)
+COLORREF CGridCellAttr::m_crDefFgClr = CLR_DEFAULT;     // Foreground colour (or CLR_DEFAULT)
 LOGFONT  CGridCellAttr::m_lfDefFont;                    // Cell font
 UINT     CGridCellAttr::m_nDefMargin = 3;               // Internal cell margin
 
@@ -120,7 +120,7 @@ void CGridCell::Reset()
     m_nFormat = DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX | DT_END_ELLIPSIS;
 #endif
     m_crBkClr = CLR_DEFAULT;     // Background colour (or CLR_DEFAULT)
-    m_crFgClr = CLR_DEFAULT;     // Forground colour (or CLR_DEFAULT)
+    m_crFgClr = CLR_DEFAULT;     // Foreground colour (or CLR_DEFAULT)
     m_lfFont;                    // Cell font
     m_nMargin = 3;               // Internal cell margin
 #endif

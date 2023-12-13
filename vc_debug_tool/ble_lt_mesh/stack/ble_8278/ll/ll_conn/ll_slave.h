@@ -176,7 +176,7 @@ ble_sts_t 	bls_hci_mod_setEventMask_cmd(u32 evtMask);  //eventMask: module speci
 
 
 /*********************************** Stack Interface, user can not use!!! ********************************/
-bool		bls_ll_pushTxFifo (int hanlde, u8 *p);
+bool		bls_ll_pushTxFifo (int handle, u8 *p);
 ble_sts_t  	bls_hci_reset(void);
 
 ble_sts_t	bls_hci_receiveHostACLData(u16 connHandle, u8 PB_Flag, u8 BC_Flag, u8 *pData );

@@ -57,7 +57,7 @@ int stdio_service_init(stdio_rx_t rx_handler);
 /**@brief Send data.
  *
  * @param[in] vlen : the length of EVENT value.
- * @param[in] value: Pointer to the formated LOCK EVENT value.
+ * @param[in] value: Pointer to the formatted LOCK EVENT value.
  *
  * @retval  0 : successful respond the status.
  *         -1 : BLE_CONN_HANDLE_INVALID

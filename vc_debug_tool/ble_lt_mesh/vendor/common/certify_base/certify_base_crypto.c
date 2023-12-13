@@ -32,6 +32,7 @@
 #include "pem_der.h"
 #include "asn_telink.h"
 #include "proj/common/tstring.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 
 
 #if CERTIFY_BASE_ENABLE // for the test case ,it should disable EPA
@@ -88,7 +89,7 @@ typedef struct{
 #define MAX_CERT_ITEM_CNT	2
 cert_item_t cert_item[MAX_CERT_ITEM_CNT];
 
-#define CERTIFY_OOB_BY_DEFAULT_CERT			1 // use defaule certificate //check by the rootcert ,and it will not have the oob part
+#define CERTIFY_OOB_BY_DEFAULT_CERT			1 // use default certificate //check by the rootcert ,and it will not have the oob part
 #define CERTIFY_OOB_BY_READING_FLASH		2 // reading certificate from flash.
 
 #if WIN32 // sig_mesh_tool.exe
@@ -194,17 +195,17 @@ u8 cert_valid()
 		flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_CRC_OFFSET, 2, (u8*)(&cert_crc));
 		cert_calc = crc16(p_cert, CERT_CRC_OFFSET);
 		if(cert_crc != cert_calc){
-			// cert is unvalid 
-			return CERT_IS_UNVALID_UNPROV;
+			// cert is invalid 
+			return CERT_IS_INVALID_UNPROV;
 		}
 		flash_write_page(FLASH_ADR_CERTIFY_ADR+CERT_VALID_OFFSET, 4, (u8*)(&cert_valid_flag));
 		return CERT_IS_VALID;
 	}else{
-		// cert valid flag is unvalid 
+		// cert valid flag is invalid 
 		if(is_provision_success()){
-			return CERT_IS_UNVALID_PROV;
+			return CERT_IS_INVALID_PROV;
 		}else{
-			return CERT_IS_UNVALID_UNPROV;
+			return CERT_IS_INVALID_UNPROV;
 		}
 	}
 }
@@ -221,7 +222,7 @@ void cert_init()
 		cert_pri_key_adr = (FLASH_ADR_CERTIFY_ADR+CERT_PRIVATE_OFFSET);
 		cert_uuid_adr = (FLASH_ADR_CERTIFY_ADR+CERT_UUID_OFFSET);
 		cert_oob_adr = (FLASH_ADR_CERTIFY_ADR+CERT_STATIC_OOB_OFFSET);
-	}else {// if the cert is unvalid ,still can read the uuid and oob
+	}else {// if the cert is invalid ,still can read the uuid and oob
 		cert_uuid_adr = (FLASH_ADR_CERTIFY_ADR+CERT_UUID_OFFSET);
 		cert_oob_adr = (FLASH_ADR_CERTIFY_ADR+CERT_STATIC_OOB_OFFSET);
 	}	
@@ -407,7 +408,7 @@ u8 mebedtls_asn_get_pubkey(u8 *p,u8 *end,cert_pub_t *p_pub)
         ret = -3;
         return ret;
     }
-	// get the pubkey ponter
+	// get the pubkey pointer
 	p_pub->len = len;
 	memcpy(p_pub->key,p_cert_pub,p_pub->len);
 	return 0;
@@ -626,7 +627,7 @@ int mbedtls_crt_parse_private(const unsigned char *crt, u32 crt_sz,private_cert_
         ret = -2;
         goto done;
     }
-	/* got the interger part  */
+	/* got the integer part  */
 	if( ( ret = mbedtls_asn1_get_int( &p, end, &msc_crt->val ) ) != 0)
     {
         ret = -3;
@@ -644,7 +645,7 @@ int mbedtls_crt_parse_private(const unsigned char *crt, u32 crt_sz,private_cert_
 	memcpy(msc_crt->pri.key ,p,len);
 	p+=len;
 
-	// get enc caculation part  
+	// get enc calculation part  
 	if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
             MBEDTLS_ASN1_CONTEXT_SPECIFIC|MBEDTLS_ASN1_CONSTRUCTED ) ) != 0 
             || len > (size_t)(end - p))
@@ -1064,7 +1065,7 @@ void sha1_test_der()
      	uECC_set_rng(telink_rand_num_generator);
 		#if 1
 		mbedtls_sha256(ecdsa_hash, sizeof(ecdsa_hash), A_debug_sha256_out, 0);
-		// need to transfer the prikey to big endiness
+		// need to transfer the prikey to big endianness
 		const struct uECC_Curve_t * p_curve;
 		
 		p_curve = uECC_secp256r1();

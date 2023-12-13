@@ -106,7 +106,7 @@ int gatt_write_transaction_callback(u8 *p,u16 len,u8 msg_type)
 	u16 pkt_no=0;
 	u16 buf_idx =0;
 	u16 total_len;
-	u16 vaid_len = master_att_mtu - 4;// opcode 1 + handle_id 2 + sar 1
+	u16 valid_len = master_att_mtu - 4;// opcode 1 + handle_id 2 + sar 1
 	u16 handle = gatt_proxy_in_handle;
 	if(MSG_PROVISION_PDU == msg_type){
 		handle = gatt_prov_in_handle;
@@ -116,33 +116,33 @@ int gatt_write_transaction_callback(u8 *p,u16 len,u8 msg_type)
 	if(len==0){
 		return 1;
 	}
-	if(len>vaid_len){
+	if(len>valid_len){
 		while(len){
 			if(!pkt_no){
 				//send the first pkt
 				p_notify->sar = SAR_START;
 				p_notify->msgType = msg_type;	
-				memcpy(p_notify->data,p,vaid_len);
-				rp_gatt_send_single(handle,tmp,vaid_len+1);
-				len = len-vaid_len;
-				buf_idx +=vaid_len;
+				memcpy(p_notify->data,p,valid_len);
+				rp_gatt_send_single(handle,tmp,valid_len+1);
+				len = len-valid_len;
+				buf_idx +=valid_len;
 				pkt_no++;
 			}else{
 				// the last pkt 
-				if(buf_idx+vaid_len>=total_len){
+				if(buf_idx+valid_len>=total_len){
 					p_notify->sar = SAR_END;
 					p_notify->msgType = msg_type;
 					memcpy(p_notify->data,p+buf_idx,total_len-buf_idx);
 					rp_gatt_send_single(handle,tmp,(unsigned char)(total_len-buf_idx+1));
 					len =0;
 				}else{
-				// send the continus pkt 
-					p_notify->sar = SAR_CONTINUS;
+				// send the continue pkt 
+					p_notify->sar = SAR_CONTINUE;
 					p_notify->msgType = msg_type;
-					memcpy(p_notify->data,p+buf_idx,vaid_len);
-					rp_gatt_send_single(handle,tmp,vaid_len+1);
-					len = len-vaid_len;
-					buf_idx +=vaid_len;
+					memcpy(p_notify->data,p+buf_idx,valid_len);
+					rp_gatt_send_single(handle,tmp,valid_len+1);
+					len = len-valid_len;
+					buf_idx +=valid_len;
 				}
 			}
 		}
@@ -166,7 +166,7 @@ void rp_gatt_send_data(u8*pbuf,u8 len)
 void mesh_prov_server_gatt_send(u8 *par,u8 len)
 {
     remote_proc_pdu_sts_str *p_pdu_sts = &(rp_mag.rp_pdu);
-    mesh_pro_data_structer *p_client_rcv = (mesh_pro_data_structer *)(par);
+    mesh_pro_data_t *p_client_rcv = (mesh_pro_data_t *)(par);
     u8 prov_cmd = p_client_rcv->invite.header.type;
 	#if 0// should open for the resending part .
 	// rsp the out bound packet.
@@ -177,65 +177,65 @@ void mesh_prov_server_gatt_send(u8 *par,u8 len)
 	mesh_cmd_sig_rp_pdu_outbound_send();
 	#endif
     switch(p_pdu_sts->sts){
-        case RP_SER_INVITE_SEND:
+        case RP_SRV_INVITE_SEND:
             if(prov_cmd == PRO_INVITE){
-				mesh_rp_ser_tick_set();// timeout start tick 
+				mesh_rp_srv_tick_set();// timeout start tick 
                 rp_gatt_send_data(par,len);
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-                mesh_rp_server_set_sts(PR_SER_CAPA_RCV);
+                mesh_rp_server_set_sts(PR_SRV_CAPA_RCV);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SER_INVITE_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SRV_INVITE_SEND",0);
             }
             break;
-        case RP_SER_START_SEND:
+        case RP_SRV_START_SEND:
             if(prov_cmd == PRO_START){
 				mesh_prov_pdu_send_retry_clear();
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 				memcpy(&(prov_oob.start),&(p_client_rcv->start),sizeof(pro_trans_start));
                 rp_gatt_send_data(par,len);
-                mesh_rp_server_set_sts(RP_SER_PUBKEY_SEND);
+                mesh_rp_server_set_sts(RP_SRV_PUBKEY_SEND);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SER_START_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SRV_START_SEND",0);
             }
             break;
-        case RP_SER_PUBKEY_SEND:
+        case RP_SRV_PUBKEY_SEND:
             if(prov_cmd == PRO_PUB_KEY){
                 rp_gatt_send_data(par,len);
 				mesh_prov_pdu_send_retry_clear();
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-                mesh_rp_server_set_sts(PR_SER_PUBKEY_RSP);
+                mesh_rp_server_set_sts(PR_SRV_PUBKEY_RSP);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SER_PUBKEY_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SRV_PUBKEY_SEND",0);
             }
             break;
-        case PR_SER_COMFIRM_SEND:
+        case PR_SRV_CONFIRM_SEND:
             if(prov_cmd == PRO_CONFIRM){
 				rp_gatt_send_data(par,len);
 				mesh_prov_pdu_send_retry_clear();
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-                mesh_rp_server_set_sts(PR_SER_COMFIRM_RSP);
+                mesh_rp_server_set_sts(PR_SRV_CONFIRM_RSP);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_COMFIRM_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_CONFIRM_SEND",0);
             }
             break;
-        case PR_SER_RANDOM_SEND:
+        case PR_SRV_RANDOM_SEND:
             if(prov_cmd == PRO_RANDOM){
                 rp_gatt_send_data(par,len);
 				mesh_prov_pdu_send_retry_clear();
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-                mesh_rp_server_set_sts(PR_SER_RANDOM_RSP);
+                mesh_rp_server_set_sts(PR_SRV_RANDOM_RSP);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_RANDOM_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_RANDOM_SEND",0);
             }
             break;
-        case PR_SER_DATA_SEND:
+        case PR_SRV_DATA_SEND:
             if(prov_cmd == PRO_DATA){
                 rp_gatt_send_data(par,len);
 				mesh_prov_pdu_send_retry_clear();
 				mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-                mesh_rp_server_set_sts(PR_SER_COMPLETE_RSP);    
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_DATA_SEND",0);
+                mesh_rp_server_set_sts(PR_SRV_COMPLETE_RSP);    
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_DATA_SEND",0);
             }
             break;
         default:
@@ -252,9 +252,9 @@ void mesh_remote_prov_gatt_suc()
 	mesh_rp_server_set_link_rp_sts(STS_PR_LINK_ACTIVE);
 	mesh_cmd_send_link_report(REMOTE_PROV_STS_SUC,STS_PR_LINK_ACTIVE,0,2);// no reason field
 	rp_mag.link_timeout = 0;
-	mesh_rp_server_set_sts(RP_SER_INVITE_SEND); 
+	mesh_rp_server_set_sts(RP_SRV_INVITE_SEND); 
 	prov_para.link_id_filter =1;
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SER_LINK_OPEN_ACK",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:RP_SRV_LINK_OPEN_ACK",0);
 }
 
 u8 gatt_rcv_data[PROVISION_GATT_MAX_LEN];
@@ -282,50 +282,50 @@ void mesh_prov_server_gatt_rcv(u8 *par,u8 len)
 	}
 	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"prov sts is  %x",p_pdu_sts->sts);
     switch(p_pdu_sts->sts){
-	    case PR_SER_CAPA_RCV:
+	    case PR_SRV_CAPA_RCV:
 	        if(gatt_rcv_data[0]== PRO_CAPABLI){
-				mesh_rp_server_set_sts(RP_SER_START_SEND); 
+				mesh_rp_server_set_sts(RP_SRV_START_SEND); 
 				gatt_rp_pdu_send_retry_set_data(gatt_rcv_data,REMOTE_PROV_SERVER_CMD_FLAG);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_CAPA_RCV",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_CAPA_RCV",0);
 			}
 			break;
-	    case PR_SER_PUBKEY_RSP:
+	    case PR_SRV_PUBKEY_RSP:
 	        if( gatt_rcv_data[0]== PRO_PUB_KEY){
-				// PR_SER_PUBKEY_ACK
-                mesh_rp_server_set_sts(PR_SER_PUBKEY_RSP);
+				// PR_SRV_PUBKEY_ACK
+                mesh_rp_server_set_sts(PR_SRV_PUBKEY_RSP);
 				gatt_rp_pdu_send_retry_set_data(gatt_rcv_data,REMOTE_PROV_SERVER_CMD_FLAG);
-                mesh_rp_server_set_sts(PR_SER_COMFIRM_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_PUBKEY_RSP",0);
+                mesh_rp_server_set_sts(PR_SRV_CONFIRM_SEND);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_PUBKEY_RSP",0);
 		    }
 		    break;
-		case PR_SER_COMFIRM_RSP:
+		case PR_SRV_CONFIRM_RSP:
 		    if( gatt_rcv_data[0]== PRO_CONFIRM){
-				// PR_SER_COMFIRM_SEND_ACK
-                mesh_rp_server_set_sts(PR_SER_COMFIRM_RSP);
+				// PR_SRV_CONFIRM_SEND_ACK
+                mesh_rp_server_set_sts(PR_SRV_CONFIRM_RSP);
 				// when we need to send cmd ,we should stop provision cmd send first
 				gatt_rp_pdu_send_retry_set_data(gatt_rcv_data,REMOTE_PROV_SERVER_CMD_FLAG);
-				mesh_rp_server_set_sts(PR_SER_RANDOM_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_COMFIRM_RSP",0);
+				mesh_rp_server_set_sts(PR_SRV_RANDOM_SEND);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_CONFIRM_RSP",0);
 		    }
 		    break;
-        case PR_SER_RANDOM_RSP:
+        case PR_SRV_RANDOM_RSP:
             if( gatt_rcv_data[0]== PRO_RANDOM){
-				// PR_SER_RANDOM_SEND_ACK
-				mesh_rp_server_set_sts(PR_SER_RANDOM_RSP);
+				// PR_SRV_RANDOM_SEND_ACK
+				mesh_rp_server_set_sts(PR_SRV_RANDOM_RSP);
 				gatt_rp_pdu_send_retry_set_data(gatt_rcv_data,REMOTE_PROV_SERVER_CMD_FLAG);
-                mesh_rp_server_set_sts(PR_SER_DATA_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_RANDOM_RSP",0);
+                mesh_rp_server_set_sts(PR_SRV_DATA_SEND);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_RANDOM_RSP",0);
 		    }
 		    break;
-        case PR_SER_COMPLETE_RSP:
+        case PR_SRV_COMPLETE_RSP:
             if(gatt_rcv_data[0]== PRO_COMPLETE){
 				// return the test case result 
-					p_pdu_sts->sts = PR_SER_COMPLETE_SUC;
+					p_pdu_sts->sts = PR_SRV_COMPLETE_SUC;
 					prov_para.link_id_filter = 0;
-				    mesh_rp_ser_tick_reset();// timeout start tick 
+				    mesh_rp_srv_tick_reset();// timeout start tick 
 				    gatt_rp_pdu_send_retry_set_data(gatt_rcv_data,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 					mesh_prov_end_set_tick();// trigger event callback part 
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SER_COMPLETE_RSP",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt CLIENT:PR_SRV_COMPLETE_RSP",0);
 					rp_gatt_disconnect();
 			}
 			break;	
@@ -350,7 +350,7 @@ u8 gatt_pkt_rp_seg_data(u8 *p,u8 len,u8* proxy_buf,u16* p_proxy_len)
 		idx_num +=(l2cap_len-4);
 		mesh_proxy_sar_start();
 		return MSG_COMPOSITE_WAIT;
-	}else if(p_gatt->sar == SAR_CONTINUS){
+	}else if(p_gatt->sar == SAR_CONTINUE){
 		memcpy(proxy_buf+idx_num,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
 		mesh_proxy_sar_continue();
@@ -410,7 +410,7 @@ void rp_gatt_hci_rcv(u8 *pu,u8 len)
 		u8 data_len = pu[1];
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,pu+2,data_len,"dongle spp data is  ",0);
 		rp_gatt_rcv_data(pu+2,data_len);
-	}else if(pu[0]==MESH_CONNECTION_STS_REPROT){
+	}else if(pu[0]==MESH_CONNECTION_STS_REPORT){
 		if(pu[2] == 0){// receive the link close cmd by the node .
 			if(mesh_rp_server_is_active()){
 				mesh_cmd_send_link_report(REMOTE_PROV_LINK_CLOSE_BY_DEVICE,STS_PR_LINK_IDLE,0,2);

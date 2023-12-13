@@ -64,7 +64,7 @@ static void eth_simu_pkt_init(u8 *pkt, u32 len){
     *((u32*)pkt) = (len - 4);
     pkt_send_buffer[pkt_buffer_count++] = pkt;
 }
-// init packets with len, mac, ip etc. for convinience
+// init packets with len, mac, ip etc. for convenience
 static void eth_simu_pkts_init(void){
     ETH_SIMU_PKT_INIT(pkt_arp_req);
     ETH_SIMU_PKT_INIT(pkt_ping_req);

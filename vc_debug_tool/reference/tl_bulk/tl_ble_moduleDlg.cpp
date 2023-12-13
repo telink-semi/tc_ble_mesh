@@ -37,7 +37,7 @@
 #include "./lib_file/hw_fun.h"
 #include "./lib_file/host_fifo.h"
 #include "./lib_file/mesh_cdtp_vs.h"
-#include "CTL_privision.h"
+#include "CTL_provision.h"
 #include "TL_RxTest.h"
 #include <stdio.h>
 #include "../../ble_lt_mesh/vendor/common/app_provison.h"
@@ -70,7 +70,7 @@ CString		m_InitFile;
 static char THIS_FILE[] = __FILE__;
 #endif
 CTLMeshDlg * m_pMeshDlg;
-CTL_privision *  m_proDlg;
+CTL_provision *  m_proDlg;
 CTL_RxTest * m_pRxTestDlg;
 CScanDlg	*m_pScanDlg;
 CRemoteScanPar rp_dlg;
@@ -282,8 +282,8 @@ UINT ThreadMainLoop ( void* pParams )
 	//DWORD		nB;
     while(dlg->main_thread_status == CTl_ble_moduleDlg::THREAD_RUN){
         Thread_main_process();
-        if(m_pMeshDlg->shedule_init){
-		    m_pMeshDlg->get_time_shedule_proc();
+        if(m_pMeshDlg->schedule_init){
+		    m_pMeshDlg->get_time_schedule_proc();
 		}
 		
         schedule_get_proc();
@@ -387,7 +387,7 @@ void CTl_ble_moduleDlg::class_pointer_init()
 {
 	g_module_dlg = this;    // because it will used print function in OnSelchangeInifile_()
     m_proDlg = &m_ProDlg;
-//	m_proDlg = new CTL_privision (NULL);
+//	m_proDlg = new CTL_provision (NULL);
 	m_proDlg->Create(IDD_PROVISION);
     
     m_pMeshDlg = &m_MeshDlg;
@@ -545,9 +545,9 @@ BOOL CTl_ble_moduleDlg::OnInitDialog()
 	m_tip.SetDelayTime(200);
 	m_tip.AddTool(GetDlgItem(IDC_OTA), _T("need connected and provisioned!"));
 // init the json data file 
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 	    init_json(FILE_MESH_DATA_BASE,0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
-	}else if(ble_moudle_id_is_kmadongle()){
+	}else if(ble_module_id_is_kmadongle()){
 		vc_json_init();
 	}
 	sig_mesh_user_init();
@@ -1174,11 +1174,11 @@ void mesh_tx_reliable_stop_report(u16 op, u16 adr_dst,u32 rsp_max, u32 rsp_cnt)
 			"mesh_tx_reliable_stop: op 0x%04x rsp_max %d, rsp_cnt %d", op, rsp_max, rsp_cnt);
 
 	
-    if(m_pMeshDlg->shedule_init && (0 == rsp_cnt)){ // timeout
-        m_pMeshDlg->shedule_init = 0;
+    if(m_pMeshDlg->schedule_init && (0 == rsp_cnt)){ // timeout
+        m_pMeshDlg->schedule_init = 0;
     }
 
-    if(ble_moudle_id_is_kmadongle()){
+    if(ble_module_id_is_kmadongle()){
         schedule_get_proc_tick_check_and_clear();
     }
 }
@@ -1242,7 +1242,7 @@ void gateway_send_unicast_adr_grp(u16* adr_list,int node_cnt)
 	gateway_buf[1] = (HCI_CMD_GATEWAY_CTL >> 8) & 0xFF;
 	gateway_buf[2] = HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND;
 	memcpy(gateway_buf+3,(u8*)(adr_list),node_cnt*2 );
-	if((buf_cnt>REPORT_ADV_BUF_SIZE) && ble_moudle_id_is_gateway()){
+	if((buf_cnt>REPORT_ADV_BUF_SIZE) && ble_module_id_is_gateway()){
 		gateway_sar_pkt_segment(gateway_buf, buf_cnt, REPORT_ADV_BUF_SIZE, 0, 0);
 	}else{
 		WriteFile_handle(gateway_buf, buf_cnt, 0, 0);
@@ -1270,7 +1270,7 @@ int vc_distribute_all_proc(mesh_bulk_ini_vc_t *p_vc_ini,int n)
     			u16 adr_list[MESH_OTA_UPDATE_NODE_MAX] = {0};
     			u32 update_node_cnt;
     			update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
-    			if(ble_moudle_id_is_gateway()){
+    			if(ble_module_id_is_gateway()){
                     LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "GATEWAY can not support initiator start now!",0);
     				return 0;	// TODO
     			}else if(update_node_cnt > 0){
@@ -1298,8 +1298,8 @@ int vc_distribute_all_proc(mesh_bulk_ini_vc_t *p_vc_ini,int n)
 	if(op_cmd == FW_DISTRIBUT_START){
 	    #if DISTRIBUTOR_START_TLK_EN
 	    u32 par_head = OFFSETOF(mesh_bulk_ini_vc_t,cmd)+OFFSETOF(mesh_bulk_cmd_par_t,op)+op_len;
-        if(is_par_distribut_start_tlk(p_vc_ini->cmd.par+1, n-par_head)){
-    	    if(ble_moudle_id_is_kmadongle()){
+        if(is_par_distribute_start_tlk(p_vc_ini->cmd.par+1, n-par_head)){
+    	    if(ble_module_id_is_kmadongle()){
     	        if(p_vc_ini->cmd.adr_dst != ele_adr_primary){
         	        p_vc_ini->cmd.adr_dst = ele_adr_primary;
                     LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "auto change destination address",0);
@@ -1354,7 +1354,7 @@ int CTl_ble_moduleDlg::ExecCmd(LPCTSTR cmd, int log_type)
     int n = Text2Bin (buff, (LPBYTE) cmd);
 	n = vc_distribute_all_proc((mesh_bulk_ini_vc_t *)buff,n);
 	if(n){
-		if((n>REPORT_ADV_BUF_SIZE) && ble_moudle_id_is_gateway()){
+		if((n>REPORT_ADV_BUF_SIZE) && ble_module_id_is_gateway()){
 			gateway_sar_pkt_segment(buff, n, REPORT_ADV_BUF_SIZE, 0, 0);
 		}
 		else{
@@ -1580,7 +1580,7 @@ void prov_print_gateway_log(u8 dir,u8 type,u8 *p_cmd,u16 len)
     }else if (type == PRO_INPUT_COM){
         LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov input cmd", 0);
     }else if (type == PRO_CONFIRM){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov comfirm cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov confirm cmd", 0);
     }else if (type == PRO_RANDOM){
         LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov random cmd", 0);
     }else if (type == PRO_DATA){
@@ -1776,7 +1776,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 	}
 #if 1
 	int id = format_parse(pu+2, n-2, buff);
-	if (id >= 0 && !ble_moudle_id_is_gateway())
+	if (id >= 0 && !ble_module_id_is_gateway())
 	{
 		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "rawdata: %s", format_str[id]);
 	}
@@ -1802,7 +1802,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
             return 0;
         }
 		
-		if (pu[0]==MESH_CONNECTION_STS_REPROT){
+		if (pu[0]==MESH_CONNECTION_STS_REPORT){
 			connect_flag = ble_sts = pu[2];
 			if(connect_flag){
 				mesh_tx_sec_nw_beacon_all_net(1);
@@ -1914,7 +1914,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				vc_node_ele_cnt = pu[2];
 			}else if (type == HCI_GATEWAY_CMD_SEND_NODE_INFO){
 				LOG_MSG_INFO(TL_LOG_GATEWAY,pu, rsp_len+2,"HCI_GATEWAY_CMD_SEND_NODE_INFO \r\n");			
-				extern CTL_privision *p_ctl_pro;
+				extern CTL_provision *p_ctl_pro;
 				if(p_ctl_pro->m_fast_prov_mode){
 					fast_prov_node_info_t *p_info_rc = (fast_prov_node_info_t *)(pu+2);
 					VC_node_dev_key_save(p_info_rc->node_info.node_adr, p_info_rc->node_info.dev_key,p_info_rc->node_info.element_cnt);
@@ -2080,10 +2080,10 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						if (0 == win32_mesh_rc_data_beacon_sec(&(p_bear_rx->len), 0)) { // iv update success
 							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
 							
-							if (ble_moudle_id_is_gateway()) {
+							if (ble_module_id_is_gateway()) {
 								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
 							}
-							else if (ble_moudle_id_is_kmadongle()) {
+							else if (ble_module_id_is_kmadongle()) {
 								vc_json_init();
 							}
 							sig_mesh_user_init();
@@ -2097,9 +2097,9 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						#if MD_PRIVACY_BEA
 						if (0 == win32_mesh_rc_data_beacon_privacy(&(p_bear_rx->len), 0)) { // iv update success
 							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
-							if (ble_moudle_id_is_gateway()) {
+							if (ble_module_id_is_gateway()) {
 								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
-							}else if (ble_moudle_id_is_kmadongle()) {
+							}else if (ble_module_id_is_kmadongle()) {
 								vc_json_init();
 							}
 							sig_mesh_user_init();
@@ -2191,7 +2191,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					proxy_write_handle = pu[4]+4;
 				}
 			}
-			else if (pu[0]==DONGLE_REPROT_READ_RSP){
+			else if (pu[0]==DONGLE_REPORT_READ_RSP){
 				
 			}
 			else if (pu[0]==DONGLE_REPORT_ONLINE_ST_UUID)
@@ -2211,7 +2211,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
     				}
 				}
 			}
-			else if (DONGLE_REPROT_FW_VERSION == type) {
+			else if (DONGLE_REPORT_FW_VERSION == type) {
 				u8  fwRevision_value[FW_REVISION_VALUE_LEN] = { 0 };
 				memcpy(fwRevision_value, pu + 2, pu[1]);
 				LOG_MSG_INFO(TL_LOG_COMMON, fwRevision_value,
@@ -2584,7 +2584,7 @@ unsigned char SendPkt(unsigned short handle,unsigned char *p ,unsigned char  len
 
 unsigned char SendPktOnlineStSet(unsigned char *p ,unsigned char  len)
 {
-	if (ble_moudle_id_is_kmadongle()) {
+	if (ble_module_id_is_kmadongle()) {
 		if (!online_st_write_handle) {
 			AfxMessageBox("Not support online status UUID");
 			return 0;
@@ -2711,7 +2711,7 @@ void CTl_ble_moduleDlg::OnDevice()
 	memset((u8 *)&gatt_mac_list,0,sizeof(gatt_mac_list));
 	set_node_prov_mode(PROV_DIRECT_MODE);
 	//DWORD nB;
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		gateway_VC_provision_start();
 	}else{
 		report_adv_opera(1);
@@ -2735,7 +2735,7 @@ void CTl_ble_moduleDlg::OnProvision()
 	m_proDlg->ShowWindow(SW_SHOW);
 	WaitForSingleObject (NULLEVENT2, 300);
 	m_proDlg->SetButton_sts();
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		gateway_get_provision_self_sts();
 		UpdateData(FALSE);
 	}
@@ -2746,7 +2746,7 @@ void CTl_ble_moduleDlg::OnScanStop()
 {
 	// TODO: Add your control notification handler code here
 	set_node_prov_mode(PROV_DIRECT_MODE);
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		gateway_VC_provision_stop();
 	}else{
 		clear_all_white_list();
@@ -2865,18 +2865,18 @@ int mesh_set_prov_cloud_para(u8 *p_pid,u8 *p_mac)
 	return 1;
 }
 
-int mesh_sec_prov_cloud_comfirm(u8* p_comfirm,u8 *p_comfirm_key,u8 *p_random)
+int mesh_sec_prov_cloud_confirm(u8* p_confirm,u8 *p_confirm_key,u8 *p_random)
 {
 	return 1;
 }
 
 
-int mesh_cloud_dev_comfirm_check(u8 *p_comfirm_key,u8* p_dev_random,u8*p_dev_comfirm)
+int mesh_cloud_dev_confirm_check(u8 *p_confirm_key,u8* p_dev_random,u8*p_dev_confirm)
 {
 	return 1;
 }
 
-// use the pid and mac to caculate the sha256 result ,and return the oob part 
+// use the pid and mac to calculate the sha256 result ,and return the oob part 
 void caculate_sha256_oob_by_para_tab(u8 *pid,u8 *p_mac,u8 *p_secret,u8 sha256_out[32])
 {
 	char sha256_in[54];
@@ -3007,7 +3007,7 @@ void gateway_VC_factory_reset()
 }
 
 
-unsigned char ble_moudle_id_is_gateway()
+unsigned char ble_module_id_is_gateway()
 {
 	if(ID_GATEWAY_VC == dongle_ble_moudle_id && Dongle_is_gateway_or_not()){
 		return 1;
@@ -3016,7 +3016,7 @@ unsigned char ble_moudle_id_is_gateway()
 	}
 }
 
-unsigned char ble_moudle_id_is_kmadongle()
+unsigned char ble_module_id_is_kmadongle()
 {
 	if(ID_KMA_DONGLE == dongle_ble_moudle_id ){
 		return 1;
@@ -3045,7 +3045,7 @@ int is_use_ota_push_mode_for_lpn(fw_distribut_srv_proc_t *distr_proc)
 	}
 	#endif
 	
-	if(ble_moudle_id_is_kmadongle()){
+	if(ble_module_id_is_kmadongle()){
 		if((1 == distr_proc->node_cnt)&&(APP_get_GATT_connect_addr() == distr_proc->list[0].adr)){
 			return 1;
 		}
@@ -3496,7 +3496,7 @@ void download_gateway_send_data(u8 *buf,int len,u32 idx)
 	}else{
 		return ;
 	}
-	//caculate the crc part 
+	//calculate the crc part 
 	ota_data.crc_16 = crc16_ota((u8 *)&ota_data.adr_index,18);
 	gateway_firmware_send((u8 *)&ota_data,sizeof(ota_data));
 	return ;
@@ -3614,7 +3614,7 @@ void gateway_VC_factory_reset_and_del_JSON()
 
 void CTl_ble_moduleDlg::OnBnClickedGatewatReset()
 {
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
         gateway_VC_factory_reset();
 		// clear all the json file , and do init part for the gateway part 
 		DeleteFile(FILE_MESH_DATA_BASE);
@@ -3710,7 +3710,7 @@ int gatt_write_transaction_callback(u8 *p,u16 len,u8 msg_type)
 					len =0;
 				}else{
 				// send the continus pkt 
-					p_notify->sar = SAR_CONTINUS;
+					p_notify->sar = SAR_CONTINUE;
 					p_notify->msgType = msg_type;
 					memcpy(p_notify->data,p+buf_idx,vaid_len);
 					SendPkt(handle,tmp,vaid_len+1);
@@ -3776,7 +3776,7 @@ void CTl_ble_moduleDlg::OnBnClickedRpScan()
 			LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "Remote scan parameter err!!!", 0);
 		}
 	}else{
-        if(ble_moudle_id_is_gateway()){
+        if(ble_module_id_is_gateway()){
             gateway_VC_provision_start();
         }else{
             report_adv_opera(1);

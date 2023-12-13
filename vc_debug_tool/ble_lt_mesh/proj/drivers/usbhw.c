@@ -29,7 +29,7 @@
 #include "../common/tutility.h"
 #include "usbhw_i.h"
 
-// Endpont8 is the alias of endpoint0
+// Endpoint8 is the alias of endpoint0
 void usbhw_disable_manual_interrupt(int m) {
 	SET_FLD(reg_ctrl_ep_irq_mode, m);
 }

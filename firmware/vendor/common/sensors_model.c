@@ -116,7 +116,7 @@ void mesh_global_var_init_sensor_descrip()
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up = TRIGGER_DELTA_UP_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = MIN_INTERVAL_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = FAST_CADENCE_LOW_DEFAULT;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_hight = FAST_CADENCE_HIGH_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_high = FAST_CADENCE_HIGH_DEFAULT;
 		for(u8 j=0; j<SENSOR_SETTINGS_NUMS; j++){
 			model_sig_sensor.sensor_states[i].setting.setting_id[j] = sensor_settings[i][j].setting_id;
 			model_sig_sensor.sensor_states[i].setting.setting_access[j] = sensor_settings[i][j].setting_access;
@@ -254,7 +254,7 @@ int mesh_tx_cadence_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 		memcpy(rsp.cadence.par+delta_len, &p_cadence->cadence_unit.delta_up, delta_len);
 		rsp.cadence.par[2*delta_len] = p_cadence->cadence_unit.min_interval;
 		memcpy(rsp.cadence.par+2*delta_len+1, &p_cadence->cadence_unit.cadence_low, cadence_len);
-		memcpy(rsp.cadence.par+2*delta_len+1+cadence_len, &p_cadence->cadence_unit.cadence_hight, cadence_len);
+		memcpy(rsp.cadence.par+2*delta_len+1+cadence_len, &p_cadence->cadence_unit.cadence_high, cadence_len);
 		len = delta_len*2 + cadence_len*2 + 4;
 
 		if((p_cadence->fast_period_div>MAX_FAST_CADENCE_PERIOD_DIV) || (p_cadence->cadence_unit.min_interval>MAX_MIN_INTERVAL)){
@@ -346,7 +346,7 @@ int mesh_cmd_sig_sensor_cadence_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 			memcpy(&p_cadence->cadence_unit.delta_up, p_cadence_set->cadence.par+delta_len, delta_len);
 			memcpy(&p_cadence->cadence_unit.min_interval, p_cadence_set->cadence.par+2*delta_len, 1);
 			memcpy(&p_cadence->cadence_unit.cadence_low, p_cadence_set->cadence.par+2*delta_len+1, cadence_len);
-			memcpy(&p_cadence->cadence_unit.cadence_hight, p_cadence_set->cadence.par+2*delta_len+cadence_len+1, cadence_len);
+			memcpy(&p_cadence->cadence_unit.cadence_high, p_cadence_set->cadence.par+2*delta_len+cadence_len+1, cadence_len);
 			mesh_model_store(1, SIG_MD_SENSOR_SETUP_S);
 
 		}

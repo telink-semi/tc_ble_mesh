@@ -105,7 +105,7 @@ typedef struct{
 int schd_random_rebuild_hour();
 int schd_random_rebuild_min();
 int schd_random_rebuild_sec();
-void rebulid_schd_nearest_and_check_event(int rebuild, u32 TAI_local);
+void rebuild_schd_nearest_and_check_event(int rebuild, u32 TAI_local);
 void mesh_scheduler_proc();
 
 void test_schd_action_set_off(u16 adr);

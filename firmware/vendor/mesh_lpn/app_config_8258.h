@@ -169,7 +169,7 @@ extern "C" {
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
 
 #define	KB_LINE_HIGH_VALID				0   //dirve pin output 0 when keyscan, scanpin read 0 is valid
-#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back trigged by key press, in case key loss
+#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back triggered by key press, in case key loss
 #define KEYSCAN_IRQ_TRIGGER_MODE		0
 #define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
 
@@ -193,7 +193,7 @@ extern "C" {
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K    // scan pin pull
 
 #define	KB_LINE_HIGH_VALID				0   // dirve pin output 0 when keyscan(no drive pin in KB_LINE_MODE=1), scanpin read 0 is valid
-#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back trigged by key press, in case key loss
+#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back triggered by key press, in case key loss
 #define KEYSCAN_IRQ_TRIGGER_MODE		0
 #define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
 
@@ -205,7 +205,7 @@ extern "C" {
 #define KB_LINE_MODE			1 			
 
 // keymap
-#define KEY_RESET				1	// long press triger reset, short press enter/exit connectable adv mode.
+#define KEY_RESET				1	// long press trigger reset, short press enter/exit connectable adv mode.
 #define KEY_CMD					2 
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 

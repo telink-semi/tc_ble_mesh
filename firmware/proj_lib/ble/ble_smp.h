@@ -118,7 +118,7 @@ typedef union{
 
 typedef struct{
 	u8 code;  //req = 0x01; rsp = 0x02;
-	u8 ioCapablity;
+	u8 ioCapability;
 	u8 oobDataFlag;
 	smp_authReq_t authReq;
 	u8 maxEncrySize;
@@ -342,7 +342,7 @@ typedef enum {
 } io_capability_t;
 
 // horizontal: initiator capabilities
-// vertial:    responder capabilities
+// vertical:    responder capabilities
 static const stk_generationMethod_t stk_generation_method[5][5] = {
 	{ JUST_WORKS,      JUST_WORKS,       PK_INIT_INPUT,   JUST_WORKS,    PK_INIT_INPUT },
 	{ JUST_WORKS,      JUST_WORKS,       PK_INIT_INPUT,   JUST_WORKS,    PK_INIT_INPUT },
@@ -351,11 +351,11 @@ static const stk_generationMethod_t stk_generation_method[5][5] = {
 	{ PK_RESP_INPUT,   PK_RESP_INPUT,    PK_INIT_INPUT,   JUST_WORKS,    PK_RESP_INPUT },
 };
 
-#define IO_CAPABLITY_DISPLAY_ONLY		0x00
-#define IO_CAPABLITY_DISPLAY_YESNO		0x01
-#define IO_CAPABLITY_KEYBOARD_ONLY		0x02
-#define IO_CAPABLITY_NO_IN_NO_OUT		0x03
-#define IO_CAPABLITY_KEYBOARD_DISPLAY	0x04
+#define IO_CAPABILITY_DISPLAY_ONLY		0x00
+#define IO_CAPABILITY_DISPLAY_YESNO		0x01
+#define IO_CAPABILITY_KEYBOARD_ONLY		0x02
+#define IO_CAPABILITY_NO_IN_NO_OUT		0x03
+#define IO_CAPABILITY_KEYBOARD_DISPLAY	0x04
 
 #define PASSKEY_TYPE_ENTRY_STARTED		0x00
 #define PASSKEY_TYPE_DIGIT_ENTERED		0x01
@@ -373,20 +373,20 @@ static const stk_generationMethod_t stk_generation_method[5][5] = {
 #define PARING_FAIL_REASON_CMD_NOT_SUPPORT			0x07
 #define PARING_FAIL_REASON_UNSPECIFIED_REASON		0x08
 #define PARING_FAIL_REASON_REPEATED_ATTEMPT			0x09
-#define PARING_FAIL_REASON_INVAILD_PARAMETER		0x0a
+#define PARING_FAIL_REASON_INVALID_PARAMETER		0x0a
 #define PARING_FAIL_REASON_DHKEY_CHECK_FAIL			0x0b
 #define PARING_FAIL_REASON_NUMUERIC_FAILED			0x0c
 #define PARING_FAIL_REASON_BREDR_PARING				0x0d
 #define PARING_FAIL_REASON_CROSS_TRANSKEY_NOT_ALLOW		0x0e
 
-#define	ENCRYPRION_KEY_SIZE_MAXINUM				16
-#define	ENCRYPRION_KEY_SIZE_MINIMUN				7
+#define	ENCRYPRION_KEY_SIZE_MAXIMUM				16
+#define	ENCRYPRION_KEY_SIZE_MINIMUM				7
 
 typedef enum{
-	SMP_PARING_DISABLE_TRRIGER = 0,
-	SMP_PARING_CONN_TRRIGER ,
-	SMP_PARING_PEER_TRRIGER,
-}smp_paringTrriger_t;
+	SMP_PARING_DISABLE_TRIGGER = 0,
+	SMP_PARING_CONN_TRIGGER ,
+	SMP_PARING_PEER_TRIGGER,
+}smp_paringTrigger_t;
 
 
 
@@ -411,11 +411,11 @@ typedef enum{
 
 /**************************************************
  * API used for slave enable the device paring.
- * encrypt_en	SMP_PARING_DISABLE_TRRIGER   -  not allow encryption
- * 				SMP_PARING_CONN_TRRIGER      -  paring process start once connect.
- * 				SMP_PARING_PEER_TRRIGER      -  paring process start once peer device start.
+ * encrypt_en	SMP_PARING_DISABLE_TRIGGER   -  not allow encryption
+ * 				SMP_PARING_CONN_TRIGGER      -  paring process start once connect.
+ * 				SMP_PARING_PEER_TRIGGER      -  paring process start once peer device start.
  */
-int 		bls_smp_enableParing (smp_paringTrriger_t encrypt_en);
+int 		bls_smp_enableParing (smp_paringTrigger_t encrypt_en);
 
 
 
@@ -525,7 +525,7 @@ typedef struct {
 
 extern smp_ctrl_t 	blc_smp_ctrl;
 
-void blc_smp_checkSecurityReqeustSending(u32 connStart_tick);
+void blc_smp_checkSecurityRequestSending(u32 connStart_tick);
 void HID_service_on_android7p0_init(void);
 
 

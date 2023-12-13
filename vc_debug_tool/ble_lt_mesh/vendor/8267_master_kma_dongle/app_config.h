@@ -90,10 +90,10 @@ extern "C" {
 //////////////////// Audio /////////////////////////////////////
 #define MIC_RESOLUTION_BIT		16
 #define MIC_SAMPLE_RATE			16000
-#define MIC_CHANNLE_COUNT		1
-#define	MIC_ENOCDER_ENABLE		0
+#define MIC_CHANNEL_COUNT		1
+#define	MIC_ENCODER_ENABLE		0
 
-#define AUDIO_SDM_ENBALE		0//if using sdm playback, should better disable USB MIC
+#define AUDIO_SDM_ENABLE		0//if using sdm playback, should better disable USB MIC
 
 
 #define GATT_RP_EN				0
@@ -110,7 +110,7 @@ extern "C" {
 
 #if(HCI_ACCESS == HCI_USE_UART)
 	#define LINK_LAYER_TEST_ENABLE				0  //just for controller debug
-	#define TEST_SPECAIL_ADV_ACCESS_CODE		0  //just for controller scan debug
+	#define TEST_SPECIAL_ADV_ACCESS_CODE		0  //just for controller scan debug
 #endif
 
 
@@ -125,7 +125,7 @@ extern "C" {
 	#define	TL_MIC_32K_FIR_16K			1
 #endif
 
-#if (AUDIO_SDM_ENBALE)
+#if (AUDIO_SDM_ENABLE)
 #define TL_SDM_BUFFER_SIZE			1024
 #endif
 

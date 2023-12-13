@@ -84,7 +84,7 @@ enum ADCINPUTCH{
 	PGAVOM,
 	PGAVOP,
 	TEMSENSORN,
-	TEMSENSORP,
+	TEMPERATURE_SENSOR_P,
 	AVSS,
 	OTVDD,//1/3 voltage division detection
 };
@@ -131,7 +131,7 @@ extern void adc_AnaChSet( enum ADCINPUTCH adcInCha);
 
 /***************************************************************************
 *
-*	@brief	This function must be called when the input channel selected to 1/3 volatage division.
+*	@brief	This function must be called when the input channel selected to 1/3 voltage division.
 *			Set IO power supply for the 1/3 voltage division detection, there are two input sources of the
 *			IO input battery voltage, one through the VDDH and the other through the  ANA_B<7> pin.
 *
@@ -143,7 +143,7 @@ extern void adc_AnaChSet( enum ADCINPUTCH adcInCha);
 
 /********************************************************
 *
-*	@brief		set ADC input channel mode - signle-end or differential mode
+*	@brief		set ADC input channel mode - single-end or differential mode
 *
 *	@param		adcCha - enum variable adc channel.
 *				inM - enum variable of ADCINPUTMODE.
@@ -177,7 +177,7 @@ extern void adc_RefVoltageSet(enum ADCRFV adcRF);
 
 /**********************************************************************
 *	@brief	ADC initiate function, set the ADC clock details (3MHz) and start the ADC clock.
-*			ADC clock relys on PLL, if the FHS isn't selected to 192M PLL (probably modified
+*			ADC clock relies on PLL, if the FHS isn't selected to 192M PLL (probably modified
 *			by other parts codes), adc initiation function will returns error.
 *
 *	@param	None

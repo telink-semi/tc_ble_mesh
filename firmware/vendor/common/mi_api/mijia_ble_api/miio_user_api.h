@@ -66,7 +66,7 @@ static inline uint64_t miio_system_get_time(void)
 
 /**
  *@brief    set mibeacon advertising timeout, after timeout advertising will stop.
- *@param    [in] millsecond : adv timeout in ms, 0 is stop adv, 0xffffffff is always on.
+ *@param    [in] millisecond : adv timeout in ms, 0 is stop adv, 0xffffffff is always on.
  *@return   0: success, negetive value: failure
  */
 static inline int miio_system_set_adv_timeout(uint32_t timeout)

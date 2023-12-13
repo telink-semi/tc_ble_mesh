@@ -227,8 +227,8 @@ typedef enum{
 #define CHARACTERISTIC_UUID_MCS_SEGMENTS_OBJECT_ID            0x2B9C // Current Track Segments Object ID
 #define CHARACTERISTIC_UUID_MCS_CURRENT_OBJECT_ID             0x2B9D // Current Track Object ID
 #define CHARACTERISTIC_UUID_MCS_NEXT_OBJECT_ID                0x2B9E // Next Track Object ID
-#define CHARACTERISTIC_UUID_MCS_PARENT_GOUP_OBJECT_ID         0x2B9F // Parent Group Object ID
-#define CHARACTERISTIC_UUID_MCS_CURRENT_GOUP_OBJECT_ID        0x2BA0 // Current Group Object ID
+#define CHARACTERISTIC_UUID_MCS_PARENT_GROUP_OBJECT_ID        0x2B9F // Parent Group Object ID
+#define CHARACTERISTIC_UUID_MCS_CURRENT_GROUP_OBJECT_ID       0x2BA0 // Current Group Object ID
 #define CHARACTERISTIC_UUID_MCS_PLAYING_ORDER                 0x2BA1 // Playing Order
 #define CHARACTERISTIC_UUID_MCS_PLAYING_ORDER_SUPPEORTED      0x2BA2 // Playing Order Supported
 #define CHARACTERISTIC_UUID_MCS_MEDIA_STATE                   0x2BA3 // Media State
@@ -300,7 +300,7 @@ typedef enum{
 // Codec ID
 #define BLC_AUDIO_CODECID_LC3                      0x00000001
 
-// Audio Codec_Specific_Capabilties parameters
+// Audio Codec_Specific_Capabilities parameters
 #define BLC_AUDIO_CAPTYPE_SUP_SAMPLE_FREQUENCY     0x01 // Supported_Sampling_Frequencies
 #define BLC_AUDIO_CAPTYPE_SUP_FRAME_DURATION       0x02 // Supported_Frame_Durations
 #define BLC_AUDIO_CAPTYPE_SUP_CHANNELS_COUNTS      0x03 // Audio_Channel_Counts
@@ -308,7 +308,7 @@ typedef enum{
 
 
 // Audio Codec_Specific_Configuration parameters
-#define BLC_AUDIO_CAPTYPE_CFG_SAMPLE_FREQUENCY     0x01 // Sampling_Freqeuncy
+#define BLC_AUDIO_CAPTYPE_CFG_SAMPLE_FREQUENCY     0x01 // Sampling_Frequency
 #define BLC_AUDIO_CAPTYPE_CFG_FRAME_DURATION       0x02 // 
 #define BLC_AUDIO_CAPTYPE_CFG_CHANNELS_ALLOCATION  0x03 // Audio_Channel_Allocation
 #define BLC_AUDIO_CAPTYPE_CFG_FRAME_OCTETS	       0x04 // 
@@ -369,8 +369,8 @@ typedef enum{
 // Audio Support Frame Duration (bitfield, for PACS)
 #define BLC_AUDIO_DURATION_FLAG_7_5                BIT(0)  //
 #define BLC_AUDIO_DURATION_FLAG_10                 BIT(1)
-#define BLC_AUDIO_DURATION_FLAG_7_5_PERFERRED      BIT(4)
-#define BLC_AUDIO_DURATION_FLAG_10_PERFERRED       BIT(5)
+#define BLC_AUDIO_DURATION_FLAG_7_5_PREFERRED      BIT(4)
+#define BLC_AUDIO_DURATION_FLAG_10_PREFERRED       BIT(5)
 // Audio Frame Duration (numbric, for ASCS)
 #define BLC_AUDIO_DURATION_CFG_7_5                 0  //
 #define BLC_AUDIO_DURATION_CFG_10                  1

@@ -65,6 +65,12 @@ int pb_gatt_provision_out_ccc_cb(void *p)
 	return 1;	
 }
 
+/**
+ * @brief       This function server to process Proxy PDU from provision service.
+ * @param[in]   p	- pointer of rf packet.
+ * @return      unused.
+ * @note        
+ */
 int	pb_gatt_Write (void *p)
 {
 	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
@@ -99,6 +105,12 @@ int proxy_out_ccc_cb(void *p)
 	return 1;	
 }
 
+/**
+ * @brief       This function server to process Proxy PDU from proxy service.
+ * @param[in]   p	- pointer of rf packet.
+ * @return      unused.
+ * @note        
+ */
 int proxy_gatt_Write(void *p)
 {
 	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
@@ -344,6 +356,13 @@ u8 proxy_proc_filter_mesh_cmd(u16 src)
     return 0;
 }
 
+/**
+ * @brief       This function server to process the configuration message.
+ * @param[in]   p	- pointer of configuration message.
+ * @param[in]   len	- length of configuration message.
+ * @return      1: done.
+ * @note        
+ */
 u8 proxy_config_dispatch(u8 *p,u8 len )
 {
 	mesh_cmd_nw_t *p_nw = (mesh_cmd_nw_t *)(p);
@@ -357,7 +376,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 	if(p_nw->src && (app_adr != p_nw->src)){
 		#if (!PTS_TEST_EN && (NLCP_BLC_EN == 0) && (SWITCH_ALWAYS_MODE_GATT_EN == 0)) // BLCMP/BLC/PERF/BV-01-I, When sending packets, the return value of is_pkt_notify_only() must be 0
 		// not record to app_adr, because this address is not added to filter list.
-		// in this case, PTS send filter set, then only send network message through ADV, then message response to PTS will not be sent throuth both ADV and GATT, so PTS will fail to receive response.
+		// in this case, PTS send filter set, then only send network message through ADV, then message response to PTS will not be sent through both ADV and GATT, so PTS will fail to receive response.
 		app_adr = p_nw->src;
 		#endif
 	}
@@ -387,9 +406,9 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			para_len = len-18;
 			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"add filter adr part ",0);
 			for(i=0;i<para_len/2;i++){
-				// swap the endiness part 
+				// swap the endianness part 
 				endianness_swap_u16(p_addr+2*i);
-				// suppose the data is little endiness 
+				// suppose the data is little endianness 
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
 				add_data_to_list(proxy_unicast);
 				#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
@@ -522,7 +541,7 @@ int proxy_adv_calc_with_private_node_identity(u8 random[8],u8 node_key[16],u16 e
 
 }
 
-void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey )
+void calculate_proxy_adv_hash(mesh_net_key_t *p_netkey )
 {
 	proxy_adv_calc_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_netkey->ident_hash);	
 	proxy_adv_calc_with_private_net_id(prov_para.random,p_netkey->nw_id,p_netkey->idk,p_netkey->priv_net_hash);
@@ -537,8 +556,8 @@ void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
 	p_proxy->flag_data = 0x06;
 	p_proxy->uuid_len = 0x03;
 	p_proxy->uuid_type = 0x03;
-	p_proxy->uuid_data[0]= SIG_MESH_PROXY_SER_VAL &0xff;
-	p_proxy->uuid_data[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+	p_proxy->uuid_data[0]= SIG_MESH_PROXY_SRV_VAL &0xff;
+	p_proxy->uuid_data[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 
 }
 #if MD_PRIVACY_BEA
@@ -667,31 +686,31 @@ u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 		proxy_adv_net_id *p_net_id = (proxy_adv_net_id *)p;
 		p_net_id->serv_len = 0x0c;
 		p_net_id->serv_type = 0x16;
-		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
-		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SRV_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 		memcpy(p_net_id->net_id,p_netkey->nw_id,8);
 	}else if(node_identity_type == NODE_IDENTITY_TYPE){
 		// calculate the demo part of the proxy adv 'hash
 		p_proxy->serv_len = 0x14;
 		p_proxy->serv_type = 0x16;
-		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
-		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SRV_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 		memcpy(p_proxy->random,pRandom,8);
 		memcpy(p_proxy->hash,p_netkey->ident_hash,8);
 	}else if (node_identity_type == PRIVATE_NETWORK_ID_TYPE){
 		// calculate the demo part of the proxy adv 'hash
 		p_proxy->serv_len = 0x14;
 		p_proxy->serv_type = 0x16;
-		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
-		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SRV_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 		memcpy(p_proxy->random,pRandom,8);
 		memcpy(p_proxy->hash,p_netkey->priv_net_hash,8);
 	}else if (node_identity_type == PRIVATE_NODE_IDENTITY_TYPE){
 		// calculate the demo part of the proxy adv 'hash
 		p_proxy->serv_len = 0x14;
 		p_proxy->serv_type = 0x16;
-		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
-		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SRV_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 		memcpy(p_proxy->random,pRandom,8);
 		memcpy(p_proxy->hash,p_netkey->priv_ident_hash,8);
 	}
@@ -721,12 +740,12 @@ u8 set_proxy_pdu_data(proxy_msg_str *p_proxy,u8 msg_type , u8 *para ,u8 para_len
 			pkt_len =(para_len>=MAX_PROXY_RSV_LEN)?MAX_PROXY_RSV_LEN:para_len ;
 			para_len -= pkt_len;
 			if(pkt_len == MAX_PROXY_RSV_LEN){
-				p_proxy->sar = CONTINUS_SEG_MSG;
+				p_proxy->sar = CONTINUE_SEG_MSG;
 				memcpy(p_proxy->data , para+para_idx,pkt_len);
 				push_proxy_raw_data((u8*)(p_proxy));
 			}else{
 				// the last packet 
-				p_proxy->sar = CONTINUS_SEG_MSG;
+				p_proxy->sar = CONTINUE_SEG_MSG;
 				memcpy(p_proxy->data , para+para_idx,pkt_len);
 				push_proxy_raw_data((u8*)(p_proxy));
 			}

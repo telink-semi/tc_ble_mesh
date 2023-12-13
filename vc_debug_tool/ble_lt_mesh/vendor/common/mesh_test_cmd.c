@@ -86,7 +86,7 @@ void mesh_message6()
     mesh_match_type_t match_type;
     mesh_match_group_mac(&match_type, p_bear->nw.dst, rf_link_get_op_by_ac(r_apl), 1, ele_adr_primary);
 
-    mesh_tx_cmd_layer_acccess(r_apl, sizeof(r_apl), ele_adr_primary, p_bear->nw.dst, 0, &match_type);
+    mesh_tx_cmd_layer_access(r_apl, sizeof(r_apl), ele_adr_primary, p_bear->nw.dst, 0, &match_type);
 }
 #endif
 
@@ -135,7 +135,7 @@ void mesh_message_fri_msg()
     mesh_match_type_t match_type;
     mesh_match_group_mac(&match_type, p_bear->nw.dst, rf_link_get_op_by_ac(r_apl), 1, ele_adr_primary);
     
-    mesh_tx_cmd_layer_acccess(r_apl, sizeof(r_apl), ele_adr_primary, p_bear->nw.dst, 0, &match_type);
+    mesh_tx_cmd_layer_access(r_apl, sizeof(r_apl), ele_adr_primary, p_bear->nw.dst, 0, &match_type);
 #endif
 }
 
@@ -389,7 +389,7 @@ int access_cmd_onoff_with_pub_test_result(u16 adr_dst, u8 rsp_max, u8 onoff, int
 		if(mesh_node_test_log[i].rx_code_num <= 1){
 			total_success = 0;
 		}else{
-			total_success = 5 * (node_rsp_rx_ack_num * 100) / (mesh_node_test_log[i].rx_code_num - 1); // add 1,beacuse roll code status of the next time
+			total_success = 5 * (node_rsp_rx_ack_num * 100) / (mesh_node_test_log[i].rx_code_num - 1); // add 1,because roll code status of the next time
 		}
 		
 		if(mesh_node_test_log[i].rx_node_num > mesh_node_test_log[i].rx_code_num){

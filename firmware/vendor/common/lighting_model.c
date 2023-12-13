@@ -266,7 +266,7 @@ static void model_pub_check_set_onoff(int level_set_st, int light_idx, u32 model
 /**
  * @brief       This function check all bind model of list and set publish step
  * @param[in]   pub_list- publish list
- * @param[in]   cb_par	- callback pararmeter
+ * @param[in]   cb_par	- callback parameter
  * @param[in]   linear	- linear
  * @return      none
  * @note        
@@ -361,9 +361,9 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
  * @param  force: Only for G_LEVEL_SET_NOACK opcode. Force to set the 
- *   gerneral level.
- *     @arg 0: Set the gerneral level if needed.
- *     @arg 1: Force to set the gerneral level.
+ *   general level.
+ *     @arg 0: Set the general level if needed.
+ *     @arg 1: Force to set the general level.
  * @param  pub_list: list of publication.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -548,7 +548,7 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
  *     @arg 1: Retransmission.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @param  force: Only for G_LEVEL_SET_NOACK opcode. Force to set the 
- *   gerneral level.
+ *   general level.
  * @param  pub_list: list of publication.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -584,7 +584,7 @@ static inline int is_valid_lightness(u16 lightness)
 }
 
 /**
- * @brief       This function get level with u16 formate.
+ * @brief       This function get level with u16 format.
  * @param[out]  rsp				- pointer to response data
  * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
  * @param[in]   st_trans_type	- A value in the enumeration type ST_TRANS_TYPE.
@@ -1136,7 +1136,7 @@ s16 get_level_from_ctl_temp_light_idx(u16 temp, int light_idx)
     s16 level = 0;
     if(light_idx < LIGHT_CNT){
         light_range_u16_t range_u16 = {0};
-        light_g_level_range_get_u16(&range_u16, light_idx, ST_TRANS_CTL_TEMP);    // alway ture
+        light_g_level_range_get_u16(&range_u16, light_idx, ST_TRANS_CTL_TEMP);    // always true
         temp = get_ctl_temp_with_check_range(temp, &range_u16);
         level = get_level_from_ctl_temp(temp, range_u16.min, range_u16.max);
     }
@@ -1240,7 +1240,7 @@ int mesh_light_ctl_def_st_rsp(mesh_cb_fun_par_t *cb_par)
     rsp.temp = light_g_level_def_get_u16(cb_par->model_idx, ST_TRANS_CTL_TEMP);
     rsp.delta_uv = light_g_level_def_get(cb_par->model_idx, ST_TRANS_CTL_D_UV);
     
-    return mesh_tx_cmd_rsp(LIGHT_CTL_DEFULT_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
+    return mesh_tx_cmd_rsp(LIGHT_CTL_DEFAULT_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
 /**
@@ -1762,7 +1762,7 @@ int access_cmd_get_lightness_last(u16 adr,u32 rsp_max)
 }
 
 /**
- * @brief       This function set lightness defaut 
+ * @brief       This function set lightness default 
  * @param[in]   adr			- Destination address
  * @param[in]   rsp_max		- how many response expected from nodes which match destination address, after sending this command
  * @param[in]   lightness	- lightness
@@ -1776,12 +1776,12 @@ int access_cmd_set_lightness_def(u16 adr, u8 rsp_max, u16 lightness, int ack)
 	u32 par_len = sizeof(mesh_cmd_lightness_def_set_t);
 	par.lightness = lightness;
 	
-	return SendOpParaDebug(adr, rsp_max, ack ? LIGHTNESS_DEFULT_SET : LIGHTNESS_DEFULT_SET_NOACK, 
+	return SendOpParaDebug(adr, rsp_max, ack ? LIGHTNESS_DEFAULT_SET : LIGHTNESS_DEFAULT_SET_NOACK, 
 						   (u8 *)&par, par_len);
 }
 
 /**
- * @brief       This function get lightness defaut 
+ * @brief       This function get lightness default 
  * @param[in]   adr		- Destination address
  * @param[in]   rsp_max	- how many response expected from nodes which match destination address, after sending this command
  * @return      0: success; others: error code of tx_errno_e
@@ -1790,7 +1790,7 @@ int access_cmd_set_lightness_def(u16 adr, u8 rsp_max, u16 lightness, int ack)
 int access_cmd_get_lightness_def(u16 adr,u32 rsp_max)
 {
 	u8 par[1];
-	return SendOpParaDebug(adr, rsp_max, LIGHTNESS_DEFULT_GET, par, 0);
+	return SendOpParaDebug(adr, rsp_max, LIGHTNESS_DEFAULT_GET, par, 0);
 }
 
 /**
@@ -1859,7 +1859,7 @@ int access_cmd_set_light_ctl(u16 adr, u8 rsp_max, u16 lightness, u16 temp, int a
 	u32 par_len = OFFSETOF(mesh_cmd_light_ctl_set_t,transit_t);
 	par.lightness = lightness;
 	par.temp = temp;
-	par.delta_uv = 0;	// comfirm later
+	par.delta_uv = 0;	// confirm later
 	if(trs_par){
 		par_len = sizeof(mesh_cmd_light_ctl_set_t);
 		memcpy(&par.transit_t, trs_par, 2);
@@ -1918,7 +1918,7 @@ int access_cmd_set_light_ctl_temp(u16 adr, u8 rsp_max, u16 temp, int ack, transi
 	mesh_cmd_light_ctl_temp_set_t par = {0};
 	u32 par_len = OFFSETOF(mesh_cmd_light_ctl_temp_set_t,transit_t);
 	par.temp = temp;
-	par.delta_uv = 0;	// comfirm later
+	par.delta_uv = 0;	// confirm later
 	if(trs_par){
 		par_len = sizeof(mesh_cmd_light_ctl_temp_set_t);
 		memcpy(&par.transit_t, trs_par, 2);

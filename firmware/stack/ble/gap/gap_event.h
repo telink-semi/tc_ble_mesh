@@ -38,14 +38,14 @@
 #define GAP_EVT_SMP_PARING_SUCCESS			                         1
 #define GAP_EVT_SMP_PARING_FAIL			                             2
 #define GAP_EVT_SMP_CONN_ENCRYPTION_DONE							 3
-#define GAP_EVT_SMP_TK_DISPALY			                             4
+#define GAP_EVT_SMP_TK_DISPLAY			                             4
 #define GAP_EVT_SMP_TK_REQUEST_PASSKEY								 5
 #define GAP_EVT_SMP_TK_REQUEST_OOB									 6
 #define GAP_EVT_SMP_TK_NUMERIC_COMPARE								 7
 
 
 #define GAP_EVT_ATT_EXCHANGE_MTU									 16
-#define GAP_EVT_GATT_HANDLE_VLAUE_CONFIRM							 17
+#define GAP_EVT_GATT_HANDLE_VALUE_CONFIRM							 17
 
 #if 1 // L2CAP_CREDIT_BASED_FLOW_CONTROL_MODE_EN
 #define GAP_EVT_L2CAP_COC_CONNECT									 22
@@ -64,16 +64,16 @@
 #define GAP_EVT_MASK_SMP_PARING_SUCCESS                           	 (1<<GAP_EVT_SMP_PARING_SUCCESS)
 #define GAP_EVT_MASK_SMP_PARING_FAIL                           		 (1<<GAP_EVT_SMP_PARING_FAIL)
 #define GAP_EVT_MASK_SMP_CONN_ENCRYPTION_DONE                     	 (1<<GAP_EVT_SMP_CONN_ENCRYPTION_DONE)
-#define GAP_EVT_MASK_SMP_TK_DISPALY                  				 (1<<GAP_EVT_SMP_TK_DISPALY)
+#define GAP_EVT_MASK_SMP_TK_DISPLAY                  				 (1<<GAP_EVT_SMP_TK_DISPLAY)
 #define GAP_EVT_MASK_SMP_TK_REQUEST_PASSKEY                  		 (1<<GAP_EVT_SMP_TK_REQUEST_PASSKEY)
 #define GAP_EVT_MASK_SMP_TK_REQUEST_OOB	                     		 (1<<GAP_EVT_SMP_TK_REQUEST_OOB)
 #define GAP_EVT_MASK_SMP_TK_NUMERIC_COMPARE                     	 (1<<GAP_EVT_SMP_TK_NUMERIC_COMPARE)
 
 #define GAP_EVT_MASK_ATT_EXCHANGE_MTU                     	 		 (1<<GAP_EVT_ATT_EXCHANGE_MTU)
-#define GAP_EVT_MASK_GATT_HANDLE_VLAUE_CONFIRM                     	 (1<<GAP_EVT_GATT_HANDLE_VLAUE_CONFIRM)
+#define GAP_EVT_MASK_GATT_HANDLE_VALUE_CONFIRM                     	 (1<<GAP_EVT_GATT_HANDLE_VALUE_CONFIRM)
 
 
-#define GAP_EVT_MASK_DEFAULT										( GAP_EVT_MASK_SMP_TK_DISPALY 			| \
+#define GAP_EVT_MASK_DEFAULT										( GAP_EVT_MASK_SMP_TK_DISPLAY 			| \
 																	  GAP_EVT_MASK_SMP_TK_REQUEST_PASSKEY   | \
 																	  GAP_EVT_MASK_SMP_TK_REQUEST_OOB		| \
 																	  GAP_EVT_MASK_ATT_EXCHANGE_MTU )

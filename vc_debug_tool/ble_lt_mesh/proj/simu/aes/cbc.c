@@ -411,7 +411,7 @@ u32 cbc_decrypt_data(                    /* authenticate the plaintext        */
       /* used in stealing mode */
       memcpy(UI8_PTR(lastBlock), UI8_PTR(ctx->cbc_buf), BLOCK_SIZE);
 
-      /* Pj = CIPH(Cj) xor Cj-1 */
+      /* Pj = CIPHER(Cj) xor Cj-1 */
       xor_block_aligned(ctx->cbc_buf, ctx->cbc_buf, prevBlock);
       memcpy(UI8_PTR(prevBlock), UI8_PTR(tempBlock), BLOCK_SIZE);
       cnt += BLOCK_SIZE;

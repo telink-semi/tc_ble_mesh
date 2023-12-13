@@ -29,7 +29,7 @@
 #include "TLMeshDlg.h"
 #include "usbprt.h"
 #include "./lib_file/gatt_provision.h"
-#include "CTL_privision.h"
+#include "CTL_provision.h"
 #include "./aes_ecb/aes_ecb.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -112,7 +112,7 @@ void CScanDlg::OnConnect()
             return ;
 		}
         // send link open and start provision part 
-		if(ble_moudle_id_is_gateway()){
+		if(ble_module_id_is_gateway()){
 			gateway_send_link_open(unicast,uuid);
 			LOG_MSG_INFO(TL_LOG_GATT_PROVISION,uuid,16,"gw rp link open\r\n");
 			#if WIN32 
@@ -148,7 +148,7 @@ void CScanDlg::OnConnect()
 
 			int uuid_idx;
 			uuid_idx = find_idx_by_mac((u8 *)(m_mac+1));
-			if(ble_moudle_id_is_gateway()){
+			if(ble_module_id_is_gateway()){
 				gateway_vc_set_adv_filter((unsigned char *)m_mac+1);
 				// printf the uuid part 
 				if(uuid_idx == -1){
@@ -214,8 +214,8 @@ void CScanDlg::AddMac(unsigned char * p_mac, int rssi)
 		p_mac[0], p_mac[1], p_mac[2], p_mac[3], p_mac[4], p_mac[5], rssi);
 	((CListBox *) GetDlgItem (IDC_SCANLIST))->AddString (str);
 }
-#define SIG_MESH_PROVISION_SER_VAL			0x1827
-#define SIG_MESH_PROXY_SER_VAL				0x1828
+#define SIG_MESH_PROVISION_SRV_VAL			0x1827
+#define SIG_MESH_PROXY_SRV_VAL				0x1828
 
 
 gatt_mac_list_str gatt_mac_list;
@@ -281,7 +281,7 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
 			((CListBox*)GetDlgItem(IDC_SCANLIST))->InsertString(idx, str);
          }
     }
-	else if(ble_moudle_id_is_gateway()){
+	else if(ble_module_id_is_gateway()){
 		unsigned char *p_mac;
 		if(p[1]== HCI_GATEWAY_CMD_UPDATE_MAC){
 			p_mac =p+2;
@@ -332,7 +332,7 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
 		char *ps;
 		u16 service_uuid=0;
 		service_uuid = (p[20]<<8)|p[19];
-		if(service_uuid != SIG_MESH_PROVISION_SER_VAL && SIG_MESH_PROXY_SER_VAL != service_uuid)
+		if(service_uuid != SIG_MESH_PROVISION_SRV_VAL && SIG_MESH_PROXY_SRV_VAL != service_uuid)
 		{
 			return ;
 		}
@@ -392,7 +392,7 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
 			p_mac[0], p_mac[1], p_mac[2], p_mac[3], p_mac[4], p_mac[5], rssi, dc, ps);
 		//unsigned char mac_idx;
 		// set the mac and the uuid part 
-		if(service_uuid == SIG_MESH_PROVISION_SER_VAL){
+		if(service_uuid == SIG_MESH_PROVISION_SRV_VAL){
 			if (gatt_mac_list.max_idx >= MAX_MAC_LIST_NUM) {
 				memset((u8 *)&gatt_mac_list,0,sizeof(gatt_mac_list));	
 			}
@@ -401,7 +401,7 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
 			memcpy((u8*)(gatt_mac_list.oob + gatt_mac_list.max_idx),p + 13 +28 ,2);// need to switch to oob info part 
 			gatt_mac_list.max_idx++;
 			((CListBox *) GetDlgItem (IDC_SCANLIST))->AddString (str);
-		}else if(service_uuid == SIG_MESH_PROXY_SER_VAL){
+		}else if(service_uuid == SIG_MESH_PROXY_SRV_VAL){
 			if (gatt_mac_list.max_idx >= MAX_MAC_LIST_NUM) {
 				memset((u8 *)&gatt_mac_list,0,sizeof(gatt_mac_list));	
 			}

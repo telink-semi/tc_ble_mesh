@@ -185,7 +185,7 @@ void system_time_run(){
 			system_time_s += interval_cnt;
 			iv_idx_st.keep_time_s += (interval_cnt-1);
 			mesh_iv_update_st_poll_s();
-			switch_triger_iv_search_mode(0);
+			switch_trigger_iv_search_mode(0);
 			LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d", system_time_s/60/60, (system_time_s/60)%60, system_time_s%60);					
 			#else
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;

@@ -68,7 +68,7 @@
 //#define			SLOT_UPDT_MASTER_TERMINATE_ALL					BIT(6)
 
 
-//#define			SLOT_UPDT_ADV_DISBALE							BIT(6)
+//#define			SLOT_UPDT_ADV_DISABLE							BIT(6)
 //#define			SLOT_UPDT_ADV_ENABLE							BIT(7)
 
 

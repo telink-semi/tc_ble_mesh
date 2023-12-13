@@ -77,7 +77,7 @@ u32 mesh_md_g_power_onoff_addr = FLASH_ADR_MD_G_POWER_ONOFF;	// share with defau
 /**
  * @brief       This function determine if the steps in the transition are valid
  * @param[in]   transit_t	- transition parameter
- * @return      0:invaild; 1:valid
+ * @return      0:invalid; 1:valid
  * @note        
  */
 int is_valid_transition_step(u8 transit_t)
@@ -804,7 +804,7 @@ STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in m
 int mesh_tx_cmd_battery_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_battery_st_t rsp = {0};
-	rsp.battery_leve = 0xff;
+	rsp.battery_level = 0xff;
 	rsp.discharge_time = 0xffffff;
 	rsp.charge_time = 0xffffff;
 	rsp.battery_flag = 0xff;
@@ -1684,10 +1684,10 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	#endif
 	CMD_NO_STR(LIGHTNESS_LAST_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_last_get, LIGHTNESS_LAST_STATUS),
 	CMD_NO_STR(LIGHTNESS_LAST_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_last_status, STATUS_NONE),
-	CMD_NO_STR(LIGHTNESS_DEFULT_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_def_get, LIGHTNESS_DEFULT_STATUS),
-	CMD_NO_STR(LIGHTNESS_DEFULT_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, LIGHTNESS_DEFULT_STATUS),
-	CMD_NO_STR(LIGHTNESS_DEFULT_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, STATUS_NONE),
-	CMD_NO_STR(LIGHTNESS_DEFULT_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_DEFAULT_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_def_get, LIGHTNESS_DEFAULT_STATUS),
+	CMD_NO_STR(LIGHTNESS_DEFAULT_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, LIGHTNESS_DEFAULT_STATUS),
+	CMD_NO_STR(LIGHTNESS_DEFAULT_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHTNESS_DEFAULT_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_def_status, STATUS_NONE),
 	CMD_NO_STR(LIGHTNESS_RANGE_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_range_get, LIGHTNESS_RANGE_STATUS),
 	CMD_NO_STR(LIGHTNESS_RANGE_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, LIGHTNESS_RANGE_STATUS),
 	CMD_NO_STR(LIGHTNESS_RANGE_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_SETUP_S, mesh_cmd_sig_lightness_range_set, STATUS_NONE),
@@ -1718,10 +1718,10 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     CMD_YS_STR(LIGHT_CTL_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, LIGHT_CTL_STATUS),
     CMD_YS_STR(LIGHT_CTL_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_set, STATUS_NONE),
 	CMD_YS_STR(LIGHT_CTL_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_status, STATUS_NONE),
-	CMD_NO_STR(LIGHT_CTL_DEFULT_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_def_get, LIGHT_CTL_DEFULT_STATUS),
-	CMD_NO_STR(LIGHT_CTL_DEFULT_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, LIGHT_CTL_DEFULT_STATUS),
-	CMD_NO_STR(LIGHT_CTL_DEFULT_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, STATUS_NONE),
-	CMD_NO_STR(LIGHT_CTL_DEFULT_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_def_status, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_DEFAULT_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_def_get, LIGHT_CTL_DEFAULT_STATUS),
+	CMD_NO_STR(LIGHT_CTL_DEFAULT_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, LIGHT_CTL_DEFAULT_STATUS),
+	CMD_NO_STR(LIGHT_CTL_DEFAULT_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_def_set, STATUS_NONE),
+	CMD_NO_STR(LIGHT_CTL_DEFAULT_STATUS, 1, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_C, mesh_cmd_sig_light_ctl_def_status, STATUS_NONE),
 	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_GET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_S, mesh_cmd_sig_light_ctl_temp_range_get, LIGHT_CTL_TEMP_RANGE_STATUS),
 	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_SET, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, LIGHT_CTL_TEMP_RANGE_STATUS),
 	CMD_NO_STR(LIGHT_CTL_TEMP_RANGE_SET_NOACK, 0, SIG_MD_LIGHT_CTL_C, SIG_MD_LIGHT_CTL_SETUP_S, mesh_cmd_sig_light_ctl_temp_range_set, STATUS_NONE),
@@ -2041,8 +2041,8 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 	#endif	
 #endif
 
-    {SIG_MD_HEALTH_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.srv, &mesh_health_cur_sts_publish)},  // change to multy element model later. 
-    {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
+    {SIG_MD_HEALTH_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.srv, &mesh_health_cur_sts_publish)},  // change to multi element model later. 
+    {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multi element model later. 
 
 #if MD_DF_CFG_SERVER_EN
     {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
@@ -2287,7 +2287,7 @@ const mesh_vendor_model_resource_t MeshVendorModelResource[] = {
     }								\
 }
 
-/*because there is no multipy element now*/
+/*because there is no multiply element now*/
 #define MODEL_PUB_ST_CB_INIT_HEALTH(model, cb)	\
 {									\
 	model.com.cb_pub_st = cb;	\
@@ -2338,7 +2338,7 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
         foreach_arr(m,MeshSigModelResource){
             const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
             if(p_source->model_id == model_id){
-                if(p_source->multy_flag){
+                if(p_source->multi_flag){
                     foreach(i,p_source->model_cnt){
                         // member of 'com' always at the first place of p_source->p_model.
                         model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
@@ -2371,8 +2371,8 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
     #endif
 #else
     #if (VENDOR_MD_MI_EN)
-        u32 model_vd_id_srv = MIOT_SEPC_VENDOR_MODEL_SER;
-        u32 model_vd_id_srv2 = MIOT_VENDOR_MD_SER;
+        u32 model_vd_id_srv = MIOT_SEPC_VENDOR_MODEL_SRV;
+        u32 model_vd_id_srv2 = MIOT_VENDOR_MD_SRV;
         #if MD_CLIENT_VENDOR_EN
         u32 model_vd_id_clnt = MIOT_SEPC_VENDOR_MODEL_CLI;
         #endif
@@ -2421,7 +2421,7 @@ void mesh_model_ele_adr_init()
 {
     foreach_arr(m,MeshSigModelResource){
         const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
-        if(p_source->multy_flag){
+        if(p_source->multi_flag){
             foreach(i,p_source->model_cnt){
                 // member of 'com' always at the first place of p_source->p_model.
                 model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);

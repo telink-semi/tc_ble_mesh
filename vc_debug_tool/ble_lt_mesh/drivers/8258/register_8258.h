@@ -530,7 +530,7 @@ enum{
 	FLD_USB_EDP7_IRQ 		= 	BIT(7),
 };
 #define reg_usb_ep8_send_max	REG_ADDR8(0x13b)
-#define reg_usb_ep8_send_thre	REG_ADDR8(0x13c)
+#define reg_usb_ep8_send_thres	REG_ADDR8(0x13c)
 #define reg_usb_ep8_fifo_mode	REG_ADDR8(0x13d)
 #define reg_usb_ep_max_size		REG_ADDR8(0x13e)
 
@@ -587,7 +587,7 @@ enum{
 	FLD_PWM_ENABLE				= BIT(1),
 	FLD_LINER_INTERPOLATE_EN	= BIT(2),
 	FLD_LEFT_SHAPING_EN 		= BIT(5),
-	FLD_RIGTH_SHAPING_EN 		= BIT(6)
+	FLD_RIGHT_SHAPING_EN 		= BIT(6)
 };
 
 #define reg_ascl_tune     REG_ADDR32(0x564)
@@ -744,7 +744,7 @@ enum{
 	FLD_CLR_WD =				BIT(27),
 };
 
-#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
+#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definition, 0x622
 
 #define WATCHDOG_DISABLE	( reg_tmr_ctrl &= ~FLD_TMR_WD_EN )
 
@@ -1042,8 +1042,8 @@ enum{
 
 #define reg_alc_vol_th_h			REG_ADDR16(0xb44)
 #define reg_alc_vol_th_l			REG_ADDR16(0xb46)
-#define reg_alc_vol_thn				REG_ADDR16(0xb48)
-#define reg_alc_vad_thn				REG_ADDR16(0xb4a)
+#define reg_alc_vol_th_n			REG_ADDR16(0xb48)
+#define reg_alc_vad_th_n			REG_ADDR16(0xb4a)
 
 #define reg_alc_vol_step			REG_ADDR8(0xb4c)
 

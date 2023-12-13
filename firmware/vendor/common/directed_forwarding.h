@@ -297,7 +297,7 @@ typedef struct{
 	u16 start_index;
 	u16 path_origin;
 	u16 destination;
-	u16 up_id; // optinal
+	u16 up_id; // optional
 }forwarding_tbl_dependents_get_t;
 
 typedef struct{
@@ -311,7 +311,7 @@ typedef struct{
 	u16 path_origin;
 	u16 destination;
 	u16 up_id;
-	u8  dependent_origion_size;
+	u8  dependent_origin_size;
 	u8  dependent_target_size;
 	u8  range_list[4*MAX_DEPENDENT_NUM*sizeof(addr_range_t)];
 }forwarding_tbl_dependents_get_sts_t;
@@ -574,7 +574,7 @@ int mesh_directed_proxy_capa_report_upon_connection();
 path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination);
 int mesh_df_path_monitoring(path_entry_com_t *p_entry);
 int directed_forwarding_initial_start(u16 netkey_index, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt);
-int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt);
+int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_endpoint, u16 dependent_addr, u8 dependent_ele_cnt);
 void mesh_directed_forwarding_proc(u8 *p_bear, u8 *par, int par_len, int src_type);
 int is_address_in_dependent_origin(path_entry_com_t *p_fwd_entry, u16 addr);
 int is_address_in_dependent_target(path_entry_com_t *p_fwd_entry, u16 addr);

@@ -306,7 +306,7 @@ void mesh_scene_st_rsp_par_fill(scene_status_t *rsp, u8 idx)
 {
 	mesh_cmd_g_level_st_t level_st; 
 	light_g_level_get((u8 *)&level_st, idx, ST_TRANS_LIGHTNESS);
-	rsp->remain_t = level_st.remain_t;  // because ST_TRANS_LIGHTNESS is  forced to transmiting, when scene recall.
+	rsp->remain_t = level_st.remain_t;  // because ST_TRANS_LIGHTNESS is  forced to transmitting, when scene recall.
 }
 
 /**
@@ -414,7 +414,7 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     			}
                 int pub_flag_scene = trans_flag_scene ? ST_G_LEVEL_SET_PUB_TRANS : ST_G_LEVEL_SET_PUB_NOW;
     			scene_active_set(cb_par->model_idx, p_recall->id, trans_flag_scene);
-            	if(pub_flag_scene){ // always TURE
+            	if(pub_flag_scene){ // always TRUE
             	    model_pub_check_set(pub_flag_scene, (u8 *)(&(model_sig_scene.srv[cb_par->model_idx])), 1);
             	}
 

@@ -69,10 +69,10 @@
 //Set Phase time, v is the PWM number, n is the desired value
 #define		SET_PWMPT(v,n)		write_reg16((PHASE_TIME_BASE + v*2),n)
 
-//PWM count status cycle value set function, v is the PWM numer, n is the desired value
+//PWM count status cycle value set function, v is the PWM number, n is the desired value
 #define		SET_PWMCSCV(v,n)	write_reg16((CSC_VALUE_BASE + v*4),n)
 
-//PWM cycle value set function, v is the PWM numer, n is the desired value
+//PWM cycle value set function, v is the PWM number, n is the desired value
 #define		SET_PWMCYCV(v,n)	write_reg16((CYC_VALUE_BASE + v*4),n)
 
 //Set number of signal frames, v can only be pwm0 and pwm1, n is the setting value
@@ -90,7 +90,7 @@
 
 
 /************************************************************
-*	@brief	Initiate the PWM function include seting and enabling the PWM clock.
+*	@brief	Initiate the PWM function include setting and enabling the PWM clock.
 *			For test pin number 22 - 27 is the PWM output pin.
 *
 *	@param	pwmCLKdiv - pwm clk divider
@@ -114,7 +114,7 @@ void pwm_Init(unsigned char pwmCLKdiv){
 *			pwmWorkM - enum variable of pwm work mode
 *			phaseTime - delay time of the pwm channel before enter into the count status
 *			cscValue - count status value
-*			cycVlaue - cycle value
+*			cycValue - cycle value
 *			sfValue - signal frame value for the COUNT and IR mode
 *
 *	@return	'1' set success; '0' set error, if you set pwm2 - pwm5 to work on the other not normal mode, the function will return error.
@@ -182,7 +182,7 @@ void pwm_Start(enum PWMN pwmNumber)
 {
 #if(__PROJECT_BLE_REMOTE__VIN)
 		gpio_set_func(GPIO_LED1, !AS_GPIO);
-		REG_ADDR8(0x5b1) = 0x0;//set the mux funtion 
+		REG_ADDR8(0x5b1) = 0x0;//set the mux function 
 		pwm_set(PWMID_LED1, PWM_MAX_TICK, PWM_MAX_TICK/3);
 		
 #endif 
@@ -220,7 +220,7 @@ void pwm_Stop(enum PWMN pwmNumber)
 *
 *	@param	pwmNumber - enum variable of pwm channel number
 *			cscValue - count status value
-*			cycVlaue - cycle value
+*			cycValue - cycle value
 
 *
 *	@return	'1' set success; '0' set error, if csValue>cycValue

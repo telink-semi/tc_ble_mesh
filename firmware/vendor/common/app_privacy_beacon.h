@@ -66,7 +66,7 @@ typedef struct{
 
 typedef struct{
 	model_common_t com;
-}model_private_beacon_ser_t;
+}model_private_beacon_srv_t;
 
 typedef struct{
 	model_common_t com;
@@ -95,7 +95,7 @@ enum{
 
 typedef struct{
     #if MD_SERVER_EN
-    model_private_beacon_ser_t srv[1];
+    model_private_beacon_srv_t srv[1];
     #endif
     #if MD_CLIENT_EN
     model_private_beacon_cli_t client[1];

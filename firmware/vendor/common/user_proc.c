@@ -57,7 +57,7 @@ u8 ais_pri_data_set(u8 *p)
 	if(AIS_UUID_LEN){
 		//service uuid
 		p[0] = 3;
-		p[1] = 2;//imcomplete  service uuid
+		p[1] = 2;//incomplete  service uuid
 		#if DU_ENABLE
 		p[2] = du_pri_service_uuid_16&0xff;
 		p[3] = du_pri_service_uuid_16>>8;
@@ -95,7 +95,7 @@ u8 ais_pri_data_set(u8 *p)
 u8 magic_aes_nums[16]={	0x11,0xff,0x22,0xee,0x33,0xdd,0x44,0xcc,
 						0x55,0xbb,0x66,0xaa,0x77,0x99,0x88,0x88};
 
-void caculate_aes_to_create_static_oob()
+void calculate_aes_to_create_static_oob()
 {
 	#if !WIN32 
 	u8 aes_in[16];
@@ -222,7 +222,7 @@ void user_system_time_proc()
 #endif
 }
 
-//if return 0, will not send transation ack for link open cmd
+//if return 0, will not send transaction ack for link open cmd
 int user_node_rc_link_open_callback()
 {
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
@@ -302,11 +302,11 @@ void user_prov_multi_oob()
 {
 #if !WIN32
     #if (AIS_ENABLE)
-		caculate_sha256_to_create_static_oob();
+		calculate_sha256_to_create_static_oob();
     #elif LLSYNC_PROVISION_AUTH_OOB
 		llsync_set_dev_auth();
     #elif (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)
-        caculate_aes_to_create_static_oob();
+        calculate_aes_to_create_static_oob();
     #else 
         // use static oob mode 
     #endif

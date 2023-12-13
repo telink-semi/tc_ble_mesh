@@ -60,7 +60,7 @@ public:
             // CJM - moved to fix a bug in the fix.
             FillSolidRect(m_rect, pDC->GetBkColor());
         }
-        else        // Make a copy of the relevent parts of the current DC for printing
+        else        // Make a copy of the relevant parts of the current DC for printing
         {
 #if !defined(_WIN32_WCE) || ((_WIN32_WCE > 201) && !defined(_WIN32_WCE_NO_PRINTING))
             m_bPrinting = pDC->m_bPrinting;
@@ -84,7 +84,7 @@ public:
             SelectObject(m_pOldBitmap);
         } else {
             // All we need to do is replace the DC with an illegal value,
-            // this keeps us from accidently deleting the handles associated with
+            // this keeps us from accidentally deleting the handles associated with
             // the CDC that was passed to the constructor.
             m_hDC = m_hAttribDC = NULL;
         }

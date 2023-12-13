@@ -581,7 +581,7 @@ enum{
 #define reg_usb_irq				REG_ADDR8(0x139)
 #define reg_usb_mask			REG_ADDR8(0x13a)
 #define reg_usb_ep8_send_max	REG_ADDR8(0x13b)
-#define reg_usb_ep8_send_thre	REG_ADDR8(0x13c)
+#define reg_usb_ep8_send_thres	REG_ADDR8(0x13c)
 #define reg_usb_ep8_fifo_mode	REG_ADDR8(0x13d)
 #define reg_usb_ep_max_size		REG_ADDR8(0x13e)
 
@@ -1039,7 +1039,7 @@ enum{
 	FLD_TMR2_STA =				BIT(26),
 	FLD_CLR_WD =				BIT(27),
 };
-#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
+#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definition, 0x622
 
 #define reg_tmr_sta				REG_ADDR8(0x623)
 enum{
@@ -1214,7 +1214,7 @@ static inline u16 get_mic_wr_ptr (void) {
 
 
 ////////////////////////analog register////////////////////////////////
-//8263 analog register 0x19-0x1c can store infomation when MCU in deepsleep mode
+//8263 analog register 0x19-0x1c can store information when MCU in deepsleep mode
 //store your information in these ana_regs before deepsleep by calling analog_write function
 //when MCU wakeup from deepsleep, read the information by by calling analog_read function
 #define rega_deepsleep_flag    0x19

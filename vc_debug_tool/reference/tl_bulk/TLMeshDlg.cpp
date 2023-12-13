@@ -98,34 +98,34 @@ typedef struct{
 }alarm_ev_idx;
 alarm_ev_t alarm_list[ALARM_CNT_MAX];
 
-void CTLMeshDlg::get_time_shedule_proc(){
-    if(AUTO_GET_ST_GROUP == m_pMeshDlg->shedule_init){
+void CTLMeshDlg::get_time_schedule_proc(){
+    if(AUTO_GET_ST_GROUP == m_pMeshDlg->schedule_init){
         LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get subscription list to refresh UI......",0);
         cfg_cmd_sub_get(NODE_ADR_AUTO, mesh_sel, SIG_MD_G_ONOFF_S);
-        shedule_init = AUTO_GET_ST_WAIT_GROUP;
-    }else if(AUTO_GET_ST_SCENE == m_pMeshDlg->shedule_init){
+        schedule_init = AUTO_GET_ST_WAIT_GROUP;
+    }else if(AUTO_GET_ST_SCENE == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_SCENE_S,1)){
             LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scene to refresh UI......",0);
             access_cmd_scene_reg_get(mesh_sel,1);
-            shedule_init = AUTO_GET_ST_WAIT_SCENE;
+            schedule_init = AUTO_GET_ST_WAIT_SCENE;
     	}else{
-            shedule_init = AUTO_GET_ST_TIME;
+            schedule_init = AUTO_GET_ST_TIME;
             // LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "scene model not found, no need auto get scene when double click node......",0);
         }
-    }else if(AUTO_GET_ST_TIME == m_pMeshDlg->shedule_init){
+    }else if(AUTO_GET_ST_TIME == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_TIME_S,1)){
             LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get time to refresh UI......",0);
             access_cmd_time_get(mesh_sel,1);
-            shedule_init = AUTO_GET_ST_WAIT_TIME;
+            schedule_init = AUTO_GET_ST_WAIT_TIME;
         }else{
-            shedule_init = AUTO_GET_ST_SCHEDULER;
+            schedule_init = AUTO_GET_ST_SCHEDULER;
         }
-    }else if(AUTO_GET_ST_SCHEDULER == m_pMeshDlg->shedule_init){
+    }else if(AUTO_GET_ST_SCHEDULER == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_SCHED_S,1)){
             LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scheduler to refresh UI......",0);
             access_cmd_schd_get(mesh_sel, 1);
         }
-        shedule_init=0; // end
+        schedule_init=0; // end
     }
 }
 
@@ -141,7 +141,7 @@ void schedule_get_proc()
     u16 mesh_sel = (u16)m_pMeshDlg->mesh_sel;
     shedule_get_proc_t *p_proc = &shedule_get_proc;
     while(p_proc->total_shedule_bit){
-        //if(ble_moudle_id_is_gateway()){ // because IsSendOpBusy() doesn't make sense in gateway.
+        //if(ble_module_id_is_gateway()){ // because IsSendOpBusy() doesn't make sense in gateway.
             if(p_proc->wait_status_tick){
                 if(clock_time_exceed(p_proc->wait_status_tick, 3500*1000)){ //
                     p_proc->wait_status_tick = 0;
@@ -211,7 +211,7 @@ void CTLMeshDlg::InitStatusSelNode()
 		SetItem (2, i, 1, GVIF_TEXT, "action", 0);	   
 		}	
 	}
-	m_GridShedule.AutoSize();
+	m_GridSchedule.AutoSize();
 	for (i=0; i<MAX_SCENE_CNT+1; i++)
 	{
 		SetItem (3, i, 0, GVIF_TEXT, "", 0);
@@ -241,9 +241,9 @@ void CTLMeshDlg::InitStatusSelNode()
         alarm_list[i].second=0;//SCHD_SEC_ANY;
     }
 
-    ShowSchedule(0);    // current_shedule=0;
+    ShowSchedule(0);    // current_schedule=0;
     GetDlgItem(IDC_currenttime)->SetWindowTextA("");
-	//UpdateSheduleStatus ();
+	//UpdateScheduleStatus ();
 	//UpdateSceneStatus ();
 	UpdateData(FALSE);
 }
@@ -322,9 +322,9 @@ CTLMeshDlg::CTLMeshDlg(CWnd* pParent /*=NULL*/)
 		memset(mesh_status, 0, sizeof(mesh_status));
 	}
 	mLite = 0;
-	current_shedule = 0;
+	current_schedule = 0;
 	current_scene = 0;
-	shedule_init = 0;
+	schedule_init = 0;
     memset(&UI_time, 0, sizeof(UI_time));
 }
 
@@ -416,8 +416,8 @@ void CTLMeshDlg::StatusNotify (unsigned char *p, int len)
 		if (CFG_SIG_MODEL_SUB_LIST == op){
 			UpdateGroupList (&rsp, op, size_op);
 			UpdateGroupStatus ();
-		    if(shedule_init){
-		        shedule_init = AUTO_GET_ST_SCENE;
+		    if(schedule_init){
+		        schedule_init = AUTO_GET_ST_SCENE;
 		    }
 		}else if (CFG_MODEL_SUB_STATUS == op){
 			UpdateGroupSetRsp (&rsp, op, size_op);
@@ -464,22 +464,22 @@ void CTLMeshDlg::StatusNotify (unsigned char *p, int len)
     		alarm_ev_t *alarm_staus = (alarm_ev_t *)par;
 
     		memcpy(&alarm_list[alarm_staus->idx], alarm_staus, sizeof(alarm_ev_t));
-            if(ble_moudle_id_is_gateway()){
+            if(ble_module_id_is_gateway()){
                 schedule_get_proc_tick_check_and_clear();
             }else{
                 //shedule_get_proc.wait_status_tick = 0; // can't clear here, because reliable is busy here.
             }
-    		UpdateSheduleStatus();	
+    		UpdateScheduleStatus();	
 		}else if(SCENE_REG_STATUS==op){
-		    if(shedule_init){
-		        shedule_init = AUTO_GET_ST_TIME;
+		    if(schedule_init){
+		        schedule_init = AUTO_GET_ST_TIME;
 		    }
 			memset(&scene_data,0,sizeof(scene_data));	
 			memcpy(&(scene_data.id[0]), (par+3),(par_len-3));
 		    UpdateSceneStatus();
 		}else if(TIME_STATUS==op){		
-		    if(shedule_init){
-		        shedule_init = AUTO_GET_ST_SCHEDULER;
+		    if(schedule_init){
+		        schedule_init = AUTO_GET_ST_SCHEDULER;
 		    }
     		time_status_t *gettime= (time_status_t *)par;
     		memcpy(&UI_time, gettime, sizeof(UI_time));
@@ -836,7 +836,7 @@ void CTLMeshDlg::UpdateOnlineStatus ()
 
 
     // rank by address
-    int start_idx = ble_moudle_id_is_kmadongle() ? 1 : 0;   // GATT conneced node at first.   
+    int start_idx = ble_module_id_is_kmadongle() ? 1 : 0;   // GATT conneced node at first.   
     for(int i=start_idx;i<mesh_num;i++) {
         for(int j=i;j<mesh_num;j++) {
             if (mesh_status[i].adr > mesh_status[j].adr) {
@@ -958,7 +958,7 @@ void CTLMeshDlg::UpdateGroupStatus ()
 	m_GridGroup.AutoSize();
 }
 
-void CTLMeshDlg::UpdateSheduleStatus ()
+void CTLMeshDlg::UpdateScheduleStatus ()
 {
 	char buff[128];
 	int i = 0;	
@@ -987,7 +987,7 @@ void CTLMeshDlg::UpdateSheduleStatus ()
         	}
         }
 	}
-	m_GridShedule.AutoSize();
+	m_GridSchedule.AutoSize();
 }
 
 void CTLMeshDlg::UpdateSceneStatus ()
@@ -1047,7 +1047,7 @@ void CTLMeshDlg::DoDataExchange(CDataExchange* pDX)
 	//DDX_Check(pDX, IDC_ALL, m_all);
 	DDX_Check(pDX, IDC_FRIDAY, m_friday);
 	DDX_Control(pDX, IDC_GRID_SCENE, m_GridScene);
-	DDX_Control(pDX, IDC_GRID_SHEDULE, m_GridShedule);
+	DDX_Control(pDX, IDC_GRID_SHEDULE, m_GridSchedule);
 	DDX_Check(pDX, IDC_MONDAY, m_monday);
 	DDX_Check(pDX, IDC_SATURDAY, m_saturday);
 	DDX_Check(pDX, IDC_SUNDAY, m_sunday);
@@ -1093,7 +1093,7 @@ BEGIN_MESSAGE_MAP(CTLMeshDlg, CDialog)
 
     ON_NOTIFY(NM_DBLCLK, IDC_GRID_GROUP, OnGridGroupDblClick)
     ON_NOTIFY(NM_CLICK, IDC_GRID_GROUP, OnGridGroupClick)
-	ON_NOTIFY(NM_CLICK, IDC_GRID_SHEDULE, OnGridSheduleClick)
+	ON_NOTIFY(NM_CLICK, IDC_GRID_SHEDULE, OnGridScheduleClick)
 	ON_NOTIFY(NM_CLICK, IDC_GRID_SCENE, OnGridSceneClick)
 	ON_NOTIFY(NM_RCLICK, IDC_GRID_GROUP, OnGridGroupRClick)
 	ON_BN_CLICKED(IDC_SET_MAC, &CTLMeshDlg::OnBnClickedSetMac)
@@ -1181,7 +1181,7 @@ void CTLMeshDlg::SetItem(int group, int row, int col, int type, char *text, int 
 	}
 	else if (group == 2)
 	{
-		m_GridShedule.SetItem(&Item);
+		m_GridSchedule.SetItem(&Item);
 	}
 	else if (group == 3)
 	{
@@ -1223,13 +1223,13 @@ BOOL CTLMeshDlg::OnInitDialog()
 	m_GridGroup.SetColumnCount(5);
 
 	//m_GridGroup.EnableDragAndDrop(TRUE);
-	m_GridShedule.GetDefaultCell(FALSE, FALSE)->SetBackClr(RGB(0xFF, 0xFF, 0xE0));
-	m_GridShedule.SetEditable(0);
-	m_GridShedule.SetVirtualMode(0);
+	m_GridSchedule.GetDefaultCell(FALSE, FALSE)->SetBackClr(RGB(0xFF, 0xFF, 0xE0));
+	m_GridSchedule.SetEditable(0);
+	m_GridSchedule.SetVirtualMode(0);
 
-	m_GridShedule.SetAutoSizeStyle();
-	m_GridShedule.SetRowCount(ALARM_CNT_MAX+1);
-	m_GridShedule.SetColumnCount(5);
+	m_GridSchedule.SetAutoSizeStyle();
+	m_GridSchedule.SetRowCount(ALARM_CNT_MAX+1);
+	m_GridSchedule.SetColumnCount(5);
 
 	m_GridScene.SetImageList(&m_ImageList);
 
@@ -1296,10 +1296,10 @@ void CTLMeshDlg::OnGridDblClick(NMHDR *pNotifyStruct, LRESULT* /*pResult*/)
 		UpdateData(FALSE);
 		mesh_sel = adr;
 		if(is_support_model_dst(mesh_sel,SIG_MD_SCHED_S,1)){
-            UpdateSheduleStatus (); // show schedule index in UI.
+            UpdateScheduleStatus (); // show schedule index in UI.
         }
 
-        shedule_init = AUTO_GET_ST_GROUP;
+        schedule_init = AUTO_GET_ST_GROUP;
 	}
 }
 void CTLMeshDlg::OnGridSceneClick(NMHDR *pNotifyStruct, LRESULT* pResult){
@@ -1309,15 +1309,15 @@ void CTLMeshDlg::OnGridSceneClick(NMHDR *pNotifyStruct, LRESULT* pResult){
 	}
 }
 
-void CTLMeshDlg::ShowSchedule(int shedule_index)
+void CTLMeshDlg::ShowSchedule(int schedule_index)
 {
-    if((shedule_index >= 16) || (shedule_index < 0)){
-        LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "shedule_index error",0);
+    if((schedule_index >= 16) || (schedule_index < 0)){
+        LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "schedule_index error",0);
         return ;
     }
-	current_shedule=shedule_index ;
+	current_schedule=schedule_index ;
     
-    if(alarm_list[current_shedule].year==SCHD_YEAR_ANY){//year
+    if(alarm_list[current_schedule].year==SCHD_YEAR_ANY){//year
     GetDlgItem(IDC_YEAR)->EnableWindow(FALSE);
     m_yearsel=0;
     m_year=0;
@@ -1325,97 +1325,97 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     else {
     m_yearsel=1;
     GetDlgItem(IDC_YEAR)->EnableWindow(TRUE);
-    m_year=alarm_list[current_shedule].year;
+    m_year=alarm_list[current_schedule].year;
     }
 ////////////////////////////////////////////////////////
-    if(alarm_list[current_shedule].month&0x0001){
+    if(alarm_list[current_schedule].month&0x0001){
     m_January=1;
     }
     else{
     m_January=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<1)){
+    if(alarm_list[current_schedule].month&(0x0001<<1)){
     m_February=1;
     }
     else{
     m_February=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<2)){
+    if(alarm_list[current_schedule].month&(0x0001<<2)){
     m_March=1;
     }
     else{
     m_March=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<3)){
+    if(alarm_list[current_schedule].month&(0x0001<<3)){
     m_April=1;
     }
     else{
     m_April=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<4)){
+    if(alarm_list[current_schedule].month&(0x0001<<4)){
     m_May=1;
     }
     else{
     m_May=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<5)){
+    if(alarm_list[current_schedule].month&(0x0001<<5)){
     m_June=1;
     }
     else{
     m_June=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<6)){
+    if(alarm_list[current_schedule].month&(0x0001<<6)){
     m_July=1;
     }
     else{
     m_July=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<7)){
+    if(alarm_list[current_schedule].month&(0x0001<<7)){
     m_August=1;
     }
     else{
     m_August=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<8)){
+    if(alarm_list[current_schedule].month&(0x0001<<8)){
     m_September=1;
     }
     else{
     m_September=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<9)){
+    if(alarm_list[current_schedule].month&(0x0001<<9)){
     m_October=1;
     }
     else{
     m_October=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<10)){
+    if(alarm_list[current_schedule].month&(0x0001<<10)){
     m_November=1;
     }
     else{
     m_November=0;
     }
-    if(alarm_list[current_shedule].month&(0x0001<<11)){
+    if(alarm_list[current_schedule].month&(0x0001<<11)){
     m_December=1;
     }
     else{
     m_December=0;
     }
 ////////////////////////////////////////////////////////
-    if(alarm_list[current_shedule].day== SCHD_DAY_ANY){//day
+    if(alarm_list[current_schedule].day== SCHD_DAY_ANY){//day
     GetDlgItem(IDC_EDIT_DAY)->EnableWindow(FALSE);
     m_daysel=0; 
     m_day=1;
     }
     else{   
     GetDlgItem(IDC_EDIT_DAY)->EnableWindow(TRUE);
-    m_day=alarm_list[current_shedule].day;
+    m_day=alarm_list[current_schedule].day;
     }
-    if(alarm_list[current_shedule].hour==SCHD_HOUR_ANY){//hour
+    if(alarm_list[current_schedule].hour==SCHD_HOUR_ANY){//hour
     GetDlgItem(IDC_HOUR)->EnableWindow(FALSE);
     m_hoursel=0;
     m_hour=0;
     }
-    else if(alarm_list[current_shedule].hour==SCHD_HOUR_RANDOM){
+    else if(alarm_list[current_schedule].hour==SCHD_HOUR_RANDOM){
     GetDlgItem(IDC_HOUR)->EnableWindow(FALSE);
     m_hoursel=1;
     m_hour=0;
@@ -1423,24 +1423,24 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     else{
     GetDlgItem(IDC_HOUR)->EnableWindow(TRUE);
     m_hoursel=2;
-    m_hour=alarm_list[current_shedule].hour;
+    m_hour=alarm_list[current_schedule].hour;
     }
-    if(alarm_list[current_shedule].minute==SCHD_MIN_ANY){//minute
+    if(alarm_list[current_schedule].minute==SCHD_MIN_ANY){//minute
     GetDlgItem(IDC_MINUTE)->EnableWindow(FALSE);
     m_minutesel=0;
     m_minute=0;
     }
-    else if(alarm_list[current_shedule].minute==SCHD_MIN_EVERY15){
+    else if(alarm_list[current_schedule].minute==SCHD_MIN_EVERY15){
     GetDlgItem(IDC_MINUTE)->EnableWindow(FALSE);
     m_minutesel=1;
     m_minute=0;
     }
-    else if(alarm_list[current_shedule].minute==SCHD_MIN_EVERY20){
+    else if(alarm_list[current_schedule].minute==SCHD_MIN_EVERY20){
     GetDlgItem(IDC_MINUTE)->EnableWindow(FALSE);
     m_minutesel=2;
     m_minute=0;
     }
-    else if(alarm_list[current_shedule].minute==SCHD_MIN_RANDOM){
+    else if(alarm_list[current_schedule].minute==SCHD_MIN_RANDOM){
     GetDlgItem(IDC_MINUTE)->EnableWindow(FALSE);
     m_minutesel=3;
     m_minute=0;
@@ -1448,24 +1448,24 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     else{
     GetDlgItem(IDC_MINUTE)->EnableWindow(TRUE);
     m_minutesel=4;
-    m_minute=alarm_list[current_shedule].minute;
+    m_minute=alarm_list[current_schedule].minute;
     }
-    if(alarm_list[current_shedule].second== SCHD_SEC_ANY){//second
+    if(alarm_list[current_schedule].second== SCHD_SEC_ANY){//second
     GetDlgItem(IDC_SECOND)->EnableWindow(FALSE);
     m_secondsel=0;
     m_seconed=0;
     }
-    else if(alarm_list[current_shedule].second==SCHD_SEC_EVERY15){
+    else if(alarm_list[current_schedule].second==SCHD_SEC_EVERY15){
     GetDlgItem(IDC_SECOND)->EnableWindow(FALSE);
     m_secondsel=1;
     m_seconed=0;
     }
-    else if(alarm_list[current_shedule].second== SCHD_SEC_EVERY20){
+    else if(alarm_list[current_schedule].second== SCHD_SEC_EVERY20){
     GetDlgItem(IDC_SECOND)->EnableWindow(FALSE);
     m_secondsel=2;
     m_seconed=0;
     }
-    else if(alarm_list[current_shedule].second==SCHD_SEC_RANDOM){
+    else if(alarm_list[current_schedule].second==SCHD_SEC_RANDOM){
     GetDlgItem(IDC_SECOND)->EnableWindow(FALSE);
     m_secondsel=3;
     m_seconed=0;
@@ -1473,46 +1473,46 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     else {
     GetDlgItem(IDC_SECOND)->EnableWindow(TRUE);
     m_secondsel=4;
-    m_seconed=alarm_list[current_shedule].second;   
+    m_seconed=alarm_list[current_schedule].second;   
     }
     //////////////////////////////////////////////
-    if(alarm_list[current_shedule].week&0x01){
+    if(alarm_list[current_schedule].week&0x01){
     m_monday=1;
     }
     else{
     m_monday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<1)){
+    if(alarm_list[current_schedule].week&(0x01<<1)){
     m_tuesday=1;
     }
     else{
     m_tuesday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<2)){
+    if(alarm_list[current_schedule].week&(0x01<<2)){
     m_wednesday=1;
     }
     else{
     m_wednesday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<3)){
+    if(alarm_list[current_schedule].week&(0x01<<3)){
     m_thursday=1;
     }
     else{
     m_thursday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<4)){
+    if(alarm_list[current_schedule].week&(0x01<<4)){
     m_friday=1;
     }
     else{
     m_friday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<5)){
+    if(alarm_list[current_schedule].week&(0x01<<5)){
     m_saturday=1;
     }
     else{
     m_saturday=0;
     }
-    if(alarm_list[current_shedule].week&(0x01<<6)){
+    if(alarm_list[current_schedule].week&(0x01<<6)){
     m_sunday=1;
     }
     else{
@@ -1520,25 +1520,25 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     }
     
     //////////////////////////////////////////////
-    if(alarm_list[current_shedule].action==SCHD_ACTION_ON){//action
+    if(alarm_list[current_schedule].action==SCHD_ACTION_ON){//action
     m_recall=1;
     GetDlgItem(IDC_EDIT_RECALL)->EnableWindow(FALSE);
     m_radio_on=0;
     }
-    else if(alarm_list[current_shedule].action==SCHD_ACTION_OFF){
+    else if(alarm_list[current_schedule].action==SCHD_ACTION_OFF){
     m_recall=1;
     GetDlgItem(IDC_EDIT_RECALL)->EnableWindow(FALSE);
     m_radio_on=1;
     }
-    else if(alarm_list[current_shedule].action==SCHD_ACTION_NONE){
+    else if(alarm_list[current_schedule].action==SCHD_ACTION_NONE){
     m_recall=1;
     GetDlgItem(IDC_EDIT_RECALL)->EnableWindow(FALSE);
     m_radio_on=2;
     }
-    else if(alarm_list[current_shedule].action==SCHD_ACTION_SCENE){
+    else if(alarm_list[current_schedule].action==SCHD_ACTION_SCENE){
     GetDlgItem(IDC_EDIT_RECALL)->EnableWindow(TRUE);
     m_radio_on=3;
-    m_recall=alarm_list[current_shedule].scene_id;
+    m_recall=alarm_list[current_schedule].scene_id;
     }
     else{
     m_recall=1;
@@ -1551,7 +1551,7 @@ void CTLMeshDlg::ShowSchedule(int shedule_index)
     UpdateData(FALSE);
 }
 
-void CTLMeshDlg::OnGridSheduleClick(NMHDR *pNotifyStruct, LRESULT* pResult){
+void CTLMeshDlg::OnGridScheduleClick(NMHDR *pNotifyStruct, LRESULT* pResult){
 	if(0 != Sel_Ele_Check()){
 		return;
 	}
@@ -1923,7 +1923,7 @@ BOOL CTLMeshDlg::PreTranslateMessage(MSG* pMsg)
             }
 			#if (LIGHT_TYPE_CT_EN)
 			u8 offset=0;
-			if(ble_moudle_id_is_gateway()){
+			if(ble_module_id_is_gateway()){
 				offset =1;
 			}else{
 				offset = get_ele_offset_by_model_VC_node_info(mesh_sel, SIG_MD_LIGHT_CTL_TEMP_S, 1);
@@ -2089,7 +2089,7 @@ void CTLMeshDlg::OnBnClickedDelNode()
     access_cmd_time_set(mesh_sel, 0, &time_set);
     #else
 	cfg_cmd_reset_node(mesh_sel);
-	if(ble_moudle_id_is_gateway()){
+	if(ble_module_id_is_gateway()){
 		extern void json_use_adr_to_del_info(u16 adr);
 		json_use_adr_to_del_info(mesh_sel);
 	}
@@ -2416,7 +2416,7 @@ void CTLMeshDlg::OnBnClickedAdd()
 	}
 	scheduler_t c_schd = {0};
 	c_schd=get_current_scheduler();	
-    c_schd.valid_flag_or_idx=current_shedule;
+    c_schd.valid_flag_or_idx=current_schedule;
     if(is_support_model_dst(mesh_sel,SIG_MD_SCHED_S,1)){
         access_cmd_schd_action_set(mesh_sel, 0, &c_schd, 1);
     }else{

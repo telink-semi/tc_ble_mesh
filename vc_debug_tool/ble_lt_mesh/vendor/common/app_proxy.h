@@ -72,7 +72,7 @@ typedef enum{
 typedef enum{
 	COMPLETE_MSG = 0,
 	FIRST_SEG_MSG,
-	CONTINUS_SEG_MSG,
+	CONTINUE_SEG_MSG,
 	LAST_SEG_MSG,
 }PROXY_DATA_SAR_TYPE;
 typedef enum{
@@ -159,7 +159,7 @@ extern void proxy_cfg_list_init_upon_connection();
 extern void set_proxy_initial_mode(u8 special_mode);
 extern void set_pair_login_ok(u8 val);
 extern u8 proxy_proc_filter_mesh_cmd(u16 src);
-void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey );
+void calculate_proxy_adv_hash(mesh_net_key_t *p_netkey );
 
 int proxy_adv_calc_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8]);
 int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 hash[8]);

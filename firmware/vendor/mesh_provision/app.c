@@ -223,7 +223,7 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 
 	switch(event)
 	{
-		case GAP_EVT_SMP_TK_DISPALY:
+		case GAP_EVT_SMP_TK_DISPLAY:
 		{
 			#if BLE_REMOTE_SECURITY_ENABLE
 			//char pc[7];
@@ -717,7 +717,7 @@ u8 gateway_upload_log_info(u8 *p_data,u8 len ,char *format,...) //gateway upload
 	p_buf = log_str;
 	pp_buf = &(p_buf);
 	
-	u32 head_len = print(PP_GET_PRINT_BUF_LEN_FALG,format,list);
+	u32 head_len = print(PP_GET_PRINT_BUF_LEN_FLAG,format,list);
 	if(head_len > sizeof(log_str)){
     	LOG_MSG_ERR (TL_LOG_NODE_BASIC, 0, 0, "not enough resource to print: %d", head_len);
 		return 0;
@@ -815,7 +815,7 @@ int gateway_cmd_from_host_ctl(u8 *p, u16 len )
 			return 0;
 		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
-		// set the pro_data infomation 
+		// set the pro_data information 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
 								p_net->flags,p_net->iv_index,p_net->unicast_address);
 		provision_mag.unicast_adr_last = p_net->unicast_address;
@@ -936,7 +936,7 @@ int gateway_cmd_from_host_ctl(u8 *p, u16 len )
 			return 0;
 		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
-		// set the pro_data infomation 
+		// set the pro_data information 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
 								p_net->flags,p_net->iv_index,p_net->unicast_address);
 		provision_mag.unicast_adr_last = p_net->unicast_address;
@@ -1134,7 +1134,7 @@ void user_init()
 						  GAP_EVT_MASK_L2CAP_COC_RECV_DATA			|  \
 						  GAP_EVT_MASK_L2CAP_COC_SEND_DATA_FINISH	|  \
 						  GAP_EVT_MASK_L2CAP_COC_CREATE_CONNECT_FINISH  |  \
-						  GAP_EVT_MASK_SMP_TK_DISPALY
+						  GAP_EVT_MASK_SMP_TK_DISPLAY
 						#else
 						0
 						#endif
@@ -1196,7 +1196,7 @@ void user_init()
 	#endif
 #endif
 #if ADC_ENABLE
-	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 #endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);

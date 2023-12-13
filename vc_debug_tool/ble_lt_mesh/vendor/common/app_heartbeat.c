@@ -485,7 +485,7 @@ u8 get_high_bits(u16 val)
 }
 
 /**
- * @brief       This function caculate heartbeat count log
+ * @brief       This function calculate heartbeat count log
  * @param[in]   val	- value
  * @return      count of log
  * @note        
@@ -539,7 +539,7 @@ u8 dispatch_heartbeat_pub_ttl(u8 val)
  */
 void init_heartbeat_str()
 {
-	// need to trigger the hearbeat msg ,at the first time 
+	// need to trigger the heartbeat msg ,at the first time 
 	//hb_pub_100ms = clock_time_100ms()- BIT(31);//reserve 32767s
 
 	// heartbeat publication 

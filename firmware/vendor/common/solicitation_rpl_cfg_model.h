@@ -37,7 +37,7 @@
 typedef struct{
 	u8 id_type;
 	u8 id_para[17]; // OFFSETOF(mesh_cmd_nw_t, 8) +MIC(8)
-}soli_ser_dat_t;
+}soli_srv_dat_t;
 
 typedef struct {
 	u8 flag_len;
@@ -50,7 +50,7 @@ typedef struct {
 		u8 service_len;
 		u8 service_type;
 		u16 service_uuid;
-		soli_ser_dat_t service_data;
+		soli_srv_dat_t service_data;
 	};
 }soli_pdu_pkt_t;
 
@@ -70,7 +70,7 @@ typedef struct{
 
 extern u32 soli_sno_tx;
 
-extern soli_ser_dat_t soli_service_data;
+extern soli_srv_dat_t soli_service_data;
 extern int soli_pdu_adv_cnt;
 
 int is_exist_in_soli_rpl(u8 *p);

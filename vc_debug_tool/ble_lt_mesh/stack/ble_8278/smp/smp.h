@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     smp.h 
+ * @file	smp.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 public@telink-semi.com;
- * @date     Sep. 18, 2015
+ * @author	BLE Group
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 /*
  * ble_smp.h
@@ -51,7 +54,7 @@
 
 
 
-//define smp database(keys/peer device informations ...)
+//define smp database(keys/peer device information ...)
 #ifndef SMP_DATABASE_INFO_SOURCE
 #define SMP_DATABASE_INFO_SOURCE					SMP_INFO_STORAGE_IN_FLASH
 #endif
@@ -207,7 +210,7 @@ void blm_smp_registerSmpFinishCb (smp_finish_callback_t cb);
 extern u8 smpPkShftCnt;
 
 extern u32 smp_timeout_start_tick;
-extern u8 smpDistirbuteKeyOrder;
+extern u8 smpDistributeKeyOrder;
 extern smp_keyDistribution_t smp_DistributeKeyInit ;
 extern smp_keyDistribution_t smp_DistributeKeyResp ;
 
@@ -257,7 +260,7 @@ void 		blc_smp_setSecurityLevel(le_security_mode_level_t  mode_level);
 
 void 		blc_smp_setParingMethods (paring_methods_t  method);    //select paring methods
 
-void 		blc_smp_setSecurityParamters (  bonding_mode_t 		mode,
+void 		blc_smp_setSecurityParameters (  bonding_mode_t 		mode,
 											int 				MITM_en,
 											int 				OOB_en,
 											int				    keyPress_en,
@@ -310,7 +313,7 @@ smp_keyDistribution_t blc_smp_setInitiatorKey (u8 LTK_distributeEn, u8 IRK_distr
 smp_keyDistribution_t blc_smp_setResponderKey (u8 LTK_distributeEn, u8 IRK_distributeEn, u8 CSRK_DistributeEn);
 
 
-int 		blc_stack_smp_setSecurityParamters (  bonding_mode_t 		mode,
+int 		blc_stack_smp_setSecurityParameters (  bonding_mode_t 		mode,
 											paring_methods_t 	method,
 											int 				MITM_en,
 											int 				OOB_en,

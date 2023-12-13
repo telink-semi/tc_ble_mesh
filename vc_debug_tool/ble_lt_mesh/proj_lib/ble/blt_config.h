@@ -295,7 +295,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #elif(LLSYNC_ENABLE)
 #define			FLASH_ADR_THREE_PARA_ADR	0x78000
 #elif (CERTIFY_BASE_ENABLE)
-#define 		FLASH_ADR_CERTIFY_ADR		0x78000 // we wil burn in an 4k bin
+#define 		FLASH_ADR_CERTIFY_ADR		0x78000 // we will burn in an 4k bin
 #endif
 
 #if BLE_REMOTE_SECURITY_ENABLE
@@ -303,7 +303,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define 		FLASH_ADR_SMP_PARA_2		0x7a000 // 
 #endif
 #if MI_API_ENABLE
-#define         MI_BLE_MESH_CER_ADR 	    0x7E000// because the certi is stored in the 0x7e800
+#define         MI_BLE_MESH_CER_ADR 	    0x7E000// because the certify is stored in the 0x7e800
 #define 		FLASH_ADR_PAR_USER_MAX		MI_BLE_MESH_CER_ADR
 #else
 
@@ -434,7 +434,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define 		FLASH_ADR_SRP_KEY2_CRC_DATA			(FLASH_ADR_SRP_KEY2 + 0xE00)
 #define 		FLASH_ADR_SALTCHAR				0xED000
 #define			FLASH_ADR_HOMEKIT_AREA_END		0xEF000
-// FLASH_ADR_HOMEKIT_AREA_END to start of user is reserve fo telink
+// FLASH_ADR_HOMEKIT_AREA_END to start of user is reserve for telink
 /*******homekit vendor define here, from FLASH_ADR_USER_HOMEKIT_END ~ FLASH_ADR_USER_HOMEKIT_START, vendor define from behined to head should be better, .*/
 #define			FLASH_ADR_USER_HOMEKIT_START	0xF4000
 // TODO
@@ -678,7 +678,7 @@ enum{
     FLD_OTA_REBOOT_FLAG                 = BIT(0),
     FLD_LOW_BATT_FLG                   	= BIT(1),
     FLD_LOW_BATT_LOOP_FLG             	= BIT(2),	// 0 means check by user_init, 1 means by main loop
-    FLD_MESH_OTA_100_FLAG               = BIT(3),	// for LPN: it is gatt connected flag bofore OTA reboot.
+    FLD_MESH_OTA_100_FLAG               = BIT(3),	// for LPN: it is gatt connected flag before OTA reboot.
 };/*DEEP_ANA_REG0*/
 
 

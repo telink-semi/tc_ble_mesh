@@ -88,10 +88,10 @@ enum {
 	FLDA_LDO_SETTING2_RSV =		BIT_RNG(6,7),
 };
 
-#define rega_32k_tm_thre0		0x10
-#define rega_32k_tm_thre1		0x11
-#define rega_32k_tm_thre2		0x12
-#define rega_32k_tm_thre3		0x13
+#define rega_32k_tm_thres0		0x10
+#define rega_32k_tm_thres1		0x11
+#define rega_32k_tm_thres2		0x12
+#define rega_32k_tm_thres3		0x13
 enum {
 	FLDA_32K_THR3_H = 			BIT_RNG(0,1),		// conflict with rega_32k_tm_val3 in document !!!
 	FLDA_32K_CONTINUE_MODE =	BIT(2),				// 0: one shot,  1: continuing

@@ -126,7 +126,7 @@ enum{
 
 
 ///////////////////////////////////////////////////////////////////////
-////////////////////////////battery dectect////////////////////////////
+////////////////////////////battery detect////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 /*test data
  * standard      test
@@ -177,8 +177,8 @@ enum{
 #define REF_VOLTAGE_SEL_6			0x06//ain9
 #define REF_VOLTAGE_SEL_7			0x07//avddh
 
-#ifndef		VBAT_LOW_LEVLE
-#define		VBAT_LOW_LEVLE		V0P98
+#ifndef		VBAT_LOW_LEVEL
+#define		VBAT_LOW_LEVEL		V0P98
 #endif
 
 #ifndef		VBAT_CHANNEL
@@ -207,8 +207,8 @@ enum{
 #define		V1P66_REF			REF_VOLTAGE_SEL_4
 #define		V1P66_SCALE			SCALING_SELECT_HALF
 
-#define		VBAT_LOW_SCALE		(VBAT_LOW_LEVLE==V0P98 ? V0P98_SCALE  : V1P1_SCALE )
-#define		VBAT_LOW_REF		(VBAT_LOW_LEVLE==V0P98 ? V0P98_REF : V1P1_REF)
+#define		VBAT_LOW_SCALE		(VBAT_LOW_LEVEL==V0P98 ? V0P98_SCALE  : V1P1_SCALE )
+#define		VBAT_LOW_REF		(VBAT_LOW_LEVEL==V0P98 ? V0P98_REF : V1P1_REF)
 
 int battery_detection_with_ldo (u8 chn, int set);
 int battery_direct_detection (u8 chn, int set);

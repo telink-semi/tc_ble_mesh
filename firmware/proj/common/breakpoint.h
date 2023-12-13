@@ -36,7 +36,7 @@ extern volatile int bp_enable;			// enable breakpoint,  default to 1
 
 #define BP_RST_COUNTER		do{bp_counter = 0;}while(0)
 
-// no idea why gcc optimize off the multline version,  so use the oneline version instead
+// no idea why gcc optimize off the multiline version,  so use the oneline version instead
 #if 1
 #define BP_ALWAYS(p)		if(bp_enable){bp_pos = p;bp_continue = 0;reg_system_tick_ctrl=FLD_SYSTEM_TICK_STOP;do{}while(bp_enable && 0 == bp_continue);reg_system_tick_ctrl=FLD_SYSTEM_TICK_START;}
 #define BP_ON_COUNTER(p,c)	if(bp_enable){bp_pos = p;++bp_counter;reg_system_tick_ctrl=FLD_SYSTEM_TICK_STOP;do{}while(bp_enable && (bp_counter == c));reg_system_tick_ctrl=FLD_SYSTEM_TICK_START;}

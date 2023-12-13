@@ -70,10 +70,17 @@ oss:
   stage: oss
   dependencies: []
   script:
+    - cd app/ios
+    - oss_checking .
+    - cd -
+    - cp -rf app/ios/scan_result ./app_ios_scan_result
+    - rm -rf app/ios
     - oss_checking .
   artifacts:
+    name: "opensource_scan_result"
     paths:
-    - scan_result
+      - ./scan_result
+      - ./app_ios_scan_result
   when: manual      
   
   

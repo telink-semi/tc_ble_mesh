@@ -158,7 +158,7 @@ enum{
     LC_STATE_PROLONG,   // 5
     LC_STATE_FADE_STANDBY_AUTO,     // 6
     LC_STATE_FADE_STANDBY_MANUAL,   // 7
-    //LC_STATE_OCCUPANCY_DELAY,       // occupancy delay is an indepent tick countdown system from light control state.
+    //LC_STATE_OCCUPANCY_DELAY,       // occupancy delay is an independent tick countdown system from light control state.
     LC_STATE_MAX,
     LC_STATE_KEEP_CURRENT_ST, // keep current state, no state or lightness change.
 };

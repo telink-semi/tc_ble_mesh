@@ -61,7 +61,7 @@ static inline void adc_set_period(void){
 
 void adc_clk_en(int en){
 	if (en) {
-		// Eanble the clock
+		// Enable the clock
 		reg_adc_clk_en |= BIT(7);
 
 		// Enable ADC LDO

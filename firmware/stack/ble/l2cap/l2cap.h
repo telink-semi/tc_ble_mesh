@@ -224,7 +224,7 @@ void		blc_l2cap_register_handler (void *p);
 int 		blc_l2cap_packet_receive (u16 connHandle, u8 * p);
 int 		blc_l2cap_send_data (u16 cid, u8 *p, int n);
 
-void 		blc_l2cap_reg_att_sig_hander(void *p);//signaling pkt proc
+void 		blc_l2cap_reg_att_sig_handler(void *p);//signaling pkt proc
 
 
 

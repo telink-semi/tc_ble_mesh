@@ -30,7 +30,7 @@ enum{
 	GPIO_DIR_OUT	= 1
 };
 
-// do not use enum,  because we use this in preprocessor diretive,  #if
+// do not use enum,  because we use this in preprocessor directive,  #if
 #define AS_GPIO		0
 #define AS_MSPI		1
 #define AS_SWIRE	2

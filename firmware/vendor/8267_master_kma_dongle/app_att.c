@@ -154,7 +154,7 @@ ble_sts_t  host_att_discoveryService (u16 handle, att_db_uuid16_t *p16, int n16,
 		att_req_read_by_type (dat, s, 0xffff, (u8 *)&uuid, 2);
 		if (host_att_service_wait_event(handle, dat, 3000000))// some pts will last 2.5s ,and then rsp the cmd
 		{
-			return  ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+			return  ATT_ERR_SERVICE_DISCOVERY_TIMEOUT;			//timeout
 		}
 
 		// process response data
@@ -210,7 +210,7 @@ ble_sts_t  host_att_discoveryService (u16 handle, att_db_uuid16_t *p16, int n16,
 			att_req_find_info (dat, p16->handle, 0xffff);
 			if (host_att_service_wait_event(handle, dat, 1000000))
 			{
-				return  ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+				return  ATT_ERR_SERVICE_DISCOVERY_TIMEOUT;			//timeout
 			}
 
 			att_findInfoRsp_t *p_rsp = (att_findInfoRsp_t *) dat;
@@ -233,7 +233,7 @@ ble_sts_t  host_att_discoveryService (u16 handle, att_db_uuid16_t *p16, int n16,
 						att_req_read (dat, pd[0]);
 						if (host_att_service_wait_event(handle, dat, 1000000))
 						{
-								return  ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+								return  ATT_ERR_SERVICE_DISCOVERY_TIMEOUT;			//timeout
 						}
 
 						att_readRsp_t *pr = (att_readRsp_t *) dat;
@@ -275,7 +275,7 @@ u32 release_key_tick;
 
 void    report_to_pc_tool(u8 len,u8 * keycode)
 {
-#if 1  //pc tool verison_1.9 or later
+#if 1  //pc tool version_1.9 or later
 		static u8 last_len = 0;
 		static u8 last_key = 0;
 		//static u32 last_key_tick = 0;
@@ -453,7 +453,7 @@ _attribute_ram_code_ void  usb_endpoints_irq_handler (void)
 
 }
 
-#if (!AUDIO_SDM_ENBALE)
+#if (!AUDIO_SDM_ENABLE)
 void	att_mic (u16 conn, u8 *p)
 {
 	att_mic_rcvd = 1;
