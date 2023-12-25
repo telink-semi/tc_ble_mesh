@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="4dp"
+    app:cardPreventCornerOverlap="false"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="eleAdr: 0x"
+                android:textSize="@dimen/info_text_size" />
+
+            <EditText
+                android:id="@+id/et_ele_adr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:digits="@string/hex_input"
+                android:enabled="false"
+                android:textSize="@dimen/msg_input_size" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="model : 0x"
+                android:textSize="@dimen/info_text_size" />
+
+            <EditText
+                android:id="@+id/et_mdl_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:digits="@string/hex_input"
+                android:textSize="@dimen/msg_input_size" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="pubAdr: 0x"
+                android:textSize="@dimen/info_text_size" />
+
+            <EditText
+                android:id="@+id/et_pub_adr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:digits="@string/hex_input"
+                android:textSize="@dimen/msg_input_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="TIP: set pubAdr 0 to reset default publication"
+                android:textSize="10sp"
+                android:textStyle="italic" />
+
+            <Button
+                android:id="@+id/btn_send"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="send"
+                android:textColor="@color/colorPrimary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</androidx.cardview.widget.CardView>

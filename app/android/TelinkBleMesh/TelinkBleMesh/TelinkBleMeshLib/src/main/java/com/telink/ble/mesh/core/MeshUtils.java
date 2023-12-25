@@ -40,9 +40,12 @@ import com.telink.ble.mesh.util.Arrays;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.zip.CRC32;
 
@@ -85,6 +88,8 @@ public final class MeshUtils {
      * used in {@link #generateChars(int)}
      */
     public static final String CHARS = "123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ+-*/<>/?!@#$%^&;'[]{}|,.";
+
+    private static final SimpleDateFormat COMPLETE_DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.getDefault());
 
     // provides a cryptographically strong random number generator
     private static SecureRandom rng;
@@ -650,5 +655,10 @@ public final class MeshUtils {
         CRC32 crc32 = new CRC32();
         crc32.update(data, offset, len);
         return (int) crc32.getValue();
+    }
+
+
+    public static String getTimeFormat(long time){
+        return COMPLETE_DATE_FORMAT.format(new Date(time));
     }
 }

@@ -1,0 +1,436 @@
+/********************************************************************************************************
+ * @file NodeInfo.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
+package com.telink.ble.mesh.model;
+
+import android.os.Handler;
+import android.util.SparseBooleanArray;
+
+import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
+import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
+
+import java.io.Serializable;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by kee on 2019/8/22.
+ */
+
+public class NodeInfo implements Serializable {
+
+
+    /**
+     * primary element unicast address
+     */
+    public int meshAddress;
+
+    /**
+     * mac address
+     */
+    public String macAddress;
+    /**
+     * device-uuid from scan-record when normal provision
+     * or
+     * device scan report when fast-provision or remote-provision
+     */
+    public byte[] deviceUUID;
+
+    /**
+     * network key indexes, contains at least one primary network key.
+     * can be add by {@link com.telink.ble.mesh.core.message.config.NetKeyAddMessage}
+     */
+    public List<Integer> netKeyIndexes = new ArrayList<>();
+
+    /**
+     * element count
+     */
+    public int elementCnt = 0;
+
+    public boolean bound = false;
+
+    public byte[] deviceKey;
+
+    /**
+     * device subscription/group info
+     */
+    public List<Integer> subList = new ArrayList<>();
+
+    // device lightness
+    public int lum = 100;
+
+    // device temperature
+    public int temp = 0;
+
+    /**
+     * device on off state
+     * 0:off 1:on -1:offline
+     */
+    private OnlineState onlineState = OnlineState.OFFLINE;
+
+    /**
+     * composition data
+     * {@link com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage}
+     */
+    public CompositionData compositionData = null;
+
+
+    /**
+     * scheduler
+     */
+    public List<Scheduler> schedulers = new ArrayList<>();
+
+    /**
+     * publication
+     */
+    private PublishModel publishModel;
+
+    /**
+     * default bind support
+     */
+    private boolean defaultBind = false;
+
+    /**
+     * subnet bridge enable
+     */
+    public boolean subnetBridgeEnabled = false;
+
+    public List<BridgingTable> bridgingTableList = new ArrayList<>();
+
+    /**
+     * selected for UI select
+     */
+    public boolean selected = false;
+
+
+    /**
+     * configs
+     */
+
+    // default TTL
+    public byte defaultTTL = 0x0A;
+
+    // is relay enabled
+    public boolean relayEnable = true;
+
+    // relay retransmit, include count and steps
+    public byte relayRetransmit = 0x15;
+
+    // is secure network beacon opened
+    public boolean beaconOpened = true;
+
+    // is gatt proxy enabled
+    public boolean gattProxyEnable = true;
+
+    // is friend enabled
+    public boolean friendEnable = true;
+
+    // network retransmit
+    public byte networkRetransmit = 0x15;
+
+
+    /**
+     * direct forwarding enabled
+     */
+    public boolean directForwardingEnabled = false;
+
+    public boolean directRelay = false;
+
+    public boolean directProxyEnabled = false;
+
+    public boolean directFriend = false;
+
+    private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
+        onlineState = OnlineState.OFFLINE;
+        MeshLogger.log("offline check task running");
+        TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
+    };
+
+    public OnlineState getOnlineState() {
+        return onlineState;
+    }
+
+    public void setOnlineState(OnlineState onlineState) {
+        this.onlineState = onlineState;
+        if (publishModel != null) {
+            Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
+            handler.removeCallbacks(offlineCheckTask);
+            int timeout = publishModel.period * 3 + 2000;
+            if (this.onlineState != OnlineState.OFFLINE && timeout > 0) {
+                handler.postDelayed(offlineCheckTask, timeout);
+            }
+        }
+    }
+
+
+    public boolean isPubSet() {
+        return publishModel != null;
+    }
+
+    public PublishModel getPublishModel() {
+        return publishModel;
+    }
+
+    public void setPublishModel(PublishModel model) {
+        this.publishModel = model;
+
+        Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
+        handler.removeCallbacks(offlineCheckTask);
+        if (this.publishModel != null && this.onlineState != OnlineState.OFFLINE) {
+            int timeout = publishModel.period * 3 + 2000;
+            if (timeout > 0) {
+                handler.postDelayed(offlineCheckTask, timeout);
+            }
+        }
+    }
+
+    public Scheduler getSchedulerByIndex(byte index) {
+        if (schedulers == null || schedulers.size() == 0) {
+            return null;
+        }
+        for (Scheduler scheduler : schedulers) {
+            if (scheduler.getIndex() == index) {
+                return scheduler;
+            }
+        }
+        return null;
+    }
+
+    public void saveScheduler(Scheduler scheduler) {
+        if (schedulers == null) {
+            schedulers = new ArrayList<>();
+            schedulers.add(scheduler);
+        } else {
+            for (int i = 0; i < schedulers.size(); i++) {
+                if (schedulers.get(i).getIndex() == scheduler.getIndex()) {
+                    schedulers.set(i, scheduler);
+                    return;
+                }
+            }
+            schedulers.add(scheduler);
+        }
+
+    }
+
+    // 0 - 15/0x0f
+    public byte allocSchedulerIndex() {
+        if (schedulers == null || schedulers.size() == 0) {
+            return 0;
+        }
+
+        outer:
+        for (byte i = 0; i <= 0x0f; i++) {
+            for (Scheduler scheduler : schedulers) {
+                if (scheduler.getIndex() == i) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
+    }
+
+    /**
+     * get on/off model element info
+     * in panel , multi on/off may exist in different element
+     *
+     * @return element adr list
+     */
+    public List<Integer> getEleListByModel(int targetModelId) {
+        if (compositionData == null) return null;
+        List<Integer> addressList = new ArrayList<>();
+
+        // element address is based on primary address and increase in loop
+        int eleAdr = this.meshAddress;
+        outer:
+        for (Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                for (int modelId : element.sigModels) {
+                    if (modelId == targetModelId) {
+                        addressList.add(eleAdr++);
+                        continue outer;
+                    }
+                }
+            }
+            eleAdr++;
+        }
+
+        return addressList;
+    }
+
+    /**
+     * @param tarModelId target model id
+     * @return element address: -1 err
+     */
+    public int getTargetEleAdr(int tarModelId) {
+        if (compositionData == null) return -1;
+        int eleAdr = this.meshAddress;
+        for (Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                for (int modelId : element.sigModels) {
+                    if (modelId == tarModelId) {
+                        return eleAdr;
+                    }
+                }
+            }
+
+            if (element.vendorModels != null) {
+                for (int modelId : element.vendorModels) {
+                    if (modelId == tarModelId) {
+                        return eleAdr;
+                    }
+                }
+            }
+
+            eleAdr++;
+        }
+        return -1;
+    }
+
+    /**
+     * get lum model element
+     *
+     * @return lum lightness union info
+     */
+    public SparseBooleanArray getLumEleInfo() {
+        if (compositionData == null) return null;
+        int eleAdr = this.meshAddress;
+
+        SparseBooleanArray result = new SparseBooleanArray();
+
+        for (Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                boolean levelSupport = false;
+                boolean lumSupport = false;
+                // if contains lightness model
+                for (int modelId : element.sigModels) {
+                    if (modelId == MeshSigModel.SIG_MD_LIGHTNESS_S.modelId) {
+                        lumSupport = true;
+                    }
+                    if (modelId == MeshSigModel.SIG_MD_G_LEVEL_S.modelId) {
+                        levelSupport = true;
+                    }
+                }
+
+                if (lumSupport) {
+                    result.append(eleAdr, levelSupport);
+                    return result;
+                }
+            }
+            eleAdr++;
+        }
+        return null;
+    }
+
+    /**
+     * get element with temperature model
+     *
+     * @return temp & isLevelSupported
+     */
+    public SparseBooleanArray getTempEleInfo() {
+        if (compositionData == null) return null;
+        int eleAdr = this.meshAddress;
+
+        SparseBooleanArray result = new SparseBooleanArray();
+
+        for (Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                boolean levelSupport = false;
+                boolean tempSupport = false;
+                // contains temperature model
+                for (int modelId : element.sigModels) {
+                    if (modelId == MeshSigModel.SIG_MD_LIGHT_CTL_TEMP_S.modelId) {
+                        tempSupport = true;
+                    }
+                    if (modelId == MeshSigModel.SIG_MD_G_LEVEL_S.modelId) {
+                        levelSupport = true;
+                    }
+                }
+
+                if (tempSupport) {
+                    result.append(eleAdr, levelSupport);
+                    return result;
+                }
+            }
+            eleAdr++;
+        }
+        return null;
+    }
+
+
+    public String getPidDesc() {
+        String pidInfo = "";
+        if (bound && compositionData != null) {
+            return "cid-" +
+                    Arrays.bytesToHexString(MeshUtils.integer2Bytes(compositionData.cid, 2, ByteOrder.LITTLE_ENDIAN), "") +
+                    " pid-" +
+                    Arrays.bytesToHexString(MeshUtils.integer2Bytes(compositionData.pid, 2, ByteOrder.LITTLE_ENDIAN), "");
+//            pidInfo = (compositionData.cid == 0x0211 ? String.format("%04X", compositionData.pid)
+//                    : "cid-" + String.format("%02X", compositionData.cid));
+
+        } else {
+            pidInfo = "(unbound)";
+        }
+        return pidInfo;
+    }
+
+    public boolean isDefaultBind() {
+        return defaultBind;
+    }
+
+    public void setDefaultBind(boolean defaultBind) {
+        this.defaultBind = defaultBind;
+    }
+
+    public boolean isLpn() {
+        return this.compositionData != null && this.compositionData.lowPowerSupport();
+    }
+
+    /**
+     * is node offline
+     */
+    public boolean isOffline() {
+        return this.onlineState == OnlineState.OFFLINE;
+    }
+
+
+    /**
+     * is node on
+     */
+    public boolean isOn() {
+        return this.onlineState == OnlineState.ON;
+    }
+
+
+    /**
+     * is node off
+     */
+    public boolean isOff() {
+        return this.onlineState == OnlineState.OFF;
+    }
+}

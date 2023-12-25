@@ -175,6 +175,10 @@ public class NodeInfo implements Serializable {
     // is gatt proxy enabled
     public boolean gattProxyEnable = true;
 
+    public boolean privateBeaconOpened = false;
+
+    public boolean privateGattProxyEnable = false;
+
     // is friend enabled
     public boolean friendEnable = true;
 
@@ -191,15 +195,11 @@ public class NodeInfo implements Serializable {
      */
     public boolean directForwardingEnabled = false;
 
-    public boolean directRelay = false;
+    public boolean directRelayEnabled = false;
 
     public boolean directProxyEnabled = false;
 
-    public boolean directFriend = false;
-
-    public boolean privateBeaconOpened = false;
-
-    public boolean privateGattProxyEnable = false;
+    public boolean directFriendEnabled = false;
 
     @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {

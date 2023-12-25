@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/shape_bottom_dialog"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tv_dialog_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Network Detail"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_close"
+            android:tint="@color/gray" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/gray"
+        android:padding="4dp" />
+
+    <!--<TextView
+        android:id="@+id/tv_show_detail"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_network"
+        android:drawableRight="@drawable/ic_arrow_right"
+        android:drawablePadding="12dp"
+        android:drawableTint="@color/colorPrimary"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="show detail"
+        android:textAllCaps="false"
+        android:textColor="@color/colorPrimary"
+        android:textSize="14sp" />-->
+
+    <TextView
+        android:id="@+id/tv_switch"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_switch"
+        android:drawableRight="@drawable/ic_arrow_right"
+        android:drawablePadding="12dp"
+        android:drawableTint="@color/colorPrimary"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="switch to this network"
+        android:textAllCaps="false"
+        android:textColor="@color/colorPrimary"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btn_leave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="leave"
+        android:theme="@style/WarnButton" />
+
+
+</LinearLayout>

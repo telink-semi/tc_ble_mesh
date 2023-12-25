@@ -601,9 +601,16 @@ public class ProvisioningController {
         }
 
         pvCapability = ProvisioningCapabilityPDU.fromBytes(capData);
-        updateProvisioningState(STATE_CAPABILITY, "Capability Received: " + pvCapability.toString());
         mProvisioningDevice.setDeviceCapability(pvCapability);
-        boolean useStaticOOB = pvCapability.isStaticOOBSupported();
+        updateProvisioningState(STATE_CAPABILITY, "Capability Received: " + pvCapability.toString());
+
+        if (mProvisioningDevice.autoStart){
+            continueProvision(mProvisioningDevice.getUnicastAddress());
+        }else {
+            //  hold and wait for continue
+        }
+
+        /*boolean useStaticOOB = pvCapability.isStaticOOBSupported();
         if (useStaticOOB && mProvisioningDevice.getAuthValue() == null) {
             if (mProvisioningDevice.isAutoUseNoOOB()) {
                 // use no oob
@@ -615,6 +622,26 @@ public class ProvisioningController {
         }
         if (useStaticOOB) {
             log("use static oob - " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceUUID()) + " - " + Arrays.bytesToHexString(mProvisioningDevice.getAuthValue()));
+        }
+        provisionStart(useStaticOOB);
+        provisionSendPubKey();
+        if (pvCapability.publicKeyType == 1 && recordPubKey != null) {
+            onPubKeyReceived(recordPubKey);
+        }*/
+    }
+
+
+    public void continueProvision(int address) {
+        boolean useStaticOOB = pvCapability.isStaticOOBSupported();
+        mProvisioningDevice.setUnicastAddress(address);
+        if (useStaticOOB && mProvisioningDevice.getAuthValue() == null) {
+            if (mProvisioningDevice.isAutoUseNoOOB()) {
+                // use no oob
+                useStaticOOB = false;
+            } else {
+                onProvisionFail("authValue not found when device static oob supported!");
+                return;
+            }
         }
         provisionStart(useStaticOOB);
         provisionSendPubKey();

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.telink.ble.mesh.ui.widget.fab.CompositeFloatingActionButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/floating_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="32dp"
+    android:layout_marginBottom="32dp"
+    app:animationMode="scale"
+    app:layout_behavior="com.telink.ble.mesh.ui.widget.fab.HideBehavior"
+    app:switchFabColor="@color/colorAccent"
+    app:switchFabIcon="@drawable/ic_plus">
+
+    <com.telink.ble.mesh.ui.widget.fab.SubFabLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:tagText="find">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_plus"
+            app:backgroundTint="#468cb7"
+            app:fabSize="mini" />
+    </com.telink.ble.mesh.ui.widget.fab.SubFabLayout>
+
+    <com.telink.ble.mesh.ui.widget.fab.SubFabLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:tagText="add">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_plus"
+            app:backgroundTint="#818aa7"
+            app:fabSize="mini" />
+    </com.telink.ble.mesh.ui.widget.fab.SubFabLayout>
+
+</com.telink.ble.mesh.ui.widget.fab.CompositeFloatingActionButton>

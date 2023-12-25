@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/item_device"
+        android:icon="@drawable/ic_bulb"
+        android:orderInCategory="100"
+        android:title="Device"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/item_group"
+        android:icon="@drawable/ic_group"
+        android:orderInCategory="100"
+        android:title="Group"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/item_network"
+        android:icon="@drawable/ic_network"
+        android:orderInCategory="100"
+        android:title="Network"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/item_user"
+        android:icon="@drawable/ic_user"
+        android:orderInCategory="100"
+        android:title="User"
+        app:showAsAction="ifRoom" />
+
+</menu>

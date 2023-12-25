@@ -290,4 +290,19 @@ public abstract class FileSystem {
 
         return null;
     }
+
+
+    public static File getBinPath(int productId, int vid) {
+        File root = Environment.getExternalStorageDirectory();
+        return new File(root.getAbsolutePath() + File.separator + "TelinkBleMesh" + File.separator + "bin" + File.separator
+                + productId
+                + File.separator + String.format("%04X", vid) + ".bin");
+    }
+
+    public static File getBinDownloadingPath(int productId, int vid) {
+        File root = Environment.getExternalStorageDirectory();
+        return new File(root.getAbsolutePath() + File.separator + "TelinkBleMesh" + File.separator + "bin" + File.separator
+                + productId
+                + File.separator + String.format("%04X", vid) + ".bin_tmp");
+    }
 }

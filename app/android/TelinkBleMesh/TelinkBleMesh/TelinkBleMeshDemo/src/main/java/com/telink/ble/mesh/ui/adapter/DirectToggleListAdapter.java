@@ -89,9 +89,9 @@ public class DirectToggleListAdapter extends BaseRecyclerViewAdapter<DirectToggl
                 String.format("%04X", deviceInfo.meshAddress),
                 pidInfo));
         holder.cb_df.setChecked(deviceInfo.directForwardingEnabled);
-        holder.cb_dr.setChecked(deviceInfo.directRelay);
+        holder.cb_dr.setChecked(deviceInfo.directRelayEnabled);
         holder.cb_dp.setChecked(deviceInfo.directProxyEnabled);
-        holder.cb_dfr.setChecked(deviceInfo.directFriend);
+        holder.cb_dfr.setChecked(deviceInfo.directFriendEnabled);
 
         holder.ll_forward.setTag(position);
         holder.ll_forward.setOnClickListener(checkViewClick);
@@ -128,9 +128,9 @@ public class DirectToggleListAdapter extends BaseRecyclerViewAdapter<DirectToggl
                 return;
             }
             setMessage.directedForwarding = 1; // get current state
-            setMessage.directedRelay = (byte) (nodeInfo.directRelay ? 0 : 1); //  reverse, changed current state
+            setMessage.directedRelay = (byte) (nodeInfo.directRelayEnabled ? 0 : 1); //  reverse, changed current state
             setMessage.setDirectedProxy((byte) (nodeInfo.directProxyEnabled ? 1 : 0));
-            setMessage.directedFriend = (byte) (nodeInfo.directFriend ? 1 : 0);
+            setMessage.directedFriend = (byte) (nodeInfo.directFriendEnabled ? 1 : 0);
 
         } else if (v.getId() == R.id.ll_proxy) {
             if (!nodeInfo.directForwardingEnabled) {
@@ -139,17 +139,17 @@ public class DirectToggleListAdapter extends BaseRecyclerViewAdapter<DirectToggl
             }
             setMessage.directedForwarding = 1;
             setMessage.setDirectedProxy((byte) (nodeInfo.directProxyEnabled ? 0 : 1));
-            setMessage.directedRelay = (byte) (nodeInfo.directRelay ? 1 : 0);
-            setMessage.directedFriend = (byte) (nodeInfo.directFriend ? 1 : 0);
+            setMessage.directedRelay = (byte) (nodeInfo.directRelayEnabled ? 1 : 0);
+            setMessage.directedFriend = (byte) (nodeInfo.directFriendEnabled ? 1 : 0);
         } else if (v.getId() == R.id.ll_friend) {
             if (!nodeInfo.directForwardingEnabled) {
                 Toast.makeText(mContext, "(friend)check direct forwarding first", Toast.LENGTH_SHORT).show();
                 return;
             }
             setMessage.directedForwarding = 1;
-            setMessage.directedFriend = (byte) (nodeInfo.directFriend ? 0 : 1);
+            setMessage.directedFriend = (byte) (nodeInfo.directFriendEnabled ? 0 : 1);
             setMessage.setDirectedProxy((byte) (nodeInfo.directProxyEnabled ? 1 : 0));
-            setMessage.directedRelay = (byte) (nodeInfo.directRelay ? 1 : 0);
+            setMessage.directedRelay = (byte) (nodeInfo.directRelayEnabled ? 1 : 0);
         }
 
         MeshService.getInstance().sendMeshMessage(setMessage);

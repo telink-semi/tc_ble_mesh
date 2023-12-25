@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/shape_bottom_dialog"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tv_dialog_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Share Info Detail"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_close"
+            android:tint="@color/gray" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/gray"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/tv_state"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawablePadding="12dp"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="State: Member"
+        android:textAllCaps="false"
+        android:textColor="@color/colorPrimary"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_member"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_account_check"
+        android:drawablePadding="12dp"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="Modify as MEMBER"
+        android:textAllCaps="false"
+        android:textColor="@color/network_st_member"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_visitor"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_account_alert"
+        android:drawablePadding="12dp"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="Modify as VISITOR"
+        android:textAllCaps="false"
+        android:textColor="@color/network_st_visitor"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_forbidden"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_account_cancel"
+        android:drawablePadding="12dp"
+        android:drawableTint="@color/network_st_forbidden"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:text="FORBIDDEN"
+        android:textAllCaps="false"
+        android:textColor="@color/network_st_forbidden"
+        android:textSize="14sp" />
+
+</LinearLayout>

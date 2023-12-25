@@ -176,6 +176,16 @@ public class MeshService implements MeshController.EventCallback {
     }
 
     /**
+     * used when {@link com.telink.ble.mesh.entity.ProvisioningDevice#autoStart} is false
+     *
+     * @param address unicast address
+     * @return is continue success
+     */
+    public boolean continueProvision(int address) {
+        return mController.continueProvision(address);
+    }
+
+    /**
      * start binding application key for models in node if device provisioned
      */
     public void startBinding(BindingParameters bindingParameters) {
@@ -216,6 +226,10 @@ public class MeshService implements MeshController.EventCallback {
      */
     public void startRemoteProvisioning(RemoteProvisioningDevice remoteProvisioningDevice) {
         mController.startRemoteProvision(remoteProvisioningDevice);
+    }
+
+    public boolean continueRemoteProvision(int address) {
+        return mController.continueRemoteProvision(address);
     }
 
     /**
@@ -279,9 +293,9 @@ public class MeshService implements MeshController.EventCallback {
     /**
      * Telink-private protocol.
      * get all devices status by send command to OnlineStatus handle
-     * @see com.telink.ble.mesh.core.ble.UUIDInfo#CHARACTERISTIC_ONLINE_STATUS
      *
      * @return if online_status supported
+     * @see com.telink.ble.mesh.core.ble.UUIDInfo#CHARACTERISTIC_ONLINE_STATUS
      */
     public boolean getOnlineStatus() {
         return mController.getOnlineStatus();
