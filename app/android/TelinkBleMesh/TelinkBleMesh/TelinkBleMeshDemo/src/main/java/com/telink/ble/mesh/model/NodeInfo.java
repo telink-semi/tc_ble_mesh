@@ -182,6 +182,10 @@ public class NodeInfo implements Serializable {
     public byte networkRetransmit = 0x15;
 
 
+    // network retransmit
+    public byte onDemandPrivateGattProxy = 20;
+
+
     /**
      * direct forwarding enabled
      */
@@ -487,6 +491,7 @@ public class NodeInfo implements Serializable {
     public boolean isOff() {
         return this.onlineState == OnlineState.OFF;
     }
+
 
     public void save() {
         MeshInfoService.getInstance().updateNodeInfo(this);
