@@ -250,4 +250,10 @@
         Otherwise, the value in message is reversed (beacon=1, privateBeacon=0)
     </string>
 
+    <string name="on_demand_value_tip">
+        0x00: Advertising with Private Network Identity type cannot be enabled on demand\n
+        0x01–0xFF: Duration in seconds of the interval during which advertising with Private Network Identity type is enabled after receiving a Solicitation PDU or after a client disconnect
+    </string>
+
+
 </resources>

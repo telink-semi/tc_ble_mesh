@@ -25,19 +25,17 @@ package com.telink.ble.mesh.core.networking;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
-import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class NetworkLayerPDU {
+public class SolicitationPDU {
 
     /**
      * Least significant bit of IV Index
      * 1 bit
      */
-    private byte ivi;
+    private byte ivi = 0;
 
     /**
      * network id
@@ -51,7 +49,7 @@ public class NetworkLayerPDU {
      * 1 bit
      * determine if the message is part of a Control MeshCommand or an Access MeshCommand
      */
-    private byte ctl;
+    private byte ctl = 1;
 
     /**
      * Time To Live
@@ -62,7 +60,7 @@ public class NetworkLayerPDU {
      * 2 to 126 = may have been relayed and can be relayed
      * 127 = has not been relayed and can be relayed
      */
-    private byte ttl;
+    private byte ttl = 0;
 
     /**
      * Sequence Number
@@ -85,21 +83,13 @@ public class NetworkLayerPDU {
     private int dst;
 
     /**
-     * Transport Protocol Data Unit
-     * 8 to 128 bits
-     * When the CTL bit is 0, the TransportPDU field shall be a maximum of 128 bits.
-     * When the CTL bit is 1, the TransportPDU field shall be a maximum of 96 bits.
-     */
-    private byte[] transportPDU;
-
-    /**
      * MeshCommand Integrity Check for Network
      * 32 or 64 bits
      * When the CTL bit is 0, the NetMIC field shall be 32 bits.
      * When the CTL bit is 1, the NetMIC field shall be 64 bits.
      */
 //    private int transMic;
-    protected NetworkEncryptionSuite encryptionSuite;
+    protected SolicitationEncryptionSuite encryptionSuite;
 
     /**
      * This constructor initializes a NetworkLayerPDU object with the specified encryption suite.
@@ -107,16 +97,9 @@ public class NetworkLayerPDU {
      *
      * @param encryptionSuite enc
      */
-    public NetworkLayerPDU(NetworkEncryptionSuite encryptionSuite) {
+    public SolicitationPDU(SolicitationEncryptionSuite encryptionSuite) {
         this.encryptionSuite = encryptionSuite;
     }
-
-    /*public NetworkLayerPDU(int ivIndex, byte[] encryptionKey, byte[] privacyKey, int nid) {
-        this.ivIndex = ivIndex;
-        this.encryptionKey = encryptionKey;
-        this.privacyKey = privacyKey;
-        this.nid = nid;
-    }*/
 
     /**
      * generates an encrypted payload for a network PDU
@@ -127,7 +110,7 @@ public class NetworkLayerPDU {
         final byte iviNid = (byte) ((ivi << 7) | nid);
         final byte ctlTTL = (byte) ((ctl << 7) | ttl);
 
-        final byte[] encryptedPayload = encryptNetworkPduPayload(transportPDU);
+        final byte[] encryptedPayload = encryptPduPayload();
 //        MeshLogger.log("encryptedPayload: " + Arrays.bytesToHexString(encryptedPayload, ""));
         final byte[] privacyRandom = createPrivacyRandom(encryptedPayload);
         final byte[] pecb = createPECB(privacyRandom);
@@ -187,7 +170,7 @@ public class NetworkLayerPDU {
         final ByteBuffer buffer = ByteBuffer.allocate(5 + privacyRandom.length + 4);
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.put(new byte[]{0x00, 0x00, 0x00, 0x00, 0x00});
-        buffer.putInt(this.encryptionSuite.ivIndex);
+        buffer.putInt(0); // ivIndex
         buffer.put(privacyRandom);
         final byte[] temp = buffer.array();
         return Encipher.aes(temp, this.encryptionSuite.privacyKey);
@@ -213,13 +196,12 @@ public class NetworkLayerPDU {
      * Finally, it encrypts the unencrypted payload using CCM (Counter with CBC-MAC) mode with the encryption key, network nonce, and a specific MIC (Message Integrity Code) length,
      * and returns the encrypted data.
      *
-     * @param lowerPDU lower transport PDU
      * @return payload
      */
-    private byte[] encryptNetworkPduPayload(byte[] lowerPDU) {
+    private byte[] encryptPduPayload() {
         byte[] networkNonce = generateNonce();
 //        MeshLogger.log("networkNonce: " + Arrays.bytesToHexString(networkNonce, ""));
-        final byte[] unencryptedNetworkPayload = ByteBuffer.allocate(2 + lowerPDU.length).order(ByteOrder.BIG_ENDIAN).putShort((short) dst).put(lowerPDU).array();
+        final byte[] unencryptedNetworkPayload = ByteBuffer.allocate(2).order(ByteOrder.BIG_ENDIAN).putShort((short) dst).array();
         return Encipher.ccm(unencryptedNetworkPayload, this.encryptionSuite.encryptionKey, networkNonce, getMicLen(), true);
     }
 
@@ -232,9 +214,8 @@ public class NetworkLayerPDU {
      * @return nonce
      */
     protected byte[] generateNonce() {
-        byte ctlTTL = (byte) ((ctl << 7) | ttl);
         byte[] seqNo = MeshUtils.integer2Bytes(seq, 3, ByteOrder.BIG_ENDIAN);
-        return NonceGenerator.generateNetworkNonce(ctlTTL, seqNo, src, this.encryptionSuite.ivIndex);
+        return NonceGenerator.generateSolicitationNonce(seqNo, src);
     }
 
     /**
@@ -247,99 +228,6 @@ public class NetworkLayerPDU {
         return ctl == 0 ? 4 : 8;
     }
 
-    /**
-     * parse header
-     *
-     * @param pdu input pdu
-     */
-    public byte[] parseObfuscatedNetworkHeader(byte[] pdu) {
-        final ByteBuffer obfuscatedNetworkBuffer = ByteBuffer.allocate(6);
-        obfuscatedNetworkBuffer.order(ByteOrder.BIG_ENDIAN);
-        obfuscatedNetworkBuffer.put(pdu, 1, 6);
-        final byte[] obfuscatedData = obfuscatedNetworkBuffer.array();
-
-        final ByteBuffer privacyRandomBuffer = ByteBuffer.allocate(7);
-        privacyRandomBuffer.order(ByteOrder.BIG_ENDIAN);
-        privacyRandomBuffer.put(pdu, 7, 7);
-        final byte[] privacyRandom = createPrivacyRandom(privacyRandomBuffer.array());
-
-        final byte[] pecb = createPECB(privacyRandom);
-        final byte[] deobfuscatedData = new byte[6];
-
-        for (int i = 0; i < 6; i++)
-            deobfuscatedData[i] = (byte) (obfuscatedData[i] ^ pecb[i]);
-
-        return deobfuscatedData;
-    }
-
-    /**
-     * parse pdu
-     *
-     * @param pduData data
-     * @return parse result
-     */
-    public boolean parse(byte[] pduData) {
-
-        int iviNid = pduData[0] & 0xFF;
-        int ivi = iviNid >> 7;
-        int nid = iviNid & 0x7F;
-//        MeshLogger.i("ivi -- " + ivi + " nid -- " + nid);
-        if (!validateNetworkPdu(ivi, nid)) {
-            MeshLogger.i("ivi or nid invalid: ivi -- " + ivi + " nid -- " + nid +
-                    " encryptSuit : ivi -- " + encryptionSuite.ivIndex + " nid -- " + encryptionSuite.nid);
-            return false;
-        }
-
-        byte[] originalHeader = this.parseObfuscatedNetworkHeader(pduData);
-        int ctlTtl = originalHeader[0];
-        int ctl = (ctlTtl >> 7) & 0x01;
-        int ttl = ctlTtl & 0x7F;
-        byte[] sequenceNumber = ByteBuffer.allocate(3).order(ByteOrder.BIG_ENDIAN).put(originalHeader, 1, 3).array();
-        int src = (((originalHeader[4] & 0xFF) << 8) + (originalHeader[5] & 0xFF));
-        this.setIvi((byte) ivi);
-        this.setNid((byte) nid);
-        this.setCtl((byte) ctl);
-        this.setTtl((byte) ttl);
-        this.setSeq(MeshUtils.bytes2Integer(sequenceNumber, ByteOrder.BIG_ENDIAN));
-        this.setSrc(src);
-
-        byte[] networkNonce = generateNonce();
-//        byte[] networkNonce = NonceGenerator.generateNetworkNonce((byte) ctlTtl, sequenceNumber, src, this.encryptionSuite.ivIndex);
-
-
-        final int dstTransportLen = pduData.length - (1 + originalHeader.length);
-
-        final byte[] dstTransportPayload = new byte[dstTransportLen];
-        System.arraycopy(pduData, 7, dstTransportPayload, 0, dstTransportLen);
-
-        // decrypted dest + transport(lower) payload
-        final byte[] decDstTransportPayload = Encipher.ccm(dstTransportPayload, this.encryptionSuite.encryptionKey, networkNonce, getMicLen(), false);
-
-        if (decDstTransportPayload == null) {
-            MeshLogger.i("network layer decrypt err");
-            return false;
-        }
-
-        int dstAdr = ((decDstTransportPayload[0] & 0xFF) << 8) | (decDstTransportPayload[1] & 0xFF);
-
-        byte[] lowerTransportPdu = new byte[decDstTransportPayload.length - 2];
-        System.arraycopy(decDstTransportPayload, 2, lowerTransportPdu, 0, lowerTransportPdu.length);
-
-        this.dst = dstAdr;
-        this.setTransportPDU(lowerTransportPdu);
-        return true;
-    }
-
-    /**
-     * used to validate a network PDU (Protocol Data Unit) based on the given IVI (Initialization Vector Index) and NID (Network Identifier). It checks if the NID matches the encryption suite's NID and if the IVI matches the least significant bit of the encryption suite's IV Index.
-     *
-     * @param ivi ivi
-     * @param nid nid
-     * @return check result
-     */
-    private boolean validateNetworkPdu(int ivi, int nid) {
-        return nid == this.encryptionSuite.nid && ivi == (this.encryptionSuite.ivIndex & 0b01);
-    }
 
     /**
      * Returns the IV index of the packet.
@@ -467,28 +355,7 @@ public class NetworkLayerPDU {
         this.dst = dst;
     }
 
-    /**
-     * Returns the Transport Protocol Data Unit (PDU) of the packet.
-     *
-     * @return The Transport PDU.
-     */
-    public byte[] getTransportPDU() {
-        return transportPDU;
-    }
-
-    /**
-     * Sets the Transport Protocol Data Unit (PDU) of the packet.
-     *
-     * @param transportPDU The Transport PDU to set.
-     */
-    public void setTransportPDU(byte[] transportPDU) {
-        this.transportPDU = transportPDU;
-    }
-
-    public static class NetworkEncryptionSuite {
-
-        // for encryption
-        public int ivIndex;
+    public static class SolicitationEncryptionSuite {
 
         protected byte[] encryptionKey;
 
@@ -502,13 +369,11 @@ public class NetworkLayerPDU {
          * It encapsulates the necessary parameters for encryption, such as the initialization vector index,
          * encryption key, privacy key, and network ID.
          *
-         * @param ivIndex       The index of the initialization vector used for encryption.
          * @param encryptionKey The encryption key used for secure communication.
          * @param privacyKey    The privacy key used for secure communication.
          * @param nid           The network ID associated with the encryption suite.
          */
-        public NetworkEncryptionSuite(int ivIndex, byte[] encryptionKey, byte[] privacyKey, int nid) {
-            this.ivIndex = ivIndex;
+        public SolicitationEncryptionSuite(byte[] encryptionKey, byte[] privacyKey, int nid) {
             this.encryptionKey = encryptionKey;
             this.privacyKey = privacyKey;
             this.nid = nid;
@@ -533,7 +398,6 @@ public class NetworkLayerPDU {
                 ", seq=0x" + Integer.toHexString(seq) +
                 ", src=" + src +
                 ", dst=" + dst +
-                ", transportPDU=" + Arrays.bytesToHexString(transportPDU) +
                 '}';
     }
 }

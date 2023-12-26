@@ -126,6 +126,10 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
         mScannerView.stopCamera();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public void handleResult(Result rawResult) {
@@ -152,13 +156,10 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
             errorDialogBuilder.setTitle("Warning")
                     .setMessage(message)
                     .setCancelable(false)
-                    .setPositiveButton("Rescan", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            handling = false;
-                            restartCamera();
+                    .setPositiveButton("Rescan", (dialog, which) -> {
+                        handling = false;
+                        restartCamera();
 //                            mScannerView.resumeCameraPreview(QRCodeScanActivity.this);
-                        }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
@@ -197,12 +198,9 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
             builder.setCancelable(false);
             builder.setTitle("Warn");
             builder.setMessage("camera permission denied, click [Go Settings] to set permission");
-            builder.setPositiveButton("Go Settings", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                }
+            builder.setPositiveButton("Go Settings", (dialog, which) -> {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
             });
 
             builder.setNegativeButton("Cancel", (dialog, which) -> {

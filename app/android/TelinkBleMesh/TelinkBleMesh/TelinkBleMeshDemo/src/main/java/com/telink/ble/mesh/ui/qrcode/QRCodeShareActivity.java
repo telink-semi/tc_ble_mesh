@@ -27,6 +27,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.WindowMetrics;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -177,7 +178,9 @@ public class QRCodeShareActivity extends BaseActivity {
 
     private void onUploadSuccess(String uuid) {
         runOnUiThread(this::dismissWaitingDialog);
-        int size = iv_qr.getMeasuredWidth();
+//        int size = iv_qr.getMeasuredWidth();
+        int size = getWindowManager().getDefaultDisplay().getWidth();
+        MeshLogger.d("qrcode size - " + size);
 //        int size = 64; // for test
         mQrCodeGenerator = new QRCodeGenerator(mGeneratorHandler, size, uuid);
         mQrCodeGenerator.execute();
@@ -185,28 +188,25 @@ public class QRCodeShareActivity extends BaseActivity {
 
     private void onUploadFail(final String desc) {
         MeshLogger.w(desc);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                dismissWaitingDialog();
-                AlertDialog.Builder builder = new AlertDialog.Builder(QRCodeShareActivity.this);
-                builder.setTitle("Warning")
-                        .setMessage(desc)
-                        .setCancelable(false)
-                        .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                upload(meshNetKeyList);
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                finish();
-                            }
-                        });
-                builder.show();
-            }
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            AlertDialog.Builder builder = new AlertDialog.Builder(QRCodeShareActivity.this);
+            builder.setTitle("Warning")
+                    .setMessage(desc)
+                    .setCancelable(false)
+                    .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            upload(meshNetKeyList);
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+            builder.show();
         });
 
     }

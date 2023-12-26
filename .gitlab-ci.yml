@@ -73,22 +73,14 @@ oss:
     - cd app/ios
     - oss_checking .
     - cd -
-    - cd app/android
+    - cp -rf app/ios/scan_result ./app_ios_scan_result
+    - rm -rf app/ios
     - oss_checking .
-    - cd -
-    - cd firmware
-    - oss_checking .
-    - cd -
-    - cd vc_debug_tool
-    - oss_checking .
-    - cd -
   artifacts:
     name: "opensource_scan_result"
     paths:
-    - ./app/ios/scan_result
-    - ./app/android/scan_result
-    - ./firmware/scan_result
-    - ./vc_debug_tool/scan_result
+      - ./scan_result
+      - ./app_ios_scan_result
   when: manual      
   
   

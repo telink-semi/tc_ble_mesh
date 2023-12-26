@@ -22,10 +22,12 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshMessage;
@@ -45,12 +47,9 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
-import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.util.MeshLogger;
 
 /**
  * network key in target device
@@ -58,7 +57,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 public class PrivateBeaconSettingActivity extends BaseActivity implements EventListener<String> {
 
     private MeshInfo meshInfo;
-    private int directAdr = 0;
+    private int meshAddress = 0;
     private NodeInfo nodeInfo;
     private Handler handler = new Handler();
     Switch sw_gatt_prx, sw_pvt_gatt_prx, sw_node_id, sw_pvt_node_id, sw_beacon, sw_pvt_beacon;
@@ -80,8 +79,6 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
         TelinkMeshApplication.getInstance().addEventListener(PrivateNodeIdentityStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(BeaconStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(PrivateBeaconStatusMessage.class.getName(), this);
-        TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
     }
 
 
@@ -97,8 +94,20 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
 
     private void initData() {
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        directAdr = MeshService.getInstance().getDirectConnectedNodeAddress();
-        getNode();
+        Intent intent = getIntent();
+        if (intent.hasExtra("meshAddress")) {
+            meshAddress = intent.getIntExtra("meshAddress", -1);
+            nodeInfo = meshInfo.getDeviceByMeshAddress(meshAddress);
+        } else {
+            Toast.makeText(getApplicationContext(), "subnet -> params err", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        sw_gatt_prx.setChecked(nodeInfo.gattProxyEnable);
+        sw_pvt_gatt_prx.setChecked(nodeInfo.privateGattProxyEnable);
+        sw_beacon.setChecked(nodeInfo.beaconOpened);
+        sw_pvt_beacon.setChecked(nodeInfo.privateBeaconOpened);
 
         sw_gatt_prx.setOnCheckedChangeListener(SWITCH_CHANGED);
         sw_pvt_gatt_prx.setOnCheckedChangeListener(SWITCH_CHANGED);
@@ -108,23 +117,6 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
         sw_pvt_beacon.setOnCheckedChangeListener(SWITCH_CHANGED);
     }
 
-    private void getNode() {
-        if (directAdr == 0) {
-            nodeInfo = null;
-            enableUi(false);
-            return;
-        }
-        nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(directAdr);
-        if (nodeInfo != null) {
-            sw_gatt_prx.setChecked(nodeInfo.gattProxyEnable);
-            sw_pvt_gatt_prx.setChecked(nodeInfo.privateGattProxyEnable);
-            sw_beacon.setChecked(nodeInfo.beaconOpened);
-            sw_pvt_beacon.setChecked(nodeInfo.privateBeaconOpened);
-            enableUi(true);
-        } else {
-            enableUi(false);
-        }
-    }
 
     private void enableUi(boolean enable) {
         sw_gatt_prx.setEnabled(enable);
@@ -152,24 +144,18 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
 
 
     CompoundButton.OnCheckedChangeListener SWITCH_CHANGED = (view, isChecked) -> {
-//        MeshLogger.d("SWITCH_CHANGED#" + isChecked);
-        if (directAdr == 0) {
-            toastMsg("please connect to mesh first");
-            view.setChecked(!isChecked);
-            return;
-        }
         MeshMessage message = null;
         switch (view.getId()) {
             case R.id.sw_gatt_prx:
-                message = GattProxySetMessage.getSimple(directAdr, (byte) (isChecked ? 1 : 0));
+                message = GattProxySetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
                 break;
 
             case R.id.sw_pvt_gatt_prx:
-                message = PrivateGattProxySetMessage.getSimple(directAdr, (byte) (isChecked ? 1 : 0));
+                message = PrivateGattProxySetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
                 break;
 
             case R.id.sw_node_id:
-                message = NodeIdentitySetMessage.getSimple(directAdr, meshInfo.getDefaultNetKey().index, (byte) (isChecked ? 1 : 0));
+                message = NodeIdentitySetMessage.getSimple(meshAddress, meshInfo.getDefaultNetKey().index, (byte) (isChecked ? 1 : 0));
                 handler.removeCallbacks(NODE_ID_RESET);
                 if (isChecked) {
                     handler.postDelayed(NODE_ID_RESET, 10 * 1000);
@@ -177,7 +163,7 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
                 break;
 
             case R.id.sw_pvt_node_id:
-                message = PrivateNodeIdentitySetMessage.getSimple(directAdr, meshInfo.getDefaultNetKey().index, (byte) (isChecked ? 1 : 0));
+                message = PrivateNodeIdentitySetMessage.getSimple(meshAddress, meshInfo.getDefaultNetKey().index, (byte) (isChecked ? 1 : 0));
                 handler.removeCallbacks(PRIVATE_NODE_ID_RESET);
                 if (isChecked) {
                     handler.postDelayed(PRIVATE_NODE_ID_RESET, 10 * 1000);
@@ -185,10 +171,10 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
                 break;
 
             case R.id.sw_beacon:
-                message = BeaconSetMessage.getSimple(directAdr, (byte) (isChecked ? 1 : 0));
+                message = BeaconSetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
                 break;
             case R.id.sw_pvt_beacon:
-                message = PrivateBeaconSetMessage.getSimple(directAdr, (byte) (isChecked ? 1 : 0));
+                message = PrivateBeaconSetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
                 break;
         }
         if (message != null) {
@@ -244,13 +230,6 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
                 nodeInfo.privateBeaconOpened = stMessage.privateBeacon == 1;
                 nodeInfo.save();
             }
-        } else if (event.getType().equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {
-            AutoConnectEvent evt = (AutoConnectEvent) event;
-            directAdr = evt.getConnectedAddress();
-            getNode();
-        } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
-            directAdr = 0;
-            getNode();
         }
     }
 

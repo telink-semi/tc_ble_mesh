@@ -57,6 +57,10 @@ public final class MeshUtils {
 
     public static final int ADDRESS_BROADCAST = 0xFFFF;
 
+    public static final int ADDRESS_ALL_PROXY = 0xFFFC;
+
+
+
     // 1970 -- 2000 offset second
     public static final long TAI_OFFSET_SECOND = 946684800;
 
@@ -74,6 +78,8 @@ public final class MeshUtils {
 
     // Object Transfer Service UUID
     public static final ParcelUuid OTS_UUID = new ParcelUuid(UUIDInfo.SERVICE_OTS);
+
+    public static final ParcelUuid SOL_UUID = new ParcelUuid(UUIDInfo.SERVICE_MESH_PROXY_SOLICITATION);
 
     /**
      * used in {@link #generateChars(int)}

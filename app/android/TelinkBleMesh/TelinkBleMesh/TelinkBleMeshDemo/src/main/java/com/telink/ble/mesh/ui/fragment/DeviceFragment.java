@@ -39,9 +39,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.Encipher;
+import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.ble.BleAdvertiser;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
+import com.telink.ble.mesh.core.networking.SolicitationPDU;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -70,6 +74,7 @@ import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 
@@ -321,7 +326,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
             case R.id.tv_cmd:
                 startActivity(new Intent(getActivity(), CmdActivity.class));
-//                startActivity(new Intent(getActivity(), CmdTestActivity.class));
+
+//                bleAdvertiser.startAdvertise(MeshUtils.SOL_UUID, buildSolData(), 10 * 1000);
                 break;
 
             case R.id.tv_log:
@@ -351,6 +357,5 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             MeshLogger.d("cps status: " + statusMessage.getCompositionData().toString());
         }
     }
-
 
 }
