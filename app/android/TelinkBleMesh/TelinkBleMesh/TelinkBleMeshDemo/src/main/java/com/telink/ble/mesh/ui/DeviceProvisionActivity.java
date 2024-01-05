@@ -22,14 +22,13 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -37,7 +36,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.message.MeshSigModel;
@@ -121,6 +119,13 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
      */
     private boolean isScanning = false;
 
+    /**
+     * unprovisioned device count
+     */
+    private int unpvDevCnt = 0;
+
+    private TextView tv_dev_cnt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,7 +140,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void initView() {
-        setContentView(R.layout.activity_device_provision);
+        setContentView(R.layout.activity_device_provision_selectable);
         findViewById(R.id.btn_add_all).setVisibility(View.VISIBLE);
         initTitle();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
@@ -147,6 +152,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         rv_devices.setAdapter(mListAdapter);
         btn_add_all = findViewById(R.id.btn_add_all);
         btn_add_all.setOnClickListener(this);
+        tv_dev_cnt = findViewById(R.id.tv_dev_cnt);
         findViewById(R.id.tv_log).setOnClickListener(this);
     }
 
@@ -159,27 +165,6 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT, this);
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_DEVICE_FOUND, this);
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
-    }
-
-    private void addTestData() {
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        BluetoothDevice bluetoothDevice = adapter.getRemoteDevice("FF:FF:BB:CC:DD:12");
-        AdvertisingDevice advertisingDevice = new AdvertisingDevice(bluetoothDevice, -23, new byte[23]);
-
-        NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.meshAddress = -1;
-        nodeInfo.deviceUUID = Arrays.generateRandom(16);
-        nodeInfo.macAddress = advertisingDevice.device.getAddress();
-        NetworkingDevice device = new NetworkingDevice(nodeInfo);
-        device.bluetoothDevice = advertisingDevice.device;
-        device.addLog("Provision", "provision start");
-        device.addLog("Provision", "provision success");
-        device.addLog("Binding", "binding start");
-        device.addLog("Binding", "binding success");
-        device.addLog("Pub-Set", "pub-set start");
-        device.addLog("Pub-Set", "pub-set success");
-        devices.add(device);
-        mListAdapter.notifyDataSetChanged();
     }
 
     private void initTitle() {
@@ -261,6 +246,14 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         processingDevice.addLog(NetworkingDevice.TAG_SCAN, "device found");
         devices.add(processingDevice);
         mListAdapter.notifyDataSetChanged();
+        updateDeviceCountInfo(1);
+    }
+
+    private void updateDeviceCountInfo(int variation) {
+        unpvDevCnt += variation;
+        runOnUiThread(() -> {
+            tv_dev_cnt.setText("unprovisioned device count: " + unpvDevCnt);
+        });
     }
 
     private void startProvision(NetworkingDevice processingDevice) {
@@ -383,6 +376,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
                 if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN)) {
                     onProvisionStart((ProvisioningEvent) event);
                 } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS)) {
+                    updateDeviceCountInfo(-1);
                     onProvisionSuccess((ProvisioningEvent) event);
                 } else if (event.getType().equals(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT)) {
                     isScanning = false;

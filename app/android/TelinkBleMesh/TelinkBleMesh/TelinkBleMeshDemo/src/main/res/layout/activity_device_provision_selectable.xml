@@ -6,6 +6,16 @@
 
     <include layout="@layout/title" />
 
+    <TextView
+        android:id="@+id/tv_dev_cnt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:padding="4dp"
+        android:text="unprovisioned device count: 0"
+        android:textColor="#e69544"
+        android:textSize="12sp" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

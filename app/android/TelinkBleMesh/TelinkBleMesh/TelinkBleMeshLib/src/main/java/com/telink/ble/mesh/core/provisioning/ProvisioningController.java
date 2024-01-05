@@ -604,7 +604,7 @@ public class ProvisioningController {
         mProvisioningDevice.setDeviceCapability(pvCapability);
         updateProvisioningState(STATE_CAPABILITY, "Capability Received: " + pvCapability.toString());
 
-        if (mProvisioningDevice.autoStart){
+        if (mProvisioningDevice.isAutoStart()){
             continueProvision(mProvisioningDevice.getUnicastAddress());
         }else {
             //  hold and wait for continue

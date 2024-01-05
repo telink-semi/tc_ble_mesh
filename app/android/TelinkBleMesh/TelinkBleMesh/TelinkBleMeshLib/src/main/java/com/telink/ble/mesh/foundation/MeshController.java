@@ -2414,8 +2414,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 break;
 
             case ProvisioningController.STATE_CAPABILITY:
-                onProvisionCapabilityReceived(mProvisioningController.getProvisioningDevice(), "device capability received");
                 log("on device capability received");
+                onProvisionCapabilityReceived(mProvisioningController.getProvisioningDevice(), "device capability received");
                 break;
         }
     }

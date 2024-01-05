@@ -134,7 +134,7 @@ public class ProvisioningDevice implements Parcelable {
      * if true, the provision-controller will send start pdu
      * otherwise, the user should call
      */
-    public boolean autoStart = true;
+    protected boolean autoStart = true;
 
     protected ProvisioningCapabilityPDU deviceCapability = null; // The device capability
 
@@ -345,6 +345,14 @@ public class ProvisioningDevice implements Parcelable {
 
     public void setRootCert(byte[] rootCert) {
         this.rootCert = rootCert;
+    }
+
+    public boolean isAutoStart() {
+        return autoStart;
+    }
+
+    public void setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
     }
 
     @Override
