@@ -146,8 +146,10 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         }
         isSoliciting = true;
         delayHandler.removeCallbacks(solSettingTimeoutTask);
-        delayHandler.postDelayed(solSettingTimeoutTask, 10 * 1000);
-        advertiser.startAdvertise(MeshUtils.SOL_UUID, buildSolData(), 10 * 1000);
+        long timeout = 2 * 60 * 1000; //  2 min
+//        long timeout = 10 * 1000; //  2 min
+        delayHandler.postDelayed(solSettingTimeoutTask, timeout);
+        advertiser.startAdvertise(MeshUtils.SOL_UUID, buildSolData(), timeout);
     }
 
     private byte[] buildSolData() {

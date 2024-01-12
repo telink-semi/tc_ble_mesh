@@ -28,9 +28,12 @@ import com.telink.ble.mesh.demo.BuildConfig;
 import com.telink.ble.mesh.model.MyObjectBox;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
+
 import io.objectbox.BoxStore;
 import io.objectbox.BoxStoreBuilder;
 import io.objectbox.android.Admin;
+import io.objectbox.exception.DbSchemaException;
 import io.objectbox.exception.FileCorruptException;
 import io.objectbox.model.ValidateOnOpenMode;
 
@@ -38,7 +41,7 @@ public class ObjectBox {
 
     private static BoxStore boxStore;
 
-    public static void init(Context context) {
+    public static boolean init(Context context) {
         BoxStoreBuilder storeBuilder = MyObjectBox.builder()
                 .validateOnOpen(ValidateOnOpenMode.WithLeaves)  // Additional DB page validation
                 .validateOnOpenPageLimit(20)
@@ -49,6 +52,9 @@ public class ObjectBox {
             MeshLogger.d("File corrupt, trying previous data snapshot...");
             storeBuilder.usePreviousCommit();
             boxStore = storeBuilder.build();
+        } catch (DbSchemaException e) {
+            e.printStackTrace();
+            return false;
         }
 
         if (BuildConfig.DEBUG) {
@@ -57,9 +63,18 @@ public class ObjectBox {
             // https://docs.objectbox.io/data-browser
             new Admin(boxStore).start(context.getApplicationContext());
         }
+        return true;
     }
 
     public static BoxStore get() {
         return boxStore;
+    }
+
+    public static void deleteAll(Context context) {
+        File objectBoxDirectory = new File(context.getFilesDir(), BoxStoreBuilder.DEFAULT_NAME);
+        if (objectBoxDirectory.exists()) {
+            boolean deleteRe = objectBoxDirectory.delete();
+            MeshLogger.d("delete - " + objectBoxDirectory.getName() + " re - " + deleteRe);
+        }
     }
 }

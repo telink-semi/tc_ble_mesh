@@ -122,6 +122,26 @@ public class TransitionTime {
         return step;
     }
 
+
+    /**
+     * Returns the resolution of the transition in milliseconds.
+     *
+     * @return the resolution in milliseconds
+     */
+    public int getResolution() {
+        switch (step) {
+            case STEP_RESOLUTION_100_MILL:
+                return PERIOD_STEP_100_MILL;
+            case STEP_RESOLUTION_1_SECOND:
+                return PERIOD_STEP_1_SECOND;
+            case STEP_RESOLUTION_10_SECOND:
+                return PERIOD_STEP_10_SECOND;
+            case STEP_RESOLUTION_10_MINUTE:
+                return PERIOD_STEP_10_MINUTE;
+        }
+        return 0;
+    }
+
     /**
      * Returns the resolution of the transition in milliseconds.
      *

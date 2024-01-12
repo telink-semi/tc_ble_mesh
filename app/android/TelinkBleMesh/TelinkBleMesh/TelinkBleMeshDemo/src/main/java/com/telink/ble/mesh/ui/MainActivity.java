@@ -93,13 +93,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
-        testMd5();
-    }
-
-    private void testMd5(){
-        byte[] re = Encipher.calcUuidByMac(Arrays.hexToBytes("FFFFBBCCDD82")); // FFFFBBCCDD82 - 192E11381215CFE0BF44D816BE0E421C
-//        byte[] re = Encipher.md5(Arrays.hexToBytes("A4C1385DAE0D")); // A422D068CF4A9533ABF263EB74A7EADA
-//        Encipher.md5();
     }
 
     private void addEventListeners() {

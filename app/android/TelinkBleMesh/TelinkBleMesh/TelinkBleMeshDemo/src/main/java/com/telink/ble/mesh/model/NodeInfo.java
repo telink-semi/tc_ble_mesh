@@ -201,6 +201,12 @@ public class NodeInfo implements Serializable {
 
     public boolean directFriendEnabled = false;
 
+    /**
+     * lighting control enabled
+     */
+    public ToOne<NodeLcProps> nodeLcProps;
+
+
     @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
         onlineState = OnlineState.OFFLINE;
@@ -440,7 +446,6 @@ public class NodeInfo implements Serializable {
         return null;
     }
 
-
     public String getPidDesc() {
         String pidInfo = "";
         if (bound && compositionData != null) {
@@ -495,5 +500,14 @@ public class NodeInfo implements Serializable {
 
     public void save() {
         MeshInfoService.getInstance().updateNodeInfo(this);
+    }
+
+    public NodeLcProps getLcProps() {
+        if (nodeLcProps.getTarget() == null) {
+            MeshLogger.d("create new props : " + meshAddress);
+            nodeLcProps.setTarget(new NodeLcProps());
+            save();
+        }
+        return nodeLcProps.getTarget();
     }
 }

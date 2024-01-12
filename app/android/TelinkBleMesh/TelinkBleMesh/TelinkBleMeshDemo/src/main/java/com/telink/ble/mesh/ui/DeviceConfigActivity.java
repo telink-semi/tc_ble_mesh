@@ -321,23 +321,20 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
     private void showDefaultTTLInputDialog(AlertDialog.Builder builder) {
         View view = LayoutInflater.from(this).inflate(R.layout.layout_config_ttl, null);
         final EditText et_input = view.findViewById(R.id.et_input);
-        builder.setView(view).setPositiveButton("confirm", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                String ttlInput = et_input.getText().toString().trim();
-                if (TextUtils.isEmpty(ttlInput)) {
-                    toastMsg("input empty");
-                    return;
-                }
-                byte ttl = Byte.parseByte(ttlInput, 16);
-                DefaultTTLSetMessage setMessage = DefaultTTLSetMessage.getSimple(deviceInfo.meshAddress, ttl);
-                boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
-                if (cmdSent) {
-                    showSendWaitingDialog("setting TTL ...");
-                } else {
-                    toastMsg("set message send error ");
-                }
+        builder.setView(view).setPositiveButton("confirm", (dialog, which) -> {
+            dialog.dismiss();
+            String ttlInput = et_input.getText().toString().trim();
+            if (TextUtils.isEmpty(ttlInput)) {
+                toastMsg("input empty");
+                return;
+            }
+            byte ttl = Byte.parseByte(ttlInput, 16);
+            DefaultTTLSetMessage setMessage = DefaultTTLSetMessage.getSimple(deviceInfo.meshAddress, ttl);
+            boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
+            if (cmdSent) {
+                showSendWaitingDialog("setting TTL ...");
+            } else {
+                toastMsg("set message send error ");
             }
         });
     }

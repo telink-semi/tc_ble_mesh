@@ -26,6 +26,7 @@ import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshInfo_;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.NodeLcProps;
 import com.telink.ble.mesh.model.OobInfo;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.util.Arrays;
@@ -44,6 +45,7 @@ public class MeshInfoService {
     private Box<NodeInfo> nodeInfoBox;
     private Box<GroupInfo> groupInfoBox;
     private Box<Scene> sceneBox;
+    private Box<NodeLcProps> nodeLcPropsBox;
     private Box<OobInfo> oobInfoBox;
     private Query<MeshInfo> meshInfoQuery;
     private Query<OobInfo> oobInfoQuery;
@@ -61,7 +63,7 @@ public class MeshInfoService {
         nodeInfoBox = store.boxFor(NodeInfo.class);
         oobInfoBox = store.boxFor(OobInfo.class);
         sceneBox = store.boxFor(Scene.class);
-
+        nodeLcPropsBox = store.boxFor(NodeLcProps.class);
         oobInfoQuery = oobInfoBox.query().build();
     }
 
@@ -109,6 +111,11 @@ public class MeshInfoService {
     public void updateNodeInfo(NodeInfo node) {
         MeshLogger.d("updateNodeInfo - " + node.id);
         nodeInfoBox.put(node);
+    }
+
+    public void updateNodeLcProps(NodeLcProps props) {
+        MeshLogger.d("updateNodeLcProps - " + props.id);
+        nodeLcPropsBox.put(props);
     }
 
     public void updateGroupInfo(GroupInfo groupInfo) {
