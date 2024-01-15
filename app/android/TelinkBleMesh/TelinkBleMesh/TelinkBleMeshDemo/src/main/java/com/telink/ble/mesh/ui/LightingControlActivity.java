@@ -124,7 +124,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
 
     private void initProps() {
         lcPropItems = new ArrayList<>();
-        nodeLcProps = nodeInfo.nodeLcProps.getTarget();
+        nodeLcProps = nodeInfo.getLcProps();
         MeshLogger.d("nodeLcProps#id : " + nodeLcProps.id);
         LcPropItem item;
         for (LightControlProperty prop : LightControlProperty.values()) {
