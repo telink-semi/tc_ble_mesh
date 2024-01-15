@@ -39,6 +39,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LcModeSetMessage;
@@ -72,6 +73,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
     private Switch switch_mode, switch_set_on_off;
     private NodeInfo nodeInfo;
     private MeshInfo meshInfo;
+    private int lcEleAdr;
     private NodeLcProps nodeLcProps;
     private List<LcPropItem> lcPropItems;
     private LcPropertyListAdapter adapter;
@@ -91,6 +93,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         if (intent.hasExtra("meshAddress")) {
             int meshAddress = intent.getIntExtra("meshAddress", -1);
             nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(meshAddress);
+            lcEleAdr = nodeInfo.getTargetEleAdr(MeshSigModel.SIG_MD_LIGHT_LC_S.modelId);
         } else {
             toastMsg("device error");
             finish();
@@ -144,7 +147,8 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         MeshLogger.d("get tap : " + position);
         LcPropItem config = lcPropItems.get(position);
         String name = config.property.name;
-        int adr = nodeInfo.meshAddress;
+//        int adr = nodeInfo.meshAddress;
+        int adr = lcEleAdr;
         int propId = config.property.id;
         LcPropertyGetMessage message = LcPropertyGetMessage.getSimple(adr, meshInfo.getDefaultAppKeyIndex(), 1, propId);
         boolean cmdSent = MeshService.getInstance().sendMeshMessage(message);
@@ -178,7 +182,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
                 }
                 byte[] value = MeshUtils.integer2Bytes(val, item.property.len, ByteOrder.LITTLE_ENDIAN);
                 LcPropertySetMessage setMessage = LcPropertySetMessage.getSimple(
-                        nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(), item.property.id,
+                        lcEleAdr, meshInfo.getDefaultAppKeyIndex(), item.property.id,
                         value, true, 1);
                 MeshService.getInstance().sendMeshMessage(setMessage);
             }
@@ -210,18 +214,18 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
             if (buttonView == switch_mode) {
                 if (isChecked && !nodeLcProps.enabled) {
                     MeshService.getInstance().sendMeshMessage(
-                            LcModeSetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(),
+                            LcModeSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                     (byte) 1, true, 1)
                     );
                 } else if (!isChecked && nodeLcProps.enabled) {
                     MeshService.getInstance().sendMeshMessage(
-                            LcModeSetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(),
+                            LcModeSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                     (byte) 0, true, 1)
                     );
                 }
             } else if (buttonView == switch_set_on_off) {
                 MeshService.getInstance().sendMeshMessage(
-                        LcLightOnOffSetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(),
+                        LcLightOnOffSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                 (byte) (isChecked ? 1 : 0), true, 1)
                 );
             }
@@ -232,13 +236,13 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_set_on:
-                LcLightOnOffSetMessage onMessage = new LcLightOnOffSetMessage(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex());
+                LcLightOnOffSetMessage onMessage = new LcLightOnOffSetMessage(lcEleAdr, meshInfo.getDefaultAppKeyIndex());
                 onMessage.setLightOnOff((byte) 1);
                 MeshService.getInstance().sendMeshMessage(onMessage);
                 break;
 
             case R.id.btn_set_off:
-                LcLightOnOffSetMessage offMessage = new LcLightOnOffSetMessage(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex());
+                LcLightOnOffSetMessage offMessage = new LcLightOnOffSetMessage(lcEleAdr, meshInfo.getDefaultAppKeyIndex());
                 offMessage.setLightOnOff((byte) 0);
                 MeshService.getInstance().sendMeshMessage(offMessage);
                 break;
