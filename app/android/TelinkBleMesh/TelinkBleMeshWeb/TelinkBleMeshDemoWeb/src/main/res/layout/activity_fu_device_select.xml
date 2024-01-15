@@ -22,15 +22,16 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+
                 android:padding="8dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Sort By Products: "
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:text="Tip: only devices of the same product can be selected"
+                    android:textSize="12sp"
+                    android:textStyle="bold|italic" />
 
                 <!--<CheckBox
                     android:id="@+id/cb_device"

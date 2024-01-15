@@ -40,6 +40,7 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.FUProductSelectAdapter;
+import com.telink.ble.mesh.util.MeshLogger;
 import com.telink.ble.mesh.web.entity.MeshNetworkDetail;
 import com.telink.ble.mesh.web.entity.MeshNode;
 import com.telink.ble.mesh.web.entity.MeshProductInfo;
@@ -107,7 +108,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
                 normalDevices.add(deviceInfo);
             }*/
         }
-
+        MeshLogger.d("init fu device:  " + productDevMap.size());
         productSelectAdapter.resetData(productDevMap);
     }
 
@@ -117,6 +118,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
         rv_device.setLayoutManager(new LinearLayoutManager(this));
 
         productSelectAdapter = new FUProductSelectAdapter(this);
+        rv_device.setAdapter(productSelectAdapter);
 
         Button btn_confirm = findViewById(R.id.btn_confirm);
         btn_confirm.setOnClickListener(this);

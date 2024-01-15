@@ -72,8 +72,6 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
     private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
     public final static String URL_GET_LATEST_VERSION_INFO = TelinkHttpClient.URL_BASE + "mesh-node/getLatestVersionInfo";
 
-    public final static String URL_UPDATE_NODE_VERSION = TelinkHttpClient.URL_BASE + "mesh-node/updateNodeVersion";
-
     public final static String URL_DOWNLOAD_BIN = TelinkHttpClient.URL_BASE + "mesh-node/downloadBin";
 
     private TextView tv_log, tv_progress, tv_info;
@@ -186,19 +184,8 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         runOnUiThread(() -> {
             btn_start_ota.setEnabled(true);
             mNodeInfo.versionInfo = latestVersion;
-            updateNodeVersion();
         });
-    }
-
-    /**
-     * update vid to cloud
-     */
-    private void updateNodeVersion() {
-        FormBody formBody = new FormBody.Builder()
-                .add("nodeId", mNodeInfo.id + "")
-                .add("vid", binVid + "")
-                .build();
-        TelinkHttpClient.getInstance().post(URL_UPDATE_NODE_VERSION, formBody, new Callback() {
+        mNodeInfo.updateCloudVersion(binVid, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 appendLog("update version onFailure");
@@ -214,7 +201,6 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
                     return;
                 }
                 try {
-
                     MeshProductVersionInfo versionInfo = JSON.parseObject(responseInfo.data, MeshProductVersionInfo.class);
                     if (versionInfo == null) {
                         appendLog("version info parse error in response");

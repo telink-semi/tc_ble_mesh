@@ -34,8 +34,8 @@ import androidx.appcompat.widget.Toolbar;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.activity.DebugActivity;
+import com.telink.ble.mesh.ui.activity.FUActivity;
 import com.telink.ble.mesh.ui.activity.MainActivity;
 import com.telink.ble.mesh.ui.activity.MeshInfoActivity;
 import com.telink.ble.mesh.ui.activity.SceneListActivity;
@@ -70,9 +70,7 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         });
 
 
-        view.findViewById(R.id.view_model_setting).setOnClickListener(this);
         view.findViewById(R.id.view_scene_setting).setOnClickListener(this);
-        view.findViewById(R.id.view_settings).setOnClickListener(this);
         view.findViewById(R.id.view_debug).setOnClickListener(this);
         view.findViewById(R.id.view_share).setOnClickListener(this);
         view.findViewById(R.id.view_applicants).setOnClickListener(this);
@@ -80,16 +78,8 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         ll_location_setting = view.findViewById(R.id.ll_location_setting);
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
-
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
-            view.findViewById(R.id.view_df).setVisibility(View.VISIBLE);
-            view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
-            view.findViewById(R.id.view_df).setOnClickListener(this);
-        } else {
-            view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
-            view.findViewById(R.id.view_df).setVisibility(View.GONE);
-        }
+        view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
+        view.findViewById(R.id.view_df).setOnClickListener(this);
     }
 
     @Override
@@ -105,14 +95,8 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.view_model_setting:
-//                startActivity(new Intent(getActivity(), ModelListActivity.class));
-                break;
             case R.id.view_scene_setting:
                 startActivity(new Intent(getActivity(), SceneListActivity.class));
-                break;
-            case R.id.view_settings:
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
                 break;
 
             case R.id.view_debug:
@@ -132,16 +116,18 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
                 break;
 
             case R.id.view_mesh_ota:
-//                startActivity(new Intent(getActivity(), FUActivity.class));
+                startActivity(new Intent(getActivity(), FUActivity.class));
                 break;
 
             case R.id.view_mesh_info:
                 startActivity(new Intent(getActivity(), MeshInfoActivity.class));
                 break;
+
             case R.id.btn_location_setting:
                 Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivityForResult(enableLocationIntent, 1);
                 break;
+
             case R.id.btn_location_ignore:
                 SharedPreferenceHelper.setLocationIgnore(getActivity(), true);
                 ll_location_setting.setVisibility(View.GONE);

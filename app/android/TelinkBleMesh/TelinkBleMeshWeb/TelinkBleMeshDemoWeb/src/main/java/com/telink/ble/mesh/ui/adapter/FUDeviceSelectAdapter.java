@@ -102,7 +102,7 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_fu_product_select, parent, false);
+        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_fu_device_select, parent, false);
         ViewHolder holder = new ViewHolder(itemView);
         holder.iv_device = itemView.findViewById(R.id.iv_device);
         holder.tv_device_info = itemView.findViewById(R.id.tv_device_info);

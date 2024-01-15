@@ -43,6 +43,7 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.activity.BaseActivity;
 import com.telink.ble.mesh.ui.activity.ChangePasswordActivity;
 import com.telink.ble.mesh.ui.activity.LoginActivity;
+import com.telink.ble.mesh.ui.activity.SettingsActivity;
 import com.telink.ble.mesh.ui.fragment.BaseFragment;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class UserFragment extends BaseFragment implements View.OnClickListener {
         view.findViewById(R.id.view_manage_networks).setOnClickListener(this);
         view.findViewById(R.id.iv_edit_nickname).setOnClickListener(this);
         view.findViewById(R.id.view_logout).setOnClickListener(this);
-
+        view.findViewById(R.id.view_settings).setOnClickListener(this);
         tv_nickname = view.findViewById(R.id.tv_nickname);
         tv_username = view.findViewById(R.id.tv_username);
         showUserInfo();
@@ -113,6 +114,10 @@ public class UserFragment extends BaseFragment implements View.OnClickListener {
 
             case R.id.view_logout:
                 ((BaseActivity) getActivity()).showConfirmDialog("User logout?", (dialog, which) -> logout());
+                break;
+
+            case R.id.view_settings:
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
                 break;
         }
     }

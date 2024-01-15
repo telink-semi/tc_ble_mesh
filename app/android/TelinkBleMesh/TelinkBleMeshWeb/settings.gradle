@@ -1,0 +1,5 @@
+// mesh demo app - web version
+include ':TelinkBleMeshDemoWeb'
+
+include ':TelinkBleMeshLib'
+project(':TelinkBleMeshLib').projectDir = new File('../TelinkBleMesh/TelinkBleMeshLib')

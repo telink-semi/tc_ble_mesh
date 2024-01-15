@@ -58,25 +58,14 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
-
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/tv_file_path"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableRight="@drawable/ic_arrow_right"
-        android:drawableTint="@color/gray"
-        android:padding="4dp"
-        android:text="select file"
-        android:textSize="13sp" />
 
     <TextView
         android:id="@+id/tv_version_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/warn_normal"
         android:paddingLeft="4dp"
+        android:textColor="@color/warn_normal"
         android:textSize="13sp" />
 
     <LinearLayout

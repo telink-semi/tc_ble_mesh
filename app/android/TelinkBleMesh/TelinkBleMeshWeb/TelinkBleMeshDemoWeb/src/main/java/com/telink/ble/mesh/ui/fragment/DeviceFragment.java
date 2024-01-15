@@ -36,6 +36,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
@@ -58,6 +59,7 @@ import com.telink.ble.mesh.ui.activity.DeviceSettingActivity;
 import com.telink.ble.mesh.ui.activity.KeyBindActivity;
 import com.telink.ble.mesh.ui.activity.LogActivity;
 import com.telink.ble.mesh.ui.activity.MainActivity;
+import com.telink.ble.mesh.ui.activity.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
 import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -121,19 +123,15 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 return false;
             }
             if (item.getItemId() == R.id.item_add) {
-                if (((BaseActivity) getActivity()).validateConfigPermission()) {
+                if (!((BaseActivity) getActivity()).validateConfigPermission()) {
+                    toastMsg("no config permission");
+                    return false;
+                }
+                if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
+                    startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
+                } else {
                     startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
                 }
-//                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
-//                /*if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity()) && AppSettings.DRAFT_FEATURES_ENABLE) {
-////                    startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
-//                } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
-////                    startActivity(new Intent(getActivity(), FastProvisionActivity.class));
-//                } else if (SharedPreferenceHelper.isAutoPvEnable(getActivity())) {
-////                    startActivity(new Intent(getActivity(), DeviceAutoProvisionActivity.class));
-//                } else {
-//                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
-//                }*/
             }
             return false;
         });

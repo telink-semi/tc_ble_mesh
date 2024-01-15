@@ -142,7 +142,7 @@ public class MeshProductVersionInfo implements Serializable {
 
 
     public void setCompositionData(String compositionData) {
-        MeshLogger.d("setCompositionData - " + compositionData);
+        MeshLogger.d("versionInfo#setCompositionData - " + compositionData);
         this.compositionData = compositionData;
         this.compositionDataObj = CompositionData.from(
                 Arrays.hexToBytes(compositionData)

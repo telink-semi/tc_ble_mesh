@@ -120,7 +120,7 @@ public class ProvisionAssist implements EventListener<String> {
         TelinkHttpClient.getInstance().post(URL_APPLY_ADDRESS, formBody, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                onApplyAddressError("call fail - " + URL_APPLY_ADDRESS);
+                onApplyAddressError("call fail - " + call.request().url());
             }
 
             @Override
@@ -176,6 +176,7 @@ public class ProvisionAssist implements EventListener<String> {
     private void startProvision() {
         byte[] deviceUUID = processingDevice.deviceUUID;
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(processingDevice.bluetoothDevice, deviceUUID, 0);
+        provisioningDevice.setAutoStart(false);
         provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         provisioningDevice.setOobInfo(processingDevice.oobInfo);
         processingDevice.state = NetworkingState.PROVISIONING;
@@ -194,6 +195,7 @@ public class ProvisionAssist implements EventListener<String> {
 
     @Override
     public void performed(final Event<String> event) {
+        if (processingDevice == null) return;
         if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN)) {
             onProvisionStart((ProvisioningEvent) event);
         } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS)) {
@@ -274,6 +276,7 @@ public class ProvisionAssist implements EventListener<String> {
                     MeshNode meshNode = JSON.parseObject(responseInfo.data, MeshNode.class);
                     mesh.insertDevice(meshNode);
                     processingDevice.nodeId = meshNode.id;
+//                    processingDevice.compositionData = meshNode.compositionData();
                     startKeyBind();
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -308,12 +311,11 @@ public class ProvisionAssist implements EventListener<String> {
         processingDevice.addLog(NetworkingDevice.TAG_BIND, "success");
         processingDevice.bindState = 1;
         // if is default bound, composition data has been valued ahead of binding action
-        processingDevice.compositionData = remote.getCompositionData();
+//        processingDevice.compositionData = remote.getCompositionData();
         // no need to set time publish
         processingDevice.state = NetworkingState.BIND_SUCCESS;
         mesh.saveBindState(processingDevice.nodeId, 1, remote.getCompositionData().vid);
         updateDeviceState();
-        onComplete(true);
     }
 
     public interface ProvisionAssistCallback {

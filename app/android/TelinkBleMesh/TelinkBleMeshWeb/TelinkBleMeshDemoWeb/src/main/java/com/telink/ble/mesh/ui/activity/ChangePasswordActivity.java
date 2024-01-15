@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.ui.activity;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
@@ -68,14 +69,19 @@ public class ChangePasswordActivity extends BaseActivity implements View.OnClick
         tv_old_pwd = findViewById(R.id.tv_old_pwd);
         tv_old_pwd.setDrawableClickListener(() -> {
             oldPwdVisible = !oldPwdVisible;
-            tv_old_pwd.setCompoundDrawables(null, null, getDrawable(oldPwdVisible ? R.drawable.ic_eye_open : R.drawable.ic_eye_close), null);
+            tv_old_pwd.setInputType(InputType.TYPE_CLASS_TEXT | (oldPwdVisible ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+            tv_old_pwd.setCompoundDrawablesWithIntrinsicBounds(0, 0, oldPwdVisible ? R.drawable.ic_eye_open : R.drawable.ic_eye_close, 0);
+            tv_old_pwd.setSelection(tv_old_pwd.getText().length());
         });
 
 
         tv_new_pwd = findViewById(R.id.tv_new_pwd);
-        tv_old_pwd.setDrawableClickListener(() -> {
+        tv_new_pwd.setDrawableClickListener(() -> {
             newPwdVisible = !newPwdVisible;
-            tv_new_pwd.setCompoundDrawables(null, null, getDrawable(newPwdVisible ? R.drawable.ic_eye_open : R.drawable.ic_eye_close), null);
+            tv_new_pwd.setInputType(InputType.TYPE_CLASS_TEXT | (newPwdVisible ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+//            tv_new_pwd.setInputType(newPwdVisible ? InputType.TYPE_CLASS_TEXT : InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            tv_new_pwd.setCompoundDrawablesWithIntrinsicBounds(0, 0, newPwdVisible ? R.drawable.ic_eye_open : R.drawable.ic_eye_close, 0);
+            tv_new_pwd.setSelection(tv_new_pwd.getText().length());
         });
 
         findViewById(R.id.btn_change_pwd).setOnClickListener(this);
@@ -91,7 +97,7 @@ public class ChangePasswordActivity extends BaseActivity implements View.OnClick
     private void changePwd() {
         showIndeterminateLoading();
         String oldInput = tv_old_pwd.getText().toString().trim();
-        String newInput = tv_old_pwd.getText().toString().trim();
+        String newInput = tv_new_pwd.getText().toString().trim();
         if (TextUtils.isEmpty(oldInput)) {
             tv_old_pwd.setError("pls input old password");
             return;
@@ -108,20 +114,26 @@ public class ChangePasswordActivity extends BaseActivity implements View.OnClick
         TelinkHttpClient.getInstance().post(URL_UPDATE_PASSWORD, formBody, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                onUpdateFail("call fail");
+                onUpdateFail("call fail: " + call.request().url());
                 e.printStackTrace();
                 MeshLogger.d(e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                ResponseInfo responseInfo = WebUtils.parseResponse(response, getBaseActivity());
+                ResponseInfo responseInfo = WebUtils.parseResponse(response, getBaseActivity(), false);
                 if (responseInfo == null) {
                     onUpdateFail("update fail: server response error");
                     return;
                 }
                 MeshLogger.d("responseInfo - " + responseInfo.toString());
-                onUpdateSuccess(newInput);
+                if (responseInfo.isSuccess()) {
+                    onUpdateSuccess(newInput);
+                } else {
+                    if (!responseInfo.isAuthErr()) {
+                        showError(responseInfo.message);
+                    }
+                }
             }
         });
     }
@@ -133,7 +145,7 @@ public class ChangePasswordActivity extends BaseActivity implements View.OnClick
 
     private void onUpdateSuccess(String password) {
         dismissIndeterminateLoading();
-        runOnUiThread(() -> toastMsg("login success"));
+        runOnUiThread(() -> toastMsg("update password success"));
         User user = TelinkMeshApplication.getInstance().getUser();
         SharedPreferenceHelper.setLoginInfo(this, user.getName(), password);
     }

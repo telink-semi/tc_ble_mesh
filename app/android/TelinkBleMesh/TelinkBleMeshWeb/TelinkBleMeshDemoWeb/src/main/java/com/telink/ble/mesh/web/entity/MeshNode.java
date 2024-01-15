@@ -50,6 +50,7 @@ public class MeshNode implements Serializable {
 
     public final static String URL_NODE_SET_PUBLISH = TelinkHttpClient.URL_BASE + "mesh-node/setPublish";
 
+    public final static String URL_UPDATE_NODE_VERSION = TelinkHttpClient.URL_BASE + "mesh-node/updateNodeVersion";
 
     private static final long serialVersionUID = 1L;
 
@@ -133,7 +134,7 @@ public class MeshNode implements Serializable {
     }
 
     public boolean isPubSet() {
-        return publishInfo != null && publishInfo.getPeriod() != null && publishInfo.getPeriod() > 0;
+        return publishInfo != null && publishInfo.getPublishAddress() != 0 && publishInfo.getPeriod() != null && publishInfo.getPeriod() > 0;
     }
 
     public void setPublishInfo(MeshNodePublish publishInfo) {
@@ -141,7 +142,7 @@ public class MeshNode implements Serializable {
     }
 
     public void resetPublishInfo(ModelPublication publication) {
-        if (publication == null) {
+        if (publication == null || publication.publishAddress == 0) {
             if (this.publishInfo != null && this.publishInfo.getId() != null) {
                 deletePublishCloud(this.publishInfo.getId());
             }
@@ -154,11 +155,10 @@ public class MeshNode implements Serializable {
         resetOfflineCheckTask();
     }
 
-    private void resetOfflineCheckTask(){
-
+    private void resetOfflineCheckTask() {
         Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
         handler.removeCallbacks(offlineCheckTask);
-        if (this.publishInfo != null && this.onlineState != OnlineState.OFFLINE) {
+        if (isPubSet() && this.onlineState != OnlineState.OFFLINE) {
             int period = TransitionTime.getTimeMilliseconds(publishInfo.getPeriod());
             int timeout = period * 3 + 2000;
             if (timeout > 0) {
@@ -174,17 +174,17 @@ public class MeshNode implements Serializable {
         TelinkHttpClient.getInstance().post(URL_NODE_DELETE_PUBLISH, formBody, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                MeshLogger.d("upload record err");
+                MeshLogger.d("delete publish err");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 ResponseInfo responseInfo = WebUtils.parseResponse(response, null, false);
                 if (responseInfo == null) {
-                    MeshLogger.d("upload record data err");
+                    MeshLogger.d("delete publish data err");
                     return;
                 }
-                MeshLogger.d("upload record success");
+                MeshLogger.d("delete publish success");
             }
         });
     }
@@ -213,10 +213,10 @@ public class MeshNode implements Serializable {
             public void onResponse(Call call, Response response) throws IOException {
                 ResponseInfo responseInfo = WebUtils.parseResponse(response, null, false);
                 if (responseInfo == null) {
-                    MeshLogger.d("upload record data err");
+                    MeshLogger.d("set publish data err");
                     return;
                 }
-                MeshLogger.d("upload record success");
+                MeshLogger.d("set publish success");
             }
         });
     }
@@ -463,5 +463,17 @@ public class MeshNode implements Serializable {
                 MeshLogger.d("upload record success");
             }
         });
+    }
+
+
+    /**
+     * update vid to cloud
+     */
+    public void updateCloudVersion(int vid, Callback callback) {
+        FormBody formBody = new FormBody.Builder()
+                .add("nodeId", id + "")
+                .add("vid", vid + "")
+                .build();
+        TelinkHttpClient.getInstance().post(URL_UPDATE_NODE_VERSION, formBody, callback);
     }
 }

@@ -62,7 +62,6 @@ import java.util.List;
  */
 public class TelinkMeshApplication extends MeshApplication {
 
-
     private final String TAG = "Telink-APP";
 
     private static TelinkMeshApplication mThis;

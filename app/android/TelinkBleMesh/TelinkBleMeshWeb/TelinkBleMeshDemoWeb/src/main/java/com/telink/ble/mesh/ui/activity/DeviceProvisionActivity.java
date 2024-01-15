@@ -44,7 +44,6 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.TelinkPlatformUuidInfo;
@@ -209,9 +208,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         NetworkingDevice processingDevice = new NetworkingDevice();
         processingDevice.uuidInfo = uuidInfo;
         processingDevice.bluetoothDevice = advertisingDevice.device;
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            processingDevice.oobInfo = oobInfo;
-        }
+        processingDevice.oobInfo = oobInfo;
         processingDevice.address = -1;
         processingDevice.deviceUUID = deviceUUID;
         processingDevice.state = NetworkingState.IDLE;

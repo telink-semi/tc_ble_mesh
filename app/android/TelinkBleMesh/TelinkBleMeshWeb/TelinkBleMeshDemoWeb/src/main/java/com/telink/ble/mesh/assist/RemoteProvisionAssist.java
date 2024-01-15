@@ -29,13 +29,11 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.entity.BindingDevice;
-import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.BindingEvent;
-import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.RemoteProvisioningEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.model.NetworkingDevice;
@@ -97,12 +95,11 @@ public class RemoteProvisionAssist implements EventListener<String> {
     }
 
     private void addEventListeners() {
-        TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN, this);
-        TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, this);
-        TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_CAPABILITY_RECEIVED, this);
         TelinkMeshApplication.getInstance().addEventListener(BindingEvent.EVENT_TYPE_BIND_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(BindingEvent.EVENT_TYPE_BIND_FAIL, this);
-        TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_CAPABILITY_RECEIVED, this);
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
     }
 
@@ -157,7 +154,7 @@ public class RemoteProvisionAssist implements EventListener<String> {
     }
 
     private void onComplete(boolean success) {
-        MeshLogger.d("remote prov - complete : - " + processingDevice.bluetoothDevice.getAddress());
+        MeshLogger.d("remote prov - complete : - " + Arrays.bytesToHexString(processingDevice.remoteProvisioningDevice.getUuid()));
         if (cb != null) {
             cb.onComplete(success);
         }
@@ -196,7 +193,7 @@ public class RemoteProvisionAssist implements EventListener<String> {
             onKeyBindFail((BindingEvent) event);
             onComplete(false);
         } else if (event.getType().equals(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_CAPABILITY_RECEIVED)) {
-            onCapabilityReceived((ProvisioningEvent) event);
+            onCapabilityReceived((RemoteProvisioningEvent) event);
         }
     }
 
@@ -218,8 +215,8 @@ public class RemoteProvisionAssist implements EventListener<String> {
     }
 
 
-    private void onCapabilityReceived(ProvisioningEvent event) {
-        ProvisioningDevice remote = event.getProvisioningDevice();
+    private void onCapabilityReceived(RemoteProvisioningEvent event) {
+        RemoteProvisioningDevice remote = event.getRemoteProvisioningDevice();
         int elementCount = remote.getDeviceCapability().eleNum & 0xFF;
         applyAddress(elementCount);
     }
@@ -274,7 +271,7 @@ public class RemoteProvisionAssist implements EventListener<String> {
         BindingDevice bindingDevice = new BindingDevice(processingDevice.address, deviceUUID, appKeyIndex);
         boolean isKeyBindNeeded = processingDevice.uuidInfo.isKeyBindNeeded();
         bindingDevice.setDefaultBound(!isKeyBindNeeded);
-        bindingDevice.setBearer(BindingBearer.GattOnly);
+        bindingDevice.setBearer(BindingBearer.Any);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
     }
 

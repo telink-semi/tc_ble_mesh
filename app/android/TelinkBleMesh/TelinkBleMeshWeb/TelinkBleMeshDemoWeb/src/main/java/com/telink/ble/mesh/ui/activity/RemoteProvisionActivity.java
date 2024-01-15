@@ -47,7 +47,6 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.RemoteNetworkingDevice;
@@ -202,9 +201,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         RemoteNetworkingDevice processingDevice = new RemoteNetworkingDevice();
         processingDevice.uuidInfo = uuidInfo;
         processingDevice.bluetoothDevice = advertisingDevice.device;
-        if (AppSettings.DRAFT_FEATURES_ENABLE) {
-            processingDevice.oobInfo = oobInfo;
-        }
+        processingDevice.oobInfo = oobInfo;
         processingDevice.address = -1;
         processingDevice.deviceUUID = deviceUUID;
         processingDevice.state = NetworkingState.IDLE;
@@ -309,6 +306,11 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             MeshLogger.d("device already exists");
             return;
         }
+        TelinkPlatformUuidInfo platformUuidInfo = TelinkPlatformUuidInfo.parseFromUuid(uuid);
+        if (platformUuidInfo == null) {
+            MeshLogger.d("not platform device: " + Arrays.bytesToHexString(uuid));
+            return;
+        }
 
 
         int index = remoteDevices.indexOf(remoteProvisioningDevice);
@@ -343,12 +345,13 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
         RemoteNetworkingDevice remoteNwkDevice = new RemoteNetworkingDevice();
         remoteNwkDevice.remoteProvisioningDevice = device;
-        remoteNwkDevice.uuidInfo = TelinkPlatformUuidInfo.parseFromUuid(device.getDeviceUUID());
+        remoteNwkDevice.uuidInfo = TelinkPlatformUuidInfo.parseFromUuid(device.getUuid());
         remoteNwkDevice.address = -1;
         remoteNwkDevice.deviceUUID = device.getUuid();
         remoteNwkDevice.state = NetworkingState.IDLE;
         remoteNwkDevice.addLog(NetworkingDevice.TAG_SCAN, "device found");
         remoteNwkDevice.state = NetworkingState.PROVISIONING;
+        remoteNwkDevice.remoteProvisioningDevice.setAutoStart(false);
 
         /*NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.deviceUUID = device.getUuid();
@@ -380,6 +383,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
         @Override
         public void onComplete(boolean success) {
+            remoteDevices.clear();
             startRemoteScan();
         }
     };

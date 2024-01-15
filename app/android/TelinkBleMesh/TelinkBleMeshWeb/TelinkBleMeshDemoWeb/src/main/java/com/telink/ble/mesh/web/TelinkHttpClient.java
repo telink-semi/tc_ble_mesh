@@ -49,8 +49,8 @@ import okhttp3.Request;
 public class TelinkHttpClient {
     private static TelinkHttpClient mHttpclient = new TelinkHttpClient();
 
-//    public final static String URL_BASE = "https://192.168.18.149:8081/";
-    public final static String URL_BASE = "http://192.168.18.87:8081/";
+    public final static String URL_BASE = "https://192.168.18.213:8081/";
+//    public final static String URL_BASE = "http://192.168.18.87:8081/";
 //    public final static String URL_BASE = "http://47.115.40.63:8080/";
 
     public final static String URL_UPLOAD = URL_BASE + "upload";
