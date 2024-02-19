@@ -57,6 +57,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.LightingControlActivity;
+import com.telink.ble.mesh.ui.SensorControlActivity;
 import com.telink.ble.mesh.ui.adapter.SwitchListAdapter;
 import com.telink.ble.mesh.ui.widget.CompositionColorView;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -72,9 +73,9 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
     private CompositionColorView cps_color;
     private View ll_lum, ll_lum_level, ll_temp, ll_temp_level;
     private NodeInfo deviceInfo;
-    private TextView tv_lum, tv_temp, tv_lum_level, tv_temp_level, tv_lc;
+    private TextView tv_lum, tv_temp, tv_lum_level, tv_temp_level;
     private SeekBar sb_lum, sb_temp;
-    private View view_lc;
+    private View view_lc, view_sensor;
 
     private long preTime;
     private static final int DELAY_TIME = 320;
@@ -174,9 +175,11 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         view.findViewById(R.id.iv_temp_add).setOnClickListener(this);
         view.findViewById(R.id.iv_temp_minus).setOnClickListener(this);
 
-        tv_lc = view.findViewById(R.id.tv_lc);
         view_lc = view.findViewById(R.id.view_lc);
-        view.findViewById(R.id.view_lc).setOnClickListener(this);
+        view_lc.setOnClickListener(this);
+
+        view_sensor = view.findViewById(R.id.view_sensor);
+        view_sensor.setOnClickListener(this);
     }
 
     private void getNodeStatus() {
@@ -213,6 +216,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         if (modelEleAdr != -1) {
             MeshService.getInstance().sendMeshMessage(OnOffGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
         }
+
     }
 
 
@@ -251,7 +255,15 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         }
 
         if (lcEleAdr == -1) {
+            view_lc.setVisibility(View.GONE);
+        } else {
+            view_lc.setVisibility(View.VISIBLE);
+        }
 
+        if (deviceInfo.isSensor()) {
+            view_sensor.setVisibility(View.VISIBLE);
+        } else {
+            view_sensor.setVisibility(View.GONE);
         }
     }
 
@@ -353,7 +365,6 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
     @Override
     public void onClick(View v) {
-        MeshLogger.log("delta: " + delta);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
         switch (v.getId()) {
@@ -370,15 +381,12 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                 break;
 
             case R.id.iv_temp_add:
-
                 deltaSetMessage = DeltaSetMessage.getSimple(tempEleInfo.keyAt(0),
                         appKeyIndex, delta, true, 1);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
 
             case R.id.iv_temp_minus:
-
-
                 deltaSetMessage = DeltaSetMessage.getSimple(tempEleInfo.keyAt(0),
                         appKeyIndex, -delta, true, 1);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
@@ -392,6 +400,9 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                 startActivity(new Intent(getActivity(), LightingControlActivity.class).putExtra("meshAddress", deviceInfo.meshAddress));
                 break;
 
+            case R.id.view_sensor:
+                startActivity(new Intent(getActivity(), SensorControlActivity.class).putExtra("meshAddress", deviceInfo.meshAddress));
+                break;
         }
     }
 

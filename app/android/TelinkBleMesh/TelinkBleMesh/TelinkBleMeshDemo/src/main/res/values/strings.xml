@@ -256,4 +256,8 @@
     </string>
 
 
+    <string name="btn_text_sensor_get_all">
+        Sensor \nGet All
+    </string>
+
 </resources>

@@ -361,6 +361,7 @@
             android:windowSoftInputMode="stateAlwaysHidden"
             tools:ignore="LockedOrientationActivity" />
         <activity android:name="com.telink.ble.mesh.ui.LightingControlActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.SensorControlActivity" />
     </application>
 
 

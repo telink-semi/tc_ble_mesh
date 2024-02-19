@@ -166,6 +166,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
                     device.pidInfo = node.getPidDesc();
                     device.pid = node.compositionData.pid;
                     device.isLpn = node.isLpn();
+                    device.isSensor = node.isSensor();
                     updatingDevices.add(device);
                 }
 

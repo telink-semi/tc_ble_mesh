@@ -34,7 +34,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.NodeSensorState;
 import com.telink.ble.mesh.ui.IconGenerator;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
 
@@ -76,7 +78,9 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
 
         NodeInfo device = mDevices.get(position);
         final int pid = device.compositionData != null ? device.compositionData.pid : 0;
-        holder.img_icon.setImageResource(IconGenerator.getIcon(pid, device.getOnlineState()));
+        boolean isSensor = device.isSensor();
+
+        holder.img_icon.setImageResource(IconGenerator.getIcon(pid, device.getOnlineState(), isSensor));
 
         if (device.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
@@ -104,12 +108,25 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
             info = String.format("%04X", device.meshAddress);
         }
 
-
         if (device.bound && device.compositionData != null) {
-            info += (device.compositionData.cid == 0x0211 ? "(Pid-" + String.format("%02X", device.compositionData.pid) + ")"
-                    : "(cid-" + String.format("%02X", device.compositionData.cid) + ")");
+            if (isSensor) {
+                NodeSensorState sensorState = device.getFirstSensorState();
 
-
+                if (sensorState != null) {
+                    /*if (sensorState.propertyID == DeviceProperty.PRESENT_AMBIENT_LIGHT_LEVEL.id) {
+                        info += ("Light Level");
+                    } else if (sensorState.propertyID == DeviceProperty.MOTION_SENSED.id) {
+                        info += ("MOTION");
+                    }*/
+//                    info += (String.format("(Sensor-%04X)", sensorState.propertyID, sensorState.state));
+                    info += (String.format("(%04X-%s)", sensorState.propertyID, Arrays.bytesToHexString(sensorState.state)));
+                } else {
+                    info += ("(Sensor-NULL)");
+                }
+            } else {
+                info += (device.compositionData.cid == 0x0211 ? "(Pid-" + String.format("%02X", device.compositionData.pid) + ")"
+                        : "(cid-" + String.format("%02X", device.compositionData.cid) + ")");
+            }
             /*if (device.nodeInfo.cpsData.lowPowerSupport()) {
                 info += "LPN";
             }*/

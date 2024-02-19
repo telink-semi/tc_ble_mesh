@@ -22,6 +22,8 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
+import com.telink.ble.mesh.core.DeviceProperty;
+
 import java.io.Serializable;
 
 import io.objectbox.annotation.Entity;
@@ -59,16 +61,16 @@ public class NodeLcProps implements Serializable {
     public int timeRunOn = -1;
 
     public void updatePropertyValue(int propertyId, int newVal) {
-        LightControlProperty property = LightControlProperty.getById(propertyId);
+        DeviceProperty property = DeviceProperty.getById(propertyId);
         if (property == null) {
             return;
         }
         updatePropertyValue(property, newVal);
     }
 
-    public void updatePropertyValue(LightControlProperty property, int newVal) {
+    public void updatePropertyValue(DeviceProperty property, int newVal) {
         switch (property) {
-            case LIGHTNESS_ON:
+            case LC_LIGHTNESS_ON:
                 lightnessOn = newVal;
                 break;
 
@@ -111,7 +113,7 @@ public class NodeLcProps implements Serializable {
     }
 
     public int getPropertyValue(int propertyId) {
-        LightControlProperty property = LightControlProperty.getById(propertyId);
+        DeviceProperty property = DeviceProperty.getById(propertyId);
         if (property == null) {
             return 0;
         }
@@ -119,9 +121,9 @@ public class NodeLcProps implements Serializable {
     }
 
 
-    public int getPropertyValue(LightControlProperty property) {
+    public int getPropertyValue(DeviceProperty property) {
         switch (property) {
-            case LIGHTNESS_ON:
+            case LC_LIGHTNESS_ON:
                 return lightnessOn;
 
             case LIGHTNESS_PROLONG:

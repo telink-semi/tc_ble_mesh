@@ -558,12 +558,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         }
     }
 
-    private Runnable timePubSetTimeoutTask = new Runnable() {
-        @Override
-        public void run() {
-            onTimePublishComplete(false, "time pub set timeout");
-        }
-    };
+    private Runnable timePubSetTimeoutTask = () -> onTimePublishComplete(false, "time pub set timeout");
 
     private void onTimePublishComplete(boolean success, String desc) {
         if (!isPubSetting) return;
@@ -585,6 +580,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 //        mesh.saveOrUpdate(DeviceProvisionActivity.this);
         provisionNext();
     }
+
 
 
     /**

@@ -30,22 +30,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
-import com.telink.ble.mesh.core.MeshUtils;
-import com.telink.ble.mesh.core.ble.BleAdvertiser;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
-import com.telink.ble.mesh.core.networking.SolicitationPDU;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.ModelPublication;
 import com.telink.ble.mesh.foundation.Event;
@@ -65,8 +60,6 @@ import com.telink.ble.mesh.ui.SchedulerListActivity;
 import com.telink.ble.mesh.ui.SubnetBridgeActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
-import java.nio.ByteBuffer;
 
 /**
  * device settings
@@ -98,7 +91,10 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         int address = getArguments().getInt("address");
         tv_pub = view.findViewById(R.id.tv_pub);
         deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
-        initPubModel();
+        boolean isSensor = deviceInfo.isSensor();
+        if (!isSensor) {
+            initPubModel();
+        }
         TextView tv_mac = view.findViewById(R.id.tv_mac);
         tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
@@ -108,7 +104,11 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         cb_relay.setChecked(deviceInfo.relayEnable);
 
         view.findViewById(R.id.view_cps).setOnClickListener(this);
-        view.findViewById(R.id.view_pub).setOnClickListener(this);
+        if (isSensor) {
+            view.findViewById(R.id.view_pub).setVisibility(View.GONE);
+        } else {
+            view.findViewById(R.id.view_pub).setOnClickListener(this);
+        }
         view.findViewById(R.id.view_config).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
         view.findViewById(R.id.view_ota).setOnClickListener(this);
@@ -116,7 +116,9 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
         view.findViewById(R.id.view_subnet).setOnClickListener(this);
         view.findViewById(R.id.view_private_beacon).setOnClickListener(this);
-        TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
+        if (!isSensor) {
+            TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
+        }
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
     }

@@ -39,13 +39,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
-import com.telink.ble.mesh.core.MeshUtils;
-import com.telink.ble.mesh.core.ble.BleAdvertiser;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
-import com.telink.ble.mesh.core.networking.SolicitationPDU;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -74,7 +70,6 @@ import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 
@@ -149,6 +144,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         view.findViewById(R.id.tv_log).setOnClickListener(this);
         view.findViewById(R.id.tv_cycle).setOnClickListener(this);
         view.findViewById(R.id.btn_test).setOnClickListener(this);
+        view.findViewById(R.id.btn_sns_get_all).setOnClickListener(this);
 
         RecyclerView gv_devices = view.findViewById(R.id.rv_online_devices);
         mDevices = TelinkMeshApplication.getInstance().getMeshInfo().nodes;
@@ -158,10 +154,12 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         gv_devices.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(position -> {
-            if (mDevices.get(position).isOffline()) return;
+            NodeInfo node = mDevices.get(position);
+            if (node.isOffline()) return;
+            if (node.isSensor()) return;
 
             int onOff = 0;
-            if (mDevices.get(position).getOnlineState() == OnlineState.OFF) {
+            if (node.getOnlineState() == OnlineState.OFF) {
                 onOff = 1;
             }
 
@@ -326,8 +324,6 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
             case R.id.tv_cmd:
                 startActivity(new Intent(getActivity(), CmdActivity.class));
-
-//                bleAdvertiser.startAdvertise(MeshUtils.SOL_UUID, buildSolData(), 10 * 1000);
                 break;
 
             case R.id.tv_log:
@@ -335,8 +331,11 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.btn_test:
-//                startActivity(new Intent(getActivity(), ConnectionTestActivity.class));
                 startActivity(new Intent(getActivity(), OnOffTestActivity.class));
+                break;
+
+            case R.id.btn_sns_get_all:
+                ((MainActivity) getActivity()).getSensorStates();
                 break;
         }
     }

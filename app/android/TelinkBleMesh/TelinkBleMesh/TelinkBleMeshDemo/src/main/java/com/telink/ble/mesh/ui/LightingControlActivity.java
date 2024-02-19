@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.DeviceProperty;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffSetMessage;
@@ -52,7 +53,6 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
-import com.telink.ble.mesh.model.LightControlProperty;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeLcProps;
@@ -130,7 +130,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         nodeLcProps = nodeInfo.getLcProps();
         MeshLogger.d("nodeLcProps#id : " + nodeLcProps.id);
         LcPropItem item;
-        for (LightControlProperty prop : LightControlProperty.values()) {
+        for (DeviceProperty prop : DeviceProperty.getLcProperties()) {
             item = new LcPropItem();
             item.property = prop;
             item.value = nodeLcProps.getPropertyValue(prop);
@@ -298,7 +298,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
 
 
     public class LcPropItem {
-        public LightControlProperty property;
+        public DeviceProperty property;
 
         public boolean expanded = false;
 
