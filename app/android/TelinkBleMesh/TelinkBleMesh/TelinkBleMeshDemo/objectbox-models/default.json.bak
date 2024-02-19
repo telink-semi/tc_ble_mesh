@@ -275,7 +275,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "38:2919866427436161725",
+      "lastPropertyId": "39:7693211708187749355",
       "name": "NodeInfo",
       "properties": [
         {
@@ -448,9 +448,12 @@
           "type": 1
         },
         {
-          "id": "38:2919866427436161725",
-          "name": "lcEnabled",
-          "type": 1
+          "id": "39:7693211708187749355",
+          "name": "nodeLcPropsId",
+          "indexId": "4:4106015631498752348",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "NodeLcProps"
         }
       ],
       "relations": [
@@ -732,10 +735,79 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "18:2912109651191137768",
+      "lastPropertyId": "12:4993378234604267159",
+      "name": "NodeLcProps",
+      "properties": [
+        {
+          "id": "1:4709340100072178838",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2568576942292118535",
+          "name": "enabled",
+          "type": 1
+        },
+        {
+          "id": "3:4072428608098155040",
+          "name": "lightnessOn",
+          "type": 5
+        },
+        {
+          "id": "4:3484166710889166378",
+          "name": "lightnessProlong",
+          "type": 5
+        },
+        {
+          "id": "5:2099821741896995403",
+          "name": "lightnessStandby",
+          "type": 5
+        },
+        {
+          "id": "6:3384105576038547123",
+          "name": "timeFade",
+          "type": 5
+        },
+        {
+          "id": "7:3628084734850027739",
+          "name": "timeFadeOn",
+          "type": 5
+        },
+        {
+          "id": "8:3360569238861956236",
+          "name": "timeFadeStandbyAuto",
+          "type": 5
+        },
+        {
+          "id": "9:5697036219274543184",
+          "name": "timeFadeStandbyManual",
+          "type": 5
+        },
+        {
+          "id": "10:3496101797254466976",
+          "name": "timeOccupancyDelay",
+          "type": 5
+        },
+        {
+          "id": "11:3860567514842923451",
+          "name": "timeProlong",
+          "type": 5
+        },
+        {
+          "id": "12:4993378234604267159",
+          "name": "timeRunOn",
+          "type": 5
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "17:5719042239068213177",
-  "lastIndexId": "3:1206649210262279878",
+  "lastEntityId": "18:2912109651191137768",
+  "lastIndexId": "4:4106015631498752348",
   "lastRelationId": "17:1644692976533144517",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
@@ -765,7 +837,8 @@
     8051414710140349273,
     3031241088902285045,
     1040592641382702225,
-    155297223198770714
+    155297223198770714,
+    2919866427436161725
   ],
   "retiredRelationUids": [
     2182875474270975386,

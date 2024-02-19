@@ -217,6 +217,7 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
 
     private void onDownloadSuccess(final String meshJson) {
         MeshLogger.d("device import json string: " + meshJson);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(false);
         builder.setTitle("Warning");

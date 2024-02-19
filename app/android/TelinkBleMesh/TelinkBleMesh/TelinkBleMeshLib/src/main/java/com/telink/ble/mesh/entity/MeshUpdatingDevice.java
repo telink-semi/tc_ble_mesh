@@ -101,6 +101,8 @@ public class MeshUpdatingDevice implements Serializable, Parcelable, Cloneable {
      */
     public boolean isLpn = false;
 
+    public boolean isSensor = false;
+
 
     public boolean needUpdate = false;
     /**

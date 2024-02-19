@@ -466,6 +466,11 @@
           "id": "10:9172225433446279959",
           "name": "bridgingTableList",
           "targetId": "3:994626657441505837"
+        },
+        {
+          "id": "18:2800170913470506993",
+          "name": "sensorStateList",
+          "targetId": "19:765136782566086494"
         }
       ]
     },
@@ -804,11 +809,35 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "19:765136782566086494",
+      "lastPropertyId": "3:8412285003734097084",
+      "name": "NodeSensorState",
+      "properties": [
+        {
+          "id": "1:6041669237602003641",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1536322467415240887",
+          "name": "propertyID",
+          "type": 5
+        },
+        {
+          "id": "3:8412285003734097084",
+          "name": "state",
+          "type": 23
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "18:2912109651191137768",
+  "lastEntityId": "19:765136782566086494",
   "lastIndexId": "4:4106015631498752348",
-  "lastRelationId": "17:1644692976533144517",
+  "lastRelationId": "18:2800170913470506993",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
