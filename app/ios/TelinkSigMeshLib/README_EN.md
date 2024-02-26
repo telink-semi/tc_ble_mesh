@@ -39,9 +39,19 @@ The sample application demonstrates how to use the library.
 * Xcode 11.0 or newer.
 * An iOS 11.0 or newer device with BLE capabilities.
 
+## How to run the Sample app `TelinkSigMesh`？
+
+* 1.Due to the project using pod to import third-party libraries, developers need to use the command line to enter the folders `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo` and `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib` respectively, and then run the command `pod install` to download and configure the pod third-party library.
+* 2.Double click to open the project icon for pod generation `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo/SigMeshOCDemo.xcworkspace`.
+* 3.Description of various Targets for project `SigMeshOCDemo`:
+* * `SigMeshOCDemo` - The offline version of TelinkSigMesh App, with Mesh data stored locally on the phone, has been launched in the App Store.
+* * `SigMeshCloud` - The cloud version of TelinkSigMesh App, stores Mesh data on Telink's cloud server.
+* * `SigLoopAddDemo` - Loop test the testing app for adding and removing Mesh devices, displaying the average time spent on each stage of adding and the success rate of adding.
+
 ## Setting up the library
 
-* copy folder `TelinkSigMeshLib` to your project, then `Link Binary With Libraries` the `TelinkSigMeshLib.framework`.
+* 1.Due to the project using pod to import third-party libraries, developers need to use the command line to enter the folders `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo` and `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib` respectively, and then run the command `pod install` to download and configure the pod third-party library.
+* 2.copy folder `TelinkSigMeshLib` to your project, then `Link Binary With Libraries` the `TelinkSigMeshLib.framework`.
 
 ## Open API
 
