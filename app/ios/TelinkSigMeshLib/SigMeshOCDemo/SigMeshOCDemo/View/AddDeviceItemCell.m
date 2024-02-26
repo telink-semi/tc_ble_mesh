@@ -42,6 +42,8 @@
     _bgView.layer.cornerRadius = 5;
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(AddDeviceModel *)model{
     NSString *addressString = @"";
     if (model.state == AddDeviceModelStateScanned || model.state == AddDeviceModelStateConnecting || model.scanRspModel.address == 0) {

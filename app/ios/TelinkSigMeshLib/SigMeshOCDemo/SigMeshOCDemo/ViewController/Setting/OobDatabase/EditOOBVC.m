@@ -50,7 +50,7 @@
     }
     self.uuidTF.delegate = self;
     self.oobTF.delegate = self;
-
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
 }
@@ -58,10 +58,10 @@
 - (void)clickSave {
     [self.uuidTF resignFirstResponder];
     [self.oobTF resignFirstResponder];
-    if (![LibTools validateHex:self.uuidTF.text.removeAllSapceAndNewlines]) {
+    if (![LibTools validateHex:self.uuidTF.text.removeAllSpaceAndNewlines]) {
         return;
     }
-    if (![LibTools validateHex:self.oobTF.text.removeAllSapceAndNewlines]) {
+    if (![LibTools validateHex:self.oobTF.text.removeAllSpaceAndNewlines]) {
         return;
     }
     if (self.uuidTF.text.length != 32) {
@@ -91,12 +91,12 @@
 
 //显示:大写，去空格，加空格
 - (void)refreshShowLabel {
-    NSString *temString = [self.uuidTF.text.uppercaseString removeAllSapceAndNewlines];
+    NSString *temString = [self.uuidTF.text.uppercaseString removeAllSpaceAndNewlines];
     self.uuidTF.text = temString;
     temString = [temString insertSpaceNum:1 charNum:2];
     self.showUUIDLabel.text = temString;
 
-    temString = [self.oobTF.text.uppercaseString removeAllSapceAndNewlines];
+    temString = [self.oobTF.text.uppercaseString removeAllSpaceAndNewlines];
     self.oobTF.text = temString;
     temString = [temString insertSpaceNum:1 charNum:2];
     self.showOOBLabel.text = temString;
@@ -111,7 +111,7 @@
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textFieldShouldEndEditing:(UITextField *)textField{
-    if ([LibTools validateHex:textField.text.removeAllSapceAndNewlines]) {
+    if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
         [self refreshShowLabel];
         return YES;
     }

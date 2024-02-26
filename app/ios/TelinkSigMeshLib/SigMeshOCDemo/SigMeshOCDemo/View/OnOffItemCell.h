@@ -26,9 +26,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OnOffItemCell : UICollectionViewCell
+/// Background layer for add on off switch button..
 @property (weak, nonatomic) IBOutlet UIView *onoffView;
+/// UISwitch used to show on off status.
 @property (weak, nonatomic) IBOutlet UISwitch *onoffSwitch;
+/// Text layer used to set on off status.
 @property (weak, nonatomic) IBOutlet UILabel *onoffLabel;
+/// Handle block of the switch value change.
 @property (copy, nonatomic) void(^clickSwitchBlock)(UISwitch *uiswitch);
 @end
 

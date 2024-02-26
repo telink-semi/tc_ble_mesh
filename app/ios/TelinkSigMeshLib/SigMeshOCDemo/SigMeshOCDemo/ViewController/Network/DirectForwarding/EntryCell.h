@@ -21,15 +21,20 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface EntryCell : UITableViewCell
+@interface EntryCell : BaseCell
+/// Background layer for setting rounded corners.
+@property (weak, nonatomic) IBOutlet UIView *bgView;
+/// Image layer used to set icon image.
+@property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
 @property (weak, nonatomic) IBOutlet UIButton *chooseButton;
-@property (weak, nonatomic) IBOutlet UIButton *onButton;
-@property (weak, nonatomic) IBOutlet UIButton *offButton;
+
+@property (nonatomic, strong) SigNodeModel *model;
 
 @end
 

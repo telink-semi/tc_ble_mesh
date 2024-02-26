@@ -279,11 +279,11 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    self.title = @"Fast provision";
+    [self setTitle:@"Device Scan" subTitle:@"Fast"];
     self.source = [[NSMutableArray alloc] init];
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-
+    //init rightBarButtonItem
 //    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
 //    self.navigationItem.rightBarButtonItem = self.refreshItem;
 

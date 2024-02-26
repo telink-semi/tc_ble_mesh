@@ -25,7 +25,9 @@
 
 @interface ChooseBinCell : UITableViewCell
 
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+/// Button layer used to set select image icon.
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
 @end

@@ -29,21 +29,7 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
-    //cornerRadius
-    self.bgView.layer.cornerRadius = 10;
-    //borderWidth
-    self.bgView.layer.borderWidth = 2;
-    //borderColor
-    self.bgView.layer.borderColor = [UIColor telinkBorderColor].CGColor;
-    //masksToBounds
-    self.bgView.layer.masksToBounds = YES;
-    //backgroundColor
-    self.backgroundColor = [UIColor clearColor];
-}
-
-//根据是否选中更新UI
-- (void)setUIWithSelected:(BOOL)isSelected {
-    self.bgView.layer.borderColor = isSelected ? [UIColor telinkButtonBlue].CGColor : [UIColor telinkBorderColor].CGColor;
+    [self configurationCornerWithBgView:self.bgView];
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
@@ -51,5 +37,14 @@
 
     // Configure the view for the selected state
 }
+
+#ifdef kIsTelinkCloudSigMeshLib
+- (void)setModel:(AppMeshNetworkModel *)model {
+    _model = model;
+    _nameLabel.text = model.name;
+    _uuidLabel.text = model.uuid;
+    _createTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+}
+#endif
 
 @end

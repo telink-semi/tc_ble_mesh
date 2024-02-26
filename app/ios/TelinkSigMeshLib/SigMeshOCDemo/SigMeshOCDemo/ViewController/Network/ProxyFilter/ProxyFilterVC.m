@@ -23,7 +23,6 @@
 
 #import "ProxyFilterVC.h"
 #import "ProxyFilterCell.h"
-#import "SettingItemCell.h"
 #import "FilterAddressCell.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"

@@ -470,6 +470,38 @@ static SigMeshLib *shareLib = nil;
     return messageHandle;
 }
 
+/// Advertising Solicitation PDU With Mesh Message.
+/// @param source The source Unicast Address.
+/// @param destination The destination address of the message received.
+/// @param interval advertising interval
+/// @param result advertising result
+- (void)advertisingSolicitationPDUWithSource:(UInt16)source destination:(UInt16)destination advertisingInterval:(NSTimeInterval)interval result:(advertisingResult)result {
+    SigNetkeyModel *networkKey = SigDataSource.share.curNetkeyModel;
+    // Get the current sequence number for local Provisioner's source address.
+    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getLocalSolicitationSequenceNumber];
+    // As the sequence number was just used, it has to be incremented.
+    [SigMeshLib.share.dataSource saveLocalSolicitationSequenceNumber:sequence+1];
+    SigIvIndex *index = [[SigIvIndex alloc] initWithIndex:0 updateActive:NO];
+//    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeSolicitationPDU:message.accessPdu networkKey:networkKey source:source destination:destination withSequence:sequence ivIndex:index];
+    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeSolicitationPDU:[NSData data] networkKey:networkKey source:source destination:destination withSequence:sequence ivIndex:index];
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 serviceDataAdvertisingFlag = 0x16;//AD type
+    [mData appendBytes:&serviceDataAdvertisingFlag length:1];
+    UInt16 serviceUUID = 0x1859;//uuid
+    [mData appendBytes:&serviceUUID length:2];
+    //Proxy Solicitation with Replay Protection type
+    UInt8 identificationType = 0;
+    [mData appendBytes:&identificationType length:1];
+    //Format determined by Identification Type field
+    NSData *identificationParameters = networkPdu.pduData;
+    [mData appendData:identificationParameters];
+    [TPeripheralManager.share advertisingManufacturerData:mData advertisingInterval:interval result:result];
+}
+
+- (void)stopAdvertising {
+    
+}
+
 /// Sends the telink's onlineStatus command.
 /// @param message The onlineStatus message to be sent.
 /// @param command The command save message and callback.
@@ -720,7 +752,7 @@ static SigMeshLib *shareLib = nil;
 
     //根据设备是否打开了publish功能来判断是否给该设备添加监测离线的定时器。
     if (message.opCode == SigOpCode_lightCTLStatus || message.opCode == SigOpCode_lightHSLStatus || message.opCode == SigOpCode_lightLightnessStatus || message.opCode == SigOpCode_genericOnOffStatus) {
-        if (node && node.hasOpenPublish) {
+        if (node && node.hasOpenPublish && !node.isSensor) {
             [SigPublishManager.share startCheckOfflineTimerWithAddress:@(source)];
         }
     }
@@ -953,15 +985,21 @@ static SigMeshLib *shareLib = nil;
                 break;
             }
         }
-    } else if ([message isKindOfClass:[SigUnknownMessage class]]) {//未定义的vendor回包
+    }
+    if (tem == nil) {
+        //未定义的vendor回包 或者 使用SigIniMeshMessage的方式发送sig message。
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
-            if ((((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == message.opCode || ((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == ((message.opCode >> 16) & 0xFF))  && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
-                tem = com;
-                break;
+            //存在responseOpCode的message类型
+            if ([com.curMeshMessage isKindOfClass:[SigIniMeshMessage class]] || [com.curMeshMessage isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
+                if ((((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == message.opCode || ((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == ((message.opCode >> 16) & 0xFF))  && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
+                    tem = com;
+                    break;
+                }
             }
         }
     }
+
     [lock unlock];
     return tem;
 }

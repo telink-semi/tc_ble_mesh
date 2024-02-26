@@ -21,11 +21,11 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "YZDisplayViewController.h"
+#import "WMZPageController/WMZPageController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SingleDeviceViewController : YZDisplayViewController
+@interface SingleDeviceViewController : WMZPageController
 
 @property (nonatomic,strong) SigNodeModel *model;
 

@@ -22,11 +22,11 @@
  *******************************************************************************************************/
 
 #import "ShareOutVC.h"
+#import <Reachability/Reachability.h>
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
-#import "KeyCell.h"
+#import "ShareNetKeyCell.h"
 #import "ShowQRCodeViewController.h"
-#import "Reachability.h"
 #import "ShareTipsVC.h"
 #import "CDTPExportVC.h"
 #import "CDTPServiceListVC.h"
@@ -58,7 +58,7 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
     self.selectArray = [NSMutableArray arrayWithObject:self.network.curNetkeyModel];
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(ShareNetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(ShareNetKeyCell.class)];
 }
 
 - (IBAction)clickSelectCDTPExportToOtherPhoneButton:(UIButton *)sender {
@@ -263,14 +263,12 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
+    ShareNetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(ShareNetKeyCell.class) forIndexPath:indexPath];
     SigNetkeyModel *model = self.sourceArray[indexPath.row];
-    [cell setNetKeyModel:model];
-    [cell.editButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
-    [cell.editButton setImage:[UIImage imageNamed:@"xuan"] forState:UIControlStateSelected];
-    cell.editButton.selected = [self.selectArray containsObject:model];
+    [cell setModel:model];
+    cell.selectButton.selected = [self.selectArray containsObject:model];
     __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {
+    [cell.selectButton addAction:^(UIButton *button) {
         if ([weakSelf.selectArray containsObject:model]) {
             [weakSelf.selectArray removeObject:model];
         } else {
@@ -291,10 +289,6 @@
         [self.selectArray addObject:model];
     }
     [self.tableView reloadData];
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 -(void)dealloc{

@@ -1036,10 +1036,100 @@
         [networkNonce appendData:deobfuscatedData];
         [networkNonce appendData:data2];
         [networkNonce appendData:data3];
-        if (pduType == SigPduType_proxyConfiguration) {
+        if (pduType == SigPduType_proxyConfiguration || pduType == SigPduType_solicitationPDU) {
             tem = 0x00;//Pad
             [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&tem length:1];
         }
+
+        NSData *encryptedData = nil;
+        NSData *obfuscatedData = nil;
+        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
+            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_ctl] withAdditionalData:nil];
+            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
+        } else {
+            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.directedSecurityEncryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_ctl] withAdditionalData:nil];
+            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.directedSecurityPrivacyKey];
+        }
+
+        NSMutableData *pduData = [NSMutableData dataWithBytes:&iviNid length:1];
+        [pduData appendData:obfuscatedData];
+        [pduData appendData:encryptedData];
+        self.pduData = pduData;
+    }
+    return self;
+}
+
+/**
+ * @brief   Creates the Network PDU. This method enctypts and obfuscates data that are to be send to the mesh network.
+ * @param   solicitationPDU    The data of solicitationPDU.
+ * @param   networkKey    network Key.
+ * @param   source    The source Unicast Address.
+ * @param   destination    The destination address of the message received.
+ * @param   sequence    The SEQ number of the PDU. Each PDU between the source and destination must have strictly
+ * increasing sequence number.
+ * @param   ivIndex    The ivIndex to decrypt the PDU.
+ * @return  return `nil` when initialize SigNetworkPdu object fail.
+ */
+- (instancetype)initWithEncodeSolicitationPDU:(NSData *)solicitationPDU networkKey:(SigNetkeyModel *)networkKey source:(UInt16)source destination:(UInt16)destination withSequence:(UInt32)sequence ivIndex:(SigIvIndex *)ivIndex {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        UInt32 index = ivIndex.index;
+
+        _networkKey = networkKey;
+        _ivi = (UInt8)(index&0x01);
+        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
+            _nid = _networkKey.nid;
+            if (_networkKey.phase == distributingKeys) {
+                _nid = _networkKey.oldNid;
+            }
+        } else {
+            _nid = _networkKey.directedSecurityNid;
+            if (_networkKey.phase == distributingKeys) {
+                _nid = _networkKey.directedSecurityOldNid;
+            }
+        }
+        _ctl = 1;
+        _source = source;
+        _destination = destination;
+        _transportPdu = solicitationPDU;
+        _ttl = 0;
+        _sequence = sequence;
+
+        UInt8 iviNid = (_ivi << 7) | (_nid & 0x7F);
+        UInt8 ctlTtl = (_ctl << 7) | (_ttl & 0x7F);
+
+        // Data to be obfuscated: CTL/TTL, Sequence Number, Source Address.
+        UInt32 bigSequence = CFSwapInt32HostToBig(sequence);
+        UInt16 bigSource = CFSwapInt16HostToBig(_source);
+        UInt16 bigDestination = CFSwapInt16HostToBig(_destination);
+        UInt32 bigIndex = CFSwapInt32HostToBig(index);
+
+        NSData *seq = [[NSData dataWithBytes:&bigSequence length:4] subdataWithRange:NSMakeRange(1, 3)];
+        NSData *data1 = [NSData dataWithBytes:&ctlTtl length:1];
+        NSData *data2 = [NSData dataWithBytes:&bigSource length:2];
+        NSMutableData *deobfuscatedData = [NSMutableData dataWithData:data1];
+        [deobfuscatedData appendData:seq];
+        [deobfuscatedData appendData:data2];
+
+        // Data to be encrypted: Destination Address, Transport PDU.
+        NSData *data3 = [NSData dataWithBytes:&bigDestination length:2];
+        NSMutableData *decryptedData = [NSMutableData dataWithData:data3];
+        [decryptedData appendData:_transportPdu];
+
+        // The key set used for encryption depends on the Key Refresh Phase.
+        SigNetkeyDerivatives *keys = _networkKey.transmitKeys;
+        UInt8 tem = [self getNonceIdOfSigPduType:SigPduType_solicitationPDU];
+        data1 = [NSData dataWithBytes:&tem length:1];
+        UInt16 tem16 = 0;
+        data2 = [NSData dataWithBytes:&tem16 length:2];
+        data3 = [NSData dataWithBytes:&bigIndex length:4];
+        NSMutableData *networkNonce = [NSMutableData dataWithData:data1];
+        [networkNonce appendData:deobfuscatedData];
+        tem = 0x00;//Pad
+        [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&tem length:1];
+        [networkNonce appendData:data2];
+        [networkNonce appendData:data3];
 
         NSData *encryptedData = nil;
         NSData *obfuscatedData = nil;
@@ -1122,19 +1212,22 @@
     return tem;
 }
 
-- (UInt8)getNonceIdOfSigPduType:(SigPduType)pduType {
+- (SigNonceType)getNonceIdOfSigPduType:(SigPduType)pduType {
     switch (pduType) {
         case SigPduType_networkPdu:
-            return 0x00;
+            return SigNonceType_networkNonce;
             break;
         case SigPduType_proxyConfiguration:
-            return 0x03;
+            return SigNonceType_proxyNonce;
+            break;
+        case SigPduType_solicitationPDU:
+            return SigNonceType_proxySolicitationNonce;
             break;
         default:
             TelinkLogError(@"Unsupported PDU Type:%lu",(unsigned long)pduType);
             break;
     }
-    return 0;
+    return SigNonceType_networkNonce;
 }
 
 - (NSString *)description {

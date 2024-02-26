@@ -22,23 +22,13 @@
  *******************************************************************************************************/
 
 #import "SettingDetailItemCell.h"
-#import "UIColor+Telink.h"
 
 @implementation SettingDetailItemCell
 
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
-    //cornerRadius
-    self.bgView.layer.cornerRadius = 7;
-    //borderWidth
-    self.bgView.layer.borderWidth = 1;
-    //borderColor
-    self.bgView.layer.borderColor = [UIColor telinkBorderColor].CGColor;
-    //masksToBounds
-    self.bgView.layer.masksToBounds = YES;
-    //backgroundColor
-    self.backgroundColor = [UIColor clearColor];
+    [self configurationCornerWithBgView:self.bgView];
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

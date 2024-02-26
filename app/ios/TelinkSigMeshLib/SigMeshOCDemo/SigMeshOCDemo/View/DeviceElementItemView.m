@@ -25,59 +25,11 @@
 
 @implementation DeviceElementItemView
 
-- (instancetype)initWithFrame:(CGRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        [self setup];
-    }
-    return self;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder {
-    if (self = [super initWithCoder:aDecoder]) {
-        [self setup];
-    }
-    return self;
-}
-
-- (void)setup {
-//    [[NSBundle mainBundle] loadNibNamed:@"DeviceElementItemView" owner:self options:nil];
-//    [self addSubview:self.stateView];
-//    self.stateView.frame = self.frame;
-}
-
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(ActionModel *)model{
-    NSString *iconName = @"";
-    NSString *state = @"";
-    switch (model.state) {
-        case DeviceStateOutOfLine:
-            iconName = @"dengo";
-            state = @"OFFLINE";
-            break;
-        case DeviceStateOff:
-            iconName = @"dengn";
-            state = @"OFF";
-            break;
-        case DeviceStateOn:
-            iconName = @"dengs";
-            state = @"ON";
-            break;
-        default:
-            break;
-    }
     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:model.address];
-    if (node) {
-        //传感器sensor特殊处理
-        if (node.isSensor) {
-            iconName = @"ic_battery-20-bluetooth";
-        }
-        //遥控器remote特殊处理
-        if (node.isRemote) {
-            iconName = @"ic_rmt";
-        }
-    }
-    self.stateImageView.image = [UIImage imageNamed:iconName];
+    self.stateImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
     self.stateImageView.hidden = NO;
     if (node.sceneAddress.count > 1) {
         self.stateImageView.hidden = ![@(model.address) isEqualToNumber:node.sceneAddress.firstObject];
@@ -87,13 +39,11 @@
     } else {
         [self.selectButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
     }
-
     //离线与关闭，亮度色温显示0
-    self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@",model.address,state];
+    self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@",model.address,[DemoTool getNodeStateStringWithUnicastAddress:model.address]];
     if (node && node.sceneAddress.count == 0) {
         self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\n%@",model.address,@"Not support scene register."];
     }
-//    self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@ lum:%d temp:%d",model.address,state,model.state == DeviceStateOn ? model.trueBrightness : 0 ,model.state == DeviceStateOn ? model.trueTemperature : 0];
 }
 
 @end

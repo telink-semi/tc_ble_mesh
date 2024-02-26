@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class SigOOBModel;
 
 @interface OOBItemCell : UITableViewCell
+/// Image layer used to set icon image.
 @property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
 @property (weak, nonatomic) IBOutlet UILabel *UUIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *OOBLabel;

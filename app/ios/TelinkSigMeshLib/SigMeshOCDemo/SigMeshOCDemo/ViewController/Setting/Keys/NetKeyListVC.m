@@ -22,10 +22,10 @@
  *******************************************************************************************************/
 
 #import "NetKeyListVC.h"
-#import "KeyCell.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
 #import "NetKeyAddVC.h"
+#import "NetKeyCell.h"
 
 @interface NetKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -39,15 +39,22 @@
     [super viewDidLoad];
 
     self.title = @"NetKey List";
-    self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
-    UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(NetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(NetKeyCell.class)];
+#ifndef kIsTelinkCloudSigMeshLib
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     self.navigationItem.rightBarButtonItem = rightItem1;
+#else
+    self.tableView.allowsSelection = NO;
+#endif
     //longpress to delete scene
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
 }
 
 - (void)clickAdd:(UIButton *)button{
@@ -63,7 +70,7 @@
     netkey.index = self.network.netKeys.count;
     netkey.phase = 0;
     netkey.timestamp = timestamp;
-    netkey.oldKey = @"00000000000000000000000000000000";
+    netkey.oldKey = nil;
     netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
     netkey.name = [NSString stringWithFormat:@"netkey%ld",(long)netkey.index];
     netkey.minSecurity = @"secure";
@@ -139,9 +146,12 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
+    NetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(NetKeyCell.class) forIndexPath:indexPath];
     SigNetkeyModel *model = self.sourceArray[indexPath.row];
-    [cell setNetKeyModel:model];
+    [cell setModel:model];
+#ifdef kIsTelinkCloudSigMeshLib
+    cell.editButton.hidden = YES;
+#endif
     __weak typeof(self) weakSelf = self;
     [cell.editButton addAction:^(UIButton *button) {
         NetKeyAddVC *vc = [[NetKeyAddVC alloc] init];
@@ -161,6 +171,7 @@
     return cell;
 }
 
+#ifndef kIsTelinkCloudSigMeshLib
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
@@ -180,9 +191,6 @@
         }];
     }
 }
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
-}
+#endif
 
 @end

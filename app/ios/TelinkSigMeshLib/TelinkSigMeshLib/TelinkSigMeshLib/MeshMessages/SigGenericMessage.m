@@ -3357,7 +3357,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         /// Initialize self.
         self.opCode = SigOpCode_sensorGet;
         if ((parameters == nil || parameters.length == 0) || (parameters != nil && parameters.length == 2)) {
-            if (parameters != nil) {
+            if (parameters != nil && parameters.length != 0) {
                 UInt16 tem16 = 0;
                 Byte *dataByte = (Byte *)parameters.bytes;
                 memcpy(&tem16, dataByte, 2);
@@ -3428,6 +3428,18 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         /// Initialize self.
         self.opCode = SigOpCode_sensorStatus;
         _marshalledSensorData = parameters;
+        NSMutableArray *mArray = [NSMutableArray array];
+        NSMutableData *mData = [NSMutableData dataWithData:parameters];
+        while (mData.length >= 2) {
+            SigSensorDataModel *model = [[SigSensorDataModel alloc] initWithSensorDataParameters:mData];
+            if (model) {
+                [mArray addObject:model];
+                [mData replaceBytesInRange:NSMakeRange(0, model.getSensorDataParameters.length) withBytes:nil length:0];
+            } else {
+                break;
+            }
+        }
+        _sensorDataModelArray = mArray;
     }
     return self;
 }
@@ -3706,7 +3718,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        self.opCode = SigOpCode_sensorCadenceSet;
+        self.opCode = SigOpCode_sensorCadenceGet;
     }
     return self;
 }
@@ -3715,7 +3727,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        self.opCode = SigOpCode_sensorCadenceSet;
+        self.opCode = SigOpCode_sensorCadenceGet;
         _propertyID = propertyID;
     }
     return self;
@@ -3730,7 +3742,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        self.opCode = SigOpCode_sensorCadenceSet;
+        self.opCode = SigOpCode_sensorCadenceGet;
         if (parameters != nil && parameters.length >= 2) {
             UInt16 tem16 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -3934,7 +3946,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
             memcpy(&tem16, dataByte, 2);
             _propertyID = tem16;
             _cadenceData = parameters;
-        }else{
+            _cadenceModel = [[SigSensorCadenceModel alloc] initWithSensorCadenceParameters:parameters];
+        } else {
             return nil;
         }
     }
@@ -3944,15 +3957,6 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 /// Message parameters as Data.
 - (NSData *)parameters {
     return _cadenceData;
-//    if (_propertyID != 0) {
-//        NSMutableData *mData = [NSMutableData data];
-//        UInt16 tem16 = _propertyID;
-//        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-//        [mData appendData:data];
-//        return mData;
-//    } else {
-//        return nil;
-//    }
 }
 
 @end
@@ -12877,7 +12881,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-        self.opCode = SigOpCode_genericOnOffStatus;
+        self.opCode = SigOpCode_LightLCLightOnOffStatus;
         if (parameters == nil || (parameters.length != 1 && parameters.length != 3)) {
             return nil;
         }

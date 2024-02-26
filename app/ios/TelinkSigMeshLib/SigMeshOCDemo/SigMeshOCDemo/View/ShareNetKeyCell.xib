@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="104" id="KGk-i7-Jjw" customClass="ShareNetKeyCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="104"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="104"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="is9-IK-Mf9">
+                        <rect key="frame" x="7" y="7" width="306" height="90"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_name" translatesAutoresizingMaskIntoConstraints="NO" id="Tey-57-22h">
+                                <rect key="frame" x="10" y="5" width="20" height="20"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="Tey-57-22h" secondAttribute="height" multiplier="1:1" id="lar-RN-Uud"/>
+                                    <constraint firstAttribute="height" constant="20" id="mr6-ay-yLn"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting detail" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fou-wX-KUr">
+                                <rect key="frame" x="40" y="6.6666666666666661" width="74" height="17"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="17" id="x7w-fS-H7p"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_id" translatesAutoresizingMaskIntoConstraints="NO" id="Heo-Qx-dl8">
+                                <rect key="frame" x="10" y="35" width="20" height="20"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting detail" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AOs-Au-MBG">
+                                <rect key="frame" x="40" y="36.666666666666664" width="74" height="17"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="17" id="OTD-Yw-9ah"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_key_value" translatesAutoresizingMaskIntoConstraints="NO" id="JIb-Ba-kic">
+                                <rect key="frame" x="10" y="65" width="20" height="20"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting detail" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="e0j-52-Cxs">
+                                <rect key="frame" x="40" y="66.666666666666671" width="74" height="17"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="17" id="O7U-WA-Teq"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CoP-CV-diO">
+                                <rect key="frame" x="276" y="35" width="20" height="20"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="20" id="FKs-k9-xHg"/>
+                                    <constraint firstAttribute="width" secondItem="CoP-CV-diO" secondAttribute="height" multiplier="1:1" id="nLA-ea-VI8"/>
+                                </constraints>
+                                <state key="normal" image="unxuan"/>
+                                <state key="selected" image="xuan"/>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xmN-H7-sRG">
+                                <rect key="frame" x="265" y="10" width="1" height="70"/>
+                                <color key="backgroundColor" name="telinkTitleGray"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="1" id="K86-wf-qct"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="JIb-Ba-kic" firstAttribute="leading" secondItem="Tey-57-22h" secondAttribute="leading" id="2Fe-NY-xpk"/>
+                            <constraint firstItem="Heo-Qx-dl8" firstAttribute="width" secondItem="Tey-57-22h" secondAttribute="width" id="3Ce-43-cav"/>
+                            <constraint firstItem="xmN-H7-sRG" firstAttribute="top" secondItem="is9-IK-Mf9" secondAttribute="top" constant="10" id="51q-p1-bVj"/>
+                            <constraint firstItem="Heo-Qx-dl8" firstAttribute="top" secondItem="Tey-57-22h" secondAttribute="bottom" constant="10" id="67z-la-2Lg"/>
+                            <constraint firstAttribute="bottom" secondItem="xmN-H7-sRG" secondAttribute="bottom" constant="10" id="A3k-Oj-fN5"/>
+                            <constraint firstAttribute="trailing" secondItem="CoP-CV-diO" secondAttribute="trailing" constant="10" id="AtO-cc-gTa"/>
+                            <constraint firstItem="Heo-Qx-dl8" firstAttribute="leading" secondItem="Tey-57-22h" secondAttribute="leading" id="CZn-u3-qAs"/>
+                            <constraint firstItem="Tey-57-22h" firstAttribute="top" secondItem="is9-IK-Mf9" secondAttribute="top" constant="5" id="EdA-RG-hrO"/>
+                            <constraint firstItem="JIb-Ba-kic" firstAttribute="top" secondItem="Heo-Qx-dl8" secondAttribute="bottom" constant="10" id="GQB-UF-9jX"/>
+                            <constraint firstItem="Tey-57-22h" firstAttribute="leading" secondItem="is9-IK-Mf9" secondAttribute="leading" constant="10" id="J4p-v0-xbg"/>
+                            <constraint firstItem="CoP-CV-diO" firstAttribute="centerY" secondItem="is9-IK-Mf9" secondAttribute="centerY" id="KJF-7f-njt"/>
+                            <constraint firstItem="AOs-Au-MBG" firstAttribute="leading" secondItem="fou-wX-KUr" secondAttribute="leading" id="NTc-qI-et9"/>
+                            <constraint firstItem="e0j-52-Cxs" firstAttribute="centerY" secondItem="JIb-Ba-kic" secondAttribute="centerY" id="Sus-dO-dgu"/>
+                            <constraint firstItem="JIb-Ba-kic" firstAttribute="height" secondItem="Tey-57-22h" secondAttribute="height" id="W9a-kH-KMa"/>
+                            <constraint firstItem="AOs-Au-MBG" firstAttribute="centerY" secondItem="Heo-Qx-dl8" secondAttribute="centerY" id="XqD-p2-1DM"/>
+                            <constraint firstItem="Heo-Qx-dl8" firstAttribute="height" secondItem="Tey-57-22h" secondAttribute="height" id="btw-ZB-e4t"/>
+                            <constraint firstItem="e0j-52-Cxs" firstAttribute="leading" secondItem="fou-wX-KUr" secondAttribute="leading" id="lqN-xw-ZHq"/>
+                            <constraint firstItem="fou-wX-KUr" firstAttribute="leading" secondItem="Tey-57-22h" secondAttribute="trailing" constant="10" id="mc6-t1-XJ9"/>
+                            <constraint firstItem="CoP-CV-diO" firstAttribute="leading" secondItem="xmN-H7-sRG" secondAttribute="trailing" constant="10" id="n7B-9T-eqW"/>
+                            <constraint firstItem="fou-wX-KUr" firstAttribute="centerY" secondItem="Tey-57-22h" secondAttribute="centerY" id="nhY-pe-cce"/>
+                            <constraint firstItem="JIb-Ba-kic" firstAttribute="width" secondItem="Tey-57-22h" secondAttribute="width" id="sJG-dc-Ioy"/>
+                            <constraint firstAttribute="bottom" secondItem="JIb-Ba-kic" secondAttribute="bottom" constant="5" id="wce-38-ANK"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="is9-IK-Mf9" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="7" id="7kr-Wy-zez"/>
+                    <constraint firstItem="is9-IK-Mf9" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="7" id="awJ-Hn-MpI"/>
+                    <constraint firstAttribute="trailing" secondItem="is9-IK-Mf9" secondAttribute="trailing" constant="7" id="bAu-VS-PCi"/>
+                    <constraint firstAttribute="bottom" secondItem="is9-IK-Mf9" secondAttribute="bottom" constant="7" id="hGZ-gV-cb0"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
+            <connections>
+                <outlet property="bgView" destination="is9-IK-Mf9" id="2dS-Wk-PHm"/>
+                <outlet property="indexLabel" destination="AOs-Au-MBG" id="5S5-4J-w48"/>
+                <outlet property="keyLabel" destination="e0j-52-Cxs" id="raW-vv-U21"/>
+                <outlet property="nameLabel" destination="fou-wX-KUr" id="zgi-p8-y9g"/>
+                <outlet property="selectButton" destination="CoP-CV-diO" id="xam-IE-kQU"/>
+            </connections>
+            <point key="canvasLocation" x="48.854961832061065" y="64.436619718309856"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_id" width="100" height="100"/>
+        <image name="ic_key_value" width="100" height="100"/>
+        <image name="ic_name" width="100" height="100"/>
+        <image name="unxuan" width="100" height="100"/>
+        <image name="xuan" width="100" height="100"/>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

@@ -22,9 +22,7 @@
  *******************************************************************************************************/
 
 #import "DeviceSettingViewController.h"
-#import "SettingItemCell.h"
 #import "SchedulerListViewController.h"
-#import "SingleOTAViewController.h"
 #import "DeviceSubscriptionListViewController.h"
 #import "UIViewController+Message.h"
 #import "SensorVC.h"
@@ -34,6 +32,16 @@
 #import "SubnetBridgeListVC.h"
 #import "DeviceConfigVC.h"
 #import "PTSViewController.h"
+#import "SettingTitleItemCell.h"
+#import "EntryCell.h"
+#import "UIButton+extension.h"
+#import "PrivateBeaconVC.h"
+
+#ifdef kIsTelinkCloudSigMeshLib
+#import "OTAVC.h"
+#else
+#import "SingleOTAViewController.h"
+#endif
 
 #define kDeviceConfig   @"Device Config"
 #define kCompositionData   @"Composition Data"
@@ -44,6 +52,7 @@
 #define kSubscriptionModels   @"Subscription Models"
 #define kDeviceOTA   @"Device OTA"
 #define kPublication   @"Publication"
+#define kPrivateBeacon   @"Private Beacon"
 #define kLPN   @"LPN"
 #define kPTStest   @"PTS test"
 
@@ -55,6 +64,8 @@
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconArray;
 @property (nonatomic, strong) NSMutableArray <NSString *>*titleArray;
+//the end time of broadcast Solicitation PDU.
+@property (strong, nonatomic) NSDate *endDate;
 @end
 
 @implementation DeviceSettingViewController
@@ -76,6 +87,11 @@
             [weakSelf kickoutAction];
         } else {
             [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
+#ifdef kIsTelinkCloudSigMeshLib
+            [AppDataSource.share deleteNodeWithAddress:weakSelf.model.address resultBlock:^(NSError * _Nullable error) {
+                TelinkLogInfo(@"error = %@", error);
+            }];
+#endif
             [weakSelf pop];
         }
     }];
@@ -101,6 +117,11 @@
             } else {
                 TelinkLogDebug(@"kickout fail.");
             }
+#ifdef kIsTelinkCloudSigMeshLib
+            [AppDataSource.share deleteNodeWithAddress:weakSelf.model.address resultBlock:^(NSError * _Nullable error) {
+                TelinkLogInfo(@"error = %@", error);
+            }];
+#endif
             [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
@@ -142,31 +163,52 @@
     [super normalSetting];
     self.macLabel.text = [NSString stringWithFormat:@"UUID:%@",self.model.UUID];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(EntryCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(EntryCell.class)];
     self.kickOutButton.backgroundColor = UIColor.telinkButtonRed;
     self.titleArray = [NSMutableArray array];
     self.iconArray = [NSMutableArray array];
+#ifdef kIsTelinkCloudSigMeshLib
     [self.titleArray addObject:kDeviceConfig];
-    [self.iconArray addObject:@"ic_setting"];
+    [self.iconArray addObject:@"ic_config"];
     [self.titleArray addObject:kCompositionData];
-    [self.iconArray addObject:@"ic_setting"];
-    [self.titleArray addObject:kNetKeyList];
-    [self.iconArray addObject:@"ic_setting"];
-    [self.titleArray addObject:kAppKeyList];
-    [self.iconArray addObject:@"ic_setting"];
-    [self.titleArray addObject:kSubnetBridgeSetting];
-    [self.iconArray addObject:@"ic_setting"];
+    [self.iconArray addObject:@"ic_composition"];
     [self.titleArray addObject:kSchedulerSetting];
     [self.iconArray addObject:@"ic_alarm"];
     [self.titleArray addObject:kSubscriptionModels];
-    [self.iconArray addObject:@"ic_setting"];
+    [self.iconArray addObject:@"ic_model"];
     [self.titleArray addObject:kDeviceOTA];
     [self.iconArray addObject:@"ic_update"];
     [self.titleArray addObject:kPublication];
-    [self.iconArray addObject:@"ic_pub"];
-    if (self.model.isSensor) {
-        [self.titleArray addObject:kLPN];
-        [self.iconArray addObject:@"ic_battery-20-bluetooth"];
-    }
+    [self.iconArray addObject:@"ic_publish"];
+#else
+    [self.titleArray addObject:kDeviceConfig];
+    [self.iconArray addObject:@"ic_config"];
+    [self.titleArray addObject:kCompositionData];
+    [self.iconArray addObject:@"ic_composition"];
+    [self.titleArray addObject:kNetKeyList];
+    [self.iconArray addObject:@"ic_keys"];
+    [self.titleArray addObject:kAppKeyList];
+    [self.iconArray addObject:@"ic_keys"];
+    [self.titleArray addObject:kSubnetBridgeSetting];
+    [self.iconArray addObject:@"ic_bridge"];
+    [self.titleArray addObject:kSchedulerSetting];
+    [self.iconArray addObject:@"ic_alarm"];
+    [self.titleArray addObject:kSubscriptionModels];
+    [self.iconArray addObject:@"ic_model"];
+    [self.titleArray addObject:kDeviceOTA];
+    [self.iconArray addObject:@"ic_update"];
+    [self.titleArray addObject:kPublication];
+    [self.iconArray addObject:@"ic_publish"];
+    //Private Beacon
+    [self.titleArray addObject:kPrivateBeacon];
+    [self.iconArray addObject:@"ic_private_beacon"];
+#endif
+    //发送自定义vendor指令，v4.1.0.0后的版本不再需要。
+//    if (self.model.isSensor) {
+//        [self.titleArray addObject:kLPN];
+//        [self.iconArray addObject:@"ic_battery-20-bluetooth"];
+//    }
     //测试PTS才打开下面注释的代码
 //        [self.titleArray addObject:kPTStest];
 //        [self.iconArray addObject:@"ic_setting"];
@@ -185,30 +227,45 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    SettingItemCell *cell = (SettingItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingItemCellID forIndexPath:indexPath];
-    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    cell.stateSwitch.hidden = YES;
     NSString *title = self.titleArray[indexPath.row];
     if ([title isEqualToString:kPublication]) {
-        UInt16 eleAdr = [self.model.publishAddress.firstObject intValue];
+        //Publication
+        EntryCell *cell = (EntryCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(EntryCell.class) forIndexPath:indexPath];
+        cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
+        UInt16 elementAddress = [self.model.publishAddress.firstObject intValue];
         UInt16 option = self.model.publishModelID;
         ModelIDModel *modelIDModel = [SigDataSource.share getModelIDModel:@(option)];
-        cell.nameLabel.text = [NSString stringWithFormat:@"%@\n(ele:0x%04X,model:%@)",kPublication , eleAdr, modelIDModel.modelName];
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.stateSwitch.hidden = NO;
-        cell.stateSwitch.enabled = self.model.hasPublishFunction;
-        cell.stateSwitch.on = self.model.hasOpenPublish;
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@(ele:0x%04X, model:%@)",kPublication , elementAddress, modelIDModel.modelName];
+        cell.chooseButton.selected = self.model.hasOpenPublish;
         __weak typeof(self) weakSelf = self;
-        [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {
+        [cell.chooseButton addAction:^(UIButton *button) {
+            button.selected = !button.selected;
             /* 周期，20秒上报一次(periodSteps:kPublishIntervalOfDemo,:Range：0x01-0x3F; periodResolution:1) */
-            BOOL result = [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:SigDataSource.share.defaultPublishPeriodModel.numberOfSteps periodResolution:[LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel] retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
+            /* sensor上报周期，0x00，即变化才上报.*/
+            UInt8 periodSteps = weakSelf.model.isSensor ? 0 : SigDataSource.share.defaultPublishPeriodModel.numberOfSteps;
+            SigStepResolution periodResolution = weakSelf.model.isSensor ? SigStepResolution_hundredsOfMilliseconds : [LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel];
+            BOOL result = [DemoCommand editPublishListWithPublishAddress:button.isSelected ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:elementAddress modelIdentifier:option companyIdentifier:0 periodSteps:periodSteps periodResolution:periodResolution retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                 TelinkLogDebug(@"editPublishList callback");
-                if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
+                if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == elementAddress) {
                     if (responseMessage.publish.publicationAddress.address == kMeshAddress_allNodes) {
                         [weakSelf.model openPublish];
+#ifdef kIsTelinkCloudSigMeshLib
+                        [AppDataSource.share setPublishWithNodeModel:weakSelf.model resultBlock:^(NSError * _Nullable error) {
+                            if (error) {
+                                TelinkLogError(@"error=%@", error);
+                            }
+                        }];
+#endif
                         [SigPublishManager.share startCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
                     } else {
                         [weakSelf.model closePublish];
+#ifdef kIsTelinkCloudSigMeshLib
+                        [AppDataSource.share deletePublishWithNodeModel:weakSelf.model resultBlock:^(NSError * _Nullable error) {
+                            if (error) {
+                                TelinkLogError(@"error=%@", error);
+                            }
+                        }];
+#endif
                         [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
                     }
                     [SigDataSource.share saveLocationData];
@@ -220,15 +277,12 @@
                 [weakSelf showTips:@"app is busy now, try again later."];
             }
         }];
-    } else {
-        cell.nameLabel.text = title;
+        return cell;
     }
+    SettingTitleItemCell *cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingTitleItemCell.class) forIndexPath:indexPath];
+    cell.nameLabel.text = title;
     cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
     return cell;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 51.0;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -261,13 +315,13 @@
         if (self.model.publishAddress.count == 0) {
             [self showTips:@"Node hasn't publish model"];
         }
+    } else if ([title isEqualToString:kPrivateBeacon]) {
+        [self pushToPrivateBeaconVC];
     } else if ([title isEqualToString:kLPN]) {
         [self pushToSensorVC];
     } else if ([title isEqualToString:kPTStest]) {
         [self pushToPTSVC];
     }
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
 }
 
 - (void)pushToDeviceConfigVC {
@@ -289,7 +343,11 @@
 }
 
 - (void)pushToSchedulerVC{
-    SchedulerListViewController *vc = (SchedulerListViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerListViewControllerID storyboard:@"Setting"];
+#ifdef kIsTelinkCloudSigMeshLib
+    SchedulerListViewController *vc = (SchedulerListViewController *)[UIStoryboard initVC:NSStringFromClass(SchedulerListViewController.class) storyboard:@"Cloud"];
+#else
+    SchedulerListViewController *vc = (SchedulerListViewController *)[UIStoryboard initVC:NSStringFromClass(SchedulerListViewController.class) storyboard:@"Setting"];
+#endif
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -300,7 +358,11 @@
 }
 
 - (void)pushToDeviceOTA{
-    SingleOTAViewController *vc = (SingleOTAViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleOTAViewControllerID];
+#ifdef kIsTelinkCloudSigMeshLib
+    OTAVC *vc = (OTAVC *)[UIStoryboard initVC:NSStringFromClass(OTAVC.class) storyboard:@"Cloud"];
+#else
+    SingleOTAViewController *vc = (SingleOTAViewController *)[UIStoryboard initVC:NSStringFromClass(SingleOTAViewController.class)];
+#endif
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -313,6 +375,12 @@
 
 - (void)pushToAppKeyListVC {
     DeviceAppKeyListVC *vc = [[DeviceAppKeyListVC alloc] init];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToPrivateBeaconVC {
+    PrivateBeaconVC *vc = [[PrivateBeaconVC alloc] init];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

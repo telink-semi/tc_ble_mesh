@@ -61,6 +61,23 @@
     }
 }
 
+/// Return the device dictionary classified by PID.
+- (NSMutableDictionary *)currentProductNodesDictionary {
+    @synchronized (self) {
+        NSArray *nodes = [NSArray arrayWithArray:self.curNodes];
+        NSMutableDictionary *mDict = [NSMutableDictionary dictionary];
+        for (SigNodeModel *node in nodes) {
+            NSMutableArray *mArray = [NSMutableArray array];
+            if ([mDict.allKeys containsObject:node.pid]) {
+                mArray = [NSMutableArray arrayWithArray:mDict[node.pid]];
+            }
+            [mArray addObject:node];
+            mDict[node.pid] = mArray;
+        }
+        return mDict;
+    }
+}
+
 /**
  *  @brief  Singleton method
  *
@@ -102,7 +119,7 @@
     [self setSequenceNumberUInt32:0];
     _partial = false;
     _encryptedArray = [NSMutableArray array];
-    _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID)]];
+    _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_LightLCServer_ID),@(kSigModel_LightLCSetupServer_ID)]];
     _defaultNodeInfos = [NSMutableArray array];
     DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_Panel compositionData:nil];
     DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT compositionData:nil];
@@ -130,7 +147,7 @@
     _needPublishTimeModel = YES;
     _defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
     _telinkExtendBearerMode = SigTelinkExtendBearerMode_noExtend;
-    _aggregatorEnable = NO;
+    _aggregatorEnable = YES;
 
     //OOB
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -914,6 +931,9 @@
             if ([weakSelf.delegate respondsToSelector:@selector(onSequenceNumberUpdate:ivIndexUpdate:)]) {
                 [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:[LibTools uint32From16String:blockIv]];
             }
+            if ([weakSelf.delegate respondsToSelector:@selector(onUpdateIvIndex:)]) {
+                [weakSelf.delegate onUpdateIvIndex:[LibTools uint32From16String:blockIv]];
+            }
         });
     }
 }
@@ -931,6 +951,9 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([weakSelf.delegate respondsToSelector:@selector(onSequenceNumberUpdate:ivIndexUpdate:)]) {
                 [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:self.getIvIndexUInt32];
+            }
+            if ([weakSelf.delegate respondsToSelector:@selector(onUpdateSequenceNumber:)]) {
+                [weakSelf.delegate onUpdateSequenceNumber:weakSelf.sequenceNumberOnDelegate];
             }
         });
     }
@@ -2415,6 +2438,42 @@
         }
     }
     return tem;
+}
+
+/**
+ * @brief   Get local solicitation sequenceNumber.
+ * @return  the solicitation sequenceNumber of mesh.
+ * @note    This API is used to get the value of solicitation sequenceNumber stored locally.
+ */
+- (UInt32)getLocalSolicitationSequenceNumber {
+    UInt32 tem = 0;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    if (dict != nil) {
+        NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+        if ([dict.allKeys containsObject:key]) {
+            tem = [[dict valueForKey:key] intValue];
+        }
+    }
+    return tem;
+}
+
+/**
+ * @brief   Use the key meshUUID+provisionerUUID+unicastAddress to store solicitation sequenceNumber locally.
+ * @param   sequenceNumber    the solicitation sequenceNumber of mesh.
+ */
+- (void)saveLocalSolicitationSequenceNumber:(UInt32)sequenceNumber {
+    sequenceNumber = sequenceNumber&0xFFFFFF;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict = [defaults objectForKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    if (dict == nil) {
+        dict = @{};
+    }
+    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
+    [mDict setValue:@(sequenceNumber) forKey:key];
+    [defaults setObject:mDict forKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    [defaults synchronize];
 }
 
 #pragma mark - provisioner UUID API

@@ -21,11 +21,12 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface PrivateBeaconCell : UITableViewCell
+@interface PrivateBeaconCell : BaseCell
+/// Background layer for setting rounded corners.
 @property (weak, nonatomic) IBOutlet UIView *bgView;
 @property (weak, nonatomic) IBOutlet UILabel *firstTitleLabel;
 @property (weak, nonatomic) IBOutlet UISwitch *firstSwitch;

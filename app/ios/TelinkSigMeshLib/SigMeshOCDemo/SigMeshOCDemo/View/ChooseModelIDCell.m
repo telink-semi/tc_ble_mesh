@@ -37,6 +37,8 @@
     // Initialization code
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(ModelIDModel *)model{
     self.model = model;
     self.modelGroupLabel.text = [NSString stringWithFormat:@"Group：%@",model.modelGroup];

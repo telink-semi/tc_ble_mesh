@@ -121,7 +121,7 @@
 
     self.selectActions = [NSMutableArray arrayWithArray:self.model.actionList];
     self.allNodes = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
-
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
     [self reloadAllButton];

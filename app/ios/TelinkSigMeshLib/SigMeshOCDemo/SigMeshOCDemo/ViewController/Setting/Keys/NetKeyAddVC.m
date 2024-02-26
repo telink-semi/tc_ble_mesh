@@ -24,52 +24,174 @@
 #import "NetKeyAddVC.h"
 #import "NSString+extension.h"
 #import "UIViewController+Message.h"
+#import "SettingDetailItemCell.h"
 
-@interface NetKeyAddVC ()<UITextFieldDelegate>
-@property (weak, nonatomic) IBOutlet UILabel *nameLabel;
-@property (weak, nonatomic) IBOutlet UITextField *indexTF;
-@property (weak, nonatomic) IBOutlet UITextField *keyTF;
-@property (weak, nonatomic) IBOutlet UILabel *oldKeyLabel;
-@property (weak, nonatomic) IBOutlet UILabel *phaseLabel;
-@property (weak, nonatomic) IBOutlet UILabel *minSecurityLabel;
-@property (weak, nonatomic) IBOutlet UILabel *timestampLabel;
-
+@interface NetKeyAddVC ()
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic, strong) NSMutableArray <NSString *>*iconArray;
+@property (nonatomic, strong) NSMutableArray <NSString *>*titleArray;
+@property (nonatomic, strong) NSMutableArray <NSString *>*valueArray;
+@property (nonatomic, strong) SigNetkeyModel *showNetKeyModel;
 @end
 
 @implementation NetKeyAddVC
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
     self.title = self.isAdd ? @"Add NetKey" : @"Edit NetKey";
-    self.indexTF.delegate = self;
-    self.keyTF.delegate = self;
-
+    SigNetkeyModel *key = [[SigNetkeyModel alloc] init];
+    [key setDictionaryToSigNetkeyModel:self.netKeyModel.getDictionaryOfSigNetkeyModel];
+    self.showNetKeyModel = key;
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingDetailItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingDetailItemCell.class)];
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
-
     [self updateUI];
 }
 
-- (void)viewWillDisappear:(BOOL)animated{
-    [super viewWillDisappear:animated];
-    [self.indexTF resignFirstResponder];
-    [self.keyTF resignFirstResponder];
+- (void)updateUI {
+    self.iconArray = [NSMutableArray arrayWithArray:@[@"ic_name", @"ic_id", @"ic_key_value", @"ic_key_value", @"ic_phase", @"ic_min_security", @"ic_timestamp"]];
+    self.titleArray = [NSMutableArray arrayWithArray:@[@"Name", @"Index", @"Key", @"Old Key", @"Phase", @"Min Security", @"Timestamp"]];
+    self.valueArray = [NSMutableArray arrayWithArray:@[self.showNetKeyModel.name, [NSString stringWithFormat:@"0x%03lX",(long)self.showNetKeyModel.index], self.showNetKeyModel.key.length > 0 ? self.showNetKeyModel.key.uppercaseString : @"NULL", self.showNetKeyModel.oldKey.length > 0 ? self.showNetKeyModel.oldKey.uppercaseString : @"NULL", [NSString stringWithFormat:@"0x%02X",self.showNetKeyModel.phase], self.showNetKeyModel.minSecurity, self.showNetKeyModel.timestamp]];
+    [self.tableView reloadData];
 }
 
-- (void)updateUI {
-    self.nameLabel.text = [NSString stringWithFormat:@"Name:%@",self.netKeyModel.name];
-    self.indexTF.text = [NSString stringWithFormat:@"%04lX",(long)self.netKeyModel.index];
-    self.keyTF.text = self.netKeyModel.key;
-    self.oldKeyLabel.text = [NSString stringWithFormat:@"OldKey:0x%@",self.netKeyModel.oldKey];
-    self.phaseLabel.text = [NSString stringWithFormat:@"Phase:0x%x",self.netKeyModel.phase];
-    self.minSecurityLabel.text = [NSString stringWithFormat:@"MinSecurity:%@",self.netKeyModel.minSecurity];
-    self.timestampLabel.text = [NSString stringWithFormat:@"Timestamp:%@",self.netKeyModel.timestamp];
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    SettingDetailItemCell *cell = (SettingDetailItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingDetailItemCell.class) forIndexPath:indexPath];
+    cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
+    cell.nameLabel.text = self.titleArray[indexPath.row];
+    cell.detailLabel.text = self.valueArray[indexPath.row];
+    if (indexPath.row > 2 || indexPath.row == 0) {
+        cell.nextImageView.hidden = YES;
+    } else {
+        cell.nextImageView.hidden = NO;
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row == 1) {
+        [self clickChangeNetKeyIndex];
+    } else if (indexPath.row == 2) {
+        [self clickChangeNetKeyValue];
+   }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return self.iconArray.count;
+}
+
+- (void)clickChangeNetKeyIndex {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Update NetKey Index" message:@"please input content" preferredStyle:UIAlertControllerStyleAlert];
+    [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"please input new netKey index";
+        textField.text = [NSString stringWithFormat:@"%03lX",(long)weakSelf.showNetKeyModel.index];
+    }];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        TelinkLogDebug(@"输入NetKey index完成");
+        UITextField *indexTextField = inputAlertController.textFields.firstObject;
+        NSString *index = indexTextField.text.removeAllSpaceAndNewlines;
+        //check input length
+        if (index.length == 0) {
+            // need input any string
+            [weakSelf showTips:@"Please input new netKey index."];
+            return;
+        }
+        if (![LibTools validateHex:index]) {
+            // Please enter a hexadecimal string
+            [weakSelf showTips:@"Please enter a hexadecimal string."];
+            return;
+        }
+        if (index.length > 3) {
+            // Please enter a hexadecimal string
+            [weakSelf showTips:@"The range of netKey index is 0~0xFFF."];
+            return;
+        }
+        if (index.length % 2 == 1) {
+            index = [@"0" stringByAppendingString:index];
+        }
+        UInt16 intIndex = [LibTools uint16From16String:index];
+        BOOL hadExist = NO;
+        NSArray *temNetkeys = [NSArray arrayWithArray:weakSelf.network.netKeys];
+        for (SigNetkeyModel *tem in temNetkeys) {
+            if (tem.index == intIndex) {
+                if (weakSelf.isAdd) {
+                    hadExist = YES;
+                    break;
+                } else {
+                    if (tem != weakSelf.netKeyModel) {
+                        hadExist = YES;
+                        break;
+                    }
+                }
+            }
+        }
+        if (hadExist) {
+            [weakSelf showTips:[NSString stringWithFormat:@"NetKey Index:0x%03X already exists, please add other netkey index.", intIndex]];
+            return;
+        }
+        weakSelf.showNetKeyModel.index = intIndex;
+        [weakSelf updateUI];
+    }]];
+    [self presentViewController:inputAlertController animated:YES completion:nil];
+}
+
+- (void)clickChangeNetKeyValue {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Update NetKey Value" message:@"please input content" preferredStyle:UIAlertControllerStyleAlert];
+    [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"please input new netKey value";
+        textField.text = weakSelf.showNetKeyModel.key;
+    }];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        TelinkLogDebug(@"输入NetKey value完成");
+        UITextField *valueTF = inputAlertController.textFields.firstObject;
+        NSString *value = valueTF.text.removeAllSpaceAndNewlines;
+        //check input length
+        if (value.length == 0) {
+            // need input any string
+            [weakSelf showTips:@"Please input new netKey value."];
+            return;
+        }
+        if (![LibTools validateHex:value]) {
+            // Please enter a hexadecimal string
+            [weakSelf showTips:@"Please enter a hexadecimal string."];
+            return;
+        }
+        if (value.length != 32) {
+            // Please enter a hexadecimal string
+            [weakSelf showTips:@"Please enter 16 bytes hex key data."];
+            return;
+        }
+        BOOL hadExist = NO;
+        NSArray *temNetkeys = [NSArray arrayWithArray:weakSelf.network.netKeys];
+        for (SigNetkeyModel *tem in temNetkeys) {
+            if ([tem.key isEqualToString:value]) {
+                if (weakSelf.isAdd) {
+                    hadExist = YES;
+                    break;
+                } else {
+                    if (tem != weakSelf.netKeyModel) {
+                        hadExist = YES;
+                        break;
+                    }
+                }
+            }
+        }
+        if (hadExist) {
+            [weakSelf showTips:[NSString stringWithFormat:@"NetKey:0x%@ already exists, please add other netkey.", value]];
+            return;
+        }
+        weakSelf.showNetKeyModel.key = value;
+        [weakSelf updateUI];
+    }]];
+    [self presentViewController:inputAlertController animated:YES completion:nil];
 }
 
 - (void)clickSave {
-    [self.indexTF resignFirstResponder];
-    [self.keyTF resignFirstResponder];
     if (!self.isAdd) {
         BOOL hadBound = NO;
         NSArray *temNodes = [NSArray arrayWithArray:self.network.curNodes];
@@ -93,89 +215,10 @@
         }
     }
 
-    if (![LibTools validateHex:self.indexTF.text.removeAllSapceAndNewlines] || self.indexTF.text.length > 4) {
-        [self showTips:@"Please input `index` in range 0~0x0FFF."];
-        return;
-    }
-    UInt16 index = [LibTools uint16From16String:self.indexTF.text];
-    if (index > 0x0FFF) {
-        [self showTips:@"Please input `index` in range 0~0x0FFF."];
-        return;
-    }
-
-    if (![LibTools validateHex:self.keyTF.text.removeAllSapceAndNewlines]) {
-        [self showTips:@"Please enter 16 bytes hex key data."];
-        return;
-    }
-    if (self.keyTF.text.length != 32) {
-        [self showTips:@"Please enter 16 bytes hex key data."];
-        return;
-    }
-
-    TelinkLogInfo(@"appkey input success!");
-    if (self.netKeyModel) {
-        BOOL hadExist = NO;
-        NSArray *temNetkeys = [NSArray arrayWithArray:self.network.netKeys];
-        for (SigNetkeyModel *tem in temNetkeys) {
-            if (tem.index == index) {
-                if (self.isAdd) {
-                    hadExist = YES;
-                    break;
-                } else {
-                    if (tem != self.netKeyModel) {
-                        hadExist = YES;
-                        break;
-                    }
-                }
-            }
-        }
-        if (hadExist) {
-            [self showTips:[NSString stringWithFormat:@"netkey index:0x%04X already exists, please add other netkey index.",index]];
-            return;
-        }
-
-        for (SigNetkeyModel *tem in temNetkeys) {
-            if ([tem.key isEqualToString:self.keyTF.text]) {
-                if (self.isAdd) {
-                    hadExist = YES;
-                    break;
-                } else {
-                    if (tem != self.netKeyModel) {
-                        hadExist = YES;
-                        break;
-                    }
-                }
-            }
-        }
-        if (hadExist) {
-            [self showTips:[NSString stringWithFormat:@"netkey:0x%@ already exists, please add other netkey.",self.keyTF.text]];
-            return;
-        }
-
-        self.netKeyModel.index = index;
-        self.netKeyModel.key = self.keyTF.text;
-        if (self.backNetKeyModel) {
-            self.backNetKeyModel(self.netKeyModel);
-        }
+    if (self.backNetKeyModel) {
+        self.backNetKeyModel(self.showNetKeyModel);
     }
     [self.navigationController popViewControllerAnimated:YES];
-}
-
-//显示:大写，去空格
-- (void)refreshShowLabel {
-    self.indexTF.text = [self.indexTF.text.uppercaseString formatToLength:4];
-    self.keyTF.text = [self.keyTF.text.uppercaseString removeAllSapceAndNewlines];
-}
-
-#pragma mark - UITextFieldDelegate
-
-- (BOOL)textFieldShouldEndEditing:(UITextField *)textField{
-    if ([LibTools validateHex:textField.text.removeAllSapceAndNewlines]) {
-        [self refreshShowLabel];
-        return YES;
-    }
-    [self showTips:@"Please enter a valid hexadecimal data."];
-    return YES;
 }
 
 @end

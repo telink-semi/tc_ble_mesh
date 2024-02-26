@@ -242,7 +242,7 @@
             m = genericMessage;
         }
 //        TelinkLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
-    } else if ([message isKindOfClass:[SigIniMeshMessage class]] && command.tidPosition != 0) {
+    } else if ([message isKindOfClass:[SigIniMeshMessage class]] && command.tidPosition != 0 && message.parameters.length >= command.tidPosition) {
         if (command.tidPosition != 0) {
             UInt8 tid = command.tid;
             if (tid == 0) {

@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MeshOTAVC">
             <connections>
+                <outlet property="binFileNameButton" destination="5qe-NK-v9Z" id="Byb-nO-3F0"/>
+                <outlet property="binFileVersionLabel" destination="ioV-Ef-mQo" id="nwv-Dl-VzT"/>
                 <outlet property="connectedDeviceButton" destination="vgO-Oy-Eyg" id="Va1-ms-2bM"/>
                 <outlet property="distributorProgressLabel" destination="XzV-vq-jYp" id="pJa-E1-da3"/>
                 <outlet property="distributorProgressView" destination="tC9-nj-8VN" id="TmD-gN-5vc"/>
@@ -20,6 +23,7 @@
                 <outlet property="policyLabel" destination="QRd-Gw-ao0" id="gUW-gS-7qU"/>
                 <outlet property="startButton" destination="78h-DF-vyg" id="iBn-wh-cwS"/>
                 <outlet property="tableView" destination="6Kk-Am-xxz" id="KNG-tN-ijY"/>
+                <outlet property="tableViewBottom" destination="cK6-jv-h6y" id="5ax-tw-RaD"/>
                 <outlet property="verifyAndApplyButton" destination="nFe-zm-swu" id="uls-ZH-ibr"/>
                 <outlet property="verifyAndApplyLabel" destination="B2b-13-H67" id="V7v-bz-pfd"/>
                 <outlet property="verifyOnlyButton" destination="slG-Sf-x8P" id="j1P-jB-iq7"/>
@@ -32,79 +36,136 @@
             <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6Kk-Am-xxz">
-                    <rect key="frame" x="0.0" y="0.0" width="375" height="453"/>
-                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="z2Y-4t-h2L">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="leading" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KzT-qt-1xn">
+                            <rect key="frame" x="10" y="0.0" width="355" height="50"/>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                            <state key="normal" title="Devices:">
+                                <color key="titleColor" name="telinkTitleGray"/>
+                            </state>
+                            <connections>
+                                <action selector="clickSelectDevicesButton:" destination="-1" eventType="touchUpInside" id="1fp-cq-G5Y"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="select" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zaK-6p-7Dn">
+                            <rect key="frame" x="293.5" y="16.5" width="39.5" height="17"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" name="telinkTitleGray"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="next" translatesAutoresizingMaskIntoConstraints="NO" id="eHE-A4-Bwt">
+                            <rect key="frame" x="343" y="17" width="8" height="16"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="8" id="90v-pP-gsW"/>
+                                <constraint firstAttribute="height" constant="16" id="hg2-M9-a0Y"/>
+                            </constraints>
+                        </imageView>
+                    </subviews>
+                    <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
+                    <constraints>
+                        <constraint firstItem="eHE-A4-Bwt" firstAttribute="centerY" secondItem="z2Y-4t-h2L" secondAttribute="centerY" id="7eX-aD-Ke0"/>
+                        <constraint firstItem="KzT-qt-1xn" firstAttribute="top" secondItem="z2Y-4t-h2L" secondAttribute="top" id="AYK-zp-GsE"/>
+                        <constraint firstAttribute="trailing" secondItem="eHE-A4-Bwt" secondAttribute="trailing" constant="24" id="FUP-1i-742"/>
+                        <constraint firstItem="zaK-6p-7Dn" firstAttribute="centerY" secondItem="z2Y-4t-h2L" secondAttribute="centerY" id="HQP-B5-CQI"/>
+                        <constraint firstAttribute="height" constant="50" id="IrJ-hl-iXm"/>
+                        <constraint firstItem="KzT-qt-1xn" firstAttribute="leading" secondItem="z2Y-4t-h2L" secondAttribute="leading" constant="10" id="hy4-pm-Ndp"/>
+                        <constraint firstAttribute="trailing" secondItem="KzT-qt-1xn" secondAttribute="trailing" constant="10" id="lXH-mJ-meN"/>
+                        <constraint firstItem="eHE-A4-Bwt" firstAttribute="leading" secondItem="zaK-6p-7Dn" secondAttribute="trailing" constant="10" id="m8U-qF-DXb"/>
+                        <constraint firstAttribute="bottom" secondItem="KzT-qt-1xn" secondAttribute="bottom" id="nj5-0B-GFW"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WqK-Af-PEW">
+                    <rect key="frame" x="0.0" y="395" width="375" height="60"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="leading" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5qe-NK-v9Z">
+                            <rect key="frame" x="10" y="0.0" width="355" height="40"/>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <state key="normal" title="file error">
+                                <color key="titleColor" name="telinkTitleGray"/>
+                            </state>
+                            <connections>
+                                <action selector="clickSelectBinFileButton:" destination="-1" eventType="touchUpInside" id="bDd-eN-p3W"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="bin version: null" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ioV-Ef-mQo">
+                            <rect key="frame" x="10" y="40" width="355" height="20"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" name="telinkButtonRed"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="next" translatesAutoresizingMaskIntoConstraints="NO" id="BMH-aO-Ltd">
+                            <rect key="frame" x="343" y="12" width="8" height="16"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="8" id="Cym-zc-K32"/>
+                                <constraint firstAttribute="height" constant="16" id="akm-Va-eec"/>
+                            </constraints>
+                        </imageView>
+                    </subviews>
+                    <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
+                    <constraints>
+                        <constraint firstItem="BMH-aO-Ltd" firstAttribute="centerY" secondItem="5qe-NK-v9Z" secondAttribute="centerY" id="8cz-XU-Gdc"/>
+                        <constraint firstItem="5qe-NK-v9Z" firstAttribute="top" secondItem="WqK-Af-PEW" secondAttribute="top" id="FbB-3C-oMd"/>
+                        <constraint firstItem="ioV-Ef-mQo" firstAttribute="top" secondItem="5qe-NK-v9Z" secondAttribute="bottom" id="HER-yT-eii"/>
+                        <constraint firstItem="5qe-NK-v9Z" firstAttribute="leading" secondItem="WqK-Af-PEW" secondAttribute="leading" constant="10" id="O4H-fT-p4W"/>
+                        <constraint firstAttribute="bottom" secondItem="ioV-Ef-mQo" secondAttribute="bottom" id="UEW-xi-PP5"/>
+                        <constraint firstAttribute="height" constant="60" id="ckh-L9-ghz"/>
+                        <constraint firstAttribute="bottom" secondItem="5qe-NK-v9Z" secondAttribute="bottom" constant="20" id="dcb-n0-0jS"/>
+                        <constraint firstAttribute="trailing" secondItem="5qe-NK-v9Z" secondAttribute="trailing" constant="10" id="l0F-QL-Bqn"/>
+                        <constraint firstAttribute="trailing" secondItem="ioV-Ef-mQo" secondAttribute="trailing" constant="10" id="uPv-du-Zca"/>
+                        <constraint firstAttribute="trailing" secondItem="BMH-aO-Ltd" secondAttribute="trailing" constant="24" id="wbg-7K-QmV"/>
+                        <constraint firstItem="ioV-Ef-mQo" firstAttribute="leading" secondItem="WqK-Af-PEW" secondAttribute="leading" constant="10" id="xyt-zK-XQ4"/>
+                    </constraints>
+                </view>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6Kk-Am-xxz">
+                    <rect key="frame" x="0.0" y="50" width="375" height="345"/>
+                    <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
                     <connections>
                         <outlet property="dataSource" destination="-1" id="MSN-6R-43d"/>
                         <outlet property="delegate" destination="-1" id="gVs-aO-9Sh"/>
                     </connections>
                 </tableView>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="78h-DF-vyg">
-                    <rect key="frame" x="188.5" y="617" width="186.5" height="50"/>
-                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                    <state key="normal" title="start">
-                        <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </state>
-                    <connections>
-                        <action selector="clickStartMeshOTA:" destination="-1" eventType="touchUpInside" id="SeO-zT-O1W"/>
-                    </connections>
-                </button>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="REB-9M-2Oa">
-                    <rect key="frame" x="0.0" y="617" width="186.5" height="50"/>
-                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="50" id="hIh-IE-Srz"/>
-                    </constraints>
-                    <state key="normal" title="get fw info">
-                        <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </state>
-                    <connections>
-                        <action selector="clickGetFwInfo:" destination="-1" eventType="touchUpInside" id="tRC-Bi-Hue"/>
-                    </connections>
-                </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="00N-56-uAK">
                     <rect key="frame" x="0.0" y="455" width="375" height="160"/>
                     <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Policy:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QRd-Gw-ao0">
-                            <rect key="frame" x="5" y="51.5" width="46.5" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Apply Policy:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QRd-Gw-ao0">
+                            <rect key="frame" x="5" y="54" width="90.5" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="h6E-Nk-pOh"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="VerifyOnly" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7kb-sU-ZrZ">
-                            <rect key="frame" x="91.5" y="51.5" width="67" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Verify Only" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7kb-sU-ZrZ">
+                            <rect key="frame" x="278.5" y="54" width="71" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="lWV-k8-BNs"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nFe-zm-swu">
-                            <rect key="frame" x="178.5" y="50" width="20" height="20"/>
-                            <constraints>
-                                <constraint firstAttribute="width" constant="20" id="A0f-HU-upE"/>
-                                <constraint firstAttribute="height" constant="20" id="zyy-sc-ggx"/>
-                            </constraints>
-                            <state key="normal" image="unxuan">
+                            <rect key="frame" x="100.5" y="50" width="25" height="25"/>
+                            <state key="normal" image="danxuan">
                                 <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </state>
-                            <state key="selected" image="xuan"/>
+                            <state key="selected" image="danxuanxuanzhong"/>
                             <connections>
                                 <action selector="clickVerifyAndApply:" destination="-1" eventType="touchUpInside" id="LOa-uJ-EYM"/>
                             </connections>
                         </button>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="VerifyAndApply" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="B2b-13-H67">
-                            <rect key="frame" x="208.5" y="51.5" width="99.5" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Verify And Apply" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="B2b-13-H67">
+                            <rect key="frame" x="130.5" y="54" width="108" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="WPR-FN-0cc"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Distributor:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yFB-1Z-ZeU">
@@ -113,158 +174,192 @@
                                 <constraint firstAttribute="height" constant="17" id="nNf-gM-xIa"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vgO-Oy-Eyg">
-                            <rect key="frame" x="95" y="13.5" width="20" height="20"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="20" id="Zxi-S0-EMZ"/>
-                                <constraint firstAttribute="width" constant="20" id="vtl-4q-9xw"/>
-                            </constraints>
-                            <state key="normal" image="unxuan">
+                            <rect key="frame" x="171" y="11" width="25" height="25"/>
+                            <state key="normal" image="danxuan">
                                 <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </state>
-                            <state key="selected" image="xuan"/>
+                            <state key="selected" image="danxuanxuanzhong"/>
                             <connections>
                                 <action selector="clickConnectedDevice:" destination="-1" eventType="touchUpInside" id="mYX-dX-9SX"/>
                             </connections>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VUP-ju-TCX">
-                            <rect key="frame" x="260" y="13.5" width="20" height="20"/>
+                            <rect key="frame" x="90" y="11" width="25" height="25"/>
                             <constraints>
-                                <constraint firstAttribute="height" constant="20" id="DSk-RW-TH2"/>
-                                <constraint firstAttribute="width" constant="20" id="sZe-GN-p2E"/>
+                                <constraint firstAttribute="height" constant="25" id="DSk-RW-TH2"/>
+                                <constraint firstAttribute="width" secondItem="VUP-ju-TCX" secondAttribute="height" multiplier="1:1" id="FMR-fT-SUK"/>
                             </constraints>
-                            <state key="normal" image="unxuan">
+                            <state key="normal" image="danxuan">
                                 <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </state>
-                            <state key="selected" image="xuan"/>
+                            <state key="selected" image="danxuanxuanzhong"/>
                             <connections>
                                 <action selector="clickPhone:" destination="-1" eventType="touchUpInside" id="cPN-n2-qZq"/>
                             </connections>
                         </button>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ConnectedDevice" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="W6n-mL-B8j">
-                            <rect key="frame" x="125" y="15" width="115" height="17"/>
+                            <rect key="frame" x="201" y="15" width="115" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="C2t-W0-9mo"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Phone" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZZA-EF-oYy">
-                            <rect key="frame" x="290" y="15" width="41" height="17"/>
+                            <rect key="frame" x="120" y="15" width="41" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="DM4-ra-Qbj"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Initiator Progress:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jxu-qK-IJt">
-                            <rect key="frame" x="5" y="83.5" width="125" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Initiate Progress:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jxu-qK-IJt">
+                            <rect key="frame" x="5" y="88.5" width="118.5" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="7jE-Ua-ucK"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="cck-6W-GF8">
-                            <rect key="frame" x="5" y="107.5" width="365" height="4"/>
+                            <rect key="frame" x="5" y="112.5" width="365" height="4"/>
                         </progressView>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Distributor Progress:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XzV-vq-jYp">
-                            <rect key="frame" x="5" y="123.5" width="145.5" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Distribute Progress:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XzV-vq-jYp">
+                            <rect key="frame" x="5" y="128.5" width="139" height="17"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="17" id="v4w-IE-Zjr"/>
                             </constraints>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
-                            <nil key="textColor"/>
+                            <color key="textColor" name="telinkTitleGray"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="tC9-nj-8VN">
-                            <rect key="frame" x="5" y="147.5" width="365" height="4"/>
+                            <rect key="frame" x="5" y="152.5" width="365" height="4"/>
                         </progressView>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="slG-Sf-x8P">
-                            <rect key="frame" x="61.5" y="50" width="20" height="20"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="20" id="3Qa-Fb-Lte"/>
-                                <constraint firstAttribute="width" constant="20" id="C1n-fG-bGY"/>
-                            </constraints>
-                            <state key="normal" image="unxuan">
+                            <rect key="frame" x="248.5" y="50" width="25" height="25"/>
+                            <state key="normal" image="danxuan">
                                 <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </state>
-                            <state key="selected" image="xuan"/>
+                            <state key="selected" image="danxuanxuanzhong"/>
                             <connections>
                                 <action selector="clickVerifyOnly:" destination="-1" eventType="touchUpInside" id="hWS-Q1-mwd"/>
                             </connections>
                         </button>
                     </subviews>
-                    <color key="backgroundColor" systemColor="systemGray5Color"/>
+                    <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
                     <constraints>
                         <constraint firstAttribute="trailing" secondItem="cck-6W-GF8" secondAttribute="trailing" constant="5" id="1Bl-Bk-Q15"/>
+                        <constraint firstItem="slG-Sf-x8P" firstAttribute="width" secondItem="VUP-ju-TCX" secondAttribute="width" id="6GV-1D-5DT"/>
                         <constraint firstItem="slG-Sf-x8P" firstAttribute="centerY" secondItem="QRd-Gw-ao0" secondAttribute="centerY" id="7Kp-e0-eBy"/>
-                        <constraint firstItem="nFe-zm-swu" firstAttribute="leading" secondItem="7kb-sU-ZrZ" secondAttribute="trailing" constant="20" id="7dS-wp-agQ"/>
                         <constraint firstItem="nFe-zm-swu" firstAttribute="centerY" secondItem="QRd-Gw-ao0" secondAttribute="centerY" id="BBE-BK-JVp"/>
                         <constraint firstItem="cck-6W-GF8" firstAttribute="top" secondItem="Jxu-qK-IJt" secondAttribute="bottom" constant="7" id="BkA-nY-4gw"/>
                         <constraint firstItem="tC9-nj-8VN" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="leading" id="EhJ-mo-mgn"/>
+                        <constraint firstItem="vgO-Oy-Eyg" firstAttribute="width" secondItem="VUP-ju-TCX" secondAttribute="width" id="IfP-zP-DNc"/>
                         <constraint firstItem="tC9-nj-8VN" firstAttribute="top" secondItem="XzV-vq-jYp" secondAttribute="bottom" constant="7" id="Jbg-TV-yXN"/>
-                        <constraint firstItem="ZZA-EF-oYy" firstAttribute="leading" secondItem="VUP-ju-TCX" secondAttribute="trailing" constant="10" id="JhI-7t-zjw"/>
-                        <constraint firstItem="7kb-sU-ZrZ" firstAttribute="leading" secondItem="slG-Sf-x8P" secondAttribute="trailing" constant="10" id="Jji-3Z-F4j"/>
+                        <constraint firstItem="ZZA-EF-oYy" firstAttribute="leading" secondItem="VUP-ju-TCX" secondAttribute="trailing" constant="5" id="JhI-7t-zjw"/>
+                        <constraint firstItem="7kb-sU-ZrZ" firstAttribute="leading" secondItem="slG-Sf-x8P" secondAttribute="trailing" constant="5" id="Jji-3Z-F4j"/>
+                        <constraint firstItem="vgO-Oy-Eyg" firstAttribute="height" secondItem="VUP-ju-TCX" secondAttribute="height" id="LDf-r8-YLd"/>
                         <constraint firstItem="Jxu-qK-IJt" firstAttribute="top" secondItem="slG-Sf-x8P" secondAttribute="bottom" constant="13.5" id="RKA-eo-DgJ"/>
+                        <constraint firstItem="nFe-zm-swu" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="trailing" constant="5" id="Sil-mT-zV7"/>
                         <constraint firstItem="W6n-mL-B8j" firstAttribute="centerY" secondItem="yFB-1Z-ZeU" secondAttribute="centerY" id="U9U-1T-ksn"/>
                         <constraint firstItem="Jxu-qK-IJt" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="leading" id="Vqb-by-lzj"/>
                         <constraint firstItem="yFB-1Z-ZeU" firstAttribute="top" secondItem="00N-56-uAK" secondAttribute="top" constant="15" id="Wsa-9g-Zgw"/>
                         <constraint firstItem="yFB-1Z-ZeU" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="leading" id="Yow-Ii-bhd"/>
                         <constraint firstItem="7kb-sU-ZrZ" firstAttribute="centerY" secondItem="QRd-Gw-ao0" secondAttribute="centerY" id="Z3b-q7-Tdc"/>
                         <constraint firstItem="cck-6W-GF8" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="leading" id="Zcc-Gp-bJG"/>
-                        <constraint firstItem="B2b-13-H67" firstAttribute="leading" secondItem="nFe-zm-swu" secondAttribute="trailing" constant="10" id="a2w-fT-Skz"/>
-                        <constraint firstItem="VUP-ju-TCX" firstAttribute="leading" secondItem="W6n-mL-B8j" secondAttribute="trailing" constant="20" id="aJ2-YP-0c3"/>
+                        <constraint firstItem="B2b-13-H67" firstAttribute="leading" secondItem="nFe-zm-swu" secondAttribute="trailing" constant="5" id="a2w-fT-Skz"/>
                         <constraint firstItem="XzV-vq-jYp" firstAttribute="top" secondItem="cck-6W-GF8" secondAttribute="bottom" constant="12" id="bfv-5Z-Bfs"/>
-                        <constraint firstItem="W6n-mL-B8j" firstAttribute="leading" secondItem="vgO-Oy-Eyg" secondAttribute="trailing" constant="10" id="bp0-Ks-OpN"/>
+                        <constraint firstItem="W6n-mL-B8j" firstAttribute="leading" secondItem="vgO-Oy-Eyg" secondAttribute="trailing" constant="5" id="bp0-Ks-OpN"/>
                         <constraint firstItem="tC9-nj-8VN" firstAttribute="trailing" secondItem="cck-6W-GF8" secondAttribute="trailing" id="bsl-Bq-xdX"/>
-                        <constraint firstItem="slG-Sf-x8P" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="trailing" constant="10" id="fcs-rK-pJJ"/>
+                        <constraint firstItem="slG-Sf-x8P" firstAttribute="height" secondItem="VUP-ju-TCX" secondAttribute="height" id="dHS-f9-APn"/>
+                        <constraint firstItem="nFe-zm-swu" firstAttribute="height" secondItem="VUP-ju-TCX" secondAttribute="height" id="ew0-vM-XTy"/>
                         <constraint firstAttribute="height" constant="160" id="g4q-D9-GKR"/>
                         <constraint firstItem="vgO-Oy-Eyg" firstAttribute="centerY" secondItem="yFB-1Z-ZeU" secondAttribute="centerY" id="gYQ-1d-fbF"/>
                         <constraint firstItem="slG-Sf-x8P" firstAttribute="top" secondItem="yFB-1Z-ZeU" secondAttribute="bottom" constant="18" id="idD-9R-10j"/>
-                        <constraint firstItem="vgO-Oy-Eyg" firstAttribute="leading" secondItem="yFB-1Z-ZeU" secondAttribute="trailing" constant="10" id="k7l-br-vGH"/>
+                        <constraint firstItem="slG-Sf-x8P" firstAttribute="leading" secondItem="B2b-13-H67" secondAttribute="trailing" constant="10" id="isR-Uj-wdn"/>
+                        <constraint firstItem="VUP-ju-TCX" firstAttribute="leading" secondItem="yFB-1Z-ZeU" secondAttribute="trailing" constant="5" id="jUr-qF-O3r"/>
+                        <constraint firstItem="vgO-Oy-Eyg" firstAttribute="leading" secondItem="ZZA-EF-oYy" secondAttribute="trailing" constant="10" id="jva-KC-HwT"/>
                         <constraint firstItem="QRd-Gw-ao0" firstAttribute="leading" secondItem="00N-56-uAK" secondAttribute="leading" constant="5" id="njM-mQ-JzH"/>
                         <constraint firstItem="B2b-13-H67" firstAttribute="centerY" secondItem="QRd-Gw-ao0" secondAttribute="centerY" id="o27-ax-Td4"/>
+                        <constraint firstItem="nFe-zm-swu" firstAttribute="width" secondItem="VUP-ju-TCX" secondAttribute="width" id="qER-ch-EJh"/>
                         <constraint firstItem="ZZA-EF-oYy" firstAttribute="centerY" secondItem="yFB-1Z-ZeU" secondAttribute="centerY" id="wVt-OW-jD1"/>
                         <constraint firstItem="XzV-vq-jYp" firstAttribute="leading" secondItem="QRd-Gw-ao0" secondAttribute="leading" id="wbe-zl-zJ3"/>
                         <constraint firstItem="VUP-ju-TCX" firstAttribute="centerY" secondItem="yFB-1Z-ZeU" secondAttribute="centerY" id="yTe-sy-wAQ"/>
                     </constraints>
                 </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="REB-9M-2Oa">
+                    <rect key="frame" x="0.0" y="617" width="186.5" height="50"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="hIh-IE-Srz"/>
+                    </constraints>
+                    <state key="normal" title="GET FIRMWARE ID">
+                        <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </state>
+                    <connections>
+                        <action selector="clickGetFwInfo:" destination="-1" eventType="touchUpInside" id="tRC-Bi-Hue"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="78h-DF-vyg">
+                    <rect key="frame" x="188.5" y="617" width="186.5" height="50"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="START">
+                        <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </state>
+                    <connections>
+                        <action selector="clickStartMeshOTA:" destination="-1" eventType="touchUpInside" id="SeO-zT-O1W"/>
+                    </connections>
+                </button>
             </subviews>
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
                 <constraint firstItem="REB-9M-2Oa" firstAttribute="top" secondItem="00N-56-uAK" secondAttribute="bottom" constant="2" id="1Qu-SH-pLA"/>
+                <constraint firstAttribute="trailing" secondItem="WqK-Af-PEW" secondAttribute="trailing" id="1mv-aO-067"/>
+                <constraint firstAttribute="trailing" secondItem="z2Y-4t-h2L" secondAttribute="trailing" id="1ra-2V-Z2p"/>
                 <constraint firstAttribute="bottomMargin" secondItem="78h-DF-vyg" secondAttribute="bottom" id="8SO-1N-UHe"/>
                 <constraint firstItem="00N-56-uAK" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="EV6-Hp-XZy"/>
-                <constraint firstItem="6Kk-Am-xxz" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="H7U-4N-2d4"/>
                 <constraint firstAttribute="trailing" secondItem="6Kk-Am-xxz" secondAttribute="trailing" id="I2D-BR-Y8c"/>
+                <constraint firstItem="6Kk-Am-xxz" firstAttribute="top" secondItem="z2Y-4t-h2L" secondAttribute="bottom" id="I9w-jx-GHK"/>
                 <constraint firstItem="REB-9M-2Oa" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="LlQ-c3-tBc"/>
                 <constraint firstItem="78h-DF-vyg" firstAttribute="height" secondItem="REB-9M-2Oa" secondAttribute="height" id="QoW-Wa-iFX"/>
                 <constraint firstItem="78h-DF-vyg" firstAttribute="width" secondItem="REB-9M-2Oa" secondAttribute="width" id="Tfn-Cz-bEs"/>
                 <constraint firstItem="78h-DF-vyg" firstAttribute="leading" secondItem="REB-9M-2Oa" secondAttribute="trailing" constant="2" id="Vul-rZ-g13"/>
+                <constraint firstItem="00N-56-uAK" firstAttribute="top" secondItem="WqK-Af-PEW" secondAttribute="bottom" id="XHb-CC-mXT"/>
                 <constraint firstAttribute="trailing" secondItem="00N-56-uAK" secondAttribute="trailing" id="Y1O-pt-JW2"/>
-                <constraint firstItem="00N-56-uAK" firstAttribute="top" secondItem="6Kk-Am-xxz" secondAttribute="bottom" constant="2" id="cK6-jv-h6y"/>
+                <constraint firstItem="z2Y-4t-h2L" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="a7r-d7-2YI"/>
+                <constraint firstItem="00N-56-uAK" firstAttribute="top" secondItem="6Kk-Am-xxz" secondAttribute="bottom" constant="60" id="cK6-jv-h6y"/>
                 <constraint firstItem="6Kk-Am-xxz" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="dG7-2x-NDI"/>
                 <constraint firstItem="78h-DF-vyg" firstAttribute="bottom" secondItem="REB-9M-2Oa" secondAttribute="bottom" id="el5-B7-KH4"/>
+                <constraint firstItem="WqK-Af-PEW" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="uq1-M1-Lms"/>
                 <constraint firstAttribute="trailing" secondItem="78h-DF-vyg" secondAttribute="trailing" id="xJf-ju-DX4"/>
+                <constraint firstItem="z2Y-4t-h2L" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="zMo-EN-TgF"/>
             </constraints>
             <point key="canvasLocation" x="34.399999999999999" y="88.605697151424295"/>
         </view>
     </objects>
     <resources>
-        <image name="unxuan" width="100" height="100"/>
-        <image name="xuan" width="100" height="100"/>
+        <image name="danxuan" width="50" height="50"/>
+        <image name="danxuanxuanzhong" width="50" height="50"/>
+        <image name="next" width="8" height="16"/>
+        <namedColor name="telinkButtonRed">
+            <color red="0.94099998474121094" green="0.0" blue="0.0080000003799796104" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTabBarBackgroundColor">
+            <color red="0.96862745098039216" green="0.96862745098039216" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemGray5Color">
-            <color red="0.8980392157" green="0.8980392157" blue="0.91764705879999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

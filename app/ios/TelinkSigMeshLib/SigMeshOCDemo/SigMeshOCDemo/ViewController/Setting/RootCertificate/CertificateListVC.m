@@ -37,6 +37,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    //init rightBarButtonItem
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"tishi"] style:UIBarButtonItemStylePlain target:self action:@selector(showTipsView)];
     self.navigationItem.rightBarButtonItem = item;
 

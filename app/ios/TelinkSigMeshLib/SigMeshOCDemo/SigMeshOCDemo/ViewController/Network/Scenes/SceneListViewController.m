@@ -94,6 +94,7 @@
     self.title = @"Scenes";
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_SceneItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_SceneItemCellID];
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd)];
     self.navigationItem.rightBarButtonItem = rightItem;
     //longpress to delete scene

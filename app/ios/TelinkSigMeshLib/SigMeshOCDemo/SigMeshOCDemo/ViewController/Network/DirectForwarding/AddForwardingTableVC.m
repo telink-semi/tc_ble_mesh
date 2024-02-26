@@ -24,23 +24,45 @@
 #import "AddForwardingTableVC.h"
 #import "UIViewController+Message.h"
 #import "NSString+extension.h"
-#import "BridgeTableItemCell.h"
-#import "BRStringPickerView.h"
 #import "CustomAlertView.h"
 #import "ChooseEntryVC.h"
+#import "AddTableHeaderCell.h"
+#import "TableNodeCell.h"
+#import "UIButton+extension.h"
 
 @interface AddForwardingTableVC ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+/// Button layer used to set add button title..
 @property (weak, nonatomic) IBOutlet UIButton *addButton;
 @property (nonatomic, strong) SigForwardingTableModel *forwardingTableModel;
-@property (nonatomic, assign) NSInteger selectRow;
-@property (nonatomic, strong) NSArray *titleArr;
-@property (nonatomic, strong) NSMutableArray *netkeyArr;
+@property (nonatomic, strong) NSArray <SigNodeModel *>*source;
+
 @end
 
 @implementation AddForwardingTableVC
 
 - (IBAction)addForwardingTable:(UIButton *)sender {
+    if (self.forwardingTableModel.tableSource == 0) {
+        [self showTips:@"Please select origin device."];
+        return;
+    }
+    if (self.forwardingTableModel.tableDestination == 0) {
+        [self showTips:@"Please select target device."];
+        return;
+    }
+    if (self.forwardingTableModel.entryNodeAddress.count == 0) {
+        [self showTips:@"Please select nodes on route."];
+        return;
+    }
+    //编辑的table暂时未考虑查重
+    if (self.isNew && [SigDataSource.share.forwardingTableModelList containsObject:self.forwardingTableModel]) {
+        //已经存在了相同的起点终点的路径
+        //the same origin and target already exists
+        [self showTips:@"the same origin and target already exists."];
+        return;
+    }
+    
+    
     //逻辑：一次性添加多个设备的table，第一个设备添加table成功后就添加table到SIGDataSource里面，中途出现添加失败，则跳过当前设备继续添加下一个，且不保存失败的设备到table里面，最后再提示部分成功、部分失败等情况，客户可以点击重试。
     TelinkLogDebug(@"");
     if (SigBearer.share.isOpen) {
@@ -52,7 +74,16 @@
         __block BOOL hasSuccess = NO;
         NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
         [operationQueue addOperationWithBlock:^{
-            NSArray *addArray = [NSArray arrayWithArray:weakSelf.forwardingTableModel.entryNodeAddress];
+            NSMutableArray *addArray = [NSMutableArray arrayWithArray:weakSelf.forwardingTableModel.entryNodeAddress];
+            //补起点
+            if (![addArray containsObject:@(weakSelf.forwardingTableModel.tableSource)]) {
+                [addArray addObject:@(weakSelf.forwardingTableModel.tableSource)];
+            }
+            //补终点
+            if (![addArray containsObject:@(weakSelf.forwardingTableModel.tableDestination)]) {
+                [addArray addObject:@(weakSelf.forwardingTableModel.tableDestination)];
+            }
+
             NSMutableArray *deleteArray = [NSMutableArray array];
             if (weakSelf.isNew == NO && weakSelf.oldTable) {
                 for (NSNumber *addressNumber in weakSelf.oldTable.entryNodeAddress) {
@@ -136,12 +167,12 @@
                 } else if (hasSuccess) {
                     // 成功
                     [ShowTipsHandle.share show:weakSelf.isNew ? Tip_AddFrowardingTableSuccess : Tip_EditFrowardingTableSuccess];
-                    [ShowTipsHandle.share delayHidden:2.0];
+                    [ShowTipsHandle.share delayHidden:0.5];
                     [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:2.0];
                 } else {
                     //不发送指令
                     [ShowTipsHandle.share show:@"not send command!"];
-                    [ShowTipsHandle.share delayHidden:2.0];
+                    [ShowTipsHandle.share delayHidden:0.5];
                 }
             });
         }];
@@ -181,39 +212,37 @@
     if (self.isNew) {
         self.title = @"Add Forwarding Table";
         [self.addButton setTitle:@"Add Forwarding Table" forState:UIControlStateNormal];
-//        SigNodeModel *node1 = SigDataSource.share.curLocationNodeModel;
-        SigNodeModel *node1 = SigDataSource.share.curNodes.firstObject;
-        SigNodeModel *node2 = SigDataSource.share.curNodes.lastObject;
-        SigUnicastAddressRangeFormatModel *format1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
-        SigUnicastAddressRangeFormatModel *format2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
-        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:NO pathOriginUnicastAddrRange:format1 pathTargetUnicastAddrRange:format2 multicastDestination:0x8000 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
+//        SigNodeModel *node1 = SigDataSource.share.curNodes.firstObject;
+//        SigNodeModel *node2 = SigDataSource.share.curNodes.lastObject;
+//        SigUnicastAddressRangeFormatModel *format1 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node1.elements.count > 1 rangeStart:node1.address rangeLength:node1.elements.count];
+//        SigUnicastAddressRangeFormatModel *format2 = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:node2.elements.count > 1 rangeStart:node2.address rangeLength:node2.elements.count];
+        self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index unicastDestinationFlag:YES backwardPathValidatedFlag:YES pathOriginUnicastAddrRange:nil pathTargetUnicastAddrRange:nil multicastDestination:0 bearerTowardPathOrigin:0x0001 bearerTowardPathTarget:0x0001];
     } else {
         self.title = @"Edit Forwarding Table";
         [self.addButton setTitle:@"Edit Forwarding Table" forState:UIControlStateNormal];
         self.forwardingTableModel = [[SigForwardingTableModel alloc] initWithOldSigForwardingTableModel:self.oldTable];
     }
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(BridgeTableItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(BridgeTableItemCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(AddTableHeaderCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(AddTableHeaderCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(TableNodeCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(TableNodeCell.class)];
     //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
     if(@available(iOS 15.0,*)) {
         self.tableView.sectionHeaderTopPadding = 0;
     }
 
     self.tableView.estimatedRowHeight = 50.0;
-    self.netkeyArr = [NSMutableArray array];
-    for (SigNetkeyModel *m in SigDataSource.share.netKeys) {
-        [self.netkeyArr addObject:[NSString stringWithFormat:@"%@(0x%04X)",m.name,m.index]];
-    }
     [self reloadUI];
 }
 
 - (void)reloadUI {
-//    if (self.forwardingTableModel.unicastDestinationFlag) {
-//        self.titleArr = @[@"NetKeyIndex",@"Unicast_Destination_Flag",@"Backward_Path_Validated_Flag",@"Origin_Range", @"Target_Range", @"Bearer_Toward_Path_Origin",@"Bearer_Toward_Path_Target", @"EntryNodeAddress"];
-//    } else {
-//        self.titleArr = @[@"NetKeyIndex",@"Unicast_Destination_Flag",@"Backward_Path_Validated_Flag",@"Origin_Range", @"Multicast_Destination",@"Bearer_Toward_Path_Origin",@"Bearer_Toward_Path_Target", @"EntryNodeAddress"];
-//    }
-    self.titleArr = @[@"NetKeyIndex",@"Backward_Path_Validated_Flag",@"Source",@"Destination",@"Bearer_Toward_Path_Origin",@"Bearer_Toward_Path_Target", @"EntryNodeAddress"];
+    NSMutableArray *mArray = [NSMutableArray array];
+    for (NSNumber *number in self.forwardingTableModel.entryNodeAddress) {
+        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:number.intValue];
+        if (node) {
+            [mArray addObject:node];
+        }
+    }
+    self.source = mArray;
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
@@ -223,401 +252,116 @@
 
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return self.titleArr.count;
+    return self.source.count+1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    BridgeTableItemCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(BridgeTableItemCell.class) forIndexPath:indexPath];
-    cell.showLabel.text = self.titleArr[indexPath.row];
-    cell.inputTF.delegate = self;
-    cell.inputTF.tag = indexPath.row;
-    cell.inputTF.hidden = NO;
-    cell.accessoryType = UITableViewCellAccessoryNone;
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    switch (indexPath.row) {
-        case 0:
-        {
-            // netKeyIndex
-            cell.inputTF.text = [NSString stringWithFormat:@"%@(0x%04X)",[SigDataSource.share getNetkeyModelWithNetkeyIndex:self.forwardingTableModel.netKeyIndex].name, self.forwardingTableModel.netKeyIndex];
+    if (indexPath.row == 0) {
+        AddTableHeaderCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(AddTableHeaderCell.class) forIndexPath:indexPath];
+        __weak typeof(self) weakSelf = self;
+        if (self.forwardingTableModel.tableSource == 0) {
+            cell.originDeviceImageView.hidden = YES;
+            cell.originDeviceNameLabel.hidden = YES;
+        } else {
+            cell.originDeviceImageView.hidden = NO;
+            cell.originDeviceNameLabel.hidden = NO;
+            cell.originDeviceImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:self.forwardingTableModel.tableSource];
+            cell.originDeviceNameLabel.text = [NSString stringWithFormat:@"Node-%04X", self.forwardingTableModel.tableSource];
         }
-            break;
-        case 1:
-        {
-            // backward
-            if (self.forwardingTableModel.backwardPathValidatedFlag) {
-                cell.inputTF.text = @"True(1)";
-            } else {
-                cell.inputTF.text = @"False(0)";
-            }
+        if (self.forwardingTableModel.tableDestination == 0) {
+            cell.targetDeviceImageView.hidden = YES;
+            cell.targetDeviceNameLabel.hidden = YES;
+        } else {
+            cell.targetDeviceImageView.hidden = NO;
+            cell.targetDeviceNameLabel.hidden = NO;
+            cell.targetDeviceImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:self.forwardingTableModel.tableDestination];
+            cell.targetDeviceNameLabel.text = [NSString stringWithFormat:@"Node-%04X", self.forwardingTableModel.tableDestination];
         }
-            break;
-        case 2:
-        {
-            // Source
-//            cell.inputTF.text = [NSString stringWithFormat:@"0x%X", self.forwardingTableModel.tableSource];
-            if (self.forwardingTableModel.tableSource == 0) {
-                cell.showLabel.text = @"Source: NULL";
-            } else {
-                cell.showLabel.text = [NSString stringWithFormat:@"Source: 0x%X", self.forwardingTableModel.tableSource];
-            }
-            cell.inputTF.hidden = YES;
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-            cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-        }
-            break;
-        case 3:
-        {
-            // Destination
-//            cell.inputTF.text = [NSString stringWithFormat:@"0x%X", self.forwardingTableModel.tableDestination];
-            if (self.forwardingTableModel.tableDestination == 0) {
-                cell.showLabel.text = @"Destination: NULL";
-            } else {
-                cell.showLabel.text = [NSString stringWithFormat:@"Destination: 0x%X", self.forwardingTableModel.tableDestination];
-            }
-            cell.inputTF.hidden = YES;
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-            cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-        }
-            break;
-        case 4:
-        {
-            // Bearer_Toward_Path_Origin
-            cell.inputTF.placeholder = @"请输入";
-            cell.inputTF.returnKeyType = UIReturnKeyDone;
-            cell.inputTF.text = [NSString stringWithFormat:@"%04X",self.forwardingTableModel.bearerTowardPathOrigin];
-        }
-            break;
-        case 5:
-        {
-            // Bearer_Toward_Path_Target
-            cell.inputTF.placeholder = @"请输入";
-            cell.inputTF.returnKeyType = UIReturnKeyDone;
-            cell.inputTF.text = [NSString stringWithFormat:@"%04X",self.forwardingTableModel.bearerTowardPathTarget];
-        }
-            break;
-        case 6:
-        {
-            // entry node address
-            cell.showLabel.text = [NSString stringWithFormat:@"EntryNodeAddress: %@", self.forwardingTableModel.getEntryNodeAddressString];
-            cell.inputTF.hidden = YES;
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-            cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-        }
-            break;
-        default:
-            break;
+        [cell.selectOriginButton addAction:^(UIButton *button) {
+            [weakSelf pushToSelectOriginDeviceVC];
+        }];
+        [cell.selectTargetButton addAction:^(UIButton *button) {
+            [weakSelf pushToSelectTargetDeviceVC];
+        }];
+        [cell.selectRouteButton addAction:^(UIButton *button) {
+            [weakSelf pushToSelectRouteDeviceVC];
+        }];
+        return cell;
     }
+    TableNodeCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(TableNodeCell.class) forIndexPath:indexPath];
+    SigNodeModel *model = self.source[indexPath.row-1];
+    cell.model = model;
     return cell;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
+- (void)pushToSelectOriginDeviceVC {
+    // Source
     ChooseEntryVC *vc = (ChooseEntryVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ChooseEntryVCID storyboard:@"Setting"];
-    __weak typeof(self) weakSelf = self;
-    if (indexPath.row == 2) {
-        // Source
-        vc.entryType = EntryType_originRange;
-        if (self.forwardingTableModel.tableSource != 0) {
-            vc.oldAddresses = [NSMutableArray arrayWithObject:@(self.forwardingTableModel.tableSource)];
-        }
-        [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
-            if (addresses.count > 1) {
-                return;
-            } else if (addresses == nil || addresses.count == 0) {
-                weakSelf.forwardingTableModel.pathOriginUnicastAddrRange = nil;
-            } else {
-                UInt16 address = addresses.firstObject.intValue;
-                SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
-                if (model) {
-                    SigUnicastAddressRangeFormatModel *range = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:model.elements.count > 1 rangeStart:address rangeLength:model.elements.count];
-                    weakSelf.forwardingTableModel.pathOriginUnicastAddrRange = range;
-                }
-            }
-            [weakSelf reloadUI];
-        }];
-    } else if (indexPath.row == 3) {
-        // Destination
-        vc.entryType = EntryType_targetRange;
-        if (self.forwardingTableModel.tableDestination != 0) {
-            vc.oldAddresses = [NSMutableArray arrayWithObject:@(self.forwardingTableModel.tableDestination)];
-        }
-        [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
-            if (addresses.count > 1) {
-                return;
-            } else if (addresses == nil || addresses.count == 0) {
-                weakSelf.forwardingTableModel.unicastDestinationFlag = YES;
-                weakSelf.forwardingTableModel.pathTargetUnicastAddrRange = nil;
-            } else {
-                UInt16 address = addresses.firstObject.intValue;
-                SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
-                if (model) {
-                    weakSelf.forwardingTableModel.unicastDestinationFlag = YES;
-                    SigUnicastAddressRangeFormatModel *range = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:model.elements.count > 1 rangeStart:address rangeLength:model.elements.count];
-                    weakSelf.forwardingTableModel.pathTargetUnicastAddrRange = range;
-                } else {
-                    weakSelf.forwardingTableModel.unicastDestinationFlag = NO;
-                    weakSelf.forwardingTableModel.multicastDestination = address;
-                }
-            }
-            [weakSelf reloadUI];
-        }];
-    } else if (indexPath.row == 6) {
-        // entry node address
-        vc.entryType = EntryType_tableEntry;
-        vc.oldAddresses = [NSMutableArray arrayWithArray:self.forwardingTableModel.entryNodeAddress];
-        [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
-            weakSelf.forwardingTableModel.entryNodeAddress = [NSMutableArray arrayWithArray:addresses];
-            [weakSelf reloadUI];
-        }];
+    vc.entryType = EntryType_originRange;
+    if (self.forwardingTableModel.tableSource != 0) {
+        vc.oldAddresses = [NSMutableArray arrayWithObject:@(self.forwardingTableModel.tableSource)];
     }
+    __weak typeof(self) weakSelf = self;
+    [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
+        if (addresses.count > 1) {
+            return;
+        } else if (addresses == nil || addresses.count == 0) {
+            weakSelf.forwardingTableModel.pathOriginUnicastAddrRange = nil;
+        } else {
+            UInt16 address = addresses.firstObject.intValue;
+            SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
+            if (model) {
+                SigUnicastAddressRangeFormatModel *range = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:model.elements.count > 1 rangeStart:address rangeLength:model.elements.count];
+                weakSelf.forwardingTableModel.pathOriginUnicastAddrRange = range;
+            }
+        }
+        [weakSelf reloadUI];
+    }];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-//- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-//    return 50.0f;
-//}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 0.0001f;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
-    return 0.0001f;
-}
-
-#pragma mark - UITextFieldDelegate 返回键
-- (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    if (textField.tag == 4 || textField.tag == 5) {
-        [textField resignFirstResponder];
+- (void)pushToSelectTargetDeviceVC {
+    // Destination
+    ChooseEntryVC *vc = (ChooseEntryVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ChooseEntryVCID storyboard:@"Setting"];
+    vc.entryType = EntryType_targetRange;
+    if (self.forwardingTableModel.tableDestination != 0) {
+        vc.oldAddresses = [NSMutableArray arrayWithObject:@(self.forwardingTableModel.tableDestination)];
     }
-    return YES;
-}
-
-#pragma mark - UITextFieldDelegate
-- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
-    if (textField.tag == 4 || textField.tag == 5) {
-        [textField addTarget:self action:@selector(handlerTextFieldEndEdit:) forControlEvents:UIControlEventEditingDidEnd];
-        return YES; // 当前 textField 可以编辑
-    } else {
-        [self.view endEditing:YES];
-        [self handlerTextFieldSelect:textField];
-        return NO; // 当前 textField 不可编辑，可以响应点击事件
-    }
-}
-
-#pragma mark - 处理编辑事件
-- (void)handlerTextFieldEndEdit:(UITextField *)textField {
-    switch (textField.tag) {
-        case 4:
-        {
-            if ([self validateString:textField.text.removeAllSapceAndNewlines]) {
-                self.forwardingTableModel.bearerTowardPathOrigin = [LibTools uint16From16String:textField.text];
-            } else {
-                [self showTips:@"Please enter the correct bearerTowardPathOrigin!"];
-            }
-        }
-            break;
-        case 5:
-        {
-            if ([self validateString:textField.text.removeAllSapceAndNewlines]) {
-                self.forwardingTableModel.bearerTowardPathTarget = [LibTools uint16From16String:textField.text];
-            } else {
-                [self showTips:@"Please enter the correct bearerTowardPathTarget!"];
-            }
-        }
-            break;
-        default:
-            break;
-    }
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9a-fA-F]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
-}
-
-#pragma mark - 处理点击事件
-- (void)handlerTextFieldSelect:(UITextField *)textField {
     __weak typeof(self) weakSelf = self;
-    switch (textField.tag) {
-        case 0:
-        {
-            // NetKeyIndex
-            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
-            stringPickerView.pickerMode = BRStringPickerComponentSingle;
-            stringPickerView.title = @"please choose NetKeyIndex";
-            stringPickerView.dataSourceArr = self.netkeyArr;
-            SigNetkeyModel *selectModel = [SigDataSource.share getNetkeyModelWithNetkeyIndex:self.forwardingTableModel.netKeyIndex];
-            stringPickerView.selectIndex = [SigDataSource.share.netKeys indexOfObject:selectModel];
-            stringPickerView.pickerStyle.cancelBtnTitle = @"Cancel";
-            stringPickerView.pickerStyle.doneBtnTitle = @"Done";
-            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
-                self.forwardingTableModel.netKeyIndex = SigDataSource.share.netKeys[resultModel.index].index;
-                textField.text = resultModel.value;
-            };
-            [stringPickerView show];
+    [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
+        if (addresses.count > 1) {
+            return;
+        } else if (addresses == nil || addresses.count == 0) {
+            weakSelf.forwardingTableModel.unicastDestinationFlag = YES;
+            weakSelf.forwardingTableModel.pathTargetUnicastAddrRange = nil;
+        } else {
+            UInt16 address = addresses.firstObject.intValue;
+            SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
+            if (model) {
+                weakSelf.forwardingTableModel.unicastDestinationFlag = YES;
+                SigUnicastAddressRangeFormatModel *range = [[SigUnicastAddressRangeFormatModel alloc] initWithLengthPresent:model.elements.count > 1 rangeStart:address rangeLength:model.elements.count];
+                weakSelf.forwardingTableModel.pathTargetUnicastAddrRange = range;
+            } else {
+                weakSelf.forwardingTableModel.unicastDestinationFlag = NO;
+                weakSelf.forwardingTableModel.multicastDestination = address;
+            }
         }
-            break;
-        case 1:
-        {
-            // Backward_Path_Validated_Flag
-            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
-            stringPickerView.pickerMode = BRStringPickerComponentSingle;
-            stringPickerView.title = @"please choose Backward_Path_Validated_Flag";
-            stringPickerView.dataSourceArr = @[@"False(0x0)", @"True(0x1)"];
-            stringPickerView.selectIndex = self.forwardingTableModel.backwardPathValidatedFlag == NO ? 0 : 1;
-            stringPickerView.pickerStyle.cancelBtnTitle = @"Cancel";
-            stringPickerView.pickerStyle.doneBtnTitle = @"Done";
-            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
-                weakSelf.forwardingTableModel.backwardPathValidatedFlag = resultModel.index == 0 ? NO : YES;
-                textField.text = resultModel.value;
-            };
-            [stringPickerView show];
-        }
-            break;
-        case 3:
-        {
-            // Path_Origin_Unicast_Addr_Range
-            AlertItemModel *item1 = [[AlertItemModel alloc] init];
-            item1.itemType = ItemType_Choose;
-            item1.headerString = @"LengthPresent:";
-            item1.defaultString = weakSelf.forwardingTableModel.pathOriginUnicastAddrRange.lengthPresent ? @"True" : @"False";
-            NSMutableArray *mArray = [NSMutableArray array];
-            [mArray addObject:@"True"];
-            [mArray addObject:@"False"];
-            item1.chooseItemsArray = mArray;
-            AlertItemModel *item2 = [[AlertItemModel alloc] init];
-            item2.itemType = ItemType_Input;
-            item2.headerString = @"RangeStart(15 bits):0x";
-            item2.defaultString = @"";
-            AlertItemModel *item3 = [[AlertItemModel alloc] init];
-            item3.itemType = ItemType_Input;
-            item3.headerString = @"RangeLength(8 bits):0x";
-            item3.defaultString = @"";
-            CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Path_Origin_Unicast_Addr_Range" detail:@"input new value" itemArray:@[item1, item2, item3] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
-                if (isConfirm) {
-                    //CONFIRM
-                    NSString *rangeStartString = [alertView getTextFieldOfRow:1].text.removeAllSapce;
-                    NSString *rangeLengthString = [alertView getTextFieldOfRow:2].text.removeAllSapce;
-                    BOOL result = [LibTools validateHex:rangeStartString];
-                    if (result == NO || rangeStartString.length == 0) {
-                        [weakSelf showTips:@"Please enter hexadecimal string to RangeStart!"];
-                        return;
-                    }
-                    result = [LibTools validateHex:rangeLengthString];
-                    if (result == NO || rangeLengthString.length == 0) {
-                        [weakSelf showTips:@"Please enter hexadecimal string to RangeLength steps!"];
-                        return;
-                    }
-                    if (rangeStartString.length > 4) {
-                        [weakSelf showTips:@"The length of RangeStart is 15 bits!"];
-                        return;
-                    }
-                    if (rangeLengthString.length > 2) {
-                        [weakSelf showTips:@"The length of RangeLength is 8 bits!"];
-                        return;
-                    }
-                    int rangeStart = [LibTools uint16From16String:rangeStartString];
-                    if (rangeStart <= 0 || rangeStart > 0x7FFF) {
-                        [weakSelf showTips:@"The range of RangeStart is 0x0001~0x7FFF!"];
-                        return;
-                    }
-                    int rangeLength = [LibTools uint8From16String:rangeLengthString];
-                    if (rangeLength < 0x02 || rangeLength > 0xFF) {
-                        [weakSelf showTips:@"The range of RangeLength is 0x02~0xFF!"];
-                        return;
-                    }
-                    SigUnicastAddressRangeFormatModel *format = [[SigUnicastAddressRangeFormatModel alloc] init];
-                    format.lengthPresent = [alertView getSelectLeftOfRow:0] ? YES : NO;
-                    format.rangeStart = rangeStart;
-                    if (format.lengthPresent) {
-                        format.rangeLength = rangeLength;
-                    } else {
-                        format.rangeLength = 2;
-                    }
-                    weakSelf.forwardingTableModel.pathOriginUnicastAddrRange = format;
-                    [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                } else {
-                    //cancel
-                }
-            }];
-            [customAlertView showCustomAlertView];
-        }
-            break;
-        case 4:
-        {
-            // Path_Target_Unicast_Addr_Range
-            AlertItemModel *item1 = [[AlertItemModel alloc] init];
-            item1.itemType = ItemType_Choose;
-            item1.headerString = @"LengthPresent:";
-            item1.defaultString = weakSelf.forwardingTableModel.pathOriginUnicastAddrRange.lengthPresent ? @"True" : @"False";
-            NSMutableArray *mArray = [NSMutableArray array];
-            [mArray addObject:@"True"];
-            [mArray addObject:@"False"];
-            item1.chooseItemsArray = mArray;
-            AlertItemModel *item2 = [[AlertItemModel alloc] init];
-            item2.itemType = ItemType_Input;
-            item2.headerString = @"RangeStart(15 bits):0x";
-            item2.defaultString = @"";
-            AlertItemModel *item3 = [[AlertItemModel alloc] init];
-            item3.itemType = ItemType_Input;
-            item3.headerString = @"RangeLength(8 bits):0x";
-            item3.defaultString = @"";
-            CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Path_Target_Unicast_Addr_Range" detail:@"input new value" itemArray:@[item1, item2, item3] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
-                if (isConfirm) {
-                    //CONFIRM
-                    NSString *rangeStartString = [alertView getTextFieldOfRow:1].text.removeAllSapce;
-                    NSString *rangeLengthString = [alertView getTextFieldOfRow:2].text.removeAllSapce;
-                    BOOL result = [LibTools validateHex:rangeStartString];
-                    if (result == NO || rangeStartString.length == 0) {
-                        [weakSelf showTips:@"Please enter hexadecimal string to RangeStart!"];
-                        return;
-                    }
-                    result = [LibTools validateHex:rangeLengthString];
-                    if (result == NO || rangeLengthString.length == 0) {
-                        [weakSelf showTips:@"Please enter hexadecimal string to RangeLength steps!"];
-                        return;
-                    }
-                    if (rangeStartString.length > 4) {
-                        [weakSelf showTips:@"The length of RangeStart is 15 bits!"];
-                        return;
-                    }
-                    if (rangeLengthString.length > 2) {
-                        [weakSelf showTips:@"The length of RangeLength is 8 bits!"];
-                        return;
-                    }
-                    int rangeStart = [LibTools uint16From16String:rangeStartString];
-                    if (rangeStart <= 0 || rangeStart > 0x7FFF) {
-                        [weakSelf showTips:@"The range of RangeStart is 0x0001~0x7FFF!"];
-                        return;
-                    }
-                    int rangeLength = [LibTools uint8From16String:rangeLengthString];
-                    if (rangeLength < 0x02 || rangeLength > 0xFF) {
-                        [weakSelf showTips:@"The range of RangeLength is 0x02~0xFF!"];
-                        return;
-                    }
-                    SigUnicastAddressRangeFormatModel *format = [[SigUnicastAddressRangeFormatModel alloc] init];
-                    format.lengthPresent = [alertView getSelectLeftOfRow:0] ? YES : NO;
-                    format.rangeStart = rangeStart;
-                    if (format.lengthPresent) {
-                        format.rangeLength = rangeLength;
-                    } else {
-                        format.rangeLength = 2;
-                    }
-                    weakSelf.forwardingTableModel.pathTargetUnicastAddrRange = format;
-                    [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                } else {
-                    //cancel
-                }
-            }];
-            [customAlertView showCustomAlertView];
-        }
-            break;
-        default:
-            break;
-    }
+        [weakSelf reloadUI];
+    }];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToSelectRouteDeviceVC  {
+    // entry node address
+    ChooseEntryVC *vc = (ChooseEntryVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ChooseEntryVCID storyboard:@"Setting"];
+    vc.entryType = EntryType_tableEntry;
+    vc.oldAddresses = [NSMutableArray arrayWithArray:self.forwardingTableModel.entryNodeAddress];
+    __weak typeof(self) weakSelf = self;
+    [vc setBackAddressCallback:^(NSMutableArray<NSNumber *> * _Nonnull addresses) {
+        weakSelf.forwardingTableModel.entryNodeAddress = [NSMutableArray arrayWithArray:addresses];
+        [weakSelf reloadUI];
+    }];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 @end

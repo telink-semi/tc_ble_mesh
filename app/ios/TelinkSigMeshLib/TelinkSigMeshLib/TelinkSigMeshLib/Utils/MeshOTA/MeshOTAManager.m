@@ -39,7 +39,6 @@
 @interface MeshOTAManager()<SigBearerDataDelegate,SigMessageDelegate>
 @property (nonatomic, copy) FinishBlock finishBlock;
 @property (nonatomic, copy) ErrorBlock errorBlock;
-@property (nonatomic, strong) NSData *otaData;
 @property (nonatomic, assign) UInt8 blockSizeLog;//记录本次meshOTA的block大小，size为2的kBlockSizeLog次幂，默认是2^12=4096字节
 @property (nonatomic, assign) UInt16 chunkSize;//记录本次meshOTA的chunk大小
 @property (nonatomic, strong) NSError *failError;
@@ -116,7 +115,8 @@
     _allAddressArray = [NSMutableArray array];
     _successAddressArray = [NSMutableArray array];
     _failAddressArray = [NSMutableArray array];
-
+    _additionalInformationDictionary = [NSMutableDictionary dictionary];
+    
     // config parameters for meshOTA R04
     _transferModeOfDistributor = SigTransferModeState_pushBLOBTransferMode;
     _transferModeOfUpdateNodes = SigTransferModeState_pushBLOBTransferMode;
@@ -494,6 +494,7 @@
     [self.allAddressArray removeAllObjects];
     [self.successAddressArray removeAllObjects];
     [self.failAddressArray removeAllObjects];
+    [self.additionalInformationDictionary removeAllObjects];
     [self.allAddressArray addObjectsFromArray:deviceAddresses];
     self.testFinish = otaData.length > 1024*3;
     self.incomingFirmwareMetadata = incomingFirmwareMetadata;
@@ -840,28 +841,52 @@
         self.gattDistributionProgressBlock(0);
     }
 
-    __block BOOL hasFail = NO;
-    self.successActionInCurrentProgress = 0;
-    __weak typeof(self) weakSelf = self;
-    self.semaphore = dispatch_semaphore_create(0);
-    [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
-        TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
+    BOOL needCheckDistributionCapabilities = NO;
+    if (self.phoneIsDistributor == NO) {
+        NSArray *allNode = [NSArray arrayWithArray:self.allAddressArray];
+        for (NSNumber *addressNumber in allNode) {
+            if (addressNumber.intValue != SigDataSource.share.getCurrentConnectedNode.address) {
+                needCheckDistributionCapabilities = YES;
+                break;
+            }
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
-    }];
-    //Most provide 3 seconds to firmwareDistributionCapabilitiesGet every node.
-    dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+    }
+    if (needCheckDistributionCapabilities) {
+        SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
+        SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+        if (modelId == nil) {
+            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionCapabilitiesGet, distributor have not FirmwareDistributionServer_ID."] code:-self.firmwareUpdateProgress userInfo:nil];
+            [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+        } else {
+            __block BOOL hasFail = NO;
+            self.successActionInCurrentProgress = 0;
+            __weak typeof(self) weakSelf = self;
+            self.semaphore = dispatch_semaphore_create(0);
+            [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
+                TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (error) {
+                    hasFail = YES;
+                }
+                dispatch_semaphore_signal(weakSelf.semaphore);
+            }];
+            //Most provide 3 seconds to firmwareDistributionCapabilitiesGet every node.
+            dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
 
-    //新做法：直连节点不支持distributor，提示meshOTA失败
-    if (hasFail) {
-        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionCapabilitiesGet"] code:-self.firmwareUpdateProgress userInfo:nil];
-        [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+            //新做法：直连节点不支持distributor，提示meshOTA失败
+            if (hasFail) {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionCapabilitiesGet"] code:-self.firmwareUpdateProgress userInfo:nil];
+                [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+            } else {
+                self.phoneIsDistributor = NO;
+                self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
+                self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
+                [self firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction];
+            }
+        }
     } else {
-        self.phoneIsDistributor = NO;
+        //待验证
         self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
         self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
         [self firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction];
@@ -976,6 +1001,7 @@
                 TelinkLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
+                        weakSelf.additionalInformationDictionary[@(source)] = @(responseMessage.additionalInformation);
 //                            if (responseMessage.additionalInformation == SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData) {
                             hasSuccess = YES;
 //                            } else {
@@ -1014,6 +1040,9 @@
 }
 
 - (void)firmwareUpdateFirmwareMetadataCheckSuccessAction {
+    if (self.firmwareUpdateFirmwareMetadataCheckSuccessHandle) {
+        self.firmwareUpdateFirmwareMetadataCheckSuccessHandle(self.additionalInformationDictionary);
+    }
     [self performSelector:@selector(firmwareUpdateConfigModelSubscriptionAdd) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
@@ -3274,9 +3303,22 @@
                     if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                     TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
-                    UInt16 oldVid = [[weakSelf.oFirmwareInformation[@(source)] objectForKey:kVid] intValue];
-                    if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformation.allKeys containsObject:@(source)] && oldVid != vid)) {
+                    BOOL checkVidResult = NO;
+                    if (weakSelf.otaData) {
+                        //存在Bin数据则获取Bin的vid，如果当前设备的vid == Bin的vid则OTA成功
+                        UInt16 binVersion = [weakSelf getVidWithOTAData:weakSelf.otaData];
+                        if (binVersion == vid) {
+                            checkVidResult = YES;
+                        }
+                    } else {
+                        //不存在Bin数据，则获取设备旧的vid，如果当前设备的vid != 旧的vid则OTA成功
+                        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
+                        UInt16 oldVid = [[weakSelf.oFirmwareInformation[@(source)] objectForKey:kVid] intValue];
+                        if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformation.allKeys containsObject:@(source)] && oldVid != vid)) {
+                            checkVidResult = YES;
+                        }
+                    }
+                    if (checkVidResult) {
                         weakSelf.nFirmwareInformation[@(source)] = @{kPid:@(pid),kVid:@(vid)};
                         [SigDataSource.share updateNodeModelVidWithAddress:nodeAddress.intValue vid:vid];
                         receiveStatusDict[@(source)] = responseMessage;
@@ -3415,6 +3457,15 @@
     if (self.firmwareDistributionReceiversList && self.advDistributionProgressBlock) {
         self.advDistributionProgressBlock(self.firmwareDistributionReceiversList);
     }
+}
+
+- (UInt16)getVidWithOTAData:(NSData *)data {
+    UInt16 vid = 0;
+    Byte *tempBytes = (Byte *)[data bytes];
+    if (data && data.length >= 6) {
+        memcpy(&vid, tempBytes + 0x4, 2);
+    }
+    return vid;
 }
 
 @end

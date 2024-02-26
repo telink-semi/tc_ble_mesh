@@ -168,7 +168,6 @@ typedef enum : UInt8 {
 @property (nonatomic,assign) UInt8 retryCount;//default is 2.
 @property (nonatomic,assign) NSTimeInterval timeout;//default is 1.28s,SigDataSource.share.defaultReliableIntervalOfNotLPN.
 @property (nonatomic,assign) UInt8 hadRetryCount;//default is 0.
-@property (nonatomic, assign) BOOL needTid;//default is NO.
 @property (nonatomic, assign) UInt8 tidPosition;//default is 0.
 @property (nonatomic, assign) BOOL hadReceiveAllResponse;//default is NO.
 @property (nonatomic, assign) UInt8 tid;//default is 0.
@@ -2769,6 +2768,12 @@ typedef enum : UInt8 {
  */
 + (void)stopScan;
 
+/**
+ * @brief   advertising Manufacturer Data.
+ * @param   data Manufacturer Data.
+ * @param   interval advertising Interval.
+ */
++ (void)advertisingManufacturerData:(NSData *)data advertisingInterval:(NSTimeInterval)interval;
 
 #pragma mark - deprecated API
 

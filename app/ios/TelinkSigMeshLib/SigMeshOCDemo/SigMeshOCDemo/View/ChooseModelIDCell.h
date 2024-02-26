@@ -25,8 +25,11 @@
 
 @interface ChooseModelIDCell : UITableViewCell
 
+/// Button layer used to set select image icon.
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(ModelIDModel *)model;
 
 @end

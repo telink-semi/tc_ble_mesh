@@ -21,7 +21,7 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "YZDisplayViewController.h"
+#import "BaseViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

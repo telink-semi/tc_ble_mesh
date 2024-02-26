@@ -3674,7 +3674,7 @@
  * @note    6.3.6.1 Light LC Property Get, seeAlso: Mesh_Model_Specification v1.0.pdf  (page.232)
  */
 + (SigMessageHandle *)lightLCPropertyGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigLightLCPropertyGet *message = [[SigLightLCPropertyGet alloc] init];
+    SigLightLCPropertyGet *message = [[SigLightLCPropertyGet alloc] initWithLightLCPropertyID:propertyID];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseLightLCPropertyStatusCallBack = successCallback;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
@@ -3958,7 +3958,7 @@
     if (model.vendorId) {
         message.opCode = (op << 16) | ((model.vendorId & 0xff) << 8) | (model.vendorId >> 8);
         //vendor的控制指令的tid特殊处理:添加tid在commandData里面tidPosition-1的位置。
-        if (model.tidPosition) {
+        if (model.tidPosition && model.commandData.length >= model.tidPosition) {
             NSMutableData *mData = [NSMutableData dataWithData:model.commandData];
             UInt8 tid = model.tid;
             [mData replaceBytesInRange:NSMakeRange(model.tidPosition-1, 1) withBytes:&tid length:1];
@@ -3976,7 +3976,7 @@
             message.responseOpCode = model.responseOpcode;
         }
     } else {
-        message.responseOpCode = [SigHelper.share getResponseOpcodeWithSendOpcode:op];
+        message.responseOpCode = [SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode];
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:model.retryCount responseMaxCount:model.responseMax responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.curNetkey = model.curNetkey;
@@ -3991,14 +3991,14 @@
 
     if (model.isEncryptByDeviceKey) {
         //mesh数据使用DeviceKey进行加密
-        return [SigMeshLib.share sendConfigMessage:(SigConfigMessage *)message toDestination:model.address command:command];
+        return [SigMeshLib.share sendConfigMessage:(SigConfigMessage *)message toDestination:model.address withTtl:model.ttl command:command];
     } else {
         SigMeshAddress *destination = [[SigMeshAddress alloc] initWithAddress:model.address];
         if (model.meshAddressModel) {
             destination = model.meshAddressModel;
         }
         //mesh数据使用AppKey进行加密
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:destination usingApplicationKey:model.curAppkey command:command];
+        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:destination withTtl:model.ttl usingApplicationKey:model.curAppkey command:command];
     }
 }
 
@@ -4069,6 +4069,7 @@
         TelinkLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
     }];
+    [[TPeripheralManager share] initSDK];
 
 //    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
 //    [SigBluetooth.share setWaitScanRseponseEnable:YES];
@@ -4326,6 +4327,9 @@
     [SigBluetooth.share stopScan];
 }
 
++ (void)advertisingManufacturerData:(NSData *)data advertisingInterval:(NSTimeInterval)interval {
+    [TPeripheralManager.share advertisingManufacturerData:data advertisingInterval:interval result:nil];
+}
 
 #pragma mark - deprecated API
 

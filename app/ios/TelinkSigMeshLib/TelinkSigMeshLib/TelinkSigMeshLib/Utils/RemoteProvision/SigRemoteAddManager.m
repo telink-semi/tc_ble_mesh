@@ -162,7 +162,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.capabilitiesResponseBlock = capabilitiesResponse;
     self.provisionSuccessBlock = provisionSuccess;
     self.failBlock = fail;
-    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[LibTools convertDataToHexStr:reportNodeUUID]];
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
@@ -244,25 +244,34 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 // 1.remoteProvisioningScanCapabilitiesGet
 - (void)getRemoteProvisioningScanCapabilities {
     TelinkLogVerbose(@"getRemoteProvisioningScanCapabilities address=0x%x",SigMeshLib.share.dataSource.getCurrentConnectedNode.address);
-    __weak typeof(self) weakSelf = self;
-    self.messageHandle = [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:SigMeshLib.share.dataSource.getCurrentConnectedNode.address retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
-//        if (responseMessage.activeScan) {
-            weakSelf.currentMaxScannedItems = responseMessage.maxScannedItems;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
-            [weakSelf performSelector:@selector(startRemoteProvisioningScan) withObject:nil afterDelay:0.5];
-        });
-//        } else {
-//            TelinkLogInfo(@"nodeAddress 0x%x no support remote provision scan, try next address.");
-//            [weakSelf endSingleRemoteProvisionScan];
-//        }
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            TelinkLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout.",SigMeshLib.share.dataSource.unicastAddressOfConnected);
-            [weakSelf endSingleRemoteProvisionScan];
+    if ([SigMeshLib.share.dataSource.getCurrentConnectedNode getElementModelWithModelIds:@[@(kSigModel_RemoteProvisionServer_ID)]]) {
+        __weak typeof(self) weakSelf = self;
+        self.messageHandle = [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:SigMeshLib.share.dataSource.getCurrentConnectedNode.address retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
+    //        if (responseMessage.activeScan) {
+                weakSelf.currentMaxScannedItems = responseMessage.maxScannedItems;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
+                [weakSelf performSelector:@selector(startRemoteProvisioningScan) withObject:nil afterDelay:0.5];
+            });
+    //        } else {
+    //            TelinkLogInfo(@"nodeAddress 0x%x no support remote provision scan, try next address.");
+    //            [weakSelf endSingleRemoteProvisionScan];
+    //        }
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                TelinkLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout.",SigMeshLib.share.dataSource.unicastAddressOfConnected);
+                [weakSelf endSingleRemoteProvisionScan];
+            }
+        }];
+    } else {
+        NSString *errstr = @"Reomte Provision fail: current connected node is no support remote provision.";
+        TelinkLogError(@"%@",errstr);
+        NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
+        if (self.scanResultBlock) {
+            self.scanResultBlock(NO, err);
         }
-    }];
+    }
 }
 
 // 2.remoteProvisioningScanStart
@@ -331,6 +340,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     NSData *devKeyData = self.provisioningData.deviceKey;
     TelinkLogInfo(@"deviceKey=%@",devKeyData);
+
+    self.unprovisionedDevice.address = address;
+    self.unprovisionedDevice.provisioned = YES;
+    [SigMeshLib.share.dataSource updateScanRspModelToDataSource:self.unprovisionedDevice];
 
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];

@@ -69,7 +69,7 @@
     self.customAlert.rightBtnTitle = self.rightBtnTitle;
     self.customAlert.leftBtn.tag = 1;
     self.customAlert.rightBtn.tag = 2;
-    self.customAlert.yz_height = 145+45*self.itemArray.count;
+    self.customAlert.height = 145+45*self.itemArray.count;
     [self.customAlert.leftBtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
     [self.customAlert.rightBtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
 }

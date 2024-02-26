@@ -26,6 +26,8 @@
 #import "UIViewController+Message.h"
 
 @interface SchedulerDetailViewController ()
+@property (weak, nonatomic) IBOutlet UILabel *schedulerIndexLabel;
+
 @property (weak, nonatomic) IBOutlet UIButton *yearAnyButton;
 @property (weak, nonatomic) IBOutlet UIButton *yearCustomButton;
 @property (weak, nonatomic) IBOutlet UITextField *yearTextField;
@@ -97,12 +99,10 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = [NSString stringWithFormat:@"Index:0x%llX",self.model.schedulerID];
-
-    UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-    [button setTitle:@"setTime" forState:UIControlStateNormal];
-    [button addTarget:self action:@selector(clickSetTime) forControlEvents:UIControlEventTouchUpInside];
-    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.title = @"Scheduler Setting";
+    self.schedulerIndexLabel.text = [NSString stringWithFormat:@"Index:0x%lX",(long)self.model.schedulerID];
+    //init rightBarButtonItems
+    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_time"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSetTime)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItems = @[rightItem2,rightItem1];
 
@@ -168,7 +168,7 @@
         UIButton *button = checkButtons[i];
         if (button.isSelected) {
             NSString *temStr = [(UITextField *)self.checkTextFields[i] text];
-            if ([self validateString:temStr]) {
+            if ([LibTools validateNumberString:temStr]) {
                 int tem = [temStr intValue];
                 int min = [checkRangeMin[i] intValue];
                 int max = [checkRangeMax[i] intValue];
@@ -315,10 +315,10 @@
 }
 
 - (IBAction)textFieldEditingEnd:(UITextField *)sender {
-    //1.remove all sapce
-    sender.text = [sender.text removeAllSapceAndNewlines];
+    //1.remove all space
+    sender.text = [sender.text removeAllSpaceAndNewlines];
     //2.正则判断合法性
-    if ([self validateString:sender.text]) {
+    if ([LibTools validateNumberString:sender.text]) {
         //3.change to int
         int tem = [sender.text intValue];
         if (sender == self.yearTextField) {
@@ -461,12 +461,6 @@
             self.actionNoButton.selected = YES;
         }
     }
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
 }
 
 @end

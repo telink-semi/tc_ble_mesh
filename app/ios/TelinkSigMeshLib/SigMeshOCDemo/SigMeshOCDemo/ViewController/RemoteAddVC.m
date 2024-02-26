@@ -315,21 +315,24 @@
                     [SDKLibCommand stopScan];
                     [weakSelf addOneNodeInGATT:peripheral];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanFinish) object:nil];
+                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanTimeout) object:nil];
                     });
                 }
             }];
             dispatch_async(dispatch_get_main_queue(), ^{
-                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanFinish) object:nil];
-                [weakSelf performSelector:@selector(scanFinish) withObject:nil afterDelay:5.0];
+                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanTimeout) object:nil];
+                [weakSelf performSelector:@selector(scanTimeout) withObject:nil afterDelay:5.0];
             });
         }];
     }
 }
 
-- (void)scanFinish {
+- (void)scanTimeout {
     [SDKLibCommand stopScan];
-    [self setUserEnable:YES];
+    NSString *errstr = @"RP-GATT: scan timeout.";
+    TelinkLogError(@"%@",errstr);
+    NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
+    [self showRemoteProvisionError:err];
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
@@ -440,7 +443,7 @@
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
 
-    self.title = @"Device Scan(Remote)";
+    [self setTitle:@"Device Scan" subTitle:@"Remote"];
 
     self.source = [NSMutableArray array];
     self.remoteSource = [NSMutableArray array];

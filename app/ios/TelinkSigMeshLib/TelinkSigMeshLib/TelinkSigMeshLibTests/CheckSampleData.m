@@ -343,7 +343,7 @@ static Byte pduByte[] = {(Byte) 0x68, (Byte) 0x16, (Byte) 0x15, (Byte) 0xB5, (By
     SigMeshLib.share.dataSource.unicastAddressOfConnected = node.address;
     SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = [LibTools uint32From16String:defaultMesh.ivIndex];
 
-    IniCommandModel *m = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:defaultMesh.curNetkeyModel.index appkeyIndex:defaultMesh.curAppkeyModel.index retryCount:0 responseMax:1 address:node.address opcode:0x2A vendorId:0xA responseOpcode:0x2B needTid:NO tidPosition:0 tid:0 commandData:[LibTools nsstringToHex:@"576f726c64"]];
+    IniCommandModel *m = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:defaultMesh.curNetkeyModel.index appkeyIndex:defaultMesh.curAppkeyModel.index retryCount:0 responseMax:1 address:node.address opcode:0x2A vendorId:0xA responseOpcode:0x2B tidPosition:0 tid:0 commandData:[LibTools nsstringToHex:@"576f726c64"]];
     m.curAppkey = defaultMesh.curAppkeyModel;
     m.curNetkey = defaultMesh.curNetkeyModel;
     m.curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="68" id="KGk-i7-Jjw" customClass="CMDCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="68"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="68"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Action:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="99R-pR-KDL">
+                        <rect key="frame" x="10" y="15" width="90" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="90" id="Xsa-Iu-y6j"/>
+                            <constraint firstAttribute="height" constant="21" id="rN6-1N-pnw"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" name="telinkTitleGray"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="1234567890123456789012345678901234567890" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4zE-vp-18l">
+                        <rect key="frame" x="105" y="16" width="200" height="19"/>
+                        <color key="textColor" name="telinkTitleBlack"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <textInputTraits key="textInputTraits"/>
+                    </textField>
+                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="down" translatesAutoresizingMaskIntoConstraints="NO" id="Pxj-cI-8gz">
+                        <rect key="frame" x="290" y="18" width="15" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="15" id="PDw-8q-QvK"/>
+                            <constraint firstAttribute="height" constant="15" id="oD1-uz-EmT"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lAK-Z8-nXQ">
+                        <rect key="frame" x="105" y="39" width="200" height="1"/>
+                        <color key="backgroundColor" name="telinkTabBarshadowImageColor"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="1" id="PeE-ty-oIX"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="01 00" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ghi-q8-tb5">
+                        <rect key="frame" x="10" y="48" width="295" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="15" id="q7w-jO-nlZ"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                        <color key="textColor" name="telinkLabelBlue"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IP6-Fa-XQL">
+                        <rect key="frame" x="105" y="5.6666666666666679" width="180" height="40"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="40" id="Mrk-0Z-qSp"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="boldSystem" pointSize="11"/>
+                        <state key="normal" title="123456789012">
+                            <color key="titleColor" name="telinkBlue"/>
+                        </state>
+                    </button>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="lAK-Z8-nXQ" firstAttribute="bottom" secondItem="4zE-vp-18l" secondAttribute="bottom" constant="5" id="4iI-zg-wUD"/>
+                    <constraint firstItem="4zE-vp-18l" firstAttribute="leading" secondItem="99R-pR-KDL" secondAttribute="trailing" constant="5" id="Ci8-fp-hUk"/>
+                    <constraint firstItem="lAK-Z8-nXQ" firstAttribute="trailing" secondItem="4zE-vp-18l" secondAttribute="trailing" id="FbN-yp-nDx"/>
+                    <constraint firstItem="IP6-Fa-XQL" firstAttribute="leading" secondItem="99R-pR-KDL" secondAttribute="trailing" constant="5" id="Fi0-1k-b6y"/>
+                    <constraint firstAttribute="trailing" secondItem="4zE-vp-18l" secondAttribute="trailing" constant="15" id="ITi-Yn-e5G"/>
+                    <constraint firstItem="lAK-Z8-nXQ" firstAttribute="leading" secondItem="4zE-vp-18l" secondAttribute="leading" id="Let-EG-lYd"/>
+                    <constraint firstItem="Ghi-q8-tb5" firstAttribute="leading" secondItem="99R-pR-KDL" secondAttribute="leading" id="R1W-21-a5s"/>
+                    <constraint firstItem="99R-pR-KDL" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="10" id="Z7U-j1-HGu"/>
+                    <constraint firstItem="Pxj-cI-8gz" firstAttribute="centerY" secondItem="99R-pR-KDL" secondAttribute="centerY" id="b2Q-nQ-XpO"/>
+                    <constraint firstItem="99R-pR-KDL" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="15" id="fMW-JG-qVy"/>
+                    <constraint firstItem="4zE-vp-18l" firstAttribute="centerY" secondItem="IP6-Fa-XQL" secondAttribute="centerY" id="fpj-6i-5DO"/>
+                    <constraint firstAttribute="bottom" secondItem="Ghi-q8-tb5" secondAttribute="bottom" constant="5" id="ieb-4g-hCu"/>
+                    <constraint firstItem="Pxj-cI-8gz" firstAttribute="trailing" secondItem="4zE-vp-18l" secondAttribute="trailing" id="m0f-ZK-zOr"/>
+                    <constraint firstItem="Pxj-cI-8gz" firstAttribute="leading" secondItem="IP6-Fa-XQL" secondAttribute="trailing" constant="5" id="nSZ-Yn-eZ0"/>
+                    <constraint firstItem="4zE-vp-18l" firstAttribute="trailing" secondItem="Ghi-q8-tb5" secondAttribute="trailing" id="qJd-38-GUS"/>
+                    <constraint firstItem="Ghi-q8-tb5" firstAttribute="top" secondItem="99R-pR-KDL" secondAttribute="bottom" constant="12" id="ugd-BJ-Bid"/>
+                    <constraint firstAttribute="bottom" secondItem="99R-pR-KDL" secondAttribute="bottom" priority="999" constant="10" id="xG3-gY-III"/>
+                    <constraint firstItem="4zE-vp-18l" firstAttribute="centerY" secondItem="99R-pR-KDL" secondAttribute="centerY" id="zca-0E-hL5"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
+            <connections>
+                <outlet property="moreImageView" destination="Pxj-cI-8gz" id="Ctr-Qz-f3b"/>
+                <outlet property="nameLabel" destination="99R-pR-KDL" id="n0D-D5-ntW"/>
+                <outlet property="paramsLabel" destination="Ghi-q8-tb5" id="04A-HW-dvE"/>
+                <outlet property="valueButton" destination="IP6-Fa-XQL" id="u0r-ob-wmV"/>
+                <outlet property="valueTF" destination="4zE-vp-18l" id="Own-Sn-dq9"/>
+            </connections>
+            <point key="canvasLocation" x="48.854961832061065" y="49.647887323943664"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="down" width="100" height="100"/>
+        <namedColor name="telinkBlue">
+            <color red="0.29019607843137257" green="0.52941176470588236" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkLabelBlue">
+            <color red="0.29019607843137257" green="0.52941176470588236" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTabBarshadowImageColor">
+            <color red="0.69803921568627447" green="0.69803921568627447" blue="0.69803921568627447" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTitleBlack">
+            <color red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>
