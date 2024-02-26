@@ -1,7 +1,14 @@
+# Xcode
+.DS_Store
+/.DS_Store
+
+#CocoaPods
 Pods/
 Pods
-.DS_Store
-Podfile.lock
-/.DS_Store
+!Podfile
+!Podfile.lock
 Podfile.lock
 /Podfile.lock
+*.xcworkspace
+
+
