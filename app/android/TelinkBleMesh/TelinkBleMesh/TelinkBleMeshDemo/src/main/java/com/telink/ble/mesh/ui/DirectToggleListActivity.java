@@ -22,15 +22,21 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.message.directforwarding.DirectedControlSetMessage;
 import com.telink.ble.mesh.core.message.directforwarding.DirectedControlStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -44,11 +50,27 @@ import com.telink.ble.mesh.util.MeshLogger;
 /**
  * network key in target device
  */
-public class DirectToggleListActivity extends BaseActivity implements EventListener<String> {
+public class DirectToggleListActivity extends BaseActivity implements EventListener<String>, View.OnClickListener {
 
     private MeshInfo meshInfo;
     private Handler handler = new Handler();
     private DirectToggleListAdapter listAdapter;
+
+    private static final int ACTION_ENABLE_DF = 0x01;
+    private static final int ACTION_DISABLE_DF = 0x02;
+
+    private static final int ACTION_ENABLE_RELAY = 0x03;
+    private static final int ACTION_DISABLE_RELAY = 0x04;
+
+    private static final int ACTION_ENABLE_PROXY = 0x05;
+    private static final int ACTION_DISABLE_PROXY = 0x06;
+
+    private static final int ACTION_ENABLE_FRIEND = 0x07;
+    private static final int ACTION_DISABLE_FRIEND = 0x08;
+
+    int curIndex = 0;
+    int action = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +88,15 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
         listAdapter = new DirectToggleListAdapter(this, meshInfo.nodes);
         rv_df.setAdapter(listAdapter);
 
+        findViewById(R.id.btn_enable_df).setOnClickListener(this);
+        findViewById(R.id.btn_disable_df).setOnClickListener(this);
+        findViewById(R.id.btn_enable_relay).setOnClickListener(this);
+        findViewById(R.id.btn_disable_relay).setOnClickListener(this);
+        findViewById(R.id.btn_enable_proxy).setOnClickListener(this);
+        findViewById(R.id.btn_disable_proxy).setOnClickListener(this);
+        findViewById(R.id.btn_enable_friend).setOnClickListener(this);
+        findViewById(R.id.btn_disable_friend).setOnClickListener(this);
+
         TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
     }
 
@@ -73,7 +104,6 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
         setTitle("Direct Toggle List");
         enableBackNav(true);
     }
-
 
     @Override
     protected void onDestroy() {
@@ -118,4 +148,115 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
         }
     }
 
+
+    private void setAll(int action) {
+        showWaitingDialog("Setting Direct...");
+        handler.postDelayed(this::dismissWaitingDialog, 500 * meshInfo.nodes.size());
+        curIndex = 0;
+        this.action = action;
+        setNext();
+    }
+
+    private void setNext() {
+        if (curIndex >= meshInfo.nodes.size()) {
+            // all complete
+            dismissWaitingDialog();
+            return;
+        }
+        NodeInfo node = meshInfo.nodes.get(curIndex);
+        curIndex += 1;
+        if (node.isOffline()) {
+            setNext();
+        }
+        int adr = node.meshAddress;
+
+        DirectedControlSetMessage setMessage = new DirectedControlSetMessage(adr);
+        switch (action) {
+            case ACTION_ENABLE_DF:
+                setMessage.directedForwarding = 1; // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+
+            case ACTION_DISABLE_DF:
+                setMessage.directedForwarding = 0; // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+
+            case ACTION_ENABLE_RELAY:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = 1; //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+
+            case ACTION_DISABLE_RELAY:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = 0; //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+
+            case ACTION_ENABLE_PROXY:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) 1);
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+            case ACTION_DISABLE_PROXY:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) 0);
+                setMessage.directedFriend = (byte) (node.directFriendEnabled ? 1 : 0);
+                break;
+
+            case ACTION_ENABLE_FRIEND:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = ((byte) 1);
+                break;
+            case ACTION_DISABLE_FRIEND:
+                setMessage.directedForwarding = (byte) (node.directForwardingEnabled ? 1 : 0); // get current state
+                setMessage.directedRelay = (byte) (node.directProxyEnabled ? 1 : 0); //  reverse, changed current state
+                setMessage.setDirectedProxy((byte) (node.directProxyEnabled ? 1 : 0));
+                setMessage.directedFriend = ((byte) 0);
+                break;
+        }
+
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_enable_df:
+                setAll(ACTION_ENABLE_DF);
+                break;
+            case R.id.btn_disable_df:
+                setAll(ACTION_DISABLE_DF);
+                break;
+            case R.id.btn_enable_relay:
+                setAll(ACTION_ENABLE_RELAY);
+                break;
+            case R.id.btn_disable_relay:
+                setAll(ACTION_DISABLE_RELAY);
+                break;
+            case R.id.btn_enable_proxy:
+                setAll(ACTION_ENABLE_PROXY);
+                break;
+            case R.id.btn_disable_proxy:
+                setAll(ACTION_DISABLE_PROXY);
+                break;
+            case R.id.btn_enable_friend:
+                setAll(ACTION_ENABLE_FRIEND);
+                break;
+            case R.id.btn_disable_friend:
+                setAll(ACTION_DISABLE_FRIEND);
+                break;
+        }
+    }
 }
