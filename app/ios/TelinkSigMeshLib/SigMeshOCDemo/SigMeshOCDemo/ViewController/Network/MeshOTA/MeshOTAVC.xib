@@ -84,7 +84,7 @@
                             <rect key="frame" x="10" y="0.0" width="355" height="40"/>
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                            <state key="normal" title="file error">
+                            <state key="normal" title="OTA new firmware file">
                                 <color key="titleColor" name="telinkTitleGray"/>
                             </state>
                             <connections>

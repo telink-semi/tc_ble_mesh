@@ -55,7 +55,8 @@
     if (!model.isKeyBindSuccess) {
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }
-    self.address.textColor = [UIColor grayColor];
+    self.nodeName.text = model.name;
+    self.address.textColor = self.nodeName.textColor = [UIColor grayColor];
     //直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
         self.address.textColor = HEX(#4A87EE);

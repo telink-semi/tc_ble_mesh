@@ -49,7 +49,7 @@
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OOBItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OOBItemCellID];
     //兼容iPad写法
     UIButton *but = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-    [but setBackgroundImage:[UIImage imageNamed:@"ic_add"] forState:UIControlStateNormal];
+    [but setBackgroundImage:[UIImage imageNamed:@"ic_add_w30"] forState:UIControlStateNormal];
     [but addTarget:self action:@selector(clickAdd:) forControlEvents:UIControlEventTouchUpInside];
     //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithCustomView:but];

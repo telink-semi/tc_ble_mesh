@@ -28,6 +28,7 @@
 @interface DirectControlListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSArray <SigNodeModel *>*source;
+@property (nonatomic, strong) SigNodeModel *allNode;
 @end
 
 @implementation DirectControlListVC
@@ -37,18 +38,31 @@
     cell.accessoryType = UITableViewCellAccessoryNone;
     SigNodeModel *model = self.source[indexPath.row];
     cell.model = model;
+    NSArray *nodeList = @[model];
+    if (model.address == 0xFFFF) {
+        nodeList = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        BOOL hasOnline = NO;
+        for (SigNodeModel *node in self.source) {
+            if (node.state != DeviceStateOutOfLine) {
+                hasOnline = YES;
+                break;
+            }
+        }
+        cell.iconImageView.image = [UIImage imageNamed:hasOnline ? @"dengs" : @"dengo"];
+        cell.nameLabel.text = @"adr-All Nodes Setting";
+    }
     __weak typeof(self) weakSelf = self;
     [cell.forwardingButton addAction:^(UIButton *button) {
-        [weakSelf setDirectedForwarding:model.directControlStatus.directedForwardingState == DirectedForwardingState_disable ? DirectedForwarding_enable : DirectedForwarding_disable node:model];
+        [weakSelf setDirectedForwarding:model.directControlStatus.directedForwardingState == DirectedForwardingState_disable ? DirectedForwarding_enable : DirectedForwarding_disable nodeList:nodeList];
     }];
     [cell.relayButton addAction:^(UIButton *button) {
-        [weakSelf setDirectedRelay:model.directControlStatus.directedRelayState == DirectedRelayState_disable ? DirectedRelay_enable : DirectedRelay_disable node:model];
+        [weakSelf setDirectedRelay:model.directControlStatus.directedRelayState == DirectedRelayState_disable ? DirectedRelay_enable : DirectedRelay_disable nodeList:nodeList];
     }];
     [cell.proxyButton addAction:^(UIButton *button) {
-        [weakSelf setDirectedProxy:model.directControlStatus.directedProxyState == DirectedProxyState_disable ? DirectedProxy_enable : DirectedProxy_disable node:model];
+        [weakSelf setDirectedProxy:model.directControlStatus.directedProxyState == DirectedProxyState_disable ? DirectedProxy_enable : DirectedProxy_disable nodeList:nodeList];
     }];
     [cell.friendButton addAction:^(UIButton *button) {
-        [weakSelf setDirectedFriend:model.directControlStatus.directedFriendState == DirectedFriendState_disable ? DirectedFriend_enable : DirectedFriend_disable node:model];
+        [weakSelf setDirectedFriend:model.directControlStatus.directedFriendState == DirectedFriendState_disable ? DirectedFriend_enable : DirectedFriend_disable nodeList:nodeList];
     }];
     return cell;
 }
@@ -57,61 +71,137 @@
     return self.source.count;
 }
 
-- (void)setDirectedForwarding:(DirectedForwarding)directedForwarding node:(SigNodeModel *)node {
-    [self directControlSetWithDirectedForwarding:directedForwarding directedRelay:directedForwarding == DirectedForwarding_disable ? DirectedRelay_disable : (DirectedRelay)node.directControlStatus.directedRelayState directedProxy:directedForwarding == DirectedForwarding_disable ? DirectedProxy_disable : (DirectedProxy)node.directControlStatus.directedProxyState directedFriend:DirectedFriend_ignore node:node];
+- (void)setDirectedForwarding:(DirectedForwarding)directedForwarding nodeList:(NSArray <SigNodeModel *>*)nodeList {
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        for (int i=0; i<nodeList.count; i++) {
+            SigNodeModel *node = nodeList[i];
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [weakSelf directControlSetWithDirectedForwarding:directedForwarding directedRelay:directedForwarding == DirectedForwarding_disable ? DirectedRelay_disable : (DirectedRelay)node.directControlStatus.directedRelayState directedProxy:directedForwarding == DirectedForwarding_disable ? DirectedProxy_disable : (DirectedProxy)node.directControlStatus.directedProxyState directedFriend:DirectedFriend_ignore node:node resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+            }];
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        }
+        if (nodeList.count > 1) {
+            weakSelf.allNode.directControlStatus.directedForwardingState = (DirectedForwardingState)directedForwarding;
+        }
+        [weakSelf finishAction];
+    }];
 }
 
-- (void)setDirectedRelay:(DirectedRelay)directedRelay node:(SigNodeModel *)node {
-    if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
-        [self showTips:@"(relay)check direct forwarding first"];
-        return;
-    }
-    [self directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:directedRelay directedProxy:(DirectedProxy)node.directControlStatus.directedProxyState directedFriend:DirectedFriend_ignore node:node];
+- (void)setDirectedRelay:(DirectedRelay)directedRelay nodeList:(NSArray <SigNodeModel *>*)nodeList {
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        for (int i=0; i<nodeList.count; i++) {
+            SigNodeModel *node = nodeList[i];
+            if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
+                [weakSelf showTips:@"(relay)check direct forwarding first"];
+                break;
+            }
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [weakSelf directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:directedRelay directedProxy:(DirectedProxy)node.directControlStatus.directedProxyState directedFriend:DirectedFriend_ignore node:node resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+            }];
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        }
+        if (nodeList.count > 1) {
+            weakSelf.allNode.directControlStatus.directedRelayState = (DirectedRelayState)directedRelay;
+        }
+        [weakSelf finishAction];
+    }];
 }
 
-- (void)setDirectedProxy:(DirectedProxy)directedProxy node:(SigNodeModel *)node {
-    if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
-        [self showTips:@"(proxy)check direct forwarding first"];
-        return;
-    }
-    [self directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:(DirectedRelay)node.directControlStatus.directedRelayState directedProxy:directedProxy directedFriend:DirectedFriend_ignore node:node];
+- (void)setDirectedProxy:(DirectedProxy)directedProxy nodeList:(NSArray <SigNodeModel *>*)nodeList {
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        for (int i=0; i<nodeList.count; i++) {
+            SigNodeModel *node = nodeList[i];
+            if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
+                [self showTips:@"(proxy)check direct forwarding first"];
+                break;
+            }
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [weakSelf directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:(DirectedRelay)node.directControlStatus.directedRelayState directedProxy:directedProxy directedFriend:DirectedFriend_ignore node:node resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+            }];
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        }
+        if (nodeList.count > 1) {
+            weakSelf.allNode.directControlStatus.directedProxyState = (DirectedProxyState)directedProxy;
+        }
+        [weakSelf finishAction];
+    }];
 }
 
-- (void)setDirectedFriend:(DirectedFriend)directedFriend node:(SigNodeModel *)node {
-    if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
-        [self showTips:@"(friend)check direct forwarding first"];
-        return;
-    }
-    [self directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:(DirectedRelay)node.directControlStatus.directedRelayState directedProxy:(DirectedProxy)node.directControlStatus.directedProxyState directedFriend:directedFriend node:node];
+- (void)setDirectedFriend:(DirectedFriend)directedFriend nodeList:(NSArray <SigNodeModel *>*)nodeList {
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        for (int i=0; i<nodeList.count; i++) {
+            SigNodeModel *node = nodeList[i];
+            if (node.directControlStatus.directedForwardingState == DirectedForwardingState_disable) {
+                [self showTips:@"(friend)check direct forwarding first"];
+                break;
+            }
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [weakSelf directControlSetWithDirectedForwarding:(DirectedForwarding)node.directControlStatus.directedForwardingState directedRelay:(DirectedRelay)node.directControlStatus.directedRelayState directedProxy:(DirectedProxy)node.directControlStatus.directedProxyState directedFriend:directedFriend node:node resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                dispatch_semaphore_signal(semaphore);
+            }];
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        }
+        if (nodeList.count > 1) {
+            weakSelf.allNode.directControlStatus.directedFriendState = (DirectedFriendState)directedFriend;
+        }
+        [weakSelf finishAction];
+    }];
 }
 
-- (void)directControlSetWithDirectedForwarding:(DirectedForwarding)directedForwarding directedRelay:(DirectedRelay)directedRelay directedProxy:(DirectedProxy)directedProxy directedFriend:(DirectedFriend)directedFriend node:(SigNodeModel *)node {
+- (void)finishAction {
+    [self updateData];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [ShowTipsHandle.share delayHidden:0.1];
+    });
+}
+
+- (void)directControlSetWithDirectedForwarding:(DirectedForwarding)directedForwarding directedRelay:(DirectedRelay)directedRelay directedProxy:(DirectedProxy)directedProxy directedFriend:(DirectedFriend)directedFriend node:(SigNodeModel *)node resultCallback:(resultBlock)resultCallback {
     if (node.state == DeviceStateOutOfLine) {
-        [self showTips:Tip_DeviceOutline];
+        [self showTips:[NSString stringWithFormat:@"%@ address:0x%04X", Tip_DeviceOutline, node.address]];
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"The address=0x04%X node is outline.", node.address] code:-1 userInfo:nil];
+            resultCallback(NO, error);
+        }
         return;
     }
-    [ShowTipsHandle.share show:Tip_SetDirectControl];
+    [ShowTipsHandle.share show:[NSString stringWithFormat:@"%@ address:0x%04X", Tip_SetDirectControl, node.address]];
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand directControlSetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index directedForwarding:directedForwarding directedRelay:directedRelay directedProxy:directedProxy directedProxyUseDirectedDefault:directedProxy == DirectedProxy_enable ? DirectedProxyUseDirectedDefault_enable : DirectedProxyUseDirectedDefault_ignore directedFriend:directedFriend destination:node.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigDirectControlStatus * _Nonnull responseMessage) {
         TelinkLogDebug(@"directControlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == node.address) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (responseMessage.status == SigConfigMessageStatus_success) {
-                    [ShowTipsHandle.share show:Tip_SetDirectControlSuccess];
+                    [ShowTipsHandle.share show:[NSString stringWithFormat:@"%@ address:0x%04X", Tip_SetDirectControlSuccess, node.address]];
                     node.directControlStatus = responseMessage;
                     [SigDataSource.share saveLocationData];
                 } else {
                     [ShowTipsHandle.share show:[NSString stringWithFormat:@"directControlSet fail, status code = %d", responseMessage.status]];
                 }
-                [ShowTipsHandle.share delayHidden:0.1];
             });
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@", isResponseAll, error);
+        if (resultCallback) {
+            resultCallback(isResponseAll, error);
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error) {
-                [ShowTipsHandle.share show:error.domain];
-                [ShowTipsHandle.share delayHidden:0.1];
+                [ShowTipsHandle.share show:[NSString stringWithFormat:@"%@ address:0x%04X", error.domain, node.address]];
             }
             [weakSelf updateData];
         });
@@ -130,10 +220,16 @@
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(DirectToggleCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(DirectToggleCell.class)];
     self.source = [[NSMutableArray alloc] init];
     self.title = @"Direct Toggle List";
+    self.allNode = [[SigNodeModel alloc] init];
+    SigDirectControlStatus *status = [[SigDirectControlStatus alloc] init];
+    self.allNode.directControlStatus = status;
+    self.allNode.unicastAddress = @"FFFF";
 }
 
 - (void)updateData{
-    self.source = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSMutableArray *mArray = [NSMutableArray arrayWithObject:self.allNode];
+    [mArray addObjectsFromArray:SigDataSource.share.curNodes];
+    self.source = mArray;
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 

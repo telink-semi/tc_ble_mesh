@@ -41,9 +41,9 @@
     _model = model;
     self.iconImage.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
     if (model.sceneAddress.count == 0) {
-        self.nameLabel.text = [NSString stringWithFormat:@"adr-0x%04X(Not support scene register.)\ncid-%@ pid-%@", model.address, model.cid, model.pid];
+        self.nameLabel.text = [NSString stringWithFormat:@"Name:%@\nAdr-0x%04X(Not support scene register.)\ncid-%@ pid-%@", model.name, model.address, model.cid, model.pid];
     } else {
-        self.nameLabel.text = [NSString stringWithFormat:@"adr-0x%04X\ncid-%@ pid-%@", model.address, model.cid, model.pid];
+        self.nameLabel.text = [NSString stringWithFormat:@"Name:%@\nAdr-0x%04X\ncid-%@ pid-%@", model.name, model.address, model.cid, model.pid];
     }
     [self.selectButton setImage:[UIImage imageNamed:model.state == DeviceStateOutOfLine ? @"bukexuan" : @"unxuan"] forState:UIControlStateNormal];
     self.selectButton.enabled = model.state != DeviceStateOutOfLine;

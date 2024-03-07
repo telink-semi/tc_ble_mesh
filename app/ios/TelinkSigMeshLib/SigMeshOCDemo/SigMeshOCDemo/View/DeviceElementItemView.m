@@ -40,9 +40,9 @@
         [self.selectButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
     }
     //离线与关闭，亮度色温显示0
-    self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@",model.address,[DemoTool getNodeStateStringWithUnicastAddress:model.address]];
+    self.stateLabel.text = [NSString stringWithFormat:@"Name:%@ adr:0x%X\non/off:%@", node.name, model.address, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
     if (node && node.sceneAddress.count == 0) {
-        self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\n%@",model.address,@"Not support scene register."];
+        self.stateLabel.text = [NSString stringWithFormat:@"Name:%@ adr:0x%X\n%@", node.name, model.address,@"Not support scene register."];
     }
 }
 

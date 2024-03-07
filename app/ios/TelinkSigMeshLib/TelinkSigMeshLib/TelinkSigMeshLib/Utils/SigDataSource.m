@@ -179,6 +179,7 @@
 //    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202883082022EA003020102020100300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D030107034200046E0844268E1DA5556DA9B85D90A06DE152FB96A1521918B33B8E081F50B0274001E979A03E322BCD83E10CC447FD1124B65E71FDFEBE4BDD43712AFB5FA40D9EA35D305B301D0603551D0E04160414C9C527F8E3D36EC844538CA132C7282C459DDFFF301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100D034154A3ED26CA04402534B3F11CB6D5C9174C5A31274FD06F8F7395456B4FD02203F0B86574C5AAB707573A99DC9ABF815CB7AD8A11ACBE5C8D2D80C31F74E64D7"];
     _forwardingTableModelList = [NSMutableArray array];
     _filterModel = [[SigProxyFilterModel alloc] init];
+    _sortTypeOfNodeList = SigSortType_sortByAddressAscending;
 }
 
 - (SigAppkeyModel *)curAppkeyModel {
@@ -292,6 +293,16 @@
     _curNodes = nil;
 }
 
+/// Set default node name.
+- (void)optimizationDataOfNodeName {
+    NSArray *nodes = [NSArray arrayWithArray:self.nodes];
+    for (SigNodeModel *node in nodes) {
+        if (node.name == nil || node.name.length == 0) {
+            node.name = @"Node name";
+        }
+    }
+}
+
 - (NSArray <SigNodeModel *>*)getNodesOfProvisioner:(SigProvisionerModel *)provisioner {
     NSMutableArray *mArray = [NSMutableArray array];
     NSArray *allNodes = [NSArray arrayWithArray:self.nodes];
@@ -300,9 +311,6 @@
             [mArray addObject:node];
         }
     }
-    [mArray sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-        return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
-    }];
     return mArray;
 }
 
@@ -607,6 +615,7 @@
     _curAppkeyModel = nil;
     [self addExtendGroupList];
     [self optimizationDataOfBlacklisted];
+    [self optimizationDataOfNodeName];
 }
 
 /**
@@ -1146,6 +1155,7 @@
         }
         _curNodes = nil;
         [self optimizationDataOfBlacklisted];
+        [self optimizationDataOfNodeName];
         [self saveLocationData];
     }
 }
@@ -1274,8 +1284,19 @@
  */
 - (void)saveLocationData {
     @synchronized(self) {
+        __weak typeof(self) weakSelf = self;
         [self.nodes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-            return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+            if (weakSelf.sortTypeOfNodeList == SigSortType_sortByAddressAscending) {
+                return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+            } else if (weakSelf.sortTypeOfNodeList == SigSortType_sortByAddressDescending) {
+                return [(SigNodeModel *)obj1 address] < [(SigNodeModel *)obj2 address];
+            } else if (weakSelf.sortTypeOfNodeList == SigSortType_sortByNameAscending) {
+                return [[(SigNodeModel *)obj1 name] compare:[(SigNodeModel *)obj2 name]];
+            } else if (weakSelf.sortTypeOfNodeList == SigSortType_sortByNameDescending) {
+                return [[(SigNodeModel *)obj2 name] compare:[(SigNodeModel *)obj1 name]];
+            } else {
+                return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+            }
         }];
         [self.groups sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
             return [(SigGroupModel *)obj1 intAddress] > [(SigGroupModel *)obj2 intAddress];
@@ -1283,7 +1304,7 @@
         [self.scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
             return [LibTools uint16From16String:[(SigSceneModel *)obj1 number]] > [LibTools uint16From16String:[(SigSceneModel *)obj2 number]];
         }];
-
+        _curNodes = nil;
         NSDictionary *meshDict = [self getDictionaryFromDataSource];
         NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
         [self saveLocationMeshData:tempData];

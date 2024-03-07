@@ -2544,5 +2544,12 @@ typedef enum : UInt8 {
     SigSensorDataFormatB = 1,
 } SigSensorDataFormat;
 
+typedef enum : UInt8 {
+    SigSortType_sortByAddressAscending = 0,
+    SigSortType_sortByAddressDescending = 1,
+    SigSortType_sortByNameAscending = 2,
+    SigSortType_sortByNameDescending = 3,
+} SigSortType;
+
 #endif /* SigEnumeration_h */
 /// 0x83 0x08 Firmware Update Information Get

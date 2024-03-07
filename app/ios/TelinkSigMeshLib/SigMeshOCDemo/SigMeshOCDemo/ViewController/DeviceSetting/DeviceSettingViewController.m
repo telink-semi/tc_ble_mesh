@@ -36,6 +36,7 @@
 #import "EntryCell.h"
 #import "UIButton+extension.h"
 #import "PrivateBeaconVC.h"
+#import "NSString+extension.h"
 
 #ifdef kIsTelinkCloudSigMeshLib
 #import "OTAVC.h"
@@ -43,6 +44,7 @@
 #import "SingleOTAViewController.h"
 #endif
 
+#define kDeviceRename   @"Device Rename"
 #define kDeviceConfig   @"Device Config"
 #define kCompositionData   @"Composition Data"
 #define kNetKeyList   @"NetKey List"
@@ -182,6 +184,8 @@
     [self.titleArray addObject:kPublication];
     [self.iconArray addObject:@"ic_publish"];
 #else
+    [self.titleArray addObject:kDeviceRename];
+    [self.iconArray addObject:@"ic_rename"];
     [self.titleArray addObject:kDeviceConfig];
     [self.iconArray addObject:@"ic_config"];
     [self.titleArray addObject:kCompositionData];
@@ -287,7 +291,9 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *title = self.titleArray[indexPath.row];
-    if ([title isEqualToString:kDeviceConfig]) {
+    if ([title isEqualToString:kDeviceRename]) {
+        [self clickRenameButton];
+    } else if ([title isEqualToString:kDeviceConfig]) {
         [self pushToDeviceConfigVC];
     } else if ([title isEqualToString:kCompositionData]) {
         [self pushToCompositionDataVC];
@@ -322,6 +328,34 @@
     } else if ([title isEqualToString:kPTStest]) {
         [self pushToPTSVC];
     }
+}
+
+- (void)clickRenameButton {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Tips" message:@"Please input new node name!" preferredStyle: UIAlertControllerStyleAlert];
+    [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"new name";
+    }];
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        NSString *nodeName = [[alertVc textFields] objectAtIndex:0].text;
+        nodeName = nodeName.removeHeadAndTailSpacePro;
+        TelinkLogDebug(@"new nodeName is %@", nodeName);
+        if (nodeName == nil || nodeName.length == 0) {
+            [weakSelf showTips:@"Node name can not be empty!"];
+            return;
+        }
+        if (nodeName.length > 10) {
+            [weakSelf showTips:@"The maximum length of the node name is 10!"];
+            return;
+        }
+        weakSelf.model.name = nodeName;
+        [SigDataSource.share saveLocationData];
+        [weakSelf showTips:@"Rename success!"];
+    }];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    [alertVc addAction:action2];
+    [alertVc addAction:action1];
+    [self presentViewController:alertVc animated:YES completion:nil];
 }
 
 - (void)pushToDeviceConfigVC {

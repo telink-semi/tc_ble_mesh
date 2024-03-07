@@ -39,7 +39,7 @@
 
 - (void)setModel:(SigNodeModel *)model {
     self.iconImage.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
-    self.nameLabel.text = [NSString stringWithFormat:@"adr-0x%04X\ncid-%@ pid-%@", model.address, model.cid, model.pid];
+    self.nameLabel.text = [NSString stringWithFormat:@"Name:%@\nAdr-0x%04X\ncid-%@ pid-%@", model.name, model.address, model.cid, model.pid];
 }
 
 @end

@@ -230,7 +230,8 @@ typedef enum : UInt8 {
 #define kCacheCurrentMeshUUIDKey  @"kCacheCurrentMeshUUIDKey"
 /// demo v4.1.0.0新增配置项：导入Mesh后自动切换Mesh还是弹框提示用户选择是否切换Mesh。
 #define kImportCompleteAction   @"kImportCompleteAction"
-
+/// demo v4.1.0.1新增配置项：node节点的排序方式，默认是短地址升序。
+#define kSortTypeOfNodeList     @"kSortTypeOfNodeList"
 //获取导航栏+状态栏的高度
 #define kGetRectNavAndStatusHeight  (self.navigationController.navigationBar.frame.size.height+[[UIApplication sharedApplication] statusBarFrame].size.height)
 

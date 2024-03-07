@@ -40,7 +40,7 @@
 - (void)setModel:(SigNodeModel *)model {
     _model = model;
     self.iconImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
-    self.nameLabel.text = [NSString stringWithFormat:@"adr-0x%@\ncid-%@ pid-%@", model.unicastAddress, model.cid, model.pid];
+    self.nameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-0x%@\ncid-%@ pid-%@", model.name, model.unicastAddress, model.cid, model.pid];
     self.forwardingSelectImageView.image = [UIImage imageNamed:model.directControlStatus.directedForwardingState ? @"xuan" : @"unxuan"];
     self.relaySelectImageView.image = [UIImage imageNamed:model.directControlStatus.directedRelayState ? @"xuan" : @"unxuan"];
     self.proxySelectImageView.image = [UIImage imageNamed:model.directControlStatus.directedProxyState ? @"xuan" : @"unxuan"];

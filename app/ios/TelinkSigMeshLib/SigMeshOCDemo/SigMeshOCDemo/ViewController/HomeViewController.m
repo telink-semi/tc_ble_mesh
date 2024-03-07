@@ -40,6 +40,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *allOFFButton;
 @property (weak, nonatomic) IBOutlet UIButton *sensorGetAllButton;
 @property (weak, nonatomic) IBOutlet UIButton *cmdButton;
+@property (strong, nonatomic) UIButton *sortButton;
 @property (assign, nonatomic) BOOL shouldSetAllOffline;//APP will set all nodes offline when user click refresh button.
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
@@ -69,6 +70,31 @@
 - (IBAction)clickCMDButton:(UIButton *)sender {
     CMDViewController *vc = (CMDViewController *)[UIStoryboard initVC:NSStringFromClass(CMDViewController.class)];
     [self.navigationController pushViewController:vc animated:YES];
+}
+
+#pragma mark add node entrance
+
+- (void)clickSortNodeList {
+    NSArray *sortTypeList = @[@"Sort by address ascending", @"Sort by address descending", @"Sort by name ascending", @"Sort by name descending"];
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Actions" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for (int i=0; i<sortTypeList.count; i++) {
+        UIAlertAction *alertT = [UIAlertAction actionWithTitle:sortTypeList[i] style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            SigDataSource.share.sortTypeOfNodeList = i;
+            [SigDataSource.share saveLocationData];
+            [weakSelf delayReloadCollectionView];
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:i] forKey:kSortTypeOfNodeList];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            [weakSelf updateSortButtonIcon];
+        }];
+        [actionSheet addAction:alertT];
+    }
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    }];
+    [actionSheet addAction:alertF];
+    actionSheet.popoverPresentationController.sourceView = self.sortButton;
+    actionSheet.popoverPresentationController.sourceRect =  self.sortButton.frame;
+    [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
 #pragma mark add node entrance
@@ -383,7 +409,11 @@
     [self setTitle:@"Device" subTitle:SigDataSource.share.meshName];
     //init rightBarButtonItem
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDevice)];
-    self.navigationItem.rightBarButtonItem = item;
+    self.sortButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
+    [self updateSortButtonIcon];
+    [self.sortButton addTarget:self action:@selector(clickSortNodeList) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *item2 = [[UIBarButtonItem alloc] initWithCustomView:self.sortButton];
+    self.navigationItem.rightBarButtonItems = @[item, item2];
 #ifdef kIsTelinkCloudSigMeshLib
     if (AppDataSource.share.curNetworkId && AppDataSource.share.curMeshNetworkDetailModel) {
         [self connectMeshAndGetStatus];
@@ -391,6 +421,12 @@
 #else
     [self connectMeshAndGetStatus];
 #endif
+}
+
+- (void)updateSortButtonIcon {
+    NSArray *icons = @[@"ic_sort_address_ascending", @"ic_sort_address_descending", @"ic_sort_name_ascending", @"ic_sort_name_descending"];
+    NSNumber *sortTypeOfNodeList = [[NSUserDefaults standardUserDefaults] valueForKey:kSortTypeOfNodeList];
+    [self.sortButton setImage:[UIImage imageNamed:icons[[sortTypeOfNodeList intValue]]] forState:UIControlStateNormal];
 }
 
 - (void)connectMeshAndGetStatus {

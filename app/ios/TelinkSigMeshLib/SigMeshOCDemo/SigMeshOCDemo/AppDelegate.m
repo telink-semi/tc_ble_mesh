@@ -61,6 +61,8 @@
     [self configImportCompleteAction];
     //14.Config Default Root Certificate Data
     [self configDefaultRootCertificateData];
+    //15.Config sortType of nodeList
+    [self configSortTypeOfNodeList];
 
     return YES;
 }
@@ -292,6 +294,22 @@
         if (selectData && selectData.length > 0) {
             SigDataSource.share.defaultRootCertificateData = selectData;
         }
+    }
+}
+
+/// 15.Config sortType of nodeList
+- (void)configSortTypeOfNodeList {
+    // demo v4.1.0.1新增配置项：node节点的排序方式，默认是短地址升序。
+    NSNumber *sortTypeOfNodeList = [[NSUserDefaults standardUserDefaults] valueForKey:kSortTypeOfNodeList];
+    if (sortTypeOfNodeList == nil) {
+        // demo默认使用短地址升序
+        sortTypeOfNodeList = [NSNumber numberWithInt:SigDataSource.share.sortTypeOfNodeList];
+        [[NSUserDefaults standardUserDefaults] setValue:sortTypeOfNodeList forKey:kSortTypeOfNodeList];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    } else {
+        SigDataSource.share.sortTypeOfNodeList = [sortTypeOfNodeList intValue];
+        // 重新排序一次并存储本地
+        [SigDataSource.share saveLocationData];
     }
 }
 

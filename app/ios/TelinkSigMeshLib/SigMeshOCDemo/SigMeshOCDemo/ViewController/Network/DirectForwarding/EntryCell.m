@@ -40,7 +40,7 @@
 - (void)setModel:(SigNodeModel *)model {
     _model = model;
     self.iconImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
-    self.nameLabel.text = [NSString stringWithFormat:@"adr-0x%@\non/off:%@", model.unicastAddress, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
+    self.nameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-0x%@\non/off:%@", model.name, model.unicastAddress, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
     if (model.state == DeviceStateOutOfLine) {
         [self.chooseButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
     } else {

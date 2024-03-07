@@ -234,7 +234,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) SigProxyFilterModel *filterModel;
 //@property (nonatomic, strong) NSMutableArray <SigNodeSeqZeroModel *>*nodeSequenceNumberCacheList;
 @property (nonatomic, strong) NSMutableArray <SigNodeSequenceNumberCacheModel *>*nodeSequenceNumberCacheList;
-
+/// v4.1.0.1及之后的版本添加。
+/// SigSortType of nodeList, default is SigSortType_sortByAddressAscending.
+@property (nonatomic, assign) SigSortType sortTypeOfNodeList;
 
 //取消该限制：客户可以初始化该类型的对象，创建一个中间的mesh数据，用于比较前后的mesh信息。
 //+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
