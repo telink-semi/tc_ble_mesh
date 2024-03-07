@@ -51,7 +51,11 @@
     } else {
         addressString = [NSString stringWithFormat:@"0x%04X", model.scanRspModel.address];
     }
-    _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nmac:%@",addressString,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    if (model.remoteScanRspModel != nil) {
+        _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nrepoet adr:0x%04X rssi:%d\nmac:%@",addressString,model.remoteScanRspModel.reportNodeAddress,model.remoteScanRspModel.RSSI,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    } else {
+        _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nmac:%@",addressString,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    }
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
     _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
     switch (model.state) {

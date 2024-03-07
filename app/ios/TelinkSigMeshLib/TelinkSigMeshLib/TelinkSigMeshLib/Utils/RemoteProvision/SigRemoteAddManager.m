@@ -333,6 +333,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 - (void)provisionSuccess{
     [self cancelLastMessageHandle];
+    SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
 
     UInt16 address = self.provisioningData.unicastAddress;
     NSString *identify = nil;

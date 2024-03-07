@@ -450,6 +450,7 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 @interface AddDeviceModel : SigModel
 @property (nonatomic, strong) SigScanRspModel *scanRspModel;//SigRemoteScanRspModel need change to SigScanRspModel.
 @property (nonatomic, assign) AddDeviceModelState state;//state of add device
+@property (nonatomic, strong) SigRemoteScanRspModel *remoteScanRspModel;//SigRemoteScanRspModel show report adr.
 
 /// Initialize AddDeviceModel object.
 /// @param scanRemoteModel SigRemoteScanRspModel object.

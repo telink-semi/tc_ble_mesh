@@ -42,9 +42,9 @@
     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:model.address];
     self.iconImage.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
     //离线与关闭，亮度色温显示0
-    self.nameLabel.text = [NSString stringWithFormat:@"adr:0x%04lX\non/off:%@",(long)model.address, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
+    self.nameLabel.text = [NSString stringWithFormat:@"Name:%@ adr:0x%04lX\non/off:%@", node.name, (long)model.address, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
     if (node && node.sceneAddress.count == 0) {
-        self.nameLabel.text = [NSString stringWithFormat:@"adr:0x%04lX\n%@",(long)model.address,@"Not support scene register."];
+        self.nameLabel.text = [NSString stringWithFormat:@"Name:%@ adr:0x%04lX\n%@", node.name, (long)model.address,@"Not support scene register."];
     }
 }
 
