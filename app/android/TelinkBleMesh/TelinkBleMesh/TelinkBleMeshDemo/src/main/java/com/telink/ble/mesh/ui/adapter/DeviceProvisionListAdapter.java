@@ -97,7 +97,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
 
         NodeInfo nodeInfo = device.nodeInfo;
         int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, nodeInfo.isSensor()));
         String deviceDesc = mContext.getString(R.string.device_prov_desc, nodeInfo.meshAddress == -1 ? "[Unallocated]" : "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {
             deviceDesc += "\nmac: " + nodeInfo.macAddress;

@@ -76,7 +76,7 @@
 /// - Parameter address: The unicastAddress of node.
 - (void)startCheckOfflineTimerWithAddress:(NSNumber *)address{
     SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:address.intValue];
-    if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod) {
+    if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod && !device.isSensor) {
         [self stopCheckOfflineTimerWithAddress:address];
         __weak typeof(self) weakSelf = self;
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:[self getIntervalWithSigPeriodModel:[device getModelIDModelWithModelID:device.publishModelID].publish.period]*3+1 repeats:NO block:^(BackgroundTimer * _Nonnull t) {

@@ -47,10 +47,11 @@
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OOBItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OOBItemCellID];
-//    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
+    //兼容iPad写法
     UIButton *but = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-    [but setBackgroundImage:[UIImage imageNamed:@"ic_add"] forState:UIControlStateNormal];
+    [but setBackgroundImage:[UIImage imageNamed:@"ic_add_w30"] forState:UIControlStateNormal];
     [but addTarget:self action:@selector(clickAdd:) forControlEvents:UIControlEventTouchUpInside];
+    //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithCustomView:but];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(clickDeleteAll)];
     self.navigationItem.rightBarButtonItems = @[rightItem1,rightItem2];

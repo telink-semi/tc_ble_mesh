@@ -45,7 +45,7 @@
     cell.nameLabel.text = model.meshName;
     cell.uuidLabel.text = model.meshUUID;
     cell.createTimeLabel.text = model.timestamp;
-    [cell setUIWithSelected:[model.meshUUID isEqualToString:SigDataSource.share.meshUUID]];
+    [cell setUIWithSelected:[model.meshUUID isEqualToString:SigDataSource.share.meshUUID] bgView:cell.bgView];
     __weak typeof(self) weakSelf = self;
     [cell.moreButton addAction:^(UIButton *button) {
         [weakSelf clickMoreButtonWithNetwork:model];
@@ -100,6 +100,7 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(NetworkCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(NetworkCell.class)];
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAddMeshNetwork)];
     self.navigationItem.rightBarButtonItem = rightItem;
 }

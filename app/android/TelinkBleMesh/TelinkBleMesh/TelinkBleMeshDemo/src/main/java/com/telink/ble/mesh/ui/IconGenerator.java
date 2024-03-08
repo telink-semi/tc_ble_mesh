@@ -37,12 +37,18 @@ public class IconGenerator {
      * @param onlineState -1: offline; 0: off, 1: on
      * @return res
      */
-    public static int getIcon(int pid, OnlineState onlineState) {
-        if (AppSettings.isLpn(pid)){
+    public static int getIcon(int pid, OnlineState onlineState, boolean isSensor) {
+        if (isSensor) {
+            if (onlineState == OnlineState.OFFLINE) {
+                return R.drawable.ic_sensor_offline;
+            }
+            return R.drawable.ic_sensor_on;
+        }
+        if (AppSettings.isLpn(pid)) {
             return R.drawable.ic_low_power;
-        }else if (AppSettings.isRemote(pid)){
+        } else if (AppSettings.isRemote(pid)) {
             return R.drawable.ic_rmt;
-        }else{
+        } else {
             if (onlineState == OnlineState.OFFLINE) {
                 return R.drawable.ic_bulb_offline;
             } else if (onlineState == OnlineState.OFF) {

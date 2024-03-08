@@ -672,6 +672,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
 
 /**
+ * @brief   Creates the Network PDU. This method enctypts and obfuscates data that are to be send to the mesh network.
+ * @param   solicitationPDU    The data of solicitationPDU.
+ * @param   networkKey    network Key.
+ * @param   source    The source Unicast Address.
+ * @param   destination    The destination address of the message received.
+ * @param   sequence    The SEQ number of the PDU. Each PDU between the source and destination must have strictly
+ * increasing sequence number.
+ * @param   ivIndex    The ivIndex to decrypt the PDU.
+ * @return  return `nil` when initialize SigNetworkPdu object fail.
+ */
+- (instancetype)initWithEncodeSolicitationPDU:(NSData *)solicitationPDU networkKey:(SigNetkeyModel *)networkKey source:(UInt16)source destination:(UInt16)destination withSequence:(UInt32)sequence ivIndex:(SigIvIndex *)ivIndex;
+
+/**
  * @brief   This method goes over all Network Keys in the mesh network and tries to deobfuscate and decode the network PDU.
  * @param   pdu    The received PDU.
  * @param   pduType    The type of the PDU: `SigPduType_proxyConfiguration` or `SigPduType_networkPdu`.

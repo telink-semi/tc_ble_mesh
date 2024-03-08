@@ -731,6 +731,23 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return true;
     }
 
+
+    boolean continueProvision(int address) {
+        if (actionMode != Mode.PROVISION) {
+            return false;
+        }
+        this.mProvisioningController.continueProvision(address);
+        return true;
+    }
+
+    boolean continueRemoteProvision(int address) {
+        if (actionMode != Mode.REMOTE_PROVISION) {
+            return false;
+        }
+        this.mRemoteProvisioningController.continueProvision(address);
+        return true;
+    }
+
     /**
      * Used to rebuild the provisioning device by setting various parameters.
      * <p>
@@ -2344,6 +2361,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, provisioningDevice, desc);
     }
 
+
+    private void onProvisionCapabilityReceived(ProvisioningDevice provisioningDevice, String desc) {
+        postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_CAPABILITY_RECEIVED, provisioningDevice, desc);
+    }
+
     /**
      * This method is called when the provisioning process is complete.
      * It takes a boolean parameter "success" which indicates whether the provisioning was successful or not.
@@ -2393,6 +2415,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             case ProvisioningController.STATE_CAPABILITY:
                 log("on device capability received");
+                onProvisionCapabilityReceived(mProvisioningController.getProvisioningDevice(), "device capability received");
                 break;
         }
     }
@@ -2793,6 +2816,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(event);
     }
 
+
+    private void onRemoteCapabilityReceived(RemoteProvisioningDevice device, String desc) {
+        RemoteProvisioningEvent event = new RemoteProvisioningEvent(this, RemoteProvisioningEvent.EVENT_TYPE_REMOTE_CAPABILITY_RECEIVED);
+        event.setRemoteProvisioningDevice(device);
+        event.setDesc(desc);
+        onEventPrepared(event);
+    }
+
     /**
      * This method updates the device key map with the given address and device key.
      * It adds the device key to the networking controller and also to the mesh configuration's device key map.
@@ -2834,6 +2865,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 RemoteProvisioningDevice device = (RemoteProvisioningDevice) obj;
                 updateDeviceKeyMap(device.getUnicastAddress(), device.getDeviceKey());
                 onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS, device, "remote provisioning success");
+            } else if (state == RemoteProvisioningController.STATE_CAPABILITY_RECEIVED) {
+                RemoteProvisioningDevice device = (RemoteProvisioningDevice) obj;
+                onRemoteCapabilityReceived(device, "remote provisioning success");
             }
         } else if (actionMode == Mode.FAST_PROVISION && mode == AccessBridge.MODE_FAST_PROVISION) {
             if (state == FastProvisioningController.STATE_RESET_NETWORK) {

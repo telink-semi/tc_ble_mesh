@@ -144,6 +144,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         view.findViewById(R.id.tv_log).setOnClickListener(this);
         view.findViewById(R.id.tv_cycle).setOnClickListener(this);
         view.findViewById(R.id.btn_test).setOnClickListener(this);
+        view.findViewById(R.id.btn_sns_get_all).setOnClickListener(this);
 
         RecyclerView gv_devices = view.findViewById(R.id.rv_online_devices);
         mDevices = TelinkMeshApplication.getInstance().getMeshInfo().nodes;
@@ -153,10 +154,12 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         gv_devices.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(position -> {
-            if (mDevices.get(position).isOffline()) return;
+            NodeInfo node = mDevices.get(position);
+            if (node.isOffline()) return;
+            if (node.isSensor()) return;
 
             int onOff = 0;
-            if (mDevices.get(position).getOnlineState() == OnlineState.OFF) {
+            if (node.getOnlineState() == OnlineState.OFF) {
                 onOff = 1;
             }
 
@@ -321,7 +324,6 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
             case R.id.tv_cmd:
                 startActivity(new Intent(getActivity(), CmdActivity.class));
-//                startActivity(new Intent(getActivity(), CmdTestActivity.class));
                 break;
 
             case R.id.tv_log:
@@ -329,8 +331,11 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.btn_test:
-//                startActivity(new Intent(getActivity(), ConnectionTestActivity.class));
                 startActivity(new Intent(getActivity(), OnOffTestActivity.class));
+                break;
+
+            case R.id.btn_sns_get_all:
+                ((MainActivity) getActivity()).getSensorStates();
                 break;
         }
     }
@@ -351,6 +356,5 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             MeshLogger.d("cps status: " + statusMessage.getCompositionData().toString());
         }
     }
-
 
 }

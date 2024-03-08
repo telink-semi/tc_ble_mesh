@@ -24,9 +24,15 @@
 #import <UIKit/UIKit.h>
 
 @interface HomeItemCell : UICollectionViewCell
+/// Text layer used to set address.
 @property (strong, nonatomic) IBOutlet UILabel *address;
+/// Image layer used to set icon image.
 @property (strong, nonatomic) IBOutlet UIImageView *icon;
+/// Text layer used to set node name.
+@property (strong, nonatomic) IBOutlet UILabel *nodeName;
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigNodeModel *)model;
 
 @end

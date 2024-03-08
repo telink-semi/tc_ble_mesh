@@ -29,7 +29,7 @@
 
 /**
  把NSString转成可写入蓝牙设备的Hex Data
-
+ 
  @param string 原始字符串数据
  @return 返回data
  */
@@ -62,7 +62,7 @@
 
 /**
  NSData 转  十六进制string(大写)
-
+ 
  @return NSString类型的十六进制string
  */
 + (NSString *)convertDataToHexStr:(NSData *)data {
@@ -70,7 +70,7 @@
         return @"";
     }
     NSMutableString *string = [[NSMutableString alloc] initWithCapacity:[data length]];
-
+    
     [data enumerateByteRangesUsingBlock:^(const void *bytes, NSRange byteRange, BOOL *stop) {
         unsigned char *dataBytes = (unsigned char*)bytes;
         for (NSInteger i = 0; i < byteRange.length; i++) {
@@ -96,7 +96,7 @@
 
 /**
  计算2000-01-01-00:00:00 到现在的秒数
-
+ 
  @return 返回2000-01-01-00:00:00 到现在的秒数
  */
 + (NSInteger )secondsFrom2000{
@@ -127,6 +127,14 @@
 + (NSString *)getNowTimeTimeString {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     formatter.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+    NSString *time = [formatter stringFromDate:[NSDate date]];
+    return time;
+}
+
+/// 返回当前时间字符串格式："HH:mm:ss"
++ (NSString *)getNowTimeStringInFormatHHmmss {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.dateFormat = @"HH:mm:ss";
     NSString *time = [formatter stringFromDate:[NSDate date]];
     return time;
 }
@@ -249,12 +257,12 @@
     NSAssert(fData.length <= 2, @"uint16FromBytes: (data length > 2)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-
+    
     UInt16 val0 = 0;
     UInt16 val1 = 0;
     [data getBytes:&val0 range:NSMakeRange(0, 1)];
     if (data.length > 1) [data getBytes:&val1 range:NSMakeRange(1, 1)];
-
+    
     UInt16 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00);
     return dstVal;
 }
@@ -264,7 +272,7 @@
     NSAssert(fData.length <= 4, @"uint32FromBytes: (data length > 4)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-
+    
     UInt32 val0 = 0;
     UInt32 val1 = 0;
     UInt32 val2 = 0;
@@ -273,7 +281,7 @@
     if (data.length > 1) [data getBytes:&val1 range:NSMakeRange(1, 1)];
     if (data.length > 2) [data getBytes:&val2 range:NSMakeRange(2, 1)];
     if (data.length > 3) [data getBytes:&val3 range:NSMakeRange(3, 1)];
-
+    
     UInt32 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00) + ((val2 << 16) & 0xff0000) + ((val3 << 24) & 0xff000000);
     return dstVal;
 }
@@ -283,7 +291,7 @@
     NSAssert(fData.length <= 8, @"uint64FromBytes: (data length > 8)");
     //    NSData *data = [self turnOverData:fData];
     NSData *data = fData;
-
+    
     UInt64 val0 = 0;
     UInt64 val1 = 0;
     UInt64 val2 = 0;
@@ -300,7 +308,7 @@
     if (data.length > 5) [data getBytes:&val5 range:NSMakeRange(5, 1)];
     if (data.length > 6) [data getBytes:&val6 range:NSMakeRange(6, 1)];
     if (data.length > 7) [data getBytes:&val7 range:NSMakeRange(7, 1)];
-
+    
     UInt64 dstVal = (val0 & 0xff) + ((val1 << 8) & 0xff00) + ((val2 << 16) & 0xff0000) + ((val3 << 24) & 0xff000000) + ((val4 << 32) & 0xff00000000) + ((val5 << 40) & 0xff0000000000) + ((val6 << 48) & 0xff000000000000) + ((val7 << 56) & 0xff00000000000000);
     return dstVal;
 }
@@ -317,6 +325,8 @@
 + (UInt16)uint16From16String:(NSString *)string {
     if (string == nil || string.length == 0) {
         return 0;
+    } else if (string.length % 2 == 1) {
+        string = [@"0" stringByAppendingString:string];
     }
     return [self uint16FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
@@ -325,6 +335,8 @@
 + (UInt32)uint32From16String:(NSString *)string {
     if (string == nil || string.length == 0) {
         return 0;
+    } else if (string.length % 2 == 1) {
+        string = [@"0" stringByAppendingString:string];
     }
     return [self uint32FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
@@ -333,6 +345,8 @@
 + (UInt64)uint64From16String:(NSString *)string {
     if (string == nil || string.length == 0) {
         return 0;
+    } else if (string.length % 2 == 1) {
+        string = [@"0" stringByAppendingString:string];
     }
     return [self uint64FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
@@ -386,7 +400,7 @@
     if(temp < CTL_TEMP_MIN){
         temp = CTL_TEMP_MIN;
     }
-
+    
     if(temp > CTL_TEMP_MAX){
         temp = CTL_TEMP_MAX;
     }
@@ -586,7 +600,7 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
     uint32_t *table = malloc(sizeof(uint32_t) * 256);
     uint32_t crc = 0xffffffff;
     uint8_t *bytes = (uint8_t *)[data bytes];
-
+    
     for (uint32_t i=0; i<256; i++) {
         table[i] = i;
         for (int j=0; j<8; j++) {
@@ -597,12 +611,12 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
             }
         }
     }
-
+    
     for (int i=0; i<data.length; i++) {
         crc = (crc >> 8) ^ table[(crc & 0xff) ^ bytes[i]];
     }
     crc ^= 0xffffffff;
-
+    
     free(table);
     return crc;
 }
@@ -655,6 +669,12 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     NSString *regex = @"^[0-9a-fA-F]{0,}$";
     NSPredicate *pred = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", regex];
     return [pred evaluateWithObject:uuidString];
+}
+
++ (BOOL)validateNumberString:(NSString *)numberString {
+    NSString *strRegex = @"^[0-9]{0,}$";
+    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
+    return [strPredicate evaluateWithObject:numberString];
 }
 
 #pragma mark - UTF-8相关
@@ -762,7 +782,7 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
         return @[];
     }
     NSMutableArray *fileSource = [NSMutableArray array];
-
+    
     // 搜索bin文件的目录(工程内部添加的bin文件)
     NSArray *paths = [[NSBundle mainBundle] pathsForResourcesOfType:fileType inDirectory:nil];
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -837,7 +857,7 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     macAddress = [LibTools turnOverData:macAddress];
     UInt8 input[15] = {0};
     memcpy(input, macAddress.bytes, 6);
-
+    
     //1: 创建一个MD5对象
     CC_MD5_CTX md5;
     //2: 初始化MD5
@@ -855,6 +875,27 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     result[8] |= 0x80;
     NSData *resultData = [NSData dataWithBytes:result length:CC_MD5_DIGEST_LENGTH];
     return resultData;
+}
+
+#pragma mark - Device property相关
+
+/// Get value length with propertyID
+/// - Parameter propertyID: device propertyID
++ (UInt8)valueLengthOfDevicePropertyID:(DevicePropertyID)propertyID {
+    UInt8 length = 1;
+    //Illuminance
+    if (propertyID == DevicePropertyID_LightControlAmbientLuxLevelOn || propertyID == DevicePropertyID_LightControlAmbientLuxLevelProlong || propertyID == DevicePropertyID_LightControlAmbientLuxLevelStandby || propertyID == DevicePropertyID_PresentAmbientLightLevel || propertyID == DevicePropertyID_PresentIlluminance) {
+        length = 3;
+    }
+    //Perceived Lightness
+    else if (propertyID == DevicePropertyID_LightControlLightnessOn || propertyID == DevicePropertyID_LightControlLightnessProlong || propertyID == DevicePropertyID_LightControlLightnessStandby) {
+        length = 2;
+    }
+    //Percentage 8
+    else if (propertyID == DevicePropertyID_InputVoltageRippleSpecification || propertyID == DevicePropertyID_LightControlRegulatorAccuracy || propertyID == DevicePropertyID_LumenMaintenanceFactor || propertyID == DevicePropertyID_MotionSensed || propertyID == DevicePropertyID_MotionThreshold || propertyID == DevicePropertyID_OutputCurrentPercent || propertyID == DevicePropertyID_OutputRippleVoltageSpecification || propertyID == DevicePropertyID_PresentDeviceOperatingEfficiency || propertyID == DevicePropertyID_PresentInputRippleVoltage || propertyID == DevicePropertyID_PresentRelativeOutputRippleVoltage || propertyID == DevicePropertyID_PresenceDetected) {
+        length = 1;
+    }
+    return length;
 }
 
 @end

@@ -24,10 +24,13 @@
 #import <UIKit/UIKit.h>
 
 @interface SceneItemCell : UITableViewCell
-
+/// Handle block of click recall button.
 @property (copy, nonatomic) void(^clickRecallBlock)(void);
+/// Handle block of click edit button.
 @property (copy, nonatomic) void(^clickEditBlock)(void);
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigSceneModel *)model;
 
 @end

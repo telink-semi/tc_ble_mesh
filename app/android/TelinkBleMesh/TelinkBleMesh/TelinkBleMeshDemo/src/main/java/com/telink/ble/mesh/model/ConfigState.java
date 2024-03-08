@@ -69,9 +69,19 @@ public enum ConfigState implements Serializable {
     KEY_REFRESH_PHASE("Key Refresh Phase", "The Key Refresh Phase state indicates and controls the Key Refresh procedure for each NetKey in the NetKey List. ", false),
 
     /**
-     *
+     * Network Transmit
      */
     NETWORK_TRANSMIT("Network Transmit", "The Network Transmit state is a composite state that controls the number and timing of the transmissions of Network PDU originating from a node."),
+
+    /**
+     * On-Demand Private GATT Proxy
+     */
+    ON_DEMAND_PRIVATE_GATT_PROXY("On-Demand Private GATT Proxy", "The On-Demand Private GATT Proxy state indicates whether advertising with Private Network Identity type can be enabled on demand and can be triggered upon reception of a Solicitation PDU."),
+
+    /**
+     * Proxy Solicitation
+     */
+//    PROXY_SOLICITATION("Proxy Solicitation", "A Proxy Client may use the GAP General Discoverable mode with non-connectable non-scannable undirected advertising events to send Solicitation PDUs to solicit a Proxy Server that supports the Private Proxy functionality to start advertising with Private Network Identity type"),
 
     // in RELAY
 //    RELAY_RETRANSMIT("Relay Retransmit", "The Relay Retransmit state is a composite state that controls parameters of retransmission of the Network PDU relayed by the node."),

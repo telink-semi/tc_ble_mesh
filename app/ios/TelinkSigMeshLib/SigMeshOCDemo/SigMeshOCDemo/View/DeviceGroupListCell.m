@@ -207,6 +207,17 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:self.subToGroup];
         [ShowTipsHandle.share hidden];
         [SigDataSource.share editGroupIDsOfDevice:self.subToGroup.isSelected unicastAddress:@(self.model.address) groupAddress:@(self.groupAddress)];
+#ifdef kIsTelinkCloudSigMeshLib
+        if (self.subToGroup.isSelected) {
+            [AppDataSource.share addNodeToGroupWithNodeAddress:self.model.address groupAddress:self.groupAddress resultBlock:^(NSError * _Nullable error) {
+                TelinkLogInfo(@"error = %@", error);
+            }];
+        } else {
+            [AppDataSource.share deleteNodeFromGroupWithNodeAddress:self.model.address groupAddress:self.groupAddress resultBlock:^(NSError * _Nullable error) {
+                TelinkLogInfo(@"error = %@", error);
+            }];
+        }
+#endif
     });
 }
 

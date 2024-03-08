@@ -26,10 +26,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface DeviceElementItemView : UIView
+/// Image layer used to set state image.
 @property (weak, nonatomic) IBOutlet UIImageView *stateImageView;
+/// Text layer used to set state.
 @property (weak, nonatomic) IBOutlet UILabel *stateLabel;
+/// Button layer used to set select image icon.
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(ActionModel *)model;
 
 @end

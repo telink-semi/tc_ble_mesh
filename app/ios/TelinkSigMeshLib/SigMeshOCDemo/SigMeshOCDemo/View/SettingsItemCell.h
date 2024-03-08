@@ -21,13 +21,13 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void(^BackSelectIndexCallback)(NSInteger selectIndex);
 
-@interface SettingsItemCell : UITableViewCell
+@interface SettingsItemCell : BaseCell
 @property (nonatomic, strong) UISwitch *enableSwitch;
 @property (nonatomic, strong) UIButton *tipsButton;
 @property (nonatomic, assign) NSInteger selectIndex;

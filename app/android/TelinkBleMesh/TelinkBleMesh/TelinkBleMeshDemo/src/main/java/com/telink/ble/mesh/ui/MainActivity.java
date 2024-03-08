@@ -36,7 +36,6 @@ import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.DistributionPhase;
@@ -44,6 +43,7 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
+import com.telink.ble.mesh.core.message.sensor.SensorGetMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -66,7 +66,6 @@ import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.NetworkFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 /**
@@ -93,13 +92,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
-        testMd5();
-    }
-
-    private void testMd5(){
-        byte[] re = Encipher.calcUuidByMac(Arrays.hexToBytes("FFFFBBCCDD82")); // FFFFBBCCDD82 - 192E11381215CFE0BF44D816BE0E421C
-//        byte[] re = Encipher.md5(Arrays.hexToBytes("A4C1385DAE0D")); // A422D068CF4A9533ABF263EB74A7EADA
-//        Encipher.md5();
     }
 
     private void addEventListeners() {
@@ -213,7 +205,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 MeshLogger.log("online status enabled");
             }
             sendTimeStatus();
-            mHandler.postDelayed(() -> checkMeshOtaState(), 3 * 1000);
+            mHandler.postDelayed(this::getSensorStates, 1500);
+            mHandler.postDelayed(this::checkMeshOtaState, 3000);
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             mHandler.removeCallbacksAndMessages(null);
         } else if (event.getType().equals(FDStatusMessage.class.getName())) {
@@ -236,6 +229,14 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 }
             }
         }
+    }
+
+
+    public void getSensorStates() {
+        int address = 0xFFFF;
+        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+        SensorGetMessage sensorGetMessage = SensorGetMessage.getSimple(address, appKeyIndex, null);
+        MeshService.getInstance().sendMeshMessage(sensorGetMessage);
     }
 
     /**

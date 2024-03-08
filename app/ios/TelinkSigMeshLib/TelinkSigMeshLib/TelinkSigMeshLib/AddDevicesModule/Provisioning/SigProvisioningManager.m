@@ -142,6 +142,7 @@ typedef enum : UInt16 {
     TelinkLogInfo(@"deviceKey=%@",devKeyData);
 
     self.unprovisionedDevice.address = address;
+    self.unprovisionedDevice.provisioned = YES;
     [SigMeshLib.share.dataSource updateScanRspModelToDataSource:self.unprovisionedDevice];
 
     SigNodeModel *model = [[SigNodeModel alloc] init];
@@ -720,42 +721,45 @@ typedef enum : UInt16 {
         self.provisioningCapabilities = capabilitiesPdu;
         self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
         self.state = ProvisioningState_capabilitiesReceived;
-        if (self.capabilitiesResponseBlock) {
-            self.unicastAddress = self.capabilitiesResponseBlock(capabilitiesPdu);
-        }
-        if (self.unicastAddress == 0) {
-            self.state = ProvisioningState_fail;
-        }else{
-            __weak typeof(self) weakSelf = self;
-            if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
-                //设备端支持staticOOB
-                if (self.staticOobData) {
-                    TelinkLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",self.staticOobData);
-                    [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-                        [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
-                    }];
-                } else {
-                    if (SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable) {
-                        //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
-                        TelinkLogVerbose(@"static OOB device,do no OOB provision");
-                        [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        __weak typeof(self) weakSelf = self;
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+        [operationQueue addOperationWithBlock:^{
+            if (weakSelf.capabilitiesResponseBlock) {
+                weakSelf.unicastAddress = weakSelf.capabilitiesResponseBlock(capabilitiesPdu);
+            }
+            if (weakSelf.unicastAddress == 0) {
+                weakSelf.state = ProvisioningState_fail;
+            }else{
+                if (weakSelf.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
+                    //设备端支持staticOOB
+                    if (weakSelf.staticOobData) {
+                        TelinkLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",weakSelf.staticOobData);
+                        [weakSelf sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:weakSelf.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                             [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                         }];
                     } else {
-                        //SDK当前未设置兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）
-                        //设备不支持则直接provision fail
-                        TelinkLogError(@"SDK not find static OOB data, not support static OOB.");
-                        self.state = ProvisioningState_fail;
+                        if (SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable) {
+                            //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
+                            TelinkLogVerbose(@"static OOB device,do no OOB provision");
+                            [weakSelf sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                                [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
+                            }];
+                        } else {
+                            //SDK当前未设置兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）
+                            //设备不支持则直接provision fail
+                            TelinkLogError(@"SDK not find static OOB data, not support static OOB.");
+                            weakSelf.state = ProvisioningState_fail;
+                        }
                     }
+                } else {
+                    //设备端不支持staticOOB
+                    TelinkLogVerbose(@"no OOB device,do no OOB provision");
+                    [weakSelf sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                        [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
+                    }];
                 }
-            } else {
-                //设备端不支持staticOOB
-                TelinkLogVerbose(@"no OOB device,do no OOB provision");
-                [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-                    [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
-                }];
             }
-        }
+        }];
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;

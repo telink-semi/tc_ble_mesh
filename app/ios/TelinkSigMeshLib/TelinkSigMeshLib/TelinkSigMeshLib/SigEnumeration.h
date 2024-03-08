@@ -24,6 +24,25 @@
 #ifndef SigEnumeration_h
 #define SigEnumeration_h
 
+/// Table 3.65: Nonce types
+/// - seeAlso: MshPRT_v1.1.pdf  (page.194)
+/// The nonce is a 13-octet value that is unique for each new message encryption. There are four different
+/// nonces that are used, as shown in Table 3.65. The type of the nonce is determined by the first octet of
+/// the nonce, referred to as the Nonce Type.
+typedef enum : UInt8 {
+    /// Used with an EncryptionKey for network authentication and encryption
+    SigNonceType_networkNonce    = 0,
+    /// Used with an application key for upper transport authentication and encryption
+    SigNonceType_applicationNonce    = 1,
+    /// Used with a device key for upper transport authentication and encryption
+    SigNonceType_deviceNonce = 2,
+    /// Used with an EncryptionKey for proxy authentication and encryption
+    SigNonceType_proxyNonce     = 3,
+    /// Used with an EncryptionKey for Proxy solicitation authentication and encryption
+    SigNonceType_proxySolicitationNonce     = 4,
+    //0x05–0xFF, Reserved for Future Use
+} SigNonceType;
+
 /// Table 3.43: Opcode formats
 /// - seeAlso: Mesh_v1.0.pdf  (page.93)
 typedef enum : UInt8 {
@@ -265,6 +284,8 @@ typedef enum      : UInt8 {
     SigPduType_proxyConfiguration = 2,
     /// - seeAlso : 5.4.1 Provisioning PDUs of Mesh_v1.0.pdf  (page.237)
     SigPduType_provisioningPdu    = 3,
+    /// - seeAlso : 6.9.1 Solicitation PDU of MshPRT_v1.1.pdf (page.637)
+    SigPduType_solicitationPDU    = 4,
 } SigPduType;
 
 /// Table 5.20: Static OOB Type field values
@@ -2127,7 +2148,408 @@ typedef enum : UInt8 {
     MajorProductType_spiritLPN = 4,
 } MajorProductType;
 
+/*LC property id number*/
+typedef enum : UInt16 {
+    LightControlPropertyID_LuxLevelOn     = 0x002B,
+    LightControlPropertyID_LuxLevelProlong   = 0x002C,
+    LightControlPropertyID_LuxLevelStandby = 0x002D,
+    LightControlPropertyID_LightnessOn = 0x002E,
+    LightControlPropertyID_LightnessProlong = 0x002F,
+    LightControlPropertyID_LightnessStandby = 0x0030,
+    LightControlPropertyID_RegulatorAccuracy = 0x0031,
+    LightControlPropertyID_RegulatorKid = 0x0032,
+    LightControlPropertyID_RegulatorKiu = 0x0033,
+    LightControlPropertyID_RegulatorKpd = 0x0034,
+    LightControlPropertyID_RegulatorKpu = 0x0035,
+    LightControlPropertyID_TimeFade = 0x0036,
+    LightControlPropertyID_TimeFadeOn = 0x0037,
+    LightControlPropertyID_TimeFadeStandbyAuto = 0x0038,
+    LightControlPropertyID_TimeFadeStandbyManual = 0x0039,
+    LightControlPropertyID_TimeOccupancyDelay = 0x003A,
+    LightControlPropertyID_TimeProlong = 0x003B,
+    LightControlPropertyID_TimeRun = 0x003C,
+} LightControlPropertyID;
 
+/// 3.3 Property identifiers
+/// - seeAlso: Device_Properties.pdf  (page.53)
+typedef enum : UInt16 {
+    // 0x0000 Prohibited
+    /// Average Ambient Temperature in a Period of Day
+    DevicePropertyID_AverageAmbientTemperatureIn_a_PeriodOfDay = 0x0001,
+    /// Average Input Current
+    DevicePropertyID_AverageInputCurrent = 0x0002,
+    /// Average Input Voltage
+    DevicePropertyID_AverageInputVoltage = 0x0003,
+    /// Average Output Current
+    DevicePropertyID_AverageOutputCurrent = 0x0004,
+    /// Average Output Voltage
+    DevicePropertyID_AverageOutputVoltage = 0x0005,
+    /// Center Beam Intensity at Full Power
+    DevicePropertyID_CenterBeamIntensityAtFullPower = 0x0006,
+    /// Chromaticity Tolerance
+    DevicePropertyID_ChromaticityTolerance = 0x0007,
+    /// Color Rendering Index R9
+    DevicePropertyID_ColorRenderingIndexR9 = 0x0008,
+    /// Color Rendering Index Ra
+    DevicePropertyID_ColorRenderingIndexRa = 0x0009,
+    /// Device Appearance
+    DevicePropertyID_DeviceAppearance = 0x000A,
+    /// Device Country of Origin
+    DevicePropertyID_DeviceCountryOfOrigin = 0x000B,
+    /// Device Date of Manufacture
+    DevicePropertyID_DeviceDateOfManufacture = 0x000C,
+    /// Device Energy Use Since Turn On
+    DevicePropertyID_DeviceEnergyUseSinceTurnOn = 0x000D,
+    /// Device Firmware Revision
+    DevicePropertyID_DeviceFirmwareRevision = 0x000E,
+    /// Device Global Trade Item Number
+    DevicePropertyID_DeviceGlobalTradeItemNumber = 0x000F,
+    /// Device Hardware Revision
+    DevicePropertyID_DeviceHardwareRevision = 0x0010,
+    /// Device Manufacturer Name
+    DevicePropertyID_DeviceManufacturerName = 0x0011,
+    /// Device Model Number
+    DevicePropertyID_DeviceModelNumber = 0x0012,
+    /// Device Operating Temperature Range Specification
+    DevicePropertyID_DeviceOperatingTemperatureRangeSpecification = 0x0013,
+    /// Device Operating Temperature Statistical Values
+    DevicePropertyID_DeviceOperatingTemperatureStatisticalValues = 0x0014,
+    /// Device Over Temperature Event Statistics
+    DevicePropertyID_DeviceOverTemperatureEventStatistics = 0x0015,
+    /// Device Power Range Specification
+    DevicePropertyID_DevicePowerRangeSpecification = 0x0016,
+    /// Device Runtime Since Turn On
+    DevicePropertyID_DeviceRuntimeSinceTurnOn = 0x0017,
+    /// Device Runtime Warranty
+    DevicePropertyID_DeviceRuntimeWarranty = 0x0018,
+    /// Device Serial Number
+    DevicePropertyID_DeviceSerialNumber = 0x0019,
+    /// Device Software Revision
+    DevicePropertyID_DeviceSoftwareRevision = 0x001A,
+    /// Device Under Temperature Event Statistics
+    DevicePropertyID_DeviceUnderTemperatureEventStatistics = 0x001B,
+    /// Indoor Ambient Temperature Statistical Values
+    DevicePropertyID_IndoorAmbientTemperatureStatisticalValues = 0x001C,
+    /// Initial CIE 1931 Chromaticity Coordinates
+    DevicePropertyID_Initial_CIE_1931_ChromaticityCoordinates = 0x001D,
+    /// Initial Correlated Color Temperature
+    DevicePropertyID_InitialCorrelatedColorTemperature = 0x001E,
+    /// Initial Luminous Flux
+    DevicePropertyID_InitialLuminousFlux = 0x001F,
+    /// Initial Planckian Distance
+    DevicePropertyID_InitialPlanckianDistance = 0x0020,
+    /// Input Current Range Specification
+    DevicePropertyID_InputCurrentRangeSpecification = 0x0021,
+    /// Input Current Statistics
+    DevicePropertyID_InputCurrentStatistics = 0x0022,
+    /// Input Over Current Event Statistics
+    DevicePropertyID_InputOverCurrentEventStatistics = 0x0023,
+    /// Input Over Ripple Voltage Event Statistics
+    DevicePropertyID_InputOverRippleVoltageEventStatistics = 0x0024,
+    /// Input Over Voltage Event Statistics
+    DevicePropertyID_InputOverVoltageEventStatistics = 0x0025,
+    /// Input Under Current Event Statistics
+    DevicePropertyID_InputUnderCurrentEventStatistics = 0x0026,
+    /// Input Under Voltage Event Statistics
+    DevicePropertyID_InputUnderVoltageEventStatistics = 0x0027,
+    /// Input Voltage Range Specification
+    DevicePropertyID_InputVoltageRangeSpecification = 0x0028,
+    /// Input Voltage Ripple Specification
+    DevicePropertyID_InputVoltageRippleSpecification = 0x0029,
+    /// Input Voltage Statistics
+    DevicePropertyID_InputVoltageStatistics = 0x002A,
+    /// Light Control Ambient LuxLevel On
+    DevicePropertyID_LightControlAmbientLuxLevelOn = 0x002B,
+    /// Light Control Ambient LuxLevel Prolong
+    DevicePropertyID_LightControlAmbientLuxLevelProlong = 0x002C,
+    /// Light Control Ambient LuxLevel Standby
+    DevicePropertyID_LightControlAmbientLuxLevelStandby = 0x002D,
+    /// Light Control Lightness On
+    DevicePropertyID_LightControlLightnessOn = 0x002E,
+    /// Light Control Lightness Prolong
+    DevicePropertyID_LightControlLightnessProlong = 0x002F,
+    /// Light Control Lightness Standby
+    DevicePropertyID_LightControlLightnessStandby = 0x0030,
+    /// Light Control Regulator Accuracy
+    DevicePropertyID_LightControlRegulatorAccuracy = 0x0031,
+    /// Light Control Regulator Kid
+    DevicePropertyID_LightControlRegulatorKid = 0x0032,
+    /// Light Control Regulator Kiu
+    DevicePropertyID_LightControlRegulatorKiu = 0x0033,
+    /// Light Control Regulator Kpd
+    DevicePropertyID_LightControlRegulatorKpd = 0x0034,
+    /// Light Control Regulator Kpu
+    DevicePropertyID_LightControlRegulatorKpu = 0x0035,
+    /// Light Control Time Fade
+    DevicePropertyID_LightControlTimeFade = 0x0036,
+    /// Light Control Time Fade On
+    DevicePropertyID_LightControlTimeFadeOn = 0x0037,
+    /// Light Control Time Fade Standby Auto
+    DevicePropertyID_LightControlTimeFadeStandbyAuto = 0x0038,
+    /// Light Control Time Fade Standby Manual
+    DevicePropertyID_LightControlTimeFadeStandbyManual = 0x0039,
+    /// Light Control Time Occupancy Delay
+    DevicePropertyID_LightControlTimeOccupancyDelay = 0x003A,
+    /// Light Control Time Prolong
+    DevicePropertyID_LightControlTimeProlong = 0x003B,
+    /// Light Control Time Run On
+    DevicePropertyID_LightControlTimeRunOn = 0x003C,
+    /// Lumen Maintenance Factor
+    DevicePropertyID_LumenMaintenanceFactor = 0x003D,
+    /// Luminous Efficacy
+    DevicePropertyID_LuminousEfficacy = 0x003E,
+    /// Luminous Energy Since Turn On
+    DevicePropertyID_LuminousEnergySinceTurnOn = 0x003F,
+    /// Luminous Exposure
+    DevicePropertyID_LuminousExposure = 0x0040,
+    /// Luminous Flux Range
+    DevicePropertyID_LuminousFluxRange = 0x0041,
+    /// Motion Sensed
+    DevicePropertyID_MotionSensed = 0x0042,
+    /// Motion Threshold
+    DevicePropertyID_MotionThreshold = 0x0043,
+    /// Open Circuit Event Statistics
+    DevicePropertyID_OpenCircuitEventStatistics = 0x0044,
+    /// Outdoor Statistical Values
+    DevicePropertyID_OutdoorStatisticalValues = 0x0045,
+    /// Output Current Range
+    DevicePropertyID_OutputCurrentRange = 0x0046,
+    /// Output Current Statistics
+    DevicePropertyID_OutputCurrentStatistics = 0x0047,
+    /// Output Ripple Voltage Specification
+    DevicePropertyID_OutputRippleVoltageSpecification = 0x0048,
+    /// Output Voltage Range
+    DevicePropertyID_OutputVoltageRange = 0x0049,
+    /// Output Voltage Statistics
+    DevicePropertyID_OutputVoltageStatistics = 0x004A,
+    /// Over Output Ripple Voltage Event Statistics
+    DevicePropertyID_OverOutputRippleVoltageEventStatistics = 0x004B,
+    /// People Count
+    DevicePropertyID_PeopleCount = 0x004C,
+    /// Presence Detected
+    DevicePropertyID_PresenceDetected = 0x004D,
+    /// Present Ambient Light Level
+    DevicePropertyID_PresentAmbientLightLevel = 0x004E,
+    /// Present Ambient Temperature
+    DevicePropertyID_PresentAmbientTemperature = 0x004F,
+    /// Present CIE 1931 Chromaticity Coordinates
+    DevicePropertyID_Present_CIE_1931_ChromaticityCoordinates = 0x0050,
+    /// Present Correlated Color Temperature
+    DevicePropertyID_PresentCorrelatedColorTemperature = 0x0051,
+    /// Present Device Input Power
+    DevicePropertyID_PresentDeviceInputPower = 0x0052,
+    /// Present Device Operating Efficiency
+    DevicePropertyID_PresentDeviceOperatingEfficiency = 0x0053,
+    /// Present Device Operating Temperature
+    DevicePropertyID_PresentDeviceOperatingTemperature = 0x0054,
+    /// Present Illuminance
+    DevicePropertyID_PresentIlluminance = 0x0055,
+    /// Present Indoor Ambient Temperature
+    DevicePropertyID_PresentIndoorAmbientTemperature = 0x0056,
+    /// Present Input Current
+    DevicePropertyID_PresentInputCurrent = 0x0057,
+    /// Present Input Ripple Voltage
+    DevicePropertyID_PresentInputRippleVoltage = 0x0058,
+    /// Present Input Voltage
+    DevicePropertyID_PresentInputVoltage = 0x0059,
+    /// Present Luminous Flux
+    DevicePropertyID_PresentLuminousFlux = 0x005A,
+    /// Present Outdoor Ambient Temperature
+    DevicePropertyID_PresentOutdoorAmbientTemperature = 0x005B,
+    /// Present Output Current
+    DevicePropertyID_PresentOutputCurrent = 0x005C,
+    /// Present Output Voltage
+    DevicePropertyID_PresentOutputVoltage = 0x005D,
+    /// Present Planckian Distance
+    DevicePropertyID_PresentPlanckianDistance = 0x005E,
+    /// Present Relative Output Ripple Voltage
+    DevicePropertyID_PresentRelativeOutputRippleVoltage = 0x005F,
+    /// Relative Device Energy Use in a Period of Day
+    DevicePropertyID_RelativeDeviceEnergyUseIn_a_PeriodOfDay = 0x0060,
+    /// Relative Device Runtime in a Generic Level Range
+    DevicePropertyID_RelativeDeviceRuntimeIn_a_GenericLevelRange = 0x0061,
+    /// Relative Exposure Time in an Illuminance Range
+    DevicePropertyID_RelativeExposureTimeIn_an_IlluminanceRange = 0x0062,
+    /// Relative Runtime in a Correlated Color Temperature Range
+    DevicePropertyID_RelativeRuntimeIn_a_CorrelatedColorTemperatureRange = 0x0063,
+    /// Relative Runtime in a Device Operating Temperature Range
+    DevicePropertyID_RelativeRuntimeIn_a_DeviceOperatingTemperatureRange = 0x0064,
+    /// Relative Runtime in an Input Current Range
+    DevicePropertyID_RelativeRuntimeIn_an_InputCurrentRange = 0x0065,
+    /// Relative Runtime in an Input Voltage Range
+    DevicePropertyID_RelativeRuntimeIn_an_InputVoltageRange = 0x0066,
+    /// Short Circuit Event Statistics
+    DevicePropertyID_ShortCircuitEventStatistics = 0x0067,
+    /// Time Since Motion Sensed
+    DevicePropertyID_TimeSinceMotionSensed = 0x0068,
+    /// Time Since Presence Detected
+    DevicePropertyID_TimeSincePresenceDetected = 0x0069,
+    /// Total Device Energy Use
+    DevicePropertyID_TotalDeviceEnergyUse = 0x006A,
+    /// Total Device Off On Cycles
+    DevicePropertyID_TotalDeviceOffOnCycles = 0x006B,
+    /// Total Device Power On Cycles
+    DevicePropertyID_TotalDevicePowerOnCycles = 0x006C,
+    /// Total Device Power On Time
+    DevicePropertyID_TotalDevicePowerOnTime = 0x006D,
+    /// Total Device Runtime
+    DevicePropertyID_TotalDeviceRuntime = 0x006E,
+    /// Total Light Exposure Time
+    DevicePropertyID_TotalLightExposureTime = 0x006F,
+    /// Total Luminous Energy
+    DevicePropertyID_TotalLuminousEnergy = 0x0070,
+    /// Desired Ambient Temperature
+    DevicePropertyID_DesiredAmbientTemperature = 0x0071,
+    /// Precise Total Device Energy Use
+    DevicePropertyID_PreciseTotalDeviceEnergyUse = 0x0072,
+    /// Power Factor
+    DevicePropertyID_PowerFactor = 0x0073,
+    /// Sensor Gain
+    DevicePropertyID_SensorGain = 0x0074,
+    /// Precise Present Ambient Temperature
+    DevicePropertyID_PrecisePresentAmbientTemperature = 0x0075,
+    /// Present Ambient Relative Humidity
+    DevicePropertyID_PresentAmbientRelativeHumidity = 0x0076,
+    /// Present Ambient Carbon Dioxide Concentration
+    DevicePropertyID_PresentAmbientCarbonDioxideConcentration = 0x0077,
+    /// Present Ambient Volatile Organic Compounds Concentration
+    DevicePropertyID_PresentAmbientVolatileOrganicCompoundsConcentration = 0x0078,
+    /// Present Ambient Noise
+    DevicePropertyID_PresentAmbientNoise = 0x0079,
+    /// Active Energy Loadside
+    DevicePropertyID_ActiveEnergyLoadside = 0x0080,
+    /// Active Power Loadside
+    DevicePropertyID_ActivePowerLoadside = 0x0081,
+    /// Air Pressure
+    DevicePropertyID_AirPressure = 0x0082,
+    /// Apparent Energy
+    DevicePropertyID_ApparentEnergy = 0x0083,
+    /// Apparent Power
+    DevicePropertyID_ApparentPower = 0x0084,
+    /// Apparent Wind Direction
+    DevicePropertyID_ApparentWindDirection = 0x0085,
+    /// Apparent Wind Speed
+    DevicePropertyID_ApparentWindSpeed = 0x0086,
+    /// Dew Point
+    DevicePropertyID_DewPoint = 0x0087,
+    /// External Supply Voltage
+    DevicePropertyID_ExternalSupplyVoltage = 0x0088,
+    /// External Supply Voltage Frequency
+    DevicePropertyID_ExternalSupplyVoltageFrequency = 0x0089,
+    /// Gust Factor
+    DevicePropertyID_GustFactor = 0x008A,
+    /// Heat Index
+    DevicePropertyID_HeatIndex = 0x008B,
+    /// Light Distribution
+    DevicePropertyID_LightDistribution = 0x008C,
+    /// Light Source Current
+    DevicePropertyID_LightSourceCurrent = 0x008D,
+    /// Light Source On Time Not Resettable
+    DevicePropertyID_LightSourceOnTimeNotResettable = 0x008E,
+    /// Light Source On Time Resettable
+    DevicePropertyID_LightSourceOnTimeResettable = 0x008F,
+    /// Light Source Open Circuit Statistics
+    DevicePropertyID_LightSourceOpenCircuitStatistics = 0x0090,
+    /// Light Source Overall Failures Statistics
+    DevicePropertyID_LightSourceOverallFailuresStatistics = 0x0091,
+    /// Light Source Short Circuit Statistics
+    DevicePropertyID_LightSourceShortCircuitStatistics = 0x0092,
+    /// Light Source Start Counter Resettable
+    DevicePropertyID_LightSourceStartCounterResettable = 0x0093,
+    /// Light Source Temperature
+    DevicePropertyID_LightSourceTemperature = 0x0094,
+    /// Light Source Thermal Derating Statistics
+    DevicePropertyID_LightSourceThermalDeratingStatistics = 0x0095,
+    /// Light Source Thermal Shutdown Statistics
+    DevicePropertyID_LightSourceThermalShutdownStatistics = 0x0096,
+    /// Light Source Total Power On Cycles
+    DevicePropertyID_LightSourceTotalPowerOnCycles = 0x0097,
+    /// Light Source Voltage
+    DevicePropertyID_LightSourceVoltage = 0x0098,
+    /// Luminaire Color
+    DevicePropertyID_LuminaireColor = 0x0099,
+    /// Luminaire Identification Number
+    DevicePropertyID_LuminaireIdentificationNumber = 0x009A,
+    /// Luminaire Manufacturer GTIN
+    DevicePropertyID_LuminaireManufacturerGTIN = 0x009B,
+    /// Luminaire Nominal Input Power
+    DevicePropertyID_LuminaireNominalInputPower = 0x009C,
+    /// Luminaire Nominal Maximum AC Mains Voltage
+    DevicePropertyID_LuminaireNominalMaximum_AC_MainsVoltage = 0x009D,
+    /// Luminaire Nominal Minimum AC Mains Voltage
+    DevicePropertyID_LuminaireNominalMinimum_AC_MainsVoltage = 0x009E,
+    /// Luminaire Power at Minimum Dim Level
+    DevicePropertyID_LuminairePowerAtMinimumDimLevel = 0x009F,
+    /// Luminaire Time of Manufacture
+    DevicePropertyID_LuminaireTimeOfManufacture = 0x00A0,
+    /// Magnetic Declination
+    DevicePropertyID_MagneticDeclination = 0x00A1,
+    /// Magnetic Flux Density - 2D
+    DevicePropertyID_MagneticFluxDensity2D = 0x00A2,
+    /// Magnetic Flux Density - 3D
+    DevicePropertyID_MagneticFluxDensity3D = 0x00A3,
+    /// Nominal Light Output
+    DevicePropertyID_NominalLightOutput = 0x00A4,
+    /// Overall Failure Condition
+    DevicePropertyID_OverallFailureCondition = 0x00A5,
+    /// Pollen Concentration
+    DevicePropertyID_PollenConcentration = 0x00A6,
+    /// Present Indoor Relative Humidity
+    DevicePropertyID_PresentIndoorRelativeHumidity = 0x00A7,
+    /// Present Outdoor Relative Humidity
+    DevicePropertyID_PresentOutdoorRelativeHumidity = 0x00A8,
+    /// Pressure
+    DevicePropertyID_Pressure = 0x00A9,
+    /// Rainfall
+    DevicePropertyID_Rainfall = 0x00AA,
+    /// Rated Median Useful Life of Luminaire
+    DevicePropertyID_RatedMedianUsefulLifeOfLuminaire = 0x00AB,
+    /// Rated Median Useful Light Source Starts
+    DevicePropertyID_RatedMedianUsefulLightSourceStarts = 0x00AC,
+    /// Reference Temperature
+    DevicePropertyID_ReferenceTemperature = 0x00AD,
+    /// Total Device Starts
+    DevicePropertyID_TotalDeviceStarts = 0x00AE,
+    /// True Wind Direction
+    DevicePropertyID_TrueWindDirection = 0x00AF,
+    /// True Wind Speed
+    DevicePropertyID_TrueWindSpeed = 0x00B0,
+    /// UV Index
+    DevicePropertyID_UV_Index = 0x00B1,
+    /// Wind Chill
+    DevicePropertyID_WindChill = 0x00B2,
+    /// Light Source Type
+    DevicePropertyID_LightSourceType = 0x00B3,
+    /// Luminaire Identification String
+    DevicePropertyID_LuminaireIdentificationString = 0x00B4,
+    /// Output Power Limitation
+    DevicePropertyID_OutputPowerLimitation = 0x00B5,
+    /// Thermal Derating
+    DevicePropertyID_ThermalDerating = 0x00B6,
+    /// Output Current Percent
+    DevicePropertyID_OutputCurrentPercent = 0x00B7,
+    //All other values, Reserved for Future Use
+} DevicePropertyID;
+
+/// The Format field is a 1-bit bit field that identifies the format of the Length and Property ID fields.
+/// Table 4.34: Sensor Data Format values
+/// - seeAlso: MshMDL_v1.1.pdf  (page.132)
+typedef enum : UInt8 {
+    /// Format A is defined as a 4-bit Length field and an 11-bit Property ID field, as defined in Table 4.35.
+    /// This format may be used for Property Values that are not longer than 16 octets and for Property IDs
+    /// less than 0x0800.
+    SigSensorDataFormatA = 0,
+    /// Format B is defined as a 7-bit Length field and a 16-bit Property ID field, as described in Table 4.36.
+    /// This format may be used for Property Values not longer than 127 octets and for any Property IDs.
+    SigSensorDataFormatB = 1,
+} SigSensorDataFormat;
+
+typedef enum : UInt8 {
+    SigSortType_sortByAddressAscending = 0,
+    SigSortType_sortByAddressDescending = 1,
+    SigSortType_sortByNameAscending = 2,
+    SigSortType_sortByNameDescending = 3,
+} SigSortType;
 
 #endif /* SigEnumeration_h */
 /// 0x83 0x08 Firmware Update Information Get

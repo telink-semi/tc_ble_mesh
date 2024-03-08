@@ -43,6 +43,8 @@ public class ProvisioningEvent extends Event<String> implements Parcelable {
     public static final String EVENT_TYPE_PROVISION_SUCCESS = "com.telink.ble.mesh.EVENT_TYPE_PROVISION_SUCCESS";
     public static final String EVENT_TYPE_PROVISION_FAIL = "com.telink.ble.mesh.EVENT_TYPE_PROVISION_FAIL";
 
+    public static final String EVENT_TYPE_CAPABILITY_RECEIVED = "com.telink.ble.mesh.EVENT_TYPE_CAPABILITY_RECEIVED";
+
     private ProvisioningDevice provisioningDevice; // The provisioning device associated with the event
     private String desc; // Additional description for the event
 

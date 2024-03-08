@@ -25,6 +25,7 @@ package com.telink.ble.mesh.util;
 import android.content.Context;
 import android.location.LocationManager;
 import android.os.Build;
+import android.util.DisplayMetrics;
 
 import java.lang.reflect.Method;
 
@@ -100,5 +101,11 @@ public class ContextUtil {
             e.printStackTrace();
             MeshLogger.e("reflect bootstrap failed:");
         }
+    }
+
+
+    public static int dpToPx(Context context, float dp) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return (int) (dp * (metrics.densityDpi / 160f));
     }
 }

@@ -57,6 +57,14 @@
     }
 }
 
++ (UIColor *)telinkLabelBlue {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkLabelBlue"];
+    } else {
+        return HEX(#FFFFFF);
+    }
+}
+
 + (UIColor *)telinkButtonUnableBlue {
     if (@available(iOS 11.0, *)) {
         return [UIColor colorNamed:@"telinkButtonUnableBlue"];
@@ -94,6 +102,14 @@
         return [UIColor colorNamed:@"telinkBorderColor"];
     } else {
         return HEX(#CBCBCB);
+    }
+}
+
++ (UIColor *)telinkTitleGray {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkTitleGray"];
+    } else {
+        return HEX(#626262);
     }
 }
 

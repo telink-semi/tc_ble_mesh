@@ -29,12 +29,11 @@
     [super awakeFromNib];
     // Initialization code
     //cornerRadius
-    self.onoffView.layer.cornerRadius = 5;
+    self.onoffView.layer.cornerRadius = 7;
     //borderWidth
     self.onoffView.layer.borderWidth = 1;
     //borderColor
-    self.onoffView.layer.borderColor = [UIColor lightGrayColor].CGColor;
-
+    self.onoffView.layer.borderColor = [UIColor telinkBorderColor].CGColor;
 }
 
 - (IBAction)changeOnoff:(UISwitch *)sender {

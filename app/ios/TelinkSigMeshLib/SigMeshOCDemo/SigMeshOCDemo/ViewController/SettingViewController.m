@@ -35,6 +35,7 @@
 #define kOOBDatabaseTitle @"OOB Database"
 #define kRootCertTitle @"Root Cert"
 #define kSettingsTitle @"Settings"
+#define kLogTitle @"Log"
 #define kTestTitle @"Test"
 #define kHowToImportBinFileTitle    @"How to import bin file?"
 #define kGetMoreTelinkAppsTitle    @"Get More Telink Apps"
@@ -73,6 +74,8 @@
         [self pushToOOBVC];
     } else if ([titleString isEqualToString:kRootCertTitle]) {
         [self pushRootCertificateVC];
+    } else if ([titleString isEqualToString:kLogTitle]) {
+        [self pushToLogVC];
     } else {
         UIViewController *vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:@"Setting"];
         [self.navigationController pushViewController:vc animated:YES];
@@ -81,10 +84,6 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.titleSource.count;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 70.0;
 }
 
 - (void)clickTest {
@@ -116,6 +115,11 @@
 
 - (void)pushRootCertificateVC {
     CertificateListVC *vc = [[CertificateListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToLogVC {
+    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_LogViewControllerID];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -171,11 +175,11 @@
 
     [self.titleSource addObject:kManagerNetworkTitle];
     [self.detailSource addObject:@"Switch, Create/Delete, Import/Export..."];
-    [self.iconSource addObject:@"setting_manage"];
+    [self.iconSource addObject:@"ic_list"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_NetworkListVCID];
     [self.titleSource addObject:kOOBDatabaseTitle];
     [self.detailSource addObject:@"used in static-oob provisioning"];
-    [self.iconSource addObject:@"setting_OOBDatabase"];
+    [self.iconSource addObject:@"ic_oob"];
     [self.vcIdentifiers addObject:@""];
     [self.titleSource addObject:kRootCertTitle];
     [self.detailSource addObject:@"used in certificate-based provisioning"];
@@ -185,6 +189,10 @@
     [self.detailSource addObject:@"other settings..."];
     [self.iconSource addObject:@"ic_setting"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsViewControllerID];
+    [self.titleSource addObject:kLogTitle];
+    [self.detailSource addObject:@"show all log..."];
+    [self.iconSource addObject:@"ic_log"];
+    [self.vcIdentifiers addObject:ViewControllerIdentifiers_LogViewControllerID];
 
     if (kshowTest) {
         [self.titleSource addObject:kTestTitle];
@@ -196,7 +204,7 @@
     //v3.3.3.6新增 How to import bin file?
     [self.titleSource addObject:@"How to import bin file?"];
     [self.detailSource addObject:@"prompt users on how to import Bin files into the app."];
-    [self.iconSource addObject:@"ic_model"];
+    [self.iconSource addObject:@"setting_file"];
     [self.vcIdentifiers addObject:@""];
     //v3.3.3.6新增 Get More Telink Apps
     [self.titleSource addObject:@"Get More Telink Apps"];

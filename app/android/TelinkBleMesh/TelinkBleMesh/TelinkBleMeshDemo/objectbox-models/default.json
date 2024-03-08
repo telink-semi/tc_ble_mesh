@@ -131,7 +131,7 @@
     },
     {
       "id": "6:2069274728427692519",
-      "lastPropertyId": "10:2479901812599270086",
+      "lastPropertyId": "11:7486707633367311255",
       "name": "MeshInfo",
       "properties": [
         {
@@ -184,6 +184,11 @@
           "id": "10:2479901812599270086",
           "name": "timestamp",
           "type": 9
+        },
+        {
+          "id": "11:7486707633367311255",
+          "name": "solSeq",
+          "type": 5
         }
       ],
       "relations": [
@@ -270,7 +275,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "33:8426405745807769616",
+      "lastPropertyId": "39:7693211708187749355",
       "name": "NodeInfo",
       "properties": [
         {
@@ -390,18 +395,8 @@
           "type": 1
         },
         {
-          "id": "25:1040592641382702225",
-          "name": "directRelay",
-          "type": 1
-        },
-        {
           "id": "26:6797289530268876656",
           "name": "directProxyEnabled",
-          "type": 1
-        },
-        {
-          "id": "27:155297223198770714",
-          "name": "directFriend",
           "type": 1
         },
         {
@@ -436,6 +431,29 @@
           "id": "33:8426405745807769616",
           "name": "privateGattProxyEnable",
           "type": 1
+        },
+        {
+          "id": "34:5174897416773049846",
+          "name": "onDemandPrivateGattProxy",
+          "type": 2
+        },
+        {
+          "id": "36:5576064727597415947",
+          "name": "directRelayEnabled",
+          "type": 1
+        },
+        {
+          "id": "37:5904884050511156545",
+          "name": "directFriendEnabled",
+          "type": 1
+        },
+        {
+          "id": "39:7693211708187749355",
+          "name": "nodeLcPropsId",
+          "indexId": "4:4106015631498752348",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "NodeLcProps"
         }
       ],
       "relations": [
@@ -448,6 +466,11 @@
           "id": "10:9172225433446279959",
           "name": "bridgingTableList",
           "targetId": "3:994626657441505837"
+        },
+        {
+          "id": "18:2800170913470506993",
+          "name": "sensorStateList",
+          "targetId": "19:765136782566086494"
         }
       ]
     },
@@ -717,11 +740,104 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "18:2912109651191137768",
+      "lastPropertyId": "12:4993378234604267159",
+      "name": "NodeLcProps",
+      "properties": [
+        {
+          "id": "1:4709340100072178838",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2568576942292118535",
+          "name": "enabled",
+          "type": 1
+        },
+        {
+          "id": "3:4072428608098155040",
+          "name": "lightnessOn",
+          "type": 5
+        },
+        {
+          "id": "4:3484166710889166378",
+          "name": "lightnessProlong",
+          "type": 5
+        },
+        {
+          "id": "5:2099821741896995403",
+          "name": "lightnessStandby",
+          "type": 5
+        },
+        {
+          "id": "6:3384105576038547123",
+          "name": "timeFade",
+          "type": 5
+        },
+        {
+          "id": "7:3628084734850027739",
+          "name": "timeFadeOn",
+          "type": 5
+        },
+        {
+          "id": "8:3360569238861956236",
+          "name": "timeFadeStandbyAuto",
+          "type": 5
+        },
+        {
+          "id": "9:5697036219274543184",
+          "name": "timeFadeStandbyManual",
+          "type": 5
+        },
+        {
+          "id": "10:3496101797254466976",
+          "name": "timeOccupancyDelay",
+          "type": 5
+        },
+        {
+          "id": "11:3860567514842923451",
+          "name": "timeProlong",
+          "type": 5
+        },
+        {
+          "id": "12:4993378234604267159",
+          "name": "timeRunOn",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "19:765136782566086494",
+      "lastPropertyId": "3:8412285003734097084",
+      "name": "NodeSensorState",
+      "properties": [
+        {
+          "id": "1:6041669237602003641",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1536322467415240887",
+          "name": "propertyID",
+          "type": 5
+        },
+        {
+          "id": "3:8412285003734097084",
+          "name": "state",
+          "type": 23
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "17:5719042239068213177",
-  "lastIndexId": "3:1206649210262279878",
-  "lastRelationId": "17:1644692976533144517",
+  "lastEntityId": "19:765136782566086494",
+  "lastIndexId": "4:4106015631498752348",
+  "lastRelationId": "18:2800170913470506993",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
@@ -747,7 +863,11 @@
     4308691135741941972,
     1438015228012879585,
     5428944306125984848,
-    8051414710140349273
+    8051414710140349273,
+    3031241088902285045,
+    1040592641382702225,
+    155297223198770714,
+    2919866427436161725
   ],
   "retiredRelationUids": [
     2182875474270975386,

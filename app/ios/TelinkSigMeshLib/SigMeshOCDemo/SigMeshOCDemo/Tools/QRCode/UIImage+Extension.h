@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (UIImage *)createQRImageWithString:(NSString *)string rate:(CGFloat)rate;
 
+- (UIImage *)imageRotatedOnDegrees:(CGFloat)degrees;
+
 @end
 
 NS_ASSUME_NONNULL_END

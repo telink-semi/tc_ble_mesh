@@ -150,15 +150,14 @@ public class BindingController {
                 isGattBearer() ? BINDING_TIMEOUT_GATT : BINDING_TIMEOUT_ADV);
 
         log("binding begin: defaultBound? " + device.isDefaultBound());
-        if (bindingDevice.isDefaultBound()) {
-            addAppKey();
+        if (bindingDevice.getCompositionData() == null) {
+            this.getCompositionData();
         } else {
-            if (bindingDevice.getCompositionData() == null) {
-                this.getCompositionData();
+            if (bindingDevice.isDefaultBound()) {
+                addAppKey();
             } else {
                 onCompositionDataReceived(bindingDevice.getCompositionData());
             }
-
         }
     }
 

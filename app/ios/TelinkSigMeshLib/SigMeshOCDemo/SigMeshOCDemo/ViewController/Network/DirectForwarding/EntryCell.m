@@ -28,12 +28,25 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    [self configurationCornerWithBgView:_bgView];
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
     [super setSelected:selected animated:animated];
 
     // Configure the view for the selected state
+}
+
+- (void)setModel:(SigNodeModel *)model {
+    _model = model;
+    self.iconImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
+    self.nameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-0x%@\non/off:%@", model.name, model.unicastAddress, [DemoTool getNodeStateStringWithUnicastAddress:model.address]];
+    if (model.state == DeviceStateOutOfLine) {
+        [self.chooseButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
+    } else {
+        [self.chooseButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
+    }
+    
 }
 
 @end

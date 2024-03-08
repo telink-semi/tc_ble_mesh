@@ -57,11 +57,13 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     public static final int STATE_PROVISIONING = 0x02;
 
-    public static final int STATE_PROVISION_SUCCESS = 0x03;
+    public static final int STATE_CAPABILITY_RECEIVED = 0x03;
 
-    public static final int STATE_PROVISION_FAIL = 0x04;
+    public static final int STATE_PROVISION_SUCCESS = 0x04;
 
-    public static final int STATE_LINK_CLOSING = 0x05;
+    public static final int STATE_PROVISION_FAIL = 0x05;
+
+    public static final int STATE_LINK_CLOSING = 0x06;
 
     private int state;
 
@@ -120,6 +122,10 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         this.provisioningController = provisioningController;
         this.provisioningDevice = remoteProvisioningDevice;
         linkOpen();
+    }
+
+    public void continueProvision(int address) {
+        provisioningController.continueProvision(address);
     }
 
     public void clear() {
@@ -331,6 +337,14 @@ public class RemoteProvisioningController implements ProvisioningBridge {
             onProvisioningComplete(true, desc);
         } else if (state == ProvisioningController.STATE_FAILED) {
             onProvisioningComplete(false, desc);
+        } else if (state == ProvisioningController.STATE_CAPABILITY) {
+            onCapabilityReceived();
+        }
+    }
+
+    private void onCapabilityReceived() {
+        if (accessBridge != null) {
+            accessBridge.onAccessStateChanged(STATE_CAPABILITY_RECEIVED, "provision capability received", AccessBridge.MODE_REMOTE_PROVISIONING, this.provisioningDevice);
         }
     }
 

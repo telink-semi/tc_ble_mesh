@@ -53,9 +53,9 @@
 @property (assign, nonatomic) BOOL hadChangeBrightness;
 @property (assign, nonatomic) BOOL hasNextBrightness;
 @property (assign, nonatomic) UInt8 nextBrightness;
-@property (assign, nonatomic) BOOL hadChangeTempareture;
-@property (assign, nonatomic) BOOL hasNextTempareture;
-@property (assign, nonatomic) UInt8 nextTempareture;
+@property (assign, nonatomic) BOOL hadChangeTemperature;
+@property (assign, nonatomic) BOOL hasNextTemperature;
+@property (assign, nonatomic) UInt8 nextTemperature;
 @property (assign, nonatomic) UInt16 extendGroupAddress;
 
 @end
@@ -162,37 +162,37 @@
     });
 }
 
-- (IBAction)changeTempareture:(UISlider *)sender {
+- (IBAction)changeTemperature:(UISlider *)sender {
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)(at group adr:0x%X):",(int)sender.value,self.model.intAddress];
-    self.model.groupTempareture = sender.value;
-    if (!self.hadChangeTempareture) {
-        self.nextTempareture = sender.value;
-        [self changeTempareture];
+    self.model.groupTemperature = sender.value;
+    if (!self.hadChangeTemperature) {
+        self.nextTemperature = sender.value;
+        [self changeTemperature];
     } else {
-        self.hasNextTempareture = YES;
-        self.nextTempareture = sender.value;
+        self.hasNextTemperature = YES;
+        self.nextTemperature = sender.value;
     }
 }
 
-- (void)changeTemparetureFinish {
-    self.hadChangeTempareture = NO;
-    if (self.hasNextTempareture) {
-        [self changeTempareture];
+- (void)changeTemperatureFinish {
+    self.hadChangeTemperature = NO;
+    if (self.hasNextTemperature) {
+        [self changeTemperature];
     }
 }
 
-- (void)changeTempareture {
-    self.hadChangeTempareture = YES;
-    self.hasNextTempareture = NO;
+- (void)changeTemperature {
+    self.hadChangeTemperature = YES;
+    self.hasNextTemperature = NO;
 //    __weak typeof(self) weakSelf = self;
-    [DemoCommand changeTemperatureWithTemperature100:self.nextTempareture address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
+    [DemoCommand changeTemperatureWithTemperature100:self.nextTemperature address:self.model.intAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
 //        [weakSelf.collectionView reloadData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinish) object:nil];
-        [self performSelector:@selector(changeTemparetureFinish) withObject:nil afterDelay:kCommandInterval];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemperatureFinish) object:nil];
+        [self performSelector:@selector(changeTemperatureFinish) withObject:nil afterDelay:kCommandInterval];
     });
 }
 
@@ -221,9 +221,9 @@
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;
     self.nextBrightness = 0;
-    self.hadChangeTempareture = NO;
-    self.hasNextTempareture = NO;
-    self.nextTempareture = 0;
+    self.hadChangeTemperature = NO;
+    self.hasNextTemperature = NO;
+    self.nextTemperature = 0;
 
     self.extendGroupAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:self.model.intAddress];
     self.lumLevelLabel.text = [NSString stringWithFormat:@"Lum Level(at group adr:0x%X):",self.extendGroupAddress];
@@ -232,11 +232,11 @@
     self.satLevelLabel.text = [NSString stringWithFormat:@"Sat Level(at group adr:0x%X):",self.extendGroupAddress+3];
 
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)(at group adr:0x%X):",self.model.groupBrightness,self.model.intAddress];
-    self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)(at group adr:0x%X):",self.model.groupTempareture,self.model.intAddress];
+    self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)(at group adr:0x%X):",self.model.groupTemperature,self.model.intAddress];
     self.title = @"Group Setting";
     self.headerLabel.text = [NSString stringWithFormat:@"%@ Devices:",self.model.name];
     self.brightnessSlider.value = self.model.groupBrightness;
-    self.temperatureSlider.value = self.model.groupTempareture;
+    self.temperatureSlider.value = self.model.groupTemperature;
 
     self.source = [[NSMutableArray alloc] init];
     NSArray *groupDevices = [NSArray arrayWithArray:self.model.groupDevices];

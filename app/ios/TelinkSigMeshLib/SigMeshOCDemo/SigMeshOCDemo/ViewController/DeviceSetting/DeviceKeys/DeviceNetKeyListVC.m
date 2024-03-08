@@ -22,9 +22,9 @@
  *******************************************************************************************************/
 
 #import "DeviceNetKeyListVC.h"
-#import "DeviceKeyCell.h"
 #import "UIViewController+Message.h"
 #import "DeviceChooseKeyVC.h"
+#import "NetKeyCell.h"
 
 @interface DeviceNetKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -40,7 +40,8 @@
     self.title = @"NetKey List";
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(DeviceKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(DeviceKeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(NetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(NetKeyCell.class)];
+    //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefresh:)];
     self.navigationItem.rightBarButtonItems = @[rightItem1,rightItem2];
@@ -199,18 +200,10 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    DeviceKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(DeviceKeyCell.class) forIndexPath:indexPath];
-    [cell setNetKeyModel:self.sourceArray[indexPath.row]];
+    NetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(NetKeyCell.class) forIndexPath:indexPath];
+    [cell setModel:self.sourceArray[indexPath.row]];
+    cell.editButton.hidden = YES;
     return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 @end

@@ -22,8 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
-import android.app.Activity;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.telink.ble.mesh.SharedPreferenceHelper;
@@ -33,7 +31,6 @@ import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.entity.TransitionTime;
-import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -160,13 +157,34 @@ public class MeshStorageService {
 
         if (localMesh != null) {
             MeshLogger.d("update local mesh");
-            localMesh.nodes = targetMesh.nodes;
-            localMesh.groups = targetMesh.groups;
-            localMesh.allProvisioners = targetMesh.allProvisioners;
-            localMesh.provisionerNodes = targetMesh.provisionerNodes;
-            localMesh.excludedNodes = targetMesh.excludedNodes;
-            localMesh.extendGroups = targetMesh.extendGroups;
-            localMesh.scenes = targetMesh.scenes;
+//            localMesh.nodes = targetMesh.nodes;
+            localMesh.nodes.clear();
+            localMesh.nodes.addAll(targetMesh.nodes);
+
+//            localMesh.groups = targetMesh.groups;
+            localMesh.groups.clear();
+            localMesh.groups.addAll(targetMesh.groups);
+
+//            localMesh.allProvisioners = targetMesh.allProvisioners;
+            localMesh.allProvisioners.clear();
+            localMesh.allProvisioners.addAll(targetMesh.allProvisioners);
+
+//            localMesh.provisionerNodes = targetMesh.provisionerNodes;
+            localMesh.provisionerNodes.clear();
+            localMesh.provisionerNodes.addAll(targetMesh.provisionerNodes);
+
+//            localMesh.excludedNodes = targetMesh.excludedNodes;
+            localMesh.excludedNodes.clear();
+            localMesh.excludedNodes.addAll(targetMesh.excludedNodes);
+
+//            localMesh.extendGroups = targetMesh.extendGroups;
+            localMesh.extendGroups.clear();
+            localMesh.extendGroups.addAll(targetMesh.extendGroups);
+
+//            localMesh.scenes = targetMesh.scenes;
+            localMesh.scenes.clear();
+            localMesh.scenes.addAll(targetMesh.scenes);
+            localMesh.saveOrUpdate();
             return localMesh;
         }
 

@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AddDeviceItemCell : UICollectionViewCell
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(AddDeviceModel *)model;
 
 @end

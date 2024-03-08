@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="animationMode">
+        <enum name="fade" value="0" />
+        <enum name="scale" value="1" />
+        <enum name="bounce" value="2" />
+    </attr>
+
+    <attr name="position">
+        <enum name="left_bottom" value="0" />
+        <enum name="right_bottom" value="1" />
+    </attr>
+
+    <declare-styleable name="CompositeFloatingActionButton">
+        <attr name="backgroundColor" format="color" />
+        <attr name="switchFabIcon" format="reference" />
+        <attr name="switchFabColor" format="color" />
+        <attr name="animationDuration" format="integer" />
+        <attr name="animationMode" />
+        <attr name="position" />
+    </declare-styleable>
+
+
+    <declare-styleable name="FabTagLayout">
+        <attr name="tagText" format="string" />
+    </declare-styleable>
+
+</resources>

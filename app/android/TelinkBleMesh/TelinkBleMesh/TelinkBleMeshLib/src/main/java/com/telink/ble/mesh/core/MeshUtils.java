@@ -40,9 +40,12 @@ import com.telink.ble.mesh.util.Arrays;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.zip.CRC32;
 
@@ -56,6 +59,10 @@ public final class MeshUtils {
     public static final int UNICAST_ADDRESS_MIN = 0x0001;
 
     public static final int ADDRESS_BROADCAST = 0xFFFF;
+
+    public static final int ADDRESS_ALL_PROXY = 0xFFFC;
+
+
 
     // 1970 -- 2000 offset second
     public static final long TAI_OFFSET_SECOND = 946684800;
@@ -75,10 +82,14 @@ public final class MeshUtils {
     // Object Transfer Service UUID
     public static final ParcelUuid OTS_UUID = new ParcelUuid(UUIDInfo.SERVICE_OTS);
 
+    public static final ParcelUuid SOL_UUID = new ParcelUuid(UUIDInfo.SERVICE_MESH_PROXY_SOLICITATION);
+
     /**
      * used in {@link #generateChars(int)}
      */
     public static final String CHARS = "123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ+-*/<>/?!@#$%^&;'[]{}|,.";
+
+    private static final SimpleDateFormat COMPLETE_DATE_FORMAT = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.getDefault());
 
     // provides a cryptographically strong random number generator
     private static SecureRandom rng;
@@ -644,5 +655,10 @@ public final class MeshUtils {
         CRC32 crc32 = new CRC32();
         crc32.update(data, offset, len);
         return (int) crc32.getValue();
+    }
+
+
+    public static String getTimeFormat(long time){
+        return COMPLETE_DATE_FORMAT.format(new Date(time));
     }
 }

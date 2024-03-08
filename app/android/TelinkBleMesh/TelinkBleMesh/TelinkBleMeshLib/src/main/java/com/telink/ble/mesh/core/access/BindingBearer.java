@@ -38,5 +38,8 @@ public enum BindingBearer {
      */
     Any,
 
+    /**
+     *
+     */
     Flex
 }

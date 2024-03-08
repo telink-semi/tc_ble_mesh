@@ -55,6 +55,7 @@ import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.NodeNetKeyActivity;
+import com.telink.ble.mesh.ui.PrivateBeaconSettingActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
 import com.telink.ble.mesh.ui.SubnetBridgeActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -78,6 +79,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
     private static final int PUB_ADDRESS = 0xFFFF;
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_device_setting, null);
@@ -89,7 +91,10 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         int address = getArguments().getInt("address");
         tv_pub = view.findViewById(R.id.tv_pub);
         deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
-        initPubModel();
+        boolean isSensor = deviceInfo.isSensor();
+        if (!isSensor) {
+            initPubModel();
+        }
         TextView tv_mac = view.findViewById(R.id.tv_mac);
         tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
@@ -97,17 +102,23 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         cb_relay = view.findViewById(R.id.cb_relay);
         cb_pub.setChecked(deviceInfo.isPubSet());
         cb_relay.setChecked(deviceInfo.relayEnable);
+
         view.findViewById(R.id.view_cps).setOnClickListener(this);
-        view.findViewById(R.id.view_pub).setOnClickListener(this);
+        if (isSensor) {
+            view.findViewById(R.id.view_pub).setVisibility(View.GONE);
+        } else {
+            view.findViewById(R.id.view_pub).setOnClickListener(this);
+        }
         view.findViewById(R.id.view_config).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
         view.findViewById(R.id.view_ota).setOnClickListener(this);
         view.findViewById(R.id.view_net_key).setOnClickListener(this);
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
         view.findViewById(R.id.view_subnet).setOnClickListener(this);
-
-
-        TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
+        view.findViewById(R.id.view_private_beacon).setOnClickListener(this);
+        if (!isSensor) {
+            TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
+        }
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
     }
@@ -169,6 +180,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(this);
         delayHandler.removeCallbacksAndMessages(null);
+
     }
 
     private void showKickConfirmDialog() {
@@ -238,7 +250,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             final ModelPublicationStatusMessage statusMessage = (ModelPublicationStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
                 getActivity().runOnUiThread(() -> {
-                    delayHandler.removeCallbacks(cmdTimeoutTask);
+                    delayHandler.removeCallbacks(pubCmdTimeoutTask);
                     dismissWaitingDialog();
                     boolean settle = statusMessage.getPublication().publishAddress != 0;
                     cb_pub.setChecked(settle);
@@ -314,8 +326,8 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 boolean result = MeshService.getInstance().sendMeshMessage(publicationSetMessage);
                 if (result) {
                     showWaitingDialog("processing...");
-                    delayHandler.removeCallbacks(cmdTimeoutTask);
-                    delayHandler.postDelayed(cmdTimeoutTask, 5 * 1000);
+                    delayHandler.removeCallbacks(pubCmdTimeoutTask);
+                    delayHandler.postDelayed(pubCmdTimeoutTask, 5 * 1000);
                 }
                 break;
 
@@ -332,15 +344,20 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 startActivity(new Intent(getActivity(), SubnetBridgeActivity.class)
                         .putExtra("meshAddress", deviceInfo.meshAddress));
                 break;
+
+            case R.id.view_private_beacon:
+                startActivity(new Intent(getActivity(), PrivateBeaconSettingActivity.class)
+                        .putExtra("meshAddress", deviceInfo.meshAddress));
+                break;
+
+
+//                case R.id.
         }
     }
 
-    private Runnable cmdTimeoutTask = new Runnable() {
-        @Override
-        public void run() {
-            toastMsg("pub timeout");
-            dismissWaitingDialog();
-        }
+    private Runnable pubCmdTimeoutTask = () -> {
+        toastMsg("pub timeout");
+        dismissWaitingDialog();
     };
 
 }

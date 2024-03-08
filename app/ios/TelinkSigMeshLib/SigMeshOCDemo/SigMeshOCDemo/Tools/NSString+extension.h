@@ -38,12 +38,12 @@
 /*
  *去掉所有空格
  */
-- (NSString *)removeAllSapce;
+- (NSString *)removeAllSpace;
 
 /*
  *去掉所有空格和最后的回车
  */
-- (NSString *)removeAllSapceAndNewlines;
+- (NSString *)removeAllSpaceAndNewlines;
 
 /// 去掉所有空格和最后的回车，并在字符串前面补充“0”使其满足长度length
 /// @param length 需要返回的字符串的长度，大于该长度直接返回，不在补“0”
@@ -56,5 +56,17 @@
 
 ///JSON字符串转化为字典
 + (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString;
+
+#pragma mark - 正则表达式相关
+
++ (BOOL)validateEmail:(NSString *)emailString;
+
+#pragma mark - 时间戳相关
+
++ (NSString *)getTimeStringWithTimeStamp:(NSInteger)timeStap;
+
+#pragma mark - sha256相关
+
+- (NSString *)sha256String;
 
 @end

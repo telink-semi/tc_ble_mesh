@@ -1608,6 +1608,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 4.2.14 Sensor Status.
 @interface SigSensorStatus : SigGenericMessage
 @property (nonatomic,strong) NSData *marshalledSensorData;
+@property (nonatomic,strong) NSArray <SigSensorDataModel *>*sensorDataModelArray;
 
 /**
  * @brief   Initialize SigSensorStatus object.
@@ -1951,6 +1952,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Fast Cadence High field identifies a Fast Cadence High state of an
 /// element (see Section 4.1.3.7).
 @property (nonatomic,strong) NSData *cadenceData;
+/// SigSensorCadenceModel init with cadenceData.
+@property (nonatomic,strong) SigSensorCadenceModel *cadenceModel;
 
 /**
  * @brief   Initialize SigSensorCadenceStatus object.

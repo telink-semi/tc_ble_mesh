@@ -41,7 +41,7 @@
 
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = accessMessage.AKF ? 0x01 : 0x02;
+        UInt8 type = accessMessage.AKF ? SigNonceType_applicationNonce : SigNonceType_deviceNonce;
         // ASZMIC is set to 1 for messages sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
         UInt8 aszmic = micSize == 4 ? 0 : 1;
@@ -115,7 +115,7 @@
 
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = _AKF ? 0x01 : 0x02;
+        UInt8 type = _AKF ? SigNonceType_applicationNonce : SigNonceType_deviceNonce;
         // ASZMIC is set to 1 for messages that shall be sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
 //        UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;

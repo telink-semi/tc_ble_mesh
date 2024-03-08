@@ -24,7 +24,9 @@
 #import "SceneItemCell.h"
 
 @interface SceneItemCell()
+/// Image layer used to set icon image.
 @property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
 
 @property (strong, nonatomic) SigSceneModel *model;
@@ -37,6 +39,8 @@
     // Initialization code
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigSceneModel *)model{
     _model = model;
     _nameLabel.text = [NSString stringWithFormat:@"sceneID:0X%@",model.number];

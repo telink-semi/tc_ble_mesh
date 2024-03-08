@@ -27,6 +27,8 @@
 
 @property (copy, nonatomic) void(^clickEditBlock)(void);
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SchedulerModel *)model;
 
 @end

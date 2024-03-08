@@ -34,6 +34,7 @@ import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
+import com.telink.ble.mesh.core.message.sensor.SensorStatusMessage;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -247,6 +248,17 @@ public class TelinkMeshApplication extends MeshApplication {
                     if (onlineDevice.meshAddress == srcAdr) {
                         int temp = ctlTemp.isComplete() ? ctlTemp.getTargetTemperature() : ctlTemp.getPresentTemperature();
                         if (onTempStatus(onlineDevice, UnitConvert.lightness2lum(temp))) {
+                            statusChangedNode = onlineDevice;
+                        }
+                        break;
+                    }
+                }
+            } else if (message.getStatusMessage() instanceof SensorStatusMessage) {
+                SensorStatusMessage sensorStatus = (SensorStatusMessage) statusMessage;
+                int srcAdr = message.getSrc();
+                for (NodeInfo onlineDevice : meshInfo.nodes) {
+                    if (onlineDevice.meshAddress == srcAdr) {
+                        if (onlineDevice.updateSensorState(sensorStatus.sensorData)) {
                             statusChangedNode = onlineDevice;
                         }
                         break;

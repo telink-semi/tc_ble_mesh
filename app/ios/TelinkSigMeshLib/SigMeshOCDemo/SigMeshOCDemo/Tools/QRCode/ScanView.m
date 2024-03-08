@@ -95,7 +95,9 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (void)start
 {
     if (self.isCameraAvailable && self.isRearCameraAvailable) {
-        [self.session startRunning];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.session startRunning];
+        });
     }
 }
 

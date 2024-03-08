@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -38,6 +39,7 @@ import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
+import com.telink.ble.mesh.core.message.lighting.LcLightOnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -219,6 +221,13 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         findViewById(R.id.iv_sat_minus).setOnClickListener(this);
         findViewById(R.id.iv_sat_add).setOnClickListener(this);
 
+        Switch switch_lc_on_off = findViewById(R.id.switch_lc_on_off);
+        switch_lc_on_off.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
+            MeshService.getInstance().sendMeshMessage(
+                    LcLightOnOffSetMessage.getSimple(group.address, mesh.getDefaultAppKeyIndex(),
+                            (byte) (isChecked ? 1 : 0), false, 0));
+        });
     }
 
     private List<NodeInfo> getDevicesInGroup() {
@@ -357,6 +366,7 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
                         appKeyIndex, delta, false, 0);
                 MeshService.getInstance().sendMeshMessage(deltaSetMessage);
                 break;
+
         }
     }
 

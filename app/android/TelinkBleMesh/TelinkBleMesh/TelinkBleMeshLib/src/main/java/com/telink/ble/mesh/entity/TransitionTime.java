@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -58,8 +58,9 @@ public class TransitionTime {
 
     /**
      * Constructs a TransitionTime object with the given number and step values.
+     *
      * @param number the number of steps in the transition
-     * @param step the resolution of the transition
+     * @param step   the resolution of the transition
      */
     public TransitionTime(byte number, byte step) {
         this.number = number;
@@ -68,6 +69,7 @@ public class TransitionTime {
 
     /**
      * Creates a TransitionTime object from the given time in milliseconds.
+     *
      * @param millisecond the time in milliseconds
      * @return a TransitionTime object representing the given time
      */
@@ -95,6 +97,7 @@ public class TransitionTime {
     /**
      * Returns the value of the TransitionTime object.
      * The value is a byte representation of the number and step values.
+     *
      * @return the value of the TransitionTime object
      */
     public byte getValue() {
@@ -103,6 +106,7 @@ public class TransitionTime {
 
     /**
      * Returns the number of steps in the transition.
+     *
      * @return the number of steps
      */
     public byte getNumber() {
@@ -111,14 +115,17 @@ public class TransitionTime {
 
     /**
      * Returns the resolution of the transition.
+     *
      * @return the resolution in milliseconds
      */
     public byte getStep() {
         return step;
     }
 
+
     /**
      * Returns the resolution of the transition in milliseconds.
+     *
      * @return the resolution in milliseconds
      */
     public int getResolution() {
@@ -133,5 +140,30 @@ public class TransitionTime {
                 return PERIOD_STEP_10_MINUTE;
         }
         return 0;
+    }
+
+    /**
+     * Returns the resolution of the transition in milliseconds.
+     *
+     * @return the resolution in milliseconds
+     */
+    public static int getResolution(int step) {
+        switch (step) {
+            case STEP_RESOLUTION_100_MILL:
+                return PERIOD_STEP_100_MILL;
+            case STEP_RESOLUTION_1_SECOND:
+                return PERIOD_STEP_1_SECOND;
+            case STEP_RESOLUTION_10_SECOND:
+                return PERIOD_STEP_10_SECOND;
+            case STEP_RESOLUTION_10_MINUTE:
+                return PERIOD_STEP_10_MINUTE;
+        }
+        return 0;
+    }
+
+    public static int getTimeMilliseconds(int value) {
+        int st = value >> 6;
+        int no = value & 0x3F;
+        return getResolution(st) * no;
     }
 }

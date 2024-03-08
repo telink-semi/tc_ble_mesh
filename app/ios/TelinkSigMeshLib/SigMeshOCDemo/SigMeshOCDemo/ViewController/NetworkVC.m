@@ -29,19 +29,37 @@
 #import "UIViewController+Message.h"
 #import "MeshInfoVC.h"
 #import "ProxyFilterVC.h"
-#import "PrivateBeaconVC.h"
+#import "ActivityIndicatorCell.h"
+
+#define kMeshInfo   @"Mesh Info"
+#define kSolicitationPDU   @"Solicitation PDU"
 
 @interface NetworkVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray <NSString *>*source;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconSource;
 @property (nonatomic, strong) NSMutableArray <NSString *>*vcIdentifiers;
+//the end time of broadcast Solicitation PDU.
+@property (strong, nonatomic) NSDate *endDate;
 @end
 
 @implementation NetworkVC
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row == 0) {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *title = self.source[indexPath.row];
+    if ([title isEqualToString:kSolicitationPDU]) {
+        //Solicitation PDU
+        ActivityIndicatorCell *cell = (ActivityIndicatorCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(ActivityIndicatorCell.class) forIndexPath:indexPath];
+        cell.nameLabel.text = title;
+        cell.iconImageView.image = [UIImage imageNamed:self.iconSource[indexPath.row]];
+        NSComparisonResult result = [[NSDate date] compare:self.endDate];
+        if (result == NSOrderedAscending) {
+            [cell.broadcastActivityView startAnimating];
+        } else {
+            [cell.broadcastActivityView stopAnimating];
+        }
+        return cell;
+    } else if ([title isEqualToString:kMeshInfo]) {
         SettingDetailItemCell *cell = (SettingDetailItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingDetailItemCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.nameLabel.text = self.source[indexPath.row];
@@ -49,7 +67,7 @@
         cell.iconImageView.image = [UIImage imageNamed:self.iconSource[indexPath.row]];
         return cell;
     }
-    SettingTitleItemCell *cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingTitleItemCellID forIndexPath:indexPath];
+    SettingTitleItemCell *cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingTitleItemCell.class) forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryNone;
     cell.nameLabel.text = self.source[indexPath.row];
     cell.iconImageView.image = [UIImage imageNamed:self.iconSource[indexPath.row]];
@@ -60,15 +78,16 @@
     NSString *titleString = self.source[indexPath.row];
     NSString *sb = @"Setting";
     UIViewController *vc = nil;
-    if ([titleString isEqualToString:@"Mesh OTA"]) {
+    if ([titleString isEqualToString:kSolicitationPDU]) {
+        NSComparisonResult result = [[NSDate date] compare:self.endDate];
+        [self setSolicitationPDUEnable:result != NSOrderedAscending];
+    } else if ([titleString isEqualToString:@"Mesh OTA"]) {
         vc = [[MeshOTAVC alloc] init];
     } else if ([titleString isEqualToString:@"Proxy Filter"]) {
         vc = [[ProxyFilterVC alloc] init];
-    } else if ([titleString isEqualToString:@"Private Beacon"]) {
-        vc = [[PrivateBeaconVC alloc] init];
     } else {
         vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:sb];
-        if ([titleString isEqualToString:@"Mesh Info"]) {
+        if ([titleString isEqualToString:kMeshInfo]) {
             MeshInfoVC *infoVC = (MeshInfoVC *)vc;
             infoVC.network = SigDataSource.share;
             __weak typeof(self) weakSelf = self;
@@ -84,10 +103,6 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.source.count;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 70.0;
 }
 
 //将tabBar.hidden移到viewDidAppear，解决下一界面的手势返回动作取消时导致界面下方出现白条的问题。
@@ -108,23 +123,24 @@
     self.iconSource = [NSMutableArray array];
     self.vcIdentifiers = [NSMutableArray array];
 
-    [self.source addObject:@"Mesh Info"];
-    [self.iconSource addObject:@"ic_mesh_network"];
+    [self.source addObject:kMeshInfo];
+    [self.iconSource addObject:@"ic_network"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_MeshInfoViewControllerID];
     [self.source addObject:@"Scenes"];
-    [self.iconSource addObject:@"scene"];
+    [self.iconSource addObject:@"ic_scene"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_SceneListViewControllerID];
     [self.source addObject:@"Direct Forwarding"];
     [self.iconSource addObject:@"ic_directForwarding"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_DirectForwardingVCID];
     [self.source addObject:@"Mesh OTA"];
-    [self.iconSource addObject:@"ic_mesh_ota"];
+    [self.iconSource addObject:@"ic_meshota"];
     [self.vcIdentifiers addObject:@""];
     [self.source addObject:@"Proxy Filter"];
     [self.iconSource addObject:@"ic_proxyFilter"];
     [self.vcIdentifiers addObject:@""];
-    [self.source addObject:@"Private Beacon"];
-    [self.iconSource addObject:@"ic_guangbo"];
+    //Solicitation PDU
+    [self.source addObject:kSolicitationPDU];
+    [self.iconSource addObject:@"ic_publish"];
     [self.vcIdentifiers addObject:@""];
 }
 
@@ -134,7 +150,23 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_SettingDetailItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_SettingDetailItemCellID];
-    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_SettingTitleItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_SettingTitleItemCellID];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(ActivityIndicatorCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(ActivityIndicatorCell.class)];
+}
+
+- (void)setSolicitationPDUEnable:(BOOL)enable {
+    if (enable) {
+        self.endDate = [NSDate dateWithTimeInterval:10 sinceDate:[NSDate date]];
+        __weak typeof(self) weakSelf = self;
+        [SigMeshLib.share advertisingSolicitationPDUWithSource:SigDataSource.share.curLocationNodeModel.address destination:MeshAddress_allProxies advertisingInterval:10 result:^(BOOL isSuccess) {
+            weakSelf.endDate = [NSDate dateWithTimeIntervalSince1970:0];
+            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+        }];
+    } else {
+        self.endDate = [NSDate dateWithTimeIntervalSince1970:0];
+        [TPeripheralManager.share stopAdvertising];
+    }
+    [self.tableView reloadData];
 }
 
 @end

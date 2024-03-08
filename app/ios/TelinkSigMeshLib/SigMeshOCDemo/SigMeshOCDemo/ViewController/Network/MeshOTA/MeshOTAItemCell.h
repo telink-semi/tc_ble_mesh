@@ -26,6 +26,7 @@
 @interface MeshOTAItemCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *certIcon;
+/// Button layer used to set select image icon.
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
 @end

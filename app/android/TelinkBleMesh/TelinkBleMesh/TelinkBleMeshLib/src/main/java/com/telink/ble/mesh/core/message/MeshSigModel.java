@@ -149,7 +149,6 @@ public enum MeshSigModel implements Serializable {
 //    SIG_MD_OBJ_TRANSFER_C(0xFF01, "Object Transfer Client", "OTA"),
 
 
-
     ;
 
     /**
@@ -201,7 +200,8 @@ public enum MeshSigModel implements Serializable {
     // default sub list
     public static MeshSigModel[] getDefaultSubList() {
         return new MeshSigModel[]{SIG_MD_G_ONOFF_S, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_S,
-                SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_S};
+                SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_S,
+                SIG_MD_LIGHT_LC_S}; //  add SIG_MD_LIGHT_LC_S for lc support
     }
 
     public static MeshSigModel[] getLevelAssociatedList() {

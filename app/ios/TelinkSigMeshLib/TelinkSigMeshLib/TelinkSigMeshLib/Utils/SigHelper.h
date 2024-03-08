@@ -171,6 +171,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param phaseType The SigFirmwareUpdatePhaseType value.
 - (NSString *)getDetailOfSigFirmwareUpdatePhaseType:(SigFirmwareUpdatePhaseType)phaseType;
 
+/// Get Detail Of SigFirmwareUpdateAdditionalInformationStatusType.
+/// @param type The SigFirmwareUpdateAdditionalInformationStatusType value.
+- (NSString *)getDetailOfSigFirmwareUpdateAdditionalInformationStatusType:(SigFirmwareUpdateAdditionalInformationStatusType)type;
+
 /// Get Detail Of SigFirmwareUpdateServerAndClientModelStatusType
 /// @param statusType The SigFirmwareUpdateServerAndClientModelStatusType value.
 - (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType;
@@ -194,6 +198,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// Get Detail Of SigNodeIdentityState
 /// @param state The SigNodeIdentityState value.
 - (NSString *)getDetailOfSigNodeIdentityState:(SigNodeIdentityState)state;
+
+/// Get Detail Of SigSensorSamplingFunctionType
+/// @param type The SigSensorSamplingFunctionType value.
+- (NSString *)getDetailOfSigSensorSamplingFunctionType:(SigSensorSamplingFunctionType)type;
+
+/// Get Sensor Name With PropertyID>
+/// @param propertyID Property ID.
+- (NSString *)getSensorNameWithPropertyID:(UInt16)propertyID;
 
 @end
 

@@ -22,10 +22,10 @@
  *******************************************************************************************************/
 
 #import "ShareInVC.h"
+#import <Reachability/Reachability.h>
 #import "FileChooseVC.h"
 #import "UIViewController+Message.h"
 #import "ScanCodeVC.h"
-#import "Reachability.h"
 #import "ShareTipsVC.h"
 
 @interface ShareInVC ()

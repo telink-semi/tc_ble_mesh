@@ -21,19 +21,25 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseCell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NetworkCell : UITableViewCell
+@interface NetworkCell : BaseCell
+/// Background layer for setting rounded corners.
 @property (weak, nonatomic) IBOutlet UIView *bgView;
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+/// Text layer used to set uuid.
 @property (weak, nonatomic) IBOutlet UILabel *uuidLabel;
+/// Text layer used to set create time.
 @property (weak, nonatomic) IBOutlet UILabel *createTimeLabel;
+/// Button layer used to set more icon image.
 @property (weak, nonatomic) IBOutlet UIButton *moreButton;
 
-//根据是否选中更新UI
-- (void)setUIWithSelected:(BOOL)isSelected;
+#ifdef kIsTelinkCloudSigMeshLib
+@property (nonatomic, strong) AppMeshNetworkModel *model;
+#endif
 
 @end
 

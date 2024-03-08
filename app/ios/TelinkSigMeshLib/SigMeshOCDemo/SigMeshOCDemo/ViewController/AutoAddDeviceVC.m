@@ -242,10 +242,10 @@
     [super normalSetting];
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-
+    //init rightBarButtonItem
     self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
     self.navigationItem.rightBarButtonItem = self.refreshItem;
-    self.title = @"Device Scan(Auto)";
+    [self setTitle:@"Device Scan" subTitle:@"Auto"];
 
     self.source = [[NSMutableArray alloc] init];
 }

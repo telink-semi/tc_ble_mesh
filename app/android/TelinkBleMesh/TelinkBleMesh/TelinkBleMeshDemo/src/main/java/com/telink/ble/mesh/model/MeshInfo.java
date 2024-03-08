@@ -172,7 +172,8 @@ public class MeshInfo implements Serializable, Cloneable {
 
     public ToMany<NodeInfo> provisionerNodes;
 
-
+    // solicitation sequence number
+    public int solSeq = 1;
     /**
      * static-oob info
      */
@@ -551,5 +552,10 @@ public class MeshInfo implements Serializable, Cloneable {
         return true;
     }
 
+    public int getSolSeq() {
+        int seq = solSeq++;
+        this.saveOrUpdate();
+        return seq;
+    }
 }
 

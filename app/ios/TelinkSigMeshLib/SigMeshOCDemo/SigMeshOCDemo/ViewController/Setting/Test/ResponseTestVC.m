@@ -152,11 +152,11 @@
         [self showTips:@"Please input total count!"];
         return;
     }
-    if (![self validateString:self.intervalTimeTF.text.removeAllSapceAndNewlines]) {
+    if (![LibTools validateNumberString:self.intervalTimeTF.text.removeAllSpaceAndNewlines]) {
         [self showTips:@"Please input correct interval time!"];
         return;
     }
-    if (![self validateString:self.totalCountTF.text.removeAllSapceAndNewlines]) {
+    if (![LibTools validateNumberString:self.totalCountTF.text.removeAllSpaceAndNewlines]) {
         [self showTips:@"Please input correct total count!"];
         return;
     }
@@ -237,12 +237,6 @@
             [self.contentText scrollRangeToVisible:NSMakeRange(self.contentText.text.length, 1)];
         }
     });
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
 }
 
 - (void)dealloc {

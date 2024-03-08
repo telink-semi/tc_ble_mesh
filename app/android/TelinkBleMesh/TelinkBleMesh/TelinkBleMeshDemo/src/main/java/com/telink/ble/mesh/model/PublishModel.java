@@ -63,6 +63,7 @@ public class PublishModel implements Serializable {
 
     public int modelId;
 
+    // publish address
     public int address;
 
 //    public byte[] params;

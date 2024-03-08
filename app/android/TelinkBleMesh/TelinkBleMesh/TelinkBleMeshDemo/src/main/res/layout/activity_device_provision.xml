@@ -43,8 +43,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ADD ALL"
-        android:visibility="gone"
-        android:theme="@style/AccentButton" />
+        android:theme="@style/AccentButton"
+        android:visibility="gone" />
 
 
     <!--<Button

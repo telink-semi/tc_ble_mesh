@@ -43,6 +43,8 @@ public class RemoteProvisioningEvent extends Event<String> {
      */
     public static final String EVENT_TYPE_REMOTE_PROVISIONING_FAIL = "com.telink.sig.mesh.EVENT_TYPE_REMOTE_PROVISIONING_FAIL";
 
+    public static final String EVENT_TYPE_REMOTE_CAPABILITY_RECEIVED = "com.telink.sig.mesh.EVENT_TYPE_REMOTE_CAPABILITY_RECEIVED";
+
     private RemoteProvisioningDevice remoteProvisioningDevice;
     private String desc;
 

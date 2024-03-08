@@ -38,7 +38,6 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DirectToggleListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -102,9 +101,9 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
             NodeInfo node = meshInfo.getDeviceByMeshAddress(src);
             if (node != null) {
                 node.directForwardingEnabled = controlStatusMessage.directedForwarding == 1;
-                node.directRelay = controlStatusMessage.directedRelay == 1;
+                node.directRelayEnabled = controlStatusMessage.directedRelay == 1;
                 node.directProxyEnabled = controlStatusMessage.directedProxy == 1;
-                node.directFriend = controlStatusMessage.directedFriend == 1;
+                node.directFriendEnabled = controlStatusMessage.directedFriend == 1;
                 listAdapter.notifyDataSetChanged();
                 node.save();
             }

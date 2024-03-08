@@ -25,7 +25,7 @@
 #import "UIViewController+Message.h"
 #import "NSString+extension.h"
 #import "BridgeTableItemCell.h"
-#import "BRStringPickerView.h"
+#import <BRPickerView/BRPickerView.h>
 
 @interface AddBridgeTableVC ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -211,7 +211,7 @@
     switch (textField.tag) {
         case 3:
         {
-            if ([self validateString:textField.text.removeAllSapceAndNewlines]) {
+            if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
                 self.bridgeModel.address1 = [LibTools uint16From16String:textField.text];
             } else {
                 [self showTips:@"Please enter the correct address!"];
@@ -220,7 +220,7 @@
             break;
         case 4:
         {
-            if ([self validateString:textField.text.removeAllSapceAndNewlines]) {
+            if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
                 self.bridgeModel.address2 = [LibTools uint16From16String:textField.text];
             } else {
                 [self showTips:@"Please enter the correct address!"];
@@ -230,12 +230,6 @@
         default:
             break;
     }
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9a-fA-F]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
 }
 
 #pragma mark - 处理点击事件

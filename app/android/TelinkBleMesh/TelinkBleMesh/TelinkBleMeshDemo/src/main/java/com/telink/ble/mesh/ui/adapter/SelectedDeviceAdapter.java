@@ -76,7 +76,7 @@ public class SelectedDeviceAdapter extends BaseRecyclerViewAdapter<SelectedDevic
 
         NodeInfo deviceInfo = mDevices.get(position);
         final int pid = deviceInfo.compositionData == null ? 0 : deviceInfo.compositionData.pid;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, deviceInfo.isSensor()));
 
         holder.tv_device_info.setText(String.format("Node-%04X", deviceInfo.meshAddress));
     }

@@ -79,6 +79,9 @@ public class MeshUpdatingDevice implements Serializable, Parcelable, Cloneable {
      */
     public int pid = 0;
 
+    // version id
+    public int vid = 0;
+
     /**
      * contains firmware update models
      * and
@@ -98,6 +101,10 @@ public class MeshUpdatingDevice implements Serializable, Parcelable, Cloneable {
      */
     public boolean isLpn = false;
 
+    public boolean isSensor = false;
+
+
+    public boolean needUpdate = false;
     /**
      * Default constructor for the MeshUpdatingDevice class.
      */

@@ -22,10 +22,10 @@
  *******************************************************************************************************/
 
 #import "DeviceAppKeyListVC.h"
-#import "KeyCell.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
 #import "DeviceChooseKeyVC.h"
+#import "AppKeyCell.h"
 
 @interface DeviceAppKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -41,7 +41,8 @@
     self.title = @"AppKey List";
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(AppKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(AppKeyCell.class)];
+    //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefresh:)];
     self.navigationItem.rightBarButtonItems = @[rightItem1,rightItem2];
@@ -61,7 +62,6 @@
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
     [vc setBackAppKeyModel:^(SigAppkeyModel * _Nonnull appKeyModel) {
-//        [weakSelf addAppKeyToDevice:appKeyModel];
         [weakSelf keyBindWithAppKey:appKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
@@ -181,9 +181,7 @@
     for (SigNodeKeyModel *nodeKey in self.model.appKeys) {
         for (SigAppkeyModel *netKey in SigDataSource.share.appKeys) {
             if (nodeKey.index == netKey.index) {
-//                if (![tem containsObject:netKey]) {
-                    [tem addObject:netKey];
-//                }
+                [tem addObject:netKey];
                 break;
             }
         }
@@ -224,46 +222,41 @@
 }
 
 - (void)keyBindWithAppKey:(SigAppkeyModel *)appKey {
-//    NSString *msg = [NSString stringWithFormat:@"Are you sure KeyBind appKey(compositionDataGet+appKeyAdd+modelAppBind*N) to index:0x%04lX key:%@",(long)appKey.index,appKey.key];
     __weak typeof(self) weakSelf = self;
-//    [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ShowTipsHandle.share show:@"add appkey and KeyBind..."];
-        });
-        NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        UInt8 keyBindType = type.integerValue;
-        UInt16 productID = [LibTools uint16From16String:self.model.pid];
-        DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
-        NSData *cpsData = deviceType.defaultCompositionData.parameters;
-        if (keyBindType == KeyBindType_Fast) {
-            if (cpsData == nil || cpsData.length == 0) {
-                keyBindType = KeyBindType_Normal;
-            }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [ShowTipsHandle.share show:@"add appkey and KeyBind..."];
+    });
+    NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
+    UInt8 keyBindType = type.integerValue;
+    UInt16 productID = [LibTools uint16From16String:self.model.pid];
+    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+    if (keyBindType == KeyBindType_Fast) {
+        if (cpsData == nil || cpsData.length == 0) {
+            keyBindType = KeyBindType_Normal;
         }
-        if (cpsData && cpsData.length > 0) {
-            cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
-        }
+    }
+    if (cpsData && cpsData.length > 0) {
+        cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
+    }
 
-        [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];
-                if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
-                    [weakSelf.model.appKeys addObject:nodeKeyModel];
-                }
-                [SigDataSource.share saveLocationData];
-                [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
-                [ShowTipsHandle.share show:@"KeyBind success!"];
-                [ShowTipsHandle.share delayHidden:2.0];
-            });
-        } fail:^(NSError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [ShowTipsHandle.share show:[NSString stringWithFormat:@"KeyBind fail! error=%@",error]];
-                [ShowTipsHandle.share delayHidden:2.0];
-            });
-        }];
-//    } cancel:^(UIAlertAction *action) {
-//
-//    }];
+    [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];
+            if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
+                [weakSelf.model.appKeys addObject:nodeKeyModel];
+            }
+            [SigDataSource.share saveLocationData];
+            [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
+            [ShowTipsHandle.share show:@"KeyBind success!"];
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
+    } fail:^(NSError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share show:[NSString stringWithFormat:@"KeyBind fail! error=%@",error]];
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
+    }];
 }
 
 #pragma mark - UITableViewDataSource
@@ -272,25 +265,10 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
-    SigAppkeyModel *model = self.sourceArray[indexPath.row];
-    [cell setAppKeyModel:model];
+    AppKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(AppKeyCell.class) forIndexPath:indexPath];
+    [cell setModel:self.sourceArray[indexPath.row]];
     cell.editButton.hidden = YES;
-//    [cell.editButton setImage:[UIImage imageNamed:@"ic_keybind"] forState:UIControlStateNormal];
-//    __weak typeof(self) weakSelf = self;
-//    [cell.editButton addAction:^(UIButton *button) {
-//        [weakSelf keyBindWithAppKey:model];
-//    }];
     return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 @end

@@ -271,20 +271,24 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
                     showConfirmDialog("share import success, switch to the new mesh?", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            switchToNetworkById(importedNetworkId);
+                            switchToNetworkById(importedNetworkId, true);
                         }
                     });
                 } else {
-                    switchToNetworkById(importedNetworkId);
+                    switchToNetworkById(importedNetworkId, true);
                 }
+            } else {
+                switchToNetworkById(importedNetworkId, false);
             }
         }
     }
 
-    private void switchToNetworkById(long networkId) {
+    private void switchToNetworkById(long networkId, boolean switched) {
         MeshInfo meshNetwork = MeshInfoService.getInstance().getById(networkId);
         TelinkMeshApplication.getInstance().setupMesh(meshNetwork);
-        listAdapter.resetCurMeshId();
-        toastMsg("switch to network success: " + meshNetwork.meshName);
+        if (switched) {
+            listAdapter.resetCurMeshId();
+            toastMsg("switch to network success: " + meshNetwork.meshName);
+        }
     }
 }

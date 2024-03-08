@@ -65,6 +65,9 @@ import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslTargetStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcLightOnOffStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcModeStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcPropertyStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyStatusMessage;
 import com.telink.ble.mesh.core.message.privatebeacon.PrivateBeaconStatusMessage;
@@ -81,6 +84,9 @@ import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
 import com.telink.ble.mesh.core.message.scene.SceneStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerStatusMessage;
+import com.telink.ble.mesh.core.message.sensor.SensorCadenceStatusMessage;
+import com.telink.ble.mesh.core.message.sensor.SensorDescriptorStatusMessage;
+import com.telink.ble.mesh.core.message.sensor.SensorStatusMessage;
 import com.telink.ble.mesh.core.message.solicitation.SolicitationItemsStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
 
@@ -176,6 +182,16 @@ public class MeshStatus {
 
             register(Opcode.LIGHT_HSL_STATUS.value, HslStatusMessage.class);
             register(Opcode.LIGHT_HSL_TARGET_STATUS.value, HslTargetStatusMessage.class);
+
+            register(Opcode.LIGHT_LC_MODE_STATUS.value, LcModeStatusMessage.class);
+            register(Opcode.LIGHT_LC_ONOFF_STATUS.value, LcLightOnOffStatusMessage.class);
+            register(Opcode.LIGHT_LC_PROPERTY_STATUS.value, LcPropertyStatusMessage.class);
+
+
+            // sensor
+            register(Opcode.SENSOR_CANDECE_STATUS.value, SensorCadenceStatusMessage.class);
+            register(Opcode.SENSOR_STATUS.value, SensorStatusMessage.class);
+            register(Opcode.SENSOR_DESCRIP_STATUS.value, SensorDescriptorStatusMessage.class);
 
             // time
             register(Opcode.TIME_STATUS.value, TimeStatusMessage.class);

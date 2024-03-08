@@ -23,7 +23,6 @@
 package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -70,10 +69,10 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
     private MeshInfo meshInfo;
     private Handler handler = new Handler();
 
-//    private NodeInfo selectedOrigin;
+    //    private NodeInfo selectedOrigin;
     private int selectedOrigin;
 
-//    private NodeInfo selectedTarget;
+    //    private NodeInfo selectedTarget;
     private int selectedTarget;
 
     // origin + route + target
@@ -142,7 +141,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
 
     private void save() {
 
-        if (selectedOrigin== 0) {
+        if (selectedOrigin == 0) {
             toastMsg("select origin");
             return;
         }
@@ -158,7 +157,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
 
         boolean exist = DirectForwardingInfoService.getInstance().exists(selectedOrigin, selectedTarget);
-        if(exist){
+        if (exist) {
             toastMsg("the same origin and target already exists");
             return;
         }
@@ -192,11 +191,11 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
 
         int address;
-        if(settingIndex == -2){
+        if (settingIndex == -2) {
             address = selectedOrigin;
         } else if (settingIndex == -1) {
             address = selectedTarget;
-        }else{
+        } else {
             address = routeNodes.get(settingIndex);
         }
         NodeInfo node = meshInfo.getDeviceByMeshAddress(address);
@@ -212,13 +211,13 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         // target address range
         tableAddMessage.pathTargetUnicastAddrRange = MeshUtils.getUnicastRange(selectedTarget, node.elementCnt);
 
-        if (node.meshAddress == selectedOrigin){ // origin
+        if (node.meshAddress == selectedOrigin) { // origin
             tableAddMessage.bearerTowardPathOrigin = 0; // unsigned
-            tableAddMessage.bearerTowardPathTarget =  1; // adv
-        }else if (node.meshAddress == selectedTarget){ // target
+            tableAddMessage.bearerTowardPathTarget = 1; // adv
+        } else if (node.meshAddress == selectedTarget) { // target
             tableAddMessage.bearerTowardPathOrigin = 1; // unsigned
             tableAddMessage.bearerTowardPathTarget = 0; // adv
-        }else {
+        } else {
             tableAddMessage.bearerTowardPathOrigin = 1; // adv
             tableAddMessage.bearerTowardPathTarget = 1; // adv
         }
@@ -256,7 +255,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
         NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedOrigin);
         int pid = node.compositionData != null ? node.compositionData.pid : 0;
-        iv_origin.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        iv_origin.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, node.isSensor()));
         tv_origin.setText(String.format("Node-%04X", selectedOrigin));
     }
 
@@ -271,7 +270,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
         NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedTarget);
         int pid = node.compositionData != null ? node.compositionData.pid : 0;
-        iv_target.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        iv_target.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, node.isSensor()));
         tv_target.setText(String.format("Node-%04X", selectedTarget));
     }
 
@@ -323,7 +322,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
             case R.id.tv_select_origin:
                 startActivityForResult(
                         new Intent(this, DeviceSelectActivity.class).putExtra(DeviceSelectActivity.KEY_TITLE, "Select Origin"),
-                                REQ_CODE_SELECT_ORIGIN);
+                        REQ_CODE_SELECT_ORIGIN);
                 break;
 
             case R.id.tv_select_target:

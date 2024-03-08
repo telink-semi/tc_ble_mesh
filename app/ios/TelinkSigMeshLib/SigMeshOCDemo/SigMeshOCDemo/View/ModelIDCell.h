@@ -25,6 +25,8 @@
 
 @interface ModelIDCell : UITableViewCell
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(ModelIDModel *)model;
 
 @end

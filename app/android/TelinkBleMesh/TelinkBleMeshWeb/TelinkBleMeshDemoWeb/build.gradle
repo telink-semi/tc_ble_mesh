@@ -1,0 +1,48 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "com.telink.ble.mesh.web"
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 5
+        versionName "3.3.3.8"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+    buildToolsVersion = '28.0.3'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:0.5'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
+
+    implementation 'com.google.code.gson:gson:2.8.3'
+    implementation project(':TelinkBleMeshLib')
+    implementation 'com.google.android.material:material:1.0.0'
+
+    implementation 'com.alibaba:fastjson:1.2.6'
+//    implementation 'com.alibaba.fastjson2:fastjson2:2.0.31'
+
+    // QRCode
+    implementation 'com.google.zxing:core:3.2.1'
+    implementation 'com.google.zxing:android-core:3.2.1'
+    implementation 'me.dm7.barcodescanner:zxing:1.9.13'
+
+    // http
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.6.0'
+}

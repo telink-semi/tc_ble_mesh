@@ -41,7 +41,7 @@
     [DemoCommand changeBrightnessWithBrightness100:sender.value address:self.model.address retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
 }
 
-- (IBAction)changeTempareture:(UISlider *)sender {
+- (IBAction)changeTemperature:(UISlider *)sender {
     SigNodeModel *device = [SigDataSource.share getNodeWithAddress:self.model.address];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)",(int)sender.value];
     [DemoCommand changeTemperatureWithTemperature100:sender.value address:[device.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
@@ -63,7 +63,7 @@
     self.brightnessSlider.value = self.model.trueBrightness;
     self.temperatureSlider.value = self.model.trueTemperature;
     self.title = [NSString stringWithFormat:@"%d",self.model.address];
-
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItem = rightItem;
 }
@@ -73,7 +73,10 @@
     if (self.backAction) {
         self.backAction(curAction);
     }
-    [self popVC:[SceneDetailViewController class]];
+    BOOL has = [self popToViewControllerWithClass:[SceneDetailViewController class]];
+    if (!has) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated{

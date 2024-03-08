@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet UITextField *modelTF;
 @property (weak, nonatomic) IBOutlet UITextField *pubAdrTF;
 @property (weak, nonatomic) IBOutlet UIButton *sendButton;
+/// Background layer for setting rounded corners.
 @property (weak, nonatomic) IBOutlet UIView *bgView;
 
 @property (nonatomic, strong) UIViewController *vc;

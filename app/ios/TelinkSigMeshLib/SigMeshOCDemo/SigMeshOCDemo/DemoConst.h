@@ -52,13 +52,10 @@ typedef enum : UInt8 {
 #define CellIdentifiers_ChooseBinCellID  @"ChooseBinCell"
 #define CellIdentifiers_SceneItemCellID  @"SceneItemCell"
 #define CellIdentifiers_SchedulerCellID  @"SchedulerCell"
-#define CellIdentifiers_SettingItemCellID  @"SettingItemCell"
 #define CellIdentifiers_AddDeviceItemCellID  @"AddDeviceItemCell"
 #define CellIdentifiers_OnOffItemCellID  @"OnOffItemCell"
 #define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
-#define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
 #define CellIdentifiers_ExtendBearerModeCellID  @"ExtendBearerModeCell"
-#define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
 #define CellIdentifiers_ColorModelCellID  @"ColorModelCell"
 #define CellIdentifiers_OnOffModelCellID  @"OnOffModelCell"
 #define CellIdentifiers_LevelAndSliderCellID  @"LevelAndSliderCell"
@@ -68,20 +65,16 @@ typedef enum : UInt8 {
 #define CellIdentifiers_ProxyFilterCellID  @"ProxyFilterCell"
 #define CellIdentifiers_FilterAddressCellID  @"FilterAddressCell"
 #define CellIdentifiers_SettingDetailItemCellID  @"SettingDetailItemCell"
-#define CellIdentifiers_SettingTitleItemCellID  @"SettingTitleItemCell"
 
 
 //ViewControllerIdentifiers
 #define ViewControllerIdentifiers_LogViewControllerID   @"LogViewController"
 #define ViewControllerIdentifiers_HomeViewControllerID  @"HomeViewController"
 #define ViewControllerIdentifiers_ReKeyBindViewControllerID @"ReKeyBindViewController"
-#define ViewControllerIdentifiers_SingleOTAViewControllerID @"SingleOTAViewController"
 #define ViewControllerIdentifiers_GroupViewControllerID  @"GroupViewController"
 #define ViewControllerIdentifiers_GroupDetailViewControllerID   @"GroupDetailViewController"
 #define ViewControllerIdentifiers_SettingViewControllerID   @"SettingViewController"
-#define ViewControllerIdentifiers_CMDViewControllerID   @"CMDViewController"
 #define ViewControllerIdentifiers_HSLViewControllerID   @"HSLViewController"
-#define ViewControllerIdentifiers_RemoteAddVCID   @"RemoteAddVC"
 #define ViewControllerIdentifiers_FastProvisionAddViewControllerID  @"FastProvisionAddVC"
 #define ViewControllerIdentifiers_AddDeviceVCID   @"AddDeviceVC"
 #define ViewControllerIdentifiers_AutoAddDeviceVCID @"AutoAddDeviceVC"
@@ -95,9 +88,6 @@ typedef enum : UInt8 {
 #define ViewControllerIdentifiers_AddBridgeTableVCID @"AddBridgeTableVC"
 #define ViewControllerIdentifiers_AddForwardingTableVCID @"AddForwardingTableVC"
 #define ViewControllerIdentifiers_ChooseEntryVCID @"ChooseEntryVC"
-#define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
-#define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
-#define ViewControllerIdentifiers_ShareViewControllerID  @"ShareVC"
 #define ViewControllerIdentifiers_ShareOutViewControllerID  @"ShareOutVC"
 #define ViewControllerIdentifiers_ShareInViewControllerID  @"ShareInVC"
 #define ViewControllerIdentifiers_FileChooseViewControllerID  @"FileChooseVC"
@@ -230,9 +220,9 @@ typedef enum : UInt8 {
 #define kAddStaticOOBDeviceByNoOOBEnable  @"kAddStaticOOBDeviceByNoOOBEnable"
 #define kDistributorAddress  @"kDistributorAddress"
 #define kDistributorPolicy  @"kDistributorPolicy"
+#define kDistributorBinString  @"kDistributorBinString"
 #define kUpdateNodeAddresses  @"kUpdateNodeAddresses"
 #define kRootCertificateName  @"kRootCertificateName"
-#define kDirectedSecurityEnable  @"kDirectedSecurityEnable"
 #define kFilter  @"kFilter"
 /// 记录Demo端的Mesh列表的key
 #define kCacheMeshListKey  @"kCacheMeshListKey"
@@ -240,7 +230,8 @@ typedef enum : UInt8 {
 #define kCacheCurrentMeshUUIDKey  @"kCacheCurrentMeshUUIDKey"
 /// demo v4.1.0.0新增配置项：导入Mesh后自动切换Mesh还是弹框提示用户选择是否切换Mesh。
 #define kImportCompleteAction   @"kImportCompleteAction"
-
+/// demo v4.1.0.1新增配置项：node节点的排序方式，默认是短地址升序。
+#define kSortTypeOfNodeList     @"kSortTypeOfNodeList"
 //获取导航栏+状态栏的高度
 #define kGetRectNavAndStatusHeight  (self.navigationController.navigationBar.frame.size.height+[[UIApplication sharedApplication] statusBarFrame].size.height)
 

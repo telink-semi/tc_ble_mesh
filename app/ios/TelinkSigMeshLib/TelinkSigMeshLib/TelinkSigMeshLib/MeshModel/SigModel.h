@@ -24,7 +24,7 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivatives,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu;
+@class SigNetkeyDerivatives,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayRetransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu,SigConfigModelPublicationStatus;
 
 //typedef void(^bleEnableCallback)(CBCentralManager *central,BOOL enable);
 //typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
@@ -319,6 +319,8 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// when response from 5.2.3.3 Scheduler Action Get, YES means this Scheduler data is Invalid.
 @property (nonatomic,assign) BOOL isInvalidScheduler;
 
+- (instancetype)initWithSchedulerDataAndSceneIdData:(NSData *)data;
+
 /// get dictionary from SchedulerModel object.
 /// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSchedulerModel;
@@ -326,6 +328,52 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// Set dictionary to SchedulerModel object.
 /// @param dictionary SchedulerModel dictionary object.
 - (void)setDictionaryToSchedulerModel:(NSDictionary *)dictionary;
+
+- (NSString *)getDetailString;
+
+@end
+
+
+/// v3.3.3.7云端版本新增 telink platform device UUID 格式定义
+/*
+ Table: Device UUID
+
+ --------------------------------------------------------------------------------------
+ Field               size(Octets)    Notes
+ ------------------- --------------- --------------------------------------------------
+ TC Flag             2               Telink Cloud Flag，fixed 0x0211
+
+ Protocol Feature    1               bit0~1:    UUID version: initial version is 0 \newline
+                                     bit2:     static OOB: 0 “no static OOB”; 1 "static OOB" \newline
+                                     bit3:     key_bind_needed: 0: no need to send key bind from APP. 1: need. \newline
+                                     bit4~7:    reserved for future
+
+ TC VENDOR ID        2               Telink Cloud Vendor ID, Telink assign. 0x0000 for reserve, 0x0001 ~ 0x000f for telink, 0x0010 ~ 0xfffe will be assigned to coustomer.
+
+ PID                 2               Telink Cloud Product ID
+
+ MAC                 6               MAC address, little endianess
+
+ RFU                 2               Reserved for future use
+
+ CHECKSUM            1               summary from "TC Flag" to "CHECKSUM"(not include)
+ */
+#define TLK_PLATFORM_CID                        (0x0001)
+@interface SigPlatformTelinkDeviceUuidModel : SigModel
+// Telink Cloud Flag，fixed 0x0211, means Telink
+@property (nonatomic, assign) UInt16 tcFlag;
+@property (nonatomic, assign) struct TCProtocolFeature protocolFeature;
+// Telink Cloud Vendor ID, Telink assign. 0x0000 for reserve, 0x0001 ~ 0x000f for telink, 0x0010 ~ 0xfffe will be assigned to coustomer.
+@property (nonatomic, assign) UInt16 tcVendorID;
+// pid of composition data.
+@property (nonatomic, assign) UInt16 pid;
+// MAC address, little endianess
+@property (nonatomic, strong) NSData *macData;
+@property (nonatomic, strong) NSData *feature_rsv2;
+@property (nonatomic, assign) UInt8 check_sum;
+
+@property (nonatomic, strong) NSData *parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
 
 @end
 
@@ -366,6 +414,10 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// return the identification type of provisioned node.
 - (SigIdentificationType)getIdentificationType;
 
+- (BOOL)isTelinkPlatformDevice;
+- (SigPlatformTelinkDeviceUuidModel *)getPlatformTelinkDeviceUuid;
+- (UInt16)getCheckSum:(NSData *)data;
+
 @end
 
 
@@ -387,6 +439,10 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// @returns return `nil` when initialize SigRemoteScanRspModel object fail.
 - (instancetype)initWithParameters:(NSData *)parameters;
 
+- (BOOL)isTelinkPlatformDevice;
+- (SigPlatformTelinkDeviceUuidModel *)getPlatformTelinkDeviceUuid;
+- (UInt16)getCheckSum:(NSData *)data;
+
 @end
 
 
@@ -394,6 +450,7 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 @interface AddDeviceModel : SigModel
 @property (nonatomic, strong) SigScanRspModel *scanRspModel;//SigRemoteScanRspModel need change to SigScanRspModel.
 @property (nonatomic, assign) AddDeviceModelState state;//state of add device
+@property (nonatomic, strong) SigRemoteScanRspModel *remoteScanRspModel;//SigRemoteScanRspModel show report adr.
 
 /// Initialize AddDeviceModel object.
 /// @param scanRemoteModel SigRemoteScanRspModel object.
@@ -533,11 +590,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt16 vendorId;
 /// The response opcode of command, only for reliable command.
 /// eg: The response opcode of VendorOnOffSet is 0xC4.
-@property (nonatomic, assign) UInt8 responseOpcode;
-/// Does the command require a tid number? YES means need tid, NO means needn`t tid.
-/// when needTid is NO, parameter tidPosition and tid is invalid.
-@property (nonatomic, assign) BOOL needTid;
-/// The position of tid in the ini command.
+@property (nonatomic, assign) UInt16 responseOpcode;
+/// The position of tid in the ini command. 0 mean no tid in this IniCommandModel.
 @property (nonatomic, assign) UInt8 tidPosition;
 /// The value of tid in the ini command.
 @property (nonatomic, assign) UInt8 tid;
@@ -551,6 +605,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,assign) NSTimeInterval timeout;
 /// YES means use netkey+deviceKey, NO means use netkey+appKey. Default is NO.
 @property (nonatomic,assign) BOOL isEncryptByDeviceKey;
+
+@property (nonatomic, assign) UInt8 ttl;
 
 /*
  The function of these three parameters is to configure the key and ivIndex actually
@@ -595,16 +651,14 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// 0 means sig model command, other means vendor model command.
 ///   - responseOpcode: The response opcode of command, only for reliable command.
 /// eg: The response opcode of VendorOnOffSet is 0xC4.
-///   - needTid: The position of tid in the ini command.
-///   when needTid is NO, parameter tidPosition and tid is invalid.
-///   - tidPosition: The position of tid in the ini command.
+///   - tidPosition: The position of tid in the ini command. 0 mean no tid in this IniCommandModel.
 ///   - tid: The value of tid in the ini command.
 ///   - commandData: The Hex command data.
 ///   eg: SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}.
 ///   eg: SigGenericOnOffSet: commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
 /// - returns:
 /// return `nil` when initialize vendor model IniCommandModel object fail.
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData;
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData;
 
 /// Initialize IniCommandModel object with complete Hex iniCommand data.
 /// - Parameter iniCommandData: complete Hex iniCommand data.
@@ -1118,6 +1172,150 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @end
 
 
+/// The Sensor Cadence state controls the cadence of sensor reports. It allows a sensor to be configured to send measured
+/// values using Sensor Status messages (see Section 4.2.14) at a different cadence for a range of measured values. It also
+/// allows a sensor to be configured to send measured values when the value changes up or down by more than a configured
+/// delta value.
+/// 4.1.3 Sensor Cadence
+/// Table 4.12: Sensor Cadence states
+/// - seeAlso: MshMDL_v1.1.pdf  (page.118)
+@interface SigSensorCadenceModel : NSObject
+/// The Sensor Property ID field is a 2-octet value referencing a device property that describes the meaning
+/// and the format of data reported by a sensor (see Section 0). A measurement reported by a sensor may
+/// be represented as a single data point (see Section 4.1.4) or as a column of a series of data points, such
+/// as a histogram (see Section 4.1.5). This representation is also determined by the device property.
+/// The values for the field are defined in the following table.
+/// Value                       Meaning
+/// 0x0000                    Prohibited
+/// 0x0001–0xFFFF      Identifier of a device property (see Section 2.1)
+@property (nonatomic, assign) UInt16 propertyID;
+/// Divisor for the Publish Period (see Mesh Protocol specification[1]).
+/// 4.1.3.1 Fast Cadence Period Divisor
+/// The Fast Cadence Period Divisor field is a 7-bit value that shall control the increased cadence of publishing Sensor
+/// Status messages. The value is represented as a 2n divisor of the Publish Period (see Mesh Protocol specification [1]).
+/// For example, the value 0x04 would have a divisor of 16, and the value 0x00 would have a divisor of 1 (i.e., the Publish
+/// Period would not change).
+/// The valid range for the Fast Cadence Period Divisor state is 0–15 and other values are Prohibited.
+@property (nonatomic, assign) UInt8 fastCadencePeriodDivisor;
+/// Defines the unit and format of the Status Trigger Delta fields.
+/// 4.1.3.2 Status Trigger Type
+/// The Status Trigger Type field shall define the unit and format of the Status Trigger Delta Down and the
+/// Status Trigger Delta Up fields.
+/// • The value of 0b0 means that the format shall be defined by the Format Type of the characteristic that
+/// the Sensor Property ID state references (see Section 4.1.1.1).
+/// • The value of 0b1 means that the unit is «unitless», the format type is 0x06 (uint16), and the value is
+/// represented as a percentage change with a resolution of 0.01 percent.
+@property (nonatomic, assign) UInt8 statusTriggerType;
+/// Delta down value that triggers a status message.
+/// The length is variable, make be 1/2/3 bytes.
+/// 4.1.3.3 Status Trigger Delta Down
+/// The Status Trigger Delta Down field shall control the negative change of a measured quantity that
+/// triggers publication of a Sensor Status message. The setting is calculated based on the value of the
+/// Status Trigger Type field:
+/// • If the value of the Status Trigger Type field is 0b0, the setting is calculated as defined by the
+/// Sensor Property ID state (see Section 4.1.1.1).
+/// • If the value of the Status Trigger Type field is 0b1, the setting is calculated using the following
+/// formula:
+///     represented value [percentage]=Status Trigger Delta Down / 100
+/// Note: In both of the cases mentioned in this section, setting the Status Trigger Delta Down field
+/// value to zero will trigger publication of a Sensor Status message for any measured change.
+@property (nonatomic, assign) UInt32 statusTriggerDeltaDown;
+/// Delta up value that triggers a status message.
+/// The length is variable, make be 1/2/3 bytes.
+/// 4.1.3.4 Status Trigger Delta Up
+/// The Status Trigger Delta Up field shall control the positive change of a measured quantity that triggers
+/// publication of a Sensor Status message. The setting is calculated based on the value of the Status
+/// Trigger Type field:
+/// • If the value of the Status Trigger Type field is 0b0, the setting is calculated as defined by the
+/// Sensor Property ID state (see Section 4.1.1.1).
+/// • If the value of the Status Trigger Type field is 0b1, the setting is calculated using the following
+/// formula:
+///     represented value [percentage]=Status Trigger Delta Up / 100
+/// Note: In both of the cases mentioned above in this Section, setting the Status Trigger Delta Up
+/// field value to zero will trigger publication of a Sensor Status message for any measured change.
+@property (nonatomic, assign) UInt32 statusTriggerDeltaUp;
+/// Minimum interval between two consecutive Status messages.
+/// 4.1.3.5 Status Min Interval
+/// The Status Min Interval field is a 1-octet value that controls the minimum interval between publishing
+/// two consecutive Sensor Status messages.
+/// The value is represented as 2^n milliseconds. For example, the value 0x0A would represent an interval
+/// of 1024ms.
+/// The valid range for the Status Min Interval is 0–26 and other values are Prohibited.
+@property (nonatomic, assign) UInt8 statusMinInterval;
+/// Low value for the fast cadence range.
+/// The length is variable, make be 1/2/3 bytes.
+/// 4.1.3.6 Fast Cadence Low
+/// The Fast Cadence Low field shall define the lower boundary of a range of measured quantities when
+/// the publishing cadence is increased as defined by the Fast Cadence Period Divisor field. The
+/// represented value is calculated as defined by the Sensor Property ID state (see Section 4.1.1.1).
+/// Note: The Fast Cadence Low may be set to a value higher than the Fast Cadence High. In such
+/// cases, the increased cadence will occur outside the range (Fast Cadence High, Fast Cadence Low).
+@property (nonatomic, assign) UInt32 fastCadenceLow;
+/// High value for the fast cadence range.
+/// The length is variable, make be 1/2/3 bytes.
+/// 4.1.3.7 Fast Cadence High
+/// The Fast Cadence High field shall define the upper boundary of a range of measured quantities when
+/// the publishing cadence is increased as defined by the Fast Cadence Period Divisor field. The
+/// represented value is calculated as defined by the Sensor Property ID state (see Section 4.1.1.1).
+/// Note: The Fast Cadence High may be set to a value lower than the Fast Cadence Low. In such
+/// cases, the increased cadence will occur outside the range (Fast Cadence High, Fast Cadence Low).
+@property (nonatomic, assign) UInt32 fastCadenceHigh;
+
+/// Initialize SigSensorCadenceModel object.
+/// - Parameter parameters: The hex of SigSensorCadenceModel object.
+/// - returns:
+/// return `nil` when initialize SigSensorCadenceModel object fail.
+- (instancetype)initWithSensorCadenceParameters:(NSData *)parameters;
+
+/// Get Sensor Cadence hex data.
+- (NSData *)getSensorCadenceParameters;
+
+@end
+
+
+/// The Marshalled Sensor Data field represents the marshalled Sensor Data state(s) (see Section 4.1.4).
+/// Special marshalling is used in order to facilitate forward compatibility and to optimize the payload of
+/// the message, as illustrated by the figure below.
+/// Marshalling is based on a type-length-value (TLV) concept. A Marshalled Property ID (MPID) is a
+/// concatenation of a 1-bit Format field, a 4-bit or 7-bit Length of the Property Value field, and an 11-bit
+/// or 16-bit Property ID.
+/// 4.2.14 Sensor Status
+/// Figure 4.4: Sensor data marshalling
+/// - seeAlso: MshMDL_v1.1.pdf  (page.130)
+@interface SigSensorDataModel : NSObject
+/// The Format field is a 1-bit bit field that identifies the format of the Length and Property ID fields.
+@property (nonatomic, assign) SigSensorDataFormat sensorDataFormat;
+/// Length of the Property Value.
+/// The Length field is a 1-based uint4 value (valid range 0x0–0xF, representing range of 1–16).
+/// The Length field is a 1-based uint7 value. The range 0x0–0x7E represents the values in the range 1–
+/// 127. The value 0x7F represents a length of zero.
+@property (nonatomic, assign) UInt8 length;
+/// Property identifying a sensor
+/// The Sensor Property ID field is a 2-octet value referencing a device property that describes the meaning
+/// and the format of data reported by a sensor (see Section 0). A measurement reported by a sensor may
+/// be represented as a single data point (see Section 4.1.4) or as a column of a series of data points, such
+/// as a histogram (see Section 4.1.5). This representation is also determined by the device property.
+/// The values for the field are defined in the following table.
+/// Value                       Meaning
+/// 0x0000                    Prohibited
+/// 0x0001–0xFFFF      Identifier of a device property (see Section 2.1)
+@property (nonatomic, assign) UInt16 propertyID;
+/// Raw Value field with a size and representation defined by the device property.
+/// Property values longer than 127 octets are not supported by the Sensor Status message.
+@property (nonatomic, strong) NSData *rawValueData;
+
+/// Initialize SigSensorDataModel object.
+/// - Parameter parameters: The hex of SigSensorDataModel object.
+/// - returns:
+/// return `nil` when initialize SigSensorDataModel object fail.
+- (instancetype)initWithSensorDataParameters:(NSData *)parameters;
+
+/// Get Sensor data hex data.
+- (NSData *)getSensorDataParameters;
+
+@end
+
+
 /// mesh设备广播包解密模型。唯一标识符为identityData，且只存储本地json存在的identityData不为空的SigEncryptedModel。设备断电后会改变identityData，出现相同的address的SigEncryptedModel时，需要replace旧的。
 @interface SigEncryptedModel : NSObject
 /// advertisementDataService data
@@ -1217,9 +1415,6 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// Set dictionary to SigNetkeyModel object.
 /// @param dictionary SigNetkeyModel dictionary object.
 - (void)setDictionaryToSigNetkeyModel:(NSDictionary *)dictionary;
-
-/// Get detail string of SigNetkeyModel object.
-- (NSString *)getNetKeyDetailString;
 
 @end
 
@@ -1461,9 +1656,6 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// @param dictionary SigAppkeyModel dictionary object.
 - (void)setDictionaryToSigAppkeyModel:(NSDictionary *)dictionary;
 
-/// Get detail string of SigAppkeyModel object.
-- (NSString *)getAppKeyDetailString;
-
 @end
 
 
@@ -1567,9 +1759,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// @param dictionary SigGroupModel dictionary object.
 - (void)setDictionaryToSigGroupModel:(NSDictionary *)dictionary;
 
-//临时缓存groupBrightness、groupTempareture，关闭APP后就丢失。
+//临时缓存groupBrightness、groupTemperature，关闭APP后就丢失。
 @property (nonatomic,assign) UInt8 groupBrightness;
-@property (nonatomic,assign) UInt8 groupTempareture;
+@property (nonatomic,assign) UInt8 groupTemperature;
 
 - (BOOL)isOn;
 - (NSMutableArray <SigNodeModel *>*)groupDevices;
@@ -1669,7 +1861,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// The relayRetransmit property contains a relay retransmit object (see Section 2.1.4.4).(C.5)
 /// C.5: If the value is unknown, this property is excluded.
-@property (nonatomic, strong) SigRelayretransmitModel *relayRetransmit;
+@property (nonatomic, strong) SigRelayRetransmitModel *relayRetransmit;
 
 /// The appKeys property contains an array of node application key objects (see Section 2.1.4.5)
 /// that includes information about the application keys known to this node.
@@ -1697,6 +1889,15 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,strong) NSMutableArray <SchedulerModel *>*schedulerList;
 @property (nonatomic,assign) BOOL subnetBridgeEnable;
 @property (nonatomic,strong) NSMutableArray <SigSubnetBridgeModel *>*subnetBridgeList;
+//cache in local json, not share to other provisioner.
+@property (nonatomic,assign) BOOL lightControlModeEnable;
+@property (nonatomic,assign) BOOL lightControlOccupancyModeEnable;
+@property (nonatomic,assign) BOOL lightControlLightOnOffState;
+@property (nonatomic,strong) NSMutableDictionary *lightControlPropertyDictionary;//{key:PropertyID, value:Number}
+@property (nonatomic,strong) NSMutableArray <SigSensorDataModel *>*sensorDataArray;
+@property (nonatomic,strong) NSMutableArray <SigSensorDescriptorModel *>*sensorDescriptorArray;
+@property (nonatomic,strong) NSMutableArray <SigSensorCadenceModel *>*sensorCadenceArray;
+
 //The following properties are not stored JSON
 @property (nonatomic,assign) DeviceState state;
 @property (nonatomic,assign) BOOL isKeyBindSuccess;
@@ -1723,6 +1924,10 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// 缓存单灯的direct forwarding使能状态信息，存储本地，不存储JSON。
 @property (nonatomic,strong,nullable) SigDirectControlStatus *directControlStatus;
+/// 缓存单灯的onDemandPrivateGATTProxy value状态信息，存储本地，不存储JSON。
+/// GATT Proxy state
+/// The On-Demand_Private_GATT_Proxy field indicates the current On-Demand Private GATT Proxy state of the node.
+@property (nonatomic, assign) UInt8 onDemandPrivateGATTProxy;
 
 ///return node true brightness, range is 0~100
 - (UInt8)trueBrightness;
@@ -1770,7 +1975,18 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 ///publish是否存在周期上报功能。
 - (BOOL)hasPublishPeriod;
 
+/// Return whether the node is a sensor.
 - (BOOL)isSensor;
+
+/// Return whether the node is a motion sensor.
+- (BOOL)isMotionSensor;
+
+/// Return whether the node is a ambient light sensor.
+- (BOOL)isAmbientLightSensor;
+
+/// Return whether the node has this propertyID.
+/// @param propertyID property ID
+- (BOOL)hasPropertyID:(UInt16)propertyID;
 
 /// 返回当前节点是否是遥控器。
 - (BOOL)isRemote;
@@ -1824,6 +2040,30 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 - (void)deleteNetKeyDataFromNode:(SigNodeKeyModel *)netKey;
 
+/// Get SigSensorDescriptorModel With PropertyID
+/// @param propertyID sensor property id
+- (SigSensorDescriptorModel *)getSigSensorDescriptorModelWithPropertyID:(UInt16)propertyID;
+
+/// Get SigSensorCadenceModel With PropertyID
+/// @param propertyID sensor property id
+- (SigSensorCadenceModel *)getSigSensorCadenceModelWithPropertyID:(UInt16)propertyID;
+
+/// Update a list of SigSensorDataModel to node.sensorDataArray.
+/// @param sensorDataModelArray A list of SigSensorDataModel
+- (void)updateSigSensorDataModelArray:(NSArray <SigSensorDataModel *>*)sensorDataModelArray;
+
+/// Update a list of SigSensorDescriptorModel to node.sensorDescriptorArray.
+/// @param sensorDescriptorModelArray A list of SigSensorDescriptorModel
+- (void)updateSigSensorDescriptorModelArray:(NSArray <SigSensorDescriptorModel *>*)sensorDescriptorModelArray;
+
+/// Update a list of SigSensorCadenceModel to node.sensorCadenceArray.
+/// @param sensorCadenceModelArray A list of SigSensorCadenceModel
+- (void)updateSigSensorCadenceModelArray:(NSArray <SigSensorCadenceModel *>*)sensorCadenceModelArray;
+
+/// Update SigConfigModelPublicationStatus To Device Config
+/// @param responseMessage The SigConfigModelPublicationStatus object.
+- (void)updateSigConfigModelPublicationStatusToDeviceConfig:(SigConfigModelPublicationStatus *)responseMessage;
+
 @end
 
 
@@ -1831,7 +2071,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// messages relayed by a mesh node [1].
 /// @note   - seeAlso: MshCDB_1.0.1.pdf (page.16),
 /// 2.1.4.4 Relay retransmit object.
-@interface SigRelayretransmitModel : NSObject
+@interface SigRelayRetransmitModel : NSObject
 /// Number of retransmissions on advertising bearer for each Network PDU relayed by the node.
 /// For example, a value of 0b000 represents a single transmission with no retransmissions,
 /// and a value of 0b111 represents a single transmission and 7 retransmissions for a total of 8
@@ -1847,13 +2087,13 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 - (UInt8)getIntervalOfJsonFile;
 - (void)setIntervalOfJsonFile:(UInt8)intervalOfJsonFile;
 
-/// get dictionary from SigRelayretransmitModel object.
+/// get dictionary from SigRelayRetransmitModel object.
 /// @returns return dictionary object.
-- (NSDictionary *)getDictionaryOfSigRelayretransmitModel;
+- (NSDictionary *)getDictionaryOfSigRelayRetransmitModel;
 
-/// Set dictionary to SigRelayretransmitModel object.
-/// @param dictionary SigRelayretransmitModel dictionary object.
-- (void)setDictionaryToSigRelayretransmitModel:(NSDictionary *)dictionary;
+/// Set dictionary to SigRelayRetransmitModel object.
+/// @param dictionary SigRelayRetransmitModel dictionary object.
+- (void)setDictionaryToSigRelayRetransmitModel:(NSDictionary *)dictionary;
 
 @end
 
@@ -2248,6 +2488,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// The resolution property contains an integer that represents the publish step resolution in
 /// milliseconds. The allowed values are: 100, 1000, 10000, and 600000.
 @property (nonatomic, assign) NSInteger resolution;
+
+- (instancetype)initWithMillisecond:(NSInteger)millisecond;
 
 /// get dictionary from SigPeriodModel object.
 /// @returns return dictionary object.

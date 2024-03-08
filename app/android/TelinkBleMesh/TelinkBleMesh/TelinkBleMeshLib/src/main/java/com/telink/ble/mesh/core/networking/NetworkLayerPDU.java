@@ -217,10 +217,6 @@ public class NetworkLayerPDU {
      * @return payload
      */
     private byte[] encryptNetworkPduPayload(byte[] lowerPDU) {
-        // seqNo 3 bytes
-//        byte ctlTTL = (byte) ((ctl << 7) | ttl);
-//        byte[] seqNo = MeshUtils.integer2Bytes(seq, 3, ByteOrder.BIG_ENDIAN);
-//        final byte[] networkNonce = NonceGenerator.generateNetworkNonce(ctlTTL, seqNo, src, this.encryptionSuite.ivIndex);
         byte[] networkNonce = generateNonce();
 //        MeshLogger.log("networkNonce: " + Arrays.bytesToHexString(networkNonce, ""));
         final byte[] unencryptedNetworkPayload = ByteBuffer.allocate(2 + lowerPDU.length).order(ByteOrder.BIG_ENDIAN).putShort((short) dst).put(lowerPDU).array();

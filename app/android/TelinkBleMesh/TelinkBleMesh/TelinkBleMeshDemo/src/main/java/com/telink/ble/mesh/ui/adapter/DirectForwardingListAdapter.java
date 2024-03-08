@@ -127,7 +127,7 @@ public class DirectForwardingListAdapter extends BaseRecyclerViewAdapter<DirectF
 
             NodeInfo nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(innerDevices.get(position));
             int pid = nodeInfo.compositionData != null ? nodeInfo.compositionData.pid : 0;
-            holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+            holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, nodeInfo.isSensor()));
 //            holder.iv_device.setVisibility(View.GONE);
             holder.tv_device_info.setText(String.format("Node-%04X", innerDevices.get(position)));
         }

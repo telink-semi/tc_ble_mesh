@@ -53,6 +53,7 @@
     self.tabBarController.tabBar.hidden = YES;
 }
 
+/// Update LogVC content.
 - (void)updateContent{
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{

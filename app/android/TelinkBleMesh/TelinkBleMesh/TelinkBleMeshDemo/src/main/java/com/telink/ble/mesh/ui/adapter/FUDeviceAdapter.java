@@ -80,8 +80,9 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
         super.onBindViewHolder(holder, position);
 
         MeshUpdatingDevice deviceInfo = mDevices.get(position);
+
         final int pid = deviceInfo.pid;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, deviceInfo.isSensor));
         String pidInfo = deviceInfo.pidInfo;
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,
                 String.format("%04X", deviceInfo.meshAddress),

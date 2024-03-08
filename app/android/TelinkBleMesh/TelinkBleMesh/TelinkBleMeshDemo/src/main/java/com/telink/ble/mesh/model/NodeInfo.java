@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.model;
 
 import android.os.Handler;
+import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -175,6 +176,10 @@ public class NodeInfo implements Serializable {
     // is gatt proxy enabled
     public boolean gattProxyEnable = true;
 
+    public boolean privateBeaconOpened = false;
+
+    public boolean privateGattProxyEnable = false;
+
     // is friend enabled
     public boolean friendEnable = true;
 
@@ -182,20 +187,29 @@ public class NodeInfo implements Serializable {
     public byte networkRetransmit = 0x15;
 
 
+    // network retransmit
+    public byte onDemandPrivateGattProxy = 20;
+
+
     /**
      * direct forwarding enabled
      */
     public boolean directForwardingEnabled = false;
 
-    public boolean directRelay = false;
+    public boolean directRelayEnabled = false;
 
     public boolean directProxyEnabled = false;
 
-    public boolean directFriend = false;
+    public boolean directFriendEnabled = false;
 
-    public boolean privateBeaconOpened = false;
+    /**
+     * lighting control enabled
+     */
+    public ToOne<NodeLcProps> nodeLcProps;
 
-    public boolean privateGattProxyEnable = false;
+
+    public ToMany<NodeSensorState> sensorStateList;
+
 
     @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
@@ -210,6 +224,7 @@ public class NodeInfo implements Serializable {
 
     public void setOnlineState(OnlineState onlineState) {
         this.onlineState = onlineState;
+        if (isSensor()) return;
         PublishModel pm = publishModel.getTarget();
         if (pm != null) {
             Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
@@ -238,7 +253,7 @@ public class NodeInfo implements Serializable {
 
     public void setPublishModel(PublishModel model) {
         this.publishModel.setTarget(model);
-
+        if (isSensor()) return;
         Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
         handler.removeCallbacks(offlineCheckTask);
         if (this.publishModel.getTarget() != null && this.onlineState != OnlineState.OFFLINE) {
@@ -436,7 +451,6 @@ public class NodeInfo implements Serializable {
         return null;
     }
 
-
     public String getPidDesc() {
         String pidInfo = "";
         if (bound && compositionData != null) {
@@ -488,7 +502,76 @@ public class NodeInfo implements Serializable {
         return this.onlineState == OnlineState.OFF;
     }
 
+
     public void save() {
         MeshInfoService.getInstance().updateNodeInfo(this);
+    }
+
+    public NodeLcProps getLcProps() {
+        if (nodeLcProps.getTarget() == null) {
+            MeshLogger.d("create new props : " + meshAddress);
+            nodeLcProps.setTarget(new NodeLcProps());
+            save();
+        }
+        return nodeLcProps.getTarget();
+    }
+
+    /**
+     * Triggered only when response is received that sends an unspecified propertyID message
+     *
+     * @param sensorData key : propertyID. value : sensor data
+     * @see com.telink.ble.mesh.core.message.sensor.SensorGetMessage propertyID
+     */
+    public void resetSensorStateList(SparseArray<byte[]> sensorData) {
+        this.sensorStateList.clear();
+        NodeSensorState st;
+        for (int i = 0; i < sensorData.size(); i++) {
+            st = new NodeSensorState();
+            st.propertyID = sensorData.keyAt(i);
+            st.state = sensorData.valueAt(i);
+            this.sensorStateList.add(st);
+        }
+    }
+
+    public boolean isSensor() {
+        return getTargetEleAdr(MeshSigModel.SIG_MD_SENSOR_S.modelId) != -1;
+    }
+
+    public NodeSensorState getFirstSensorState() {
+        if (sensorStateList.size() == 0) return null;
+        return sensorStateList.get(0);
+    }
+
+    /**
+     * 只要有不同， 则更新所有的
+     *
+     * @param sensorData
+     * @return
+     */
+    public boolean updateSensorState(SparseArray<byte[]> sensorData) {
+        boolean updated = false;
+        if (sensorData.size() != this.sensorStateList.size()) {
+            updated = true;
+        } else {
+            for (int i = 0; i < sensorData.size(); i++) {
+                NodeSensorState st = this.sensorStateList.get(i);
+                if (st.propertyID != sensorData.keyAt(i) || !Arrays.equals(st.state, sensorData.valueAt(i))) {
+                    updated = true;
+                }
+            }
+        }
+        if (updated) {
+            resetSensorStateList(sensorData);
+        }
+        return updated;
+    }
+
+    public NodeSensorState getSensorStateByPropId(int propertyID) {
+        for (NodeSensorState st : sensorStateList) {
+            if (st.propertyID == propertyID) {
+                return st;
+            }
+        }
+        return null;
     }
 }
