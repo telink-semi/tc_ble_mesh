@@ -7,7 +7,7 @@
 
 ### Bug Fixes
 
-* fix segment rx when multi group segment message appear. 
+* fix receiver miss message while multi nodes sending group segment message.
 
 ### Features
 
@@ -42,7 +42,7 @@
 
 ### Bug Fixes
 
-* 修复多个节点同时发送目的地址为非单播的分包消息时，接收端大概率接收不到任何分包消息的问题.
+* 修复多个节点同时发送非单播的分包消息时，影响接收端收包的问题.
 
 ### Features
 
