@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     TelinkSigMeshLib.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  TelinkSigMeshLib.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/10/21.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     TelinkSigMeshLib.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/10/21
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -37,21 +31,17 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <TelinkSigMeshLib/PublicHeader.h>
 
+/*注意：
+ 1.没有宏定义‘#define kIsTelinkCloudSigMeshLib’，生成不包含云端相关代码的库TelinkSigMeshLib.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
+ 2.default release TelinkSigMeshLib.framework.
+ 3.SDK通过以下代码来添加云端SDK特有的代码逻辑：
+  #ifdef kIsTelinkCloudSigMeshLib
+  <* some code *>
+  #endif
+ */
+
 #import <CoreBluetooth/CoreBluetooth.h>
 
-/*注意：
- 1.注释‘#define kExist’则生成不包含MeshOTA、remote provision代码的库TelinkSigMeshLib.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
- 2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibExtensions.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
- 3.default release TelinkSigMeshLib.framework.
- */
-//#define kExist
-#ifndef kExist
-
-// 1.该部分为不包含MeshOTA、remote provision代码的公开头文件
-/*是否存在MeshOTA功能*/
-#define kExistMeshOTA   (NO)
-/*是否存在remote provision功能*/
-#define kExistRemoteProvision   (NO)
 #import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigStruct.h>
@@ -69,7 +59,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigProxyConfigurationMessage.h>
 #import <TelinkSigMeshLib/LibTools.h>
 #import <TelinkSigMeshLib/SigGenericMessage.h>
-#import <TelinkSigMeshLib/SigHearbeatMessage.h>
+#import <TelinkSigMeshLib/SigHeartbeatMessage.h>
 #import <TelinkSigMeshLib/OTAManager.h>
 #import <TelinkSigMeshLib/SigPublishManager.h>
 #import <TelinkSigMeshLib/TelinkHttpManager.h>
@@ -77,40 +67,21 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/MeshOTAManager.h>
 #import <TelinkSigMeshLib/SigRemoteAddManager.h>
 #import <TelinkSigMeshLib/SigBluetooth.h>
+#import <TelinkSigMeshLib/TPeripheralManager.h>
 #import <TelinkSigMeshLib/SigAddDeviceManager.h>
-
-#else
-
-// 2.该部分为包含MeshOTA、remote provision代码的公开头文件
-/*是否存在MeshOTA功能*/
-#define kExistMeshOTA   (YES)
-/*是否存在remote provision功能*/
-#define kExistRemoteProvision   (YES)
-#import <TelinkSigMeshLibExtensions/SigConst.h>
-#import <TelinkSigMeshLibExtensions/SigEnumeration.h>
-#import <TelinkSigMeshLibExtensions/SigStruct.h>
-#import <TelinkSigMeshLibExtensions/SigLogger.h>
-#import <TelinkSigMeshLibExtensions/SigModel.h>
-#import <TelinkSigMeshLibExtensions/BackgroundTimer.h>
-#import <TelinkSigMeshLibExtensions/SigBearer.h>
-#import <TelinkSigMeshLibExtensions/SigDataSource.h>
-#import <TelinkSigMeshLibExtensions/SDKLibCommand.h>
-#import <TelinkSigMeshLibExtensions/SigConfigMessage.h>
-#import <TelinkSigMeshLibExtensions/SigMeshMessage.h>
-#import <TelinkSigMeshLibExtensions/SigMeshLib.h>
-#import <TelinkSigMeshLibExtensions/SigHelper.h>
-#import <TelinkSigMeshLibExtensions/SigMessageHandle.h>
-#import <TelinkSigMeshLibExtensions/SigProxyConfigurationMessage.h>
-#import <TelinkSigMeshLibExtensions/LibTools.h>
-#import <TelinkSigMeshLibExtensions/SigGenericMessage.h>
-#import <TelinkSigMeshLibExtensions/SigHearbeatMessage.h>
-#import <TelinkSigMeshLibExtensions/OTAManager.h>
-#import <TelinkSigMeshLibExtensions/SigPublishManager.h>
-#import <TelinkSigMeshLibExtensions/TelinkHttpManager.h>
-#import <TelinkSigMeshLibExtensions/SigFastProvisionAddManager.h>
-#import <TelinkSigMeshLibExtensions/MeshOTAManager.h>
-#import <TelinkSigMeshLibExtensions/SigRemoteAddManager.h>
-#import <TelinkSigMeshLibExtensions/SigBluetooth.h>
-#import <TelinkSigMeshLibExtensions/SigAddDeviceManager.h>
-
-#endif
+#import <TelinkSigMeshLib/SigPdu.h>
+#import <TelinkSigMeshLib/ConnectTools.h>
+#import <TelinkSigMeshLib/SDKLibCommand+subnetBridge.h>
+#import <TelinkSigMeshLib/SDKLibCommand+certificate.h>
+#import <TelinkSigMeshLib/SDKLibCommand+opcodesAggregatorSequence.h>
+#import <TelinkSigMeshLib/SDKLibCommand+privateBeacon.h>
+#import <TelinkSigMeshLib/SDKLibCommand+firmwareUpdate.h>
+#import <TelinkSigMeshLib/SDKLibCommand+remoteProvision.h>
+#import <TelinkSigMeshLib/SDKLibCommand+directForwarding.h>
+#import <TelinkSigMeshLib/OTSCommand.h>
+#import <TelinkSigMeshLib/OTSBaseModel.h>
+#import <TelinkSigMeshLib/OTSHandle.h>
+#import <TelinkSigMeshLib/NSData+Compression.h>
+#import <TelinkSigMeshLib/SDKLibCommand+minor_ENH.h>
+#import <TelinkSigMeshLib/CDTPServiceModel.h>
+#import <TelinkSigMeshLib/CDTPClientModel.h>

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/3/14
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SensorVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/3/14.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SensorVC.h"
 #import "NSString+extension.h"
@@ -57,20 +51,20 @@
 }
 
 - (IBAction)clickGetSensorStatus:(UIButton *)sender {
-//    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 e0 11 02 e1 02 00 00";
-    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 82 01";
-    NSString *string = [str.uppercaseString removeAllSapceAndNewlines];
+    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 e0 11 02 e1 02 00 00";
+//    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 82 01";
+    NSString *string = [str.uppercaseString removeAllSpaceAndNewlines];
     NSData *data = [LibTools nsstringToHex:string];
-    
+
     UInt8 *bytes = (UInt8 *)data.bytes;
     UInt16 address = self.model.address;
     memcpy(bytes+8, &address, 2);
     NSData *iniData = [NSData dataWithBytes:bytes length:data.length];
-    
+
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand sendOpINIData:iniData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",(unsigned int)responseMessage.opCode,responseMessage.parameters];
-        TeLogVerbose(@"%@",str);
+        TelinkLogVerbose(@"%@",str);
         [weakSelf showNewLogMessage:str];
         if (responseMessage.opCode == 0xE11102 && source == weakSelf.model.address) {
             UInt16 h = 0,t = 0;
@@ -84,18 +78,18 @@
             [weakSelf showNewLogMessage:[NSString stringWithFormat:@"response:%@,h=%d,t=%d",responseMessage.parameters,h,t]];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogVerbose(@"");
+        TelinkLogVerbose(@"");
     }];
-    TeLogInfo(@"send ini:%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
+    TelinkLogInfo(@"send ini:%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
 }
 
 //- (IBAction)clickKictOut:(UIButton *)sender {
-//    TeLogDebug(@"");
+//    TelinkLogDebug(@"");
 //    self.hasClickKickout = YES;
 //    [ShowTipsHandle.share show:Tip_KickoutDevice];
-//    
+//
 //    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-//    
+//
 //    if (SigBearer.share.isOpen) {
 //        [self kickoutAction];
 //    } else {
@@ -105,16 +99,16 @@
 //}
 //
 //- (void)kickoutAction{
-//    TeLogDebug(@"");
+//    TelinkLogDebug(@"");
 //    __weak typeof(self) weakSelf = self;
 //    [DemoCommand kickoutDevice:self.model.address retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-//        TeLogDebug(@"delete device success.");
+//        TelinkLogDebug(@"delete device success.");
 //        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
 //        [weakSelf pop];
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//        
+//
 //    }];
-//    
+//
 //    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
 //        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
 //    } else {
@@ -141,7 +135,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

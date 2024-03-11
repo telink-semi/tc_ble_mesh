@@ -111,6 +111,7 @@
 + ivIndex : iv-index
 + sequenceNumber : 消息序列号
 + localAddress : 本地地址， 应为合法的单播地址 (0x0001 - 0x7FFF)
++ proxyFilterWhiteList : 设置代理节点的filter白名单， 应包含手机地址（即localAddress）和广播地址（0xFFFF）。
 + deviceKeyMap : 设备密钥和设备地址图表
  
 <span id="detail_mesh_message"></span>

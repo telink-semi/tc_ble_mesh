@@ -1,37 +1,33 @@
 /********************************************************************************************************
- * @file     SchedulerDetailViewController.m 
+ * @file     SchedulerDetailViewController.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/9/26
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SchedulerDetailViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/9/26.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SchedulerDetailViewController.h"
 #import "NSString+extension.h"
 #import "UIViewController+Message.h"
 
 @interface SchedulerDetailViewController ()
+@property (weak, nonatomic) IBOutlet UILabel *schedulerIndexLabel;
+
 @property (weak, nonatomic) IBOutlet UIButton *yearAnyButton;
 @property (weak, nonatomic) IBOutlet UIButton *yearCustomButton;
 @property (weak, nonatomic) IBOutlet UITextField *yearTextField;
@@ -103,46 +99,44 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = [NSString stringWithFormat:@"%llu",self.model.schedulerID];
-    
-    UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
-    [button setTitle:@"setTime" forState:UIControlStateNormal];
-    [button addTarget:self action:@selector(clickSetTime) forControlEvents:UIControlEventTouchUpInside];
-    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithCustomView:button];
+    self.title = @"Scheduler Setting";
+    self.schedulerIndexLabel.text = [NSString stringWithFormat:@"Index:0x%lX",(long)self.model.schedulerID];
+    //init rightBarButtonItems
+    UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_time"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSetTime)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_check"] style:UIBarButtonItemStylePlain target:self action:@selector(clickSave)];
     self.navigationItem.rightBarButtonItems = @[rightItem2,rightItem1];
-    
+
     self.monthButtons = @[self.month1Button,self.month2Button,self.month3Button,self.month4Button,self.month5Button,self.month6Button,self.month7Button,self.month8Button,self.month9Button,self.month10Button,self.month11Button,self.month12Button,self.monthAllButton];
     self.weekButtons = @[self.week1Button,self.week2Button,self.week3Button,self.week4Button,self.week5Button,self.week6Button,self.week7Button,self.weekAllButton];
     self.checkTextFields = @[self.yearTextField,self.dayTextField,self.hourTextField,self.minuteTextField,self.secondTextField,self.actionSceneIdField];
-    
+
     [self reloadView];
 }
 
 - (void)clickSetTime {
     [DemoCommand setNowTimeWithAddress:self.device.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigTimeStatus * _Nonnull responseMessage) {
-        TeLogVerbose(@"setNowTimeWithAddress finish.");
+        TelinkLogVerbose(@"setNowTimeWithAddress finish.");
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
 }
 
 - (void)clickSave{
     [self.view endEditing:YES];
-    
+
     if ([self hasInputError]) {
         return;
     }
-    
+
     NSMutableArray *allArray = [[NSMutableArray alloc] initWithObjects:self.device, nil];
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         while (allArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             SigNodeModel *curDevice = allArray.firstObject;
             [DemoCommand setSchedulerActionWithAddress:curDevice.address schedulerModel:weakSelf.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
-                TeLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
+                TelinkLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
                 UInt16 sceneID = weakSelf.model.sceneId;
                 UInt64 scheduler = weakSelf.model.schedulerData;
                 NSMutableData *mData = [NSMutableData dataWithData:[NSData dataWithBytes:&scheduler length:8]];
@@ -152,11 +146,11 @@
                     dispatch_semaphore_signal(semaphore);
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                TeLogDebug(@"");
+                TelinkLogDebug(@"");
             }];
             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
-        TeLogDebug(@"save success");
+        TelinkLogDebug(@"save success");
         [weakSelf.device saveSchedulerModelWithModel:weakSelf.model];
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf.navigationController popViewControllerAnimated:YES];
@@ -169,12 +163,12 @@
     NSArray *checkRangeMin = @[@(2000),@(1),@(0),@(0),@(0),@(0)];
     NSArray *checkRangeMax = @[@(2099),@(31),@(23),@(59),@(59),@(kMeshAddress_allNodes)];
     NSArray *checkTips = @[@"year",@"day",@"hour",@"minute",@"second",@"sceneId"];
-    
+
     for (int i=0; i<checkButtons.count; i++) {
         UIButton *button = checkButtons[i];
         if (button.isSelected) {
             NSString *temStr = [(UITextField *)self.checkTextFields[i] text];
-            if ([self validateString:temStr]) {
+            if ([LibTools validateNumberString:temStr]) {
                 int tem = [temStr intValue];
                 int min = [checkRangeMin[i] intValue];
                 int max = [checkRangeMax[i] intValue];
@@ -188,7 +182,7 @@
             }
         }
     }
-    
+
     return NO;
 }
 
@@ -198,7 +192,7 @@
             [self textFieldEditingEnd:tf];
         }
     }
-    
+
     //year
     if (sender == self.yearAnyButton) {
         self.model.year = 0x64;
@@ -209,7 +203,7 @@
         }
         self.model.year = ([self.yearTextField.text intValue] - 2000) & 0x7F;
     }
-    
+
     //month
     else if ([self.monthButtons containsObject:sender]) {
         sender.selected = !sender.isSelected;
@@ -223,7 +217,7 @@
             self.model.month = self.model.month ^ (1 << [self.monthButtons indexOfObject:sender]);
         }
     }
-    
+
     //day
     if (sender == self.dayAnyButton) {
         self.model.day = 0;
@@ -234,7 +228,7 @@
         }
         self.model.day = [self.dayTextField.text intValue] & 0x1F;
     }
-    
+
     //hour
     if (sender == self.hourAnyButton || sender == self.hourOnceButton) {
         self.model.hour = sender == self.hourAnyButton ? 0x18 : 0x19;
@@ -245,7 +239,7 @@
         }
         self.model.hour = [self.hourTextField.text intValue] & 0x1F;
     }
-    
+
     //minute
     if (sender == self.minuteAnyButton || sender == self.minute15Button || sender == self.minute20Button || sender == self.minuteOnceButton) {
         if (sender == self.minuteAnyButton) {
@@ -264,7 +258,7 @@
         }
         self.model.minute = [self.minuteTextField.text intValue] & 0x3F;
     }
-    
+
     //second
     if (sender == self.secondAnyButton || sender == self.second15Button || sender == self.second20Button || sender == self.secondOnceButton) {
         if (sender == self.secondAnyButton) {
@@ -283,7 +277,7 @@
         }
         self.model.second = [self.secondTextField.text intValue] & 0x3F;
     }
-    
+
     //week
     else if ([self.weekButtons containsObject:sender]) {
         sender.selected = !sender.isSelected;
@@ -297,7 +291,7 @@
             self.model.week = self.model.week ^ (1 << [self.weekButtons indexOfObject:sender]);
         }
     }
-    
+
     //action
     if (sender == self.actionOffButton || sender == self.actionOnButton || sender == self.actionNoButton) {
         if (sender == self.actionOffButton) {
@@ -316,15 +310,15 @@
         self.model.sceneId = [self.actionSceneIdField.text intValue] & 0xFFFF;
         self.model.action = 0x2;
     }
-    
+
     [self reloadView];
 }
 
 - (IBAction)textFieldEditingEnd:(UITextField *)sender {
-    //1.remove all sapce
-    sender.text = [sender.text removeAllSapceAndNewlines];
+    //1.remove all space
+    sender.text = [sender.text removeAllSpaceAndNewlines];
     //2.正则判断合法性
-    if ([self validateString:sender.text]) {
+    if ([LibTools validateNumberString:sender.text]) {
         //3.change to int
         int tem = [sender.text intValue];
         if (sender == self.yearTextField) {
@@ -361,14 +355,14 @@
         self.yearCustomButton.selected = NO;
         self.yearTextField.enabled = NO;
     }
-    
+
     //month
     self.monthAllButton.selected = self.model.month == 0xFFF;
     for (int i=0; i<12; i++) {
         UIButton *but = self.monthButtons[i];
         but.selected = ((self.model.month >> i) & 1) == 1;
     }
-    
+
     //day
     if (self.model.day <= 0x1F && self.model.day > 0) {
         self.dayAnyButton.selected = NO;
@@ -380,7 +374,7 @@
         self.dayCustomButton.selected = NO;
         self.dayTextField.enabled = NO;
     }
-    
+
     //hour
     if (self.model.hour <= 0x17) {
         self.hourAnyButton.selected = NO;
@@ -394,7 +388,7 @@
         self.hourCustomButton.selected = NO;
         self.hourTextField.enabled = NO;
     }
-    
+
     //minute
     self.minuteAnyButton.selected = NO;
     self.minute15Button.selected = NO;
@@ -417,7 +411,7 @@
             self.minuteOnceButton.selected = YES;
         }
     }
-    
+
     //second
     self.secondAnyButton.selected = NO;
     self.second15Button.selected = NO;
@@ -440,14 +434,14 @@
             self.secondOnceButton.selected = YES;
         }
     }
-    
+
     //week
     self.weekAllButton.selected = self.model.week == 0x7F;
     for (int i=0; i<7; i++) {
         UIButton *but = self.weekButtons[i];
         but.selected = ((self.model.week >> i) & 1) == 1;
     }
-    
+
     //action
     self.actionOffButton.selected = NO;
     self.actionOnButton.selected = NO;
@@ -467,18 +461,6 @@
             self.actionNoButton.selected = YES;
         }
     }
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 @end

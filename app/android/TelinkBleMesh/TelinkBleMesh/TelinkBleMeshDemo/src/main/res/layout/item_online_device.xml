@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="4dp">
 
     <ImageView
         android:id="@+id/img_icon"
@@ -20,6 +20,6 @@
         android:layout_marginTop="4dp"
         android:gravity="center"
         android:text="sample"
-        android:textSize="11sp" />
+        android:textSize="10sp" />
 
 </LinearLayout>

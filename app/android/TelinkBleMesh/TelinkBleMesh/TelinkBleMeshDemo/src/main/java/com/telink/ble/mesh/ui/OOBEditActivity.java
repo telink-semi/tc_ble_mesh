@@ -4,35 +4,36 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.OOBPair;
+import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.widget.HexFormatTextWatcher;
 import com.telink.ble.mesh.util.Arrays;
-
-import androidx.appcompat.widget.Toolbar;
 
 /**
  * add or edit static-OOB
@@ -41,12 +42,11 @@ public class OOBEditActivity extends BaseActivity {
 
     public static final String EXTRA_OOB = "com.telink.ble.mesh.EXTRA_OOB";
 
-    public static final String EXTRA_POSITION = "com.telink.ble.mesh.EXTRA_POSITION";
-
-    private boolean isAddMode = false;
+    //    private boolean isAddMode = false;
     // oobPair in edit mode
-    private OOBPair editingOOBPair;
+    private long oobId = 0;
     private EditText et_uuid, et_oob;
+    private OobInfo oobInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,35 +55,34 @@ public class OOBEditActivity extends BaseActivity {
             return;
         }
         setContentView(R.layout.activity_oob_edit);
-        isAddMode = !getIntent().hasExtra(EXTRA_OOB);
-        if (isAddMode) {
-            setTitle("Add OOB");
-        } else {
+
+        oobId = getIntent().getLongExtra(EXTRA_OOB, 0);
+        initView();
+        if (oobId != 0) {
+            oobInfo = MeshInfoService.getInstance().getOobById(oobId);
             setTitle("Edit OOB");
-            editingOOBPair = (OOBPair) getIntent().getSerializableExtra(EXTRA_OOB);
+            et_uuid.setText(Arrays.bytesToHexString(oobInfo.deviceUUID));
+            et_oob.setText(Arrays.bytesToHexString(oobInfo.oob));
+        } else {
+            oobInfo = new OobInfo();
+            setTitle("Add OOB");
         }
+    }
+
+    private void initView() {
         enableBackNav(true);
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.check);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_check) {
-                    OOBPair pair = validateInput();
-                    if (pair == null) {
-                        return false;
-                    }
-                    Intent intent = new Intent();
-                    intent.putExtra(EXTRA_OOB, pair);
-                    if (!isAddMode) {
-                        int rawPosition = getIntent().getIntExtra(EXTRA_POSITION, 0);
-                        intent.putExtra(EXTRA_POSITION, rawPosition);
-                    }
-                    setResult(RESULT_OK, intent);
-                    finish();
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_check) {
+                if (!validateInput()) {
+                    return false;
                 }
-                return false;
+                Intent intent = new Intent();
+                setResult(RESULT_OK, intent);
+                finish();
             }
+            return false;
         });
 
         et_uuid = findViewById(R.id.et_uuid);
@@ -93,49 +92,38 @@ public class OOBEditActivity extends BaseActivity {
         et_uuid.addTextChangedListener(new HexFormatTextWatcher(tv_uuid_preview));
         et_oob.addTextChangedListener(new HexFormatTextWatcher(tv_oob_preview));
 
-        if (!isAddMode) {
-            et_uuid.setText(Arrays.bytesToHexString(editingOOBPair.deviceUUID));
-            et_oob.setText(Arrays.bytesToHexString(editingOOBPair.oob));
-        }
     }
 
-    private OOBPair validateInput() {
+    private boolean validateInput() {
         String uuidInput = et_uuid.getText().toString();
         if (uuidInput.equals("")) {
             toastMsg("uuid cannot be null");
-            return null;
+            return false;
         }
 
         byte[] uuid = Arrays.hexToBytes(uuidInput);
         if (uuid == null || uuid.length != 16) {
             toastMsg("uuid format error");
-            return null;
+            return false;
         }
 
         String oobInput = et_oob.getText().toString();
         if (oobInput.equals("")) {
             toastMsg("oob cannot be null");
-            return null;
+            return false;
         }
 
         byte[] oob = Arrays.hexToBytes(oobInput);
-        if (oob == null || oob.length != 16) {
+        if (oob == null || (oob.length != 16 && oob.length != 32)) {
             toastMsg("oob format error");
-            return null;
+            return false;
         }
 
-        if (isAddMode) {
-            OOBPair oobPair = new OOBPair();
-            oobPair.timestamp = System.currentTimeMillis();
-            oobPair.oob = oob;
-            oobPair.deviceUUID = uuid;
-            return oobPair;
-        } else {
-            editingOOBPair.timestamp = System.currentTimeMillis();
-            editingOOBPair.oob = oob;
-            editingOOBPair.deviceUUID = uuid;
-            return editingOOBPair;
-        }
+        oobInfo.timestamp = System.currentTimeMillis();
+        oobInfo.oob = oob;
+        oobInfo.deviceUUID = uuid;
+        MeshInfoService.getInstance().updateOobInfo(oobInfo);
+        return true;
     }
 
 }

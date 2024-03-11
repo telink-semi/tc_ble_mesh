@@ -1,28 +1,30 @@
 /********************************************************************************************************
- * @file     IconGenerator.java 
+ * @file IconGenerator.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.OnlineState;
 
 /**
  * Created by kee on 2018/9/29.
@@ -31,17 +33,25 @@ import com.telink.ble.mesh.model.NodeInfo;
 public class IconGenerator {
 
     /**
-     * @param type  0: common device, 1: lpn
-     * @param onOff -1: offline; 0: off, 1: on
+     * @param pid         0: common device, 1: lpn
+     * @param onlineState -1: offline; 0: off, 1: on
      * @return res
      */
-    public static int getIcon(int type, int onOff) {
-        if (type == 1){
+    public static int getIcon(int pid, OnlineState onlineState, boolean isSensor) {
+        if (isSensor) {
+            if (onlineState == OnlineState.OFFLINE) {
+                return R.drawable.ic_sensor_offline;
+            }
+            return R.drawable.ic_sensor_on;
+        }
+        if (AppSettings.isLpn(pid)) {
             return R.drawable.ic_low_power;
-        }else {
-            if (onOff == NodeInfo.ON_OFF_STATE_OFFLINE) {
+        } else if (AppSettings.isRemote(pid)) {
+            return R.drawable.ic_rmt;
+        } else {
+            if (onlineState == OnlineState.OFFLINE) {
                 return R.drawable.ic_bulb_offline;
-            } else if (onOff == NodeInfo.ON_OFF_STATE_OFF) {
+            } else if (onlineState == OnlineState.OFF) {
                 return R.drawable.ic_bulb_off;
             } else {
             /*if (deviceInfo.lum == 100) {

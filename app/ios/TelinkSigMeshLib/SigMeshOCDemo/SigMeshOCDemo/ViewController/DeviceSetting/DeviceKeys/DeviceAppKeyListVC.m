@@ -1,43 +1,31 @@
 /********************************************************************************************************
-* @file     DeviceAppKeyListVC.m
-*
-* @brief    Show all AppKey of node.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  DeviceAppKeyListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     DeviceAppKeyListVC.m
+ *
+ * @brief    Show all AppKey of node.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "DeviceAppKeyListVC.h"
-#import "KeyCell.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
 #import "DeviceChooseKeyVC.h"
+#import "AppKeyCell.h"
 
 @interface DeviceAppKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -53,7 +41,8 @@
     self.title = @"AppKey List";
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(AppKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(AppKeyCell.class)];
+    //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefresh:)];
     self.navigationItem.rightBarButtonItems = @[rightItem1,rightItem2];
@@ -64,11 +53,16 @@
 }
 
 - (void)clickAdd:(UIButton *)button {
+    if (self.model.appKeys.count >= 2) {
+        [self showTips:@"more than 2 app keys is not supported"];
+        return;
+    }
+
     DeviceChooseKeyVC *vc = [[DeviceChooseKeyVC alloc] init];
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
     [vc setBackAppKeyModel:^(SigAppkeyModel * _Nonnull appKeyModel) {
-        [weakSelf addAppKeyToDevice:appKeyModel];
+        [weakSelf keyBindWithAppKey:appKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -76,9 +70,9 @@
 - (void)clickRefresh:(UIButton *)button {
     [ShowTipsHandle.share show:@"get node AppKey list..."];
 
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     __weak typeof(self) weakSelf = self;
-    [oprationQueue addOperationWithBlock:^{
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         NSArray *temList = [NSArray arrayWithArray:self.model.netKeys];
         NSMutableArray *backList = [NSMutableArray array];
@@ -86,7 +80,7 @@
         for (SigNodeKeyModel *tem in temList) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             [SDKLibCommand configAppKeyGetWithDestination:weakSelf.model.address networkKeyIndex:tem.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyList * _Nonnull responseMessage) {
-                TeLogInfo(@"AppKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+                TelinkLogInfo(@"AppKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
                 if (responseMessage.networkKeyIndex == tem.index) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         for (NSNumber *number in responseMessage.applicationKeyIndexes) {
@@ -135,7 +129,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configAppKeyAddWithDestination:self.model.address appkeyModel:appKey retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"AppKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"AppKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:responseMessage.applicationKeyIndex updated:NO];
             if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
@@ -149,7 +143,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"add AppKey to node fail! error=%@",error]];
         }
@@ -162,7 +156,7 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configAppKeyDeleteWithDestination:self.model.address appkeyModel:appKey retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"AppKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"AppKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:responseMessage.applicationKeyIndex updated:NO];
             [weakSelf.model.appKeys removeObject:nodeKeyModel];
@@ -174,7 +168,7 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete AppKey from node fail! error=%@",error]];
         }
@@ -187,9 +181,7 @@
     for (SigNodeKeyModel *nodeKey in self.model.appKeys) {
         for (SigAppkeyModel *netKey in SigDataSource.share.appKeys) {
             if (nodeKey.index == netKey.index) {
-                if (![tem containsObject:netKey]) {
-                    [tem addObject:netKey];
-                }
+                [tem addObject:netKey];
                 break;
             }
         }
@@ -213,47 +205,57 @@
             }
 
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
+            if (model.index == SigDataSource.share.curAppkeyModel.index) {
+                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a app key in use!" sure:nil];
+                return;
+            }
+
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteAppKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
 }
 
 - (void)keyBindWithAppKey:(SigAppkeyModel *)appKey {
-    NSString *msg = [NSString stringWithFormat:@"Are you sure KeyBind appKey(compositionDataGet+appKeyAdd+modelAppBind*N) to index:0x%04lX key:%@",(long)appKey.index,appKey.key];
-    [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ShowTipsHandle.share show:@"KeyBind..."];
-        });
-        NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        UInt8 keyBindType = type.integerValue;
-        UInt16 productID = [LibTools uint16From16String:self.model.pid];
-        DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
-        NSData *cpsData = deviceType.defaultCompositionData.parameters;
-        if (keyBindType == KeyBindTpye_Fast) {
-            if (cpsData == nil || cpsData.length == 0) {
-                keyBindType = KeyBindTpye_Normal;
-            }
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [ShowTipsHandle.share show:@"add appkey and KeyBind..."];
+    });
+    NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
+    UInt8 keyBindType = type.integerValue;
+    UInt16 productID = [LibTools uint16From16String:self.model.pid];
+    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+    if (keyBindType == KeyBindType_Fast) {
+        if (cpsData == nil || cpsData.length == 0) {
+            keyBindType = KeyBindType_Normal;
         }
+    }
+    if (cpsData && cpsData.length > 0) {
+        cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
+    }
 
-        [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [ShowTipsHandle.share show:@"KeyBind success!"];
-                [ShowTipsHandle.share delayHidden:3.0];
-            });
-        } fail:^(NSError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [ShowTipsHandle.share show:[NSString stringWithFormat:@"KeyBind fail! error=%@",error]];
-                [ShowTipsHandle.share delayHidden:3.0];
-            });
-        }];
-    } cancel:^(UIAlertAction *action) {
-        
+    [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];
+            if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
+                [weakSelf.model.appKeys addObject:nodeKeyModel];
+            }
+            [SigDataSource.share saveLocationData];
+            [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
+            [ShowTipsHandle.share show:@"KeyBind success!"];
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
+    } fail:^(NSError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share show:[NSString stringWithFormat:@"KeyBind fail! error=%@",error]];
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -263,24 +265,10 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
-    SigAppkeyModel *model = self.sourceArray[indexPath.row];
-    [cell setAppKeyModel:model];
-    [cell.editButton setImage:[UIImage imageNamed:@"ic_keybind"] forState:UIControlStateNormal];
-    __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {
-        [weakSelf keyBindWithAppKey:model];
-    }];
+    AppKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(AppKeyCell.class) forIndexPath:indexPath];
+    [cell setModel:self.sourceArray[indexPath.row]];
+    cell.editButton.hidden = YES;
     return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 @end

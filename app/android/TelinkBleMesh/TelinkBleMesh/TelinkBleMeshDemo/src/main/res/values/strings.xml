@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">TelinkBleMesh</string>
+    <!--    <string name="app_name">TelinkBleMesh</string>-->
+    <string name="app_name">TelinkSigMesh</string>
 
-    <string name="app_copyright">©2020 Telink Semiconductor</string>
+    <string name="app_copyright">©2023 Telink Semiconductor</string>
 
     <string name="menu_scan">scan</string>
     <string name="menu_stop">stop</string>
@@ -52,18 +53,28 @@
 
     <string name="auto_provision">Auto Provision</string>
 
-    <string name="private_mode">Private Mode(Default Bound)</string>
+    <string name="private_mode">Enable Private Mode(Default Bound)</string>
 
 
     <string name="enable_remote_provision">Remote Provision</string>
 
     <string name="enable_dle">Enable DLE Mode Extend Bearer</string>
 
+    <string name="extend_bearer_title">Extend Bearer Mode</string>
+
+    <string name="extend_bearer_no">No Extend</string>
+
+    <string name="extend_bearer_gatt">Extend GATT Only</string>
+
+    <string name="extend_bearer_gatt_adv">Extend GATT &amp; ADV</string>
+
     <string name="enable_fast_provision">Fast Provision</string>
 
     <string name="enable_no_oob">Use No-OOB automatically</string>
 
     <string name="oob_database">OOB Database</string>
+
+    <string name="root_cert">Root Cert</string>
 
     <string name="oob_info">UUID: %s\nOOB : %s\n(%s)</string>
 
@@ -116,9 +127,24 @@
         <item>4. Back to home page, and waiting for mesh reconnect </item>
     </string-array>
 
+    <string name="provision_mode_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
+    <string name="sub_level_service_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
     <string name="auto_provision_tip">
         Enabled for scanning , provisioning and key-binding one by one;
         Disabled for selectable networking.
+    </string>
+
+    <string name="log_tip">
+        TIP:
+        Enabled for default bound when key-binding;
     </string>
 
     <string name="private_mode_tip">
@@ -146,11 +172,24 @@
         Use No-OOB if device UUID not found when device is static-OOB supported
     </string>
 
+
+    <string name="online_status_tip">
+        Use No-OOB if device UUID not found when device is static-OOB supported
+    </string>
+
     <string name="dle_tip">
         DLE selected action will change mesh upper layer segmentation bound:
         \n\n\tDisabled ->  segment bound is 11;
         \n\n\tEnabled ->  segment bound is 225.
-        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE] in [NetworkingController].
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
+
+    </string>
+
+    <string name="extend_mode_tip">
+        DLE selected action will change mesh upper layer segmentation bound:
+        \n\n\tDisabled ->  segment bound is 11;
+        \n\n\tEnabled ->  segment bound is 225.
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
 
     </string>
 
@@ -162,4 +201,63 @@
     <string name="online_status_enabled">Online Status: ENABLED</string>
 
     <string name="online_status_disabled">Online Status: DISABLED</string>
+
+    <string name="export_tip">1.Select at least one network key \n2.Select destination\n3.Click EXPORT</string>
+
+    <string name="import_tip">1.Select source \n2.If the selected source is JSON file, select the target file \n3.Click IMPORT</string>
+
+
+    <string name="enable_subnet_bridge">Enable Subnet Bridge</string>
+
+    <string name="init_progress">Initiate progress(%d):</string>
+
+    <string name="dist_progress">Distribute progress(%d):</string>
+
+    <string name="df_origin_desc">0x%s</string>
+
+    <string name="df_route_node">Node-%s</string>
+
+    <string name="extend_bearer_mode_tip">
+        1. No Extend: No extension is used. \n\n
+        2. Extend GATT Only: Only GATT (Generic Attribute Profile) is used for extending the bearer. \n\n
+        3. Extend GATT &amp; ADV: Both GATT and advertising are used for extending the bearer. \n\n
+    </string>
+
+
+    <string name="share_import_action_complete_tip">
+        1. Manual Switch(Default): Switch mesh network by manual. \n\n
+        2. Auto Switch: Switch mesh network automatically after import comple. \n\n
+    </string>
+
+    <string name="tip_enable_pvt_gatt_prx">
+        When the switch is on:\n
+            \t1. turned off gatt proxy by sent Gatt Proxy Set Message (gattProxy=0)\n
+            \t2. turned on private beacon by sent Private Gatt Proxy Set Message (privateGattProxy=1)\n
+        Otherwise, the value in message is reversed (gattProxy=1, privateGattProxy=0)
+    </string>
+
+    <string name="tip_enable_pvt_node_id">
+        When the switch is on:\n
+            \t1. turned off node identity by sent Node Identity Set Message (identity=0)\n
+            \t2. turned on private node identity by sent Private Node Identity Set Message (privateIdentity=1)\n
+        Otherwise, the value in message is reversed (identity=1, privateIdentity=0)
+    </string>
+
+    <string name="tip_enable_pv_bcn">
+        When the switch is on:\n
+            \t1. turned off beacon by sent Beacon Set Message (beacon=0)\n
+            \t2. turned on private beacon by sent Private Beacon Set Message (privateBeacon=0)\n
+        Otherwise, the value in message is reversed (beacon=1, privateBeacon=0)
+    </string>
+
+    <string name="on_demand_value_tip">
+        0x00: Advertising with Private Network Identity type cannot be enabled on demand\n
+        0x01–0xFF: Duration in seconds of the interval during which advertising with Private Network Identity type is enabled after receiving a Solicitation PDU or after a client disconnect
+    </string>
+
+
+    <string name="btn_text_sensor_get_all">
+        Sensor \nGet All
+    </string>
+
 </resources>

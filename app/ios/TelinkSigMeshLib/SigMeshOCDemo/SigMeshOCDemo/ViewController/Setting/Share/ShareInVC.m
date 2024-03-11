@@ -3,36 +3,37 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/1/24
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ShareInVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/1/24.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ShareInVC.h"
+#import <Reachability/Reachability.h>
 #import "FileChooseVC.h"
 #import "UIViewController+Message.h"
+#import "ScanCodeVC.h"
+#import "ShareTipsVC.h"
 
 @interface ShareInVC ()
-@property (weak, nonatomic) IBOutlet UITextView *inTipTextView;
+@property (weak, nonatomic) IBOutlet UIButton *selectCDTPButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeAndCloudButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectJsonFileButton;
+@property (weak, nonatomic) IBOutlet UIButton *importButton;
+@property (strong, nonatomic) ScanCodeVC *scanCodeVC;
 
 @end
 
@@ -41,16 +42,95 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
-    self.inTipTextView.text = @"Import JSON:\n\n1. Iphone connect to computer that install iTunes.\n2. Click on the iTunes phone icon in the upper left corner of iTunes into the iphone interface.\n3. Select \"file sharing\" in the left of the iTunes, then find and click on the demo APP in the application of \"TelinkSigMesh\", wait for iTunes load file.\n4. After file is loaded, drag the files on the computer \"mesh.json\" into the right side of the \"TelinkSigMesh\", replace the old file and reopen the APP, the APP will load json data file automatically.\n5. Click IMPORT button to choose new json file and load it.\n\n导入JSON数据操作，步骤如下：\n\n1. 将手机连接到安装了iTunes的电脑上。\n2. 点击iTunes左上角的手机图标进入iTunes设备详情界面。\n3. 选择iTunes左侧的“文件共享”，然后在应用中找到并点击demo APP “TelinkSigMesh”，等待iTunes加载文件。\n4. 文件加载完成后，将电脑上的json文件拖入右侧的“TelinkSigMesh”的文稿中。\n5. APP点击IMPORT按钮选择刚刚的JSON文件进行加载。";
+    self.title = @"Share Import";
+    // 由于mesh v1.1并未release CDTP功能，暂时屏蔽CDTP功能。
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
+    self.selectJsonFileButton.selected = NO;
+    self.importButton.backgroundColor = UIColor.telinkButtonBlue;
+}
+
+- (IBAction)clickSelectCDTPButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = YES;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectQRCodeAndCloudButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectJsonFileButton:(UIButton *)sender {
+    self.selectCDTPButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = YES;
+}
+
+- (IBAction)clickCDTPButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_CDTPImport;
+    vc.tipsMessage = TipsMessage_QRCodeAndCDTPTransferJSONToOtherPhone;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickCloudTransferJsonButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_QRCodeAndCloudTransferJSON;
+    vc.tipsMessage = TipsMessage_QRCodeAndCloudTransferJSON;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickJsonFileButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_JSONFile;
+    vc.tipsMessage = TipsMessage_JSONFile;
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (IBAction)clickImportButton:(UIButton *)sender {
-    FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storybroad:@"Setting"];
+    if (self.selectCDTPButton.selected) {
+        [SDKLibCommand stopMeshConnectWithComplete:nil];
+        [self importMeshByCDTP];
+    } else if (self.selectQRCodeAndCloudButton.selected) {
+        [SDKLibCommand stopMeshConnectWithComplete:nil];
+        [self importMeshByQRCodeAndBLETransfer];
+    } else if (self.selectQRCodeAndCloudButton.selected) {
+        [self importMeshByQRCodeAndCloud];
+    } else if (self.selectJsonFileButton.selected) {
+        [self importMeshByJsonFile];
+    }
+}
+
+- (void)importMeshByCDTP {
+    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_CDTPServiceListVCID storyboard:@"Setting"];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)importMeshByQRCodeAndBLETransfer {
+    self.scanCodeVC.title = @"QRCode + BLE Transfer";
+    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
+}
+
+- (void)importMeshByQRCodeAndCloud {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+
+    self.scanCodeVC.title = @"QRCode + Cloud";
+    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
+}
+
+- (void)importMeshByJsonFile {
+    FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storyboard:@"Setting"];
     __weak typeof(self) weakSelf = self;
     [vc setBackJsonData:^(NSData * _Nonnull jsonData, NSString * _Nonnull jsonName) {
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-            TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
+            TelinkLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
             [weakSelf loadJsonData:jsonData jaonName:jsonName];
         }];
     }];
@@ -63,92 +143,74 @@
     __weak typeof(self) weakSelf = self;
     [operation addOperationWithBlock:^{
         NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSString *oldMeshUUID = SigDataSource.share.meshUUID;
         NSDictionary *dict = [LibTools getDictionaryWithJsonString:str];
-        [SigDataSource.share setDictionaryToDataSource:dict];
         BOOL result = dict != nil;
         if (result) {
-            NSString *tipString = [NSString stringWithFormat:@"import %@ success!",name];
-            TeLogDebug(@"%@",tipString);
-            [weakSelf showTips:tipString];
+            [weakSelf handleMeshDictionaryFromShareImport:dict];
         } else {
             NSString *tipString = [NSString stringWithFormat:@"import %@ fail!",name];
             [weakSelf showTips:tipString];
-            TeLogDebug(@"%@",tipString);
-            return;
+            TelinkLogDebug(@"%@",tipString);
         }
-
-        BOOL needChangeProvisionerAddress = NO;//修改手机本地节点的地址
-        BOOL reStartSequenceNumber = NO;//修改手机本地节点使用的发包序列号sno
-        BOOL hasPhoneUUID = NO;
-        NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
-        NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
-        for (SigProvisionerModel *provision in provisioners) {
-            if ([provision.UUID isEqualToString:curPhoneUUID]) {
-                hasPhoneUUID = YES;
-                break;
-            }
-        }
-        if (hasPhoneUUID) {
-            // v3.1.0, 存在
-            BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
-            if (isSameMesh) {
-                // v3.1.0, 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和ProvisionerAddress
-                needChangeProvisionerAddress = NO;
-                reStartSequenceNumber = NO;
-            } else {
-                // v3.1.0, 存在，但为不同mesh网络，获取provision，修改为新的ProvisionerAddress，sno从0开始
-                needChangeProvisionerAddress = YES;
-                reStartSequenceNumber = YES;
-            }
-        } else {
-            // v3.1.0, 不存在，覆盖并新建provisioner
-            needChangeProvisionerAddress = NO;
-            reStartSequenceNumber = YES;
-        }
-        
-        //重新计算sno
-        if (reStartSequenceNumber) {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
-            [SigDataSource.share setLocationSno:0];
-        }
-
-        UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
-        for (SigNodeModel *node in nodes) {
-            NSInteger curMax = node.address + node.elements.count - 1;
-            if (curMax > maxAddr) {
-                maxAddr = curMax;
-            }
-        }
-        if (needChangeProvisionerAddress) {
-            //修改手机的本地节点的地址
-            UInt16 newProvisionAddress = maxAddr + 1;
-            [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
-            TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
-            //修改下一次添加设备使用的地址
-            [SigDataSource.share saveLocationProvisionAddress:maxAddr + 1];
-        } else {
-            //修改下一次添加设备使用的地址
-            [SigDataSource.share saveLocationProvisionAddress:maxAddr];
-        }
-        TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
-
-//        SigDataSource.share.curNetkeyModel = nil;
-//        SigDataSource.share.curAppkeyModel = nil;
-        [SigDataSource.share checkExistLocationProvisioner];
-        [SigDataSource.share saveLocationData];
-        [SigDataSource.share.scanList removeAllObjects];
     }];
 }
 
-- (void)showTips:(NSString *)message{
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
+- (ScanCodeVC *)scanCodeVC {
+    if (!_scanCodeVC) {
+        _scanCodeVC = [ScanCodeVC scanCodeVC];
+        __weak typeof(self) weakSelf = self;
+        [_scanCodeVC scanDataViewControllerBackBlock:^(id content) {
+            //AnalysisShareDataVC
+            if (weakSelf.selectQRCodeAndCloudButton.isSelected) {
+                NSString *uuidString = (NSString *)content;
+                if (uuidString.length && [LibTools validateUUID:uuidString]) {
+                    [weakSelf getTelinkJsonWithUUID:uuidString];
+                }else{
+                    //hasn't data
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    [weakSelf showTips:@"QRCode is error."];
+                    return;
+                }
+            }
         }];
-    });
+    }
+    return _scanCodeVC;
+}
+
+- (void)getTelinkJsonWithUUID:(NSString *)uuid {
+    __weak typeof(self) weakSelf = self;
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
+        TelinkLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+        [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (err) {
+                    NSString *errstr = [NSString stringWithFormat:@"%@",err];
+                    TelinkLogInfo(@"%@",errstr);
+                    [weakSelf showTips:errstr];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                } else {
+                    TelinkLogInfo(@"result=%@",result);
+                    NSDictionary *dic = (NSDictionary *)result;
+                    BOOL isSuccess = [dic[@"isSuccess"] boolValue];
+                    if (isSuccess) {
+                        [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
+                    }else{
+                        [weakSelf showTips:dic[@"msg"]];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    }
+                }
+            });
+        }];
+    }];
+}
+
+- (void)showDownloadJsonSuccess:(NSDictionary *)jsonDict uuid:(NSString *)uuid {
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+    [self handleMeshDictionaryFromShareImport:jsonDict];
+}
+
+-(void)dealloc{
+    TelinkLogDebug(@"");
 }
 
 @end

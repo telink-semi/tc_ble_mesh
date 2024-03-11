@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="gTV-IL-0wX" customClass="AddDeviceItemCell">
-            <rect key="frame" x="0.0" y="0.0" width="120" height="80"/>
+            <rect key="frame" x="0.0" y="0.0" width="180" height="80"/>
             <autoresizingMask key="autoresizingMask"/>
             <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                <rect key="frame" x="0.0" y="0.0" width="120" height="80"/>
+                <rect key="frame" x="0.0" y="0.0" width="180" height="80"/>
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LPR-yL-9hT">
-                        <rect key="frame" x="0.0" y="0.0" width="120" height="80"/>
+                        <rect key="frame" x="0.0" y="0.0" width="180" height="80"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="dengs" translatesAutoresizingMaskIntoConstraints="NO" id="3s8-Ka-g72">
                                 <rect key="frame" x="5" y="5" width="30" height="30"/>
@@ -29,16 +28,24 @@
                                     <constraint firstAttribute="height" constant="30" id="jjZ-fT-iaa"/>
                                 </constraints>
                             </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_certificate" translatesAutoresizingMaskIntoConstraints="NO" id="umO-iq-nnw">
+                                <rect key="frame" x="0.0" y="0.0" width="15" height="15"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="15" id="PrH-K4-tIF"/>
+                                    <constraint firstAttribute="height" constant="15" id="bRk-6J-Y0Z"/>
+                                </constraints>
+                            </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CnQ-Aa-kjy">
-                                <rect key="frame" x="40" y="5" width="75" height="49"/>
+                                <rect key="frame" x="40" y="5" width="135" height="49"/>
                                 <string key="text">adr:2
+repoet adr:2 rssi:-100
 mac:AB:CD:12:34:56:78</string>
-                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="11"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="state" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="M3W-8D-Okm">
-                                <rect key="frame" x="5" y="59" width="110" height="16"/>
+                                <rect key="frame" x="5" y="59" width="170" height="16"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="16" id="0wV-DZ-lxc"/>
                                 </constraints>
@@ -47,14 +54,16 @@ mac:AB:CD:12:34:56:78</string>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstAttribute="bottom" secondItem="M3W-8D-Okm" secondAttribute="bottom" constant="5" id="FEB-eN-FjF"/>
                             <constraint firstItem="M3W-8D-Okm" firstAttribute="top" secondItem="CnQ-Aa-kjy" secondAttribute="bottom" constant="5" id="KdC-bq-qVi"/>
                             <constraint firstItem="3s8-Ka-g72" firstAttribute="leading" secondItem="LPR-yL-9hT" secondAttribute="leading" constant="5" id="OCg-yX-v7p"/>
                             <constraint firstItem="CnQ-Aa-kjy" firstAttribute="top" secondItem="LPR-yL-9hT" secondAttribute="top" constant="5" id="dgO-Dh-8Dw"/>
                             <constraint firstItem="3s8-Ka-g72" firstAttribute="top" secondItem="LPR-yL-9hT" secondAttribute="top" constant="5" id="eN0-LM-FWz"/>
+                            <constraint firstItem="umO-iq-nnw" firstAttribute="leading" secondItem="LPR-yL-9hT" secondAttribute="leading" id="lyA-i1-Mh5"/>
                             <constraint firstAttribute="trailing" secondItem="CnQ-Aa-kjy" secondAttribute="trailing" constant="5" id="omp-Se-f7c"/>
+                            <constraint firstItem="umO-iq-nnw" firstAttribute="top" secondItem="LPR-yL-9hT" secondAttribute="top" id="pDD-5i-6cF"/>
                             <constraint firstItem="CnQ-Aa-kjy" firstAttribute="leading" secondItem="3s8-Ka-g72" secondAttribute="trailing" constant="5" id="stz-7c-hh3"/>
                             <constraint firstAttribute="trailing" secondItem="M3W-8D-Okm" secondAttribute="trailing" constant="5" id="xpE-7S-pl4"/>
                             <constraint firstItem="M3W-8D-Okm" firstAttribute="leading" secondItem="LPR-yL-9hT" secondAttribute="leading" constant="5" id="yrc-lT-wX9"/>
@@ -62,16 +71,17 @@ mac:AB:CD:12:34:56:78</string>
                     </view>
                 </subviews>
             </view>
+            <viewLayoutGuide key="safeArea" id="SEy-5g-ep8"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="LPR-yL-9hT" secondAttribute="bottom" id="CTj-xw-82G"/>
                 <constraint firstItem="LPR-yL-9hT" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="FUU-l8-6sh"/>
                 <constraint firstAttribute="trailing" secondItem="LPR-yL-9hT" secondAttribute="trailing" id="NAB-tH-T6Z"/>
                 <constraint firstItem="LPR-yL-9hT" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="mH8-xh-FGu"/>
             </constraints>
-            <viewLayoutGuide key="safeArea" id="SEy-5g-ep8"/>
             <connections>
                 <outlet property="_bgView" destination="LPR-yL-9hT" id="BS0-3W-Ake"/>
                 <outlet property="_icon" destination="3s8-Ka-g72" id="Esg-Nr-dK2"/>
+                <outlet property="_icon_cert" destination="umO-iq-nnw" id="z7o-lP-5h6"/>
                 <outlet property="_nameLabel" destination="CnQ-Aa-kjy" id="jVJ-9m-Ewh"/>
                 <outlet property="_stateLabel" destination="M3W-8D-Okm" id="J2Z-eO-dpm"/>
             </connections>
@@ -79,6 +89,10 @@ mac:AB:CD:12:34:56:78</string>
         </collectionViewCell>
     </objects>
     <resources>
-        <image name="dengs" width="25" height="25"/>
+        <image name="dengs" width="50" height="50"/>
+        <image name="ic_certificate" width="100" height="100"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
     </resources>
 </document>

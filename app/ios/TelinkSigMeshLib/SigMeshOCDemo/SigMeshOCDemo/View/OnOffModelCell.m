@@ -1,10 +1,25 @@
-//
-//  OnOffModelCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/11/24.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+/********************************************************************************************************
+ * @file     OnOffModelCell.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/11/24
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "OnOffModelCell.h"
 #import "OnOffItemCell.h"
@@ -49,9 +64,9 @@
 //        //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
 ////        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
 ////        [SDKLibCommand genericOnOffSetDestination:ele_adr.intValue isOn:swift.isOn transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-////            TeLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
+////            TelinkLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
 ////        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-////            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+////            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 ////        }];
     }];
     //Attention: panel has 8 onoff button, but node just has one onoff data, developer should fix that when your app has panel.
@@ -72,7 +87,7 @@
     [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
-+ (CGFloat)getOnOffModelCellHightOfItemCount:(NSInteger)itemCount {
++ (CGFloat)getOnOffModelCellHeightOfItemCount:(NSInteger)itemCount {
     CGRect rx = [UIScreen mainScreen].bounds;
     CGFloat a = floorf((rx.size.width - 8) / (CGFloat)(70 + 8));
     CGFloat  h = (70.0 + 8) * ceilf(itemCount/a);

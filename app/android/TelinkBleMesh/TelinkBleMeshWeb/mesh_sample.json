@@ -1,0 +1,179 @@
+{
+  "code": 200,
+  "message": "get network detail success",
+  "data": {
+    "id": 8,
+    "name": "T1",
+    "createTime": 1671001212065,
+    "ivIndex": 0,
+    "role": 0,
+    "provisioner": {
+      "id": 12,
+      "name": "provisioner_in_T1",
+      "userId": 2,
+      "clientId": "86ef08fc-5769-459e-a5e3-5541d287071e",
+      "createTime": 1671001212079,
+      "address": 32767,
+      "sequenceNumber": 32256,
+      "networkId": 8
+    },
+    "createUser": "kee",
+    "networkKeyList": [
+      {
+        "id": 8,
+        "name": "netKey_in_T1",
+        "networkId": 8,
+        "index": 0,
+        "phase": 0,
+        "key": "159A702A7EC7A7DAE7ABFF0F74523007",
+        "oldKey": null,
+        "createTime": 1671001212084,
+        "updateTime": null,
+        "description": null
+      }
+    ],
+    "applicationKeyList": [
+      {
+        "id": 8,
+        "name": "appKey_in_T1",
+        "networkId": 8,
+        "index": 0,
+        "key": "8FDC3F274BE80E66C6BE36C0A893D3AD",
+        "oldKey": null,
+        "networkKeyId": 8,
+        "createTime": 1671001212091,
+        "updateTime": null,
+        "description": null
+      }
+    ],
+    "nodeList": [
+      {
+        "id": 4,
+        "name": "common node",
+        "deviceUuid": "1102000100010083DDCCBBFFFF0000FA",
+        "createUserId": 2,
+        "networkId": 8,
+        "address": 23,
+        "state": 1,
+        "deviceKey": "BCD328FBCBBD1BD0A961650BD0800D63",
+        "bindState": 1,
+        "productId": 1,
+        "versionId": null,
+        "meshProvisionerId": 12,
+        "createTime": 1699937123000,
+        "updateTime": null,
+        "description": null,
+        "productInfo": {
+          "manufacturerName": null,
+          "id": 1,
+          "manufacturerId": 2,
+          "pid": 1,
+          "name": "P-0609",
+          "createTime": 1686292129142,
+          "updateTime": null,
+          "info": null
+        },
+        "versionInfo": {
+          "id": 1,
+          "name": "V-0609",
+          "productId": 1,
+          "vid": 13110,
+          "binFilePath": "m-2/p-1/v-1/16862921291968258_mesh_telink_platform_20230607_scene_scheduler_meshOTA.bin",
+          "elementCount": 2,
+          "compositionData": "110201003336690007000000140100000200030000FE00FF001201120010021004100610071003120412061207120013011303130413110200000000020002100613",
+          "info": "可用于测试场景和闹钟功能",
+          "createTime": 1686292129142,
+          "updateTime": null,
+          "state": null
+        },
+        "subList": [],
+        "publishInfo": null,
+        "productName": null,
+        "networkName": null
+      }
+    ],
+    "groupList": [
+      {
+        "id": 33,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49152,
+        "name": "Living room",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 34,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49153,
+        "name": "Kitchen",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 35,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49154,
+        "name": "Master bedroom",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 36,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49155,
+        "name": "Secondary bedroom",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 37,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49156,
+        "name": "Balcony",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 38,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49157,
+        "name": "Bathroom",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 39,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49158,
+        "name": "Hallway",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      },
+      {
+        "id": 40,
+        "networkId": 8,
+        "createUserId": 2,
+        "address": 49159,
+        "name": "others",
+        "createTime": 1671001212100,
+        "updateTime": null,
+        "createProvisionerId": 12
+      }
+    ]
+  },
+  "totalCount": null
+}

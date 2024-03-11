@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     ModelPublication.java 
+ * @file ModelPublication.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 package com.telink.ble.mesh.entity;
@@ -31,12 +32,16 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
+ * This class represents a model publication in the Bluetooth Mesh network.
  * publication entity used when send publicationSet message or receive publication status message
  * Created by kee on 2018/9/17.
  */
 public final class ModelPublication implements Serializable, Parcelable {
 
-    public static final int CREDENTIAL_FLAG_DEFAULT = 0b1;
+    /**
+     * changed from 1 to 0, because of device may not have friend key
+     */
+    public static final int CREDENTIAL_FLAG_DEFAULT = 0b0;
 
     public static final int RFU_DEFAULT = 0x00;
 
@@ -51,8 +56,8 @@ public final class ModelPublication implements Serializable, Parcelable {
      */
     public static final int RETRANSMIT_COUNT_DEFAULT = 0x05;
 
-
-    public static final int RETRANSMIT_INTERVAL_STEP_DEFAULT = 0x02;
+    // unit: 50ms, from 0x02 to 0x00
+    public static final int RETRANSMIT_INTERVAL_STEP_DEFAULT = 0x00;
 
 
     /**
@@ -62,17 +67,22 @@ public final class ModelPublication implements Serializable, Parcelable {
     public int elementAddress;
 
     /**
+     * Value of the publish address
      * 16 bits
      */
     public int publishAddress;
 
     /**
+     * Index of the application key
      * 12 bits
      */
     public int appKeyIndex;
 
     /**
+     * Value of the Friendship Credential Flag
      * 1 bit
+     * 0 Master security material is used for Publishing
+     * 1 Friendship security material is used for Publishing， used on LPN
      */
     public int credentialFlag = CREDENTIAL_FLAG_DEFAULT;
 
@@ -83,26 +93,31 @@ public final class ModelPublication implements Serializable, Parcelable {
     public int rfu = RFU_DEFAULT;
 
     /**
+     * Default TTL value for the outgoing messages
      * 8 bits
      */
     public int ttl = TTL_DEFAULT;
 
     /**
+     * Period for periodic status publishing
      * 8 bits
      */
     public byte period;
 
     /**
+     * Number of retransmissions for each published message
      * 3 bits
      */
     public int retransmitCount = RETRANSMIT_COUNT_DEFAULT;
 
     /**
+     * Number of 50-millisecond steps between retransmissions
      * 5 bits
      */
     public int retransmitIntervalSteps = RETRANSMIT_INTERVAL_STEP_DEFAULT;
 
     /**
+     * SIG Model ID or Vendor Model ID
      * 16 or 32 bits
      */
     public int modelId;
@@ -140,9 +155,24 @@ public final class ModelPublication implements Serializable, Parcelable {
         }
     };
 
+    /**
+     * Constructs a new ModelPublication object.
+     * This is used for creating a default instance of the class.
+     */
     public ModelPublication() {
     }
 
+    /**
+     * Creates a default ModelPublication object with the specified parameters.
+     *
+     * @param elementAddress    The element address.
+     * @param publishAddress    The publish address.
+     * @param appKeyIndex       The index of the application key.
+     * @param periodMillisecond The period for periodic status publishing in milliseconds.
+     * @param modelId           The SIG Model ID or Vendor Model ID.
+     * @param sig               Indicates whether the model is a SIG model.
+     * @return A new instance of the ModelPublication class with the specified parameters.
+     */
     public static ModelPublication createDefault(int elementAddress, int publishAddress, int appKeyIndex, long periodMillisecond, int modelId, boolean sig) {
         ModelPublication instance = new ModelPublication();
         instance.elementAddress = elementAddress;
@@ -154,6 +184,11 @@ public final class ModelPublication implements Serializable, Parcelable {
         return instance;
     }
 
+    /**
+     * Converts the ModelPublication object to a byte array.
+     *
+     * @return The byte array representation of the ModelPublication object.
+     */
     public byte[] toBytes() {
         final int len = sig ? 11 : 13;
         ByteBuffer bf = ByteBuffer.allocate(len).order(ByteOrder.LITTLE_ENDIAN);

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/28
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ProxyProtocolHandler.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/28.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "ProxyProtocolHandler.h"
 
@@ -36,7 +30,7 @@
 
 @implementation ProxyProtocolHandler
 
-- (SigPduType)getPduTypeFromeData:(NSData *)data {
+- (SigPduType)getPduTypeFromData:(NSData *)data {
     SigPduType type = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -63,7 +57,7 @@
     return type;
 }
 
-- (SAR)getSAPFromeData:(NSData *)data {
+- (SAR)getSAPFromData:(NSData *)data {
     SAR tem = 0;
     if (data && data.length > 0) {
         UInt8 value = 0;
@@ -129,14 +123,14 @@
 ///
 /// - parameter data: The data received.
 /// - returns: The message and its type, or `nil`, if more data are expected.
-- (SigPudModel *)reassembleData:(NSData *)data {
+- (nullable SigPudModel *)reassembleData:(NSData *)data {
     if (!data || data.length == 0) {
         return nil;
     }
 
-    SAR sar = [self getSAPFromeData:data];
-    SigPduType messageType = [self getPduTypeFromeData:data];
-    
+    SAR sar = [self getSAPFromData:data];
+    SigPduType messageType = [self getPduTypeFromData:data];
+
     // Ensure, that only complete message or the first segment may be processed if the buffer is empty.
     if ((_buffer == nil || _buffer.length == 0) && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
@@ -146,7 +140,7 @@
     if (_bufferType != messageType && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
     }
-    
+
     // If a new message was received while the old one was processed, disregard the old one.
     if (_buffer != nil && (sar == SAR_completeMessage || sar == SAR_firstSegment)) {
         _buffer = nil;
@@ -159,7 +153,7 @@
         _buffer = [NSMutableData data];
     }
     [_buffer appendData:[data subdataWithRange:NSMakeRange(1, data.length-1)]];
-    
+
     // If the complete message was received, return it.
     if (sar == SAR_completeMessage || sar == SAR_lastSegment) {
         SigPudModel *model = [[SigPudModel alloc] init];

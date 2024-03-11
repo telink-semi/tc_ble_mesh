@@ -1,37 +1,29 @@
 /********************************************************************************************************
- * @file     GroupCell.m 
+ * @file     GroupCell.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  GroupCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "GroupCell.h"
 
 @interface GroupCell()
-@property (weak, nonatomic) IBOutlet UILabel *groupID;
-@property (weak, nonatomic) IBOutlet UISwitch *sw;
 @property (assign, nonatomic) UInt16 groupAddress;
 @property (strong, nonatomic) SigGroupModel *model;
 @end
@@ -44,6 +36,8 @@
     self.groupAddress = 0;
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigGroupModel *)model{
     self.model = model;
     self.groupID.text = model.name;
@@ -62,11 +56,6 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
     }];
-//    [DemoCommand switchOnOffWithIsOn:on address:self.groupAddress responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-//        weakSelf.sw.on = on;
-//    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//
-//    }];
 }
 
 @end

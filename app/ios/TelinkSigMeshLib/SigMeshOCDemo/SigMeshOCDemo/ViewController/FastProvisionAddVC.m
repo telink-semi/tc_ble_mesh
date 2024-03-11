@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/19
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  FastProvisionAddVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/9/19.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "FastProvisionAddVC.h"
 #import "AddDeviceItemCell.h"
@@ -71,7 +65,7 @@
 - (void)startScanSingleUnProvisionNode {
     __weak typeof(self) weakSelf = self;
     SigBearer.share.isAutoReconnect = NO;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (weakSelf.isAdding) {
             if (successful) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -80,12 +74,11 @@
                 });
                 [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                         if (unprovisioned) {
-                            //=================test==================//
-//                            if (RSSI.intValue <= -50) {
+//                            //RSSI太弱会容易出现连接失败。
+//                            if (RSSI.intValue <= -70) {
 //                                return;
 //                            }
-                            //=================test==================//
-                        TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
+                        TelinkLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
                         });
@@ -97,7 +90,7 @@
                                         [weakSelf startFastProvision];
                                     } else {
                                         NSString *str = @"connect fail.";
-                                        TeLogError(@"%@",str);
+                                        TelinkLogError(@"%@",str);
                                         [weakSelf showTips:str];
                                         [weakSelf userAbled:YES];
                                         weakSelf.isAdding = NO;
@@ -105,7 +98,7 @@
                                 }];
                             } else {
                                 NSString *str = @"change node fail.";
-                                TeLogError(@"%@",str);
+                                TelinkLogError(@"%@",str);
                                 [weakSelf showTips:str];
                                 [weakSelf userAbled:YES];
                                 weakSelf.isAdding = NO;
@@ -115,7 +108,7 @@
                 }];
             } else {
                 NSString *str = @"close fail.";
-                TeLogError(@"%@",str);
+                TelinkLogError(@"%@",str);
                 [weakSelf showTips:str];
                 [weakSelf userAbled:YES];
                 weakSelf.isAdding = NO;
@@ -125,6 +118,7 @@
 }
 
 - (void)scanSingleUnProvisionNodeTimeout {
+    [self showTips:@"There is no unprovision device nearby!"];
     [self userAbled:YES];
     self.isAdding = NO;
 }
@@ -132,53 +126,60 @@
 - (void)startFastProvision {
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
     __weak typeof(self) weakSelf = self;
-    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-        [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
-    } startProvisionCallback:^{
-        [weakSelf updateStartProvision];
-    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
-        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
-    } finish:^(NSError * _Nullable error) {
-        TeLogInfo(@"error=%@",error);
-        [weakSelf addFinish];
-        [SigBearer.share startMeshConnectWithComplete:nil];
-        [weakSelf userAbled:YES];
-        weakSelf.isAdding = NO;
-    }];
-//    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-//        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+//    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:sizeof(CTByte)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//        [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//    } startProvisionCallback:^{
+//        [weakSelf updateStartProvision];
+//    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
 //        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } finish:^(NSError * _Nullable error) {
-//        TeLogInfo(@"error=%@",error);
+//        TelinkLogInfo(@"error=%@",error);
+//        [weakSelf addFinish];
+//        [SDKLibCommand startMeshConnectWithComplete:nil];
 //        [weakSelf userAbled:YES];
 //        weakSelf.isAdding = NO;
 //    }];
+    //注意：如果客户的compositionData不是默认的数据，需要开发者新增或者修改SigDataSource.share.defaultNodeInfos里面的数据。
+    //添加所有已经存在cpsData的pid的设备
+    NSMutableArray *productIds = [NSMutableArray array];
+    for (DeviceTypeModel *model in SigDataSource.share.defaultNodeInfos) {
+        [productIds addObject:@(model.PID)];
+    }
+    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:productIds currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    } startProvisionCallback:^{
+        [weakSelf updateStartProvision];
+    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    } finish:^(NSError * _Nullable error) {
+        TelinkLogInfo(@"error=%@",error);
+        if (error) {
+            [weakSelf showTips:error.domain];
+        }
+        [weakSelf addFinish];
+        [SDKLibCommand startMeshConnectWithComplete:nil];
+        [weakSelf userAbled:YES];
+        weakSelf.isAdding = NO;
+    }];
 }
 
 - (void)userAbled:(BOOL)able{
     dispatch_async(dispatch_get_main_queue(), ^{
         self.refreshItem.enabled = able;
         self.goBackButton.enabled = able;
-        [self.goBackButton setBackgroundColor:able ? kDefultColor : kDefultUnableColor];
+        [self.goBackButton setBackgroundColor:able ? UIColor.telinkButtonBlue : UIColor.telinkButtonUnableBlue];
     });
 }
 
-- (void)showTips:(NSString *)message{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-
-        }];
-    });
-}
-
-- (void)updateScanedDeviceWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+- (void)updateScannedDeviceWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
     AddDeviceModel *model = [[AddDeviceModel alloc] init];
     SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
     scanModel.macAddress = macAddress;
     model.scanRspModel = scanModel;
     model.scanRspModel.address = address;
-    model.state = AddDeviceModelStateScaned;
+    model.state = AddDeviceModelStateScanned;
     if (![self.source containsObject:model]) {
         [self.source addObject:model];
     } else {
@@ -186,7 +187,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -197,7 +198,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -215,7 +216,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -231,12 +232,12 @@
     if (needRefresh) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.collectionView reloadData];
-            [self scrollowToBottom];
+            [self scrollToBottom];
         });
     }
 }
 
-- (void)scrollowToBottom{
+- (void)scrollToBottom{
     NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
     NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
@@ -252,15 +253,20 @@
         //        });
             } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error) {
-                    TeLogError(@"setFilter fail!!!");
+                    TelinkLogError(@"setFilter fail!!!");
                     //失败后逻辑：断开连接，再返回
-                    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+                    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [weakSelf.navigationController popViewControllerAnimated:YES];
                         });
                     }];
                 } else {
                     dispatch_async(dispatch_get_main_queue(), ^{
+                        //修复添加设备完成后返回首页断开直连设备不会回连的bug.
+                        //Fix the bug where disconnecting a directly connected device after adding it and returning to the homepage will not cause it to reconnect.
+                        if (SigBearer.share.isOpen) {
+                            [SDKLibCommand startMeshConnectWithComplete:nil];
+                        }
                         [weakSelf.navigationController popViewControllerAnimated:YES];
                     });
                 }
@@ -273,11 +279,11 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    self.title = @"Fast provision";
+    [self setTitle:@"Device Scan" subTitle:@"Fast"];
     self.source = [[NSMutableArray alloc] init];
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    
+    //init rightBarButtonItem
 //    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
 //    self.navigationItem.rightBarButtonItem = self.refreshItem;
 
@@ -287,12 +293,12 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
-    
+
     [self startAddDevice];
 }
 
 -(void)dealloc{
-    TeLogDebug(@"%s",__func__);
+    TelinkLogDebug(@"%s",__func__);
 }
 
 @end

@@ -1,30 +1,31 @@
 /********************************************************************************************************
- * @file     UUIDInfo.java 
+ * @file UUIDInfo.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
 import java.util.UUID;
 
 /**
- * Created by kee on 2018/7/19.
+ * bluetooth UUIDs including service UUIDs and characteristic UUIDs
  */
 
 public class UUIDInfo {
@@ -52,4 +53,39 @@ public class UUIDInfo {
     public static final UUID CHARACTERISTIC_FW_VERSION = UUID.fromString("00002A26-0000-1000-8000-00805F9B34FB");
 
 
+
+    public static final UUID SERVICE_OTS = UUID.fromString("00001825-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID SERVICE_MESH_PROXY_SOLICITATION = UUID.fromString("00001859-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OTS_FEATURE = UUID.fromString("00002ABD-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_NAME = UUID.fromString("00002ABE-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_TYPE = UUID.fromString("00002ABF-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_SIZE = UUID.fromString("00002AC0-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_FIRST_CREATED = UUID.fromString("00002AC1-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_LAST_MODIFIED = UUID.fromString("00002AC2-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_ID = UUID.fromString("00002AC3-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_PROPERTIES = UUID.fromString("00002AC4-0000-1000-8000-00805F9B34FB");
+
+    // object action control point
+    public static final UUID CHARACTERISTIC_OACP = UUID.fromString("00002AC5-0000-1000-8000-00805F9B34FB"); //  contains CCC
+    // object list control point
+    public static final UUID CHARACTERISTIC_OLCP = UUID.fromString("00002AC6-0000-1000-8000-00805F9B34FB"); //  contains CCC
+
+    public static final UUID CHARACTERISTIC_OBJECT_LIST_FILTER = UUID.fromString("00002AC7-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_OBJECT_CHANGED = UUID.fromString("00002AC8-0000-1000-8000-00805F9B34FB"); //  contains CCC
+
+    public static final UUID CHARACTERISTIC_IOS_PSM = UUID.fromString("ABDD3056-28FA-441D-A470-55A75A52553A");
+
+    public static final UUID SERVICE_GENERIC_ATTRIBUTE = UUID.fromString("00001801-0000-1000-8000-00805F9B34FB");
+
+    public static final UUID CHARACTERISTIC_SERVICE_CHANGED = UUID.fromString("00002A05-0000-1000-8000-00805F9B34FB");
 }

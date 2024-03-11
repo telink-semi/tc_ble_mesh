@@ -1,0 +1,877 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "2:1764302752021457479",
+      "lastPropertyId": "3:6485485358001930618",
+      "name": "AddressRange",
+      "properties": [
+        {
+          "id": "1:3910043026171133464",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8728768982339899990",
+          "name": "low",
+          "type": 5
+        },
+        {
+          "id": "3:6485485358001930618",
+          "name": "high",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:994626657441505837",
+      "lastPropertyId": "6:551000097730355338",
+      "name": "BridgingTable",
+      "properties": [
+        {
+          "id": "1:8104861272436988884",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:749425147913777577",
+          "name": "directions",
+          "type": 2
+        },
+        {
+          "id": "3:7670561048264686992",
+          "name": "netKeyIndex1",
+          "type": 5
+        },
+        {
+          "id": "4:7433210936932935477",
+          "name": "netKeyIndex2",
+          "type": 5
+        },
+        {
+          "id": "5:1181641205292571225",
+          "name": "address1",
+          "type": 5
+        },
+        {
+          "id": "6:551000097730355338",
+          "name": "address2",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:7050452310995110296",
+      "lastPropertyId": "4:1428642024179935310",
+      "name": "GroupInfo",
+      "properties": [
+        {
+          "id": "1:8861658201973485212",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8310331915251930599",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:8755032179006257148",
+          "name": "address",
+          "type": 5
+        },
+        {
+          "id": "4:1428642024179935310",
+          "name": "selected",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:6328424765280299624",
+      "lastPropertyId": "5:5331858075944587825",
+      "name": "MeshAppKey",
+      "properties": [
+        {
+          "id": "1:4007445848740205627",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:9004711189128761970",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:4094089802120013045",
+          "name": "index",
+          "type": 5
+        },
+        {
+          "id": "4:4245432823405244555",
+          "name": "key",
+          "type": 23
+        },
+        {
+          "id": "5:5331858075944587825",
+          "name": "boundNetKeyIndex",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:2069274728427692519",
+      "lastPropertyId": "11:7486707633367311255",
+      "name": "MeshInfo",
+      "properties": [
+        {
+          "id": "1:336168581118496780",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:611417875749402651",
+          "name": "meshUUID",
+          "type": 9
+        },
+        {
+          "id": "3:6651928980365702477",
+          "name": "provisionerUUID",
+          "type": 9
+        },
+        {
+          "id": "4:181161418257466648",
+          "name": "ivIndex",
+          "type": 5
+        },
+        {
+          "id": "5:6067940850884157003",
+          "name": "sequenceNumber",
+          "type": 5
+        },
+        {
+          "id": "6:6761669226907302846",
+          "name": "localAddress",
+          "type": 5
+        },
+        {
+          "id": "7:6830520075607036574",
+          "name": "provisionIndex",
+          "type": 5
+        },
+        {
+          "id": "8:4521951590562376610",
+          "name": "addressTopLimit",
+          "type": 5
+        },
+        {
+          "id": "9:8138377349172761395",
+          "name": "meshName",
+          "type": 9
+        },
+        {
+          "id": "10:2479901812599270086",
+          "name": "timestamp",
+          "type": 9
+        },
+        {
+          "id": "11:7486707633367311255",
+          "name": "solSeq",
+          "type": 5
+        }
+      ],
+      "relations": [
+        {
+          "id": "1:2910734377136658791",
+          "name": "unicastRange",
+          "targetId": "2:1764302752021457479"
+        },
+        {
+          "id": "2:2544090045231112346",
+          "name": "nodes",
+          "targetId": "8:6579166990100229747"
+        },
+        {
+          "id": "3:2407675280475234205",
+          "name": "meshNetKeyList",
+          "targetId": "7:504061772864822281"
+        },
+        {
+          "id": "4:8399942278602895366",
+          "name": "appKeyList",
+          "targetId": "5:6328424765280299624"
+        },
+        {
+          "id": "5:3790850349562748779",
+          "name": "scenes",
+          "targetId": "11:3708419890867133197"
+        },
+        {
+          "id": "6:2359409526936849282",
+          "name": "groups",
+          "targetId": "4:7050452310995110296"
+        },
+        {
+          "id": "7:5560402327294148212",
+          "name": "extendGroups",
+          "targetId": "4:7050452310995110296"
+        },
+        {
+          "id": "12:1451763253102119136",
+          "name": "allProvisioners",
+          "targetId": "16:9091345760396773004"
+        },
+        {
+          "id": "13:9109301361413788209",
+          "name": "excludedNodes",
+          "targetId": "8:6579166990100229747"
+        },
+        {
+          "id": "14:750515626164944415",
+          "name": "provisionerNodes",
+          "targetId": "8:6579166990100229747"
+        }
+      ]
+    },
+    {
+      "id": "7:504061772864822281",
+      "lastPropertyId": "4:4996070629725167257",
+      "name": "MeshNetKey",
+      "properties": [
+        {
+          "id": "1:6739783409669224131",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7342338969280520527",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:2561597980151251064",
+          "name": "index",
+          "type": 5
+        },
+        {
+          "id": "4:4996070629725167257",
+          "name": "key",
+          "type": 23
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "8:6579166990100229747",
+      "lastPropertyId": "39:7693211708187749355",
+      "name": "NodeInfo",
+      "properties": [
+        {
+          "id": "1:1623821078275734433",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6194002982900482613",
+          "name": "meshAddress",
+          "type": 5
+        },
+        {
+          "id": "3:4529929458849011089",
+          "name": "macAddress",
+          "type": 9
+        },
+        {
+          "id": "4:2157940618669597664",
+          "name": "deviceUUID",
+          "type": 23
+        },
+        {
+          "id": "5:1626470281826987649",
+          "name": "netKeyIndexes",
+          "type": 30
+        },
+        {
+          "id": "6:4819301776168092095",
+          "name": "elementCnt",
+          "type": 5
+        },
+        {
+          "id": "7:9044543274663523534",
+          "name": "bound",
+          "type": 1
+        },
+        {
+          "id": "8:2673468569596036149",
+          "name": "deviceKey",
+          "type": 23
+        },
+        {
+          "id": "9:3831556954344432940",
+          "name": "subList",
+          "type": 30
+        },
+        {
+          "id": "10:8864839164804326099",
+          "name": "lum",
+          "type": 5
+        },
+        {
+          "id": "11:3494688511062469481",
+          "name": "temp",
+          "type": 5
+        },
+        {
+          "id": "12:3863148715437878742",
+          "name": "onlineState",
+          "type": 5
+        },
+        {
+          "id": "14:8185126411718485460",
+          "name": "defaultBind",
+          "type": 1
+        },
+        {
+          "id": "15:6153499661856701931",
+          "name": "subnetBridgeEnabled",
+          "type": 1
+        },
+        {
+          "id": "16:1870858518862634295",
+          "name": "selected",
+          "type": 1
+        },
+        {
+          "id": "17:8187179977334129636",
+          "name": "defaultTTL",
+          "type": 2
+        },
+        {
+          "id": "18:3028042820079047102",
+          "name": "relayEnable",
+          "type": 1
+        },
+        {
+          "id": "19:4144651003041810183",
+          "name": "relayRetransmit",
+          "type": 2
+        },
+        {
+          "id": "20:3501189454555487089",
+          "name": "beaconOpened",
+          "type": 1
+        },
+        {
+          "id": "21:2789925141979546276",
+          "name": "gattProxyEnable",
+          "type": 1
+        },
+        {
+          "id": "22:4888425144071391734",
+          "name": "friendEnable",
+          "type": 1
+        },
+        {
+          "id": "23:3400535916968517229",
+          "name": "networkRetransmit",
+          "type": 2
+        },
+        {
+          "id": "24:6890974299115063309",
+          "name": "directForwardingEnabled",
+          "type": 1
+        },
+        {
+          "id": "26:6797289530268876656",
+          "name": "directProxyEnabled",
+          "type": 1
+        },
+        {
+          "id": "28:6845919468319028494",
+          "name": "publishModelId",
+          "indexId": "1:2390214808906097166",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "PublishModel"
+        },
+        {
+          "id": "29:8769029968393784580",
+          "name": "timePublishConfigured",
+          "type": 1
+        },
+        {
+          "id": "30:1946681122139823938",
+          "name": "compositionData",
+          "type": 23
+        },
+        {
+          "id": "31:7083973705940019782",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "32:1250097596279928258",
+          "name": "privateBeaconOpened",
+          "type": 1
+        },
+        {
+          "id": "33:8426405745807769616",
+          "name": "privateGattProxyEnable",
+          "type": 1
+        },
+        {
+          "id": "34:5174897416773049846",
+          "name": "onDemandPrivateGattProxy",
+          "type": 2
+        },
+        {
+          "id": "36:5576064727597415947",
+          "name": "directRelayEnabled",
+          "type": 1
+        },
+        {
+          "id": "37:5904884050511156545",
+          "name": "directFriendEnabled",
+          "type": 1
+        },
+        {
+          "id": "39:7693211708187749355",
+          "name": "nodeLcPropsId",
+          "indexId": "4:4106015631498752348",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "NodeLcProps"
+        }
+      ],
+      "relations": [
+        {
+          "id": "9:3631001395049274821",
+          "name": "schedulers",
+          "targetId": "13:290183085493963579"
+        },
+        {
+          "id": "10:9172225433446279959",
+          "name": "bridgingTableList",
+          "targetId": "3:994626657441505837"
+        },
+        {
+          "id": "18:2800170913470506993",
+          "name": "sensorStateList",
+          "targetId": "19:765136782566086494"
+        }
+      ]
+    },
+    {
+      "id": "10:2376913526180829341",
+      "lastPropertyId": "8:6013335243784519146",
+      "name": "PublishModel",
+      "properties": [
+        {
+          "id": "1:3591706847788520059",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3703643461758964907",
+          "name": "elementAddress",
+          "type": 5
+        },
+        {
+          "id": "3:3746969599648659733",
+          "name": "modelId",
+          "type": 5
+        },
+        {
+          "id": "4:2642494881192852913",
+          "name": "address",
+          "type": 5
+        },
+        {
+          "id": "5:8344163245775699196",
+          "name": "period",
+          "type": 5
+        },
+        {
+          "id": "6:563099048165166695",
+          "name": "ttl",
+          "type": 5
+        },
+        {
+          "id": "7:1398174327309918103",
+          "name": "credential",
+          "type": 5
+        },
+        {
+          "id": "8:6013335243784519146",
+          "name": "transmit",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "11:3708419890867133197",
+      "lastPropertyId": "4:4026545688755204419",
+      "name": "Scene",
+      "properties": [
+        {
+          "id": "1:3684049614188076924",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6989180657637444783",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1391043012477660223",
+          "name": "sceneId",
+          "type": 5
+        },
+        {
+          "id": "4:4026545688755204419",
+          "name": "addressList",
+          "type": 30
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "13:290183085493963579",
+      "lastPropertyId": "3:5778465881033196699",
+      "name": "Scheduler",
+      "properties": [
+        {
+          "id": "1:5809139191958148052",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1936459283606878172",
+          "name": "index",
+          "type": 2
+        },
+        {
+          "id": "3:5778465881033196699",
+          "name": "registerId",
+          "indexId": "2:6055176124542646347",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "SchedulerRegister"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "14:5156704748603895659",
+      "lastPropertyId": "11:1487792240124067561",
+      "name": "SchedulerRegister",
+      "properties": [
+        {
+          "id": "1:3467229997467938096",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6989845257887833048",
+          "name": "year",
+          "type": 6
+        },
+        {
+          "id": "3:4889750219171794962",
+          "name": "month",
+          "type": 6
+        },
+        {
+          "id": "4:392079756930252568",
+          "name": "day",
+          "type": 6
+        },
+        {
+          "id": "5:4237370576767075913",
+          "name": "hour",
+          "type": 6
+        },
+        {
+          "id": "6:5050836699426386552",
+          "name": "minute",
+          "type": 6
+        },
+        {
+          "id": "7:2488288412422792721",
+          "name": "second",
+          "type": 6
+        },
+        {
+          "id": "8:8024557240102474329",
+          "name": "week",
+          "type": 6
+        },
+        {
+          "id": "9:6600575812856940429",
+          "name": "action",
+          "type": 6
+        },
+        {
+          "id": "10:839959405164512565",
+          "name": "transTime",
+          "type": 6
+        },
+        {
+          "id": "11:1487792240124067561",
+          "name": "sceneId",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "15:3478473560802249521",
+      "lastPropertyId": "5:7999411875846621535",
+      "name": "OobInfo",
+      "properties": [
+        {
+          "id": "1:3567764192448061667",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:496687199810557216",
+          "name": "deviceUUID",
+          "type": 23
+        },
+        {
+          "id": "3:8769251797724845497",
+          "name": "oob",
+          "type": 23
+        },
+        {
+          "id": "4:3996122189236886053",
+          "name": "importMode",
+          "type": 5
+        },
+        {
+          "id": "5:7999411875846621535",
+          "name": "timestamp",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "16:9091345760396773004",
+      "lastPropertyId": "3:5237394518513339767",
+      "name": "Provisioner",
+      "properties": [
+        {
+          "id": "1:6331221499117126151",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6706302340015216544",
+          "name": "provisionerName",
+          "type": 9
+        },
+        {
+          "id": "3:5237394518513339767",
+          "name": "UUID",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "15:3897692237543528373",
+          "name": "allocatedUnicastRange",
+          "targetId": "2:1764302752021457479"
+        },
+        {
+          "id": "16:4719440422919075677",
+          "name": "allocatedGroupRange",
+          "targetId": "2:1764302752021457479"
+        },
+        {
+          "id": "17:1644692976533144517",
+          "name": "allocatedSceneRange",
+          "targetId": "17:5719042239068213177"
+        }
+      ]
+    },
+    {
+      "id": "17:5719042239068213177",
+      "lastPropertyId": "3:2144907213425026123",
+      "name": "SceneRange",
+      "properties": [
+        {
+          "id": "1:3542670181193611278",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7496379706960056173",
+          "name": "firstScene",
+          "type": 5
+        },
+        {
+          "id": "3:2144907213425026123",
+          "name": "lastScene",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "18:2912109651191137768",
+      "lastPropertyId": "12:4993378234604267159",
+      "name": "NodeLcProps",
+      "properties": [
+        {
+          "id": "1:4709340100072178838",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2568576942292118535",
+          "name": "enabled",
+          "type": 1
+        },
+        {
+          "id": "3:4072428608098155040",
+          "name": "lightnessOn",
+          "type": 5
+        },
+        {
+          "id": "4:3484166710889166378",
+          "name": "lightnessProlong",
+          "type": 5
+        },
+        {
+          "id": "5:2099821741896995403",
+          "name": "lightnessStandby",
+          "type": 5
+        },
+        {
+          "id": "6:3384105576038547123",
+          "name": "timeFade",
+          "type": 5
+        },
+        {
+          "id": "7:3628084734850027739",
+          "name": "timeFadeOn",
+          "type": 5
+        },
+        {
+          "id": "8:3360569238861956236",
+          "name": "timeFadeStandbyAuto",
+          "type": 5
+        },
+        {
+          "id": "9:5697036219274543184",
+          "name": "timeFadeStandbyManual",
+          "type": 5
+        },
+        {
+          "id": "10:3496101797254466976",
+          "name": "timeOccupancyDelay",
+          "type": 5
+        },
+        {
+          "id": "11:3860567514842923451",
+          "name": "timeProlong",
+          "type": 5
+        },
+        {
+          "id": "12:4993378234604267159",
+          "name": "timeRunOn",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "19:765136782566086494",
+      "lastPropertyId": "3:8412285003734097084",
+      "name": "NodeSensorState",
+      "properties": [
+        {
+          "id": "1:6041669237602003641",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1536322467415240887",
+          "name": "propertyID",
+          "type": 5
+        },
+        {
+          "id": "3:8412285003734097084",
+          "name": "state",
+          "type": 23
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "19:765136782566086494",
+  "lastIndexId": "4:4106015631498752348",
+  "lastRelationId": "18:2800170913470506993",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [
+    2081136313973979244,
+    4997496793182107366,
+    6171911036437264735
+  ],
+  "retiredIndexUids": [
+    1206649210262279878
+  ],
+  "retiredPropertyUids": [
+    1383819400209798051,
+    2129298725270926374,
+    2500718768392416442,
+    5856905708738865362,
+    287483622224057219,
+    200508415016688133,
+    1581946032145540409,
+    6312606664015532205,
+    6602222320389773953,
+    335605473887049558,
+    4308691135741941972,
+    1438015228012879585,
+    5428944306125984848,
+    8051414710140349273,
+    3031241088902285045,
+    1040592641382702225,
+    155297223198770714,
+    2919866427436161725
+  ],
+  "retiredRelationUids": [
+    2182875474270975386,
+    8313588883292029431
+  ],
+  "version": 1
+}

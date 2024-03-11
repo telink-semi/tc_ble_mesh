@@ -1,10 +1,25 @@
-//
-//  ColorModelCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/11/23.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+/********************************************************************************************************
+ * @file     ColorModelCell.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/11/23
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "ColorModelCell.h"
 
@@ -31,8 +46,11 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    //cornerRadius
     self.currentColorImageView.layer.cornerRadius = 8;
+    //borderWidth
     self.currentColorImageView.layer.borderWidth = 1;
+    //borderColor
     self.currentColorImageView.layer.borderColor = [UIColor lightGrayColor].CGColor;
     self.colorPicker.delegate = self;
     [self setColorModel:[UIColor whiteColor]];
@@ -118,6 +136,11 @@
     [self refreshUI];
 }
 
+- (void)changeUIWithHslModelLightSliderValue:(CGFloat)lightSliderValue {
+    self.hslModel.lightness = lightSliderValue;
+    [self setHslModel:self.hslModel];
+}
+
 - (void)setHsvModel:(HSVModel *)hsvModel {
     _colorModel = [ColorManager getUIColorWithHSVColor:hsvModel];;
     _rgbModel = [ColorManager getRGBWithColor:_colorModel];
@@ -131,8 +154,8 @@
     if (!self.VSlider.isTracking) {
         self.VSlider.value = self.hsvModel.value;
     }
-    self.showVLabel.text = [NSString stringWithFormat:@"V(%d)",(int)(self.hsvModel.value*100)];
-    
+    self.showVLabel.text = [NSString stringWithFormat:@"V(%.0f)",(self.hsvModel.value*100)];
+
     if (!self.RSlider.isTracking) {
         self.RSlider.value = self.rgbModel.red;
     }
@@ -142,9 +165,9 @@
     if (!self.BSlider.isTracking) {
         self.BSlider.value = self.rgbModel.blud;
     }
-    self.showRLabel.text = [NSString stringWithFormat:@"R(%d)",(int)(self.rgbModel.red*255)];
-    self.showGLabel.text = [NSString stringWithFormat:@"G(%d)",(int)(self.rgbModel.green*255)];
-    self.showBLabel.text = [NSString stringWithFormat:@"B(%d)",(int)(self.rgbModel.blud*255)];
+    self.showRLabel.text = [NSString stringWithFormat:@"R(%.0f)",(self.rgbModel.red*255)];
+    self.showGLabel.text = [NSString stringWithFormat:@"G(%.0f)",(self.rgbModel.green*255)];
+    self.showBLabel.text = [NSString stringWithFormat:@"B(%.0f)",(self.rgbModel.blud*255)];
 
     if (!self.HSlider.isTracking) {
         self.HSlider.value = self.hslModel.hue;
@@ -155,9 +178,9 @@
     if (!self.LSlider.isTracking) {
         self.LSlider.value = self.hslModel.lightness;
     }
-    self.showHLabel.text = [NSString stringWithFormat:@"H(%d)",(int)(self.hslModel.hue*360)];
-    self.showSLabel.text = [NSString stringWithFormat:@"S(%d)",(int)(self.hslModel.saturation*100)];
-    self.showLLabel.text = [NSString stringWithFormat:@"L(%d)",(int)(self.hslModel.lightness*100)];
+    self.showHLabel.text = [NSString stringWithFormat:@"H(%.0f)",(self.hslModel.hue*360)];
+    self.showSLabel.text = [NSString stringWithFormat:@"S(%.0f)",(self.hslModel.saturation*100)];
+    self.showLLabel.text = [NSString stringWithFormat:@"L(%.0f)",(self.hslModel.lightness*100)];
 }
 
 - (void)callbackCurrentColor {

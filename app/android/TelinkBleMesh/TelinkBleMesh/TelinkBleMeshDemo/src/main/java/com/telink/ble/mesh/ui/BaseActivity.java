@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     BaseActivity.java 
+ * @file BaseActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -27,10 +28,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -43,29 +49,50 @@ import com.telink.ble.mesh.foundation.event.BluetoothEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 
 /**
+ * base activity
  * Created by Administrator on 2017/2/21.
  */
+@SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity implements EventListener<String> {
 
-    private AlertDialog.Builder confirmDialogBuilder;
-    protected Toast toast;
     protected final String TAG = getClass().getSimpleName();
-    private AlertDialog mWaitingDialog;
+
+    protected Toast toast;
+
+    /**
+     * waiting dialog
+     */
+    private AlertDialog waitingDialog;
+
+    /**
+     * waiting text
+     */
     private TextView waitingTip;
 
+    /**
+     * shown when phone location is closed
+     */
     private AlertDialog locationWarningDialog;
 
+    /**
+     * shown when bluetooth is closed
+     */
     private AlertDialog bleStateDialog;
+
+    /**
+     * confirm dialog with 2 buttons, confirm and cancel
+     */
+    private AlertDialog confirmDialogBuilder;
+
+    /**
+     * dialog with only one confirm button
+     */
+    private AlertDialog tipDialog;
 
 
     @Override
-    @SuppressLint("ShowToast")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         MeshLogger.w(TAG + " onCreate");
@@ -109,32 +136,52 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     }
 
     public void toastMsg(CharSequence s) {
-
         if (this.toast != null) {
-            this.toast.setView(this.toast.getView());
-            this.toast.setDuration(Toast.LENGTH_SHORT);
-            this.toast.setText(s);
-            this.toast.show();
+            this.toast.cancel();
         }
+        this.toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
+        this.toast.show();
     }
 
     public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick) {
         if (confirmDialogBuilder == null) {
-            confirmDialogBuilder = new AlertDialog.Builder(this);
-            confirmDialogBuilder.setCancelable(true);
-            confirmDialogBuilder.setTitle("Warning");
-//            confirmDialogBuilder.setMessage(msg);
-            confirmDialogBuilder.setPositiveButton("Confirm", confirmClick);
-
-            confirmDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Warning");
+            builder.setPositiveButton("Confirm", confirmClick);
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+            confirmDialogBuilder = builder.create();
         }
         confirmDialogBuilder.setMessage(msg);
         confirmDialogBuilder.show();
+    }
+
+    public void dismissConfirmDialog() {
+        if (confirmDialogBuilder != null && confirmDialogBuilder.isShowing()) {
+            confirmDialogBuilder.dismiss();
+        }
+    }
+
+    public void showTipDialog(String msg) {
+        if (tipDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Tip");
+            builder.setPositiveButton("Confirm", null);
+            tipDialog = builder.create();
+        }
+        tipDialog.setMessage(msg);
+        tipDialog.show();
+    }
+
+
+    public void showTipDialog(String title, String msg, DialogInterface.OnClickListener confirmClick) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle("Tip");
+        builder.setMessage(msg);
+        builder.setPositiveButton("OK", confirmClick);
+        builder.show();
     }
 
     public void showLocationDialog() {
@@ -210,23 +257,23 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
 
 
     public void showWaitingDialog(String tip) {
-        if (mWaitingDialog == null) {
+        if (waitingDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             View dialogView = LayoutInflater.from(this).inflate(R.layout.view_dialog_waiting, null);
             waitingTip = dialogView.findViewById(R.id.waiting_tips);
             builder.setView(dialogView);
             builder.setCancelable(false);
-            mWaitingDialog = builder.create();
+            waitingDialog = builder.create();
         }
         if (waitingTip != null) {
             waitingTip.setText(tip);
         }
-        mWaitingDialog.show();
+        waitingDialog.show();
     }
 
     public void dismissWaitingDialog() {
-        if (mWaitingDialog != null && mWaitingDialog.isShowing()) {
-            mWaitingDialog.dismiss();
+        if (waitingDialog != null && waitingDialog.isShowing()) {
+            waitingDialog.dismiss();
         }
     }
 
@@ -237,15 +284,29 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         }
     }
 
+
+    protected void setSubTitle(String subTitle) {
+        TextView tv_sub_title = findViewById(R.id.tv_sub_title);
+        if (tv_sub_title != null) {
+            if (TextUtils.isEmpty(subTitle)) {
+                tv_sub_title.setVisibility(View.GONE);
+            } else {
+                tv_sub_title.setVisibility(View.VISIBLE);
+                tv_sub_title.setText(subTitle);
+            }
+        }
+    }
+
+    protected void setTitle(String title, String subTitle) {
+        setTitle(title);
+        setSubTitle(subTitle);
+    }
+
     protected void enableBackNav(boolean enable) {
         Toolbar toolbar = findViewById(R.id.title_bar);
         if (enable) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_left);
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    finish();
-                }
-            });
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
         } else {
             toolbar.setNavigationIcon(null);
         }
@@ -258,7 +319,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
             if (!SharedPreferenceHelper.isLocationIgnore(this)) {
                 boolean showDialog;
                 if (this instanceof MainActivity) {
-                    showDialog = MeshService.getInstance().getCurrentMode() == MeshController.Mode.MODE_AUTO_CONNECT;
+                    showDialog = MeshService.getInstance().getCurrentMode() == MeshController.Mode.AUTO_CONNECT;
                 } else {
                     showDialog = true;
                 }
@@ -279,5 +340,12 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
                 dismissBleStateDialog();
             }
         }
+    }
+
+    protected void showItemSelectDialog(String title, String[] items, DialogInterface.OnClickListener onClickListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(items, onClickListener);
+        builder.setTitle(title);
+        builder.show();
     }
 }

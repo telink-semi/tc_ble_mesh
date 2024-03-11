@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBg"
+    android:orientation="vertical">
+
+    <include layout="@layout/title" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:text="Email" />
+
+        <TextView
+            android:id="@+id/tv_email"
+            style="@style/user_info_grid_input"
+            android:text="aa@tel.com" />
+
+    </GridLayout>
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:text="Username" />
+
+        <TextView
+            android:id="@+id/tv_name"
+            style="@style/user_info_grid_input"
+            android:text="aaa" />
+    </GridLayout>
+
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:layout_row="2"
+            android:text="Nickname" />
+
+        <EditText
+            android:id="@+id/et_nickname"
+            style="@style/user_info_grid_input"
+            android:layout_row="2"
+            android:text="少年怀" />
+    </GridLayout>
+
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:text="Phone" />
+
+        <EditText
+            android:id="@+id/et_phone"
+            style="@style/user_info_grid_input"
+            android:gravity="center_horizontal"
+            android:inputType="textMultiLine"
+            android:text="" />
+    </GridLayout>
+
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:text="Company" />
+
+        <EditText
+            android:id="@+id/et_company"
+            style="@style/user_info_grid_input"
+            android:gravity="center_horizontal"
+            android:inputType="textMultiLine"
+            android:text="" />
+    </GridLayout>
+
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp">
+
+        <TextView
+            style="@style/user_info_grid_text"
+            android:text="Sign" />
+
+        <EditText
+            android:id="@+id/et_sign"
+            style="@style/user_info_grid_input"
+            android:gravity="center_horizontal"
+            android:inputType="textMultiLine"
+            android:text="无边落木萧萧下，不尽长江滚滚来 无边落木萧萧下，不尽长江滚滚来 无边落木萧萧下，不尽长江滚滚来 无边落木萧萧下，不尽长江滚滚来" />
+    </GridLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btn_save_user_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save" />
+
+</LinearLayout>

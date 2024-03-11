@@ -1,0 +1,113 @@
+stages:
+  - scc
+  - genLicense
+  - checkLicense
+  - oss
+  - misspellChecking
+  - sensitive_word_check
+
+scc:
+  stage: scc 
+  tags:
+    - LINUX
+  dependencies: []
+  script:
+    - echo "Enter scc stage"
+    - scc | tee scc.txt
+    - bash /usr/bin/scc_calc.sh
+    - echo "The End SCC result:"
+    - cat scc.txt
+  artifacts:
+    paths:
+    - scc.txt
+  when: manual #always
+
+genLicense:
+  stage: genLicense
+  tags:
+    - LINUX
+  before_script:
+  script:
+    - date
+    - generat_license_list
+    - date
+  artifacts:
+    paths:
+    - "license_list_gen.txt"
+    - "no_license_list_gen.txt"
+    - "mismatch_license_file_gen.txt"
+  when: manual
+
+checkLicense:
+  variables:
+    CODE_COMPILE_ARCH: 'EAGLE_ANDES'
+    COV_PF_CATALOG: 'BLE'
+  stage: checkLicense
+  tags:
+    - LINUX
+  allow_failure: yes
+  dependencies: []
+  before_script:
+  script:
+    - date
+    - check_license
+    #- generat_license_list 
+    - date
+    - ls
+
+  artifacts:
+    when: always
+    paths:
+    - "mismatch_license.txt"
+    - "no_license*.txt"
+    - "unknow_type_file.txt"
+  when: manual #always
+
+
+oss:
+  tags:
+    - OSS
+  stage: oss
+  dependencies: []
+  script:
+    - cd app/ios
+    - oss_checking .
+    - cd -
+    - cp -rf app/ios/scan_result ./app_ios_scan_result
+    - rm -rf app/ios
+    - oss_checking .
+  artifacts:
+    name: "opensource_scan_result"
+    paths:
+      - ./scan_result
+      - ./app_ios_scan_result
+  when: manual      
+  
+  
+misspellChecking:
+  stage: misspellChecking
+  tags:
+    - LINUX
+  dependencies: []
+  script:
+    - echo "--------------- Begin ------------------------"
+    - misspell-check
+    - echo "---------------- End -----------------------"
+  artifacts:
+    when: on_failure
+    paths:
+    - misspell_result.txt
+  when: manual    # Just check, ignore fail
+
+sensitive_word_check:
+  stage: sensitive_word_check 
+  tags:
+    - LINUX
+  dependencies: []
+  script:
+    - grep -E "(esb|nrf|nordic|Shock[ ]*Burst)" . -inr
+    - > 
+      if [ $? == 0 ]; then
+        exit 1
+      fi
+  when: manual 

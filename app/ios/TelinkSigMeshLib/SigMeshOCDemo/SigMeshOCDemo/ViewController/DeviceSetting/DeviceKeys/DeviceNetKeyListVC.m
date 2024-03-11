@@ -1,42 +1,30 @@
 /********************************************************************************************************
-* @file     DeviceNetKeyListVC.m
-*
-* @brief    Show all NetKey of node.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  DeviceNetKeyListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     DeviceNetKeyListVC.m
+ *
+ * @brief    Show all NetKey of node.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "DeviceNetKeyListVC.h"
-#import "DeviceKeyCell.h"
 #import "UIViewController+Message.h"
 #import "DeviceChooseKeyVC.h"
+#import "NetKeyCell.h"
 
 @interface DeviceNetKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -52,7 +40,8 @@
     self.title = @"NetKey List";
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(DeviceKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(DeviceKeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(NetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(NetKeyCell.class)];
+    //init rightBarButtonItems
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     UIBarButtonItem *rightItem2 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefresh:)];
     self.navigationItem.rightBarButtonItems = @[rightItem1,rightItem2];
@@ -63,6 +52,10 @@
 }
 
 - (void)clickAdd:(UIButton *)button {
+    if (self.model.netKeys.count >= 2) {
+        [self showTips:@"more than 2 net keys is not supported"];
+        return;
+    }
     DeviceChooseKeyVC *vc = [[DeviceChooseKeyVC alloc] init];
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
@@ -77,9 +70,9 @@
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand configNetKeyGetWithDestination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyList * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+        TelinkLogInfo(@"NetKeyGet responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         NSMutableArray *backList = [NSMutableArray array];
-        for (NSNumber *number in responseMessage.networkKeyIndexs) {
+        for (NSNumber *number in responseMessage.networkKeyIndexes) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:number.intValue updated:NO];
             [backList addObject:nodeKeyModel];
         }
@@ -88,11 +81,13 @@
         [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
         [ShowTipsHandle.share show:@"get node NetKey list success!"];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"get node NetKey list fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -100,8 +95,8 @@
     [ShowTipsHandle.share show:@"add NetKey to node..."];
 
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand configNetKeyAddWithDestination:self.model.address NetworkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+    [SDKLibCommand configNetKeyAddWithDestination:self.model.address networkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
+        TelinkLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
             if (![weakSelf.model.netKeys containsObject:nodeKeyModel]) {
@@ -115,11 +110,13 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"add NetKey to node fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -127,11 +124,11 @@
     [ShowTipsHandle.share show:@"delete NetKey from node..."];
 
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand configNetKeyDeleteWithDestination:self.model.address NetworkKeyIndex:netKey.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"NetKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
+    [SDKLibCommand configNetKeyDeleteWithDestination:self.model.address networkKeyIndex:netKey.index retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
+        TelinkLogInfo(@"NetKeyDelete responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];
-            [weakSelf.model.netKeys removeObject:nodeKeyModel];
+            [weakSelf.model deleteNetKeyDataFromNode:nodeKeyModel];
             [SigDataSource.share saveLocationData];
             [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
             [ShowTipsHandle.share show:@"delete NetKey to node success!"];
@@ -140,11 +137,13 @@
         }
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete NetKey from node fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -179,12 +178,17 @@
             }
 
             SigNetkeyModel *model = self.sourceArray[indexPath.row];
+            if (model.index == SigDataSource.share.curNetkeyModel.index) {
+                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a net key in use!" sure:nil];
+                return;
+            }
+
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteNetKeyOfDevice:model];
             } cancel:^(UIAlertAction *action) {
-                
+
             }];
         }
     }
@@ -196,18 +200,10 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    DeviceKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(DeviceKeyCell.class) forIndexPath:indexPath];
-    [cell setNetKeyModel:self.sourceArray[indexPath.row]];
+    NetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(NetKeyCell.class) forIndexPath:indexPath];
+    [cell setModel:self.sourceArray[indexPath.row]];
+    cell.editButton.hidden = YES;
     return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 @end

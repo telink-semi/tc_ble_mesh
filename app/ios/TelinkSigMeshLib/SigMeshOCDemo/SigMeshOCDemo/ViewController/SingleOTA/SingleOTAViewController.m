@@ -1,31 +1,25 @@
 /********************************************************************************************************
- * @file     SingleOTAViewController.m 
+ * @file     SingleOTAViewController.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SingleOTAViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SingleOTAViewController.h"
 #import "OTAFileSource.h"
@@ -68,7 +62,7 @@
         [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
         } cancel:^(UIAlertAction *action) {
-            
+
         }];
     } else {
         [self otaAction];
@@ -76,12 +70,12 @@
 }
 
 - (void)otaAction {
-    TeLogVerbose(@"clickStartOTA");
+    TelinkLogVerbose(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
     [self showOTATips:@"start connect..."];
-    
+
     __weak typeof(self) weakSelf = self;
     BOOL result = [OTAManager.share startOTAWithOtaData:self.localData models:@[self.model] singleSuccessAction:^(SigNodeModel *device) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -96,18 +90,22 @@
             [weakSelf showOTAProgress:progress];
         });
     } finishAction:^(NSArray<SigNodeModel *> *successModels, NSArray<SigNodeModel *> *fileModels) {
-        TeLogDebug(@"");
+        TelinkLogDebug(@"");
     }];
-    TeLogDebug(@"result = %d",result);
+    TelinkLogDebug(@"result = %d",result);
 }
 
 - (void)normalSetting{
     [super normalSetting];
+    //init rightBarButtonItem
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"tishi"] style:UIBarButtonItemStylePlain target:self action:@selector(clickPushToTipsVC)];
+    self.navigationItem.rightBarButtonItem = item;
     self.selectIndex = -1;
     self.OTAing = NO;
-    self.normalColor = kDefultColor;
+    self.otaButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.normalColor = UIColor.telinkButtonBlue;
     self.unableColor = [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
-    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid],[LibTools uint16From16String:self.model.vid]];
+    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid], CFSwapInt16HostToBig([LibTools uint16From16String:self.model.vid])];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ChooseBinCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ChooseBinCellID];
     self.source = [[NSMutableArray alloc] initWithArray:OTAFileSource.share.getAllBinFile];
@@ -118,18 +116,17 @@
     [OTAManager.share stopOTA];
 }
 
+- (void)clickPushToTipsVC {
+    UIViewController *vc = [UIStoryboard initVC:@"TipsVC" storyboard:@"Setting"];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
 - (void)showOTAProgress:(float)progress{
     NSString *tips = [NSString stringWithFormat:@"OTA:%.1f%%", progress];
     if (progress == 100) {
         tips = [tips stringByAppendingString:@",reboot..."];
     }
     [self showOTATips:tips];
-}
-
-- (void)showTips:(NSString *)message{
-    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-        
-    }];
 }
 
 - (void)showOTATips:(NSString *)message{
@@ -142,8 +139,8 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
-    [SigBearer.share startMeshConnectWithComplete:nil];
-    TeLogVerbose(@"otaSuccess");
+    [SDKLibCommand startMeshConnectWithComplete:nil];
+    TelinkLogVerbose(@"otaSuccess");
 }
 
 - (void)otaFailAction{
@@ -152,19 +149,25 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA fail"];
-    [SigBearer.share startMeshConnectWithComplete:nil];
+    [SDKLibCommand startMeshConnectWithComplete:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    TeLogVerbose(@"otaFail");
+    TelinkLogVerbose(@"otaFail");
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     ChooseBinCell *cell = (ChooseBinCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ChooseBinCellID forIndexPath:indexPath];
     NSString *binString = self.source[indexPath.row];
     NSData *data = [OTAFileSource.share getDataWithBinName:binString];
-    UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-    cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+    cell.nameLabel.numberOfLines = 0;
+    if (data && data.length) {
+        UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
+        vid = CFSwapInt16HostToBig(vid);
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:0x%X",binString,[OTAFileSource.share getPidWithOTAData:data], vid];
+    } else {
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
+    }
     cell.selectButton.selected = indexPath.row == self.selectIndex;
     return cell;
 }
@@ -187,7 +190,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

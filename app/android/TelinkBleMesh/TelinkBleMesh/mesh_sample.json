@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#",
-  "version": "1.0.0",
-  "meshUUID": "72C6BE40444D2081BEAADDAD4E3CC21C",
+  "id": "https://www.bluetooth.com/specifications/specs/mesh-cdb-1-0-1-schema.json#",
+  "version": "1.0.1",
+  "meshUUID": "72C6BE40-444D-2081-BEAA-DDAD4E3CC21C",
   "meshName": "Brian and Mary's House",
   "timestamp": "2018-12-23T11:45:22-08:00",
   "netKeys": [
@@ -54,7 +54,7 @@
   "provisioners": [
     {
       "provisionerName": "Brian's Phone",
-      "UUID": "70CF7C9732A345B691494810D2E9CBF4",
+      "UUID": "70CF7C97-32A3-45B6-9149-4810D2E9CBF4",
       "allocatedGroupRange": [
         {
           "highAddress": "C1FF",
@@ -75,7 +75,7 @@
     },
     {
       "provisionerName": "Mary's Phone",
-      "UUID": "577C2832B345A6944A4810D2C9DFE456",
+      "UUID": "577C2832-B345-A694-4A48-10D2C9DFE456",
       "allocatedGroupRange": [
         {
           "highAddress": "C0FF",
@@ -102,11 +102,11 @@
   ],
   "nodes": [
     {
-      "UUID": "559B8C9732A345B691494865D288CBF3",
+      "UUID": "559B8C97-32A3-45B6-9149-4865D288CBF3",
       "name": "Bedroom Light Switch",
       "deviceKey": "0FE48D03E41D26E5C5EA327A55E8A218",
       "unicastAddress": "0002",
-      "security": "high",
+      "security": "secure",
       "cid": "0003",
       "pid": "0003",
       "vid": "0003",
@@ -201,10 +201,10 @@
         "interval": 20
       },
       "defaultTTL": 3,
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "347F8A9732D345E79149486AA2887983",
+      "UUID": "347F8A97-32D3-45E7-9149-486AA2887983",
       "name": "Bedroom Light",
       "unicastAddress": "0004",
       "cid": "0011",
@@ -417,7 +417,7 @@
         }
       ],
       "deviceKey": "89DDEFD69B45AEC29DFD545E901CEE64",
-      "security": "high",
+      "security": "secure",
       "configComplete": true,
       "netKeys": [
         {
@@ -440,14 +440,14 @@
         "interval": 60
       },
       "defaultTTL": 4,
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "345E82273DD345CC41494865D2334545",
+      "UUID": "345E8227-3DD3-45CC-4149-4865D2334545",
       "name": "Bedside Light (Brian)",
       "deviceKey": "AAA4B4CA3AD5C6D6BE1A8D455EC40BE0",
       "unicastAddress": "0007",
-      "security": "high",
+      "security": "secure",
       "cid": "000A",
       "pid": "1204",
       "vid": "0041",
@@ -607,14 +607,14 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "268E8CA732A345B69149AA44BAAD2346",
+      "UUID": "268E8CA7-32A3-45B6-9149-AA44BAAD2346",
       "name": "Bedside Light (Mary)",
       "deviceKey": "B619F5BA671AF2548BA219760294063B",
       "unicastAddress": "0105",
-      "security": "high",
+      "security": "secure",
       "cid": "000A",
       "pid": "1204",
       "vid": "0041",
@@ -775,14 +775,14 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "CBFA8C9732E345B691494822D28856FF",
+      "UUID": "CBFA8C97-32E3-45B6-9149-4822D28856FF",
       "name": "Molly's Access Tag",
       "deviceKey": "C7F91F91AB79F445925BC9B568CA53A9",
       "unicastAddress": "0109",
-      "security": "low",
+      "security": "insecure",
       "cid": "003F",
       "pid": "0001",
       "vid": "0001",
@@ -845,14 +845,14 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "45708C9732A345B5E149486AB247C4EE",
+      "UUID": "45708C97-32A3-45B5-E149-486AB247C4EE",
       "name": "Cat Flap",
       "deviceKey": "CA1C7F26BB557BD609777575CEF8E599",
       "unicastAddress": "010A",
-      "security": "low",
+      "security": "insecure",
       "cid": "000C",
       "pid": "0002",
       "vid": "0000",
@@ -904,14 +904,14 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "27668C9732A345B561494865E288CBC2",
+      "UUID": "27668C97-32A3-45B5-6149-4865E288CBC2",
       "name": "Door Bell",
       "deviceKey": "FC846BF0D85AC4D9CEF63AA04E5507CE",
       "unicastAddress": "0103",
-      "security": "high",
+      "security": "secure",
       "cid": "0007",
       "pid": "0019",
       "vid": "0000",
@@ -975,14 +975,14 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "EAA389973B4345B691494865D2885555",
+      "UUID": "EAA38997-3B43-45B6-9149-4865D2885555",
       "name": "Bell",
       "deviceKey": "31743AFD08DBACECBBA1297BDD0AAEFE",
       "unicastAddress": "0104",
-      "security": "high",
+      "security": "secure",
       "cid": "0007",
       "pid": "001A",
       "vid": "0003",
@@ -1034,11 +1034,11 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "70CF7C9732A345B691494810D2E9CBF4",
-      "name": "Brian��s phone",
+      "UUID": "70CF7C97-32A3-45B6-9149-4810D2E9CBF4",
+      "name": "Brian's phone",
       "cid": "0008",
       "pid": "032B",
       "vid": "0005",
@@ -1051,7 +1051,7 @@
       },
       "deviceKey": "27653BFE0EEEA5ECBBA68975DD0A0244",
       "unicastAddress": "0001",
-      "security": "high",
+      "security": "secure",
       "configComplete": true,
       "netKeys": [
         {
@@ -1104,11 +1104,11 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     },
     {
-      "UUID": "577C2832B345A6944A4810D2C9DFE456",
-      "name": "Mary��s phone",
+      "UUID": "577C2832-B345-A694-4A48-10D2C9DFE456",
+      "name": "Mary's phone",
       "cid": "0001",
       "pid": "011a",
       "vid": "0004",
@@ -1121,7 +1121,7 @@
       },
       "deviceKey": "CCA28B400D49ABECBBA33975F7665628",
       "unicastAddress": "01FF",
-      "security": "high",
+      "security": "secure",
       "configComplete": true,
       "netKeys": [
         {
@@ -1174,7 +1174,7 @@
           ]
         }
       ],
-      "blacklisted": false
+      "excluded": false
     }
   ],
   "groups": [
@@ -1208,16 +1208,17 @@
     {
       "name": "Go to sleep",
       "addresses": [
-        "C023"
+        "0004"
       ],
       "number": "0007"
     },
     {
       "name": "Wakeup",
       "addresses": [
-        "C023"
+        "0004"
       ],
       "number": "0002"
     }
-  ]
+  ],
+  "partial": false
 }

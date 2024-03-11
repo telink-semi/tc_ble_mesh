@@ -1,11 +1,27 @@
+#########################################################################################################
+ # @file     Script.sh
+ #
+ # @brief    for TLSR chips
+ #
+ # @author   Telink, 梁家誌
+ # @date     2019/12/13
+ #
+ # @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ #
+ #          Licensed under the Apache License, Version 2.0 (the "License");
+ #          you may not use this file except in compliance with the License.
+ #          You may obtain a copy of the License at
+ #
+ #              http://www.apache.org/licenses/LICENSE-2.0
+ #
+ #          Unless required by applicable law or agreed to in writing, software
+ #          distributed under the License is distributed on an "AS IS" BASIS,
+ #          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ #          See the License for the specific language governing permissions and
+ #          limitations under the License.
+########################################################################################################
+
 #!/bin/sh
-
-#  Script.sh
-#  SigMeshOC
-#
-#  Created by 梁家誌 on 2019/12/13.
-#  Copyright © 2019 梁家誌. All rights reserved.
-
 
 #注意：脚本目录和xxxx.xcodeproj要在同一个目录，如果放到其他目录，请自行修改脚本。
 #注意：当前脚本默认release基础版本的库，如果要release源码扩展版本的库，需要添加Extensions文件及其文件，target_Name=TelinkSigMeshLib修改为target_Name=TelinkSigMeshLibExtensions。

@@ -3,35 +3,43 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/1/24
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ShareOutVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/1/24.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ShareOutVC.h"
+#import <Reachability/Reachability.h>
+#import "UIButton+extension.h"
 #import "UIViewController+Message.h"
+#import "ShareNetKeyCell.h"
+#import "ShowQRCodeViewController.h"
+#import "ShareTipsVC.h"
+#import "CDTPExportVC.h"
+#import "CDTPServiceListVC.h"
 
-@interface ShareOutVC ()
-@property (weak, nonatomic) IBOutlet UITextView *outTipTextView;
+@interface ShareOutVC ()<UITableViewDelegate,UITableViewDataSource>
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UIButton *selectCDTPToOtherPhoneButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectCDTPToGatewayButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeAndCloudButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectJsonFileButton;
+@property (weak, nonatomic) IBOutlet UIButton *exportButton;
+@property (nonatomic, strong) NSMutableArray <SigNetkeyModel *>*sourceArray;
+@property (nonatomic, strong) NSMutableArray <SigNetkeyModel *>*selectArray;
 
 @end
 
@@ -39,12 +47,178 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self setTitle:@"Share Export" subTitle:self.network.meshName];
     // Do any additional setup after loading the view.
-    
-    self.outTipTextView.text = @"Export JSON:\n\n1. Click EXPORT button to create a new json file.\n2. Iphone connect to computer that install iTunes.\n3. Click on the iTunes phone icon in the upper left corner of iTunes into the iphone interface.\n4. Select \"file sharing\" in the left of the iTunes, then find and click on the demo APP in the application of \"TelinkSigMesh\", wait for iTunes load file.\n5. After file is loaded, found file \"mesh-.json\"in the \"TelinkSigMesh\".You just must to drag the file to your computer.\n\n导出JSON数据操作，步骤如下：\n\n1. 点击APP的EXPORT按钮，生成新的json文件。\n2. 将手机连接到安装了iTunes的电脑上。\n3. 点击iTunes左上角的手机图标进入iTunes设备详情界面。\n4. 选择iTunes左侧的“文件共享”，然后在应用中找到并点击demo APP “TelinkSigMesh”，等待iTunes加载文件。\n5. 文件加载完成后，在“TelinkSigMesh”的文稿中找到mesh的分享数据文件“mesh-.json”，把该文件拖到电脑即可。";
+    // 由于mesh v1.1并未release CDTP功能，暂时屏蔽CDTP功能。
+    self.selectCDTPToOtherPhoneButton.selected = NO;
+    self.selectCDTPToGatewayButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
+    self.selectJsonFileButton.selected = NO;
+    self.exportButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.sourceArray = [NSMutableArray arrayWithArray:self.network.netKeys];
+    self.selectArray = [NSMutableArray arrayWithObject:self.network.curNetkeyModel];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(ShareNetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(ShareNetKeyCell.class)];
+}
+
+- (IBAction)clickSelectCDTPExportToOtherPhoneButton:(UIButton *)sender {
+    self.selectCDTPToOtherPhoneButton.selected = YES;
+    self.selectCDTPToGatewayButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectCDTPExportToGatewayButton:(UIButton *)sender {
+    self.selectCDTPToOtherPhoneButton.selected = NO;
+    self.selectCDTPToGatewayButton.selected = YES;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectQRCodeAndCloudButton:(UIButton *)sender {
+    self.selectCDTPToOtherPhoneButton.selected = NO;
+    self.selectCDTPToGatewayButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = YES;
+    self.selectJsonFileButton.selected = NO;
+}
+
+- (IBAction)clickSelectJsonFileButton:(UIButton *)sender {
+    self.selectCDTPToOtherPhoneButton.selected = NO;
+    self.selectCDTPToGatewayButton.selected = NO;
+    self.selectQRCodeAndCloudButton.selected = NO;
+    self.selectJsonFileButton.selected = YES;
+}
+
+- (IBAction)clickCDTPExportToOtherPhoneTipsButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_CDTPExportToOtherPhone;
+    vc.tipsMessage = TipsMessage_QRCodeAndCDTPTransferJSONToOtherPhone;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickCDTPExportToGatewayTipsButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_CDTPExportToGateway;
+    vc.tipsMessage = TipsMessage_QRCodeAndCDTPTransferJSONToGateway;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickCloudTransferJsonButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_QRCodeAndCloudTransferJSON;
+    vc.tipsMessage = TipsMessage_QRCodeAndCloudTransferJSON;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickJsonFileButton:(UIButton *)sender {
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
+    vc.title = TipsTitle_JSONFile;
+    vc.tipsMessage = TipsMessage_JSONFile;
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (IBAction)clickExportButton:(UIButton *)sender {
+    if (self.network.curNodes.count == 0) {
+        [self showTips:@"not allow to share empty network!"];
+        return;
+    }
+    if (self.selectArray.count == 0) {
+        [self showTips:@"Please select at least one network key!"];
+        return;
+    }
+
+    //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
+    SigDataSource *exportDS = [[SigDataSource alloc] init];
+    [exportDS setDictionaryToDataSource:self.network.getFormatDictionaryFromDataSource];
+    exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
+    NSMutableArray *netkeyIndexes = [NSMutableArray array];
+    for (SigNetkeyModel *model in exportDS.netKeys) {
+        [netkeyIndexes addObject:@(model.index)];
+    }
+    NSMutableArray *apps = [NSMutableArray array];
+    for (SigAppkeyModel *model in self.network.appKeys) {
+        if ([netkeyIndexes containsObject:@(model.boundNetKey)]) {
+            [apps addObject:model];
+        }
+    }
+    exportDS.appKeys = [NSMutableArray arrayWithArray:apps];
+
+    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getFormatDictionaryFromDataSource]];
+    //3.3.2新增逻辑：未定义subnet bridge的key，暂时不分享subnet bridge相关内容。
+    if ([exportDict.allKeys containsObject:@"nodes"]) {
+        NSArray *nodeList = exportDict[@"nodes"];
+        NSMutableArray *newNodes = [NSMutableArray array];
+        if (nodeList && nodeList.count) {
+            for (NSDictionary *dic in nodeList) {
+                NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dic];
+                if ([mDict.allKeys containsObject:@"subnetBridgeList"]) {
+                    [mDict removeObjectForKey:@"subnetBridgeList"];
+                }
+                if ([mDict.allKeys containsObject:@"subnetBridgeEnable"]) {
+                    [mDict removeObjectForKey:@"subnetBridgeEnable"];
+                }
+                [newNodes addObject:mDict];
+            }
+            exportDict[@"nodes"] = newNodes;
+        }
+    }
+
+    if (self.selectCDTPToOtherPhoneButton.selected) {
+        [self exporyMeshByCDTPWithDictionary:exportDict isExportToGateway:NO];
+    } else if (self.selectCDTPToGatewayButton.selected) {
+        [self exporyMeshByCDTPWithDictionary:exportDict isExportToGateway:YES];
+    } else if (self.selectQRCodeAndCloudButton.selected) {
+        [self exporyMeshByQRCodeAndCloudWithDictionary:exportDict];
+    } else if (self.selectJsonFileButton.selected) {
+        [self exporyMeshByJsonFileWithDictionary:exportDict];
+    }
+}
+
+- (void)exporyMeshByCDTPWithDictionary:(NSDictionary *)dictionary isExportToGateway:(BOOL)isExportToGateway {
+    ObjectModel *object = [[ObjectModel alloc] initWithMeshDictionary:dictionary];
+    if (isExportToGateway) {
+        CDTPServiceListVC *vc = (CDTPServiceListVC *)[UIStoryboard initVC:ViewControllerIdentifiers_CDTPServiceListVCID storyboard:@"Setting"];
+        vc.meshObject = object;
+        vc.isExportToGateway = YES;
+        [self.navigationController pushViewController:vc animated:YES];
+    } else {
+        CDTPExportVC *vc = (CDTPExportVC *)[UIStoryboard initVC:ViewControllerIdentifiers_CDTPExportVCID storyboard:@"Setting"];
+        vc.meshDictionary = dictionary;
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+}
+
+- (void)exporyMeshByQRCodeAndCloudWithDictionary:(NSDictionary *)dictionary {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+
+    __weak typeof(self) weakSelf = self;
+    //设置有效时间5分钟
+    [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (err) {
+                NSString *errstr = [NSString stringWithFormat:@"%@",err];
+                TelinkLogInfo(@"%@",errstr);
+                [weakSelf showTips:errstr];
+            } else {
+                TelinkLogInfo(@"result=%@",result);
+                NSDictionary *dic = (NSDictionary *)result;
+                BOOL isSuccess = [dic[@"isSuccess"] boolValue];
+                if (isSuccess) {
+                    [weakSelf pushToShowQRCodeVCWithUUID:dic[@"data"]];
+                }else{
+                    [weakSelf showTips:dic[@"msg"]];
+                }
+            }
+        });
+    }];
+}
+
+- (void)exporyMeshByJsonFileWithDictionary:(NSDictionary *)dictionary {
     //导出json文件名为“mesh-时间.json”
     NSDate *date = [NSDate date];
     NSDateFormatter *f = [[NSDateFormatter alloc] init];
@@ -52,7 +226,7 @@
     f.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];
     NSString *dstr = [f stringFromDate:date];
     NSString *jsonName = [NSString stringWithFormat:@"mesh-%@.json",dstr];
-    
+
     NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:jsonName];
 
     NSFileManager *manager = [[NSFileManager alloc] init];
@@ -60,43 +234,65 @@
     if (!exist) {
         BOOL ret = [manager createFileAtPath:path contents:nil attributes:nil];
         if (ret) {
-            NSDictionary *jsonDict = [SigDataSource.share getFormatDictionaryFromDataSource];
-            NSData *tempData = [LibTools getJSONDataWithDictionary:jsonDict];
-//            NSData *tempData = [SigDataSource.share.getJsonStringFromeDataSource dataUsingEncoding:NSUTF8StringEncoding];
+            NSData *tempData = [LibTools getJSONDataWithDictionary:dictionary];
             NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];
             [handle truncateFileAtOffset:0];
             [handle writeData:tempData];
             [handle closeFile];
-            
+
             NSString *tipString = [NSString stringWithFormat:@"export %@ success!",jsonName];
             [self showTips:tipString];
-            TeLogDebug(@"%@",tipString);
+            TelinkLogDebug(@"%@",tipString);
         } else {
             NSString *tipString = [NSString stringWithFormat:@"export %@ fail!",jsonName];
             [self showTips:tipString];
-            TeLogDebug(@"%@",tipString);
+            TelinkLogDebug(@"%@",tipString);
         }
     }
 }
 
-- (void)showTips:(NSString *)message{
+- (void)pushToShowQRCodeVCWithUUID:(NSString *)uuid {
+    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storyboard:@"Setting"];
+    vc.uuidString = uuid;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return self.sourceArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    ShareNetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(ShareNetKeyCell.class) forIndexPath:indexPath];
+    SigNetkeyModel *model = self.sourceArray[indexPath.row];
+    [cell setModel:model];
+    cell.selectButton.selected = [self.selectArray containsObject:model];
     __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-            
-        }];
-    });
+    [cell.selectButton addAction:^(UIButton *button) {
+        if ([weakSelf.selectArray containsObject:model]) {
+            [weakSelf.selectArray removeObject:model];
+        } else {
+            [weakSelf.selectArray addObject:model];
+        }
+        [weakSelf.tableView reloadData];
+    }];
+    return cell;
 }
 
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+    SigNetkeyModel *model = self.sourceArray[indexPath.row];
+    if ([self.selectArray containsObject:model]) {
+        [self.selectArray removeObject:model];
+    } else {
+        [self.selectArray addObject:model];
+    }
+    [self.tableView reloadData];
 }
-*/
+
+-(void)dealloc{
+    TelinkLogDebug(@"");
+}
 
 @end

@@ -1,62 +1,137 @@
 /********************************************************************************************************
- * @file     MeshUpdatingDevice.java 
+ * @file MeshUpdatingDevice.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
+
+import java.io.Serializable;
+
 /**
- * Mesh firmware updating device
- * Created by kee on 2019/10/10.
+ * This class represents a device that is capable of updating a mesh network.
+ * It implements the Serializable, Parcelable, and Cloneable interfaces.
  */
-public class MeshUpdatingDevice implements Parcelable {
+public class MeshUpdatingDevice implements Serializable, Parcelable, Cloneable {
 
     public static final int STATE_INITIAL = 0;
+
     public static final int STATE_SUCCESS = 1;
+
     public static final int STATE_FAIL = 2;
+
+    public static final int STATE_METADATA_RSP = 3;
+
+    /**
+     * firmware info updated
+     */
+//    public static final int STATE_FW_UPDATE = 3;
 
     /**
      * unicast address
      */
-    private int meshAddress;
+    public int meshAddress;
 
     /**
      * element address at updating model
      *
      * @see com.telink.ble.mesh.core.message.MeshSigModel#SIG_MD_OBJ_TRANSFER_S
      */
-    private int updatingEleAddress;
+    public int updatingEleAddress;
 
-    private int state = STATE_INITIAL;
+    public int state = STATE_INITIAL;
 
+    public String pidInfo;
+
+    /**
+     * latest firmware id
+     */
+    public byte[] firmwareId;
+
+    /**
+     * AdditionalInformation in metadata
+     */
+    public AdditionalInformation additionalInformation = null;
+
+    /**
+     * is low power node
+     */
+    public int pid = 0;
+
+    // version id
+    public int vid = 0;
+
+    /**
+     * contains firmware update models
+     * and
+     * device is online
+     */
+    public boolean isSupported = false;
+
+    public boolean isOnline = false;
+
+    /**
+     * Indicates if the device is selected.
+     */
+    public boolean selected = false;
+
+    /**
+     * Indicates if the device is a low power node.
+     */
+    public boolean isLpn = false;
+
+    public boolean isSensor = false;
+
+
+    public boolean needUpdate = false;
+    /**
+     * Default constructor for the MeshUpdatingDevice class.
+     */
     public MeshUpdatingDevice() {
     }
 
+    /**
+     * Constructor for the MeshUpdatingDevice class.
+     *
+     * @param in The parcel to read from.
+     */
     protected MeshUpdatingDevice(Parcel in) {
         meshAddress = in.readInt();
         updatingEleAddress = in.readInt();
         state = in.readInt();
+        pidInfo = in.readString();
+        firmwareId = in.createByteArray();
+        pid = in.readInt();
+        isSupported = in.readByte() != 0;
+        isOnline = in.readByte() != 0;
+        selected = in.readByte() != 0;
+        isLpn = in.readByte() != 0;
     }
 
+    /**
+     * Creator for the MeshUpdatingDevice class.
+     */
     public static final Creator<MeshUpdatingDevice> CREATOR = new Creator<MeshUpdatingDevice>() {
         @Override
         public MeshUpdatingDevice createFromParcel(Parcel in) {
@@ -69,28 +144,23 @@ public class MeshUpdatingDevice implements Parcelable {
         }
     };
 
-    public int getMeshAddress() {
-        return meshAddress;
-    }
-
-    public void setMeshAddress(int meshAddress) {
-        this.meshAddress = meshAddress;
-    }
-
-    public int getUpdatingEleAddress() {
-        return updatingEleAddress;
-    }
-
-    public void setUpdatingEleAddress(int updatingEleAddress) {
-        this.updatingEleAddress = updatingEleAddress;
-    }
-
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
+    /**
+     * Gets the description of the device's state.
+     *
+     * @return The description of the device's state.
+     */
+    public String getStateDesc() {
+        switch (state) {
+            case STATE_INITIAL:
+                return "INIT";
+            case STATE_FAIL:
+                return "Update Fail";
+            case STATE_SUCCESS:
+                return "Update Success";
+            case STATE_METADATA_RSP:
+                return "Metadata RSP";
+        }
+        return "";
     }
 
     @Override
@@ -103,5 +173,17 @@ public class MeshUpdatingDevice implements Parcelable {
         dest.writeInt(meshAddress);
         dest.writeInt(updatingEleAddress);
         dest.writeInt(state);
+        dest.writeString(pidInfo);
+        dest.writeByteArray(firmwareId);
+        dest.writeInt(pid);
+        dest.writeByte((byte) (isSupported ? 1 : 0));
+        dest.writeByte((byte) (isOnline ? 1 : 0));
+        dest.writeByte((byte) (selected ? 1 : 0));
+        dest.writeByte((byte) (isLpn ? 1 : 0));
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

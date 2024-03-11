@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     NotificationMessage.java 
+ * @file NotificationMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
@@ -25,7 +26,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * NotificationMessage is used to notify mesh status changed
+ * The NotificationMessage class is used to notify changes in the mesh status.
+ * <p>
+ * It contains information such as the source, destination, opcode, and raw parameters data.
+ * The statusMessage field stores the parsed message based on the opcode and parameters.
+ * If the opcode is registered in the MeshStatus.Container class, the statusMessage will be populated.
+ * Otherwise, it will be null.
+ * <p>
+ * This class implements the Parcelable interface to allow for easy serialization and deserialization.
  * <p>
  * Created by kee on 2019/9/3.
  */
@@ -43,6 +51,14 @@ public class NotificationMessage implements Parcelable {
      */
     private StatusMessage statusMessage;
 
+    /**
+     * Constructs a new NotificationMessage with the specified source, destination, opcode, and parameters.
+     *
+     * @param src    the source of the message
+     * @param dst    the destination of the message
+     * @param opcode the opcode of the message
+     * @param params the raw parameters data of the message
+     */
     public NotificationMessage(int src, int dst, int opcode, byte[] params) {
         this.src = src;
         this.dst = dst;
@@ -55,7 +71,11 @@ public class NotificationMessage implements Parcelable {
         this.statusMessage = StatusMessage.createByAccessMessage(opcode, params);
     }
 
-
+    /**
+     * Constructs a new NotificationMessage by deserializing it from a Parcel.
+     *
+     * @param in the Parcel to read from
+     */
     protected NotificationMessage(Parcel in) {
         src = in.readInt();
         dst = in.readInt();
@@ -64,6 +84,9 @@ public class NotificationMessage implements Parcelable {
         statusMessage = in.readParcelable(StatusMessage.class.getClassLoader());
     }
 
+    /**
+     * A Creator object that is used to create instances of NotificationMessage from a Parcel.
+     */
     public static final Creator<NotificationMessage> CREATOR = new Creator<NotificationMessage>() {
         @Override
         public NotificationMessage createFromParcel(Parcel in) {
@@ -76,11 +99,23 @@ public class NotificationMessage implements Parcelable {
         }
     };
 
+    /**
+     * Returns a bitmask indicating the set of special object types
+     * marshaled by this Parcelable object instance.
+     *
+     * @return a bitmask indicating the set of special object types
+     */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Writes the NotificationMessage object's data to the passed-in Parcel.
+     *
+     * @param dest  the Parcel to write to
+     * @param flags additional flags about how the object should be written
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(src);
@@ -90,42 +125,92 @@ public class NotificationMessage implements Parcelable {
         dest.writeParcelable(statusMessage, flags);
     }
 
+    /**
+     * Returns the source of the message.
+     *
+     * @return the source of the message
+     */
     public int getSrc() {
         return src;
     }
 
+    /**
+     * Sets the source of the message.
+     *
+     * @param src the source of the message
+     */
     public void setSrc(int src) {
         this.src = src;
     }
 
+    /**
+     * Returns the destination of the message.
+     *
+     * @return the destination of the message
+     */
     public int getDst() {
         return dst;
     }
 
+    /**
+     * Sets the destination of the message.
+     *
+     * @param dst the destination of the message
+     */
     public void setDst(int dst) {
         this.dst = dst;
     }
 
+    /**
+     * Returns the opcode of the message.
+     *
+     * @return the opcode of the message
+     */
     public int getOpcode() {
         return opcode;
     }
 
+    /**
+     * Sets the opcode of the message.
+     *
+     * @param opcode the opcode of the message
+     */
     public void setOpcode(int opcode) {
         this.opcode = opcode;
     }
 
+    /**
+     * Returns the raw parameters data of the message.
+     *
+     * @return the raw parameters data of the message
+     */
     public byte[] getParams() {
         return params;
     }
 
+    /**
+     * Sets the raw parameters data of the message.
+     *
+     * @param params the raw parameters data of the message
+     */
     public void setParams(byte[] params) {
         this.params = params;
     }
 
+    /**
+     * Returns the parsed status message based on the opcode and parameters.
+     *
+     * @return the parsed status message
+     */
     public StatusMessage getStatusMessage() {
         return statusMessage;
     }
 
+    /**
+     * Sets the parsed status message.
+     *
+     * @param statusMessage the parsed status message
+     */
     public void setStatusMessage(StatusMessage statusMessage) {
         this.statusMessage = statusMessage;
     }

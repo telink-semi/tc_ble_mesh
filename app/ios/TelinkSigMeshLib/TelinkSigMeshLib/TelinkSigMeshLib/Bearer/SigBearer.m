@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/23
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigBearer.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/23.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigBearer.h"
 #import "ProxyProtocolHandler.h"
@@ -55,8 +49,8 @@
 
 /// flag current node whether had provisioned.
 @property (nonatomic, assign) BOOL provisioned;//default is YES.
-@property (nonatomic, assign) BOOL hasScaned1828;//default is NO.
-@property (nonatomic,strong) NSMutableDictionary <CBPeripheral *,NSNumber *>*scanedPeripheralDict;
+@property (nonatomic, assign) BOOL hasScanned1828;//default is NO.
+@property (nonatomic,strong) NSMutableDictionary <CBPeripheral *,NSNumber *>*scannedPeripheralDict;
 @property (nonatomic, strong) NSThread *receiveThread;
 
 @end
@@ -65,19 +59,28 @@
 
 #pragma  mark - Computed properties
 
-+ (SigBearer *)share {
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share {
+    /// Singleton instance
     static SigBearer *shareManager = nil;
+    /// Note: The dispatch_once function can ensure that a certain piece
+    /// of code is only executed once in the entire application life cycle!
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
+        /// Initialize the Singleton configure parameters.
         shareManager = [[SigBearer alloc] init];
         shareManager.ble = [SigBluetooth share];
         shareManager.queue = [NSMutableArray array];
         shareManager.delegate = shareManager;
         shareManager.provisioned = YES;
-        shareManager.hasScaned1828 = NO;
+        shareManager.hasScanned1828 = NO;
         shareManager.isSending = NO;
         shareManager.protocolHandler = [[ProxyProtocolHandler alloc] init];
-        shareManager.scanedPeripheralDict = [[NSMutableDictionary alloc] init];
+        shareManager.scannedPeripheralDict = [[NSMutableDictionary alloc] init];
         [shareManager initThread];
     });
     return shareManager;
@@ -85,6 +88,7 @@
 
 - (void)initThread{
     _receiveThread = [[NSThread alloc] initWithTarget:self selector:@selector(startThread) object:nil];
+    _receiveThread.name = @"SigBearer Thread";
     [_receiveThread start];
 }
 
@@ -103,27 +107,27 @@
 }
 
 - (void)anasislyOnlineStatueDataFromUUID:(NSData *)data{
-    TeLogInfo(@"onlineStatus解密前=%@",[LibTools convertDataToHexStr:data]);
-    NSData *beaconKey = SigDataSource.share.curNetkeyModel.keys.beaconKey;
+    TelinkLogInfo(@"onlineStatus解密前=%@",[LibTools convertDataToHexStr:data]);
+    NSData *beaconKey = SigMeshLib.share.dataSource.curNetkeyModel.keys.beaconKey;
     NSData *outputData = [NSData dataWithData:[self decryptionOnlineStatusPacketWithInputData:data networkBeaconKey:beaconKey]];
     if (outputData == nil || outputData.length == 0) {
         return;
     }
     UInt8 *byte = (UInt8 *)outputData.bytes;
-    TeLogInfo(@"onlineStatus解密后=%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:byte length:data.length]]);
+    TelinkLogInfo(@"onlineStatus解密后=%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:byte length:data.length]]);
 
     UInt8 opcodeInt=0,statusDataLength=6,statusCount=0;
     memcpy(&opcodeInt, byte, 1);
     memcpy(&statusDataLength, byte + 1, 1);
     statusCount = (UInt8)(data.length-4-2)/statusDataLength;//减去OPCode+length+snumber+CRC
-    
+
     for (int i=0; i<statusCount; i++) {
         UInt16 address = 0;
         memcpy(&address, byte + 4 + statusDataLength*i, 2);
         if (address == 0) {
             continue;
         }
-        SigNodeModel *device = [SigDataSource.share getNodeWithAddress:address];
+        SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:address];
         if (device) {
             UInt8 stateInt=0,bright100=0,temperature100=0;
             if (statusDataLength > 2) {
@@ -189,7 +193,7 @@
     {
         if (outputByte[ivLen+len+i] != r[i])
         {
-            TeLogError(@"The packet of onlineStatus decryption fail.");
+            TelinkLogError(@"The packet of onlineStatus decryption fail.");
             return nil;//Failed
         }
     }
@@ -218,7 +222,7 @@
                 block(YES);
             }
         }else{
-            [SigBluetooth.share cancelAllConnecttionWithComplete:^{
+            [SigBluetooth.share cancelAllConnectionWithComplete:^{
                 [self blockState];
                 if (block) {
                     block(YES);
@@ -248,19 +252,19 @@
 #pragma  mark - Private
 
 - (void)blockState {
-    TeLogVerbose(@"");
     __weak typeof(self) weakSelf = self;
 //    [self.ble setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
 //        if (weakSelf.isOpened) {
 //            [weakSelf openWithResult:^(BOOL successful) {
-//                TeLogInfo(@"ble power on, open bearer %@.",successful?@"success":@"fail");
+//                TelinkLogInfo(@"ble power on, open bearer %@.",successful?@"success":@"fail");
 //            }];
 //        } else {
-//            TeLogInfo(@"ble power.");
+//            TelinkLogInfo(@"ble power.");
 //        }
 //    }];
     [self.ble setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-        [SigMeshLib.share cleanAllCommandsAndRetry];
+        SigMeshLib.share.dataSource.unicastAddressOfConnected = 0;
+        [SigMeshLib.share cleanAllCommandsAndRetryWhenMeshDisconnected];
         if ([weakSelf.dataDelegate respondsToSelector:@selector(bearer:didCloseWithError:)]) {
             [weakSelf.dataDelegate bearer:weakSelf didCloseWithError:error];
         }
@@ -273,11 +277,11 @@
     }];
     [self.ble setBluetoothDidUpdateValueForCharacteristicCallback:^(CBPeripheral *peripheral, CBCharacteristic *characteristic, NSError * _Nullable error) {
         if (![peripheral isEqual:weakSelf.peripheral]) {
-            TeLogDebug(@"value is not notify from currentPeripheral.");
+            TelinkLogDebug(@"value is not notify from currentPeripheral.");
             return;
         }
         if (!characteristic || characteristic.value.length == 0) {
-            TeLogDebug(@"value is empty.");
+            TelinkLogDebug(@"value is empty.");
             return;
         }
 
@@ -290,11 +294,11 @@
     }];
     [self.ble setBluetoothDidUpdateOnlineStatusValueCallback:^(CBPeripheral *peripheral, CBCharacteristic *characteristic, NSError * _Nullable error) {
         if (![peripheral isEqual:weakSelf.peripheral]) {
-            TeLogDebug(@"value is not notify from currentPeripheral.");
+            TelinkLogDebug(@"value is not notify from currentPeripheral.");
             return;
         }
         if (!characteristic || characteristic.value.length == 0) {
-            TeLogDebug(@"value is empty.");
+            TelinkLogDebug(@"value is empty.");
             return;
         }
         [weakSelf receiveOnlineStatueData:characteristic.value];
@@ -303,7 +307,7 @@
 
 - (void)shouldSendNextPacketData {
     if (self.queue.count == 0) {
-        TeLogDebug(@"")
+//        TelinkLogDebug(@"")
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
         });
@@ -312,7 +316,7 @@
         }
         return;
     } else {
-        TeLogDebug(@"")
+        TelinkLogDebug(@"");
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
             [self performSelector:@selector(shouldSendNextPacketData) withObject:nil afterDelay:0.5];
@@ -326,18 +330,19 @@
 
 - (void)showSendData:(NSData *)data forCharacteristic:(CBCharacteristic *)characteristic {
     if ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_In_CharacteristicsID]) {
-        TeLogInfo(@"---> to:GATT, length:%d",data.length);
-//        TeLogInfo(@"---> to:GATT, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
+//        TelinkLogInfo(@"---> to:GATT, length:%d",data.length);
+        TelinkLogInfo(@"---> to:GATT, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_In_CharacteristicsID]) {
-        TeLogInfo(@"---> to:PROXY, length:%d",data.length);
+        TelinkLogInfo(@"---> to:PROXY, length:%d",data.length);
+//        TelinkLogInfo(@"---> to:PROXY, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
-        TeLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
+        TelinkLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
-        TeLogVerbose(@"---> to:GATT-OTA, length:%d",data.length);
+        TelinkLogVerbose(@"---> to:GATT-OTA, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kMeshOTA_CharacteristicsID]) {
-        TeLogInfo(@"---> to:MESH-OTA, length:%d",data.length);
+        TelinkLogInfo(@"---> to:MESH-OTA, length:%d",data.length);
     } else {
-        TeLogInfo(@"---> to:%@, length:%d,value:%@",characteristic.UUID.UUIDString,data.length,[LibTools convertDataToHexStr:data]);
+        TelinkLogInfo(@"---> to:%@, length:%d,value:%@",characteristic.UUID.UUIDString,data.length,[LibTools convertDataToHexStr:data]);
     }
 }
 
@@ -346,46 +351,42 @@
 - (void)openWithResult:(bearerOperationResultCallback)block {
     self.bearerOpenCallback = block;
     __weak typeof(self) weakSelf = self;
-    SigNodeModel *node = [SigDataSource.share getNodeWithUUID:self.peripheral.identifier.UUIDString];
+    SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithPeripheralUUIDString:self.peripheral.identifier.UUIDString];
     if (node == nil) {
-        SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:self.peripheral.identifier.UUIDString];
-        TeLogDebug(@"start connected scanModel.macAddress=%@",scanModel.macAddress);
+        SigScanRspModel *scanModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:self.peripheral.identifier.UUIDString];
+        TelinkLogDebug(@"start connected scanModel.macAddress=%@",scanModel.macAddress);
     } else {
-        TeLogDebug(@"start connected node.macAddress=%@",node.macAddress);
+        TelinkLogDebug(@"start connected node.macAddress=%@",node.macAddress);
     }
     [self.ble connectPeripheral:self.peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-//        TeLogDebug(@"callback connected peripheral=%@,successful=%d",peripheral,successful);
         if (successful) {
             [SigBluetooth.share discoverServicesOfPeripheral:peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-//                TeLogDebug(@"callback discoverServicesOfPeripheral peripheral=%@,successful=%d",peripheral,successful);
                 if (successful) {
                     NSMutableArray *characteristics = [NSMutableArray array];
                     CBCharacteristic *gattOutCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:peripheral];
                     CBCharacteristic *proxyOutCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:peripheral];
-                    if (gattOutCharacteristic) {
+                    if (gattOutCharacteristic && (gattOutCharacteristic.properties & CBCharacteristicPropertyNotify)) {
                         [characteristics addObject:gattOutCharacteristic];
                     }
-                    if (proxyOutCharacteristic) {
+                    if (proxyOutCharacteristic && (proxyOutCharacteristic.properties & CBCharacteristicPropertyNotify)) {
                         [characteristics addObject:proxyOutCharacteristic];
                     }
-//                    TeLogDebug(@"characteristics=%@",characteristics);
-                    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-                    [oprationQueue addOperationWithBlock:^{
+                    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+                    [operationQueue addOperationWithBlock:^{
                         //这个block语句块在子线程中执行
-                        __block BOOL hasFail = NO;
+                        __block BOOL hasSuccess = NO;
                         for (CBCharacteristic *c in characteristics) {
                             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                            [SigBluetooth.share changeNotifyToState:YES Peripheral:peripheral characteristic:c timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-                                hasFail = !successful;
+                            [SigBluetooth.share changeNotifyToState:YES Peripheral:peripheral characteristic:c timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic, NSError * _Nullable error) {
+                                if (!hasSuccess) {
+                                    hasSuccess = characteristic.isNotifying;
+                                }
                                 dispatch_semaphore_signal(semaphore);
                             }];
                             //Most provide 5 seconds to change notify state.
                             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0));
-                            if (hasFail) {
-                                break;
-                            }
                         }
-                        [weakSelf openResult:!hasFail];
+                        [weakSelf openResult:hasSuccess];
                     }];
                 }else{
                     [weakSelf openResult:NO];
@@ -404,7 +405,7 @@
     self.bearerCloseCallback = block;
     __weak typeof(self) weakSelf = self;
     [self.ble cancelConnectionPeripheral:self.peripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-        TeLogVerbose(@"callback disconnected peripheral=%@,successful=%d",peripheral,successful);
+//        TelinkLogVerbose(@"callback disconnected peripheral=%@,successful=%d",peripheral,successful);
         [weakSelf closeResult:successful];
     }];
     _isOpened = NO;
@@ -431,12 +432,16 @@
         self.bearerCloseCallback(isSuccess);
 //        self.bearerCloseCallback = nil;
     }
+//    if ([self.dataDelegate respondsToSelector:@selector(bearer:didCloseWithError:)]) {
+//        NSError *error = nil;
+//        [self.dataDelegate bearer:self didCloseWithError:error];
+//    }
 }
 
 - (void)connectAndReadServicesWithPeripheral:(CBPeripheral *)peripheral result:(bearerOperationResultCallback)result {
     __weak typeof(self) weakSelf = self;
     if ([self.getCurrentPeripheral.identifier.UUIDString isEqualToString:peripheral.identifier.UUIDString] && peripheral.state == CBPeripheralStateConnected) {
-        TeLogVerbose(@"peripheral.state = CBPeripheralStateConnected.");
+        TelinkLogVerbose(@"peripheral.state = CBPeripheralStateConnected.");
         if (result) {
             result(YES);
         }
@@ -478,14 +483,14 @@
 
 - (void)sentPcakets:(NSArray <NSData *>*)packets toCharacteristic:(CBCharacteristic *)characteristic type:(CBCharacteristicWriteType)type {
     if (packets == nil || packets.count == 0) {
-        TeLogError(@"current packets is empty.");
+        TelinkLogError(@"current packets is empty.");
         if (self.sendPacketFinishBlock) {
             self.sendPacketFinishBlock();
         }
         return;
     }
     if (characteristic == nil) {
-        TeLogError(@"current characteristic is empty.");
+        TelinkLogError(@"current characteristic is empty.");
         if (self.sendPacketFinishBlock) {
             self.sendPacketFinishBlock();
         }
@@ -498,7 +503,7 @@
             BOOL queueWasEmpty = _queue.count == 0;
             [_queue addObjectsFromArray:packets];
             self.characteristic = characteristic;
-            
+
             // Don't look at `basePeripheral.canSendWriteWithoutResponse`. If often returns `false` even when nothing was sent before and no callback is called afterwards. Just assume, that the first packet can always be sent.
             if (queueWasEmpty) {
                 NSData *packet = _queue.firstObject;
@@ -527,19 +532,15 @@
 }
 
 - (void)sendBlePdu:(SigPdu *)pdu ofType:(SigPduType)type {
-    if (![self isOpen]) {
-        TeLogError(@"current bearer is not in notitying.");
-        return;
-    }
     if (!pdu || !pdu.pduData || pdu.pduData.length == 0) {
-        TeLogError(@"current data is empty.");
+        TelinkLogError(@"current data is empty.");
         return;
     }
-    
+
     NSInteger mtu = [self.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
 //    NSInteger mtu = 20;
     NSArray *packets = [self.protocolHandler segmentWithData:pdu.pduData messageType:type mtu:mtu];
-//    TeLogVerbose(@"pdu.pduData.length=%d,sentPcakets:%@",pdu.pduData.length,packets);
+//    TelinkLogVerbose(@"pdu.pduData.length=%d,sentPcakets:%@",pdu.pduData.length,packets);
 
     CBCharacteristic *c = nil;
     if (type == SigPduType_provisioningPdu) {
@@ -552,6 +553,10 @@
     //写法2.等待所有压包都发送完成
     self.isSending = YES;
     for (NSData *pack in packets) {
+        if (c == nil) {
+            TelinkLogError(@"current characteristic is empty, needn`t send packet!");
+            break;
+        }
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [self sentPcakets:@[pack] toCharacteristic:c type:CBCharacteristicWriteWithoutResponse complete:^{
             dispatch_semaphore_signal(semaphore);
@@ -578,20 +583,32 @@
 }
 
 #pragma  mark - delegate
+
+/// Callback called when a packet has been received using the SigBearer. Data longer than MTU will automatically be reassembled using the bearer protocol if bearer implements segmentation.
+/// @param bearer The SigBearer on which the data were received.
+/// @param data The data received.
+/// @param type The type of the received data.
 - (void)bearer:(SigBearer *)bearer didDeliverData:(NSData *)data ofType:(SigPduType)type {
     if (type == SigPduType_provisioningPdu) {
-        // Try parsing the response.
-        SigProvisioningResponse *response = [[SigProvisioningResponse alloc] initWithData:data];
-        if (!response) {
-            TeLogDebug(@"parsing the response fail.");
+        if (data.length < 1) {
             return;
         }
-        if (!response.isValid) {
-            TeLogDebug(@"the response is not valid.");
+        UInt8 type = 0;
+        memcpy(&type, data.bytes, 1);
+        Class MessageType = [SigProvisioningPdu getProvisioningPduClassWithProvisioningPduType:type];
+        if (MessageType != nil) {
+            SigProvisioningPdu *msg = [[MessageType alloc] initWithParameters:data];
+            if (msg) {
+                if (SigProvisioningManager.share.provisionResponseBlock) {
+                    SigProvisioningManager.share.provisionResponseBlock(msg);
+                }
+            } else {
+                TelinkLogDebug(@"the response is not valid.");
+                return;
+            }
+        } else {
+            TelinkLogDebug(@"parsing the response fail.");
             return;
-        }
-        if (SigProvisioningManager.share.provisionResponseBlock) {
-            SigProvisioningManager.share.provisionResponseBlock(response);
         }
     }else{
         [SigMeshLib.share bearerDidDeliverData:data type:type];
@@ -600,38 +617,46 @@
 
 #pragma  mark - auto reconnect
 
-/// 开始连接SigDataSource这个单例的mesh网络。
+/**
+ * @brief   Start connecting to the single column mesh network of SigDataSource.
+ * @param   complete callback of connect mesh complete.
+ * @note    Internally, it will retry every 10 seconds until the connection is successful or the 'stopMeshConnectWithComplete' call is made to stop the connection:`
+ */
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {
     if (complete) {
         self.startMeshConnectCallback = complete;
     }
     self.isAutoReconnect = YES;
-    if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigDataSource.share existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString]) {
+    if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigMeshLib.share.dataSource existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString]) {
         [self startMeshConnectSuccess];
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
             [self performSelector:@selector(meshConnectTimeout) withObject:nil afterDelay:kStartMeshConnectTimeout];
         });
-        self.hasScaned1828 = NO;
+        self.hasScanned1828 = NO;
         __weak typeof(self) weakSelf = self;
-        [SigBluetooth.share cancelAllConnecttionWithComplete:^{
+        [SigBluetooth.share cancelAllConnectionWithComplete:^{
             [weakSelf startScanMeshNode];
         }];
     }
 }
 
-/// 断开一个mesh网络的连接，切换不同的mesh网络时使用。
+/**
+ * @brief   Disconnect mesh connect.
+ * @param   complete callback of connect mesh complete.
+ * @note    It will use in switch mesh network.
+ */
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete {
     self.isAutoReconnect = NO;
     self.stopMeshConnectCallback = complete;
     [SigBluetooth.share stopScan];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHightestPeripheral) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHeightestPeripheral) object:nil];
     });
     __weak typeof(self) weakSelf = self;
-    [SigBluetooth.share cancelAllConnecttionWithComplete:^{
+    [SigBluetooth.share cancelAllConnectionWithComplete:^{
         if (weakSelf.stopMeshConnectCallback) {
             weakSelf.stopMeshConnectCallback(YES);
         }
@@ -640,12 +665,12 @@
 
 - (void)startScanMeshNode {
     __weak typeof(self) weakSelf = self;
-    self.scanedPeripheralDict = [[NSMutableDictionary alloc] init];
+    self.scannedPeripheralDict = [[NSMutableDictionary alloc] init];
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if (!unprovisioned) {
             [weakSelf savePeripheralToLocal:peripheral rssi:RSSI];
-            if (RSSI.intValue >= -50) {
-                [weakSelf connectRssiHighterPeripheral:peripheral];
+            if (RSSI.intValue >= -70) {
+                [weakSelf connectRssiHeighterPeripheral:peripheral];
             }else{
                 [weakSelf scanProvisionedDevicesSuccess];
             }
@@ -654,32 +679,36 @@
 }
 
 - (void)savePeripheralToLocal:(CBPeripheral *)tempPeripheral rssi:(NSNumber *)rssi{
-    self.scanedPeripheralDict[tempPeripheral] = rssi;
+    self.scannedPeripheralDict[tempPeripheral] = rssi;
 }
 
 - (void)scanProvisionedDevicesSuccess {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
-        if (!self.hasScaned1828) {
-            self.hasScaned1828 = YES;
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHightestPeripheral) object:nil];
-            [self performSelector:@selector(connectRssiHightestPeripheral) withObject:nil afterDelay:1.0];
+        if (!self.hasScanned1828) {
+            self.hasScanned1828 = YES;
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHeightestPeripheral) object:nil];
+            [self performSelector:@selector(connectRssiHeightestPeripheral) withObject:nil afterDelay:1.0];
         }
     });
 }
 
 - (void)meshConnectTimeout {
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
     __weak typeof(self) weakSelf = self;
-    [self stopMeshConnectWithComplete:^(BOOL successful) {
+    if (self.isAutoReconnect) {
         [weakSelf startMeshConnectFail];
-    }];
+    } else {
+        [self stopMeshConnectWithComplete:^(BOOL successful) {
+            [weakSelf startMeshConnectFail];
+        }];
+    }
 }
 
 - (void)startAutoConnect {
-    TeLogInfo(@"startAutoConnect");
+    TelinkLogInfo(@"startAutoConnect");
     [self stopAutoConnect];
-    if (SigDataSource.share.curNodes.count > 0) {
+    if (SigMeshLib.share.dataSource.curNodes.count > 0) {
         [self startMeshConnectWithComplete:self.startMeshConnectCallback];
     }
 }
@@ -692,37 +721,37 @@
 }
 
 /// 正常扫描流程：1秒内扫描到RSSI大于“-50”的设备，直接连接。
-- (void)connectRssiHighterPeripheral:(CBPeripheral *)peripheral {
-//    TeLogInfo(@"peripheral.uuid=%@",peripheral.identifier.UUIDString);
+- (void)connectRssiHeighterPeripheral:(CBPeripheral *)peripheral {
+//    TelinkLogInfo(@"peripheral.uuid=%@",peripheral.identifier.UUIDString);
     [SigBluetooth.share stopScan];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHightestPeripheral) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHeightestPeripheral) object:nil];
     });
     [self normalConnectPeripheral:peripheral];
 }
 
 /// 正常扫描流程：扫描到第一个设备1秒后连接RSSI最大的设备
-- (void)connectRssiHightestPeripheral {
-//    TeLogInfo(@"");
+- (void)connectRssiHeightestPeripheral {
+//    TelinkLogInfo(@"");
     [SigBluetooth.share stopScan];
-    CBPeripheral *peripheral = [self getHightestRSSIPeripheral];
+    CBPeripheral *peripheral = [self getHeightestRSSIPeripheral];
     if (peripheral) {
         [self normalConnectPeripheral:peripheral];
     } else {
-        TeLogError(@"逻辑异常：SDK缓存中并未扫描到设备。");
+        TelinkLogError(@"逻辑异常：SDK缓存中并未扫描到设备。");
     }
 }
 
-- (CBPeripheral *)getHightestRSSIPeripheral {
-    if (!self.scanedPeripheralDict || self.scanedPeripheralDict.allKeys.count == 0) {
+- (CBPeripheral *)getHeightestRSSIPeripheral {
+    if (!self.scannedPeripheralDict || self.scannedPeripheralDict.allKeys.count == 0) {
         return nil;
     }
-    CBPeripheral *temP = self.scanedPeripheralDict.allKeys.firstObject;
-    int temRssi = self.scanedPeripheralDict[temP].intValue;
-    NSArray *allKeys = [NSArray arrayWithArray:self.scanedPeripheralDict.allKeys];
+    CBPeripheral *temP = self.scannedPeripheralDict.allKeys.firstObject;
+    int temRssi = self.scannedPeripheralDict[temP].intValue;
+    NSArray *allKeys = [NSArray arrayWithArray:self.scannedPeripheralDict.allKeys];
     for (CBPeripheral *tem in allKeys) {
-        int value = self.scanedPeripheralDict[tem].intValue;
+        int value = self.scannedPeripheralDict[tem].intValue;
         if (value > temRssi) {
             temRssi = value;
             temP = tem;
@@ -735,30 +764,31 @@
     __weak typeof(self) weakSelf = self;
     [self changePeripheral:peripheral result:^(BOOL successful) {
         if (successful) {
-//            TeLogDebug(@"change to uuid:%@ success.",peripheral.identifier.UUIDString);
+//            TelinkLogDebug(@"change to uuid:%@ success.",peripheral.identifier.UUIDString);
             [weakSelf openWithResult:^(BOOL successful) {
                 if (successful) {
-                    TeLogDebug(@"connected and read gatt list success.");
+                    TelinkLogDebug(@"connected and read gatt list success.");
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-                            TeLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
-                            [weakSelf startMeshConnectSuccess];
+                        [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
                         } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                             if (error) {
-                                TeLogDebug(@"set filter:%@ fail.",peripheral.identifier.UUIDString);
+                                TelinkLogDebug(@"set filter:%@ fail.",peripheral.identifier.UUIDString);
                                 [weakSelf startMeshConnectFail];
         //                        [weakSelf startAutoConnect];
+                            } else {
+                                TelinkLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
+                                [weakSelf startMeshConnectSuccess];
                             }
                         }];
                     });
                 } else {
-                    TeLogDebug(@"read gatt list:%@ fail.",peripheral.identifier.UUIDString);
+                    TelinkLogDebug(@"read gatt list:%@ fail.",peripheral.identifier.UUIDString);
                     [weakSelf startMeshConnectFail];
 //                        [weakSelf startAutoConnect];
                 }
             }];
         } else {
-//            TeLogDebug(@"change to uuid:%@ fail.",peripheral.identifier.UUIDString);
+//            TelinkLogDebug(@"change to uuid:%@ fail.",peripheral.identifier.UUIDString);
             [weakSelf startMeshConnectFail];
 //            [weakSelf startAutoConnect];
         }
@@ -766,7 +796,7 @@
 }
 
 - (void)startMeshConnectSuccess {
-    if (SigDataSource.share.hasNodeExistTimeModelID && SigDataSource.share.needPublishTimeModel) {
+    if (SigMeshLib.share.dataSource.hasNodeExistTimeModelID && SigMeshLib.share.dataSource.needPublishTimeModel) {
         [SDKLibCommand statusNowTime];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
@@ -792,7 +822,9 @@
 //    }
     __weak typeof(self) weakSelf = self;
     [self closeWithResult:^(BOOL successful) {
-        [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
+        if (weakSelf.isAutoReconnect) {
+            [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
+        }
     }];
 }
 

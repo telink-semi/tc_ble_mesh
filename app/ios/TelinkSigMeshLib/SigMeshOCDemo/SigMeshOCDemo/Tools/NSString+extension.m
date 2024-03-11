@@ -1,61 +1,56 @@
 /********************************************************************************************************
- * @file     NSString+extension.m 
+ * @file     NSString+extension.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/8/2
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  NSString+extension.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/8/2.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "NSString+extension.h"
+#import <CommonCrypto/CommonCrypto.h>
 
 @implementation NSString (extension)
 
 /*
  *去掉首尾空格
  */
-- (NSString *)removeHeadAndTailSpace{
+- (NSString *)removeHeadAndTailSpace {
     return [self stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
 }
 
 /*
  *去掉首尾空格 包括后面的换行 \n
  */
-- (NSString *)removeHeadAndTailSpacePro{
+- (NSString *)removeHeadAndTailSpacePro {
     return [self stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
 }
 
 /*
  *去掉所有空格
  */
-- (NSString *)removeAllSapce{
+- (NSString *)removeAllSpace {
     return [self stringByReplacingOccurrencesOfString:@" " withString:@""];
 }
 
 /*
  *去掉所有空格和最后的回车
  */
-- (NSString *)removeAllSapceAndNewlines{
+- (NSString *)removeAllSpaceAndNewlines {
     NSString *tem = [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     return [tem stringByReplacingOccurrencesOfString:@" " withString:@""];
 }
@@ -74,7 +69,7 @@
 /*
  *循环在间隔n个字符添加m个空格
  */
-- (NSString *)insertSpaceNum:(int)spaceNum charNum:(int)charNum{
+- (NSString *)insertSpaceNum:(int)spaceNum charNum:(int)charNum {
     if (charNum <= 0) {
         return @"";
     }
@@ -91,23 +86,51 @@
 }
 
 ///JSON字符串转化为字典
-+ (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString
-{
++ (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString {
     if (jsonString == nil) {
         return nil;
     }
-    
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     NSError *err;
-    NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
-                                                        options:NSJSONReadingMutableContainers
-                                                          error:&err];
-    if(err)
-    {
-        TeLogDebug(@"json解析失败：%@",err);
+    NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:&err];
+    if(err) {
+        TelinkLogDebug(@"json解析失败：%@",err);
         return nil;
     }
     return dic;
+}
+
+#pragma mark - 正则表达式相关
+
++ (BOOL)validateEmail:(NSString *)emailString {
+//    NSString *regex = @"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}";
+    NSString *regex = @"^([a-z0-9A-Z]+[-|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+    NSPredicate *pred = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", regex];
+    return [pred evaluateWithObject:emailString];
+}
+
+#pragma mark - 时间戳相关
+
++ (NSString *)getTimeStringWithTimeStamp:(NSInteger)timeStap {//1684229590952
+    NSDate *confromTimesp = [NSDate dateWithTimeIntervalSince1970:timeStap/1000];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSString *dateString = [dateFormatter stringFromDate:confromTimesp];
+    return dateString;
+}
+
+#pragma mark - sha256相关
+
+- (NSString *)sha256String {
+    const char *cString = [self cStringUsingEncoding:NSUTF8StringEncoding];
+    NSData *data = [NSData dataWithBytes:cString length:self.length];
+    uint8_t digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(data.bytes,(CC_LONG)data.length, digest);
+    NSMutableString* output = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for(int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++){
+        [output appendFormat:@"%02x", digest[i]];
+    }
+    return output;
 }
 
 @end

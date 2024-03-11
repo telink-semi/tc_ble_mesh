@@ -1,0 +1,569 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TL_MESH_DLG DIALOGEX 0, 0, 535, 286
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mesh"
+FONT 10, "System", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Week",IDC_STATIC,269,136,145,26
+    CONTROL         "On",IDC_ON,"Button",BS_AUTORADIOBUTTON | WS_GROUP,273,172,22,8
+    CONTROL         "Off",IDC_OFF,"Button",BS_AUTORADIOBUTTON,294,172,18,8
+    CONTROL         "No action",IDC_NO_ACTION,"Button",BS_AUTORADIOBUTTON,317,172,43,8
+    CONTROL         "Recall",IDC_SCENE_RECALL,"Button",BS_AUTORADIOBUTTON,359,172,31,8
+    GROUPBOX        "Mesh",IDC_STATIC,9,1,103,279
+    CONTROL         "Custom1",IDC_GRID,"MFCGridCtrl",WS_TABSTOP,9,8,99,268
+    GROUPBOX        "Group",IDC_STATIC,182,1,83,279
+    CONTROL         "Custom2",IDC_GRID_GROUP,"MFCGridCtrl",WS_TABSTOP,182,8,82,268
+    PUSHBUTTON      "Nodes",IDC_NODE,116,1,22,15
+    PUSHBUTTON      "Group_S",IDC_GROUP,116,33,36,13
+    LTEXT           "FFFF",IDC_LIGHT,119,24,19,9
+    PUSHBUTTON      "SetMac",IDC_SET_MAC,116,259,42,14,NOT WS_VISIBLE
+    EDITTEXT        IDC_EDIT_MAC,116,245,61,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    PUSHBUTTON      "Group_C",IDC_GROUP2,116,46,36,13
+    PUSHBUTTON      "GetPub_S",IDC_GET_PUB,116,85,36,13
+    EDITTEXT        IDC_PUB_ADDR,154,85,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "SecNwBc",IDC_GET_SEC_NW_BC,116,98,36,13
+    EDITTEXT        IDC_SEC_NW_BC,154,98,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "TTL",IDC_GetTTL,116,111,36,13
+    EDITTEXT        IDC_TTl_VAL,154,111,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "transmit",IDC_GET_Transimit,116,124,36,13
+    EDITTEXT        IDC_Transimit,154,124,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Relay",IDC_GET_RELAY,116,137,36,13
+    EDITTEXT        IDC_RELAY_VAL,154,137,21,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Friend",IDC_GET_FRIEND,116,150,36,13
+    EDITTEXT        IDC_FRIEND_VAL,154,150,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Proxy",IDC_GET_PROXY,116,163,36,13
+    EDITTEXT        IDC_PROXY_VAL,154,163,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Lightness",IDC_GET_LEVEL,116,176,36,13
+    EDITTEXT        IDC_LEVEL_VAL,154,176,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "C/T",IDC_GET_CT,116,189,36,13
+    EDITTEXT        IDC_CT_VAL,154,189,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "RFU",IDC_GET_PUB10,116,202,36,13
+    EDITTEXT        IDC_PUB_ADDR10,154,202,22,12,ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "GetCPS",IDC_GET_CPS,116,216,36,13
+    PUSHBUTTON      "DelNode",IDC_DEL_NODE,116,230,36,13
+    PUSHBUTTON      "GrpDelAll_S",IDC_GrpDelAll_S,116,59,42,13
+    PUSHBUTTON      "GrpDelAll_C",IDC_GrpDelAll_C,116,72,43,13
+    CONTROL         "Custom2",IDC_GRID_SHEDULE,"MFCGridCtrl",WS_TABSTOP,269,194,139,88
+    GROUPBOX        "get/set",IDC_STATIC,115,16,62,257
+    GROUPBOX        "schedule",IDC_STATIC,269,0,145,282
+    PUSHBUTTON      "set time",IDC_SET_TIME,418,35,30,16
+    PUSHBUTTON      "get time",IDC_GET_TIME,418,17,30,16
+    CONTROL         "Mon",IDC_MONDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,273,143,24,8
+    CONTROL         "Tue",IDC_TUESDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,298,143,24,8
+    CONTROL         "Wed",IDC_WEDNESDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,324,143,24,8
+    CONTROL         "Thu",IDC_THURSDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,273,151,24,8
+    CONTROL         "Fri",IDC_FRIDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,298,151,24,8
+    CONTROL         "Sat",IDC_SATURDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,324,151,24,8
+    CONTROL         "Sun",IDC_SUNDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,350,151,24,8
+    PUSHBUTTON      "set",IDC_ADD,270,181,27,13
+    GROUPBOX        "Scene",IDC_STATIC,417,57,111,222
+    PUSHBUTTON      "add",IDC_SCENE_ADD,422,67,27,15
+    PUSHBUTTON      "delete",IDC_SCENE_DEL,422,224,27,15
+    PUSHBUTTON      "recall",IDC_SCENE_LOAD,486,224,26,15
+    CONTROL         "Custom2",IDC_GRID_SCENE,"MFCGridCtrl",WS_TABSTOP,422,84,90,138
+    CONTROL         "any",IDC_ANY_YEAR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,273,15,24,8
+    CONTROL         "custom",IDC_CUSTOM_YEAR,"Button",BS_AUTORADIOBUTTON,273,23,32,8
+    GROUPBOX        "Year",IDC_STATIC,269,7,72,29
+    EDITTEXT        IDC_YEAR,308,18,28,12,ES_AUTOHSCROLL
+    GROUPBOX        "Month",IDC_STATIC,269,31,144,35
+    CONTROL         "Jan",IDC_JAN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,273,44,22,6
+    CONTROL         "Feb",IDC_FEB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,296,44,22,6
+    CONTROL         "Mar",IDC_MAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,319,44,22,6
+    CONTROL         "Apr",IDC_APR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,342,44,22,6
+    CONTROL         "May",IDC_MAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,365,44,22,6
+    CONTROL         "Jun",IDC_JUN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,388,44,22,6
+    CONTROL         "Jul",IDC_JUL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,273,53,22,6
+    CONTROL         "Aug",IDC_AUG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,296,53,22,6
+    CONTROL         "Sep",IDC_SEP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,319,53,22,6
+    CONTROL         "Oct",IDC_OCT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,342,53,22,6
+    CONTROL         "Nov",IDC_NOV,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,365,53,22,6
+    CONTROL         "Dec",IDC_DEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,388,53,22,6
+    GROUPBOX        "Day",IDC_STATIC,341,7,72,29
+    CONTROL         "any",IDC_ANY_DAY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,346,15,25,8
+    CONTROL         "custom",IDC_CUSTOM_DAY,"Button",BS_AUTORADIOBUTTON,346,23,31,10
+    EDITTEXT        IDC_EDIT_DAY,382,19,19,12,ES_AUTOHSCROLL
+    GROUPBOX        "Hour",IDC_STATIC,269,65,144,19
+    CONTROL         "any hour",IDC_ANY_HOUR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,273,72,38,10
+    CONTROL         "once a day",IDC_ONCE_DAY,"Button",BS_AUTORADIOBUTTON,315,72,51,10
+    CONTROL         "cus",IDC_CUSTOM_HOUR,"Button",BS_AUTORADIOBUTTON,368,72,22,10
+    GROUPBOX        "Minute",IDC_STATIC,269,83,67,54
+    CONTROL         "any minute",IDC_ANY_MINUTE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,273,90,44,8
+    CONTROL         "every 15 minute",IDC_EVERY_15_MIN,"Button",BS_AUTORADIOBUTTON,273,98,62,8
+    CONTROL         "every 20 minute",IDC_EVERY_20_MIN,"Button",BS_AUTORADIOBUTTON,273,106,62,8
+    CONTROL         "once an hour",IDC_ONCE_HOUR,"Button",BS_AUTORADIOBUTTON,273,114,56,8
+    CONTROL         "custom",IDC_CUSTOM_MIN,"Button",BS_AUTORADIOBUTTON,273,122,37,8
+    EDITTEXT        IDC_HOUR,390,71,19,12,ES_AUTOHSCROLL
+    LTEXT           "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ",IDC_STATIC,270,59,144,8
+    GROUPBOX        "Second",IDC_STATIC,342,83,72,54
+    CONTROL         "any second",IDC_ANY_SECOND,"Button",BS_AUTORADIOBUTTON | WS_GROUP,346,90,56,8
+    CONTROL         "every 15 second",IDC_EVERY_15_SEC,"Button",BS_AUTORADIOBUTTON,346,98,56,8
+    CONTROL         "every 20 second",IDC_EVERY_20_SEC,"Button",BS_AUTORADIOBUTTON,346,106,56,8
+    CONTROL         "once a minute",IDC_ONCE_MIN,"Button",BS_AUTORADIOBUTTON,346,114,56,8
+    CONTROL         "custom",IDC_CUSTOM_SEC,"Button",BS_AUTORADIOBUTTON,346,122,37,8
+    EDITTEXT        IDC_MINUTE,309,121,19,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SECOND,382,121,19,12,ES_AUTOHSCROLL
+    LTEXT           "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ",IDC_STATIC,272,130,144,8
+    GROUPBOX        "Action",IDC_STATIC,269,164,145,16,WS_GROUP
+    LTEXT           "==============================================================================================",IDC_STATIC,270,158,143,8
+    EDITTEXT        IDC_EDIT_RECALL,390,170,19,12,ES_AUTOHSCROLL
+    GROUPBOX        "Time",IDC_STATIC,416,7,112,49
+    LTEXT           "",IDC_currenttime,450,20,70,8
+    EDITTEXT        IDC_scenenumber,451,67,40,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_ONLINE_SEL,139,2,36,40,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROVISION DIALOGEX 0, 0, 461, 224
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "provision"
+FONT 10, "System", 0, 0, 0x0
+BEGIN
+    LTEXT           "network_key",IDC_network_key_text,14,54,42,8
+    EDITTEXT        IDC_NETWORK_KEY,67,54,187,14,ES_AUTOHSCROLL
+    LTEXT           "netkey_idx(little)",IDC_STATIC,15,74,55,8
+    EDITTEXT        IDC_KEY_INDEX,77,72,40,14,ES_AUTOHSCROLL
+    LTEXT           "iv_update_flag",IDC_STATIC,14,90,49,8
+    EDITTEXT        IDC_IV_UPDATE_FLAG,77,89,40,14,ES_AUTOHSCROLL
+    LTEXT           "iv_index(big end)",IDC_STATIC,128,75,57,8
+    EDITTEXT        IDC_IV_INDEX,187,72,60,14,ES_AUTOHSCROLL
+    LTEXT           "unicast_addr(little)",IDC_STATIC,128,92,61,8
+    EDITTEXT        IDC_UNICAST_ADR,187,89,60,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Provision",IDC_PROVISION_START,11,107,44,14
+    PUSHBUTTON      "Disconnect",IDC_PRO_DISCONNECT,11,123,43,14,NOT WS_VISIBLE
+    EDITTEXT        IDC_CMD_DAT,163,15,89,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    LTEXT           "send_cmd",IDC_CMD,120,17,39,8,NOT WS_VISIBLE
+    PUSHBUTTON      "send",IDC_START_SEND,122,32,39,14,NOT WS_VISIBLE
+    GROUPBOX        "provision",IDC_STATIC_PROVISION,8,47,249,101,NOT WS_VISIBLE
+    GROUPBOX        "test_cmd",IDC_STATIC_TEST_CMD,113,8,144,40,NOT WS_VISIBLE
+    GROUPBOX        "filter_operation",IDC_STATIC,8,148,249,70
+    COMBOBOX        IDC_COM_FILTER_TYPE,58,162,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "filter_type",IDC_STATIC,18,162,34,8
+    LTEXT           "filter_data",IDC_STATIC,113,162,34,8
+    EDITTEXT        IDC_EDIT_FILTER_DATA,154,162,53,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Add_mac",IDC_BUT_ADD_MAC,72,179,37,14
+    PUSHBUTTON      "RM_mac",IDC_BUT_RM_MAC,18,202,34,14
+    PUSHBUTTON      "SetFilter",IDC_BUT_SET_FILTER_TYPE,18,179,33,14
+    PUSHBUTTON      "SetPro_internal",IDC_SET_PRO,18,24,55,14
+    EDITTEXT        IDC_APPKEY,293,32,160,14,ES_AUTOHSCROLL
+    LTEXT           "appkey_idx(little)",IDC_STATIC,262,15,59,8
+    EDITTEXT        IDC_APPKEY_INDEX,320,15,61,14,ES_AUTOHSCROLL
+    LTEXT           "app_key",IDC_STATIC,262,34,29,12
+    GROUPBOX        "Static",IDC_STATIC,259,8,195,63
+    PUSHBUTTON      "bind_all",IDC_APPKEY_BIND_ALL,264,52,34,14
+    CONTROL         "Fast prov mode",IDC_FAST_PROV,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,6,60,12
+    COMBOBOX        IDC_RP_DKRI,143,108,58,55,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "DKRI_RP",IDC_DKRI_PROV,217,107,37,14
+    PUSHBUTTON      "candi_en",IDC_CANDI_EN,217,125,37,14
+    EDITTEXT        IDC_NODE_ADR,143,125,58,14,ES_AUTOHSCROLL
+    LTEXT           "NODE_ADR",IDC_STATIC,100,128,39,8
+END
+
+IDD_RX_TEST DIALOGEX 0, 0, 461, 302
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rx test"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "total counts",IDC_STATIC,207,24,42,11
+    EDITTEXT        IDC_TOTAL_COUNTS,250,24,42,16,ES_AUTOHSCROLL
+    CTEXT           "interval(ms)",IDC_STATIC,208,50,42,11
+    EDITTEXT        IDC_INTERVAL,249,50,42,16,ES_AUTOHSCROLL
+    PUSHBUTTON      "start",IDC_START,220,77,43,17
+    EDITTEXT        IDC_TRANSMIT_SET,47,17,41,17,ES_AUTOHSCROLL
+    PUSHBUTTON      "transmit",IDC_TRANSMIT,14,17,33,17
+    CTEXT           "Node",IDC_STATIC,14,40,32,14
+    EDITTEXT        IDC_DST_ADDR,47,40,41,17,ES_AUTOHSCROLL
+    GROUPBOX        "Set",IDC_STATIC,7,8,180,133
+    PUSHBUTTON      "result",IDC_GET_RESULT,319,13,36,17
+    EDITTEXT        IDC_RESULT,330,34,62,14,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Start",IDC_STATIC,189,8,112,136
+    GROUPBOX        "Result",IDC_STATIC,300,8,96,136
+    CONTROL         "单播(ack)",IDC_UNICAST,"Button",BS_AUTORADIOBUTTON | WS_GROUP,12,72,53,14
+    CONTROL         "广播(no_ack)",IDC_BROCAST_NOACK,"Button",BS_AUTORADIOBUTTON,12,102,53,14
+    CONTROL         "并发(ack)",IDC_BROCAST_ACK,"Button",BS_AUTORADIOBUTTON,12,116,53,14
+    CONTROL         "单播(no ack)",IDC_UNICAST_NO_ACK,"Button",BS_AUTORADIOBUTTON,12,87,53,14
+    EDITTEXT        IDC_PKT_NUMS,121,75,41,17,ES_AUTOHSCROLL
+    GROUPBOX        "发包方式",IDC_STATIC,8,61,72,76
+    EDITTEXT        IDC_NODES,134,21,41,17,ES_AUTOHSCROLL
+    LTEXT           "总节点数",IDC_STATIC,98,22,32,17
+    EDITTEXT        IDC_MAX,330,52,62,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_MIN,330,70,62,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_AVERAGE,330,88,62,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Max",IDC_STATIC,307,53,18,14
+    LTEXT           "Min",IDC_STATIC,307,70,13,14
+    LTEXT           "Average",IDC_STATIC,303,87,26,14
+    LTEXT           "note:\r\n1.测试命令接收延时:直连节点和被测节点需要同时上电.\r\n2.获取结果时，指定目标地址：若为直连节点，返回发出到收到ack的时间差；非直连节点，返回节点响应命令的延时时间.\r\n3.节点端buf只保存100条信息，并发(ack)需指定记录的node地址.\r\n4.节点地址注意不要重复.",IDC_STATIC,7,148,278,95
+    GROUPBOX        "access par len",IDC_STATIC,97,61,78,72
+    EDITTEXT        IDC_PKT_RECEIVE,121,97,41,17,ES_AUTOHSCROLL
+    LTEXT           "send",IDC_STATIC,101,79,20,11
+    LTEXT           "rsp",IDC_STATIC,101,101,16,12
+    EDITTEXT        IDC_ADDR_GET,355,13,36,17,ES_AUTOHSCROLL
+    PUSHBUTTON      "clear",IDC_BUTTON_CLEAR,305,104,24,17
+    EDITTEXT        IDC_EDIT_CLEAR,330,105,60,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_RP_SCAN_CAP DIALOGEX 0, 0, 151, 102
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "remote scan para"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,46,81,50,14
+    EDITTEXT        IDC_RP_SCAN_LIMIT,62,14,37,12,ES_AUTOHSCROLL
+    LTEXT           "limit",IDC_STATIC,34,16,18,10,0,WS_EX_RIGHT
+    EDITTEXT        IDC_RP_SCAN_TIMEOUT,62,33,37,12,ES_AUTOHSCROLL
+    LTEXT           "timeout",IDC_STATIC,28,35,28,10
+    PUSHBUTTON      "get_limit",IDC_GET_SCAN_CAP,23,58,38,13
+    EDITTEXT        IDC_RP_SCAN_CAP_ST,65,59,37,12,ES_AUTOHSCROLL | ES_READONLY
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_TL_MESH_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 528
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 279
+    END
+
+    IDD_PROVISION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 454
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 217
+    END
+
+    IDD_RX_TEST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 454
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 295
+    END
+
+    IDD_RP_SCAN_CAP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 144
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PROVISION DLGINIT
+BEGIN
+    IDC_COM_FILTER_TYPE, 0x403, 11, 0
+0x6877, 0x7469, 0x5f65, 0x696c, 0x7473, "\000" 
+    IDC_COM_FILTER_TYPE, 0x403, 11, 0
+0x6c62, 0x6361, 0x5f6b, 0x696c, 0x7473, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_RX_TEST AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROVISION AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_RP_SCAN_CAP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英语(美国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TL_BLE_MODULE_DIALOG DIALOGEX 0, 0, 672, 397
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "sig_mesh master"
+FONT 8, "Courier New", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Close",IDC_CLOSEDLG,634,377,31,14
+    PUSHBUTTON      "Clear",IDC_LOGCLEAR,366,9,25,14
+    LISTBOX         IDC_COMMAND,8,23,237,348,LBS_NOINTEGRALHEIGHT | NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_INIFILE,34,9,106,244,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LOG,249,41,422,317,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON      "INI",IDC_OPEN,143,9,31,14
+    PUSHBUTTON      "Scan",IDC_SCAN,135,377,38,14,NOT WS_VISIBLE
+    COMBOBOX        IDC_CHANNEL,149,356,62,59,CBS_DROPDOWN | NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_CONN_INTERVAL,216,354,28,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    EDITTEXT        IDC_CONN_TIMEOUT,251,354,27,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    EDITTEXT        IDC_CONN_CHNMASK,70,377,72,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    PUSHBUTTON      "Stop",IDC_STOP,176,377,38,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Save",IDC_LOGSAVE,422,9,31,14
+    PUSHBUTTON      "Save...",IDC_LOGSAVEFILE,392,9,30,14
+    CONTROL         "Log",IDC_LOGEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,237,11,24,10
+    EDITTEXT        IDC_TEXT_BO,8,24,227,324,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "BULKOUT ASCII",IDC_BULKOUT,177,9,58,14
+    CONTROL         "Hex",IDC_HEX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,454,11,24,10
+    EDITTEXT        IDC_CMDINPUT,9,374,237,17,ES_AUTOHSCROLL
+    PUSHBUTTON      "CMD",IDC_CMDSEL,8,9,22,14
+    PUSHBUTTON      "Scan",IDC_Device,524,9,20,14,NOT WS_TABSTOP
+    PUSHBUTTON      "Prov",IDC_PROVISION,603,377,31,14
+    PUSHBUTTON      "Stop",IDC_SCAN_STOP,501,9,22,14
+    PUSHBUTTON      "Mesh",IDC_MESH_DISPLAY,634,360,31,14
+    CONTROL         "Adv",IDC_ADV_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,478,11,24,10
+    PUSHBUTTON      "OTA",IDC_OTA,611,9,23,14
+    PUSHBUTTON      "Rx test",IDC_RX_TEST,634,9,30,14
+    PUSHBUTTON      "retry",IDC_SET_RETRY,342,9,24,14
+    EDITTEXT        IDC_EDIT_RETRY,319,9,22,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "USB",IDC_USB_MODE,375,376,32,14
+    PUSHBUTTON      "UART",IDC_UART_MODE,340,376,33,14
+    COMBOBOX        IDC_COMM_COMBO,288,377,47,70,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "connect",IDC_UART_CONN,375,360,32,14
+    PUSHBUTTON      "GwOtaSelf",IDC_GATEWAY_OTA,562,377,40,14
+    PUSHBUTTON      "GwMeshOta",IDC_MESH_OTA,517,377,45,14
+    PUSHBUTTON      "GwReset",IDC_GATEWAT_RESET,482,377,35,14
+    CONTROL         "fastbind",IDC_FASTBIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,251,27,48,10
+    PUSHBUTTON      "OpenFile",IDC_SEARCHFILE,585,360,48,14
+    EDITTEXT        IDC_OTA_PATH,507,360,77,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Path:",IDC_STATIC,485,363,21,8
+    PUSHBUTTON      "rp_scan",IDC_RP_SCAN,544,9,30,14
+    COMBOBOX        IDC_COMBO_ADV_CHN,288,360,47,63,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "chn_set",IDC_CHN_SET,340,360,33,14
+    PUSHBUTTON      "input_db",IDC_INPUT_DB,410,360,44,14
+    PUSHBUTTON      "output_db",IDC_OUTPUT_DB,411,377,44,14
+    CONTROL         "directed",IDC_USE_DIRECTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,244,378,44,10
+    PUSHBUTTON      "ex_scan",IDC_extend_scan,574,9,32,14
+    CONTROL         "AutoSaveLog",IDC_CHECK_AUTO_SAVE_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,11,53,10
+    LTEXT           "Extend Adv:",IDC_STATIC_EXTEND_ADV_OPTION,304,28,45,8
+    COMBOBOX        IDC_COMBO_EXTEND_ADV_OPTION,352,25,48,60,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_TL_SCAN_DLG DIALOGEX 0, 0, 388, 321
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ScanDev"
+FONT 10, "Courier New", 0, 0, 0x0
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,338,300,43,14
+    LISTBOX         IDC_SCANLIST,7,7,374,287,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Connect",IDC_CONNECT,7,300,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_TL_BLE_MODULE_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 665
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 391
+    END
+
+    IDD_TL_SCAN_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 381
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 314
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_TL_BLE_MODULE_DIALOG DLGINIT
+BEGIN
+    IDC_CHANNEL, 0x403, 10, 0
+0x3733, 0x2d20, 0x3220, 0x3034, 0x0032, 
+    IDC_CHANNEL, 0x403, 10, 0
+0x3833, 0x2d20, 0x3220, 0x3234, 0x0036, 
+    IDC_CHANNEL, 0x403, 10, 0
+0x3933, 0x2d20, 0x3220, 0x3834, 0x0030, 
+    0
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\tl_ble_module.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\tl_ble_module.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "tl_ble_module MFC Application"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "tl_ble_module"
+            VALUE "LegalCopyright", "Copyright (C) 2014"
+            VALUE "OriginalFilename", "tl_ble_module.EXE"
+            VALUE "ProductName", "tl_ble_module Application"
+            VALUE "ProductVersion", "1, 0, 0, 1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_IMAGES              BITMAP                  "res\\images.bmp"
+
+#endif    // 英语(美国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\tl_ble_module.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

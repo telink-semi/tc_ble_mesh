@@ -1,38 +1,32 @@
 /********************************************************************************************************
- * @file     DeviceGroupViewController.m 
+ * @file     DeviceGroupViewController.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/10
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  DeviceGroupViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/10.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "DeviceGroupViewController.h"
 #import "DeviceGroupListCell.h"
 
 @interface DeviceGroupViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*source;
+@property (nonatomic,strong) NSMutableArray <SigGroupModel *>*source;
 @end
 
 @implementation DeviceGroupViewController
@@ -41,24 +35,17 @@
 - (void)normalSetting{
     [super normalSetting];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-
-    self.source = [[NSMutableArray alloc] init];
-    if (self.model.getGroupIDs) {
-        NSArray *getGroupIDs = [NSArray arrayWithArray:self.model.getGroupIDs];
-        for (NSNumber *groupID in getGroupIDs) {
-            [self.source addObject:groupID];
-        }
-    }
+    self.source = [NSMutableArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
 }
 
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return SigDataSource.share.groups.count;
+    return self.source.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     DeviceGroupListCell *cell = (DeviceGroupListCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_DeviceGroupListCellID forIndexPath:indexPath];
-    SigGroupModel *gModel = SigDataSource.share.groups[indexPath.row];
+    SigGroupModel *gModel = self.source[indexPath.row];
     [cell contentWithGroupAddress:@(gModel.intAddress) groupName:gModel.name model:self.model];
     return cell;
 }
@@ -68,7 +55,7 @@
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end

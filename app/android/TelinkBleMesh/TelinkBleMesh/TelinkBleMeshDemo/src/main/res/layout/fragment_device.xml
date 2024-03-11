@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBg"
@@ -8,22 +7,12 @@
 
     <include layout="@layout/title" />
 
-    <TextView
-        android:id="@+id/tv_provision"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/main_bg_click"
-        android:gravity="center"
-        android:padding="8dp"
-        android:text="Provision"
-        android:textColor="#fff"
-        android:visibility="gone" />
-
 
     <LinearLayout
         android:id="@+id/ll_cmd"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <Button
@@ -43,6 +32,16 @@
             android:singleLine="true"
             android:text="All Off" />
 
+
+        <Button
+            android:id="@+id/btn_sns_get_all"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:lines="2"
+            android:text="@string/btn_text_sensor_get_all"
+            android:textSize="11sp" />
+
         <Button
             android:id="@+id/tv_cmd"
             android:layout_width="0dp"
@@ -50,13 +49,15 @@
             android:layout_weight="1"
             android:singleLine="true"
             android:text="CMD" />
+
         <Button
             android:id="@+id/tv_log"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:singleLine="true"
-            android:text="LOG" />
+            android:text="LOG"
+            android:visibility="gone" />
 
 
     </LinearLayout>
@@ -139,9 +140,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:visibility="gone"
-        android:text="Mesh Test" />
-
+        android:text="Mesh Test"
+        android:visibility="gone" />
 
 
 </LinearLayout>

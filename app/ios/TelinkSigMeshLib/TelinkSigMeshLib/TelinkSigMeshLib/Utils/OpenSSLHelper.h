@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     OpenSSLHelper.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  OpenSSLHelper.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/10/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     OpenSSLHelper.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/10/16
+ *
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -36,7 +30,12 @@
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
-+ (OpenSSLHelper *)share;
+/**
+ *  @brief  Singleton method
+ *
+ *  @return the default singleton instance. You are not allowed to create your own instances of this class.
+ */
++ (instancetype)share;
 
 /// Generates 128-bit random data.
 - (NSData *)generateRandom;
@@ -52,7 +51,7 @@
 /// @return The 128-bit authentication code (MAC).
 - (NSData *)calculateCMAC:(NSData *)someData andKey:(NSData *)key;
 
-/// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
+/// RFC3610 defines the AES Counted with CBC-MAC (CCM).
 /// This method generates ciphertext and MIC (Message Integrity Check).
 /// @param someData The data to be encrypted and authenticated, also known as plaintext.
 /// @param key The 128-bit key.
@@ -71,7 +70,7 @@
 /// @return Decrypted data, if decryption is successful and MIC is valid, otherwise `nil`.
 - (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad;
 
-/// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
+/// Obfuscates given data by XORing it with PECB, which is calculated by encrypting
 /// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
 /// @param data The data to obfuscate.
 /// @param privacyRandom Data used as Privacy Random.
@@ -88,6 +87,52 @@
 /// @return Deobfuscated data of the same size as input data.
 - (NSData *)deobfuscate:(NSData *)data ivIndex:(UInt32)ivIndex privacyKey:(NSData *)privacyKey;
 
+/**
+ * @brief   Calculate Authentication Tag.
+ * @param   keyRefreshFlag    Key Refresh Flag, 0: False, 1: True.
+ * @param   ivUpdateActive    IV Update Flag, 0: Normal Operation, 1: IV Update in Progress.
+ * @param   ivIndex    Current value of the IV Index of the mesh network.
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  AuthenticationTag hex data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
+- (NSData *)calculateAuthenticationTagWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+
+/**
+ * @brief   Calculate Obfuscated Private Beacon Data.
+ * @param   keyRefreshFlag    Key Refresh Flag, 0: False, 1: True.
+ * @param   ivUpdateActive    IV Update Flag, 0: Normal Operation, 1: IV Update in Progress.
+ * @param   ivIndex    Current value of the IV Index of the mesh network.
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Obfuscated Private Beacon Data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
+- (NSData *)calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+
+/**
+ * @brief   Calculate Private Beacon Data.
+ * @param   obfuscatedPrivateBeaconData    Obfuscated Private Beacon Data
+ * @param   randomData    Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Private Beacon Data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+ * 3.10.4.1.1 Private beacon security function
+ */
+- (NSData *)calculatePrivateBeaconDataWithObfuscatedPrivateBeaconData:(NSData *)obfuscatedPrivateBeaconData randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey;
+
+/**
+ * @brief   Calculate Private Beacon Key.
+ * @param   networkKey    The network key of this mesh network.
+ * @return  Private Beacon Key hex data.
+ * @note    - seeAlso: MshPRT_v1.1.pdf  (page.203)
+ * 3.9.6.3.5 PrivateBeaconKey
+ */
+- (NSData *)calculatePrivateBeaconKeyWithNetworkKey:(NSData *)networkKey;
+
 // MARK: - Helpers
 
 /// THe network key material derivation function k1 is used to generate instances of Identity Key and Beacon Key.
@@ -99,7 +144,9 @@
 /// @return 128-bit key.
 - (NSData *)calculateK1WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P;
 
-/// The network key material derivation function k2 is used to generate instances of Encryption Key, Privacy Key and NID for use as Master and Private Low Power node communication. This method returns 33 byte data.
+/// The network key material derivation function k2 is used to generate instances of Encryption Key,
+/// Privacy Key and NID for use as Master and Private Low Power node communication.
+/// This method returns 33 byte data.
 ///
 /// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
@@ -126,5 +173,31 @@
 /// @param key The 128-bit key.
 /// @return A byte array of encrypted data using the key. The size of the returned  array is equal to the size of input data.
 - (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key;
+
+/// Calculate the XOR value of two data.
+/// @param firstData first data.
+/// @param secondData second data.
+- (NSData *)calculateXORWithFirstData:(NSData *)firstData secondData:(NSData *)secondData;
+
+/// Check Certificate Hex Data
+/// check version & time & Serial Number
+///
+/// "ecdsa-with-SHA256"
+/// check certificate data and return inner public key
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @param superCerData certificate data formatted by x509 IntermediateCertificate der.
+/// @return public key.
+- (NSData *)checkCertificate:(NSData *)cerData withSuperCertificate:(NSData *)superCerData;
+
+/// Get Static OOB data from Certificate hex data
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @return Static OOB data.
+- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData;
+
+/// Verify the user certificate list using the root certificate.
+/// @param userCerDataList certificate data formatted by x509 DeviceCertificate der.
+/// @param rootCerData certificate data formatted by x509 root der.
+/// @return YES means verify success, NO means verify fail.
+- (BOOL)checkUserCertificateDataList:(NSArray <NSData *>*)userCerDataList withRootCertificate:(NSData *)rootCerData;
 
 @end

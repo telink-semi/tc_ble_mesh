@@ -1,29 +1,29 @@
 /********************************************************************************************************
- * @file     Parameters.java 
+ * @file Parameters.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.foundation.parameter;
 
 
 import com.telink.ble.mesh.core.ble.LeScanFilter;
-import com.telink.ble.mesh.util.ContextUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,9 +31,13 @@ import java.util.UUID;
 
 /**
  * Mesh action params
- * Created by kee on 2017/11/23.
+ * This is an abstract class representing an event.
+ * It implements the Parcelable interface to allow for easy serialization and deserialization.
+ * The event class is generic, allowing for different types of events to be created.
+ * The sender and type properties represent the sender object and the type of the event, respectively.
+ * The threadMode property represents the thread mode in which the event should be handled.
+ * The default thread mode is set to Default.
  */
-
 public class Parameters {
 
     /**
@@ -119,7 +123,6 @@ public class Parameters {
     public static final String ACTION_MESH_OTA_FIRMWARE = "com.telink.ble.mesh.light.ACTION_MESH_OTA_FIRMWARE";
 
 
-
     protected Map<String, Object> mParams;
 
     protected Parameters() {
@@ -137,15 +140,34 @@ public class Parameters {
         this.set(COMMON_PROXY_FILTER_INIT_NEEDED, true);
     }
 
+    /**
+     * Sets a value for the specified key.
+     *
+     * @param key   the key for the parameter
+     * @param value the value for the parameter
+     */
     protected void set(String key, Object value) {
         if (mParams != null) mParams.put(key, value);
     }
 
+    /**
+     * Retrieves the value for the specified key.
+     *
+     * @param key the key for the parameter
+     * @return the value for the parameter, or null if the key does not exist
+     */
     public Object get(String key) {
         if (mParams != null) return mParams.get(key);
         return null;
     }
 
+    /**
+     * Retrieves the boolean value for the specified key.
+     *
+     * @param key          the key for the parameter
+     * @param defaultValue the default value to return if the key does not exist
+     * @return the boolean value for the parameter, or the default value if the key does not exist
+     */
     public boolean getBool(String key, boolean defaultValue) {
         if (mParams != null && mParams.containsKey(key)) {
             return (boolean) mParams.get(key);
@@ -153,6 +175,13 @@ public class Parameters {
         return defaultValue;
     }
 
+    /**
+     * Retrieves the integer value for the specified key.
+     *
+     * @param key          the key for the parameter
+     * @param defaultValue the default value to return if the key does not exist
+     * @return the integer value for the parameter, or the default value if the key does not exist
+     */
     public int getInt(String key, int defaultValue) {
         if (mParams != null) {
             return (int) mParams.get(key);
@@ -160,6 +189,13 @@ public class Parameters {
         return defaultValue;
     }
 
+    /**
+     * Retrieves the long value for the specified key.
+     *
+     * @param key          the key for the parameter
+     * @param defaultValue the default value to return if the key does not exist
+     * @return the long value for the parameter, or the default value if the key does not exist
+     */
     public long getLong(String key, long defaultValue) {
         if (mParams != null) {
             return (long) mParams.get(key);
@@ -167,6 +203,12 @@ public class Parameters {
         return defaultValue;
     }
 
+    /**
+     * Retrieves the string value for the specified key.
+     *
+     * @param key the key for the parameter
+     * @return the string value for the parameter, or null if the key does not exist
+     */
     public String getString(String key) {
         if (mParams != null) {
             return (String) mParams.get(key);
@@ -174,6 +216,12 @@ public class Parameters {
         return null;
     }
 
+    /**
+     * Retrieves the string array value for the specified key.
+     *
+     * @param key the key for the parameter
+     * @return the string array value for the parameter, or null if the key does not exist
+     */
     public String[] getStringArray(String key) {
         if (mParams != null) {
             return (String[]) mParams.get(key);
@@ -181,6 +229,12 @@ public class Parameters {
         return null;
     }
 
+    /**
+     * Retrieves the byte array value for the specified key.
+     *
+     * @param key the key for the parameter
+     * @return the byte array value for the parameter, or null if the key does not exist
+     */
     public byte[] getByteArray(String key) {
         if (mParams != null) {
             return (byte[]) mParams.get(key);
@@ -188,42 +242,72 @@ public class Parameters {
         return null;
     }
 
-
+    /**
+     * Sets the minimum scan spacing.
+     *
+     * @param spacing the minimum scan spacing in milliseconds
+     */
     public void setScanMinSpacing(long spacing) {
         this.set(COMMON_SCAN_MIN_SPACING, spacing);
     }
 
     /**
-     * set scanning timeout
+     * Sets the scan timeout.
      *
-     * @param timeout millisecond
+     * @param timeout the scan timeout in milliseconds
      */
     public void setScanTimeout(long timeout) {
         this.set(COMMON_SCAN_TIMEOUT, timeout);
     }
 
+    /**
+     * Sets the connect timeout.
+     *
+     * @param timeout the connect timeout in milliseconds
+     */
     public void setConnectTimeout(long timeout) {
         this.set(COMMON_CONNECT_TIMEOUT, timeout);
     }
 
+    /**
+     * Sets the connect retry count.
+     *
+     * @param retry the connect retry count
+     */
     public void setConnectRetry(int retry) {
         this.set(COMMON_CONNECT_RETRY, retry);
     }
 
+    /**
+     * Sets the scan filter.
+     *
+     * @param scanFilter the scan filter to set
+     */
     public void setScanFilter(LeScanFilter scanFilter) {
         this.set(SCAN_FILTERS, scanFilter);
     }
 
+    /**
+     * Creates a scan filter with the specified UUIDs.
+     *
+     * @param uuid the UUIDs to include in the scan filter
+     * @return the created scan filter
+     */
     public LeScanFilter createScanFilter(UUID[] uuid) {
         LeScanFilter scanFilter = new LeScanFilter();
         scanFilter.uuidInclude = uuid;
         return scanFilter;
     }
 
+    /**
+     * Creates a scan filter with the specified UUID.
+     *
+     * @param uuid the UUID to include in the scan filter
+     * @return the created scan filter
+     */
     public LeScanFilter createScanFilter(UUID uuid) {
         LeScanFilter scanFilter = new LeScanFilter();
         scanFilter.uuidInclude = new UUID[]{uuid};
         return scanFilter;
     }
-
 }

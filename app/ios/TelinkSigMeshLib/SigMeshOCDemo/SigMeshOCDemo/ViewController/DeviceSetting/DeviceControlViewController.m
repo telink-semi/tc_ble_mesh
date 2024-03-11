@@ -1,31 +1,25 @@
 /********************************************************************************************************
- * @file     DeviceControlViewController.m 
+ * @file     DeviceControlViewController.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/10
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  DeviceControlViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/10.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "DeviceControlViewController.h"
 #import "ColorManager.h"
@@ -35,12 +29,16 @@
 #import "OnOffModelCell.h"
 #import "LevelAndSliderCell.h"
 #import "BaseTableView.h"
+#import "SettingTitleItemCell.h"
+#import "LightingControlVC.h"
+#import "SensorConfigVC.h"
 
 typedef enum : NSUInteger {
     ModelUITypeHSL = 0,
     ModelUITypeOnOff = 1,
     ModelUITypeLum = 2,
     ModelUITypeTemp = 3,
+    ModelUITypeLightingControl = 4,
 } ModelUIType;
 
 @interface ModelType : NSObject
@@ -56,12 +54,10 @@ typedef enum : NSUInteger {
 @property (assign, nonatomic) BOOL hadChangeBrightness;
 @property (assign, nonatomic) BOOL hasNextBrightness;
 @property (assign, nonatomic) UInt8 nextBrightness;
-@property (assign, nonatomic) BOOL hadChangeTempareture;
-@property (assign, nonatomic) BOOL hasNextTempareture;
-@property (assign, nonatomic) UInt8 nextTempareture;
+@property (assign, nonatomic) BOOL hadChangeTemperature;
+@property (assign, nonatomic) BOOL hasNextTemperature;
+@property (assign, nonatomic) UInt8 nextTemperature;
 @property (strong, nonatomic) ColorModelCell *colorModelCell;
-
-
 
 @property (strong, nonatomic) NSMutableArray <NSNumber *>*onoffStateSource;
 @property (strong, nonatomic) NSMutableArray <ModelType *>*dataSource;
@@ -78,30 +74,42 @@ typedef enum : NSUInteger {
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    
+
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;
     self.nextBrightness = 0;
-    self.hadChangeTempareture = NO;
-    self.hasNextTempareture = NO;
-    self.nextTempareture = 0;
-    
-    
-    
-    
+    self.hadChangeTemperature = NO;
+    self.hasNextTemperature = NO;
+    self.nextTemperature = 0;
+
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.tableView.allowsSelection = NO;
+//    self.tableView.allowsSelection = NO;
     self.tableView.baseTableViewDelegate = self;
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
+
     self.dataSource = [NSMutableArray array];
     if (self.model.HSLAddresses.count > 0) {
-        self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+        self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
 
         ModelType *type = [[ModelType alloc] init];
         type.uiType = ModelUITypeHSL;
         type.addresses = [NSMutableArray arrayWithArray:self.model.HSLAddresses];
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ColorModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ColorModelCellID];
+    }
+    if (self.model.isSensor) {
+        if ([self.model getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]]) {
+            ModelType *type = [[ModelType alloc] init];
+            type.uiType = ModelUITypeLightingControl;
+            [self.dataSource addObject:type];
+        }
+    } else {
+        if ([self.model getElementModelWithModelIds:@[@(kSigModel_LightLCServer_ID)]]) {
+            ModelType *type = [[ModelType alloc] init];
+            type.uiType = ModelUITypeLightingControl;
+            [self.dataSource addObject:type];
+        }
     }
     if (self.model.onoffAddresses.count > 0) {
         ModelType *type = [[ModelType alloc] init];
@@ -116,7 +124,7 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OnOffModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OnOffModelCellID];
     }
-    
+
     //注意：2.8.2发现RGB为255、0、0时，亮度调到100会设备颜色显示异常，暂时屏蔽亮度、色温
 
     if (self.model.lightnessAddresses.count > 0) {
@@ -133,16 +141,20 @@ typedef enum : NSUInteger {
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_LevelAndSliderCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_LevelAndSliderCellID];
     }
-    
-    //获取当前设备的详细状态数据(亮度、色温、HSL)
-    //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temprature at node detail vc.
-    //modelID 0x1303:Light CTL Get
-    BOOL hasCTLGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHT_CTL_S)].count > 0;
-    //modelID 0x1300:Light Lightness Get
-    BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHTNESS_S)].count > 0;
 
-    if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet) {
-        //get light and temprature
+    [self getDeviceState];
+}
+
+- (void)getDeviceState {
+    //获取当前设备的详细状态数据(亮度、色温、HSL)
+    //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temperature at node detail vc.
+    //modelID 0x1303:Light CTL Get
+    BOOL hasCTLGet = [self.model getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0;
+    //modelID 0x1300:Light Lightness Get
+    BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)].count > 0;
+
+    if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet && self.model.state != DeviceStateOutOfLine) {
+        //get light and temperature
         __weak typeof(self) weakSelf = self;
         [DemoCommand getCTLWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightCTLStatus * _Nonnull responseMessage) {
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
@@ -151,7 +163,7 @@ typedef enum : NSUInteger {
                 [weakSelf performSelectorOnMainThread:@selector(getHSL) withObject:nil waitUntilDone:YES];
             }
         }];
-    }else if (self.model.lightnessAddresses.count > 0 && hasLightnessGet) {
+    }else if (self.model.lightnessAddresses.count > 0 && hasLightnessGet && self.model.state != DeviceStateOutOfLine) {
         //get light
         __weak typeof(self) weakSelf = self;
         [DemoCommand getLumWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
@@ -165,37 +177,37 @@ typedef enum : NSUInteger {
 }
 
 - (void)getHSL{
-    BOOL hasHSLGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHT_HSL_S)].count > 0;
+    BOOL hasHSLGet = [self.model getAddressesWithModelID:@(kSigModel_LightHSLServer_ID)].count > 0;
     //v3.3.0新增逻辑：开灯时才获取HSL，关灯不获取HSL，因为关灯时HSL值都是0，获取HSL没有意义。
     if (self.model.HSLAddresses.count > 0 && hasHSLGet && self.model.state == DeviceStateOn) {
         __weak typeof(self) weakSelf = self;
         [DemoCommand getHSLWithAddress:self.model.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
             [weakSelf performSelectorOnMainThread:@selector(HSLCallBack) withObject:nil waitUntilDone:YES];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
     }
 }
 
 - (void)HSLCallBack{
-    self.colorModel = [self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100];
+    self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
-- (UIColor *)getColorWithH:(UInt8)h S:(UInt8)s L:(UInt8)l{
+- (UIColor *)getColorWithHue:(UInt8)hue saturation:(UInt8)saturation ligntness:(UInt8)ligntness {
     //注意：hsl四舍五入取两位小数，理论上hsl中h为[0~100)
-    if (h == 100) {
-        h = 99;
+    if (hue == 100) {
+        hue = 99;
     }
     HSLModel *hsl = [[HSLModel alloc] init];
-    hsl.hue = [NSString stringWithFormat:@"%d",h].div(@"100").floatValue;
-    hsl.saturation = [NSString stringWithFormat:@"%d",s].div(@"100").floatValue;
-    hsl.lightness = [NSString stringWithFormat:@"%d",l].div(@"100").floatValue;
+    hsl.hue = [NSString stringWithFormat:@"%d",hue].div(@"100").floatValue;
+    hsl.saturation = [NSString stringWithFormat:@"%d",saturation].div(@"100").floatValue;
+    hsl.lightness = [NSString stringWithFormat:@"%d",ligntness].div(@"100").floatValue;
     return [ColorManager getRGBWithHSLColor:hsl];
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 #pragma mark - UITableViewDataSource
@@ -206,7 +218,7 @@ typedef enum : NSUInteger {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     ModelType *type = self.dataSource[indexPath.row];
-    UITableViewCell *cell = [[UITableViewCell alloc] init];
+    UITableViewCell *cell = nil;
     UInt8 lum=0,temp=0;
     switch (type.uiType) {
         case ModelUITypeHSL:
@@ -246,10 +258,17 @@ typedef enum : NSUInteger {
             ((LevelAndSliderCell *)cell).valueSlider.value = temp;
             ((LevelAndSliderCell *)cell).delegate = self;
             break;
+        case ModelUITypeLightingControl:
+        {
+            cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingTitleItemCell.class) forIndexPath:indexPath];
+            ((SettingTitleItemCell *)cell).nameLabel.text = self.model.isSensor ? @"Sensor Control" : @"Network Lighting Control";
+            ((SettingTitleItemCell *)cell).iconImageView.image = [UIImage imageNamed:self.model.isSensor ? @"ic_sensor" : @"ic_motion_sensor_online"];
+        }
+            break;
         default:
             break;
     }
-
+    cell.selectionStyle = type.uiType == ModelUITypeLightingControl ? UITableViewCellSelectionStyleDefault : UITableViewCellSelectionStyleNone;
     return cell;
 }
 
@@ -260,7 +279,7 @@ typedef enum : NSUInteger {
             return 692.5;
             break;
         case ModelUITypeOnOff:
-            return [OnOffModelCell getOnOffModelCellHightOfItemCount:type.addresses.count];
+            return [OnOffModelCell getOnOffModelCellHeightOfItemCount:type.addresses.count];
             break;
         case ModelUITypeLum:
             return 109;
@@ -268,10 +287,66 @@ typedef enum : NSUInteger {
         case ModelUITypeTemp:
             return 109;
             break;
+        case ModelUITypeLightingControl:
+            return 74;
+            break;
         default:
             break;
     }
     return 0;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+    ModelType *type = self.dataSource[indexPath.row];
+    if (type.uiType == ModelUITypeLightingControl) {
+        if (self.model.isSensor) {
+            //push to sensor config vc
+            SensorConfigVC *vc = (SensorConfigVC *)[UIStoryboard initVC:NSStringFromClass(SensorConfigVC.class) storyboard:@"DeviceSetting"];
+            vc.model = self.model;
+            [self.navigationController pushViewController:vc animated:YES];
+
+            //sensorGet
+//            [SDKLibCommand sensorGetWithDestination:[self.model getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]].unicastAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorStatus * _Nonnull responseMessage) {
+//        
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//        
+//            }];
+
+//            //sensorSettingsGet
+//            [SDKLibCommand sensorSettingsGetWithDestination:self.model.address propertyID:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSettingsStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorSettingGet
+//            [SDKLibCommand sensorSettingGetWithDestination:self.model.address propertyID:0 settingPropertyID:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSettingStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorColumnGet
+//            [SDKLibCommand sensorColumnGetWithDestination:self.model.address propertyID:0 rawValueX:[NSData data] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorColumnStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorSeriesGet
+//            [SDKLibCommand sensorSeriesGetWithDestination:self.model.address propertyID:0 rawValueX1Data:[NSData data] rawValueX2Data:[NSData data] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSeriesStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+        } else if ([self.model getElementModelWithModelIds:@[@(kSigModel_LightLCServer_ID)]]) {
+            //push to lighting control vc
+            LightingControlVC *vc = (LightingControlVC *)[UIStoryboard initVC:NSStringFromClass(LightingControlVC.class) storyboard:@"DeviceSetting"];
+            vc.model = self.model;
+            [self.navigationController pushViewController:vc animated:YES];
+        } else {
+            [self showTips:@"Lighting control not support!"];
+        }
+    }
 }
 
 #pragma mark - BaseTableViewDelegate
@@ -304,9 +379,9 @@ typedef enum : NSUInteger {
     if ([self canSend]) {
         UInt16 address = self.model.address;
         [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
-            
+
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+
         }];
         self.hasNextHSLCMD = NO;
     } else {
@@ -339,20 +414,32 @@ typedef enum : NSUInteger {
     [self.onoffStateSource replaceObjectAtIndex:indexPath.item withObject:@(value)];
     ModelType *type = self.dataSource[[self.tableView indexPathForCell:cell].item];
     UInt16 elementAddress = [type.addresses[indexPath.item] intValue];
-    
+
     //0.不带渐变且无回包写法：
     //attention: resMax change to 0, because node detail vc needn't response.
 //    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-    
+
     //1.不带渐变写法：
-    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:1 ack:YES successCallback:nil resultCallback:nil];
-    
+    __weak typeof(self) weakSelf = self;
+    __block BOOL needGetDeviceState = NO;
+    [DemoCommand switchOnOffWithIsOn:value address:elementAddress responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+        if ((responseMessage.remainingTime == nil && responseMessage.isOn == YES) || (responseMessage.remainingTime != nil && responseMessage.targetState == YES)) {
+            if (weakSelf.model.trueBrightness == 0) {
+                needGetDeviceState = YES;
+            }
+        }
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        if (needGetDeviceState) {
+            [weakSelf getDeviceState];
+        }
+    }];
+
     //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
 //        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
 //        [SDKLibCommand genericOnOffSetDestination:elementAddress isOn:value transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-//            TeLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
+//            TelinkLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
 //        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //        }];
 }
 
@@ -369,13 +456,16 @@ typedef enum : NSUInteger {
             self.hasNextBrightness = YES;
             self.nextBrightness = value;
         }
+        //如果UI是HSL的UI，需要联动修改HSL的滑竿。
+        [self changeUIBylightnessOfHSLModel:value/100.0];
     } else if (type.uiType == ModelUITypeTemp) {
-        if (!self.hadChangeTempareture) {
-            self.nextTempareture = value;
-            [self changeTemparetureWithModelType:type];
+        cell.showValueLabel.text = [NSString stringWithFormat:@"Temp(%d)(at ele adr:0x%X):",(int)value,self.model.temperatureAddresses.firstObject.intValue];
+        if (!self.hadChangeTemperature) {
+            self.nextTemperature = value;
+            [self changeTemperatureWithModelType:type];
         } else {
-            self.hasNextTempareture = YES;
-            self.nextTempareture = value;
+            self.hasNextTemperature = YES;
+            self.nextTemperature = value;
         }
     }
 }
@@ -391,7 +481,7 @@ typedef enum : NSUInteger {
 - (void)changeBrightnessWithModelType:(ModelType *)type {
     self.hadChangeBrightness = YES;
     self.hasNextBrightness = NO;
-    TeLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
+    TelinkLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
     self.model.brightness = [LibTools lumToLightness:self.nextBrightness];
     UInt16 elementAddress = [type.addresses.firstObject intValue];
     [DemoCommand changeBrightnessWithBrightness100:self.nextBrightness address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
@@ -408,22 +498,22 @@ typedef enum : NSUInteger {
     }
 }
 
-- (void)changeTemparetureWithModelType:(ModelType *)type {
-    self.hadChangeTempareture = YES;
-    self.hasNextTempareture = NO;
-    self.model.temperature = [LibTools temp100ToTemp:self.nextTempareture];
+- (void)changeTemperatureWithModelType:(ModelType *)type {
+    self.hadChangeTemperature = YES;
+    self.hasNextTemperature = NO;
+    self.model.temperature = [LibTools temp100ToTemp:self.nextTemperature];
     UInt16 elementAddress = [type.addresses.firstObject intValue];
-    [DemoCommand changeTempratureWithTemprature100:self.nextTempareture address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+    [DemoCommand changeTemperatureWithTemperature100:self.nextTemperature address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinishWithModelType:) object:type];
-        [self performSelector:@selector(changeTemparetureFinishWithModelType:) withObject:type afterDelay:kCommandInterval];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemperatureFinishWithModelType:) object:type];
+        [self performSelector:@selector(changeTemperatureFinishWithModelType:) withObject:type afterDelay:kCommandInterval];
     });
 }
 
-- (void)changeTemparetureFinishWithModelType:(ModelType *)type {
-    self.hadChangeTempareture = NO;
-    if (self.hasNextTempareture) {
-        [self changeTemparetureWithModelType:type];
+- (void)changeTemperatureFinishWithModelType:(ModelType *)type {
+    self.hadChangeTemperature = NO;
+    if (self.hasNextTemperature) {
+        [self changeTemperatureWithModelType:type];
     }
 }
 
@@ -436,13 +526,29 @@ typedef enum : NSUInteger {
     UInt16 address = type.addresses.firstObject.intValue;
     __weak typeof(self) weakSelf = self;
     [DemoCommand changeLevelWithAddress:address level:level responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericLevelStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"control level success.");
+        TelinkLogDebug(@"control level success.");
         dispatch_async(dispatch_get_main_queue(), ^{
+            //根据回包进行HSL的滑竿进行联动。
+            if (weakSelf.model.HSLAddresses.count > 0) {
+                weakSelf.colorModel = [weakSelf getColorWithHue:weakSelf.model.HSL_Hue100 saturation:weakSelf.model.HSL_Saturation100 ligntness:weakSelf.model.HSL_Lightness100];
+            }
             [weakSelf.tableView reloadData];
         });
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
+}
+
+- (void)changeUIBylightnessOfHSLModel:(CGFloat)lightnessOfHSLModel {
+    if (self.model.HSLAddresses.count > 0) {
+        for (ModelType *m in self.dataSource) {
+            if (m.uiType == ModelUITypeHSL) {
+                ColorModelCell *cell = (ColorModelCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:[self.dataSource indexOfObject:m] inSection:0]];
+                [cell changeUIWithHslModelLightSliderValue:lightnessOfHSLModel];
+                break;
+            }
+        }
+    }
 }
 
 @end

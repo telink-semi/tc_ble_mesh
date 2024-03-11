@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/11/19
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ScanView.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/11/19.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "ScanView.h"
 #import <AVFoundation/AVFoundation.h>
@@ -63,7 +57,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         [self setupScanRect];
         [self addSubview: self.remind];
         self.layer.masksToBounds = YES;
-        
+
     }
     return self;
 }
@@ -73,12 +67,12 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (BOOL)isCameraAvailable{
     return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
 }
-  
+
 // 前面的摄像头是否可用
 - (BOOL)isFrontCameraAvailable{
     return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
 }
-  
+
 // 后面的摄像头是否可用
 - (BOOL)isRearCameraAvailable{
     return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
@@ -101,7 +95,9 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (void)start
 {
     if (self.isCameraAvailable && self.isRearCameraAvailable) {
-        [self.session startRunning];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.session startRunning];
+        });
     }
 }
 
@@ -124,7 +120,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 {
     if (!_session) {
         _session = [AVCaptureSession new];
-        
+
         [_session setSessionPreset: AVCaptureSessionPreset1920x1080];    //高质量采集
         [self setupIODevice];
     }
@@ -192,12 +188,12 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         CGRect textRect = self.scanRect;
         textRect.origin.y += CGRectGetHeight(textRect) + 20;
         textRect.size.height = 50.f;
-        
+
         _remind = [[UILabel alloc] initWithFrame: textRect];
         _remind.font = [UIFont systemFontOfSize: 15.f * SCREEN_WIDTH / 375.f];
         _remind.textColor = [UIColor whiteColor];
         _remind.textAlignment = NSTextAlignmentCenter;
-        _remind.text = @"将二维码放入框内，即可自动扫描";
+        _remind.text = @"Put the QR code into the box, and it can be automatically scanned";
         _remind.backgroundColor = [UIColor clearColor];
         _remind.numberOfLines = 0;
     }
@@ -216,7 +212,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         scanRect.origin.y -= 1;
         scanRect.size.width += 2;
         scanRect.size.height += 2;
-        
+
         _scanRectLayer = [CAShapeLayer layer];
         _scanRectLayer.path = [UIBezierPath bezierPathWithRect: scanRect].CGPath;
         _scanRectLayer.fillColor = [UIColor clearColor].CGColor;
@@ -266,25 +262,25 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
         maskLayer.path = [UIBezierPath bezierPathWithRect: rect].CGPath;
         return maskLayer;
     }
-    
+
     CGFloat boundsInitX = CGRectGetMinX(rect);
     CGFloat boundsInitY = CGRectGetMinY(rect);
     CGFloat boundsWidth = CGRectGetWidth(rect);
     CGFloat boundsHeight = CGRectGetHeight(rect);
-    
+
     CGFloat minX = CGRectGetMinX(exceptRect);
     CGFloat maxX = CGRectGetMaxX(exceptRect);
     CGFloat minY = CGRectGetMinY(exceptRect);
     CGFloat maxY = CGRectGetMaxY(exceptRect);
     CGFloat width = CGRectGetWidth(exceptRect);
-    
+
     /** 添加路径*/
     UIBezierPath * path = [UIBezierPath bezierPathWithRect: CGRectMake(boundsInitX, boundsInitY, minX, boundsHeight)];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(minX, boundsInitY, width, minY)]];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(maxX, boundsInitY, boundsWidth - maxX, boundsHeight)]];
     [path appendPath: [UIBezierPath bezierPathWithRect: CGRectMake(minX, maxY, width, boundsHeight - maxY)]];
     maskLayer.path = path.CGPath;
-    
+
     return maskLayer;
 }
 
@@ -313,7 +309,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
     CGFloat minY = (SCREEN_HEIGHT - size) * 0.5 / SCREEN_HEIGHT;
     CGFloat maxY = (SCREEN_HEIGHT + size) * 0.5 / SCREEN_HEIGHT;
     self.output.rectOfInterest = CGRectMake(minY, SCANSPACEOFFSET, maxY, 1 - SCANSPACEOFFSET * 2);
-    
+
     [self.layer addSublayer: self.shadowLayer];
     [self.layer addSublayer: self.scanRectLayer];
 }
@@ -338,17 +334,17 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
     if (metadataObjects.count > 0) {
         [self stop];
-        
+
         AVMetadataMachineReadableCodeObject * metadataObject = metadataObjects[0];
         //        id obj = [metadataObject valueForKeyPath:@"_internal.basicDescriptor"];
         if (metadataObject.type != AVMetadataObjectTypeQRCode) {
             return;
         }
         //        NSData *data = [obj valueForKeyPath:@"BarcodeRawData"];
-//        TeLogDebug(@"metadataObject->%@", metadataObject.stringValue);
+//        TelinkLogDebug(@"metadataObject->%@", metadataObject.stringValue);
         if (self.scanDataBlock && metadataObject.stringValue) {
             self.scanDataBlock(metadataObject.stringValue);
-            
+
 //            [self removeFromSuperview];
         } else {
             [[NSNotificationCenter defaultCenter] postNotificationName:SuccessScanQRCodeNotification object:self userInfo: @{ ScanQRCodeMessageKey: metadataObject.stringValue }];

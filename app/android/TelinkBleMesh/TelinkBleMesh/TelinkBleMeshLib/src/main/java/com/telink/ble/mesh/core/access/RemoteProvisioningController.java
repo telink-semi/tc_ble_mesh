@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     RemoteProvisioningController.java 
+ * @file RemoteProvisioningController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
@@ -56,11 +57,13 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     public static final int STATE_PROVISIONING = 0x02;
 
-    public static final int STATE_PROVISION_SUCCESS = 0x03;
+    public static final int STATE_CAPABILITY_RECEIVED = 0x03;
 
-    public static final int STATE_PROVISION_FAIL = 0x04;
+    public static final int STATE_PROVISION_SUCCESS = 0x04;
 
-    public static final int STATE_LINK_CLOSING = 0x05;
+    public static final int STATE_PROVISION_FAIL = 0x05;
+
+    public static final int STATE_LINK_CLOSING = 0x06;
 
     private int state;
 
@@ -107,9 +110,9 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     public void begin(ProvisioningController provisioningController, RemoteProvisioningDevice remoteProvisioningDevice) {
-        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s",
+        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s  allocatedAdr -- %04X",
                 remoteProvisioningDevice.getServerAddress(),
-                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid())));
+                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid()), remoteProvisioningDevice.getUnicastAddress()));
         this.outboundNumber = OUTBOUND_INIT_VALUE;
         this.inboundPDUNumber = -1;
         this.cachePdu = null;
@@ -119,6 +122,10 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         this.provisioningController = provisioningController;
         this.provisioningDevice = remoteProvisioningDevice;
         linkOpen();
+    }
+
+    public void continueProvision(int address) {
+        provisioningController.continueProvision(address);
     }
 
     public void clear() {
@@ -290,9 +297,36 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         }
     };
 
-    // draft feature
     private void onMeshMessagePrepared(MeshMessage meshMessage) {
+        log("remote provisioning message prepared: " + meshMessage.getClass().getSimpleName()
+                + String.format(" opcode: 0x%04X -- dst: 0x%04X -- params: ", meshMessage.getOpcode(), meshMessage.getDestinationAddress())
+                + Arrays.bytesToHexString(meshMessage.getParams()));
+        if (accessBridge != null) {
+            boolean isMessageSent = accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_REMOTE_PROVISIONING);
+            if (!isMessageSent) {
+                /*
+                 * message send error
+                 */
+                int opcode = meshMessage.getOpcode();
+                log(String.format("remote provisioning message send error : %04X", opcode));
+                if (meshMessage.getOpcode() == Opcode.REMOTE_PROV_PDU_SEND.value) {
+                    synchronized (WAITING_LOCK) {
+                        outboundReportWaiting = true;
+                    }
+                    resendProvisionPdu();
+                } else {
+                    onCommandError(meshMessage.getOpcode());
+                }
 
+            } else {
+                if (meshMessage.getOpcode() == Opcode.REMOTE_PROV_PDU_SEND.value) {
+                    synchronized (WAITING_LOCK) {
+                        outboundReportWaiting = true;
+                    }
+                    resendProvisionPdu();
+                }
+            }
+        }
     }
 
 
@@ -303,6 +337,14 @@ public class RemoteProvisioningController implements ProvisioningBridge {
             onProvisioningComplete(true, desc);
         } else if (state == ProvisioningController.STATE_FAILED) {
             onProvisioningComplete(false, desc);
+        } else if (state == ProvisioningController.STATE_CAPABILITY) {
+            onCapabilityReceived();
+        }
+    }
+
+    private void onCapabilityReceived() {
+        if (accessBridge != null) {
+            accessBridge.onAccessStateChanged(STATE_CAPABILITY_RECEIVED, "provision capability received", AccessBridge.MODE_REMOTE_PROVISIONING, this.provisioningDevice);
         }
     }
 

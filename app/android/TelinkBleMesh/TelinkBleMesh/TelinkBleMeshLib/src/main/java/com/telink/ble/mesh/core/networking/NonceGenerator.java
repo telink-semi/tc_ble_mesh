@@ -1,33 +1,36 @@
 /********************************************************************************************************
- * @file     NonceGenerator.java 
+ * @file NonceGenerator.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-/**
- * Created by kee on 2019/8/12.
- */
 
+/**
+ * This class is responsible for generating nonces used in network authentication and encryption.
+ * It provides methods to generate network, application, device, and proxy nonces.
+ * Nonces are used in various encryption and authentication processes in network communication.
+ */
 public class NonceGenerator {
 
     private static final int NONCE_LENGTH = 13;
@@ -51,6 +54,11 @@ public class NonceGenerator {
      * Used with an encryption key for proxy authentication and encryption
      */
     private static final byte NONCE_TYPE_PROXY = 0x03;
+
+    /**
+     * Used with an encryption key for proxy authentication and encryption
+     */
+    private static final byte NONCE_TYPE_SOLICITATION = 0x04;
 
     private static final byte NONCE_PADDING = 0x00;
 
@@ -87,13 +95,26 @@ public class NonceGenerator {
      * output proxy nonce
      */
     public static byte[] generateProxyNonce(byte[] sequenceNumber, int src, int ivIndex) {
-        ByteBuffer applicationNonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
-        applicationNonceBuffer.put(NONCE_TYPE_PROXY); //Nonce typeValue
-        applicationNonceBuffer.put(NONCE_PADDING); //PAD
-        applicationNonceBuffer.put(sequenceNumber);
-        applicationNonceBuffer.putShort((short) src);
-        applicationNonceBuffer.put(new byte[]{NONCE_PADDING, NONCE_PADDING});
-        applicationNonceBuffer.putInt(ivIndex);
-        return applicationNonceBuffer.array();
+        ByteBuffer nonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
+        nonceBuffer.put(NONCE_TYPE_PROXY); //Nonce typeValue
+        nonceBuffer.put(NONCE_PADDING); //PAD
+        nonceBuffer.put(sequenceNumber);
+        nonceBuffer.putShort((short) src);
+        nonceBuffer.put(new byte[]{NONCE_PADDING, NONCE_PADDING});
+        nonceBuffer.putInt(ivIndex);
+        return nonceBuffer.array();
+    }
+
+    /**
+     * output proxy nonce
+     */
+    public static byte[] generateSolicitationNonce(byte[] sequenceNumber, int src) {
+        ByteBuffer nonceBuffer = ByteBuffer.allocate(NONCE_LENGTH);
+        nonceBuffer.put(NONCE_TYPE_SOLICITATION); //Nonce typeValue
+        nonceBuffer.put(NONCE_PADDING); //PAD
+        nonceBuffer.put(sequenceNumber);
+        nonceBuffer.putShort((short) src);
+        nonceBuffer.put(new byte[6]);
+        return nonceBuffer.array();
     }
 }

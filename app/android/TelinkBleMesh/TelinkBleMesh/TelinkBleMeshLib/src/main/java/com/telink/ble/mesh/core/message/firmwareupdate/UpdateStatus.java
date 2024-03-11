@@ -1,26 +1,31 @@
 /********************************************************************************************************
- * @file     UpdateStatus.java 
+ * @file UpdateStatus.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate;
 
+/**
+ * This enum represents the possible status codes for an update operation.
+ * Each status code is associated with a description.
+ */
 public enum UpdateStatus {
 
     SUCCESS(0x00, "The message was processed successfully"),
@@ -41,14 +46,34 @@ public enum UpdateStatus {
 
     UNKNOWN_ERROR(0xFF, "unknown error");
 
+    /**
+     * The code associated with the status.
+     */
     public final int code;
+
+    /**
+     * The description of the status.
+     */
     public final String desc;
 
+    /**
+     * Constructs a new UpdateStatus with the given code and description.
+     *
+     * @param code The code associated with the status.
+     * @param desc The description of the status.
+     */
     UpdateStatus(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
+    /**
+     * Returns the UpdateStatus associated with the given code.
+     * If no matching status is found, returns UNKNOWN_ERROR.
+     *
+     * @param code The code to lookup.
+     * @return The UpdateStatus associated with the code, or UNKNOWN_ERROR if not found.
+     */
     public static UpdateStatus valueOf(int code) {
         for (UpdateStatus status : values()) {
             if (status.code == code) return status;

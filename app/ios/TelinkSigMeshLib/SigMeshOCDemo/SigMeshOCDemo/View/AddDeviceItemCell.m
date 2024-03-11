@@ -1,37 +1,32 @@
 /********************************************************************************************************
- * @file     AddDeviceItemCell.m 
+ * @file     AddDeviceItemCell.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/17
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  AddDeviceItemCell.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/17.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "AddDeviceItemCell.h"
 
 @implementation AddDeviceItemCell{
     __weak IBOutlet UIView *_bgView;
     __weak IBOutlet UIImageView *_icon;
+    __weak IBOutlet UIImageView *_icon_cert;
     __weak IBOutlet UILabel *_nameLabel;
     __weak IBOutlet UILabel *_stateLabel;
 }
@@ -39,14 +34,30 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    //borderWidth
     _bgView.layer.borderWidth = 1;
+    //borderColor
     _bgView.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    //cornerRadius
     _bgView.layer.cornerRadius = 5;
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(AddDeviceModel *)model{
-    _nameLabel.text = [NSString stringWithFormat:@"adr:0x%X\nmac:%@",model.scanRspModel.address,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    NSString *addressString = @"";
+    if (model.state == AddDeviceModelStateScanned || model.state == AddDeviceModelStateConnecting || model.scanRspModel.address == 0) {
+        addressString = @"[Unallocated]";
+    } else {
+        addressString = [NSString stringWithFormat:@"0x%04X", model.scanRspModel.address];
+    }
+    if (model.remoteScanRspModel != nil) {
+        _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nrepoet adr:0x%04X rssi:%d\nmac:%@",addressString,model.remoteScanRspModel.reportNodeAddress,model.remoteScanRspModel.RSSI,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    } else {
+        _nameLabel.text = [NSString stringWithFormat:@"adr:%@\nmac:%@",addressString,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    }
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
+    _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
     switch (model.state) {
         case AddDeviceModelStateBinding:
             _stateLabel.text = @"BINDING";
@@ -60,8 +71,11 @@
         case AddDeviceModelStateBindFail:
             _stateLabel.text = @"UNBIND";
             break;
-        case AddDeviceModelStateScaned:
-            _stateLabel.text = @"SCANED";
+        case AddDeviceModelStateScanned:
+            _stateLabel.text = @"SCANNED";
+            break;
+        case AddDeviceModelStateConnecting:
+            _stateLabel.text = @"CONNECTING";
             break;
         case AddDeviceModelStateProvisioning:
             _stateLabel.text = @"PROVISIONING";

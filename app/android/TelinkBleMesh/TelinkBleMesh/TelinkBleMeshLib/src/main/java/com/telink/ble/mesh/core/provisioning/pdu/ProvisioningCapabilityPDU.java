@@ -1,36 +1,51 @@
 /********************************************************************************************************
- * @file     ProvisioningCapabilityPDU.java 
+ * @file ProvisioningCapabilityPDU.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
-/**
- * Created by kee on 2019/7/18.
- */
+
 // 03:01:
 // 02:00:01:00:00:00:00:00:00:00:00
 // from device
+
+/**
+ * The ProvisioningCapabilityPDU class represents a Provisioning State PDU containing Capability data.
+ * It implements the ProvisioningStatePDU interface.
+ */
 public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
 
     private static final int LEN = 11;
 
+    /**
+     * Algorithm - BTM_ECDH_P256_CMAC_AES128_AES_CCM
+     */
+    private static final int ALG_BIT_MASK_CMAC = 0b01;
+
+    /**
+     * Algorithm - BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+     */
+    private static final int ALG_BIT_MASK_HMAC = 0b10;
+
+    // raw data
     public byte[] rawData;
 
 
@@ -47,6 +62,11 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
      * 2 bytes
      * bit-0: FIPS P-256 Elliptic Curve
      * bit-1--15: Reserved for Future Use
+     * <p>
+     * <p>
+     * update EPA
+     * 0	BTM_ECDH_P256_CMAC_AES128_AES_CCM
+     * 1	BTM_ECDH_P256_HMAC_SHA256_AES_CCM
      */
     public short algorithms;
 
@@ -107,6 +127,12 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
      */
     public short inputOOBAction;
 
+    /**
+     * create instance from byte array
+     *
+     * @param data data
+     * @return instance
+     */
     public static ProvisioningCapabilityPDU fromBytes(byte[] data) {
         if (data == null || data.length < LEN) {
             return null;
@@ -126,6 +152,10 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
         return capability;
     }
 
+    /**
+     * @return string representation of the  ProvisioningCapabilityPDU  object,
+     * including its various attributes such as  eleNum ,  algorithms ,  publicKeyType , etc.
+     */
     @Override
     public String toString() {
         return "ProvisioningCapabilityPDU{" +
@@ -140,17 +170,39 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
                 '}';
     }
 
+    /**
+     * @return the raw byte array representation of the  ProvisioningCapabilityPDU  object.
+     */
     @Override
     public byte[] toBytes() {
         return rawData;
     }
 
+    /**
+     * Gets the state of the PDU.
+     *
+     * @return The state of the PDU.
+     */
     @Override
     public byte getState() {
         return ProvisioningPDU.TYPE_CAPABILITIES;
     }
 
-    public boolean staticOOBSupported() {
+    /**
+     * checks if the static Out-of-Band (OOB) type is supported by the  ProvisioningCapabilityPDU  object.
+     *
+     * @return true  if the  staticOOBType  attribute is not equal to 0.
+     */
+    public boolean isStaticOOBSupported() {
         return staticOOBType != 0;
+    }
+
+    /**
+     * method checks if the HMAC algorithm is supported by the  ProvisioningCapabilityPDU  object.
+     *
+     * @return true  if the  algorithms  attribute has the  ALG_BIT_MASK_HMAC  bit set.
+     */
+    public boolean isHMacAlgorithmSupported() {
+        return (algorithms & ALG_BIT_MASK_HMAC) != 0;
     }
 }

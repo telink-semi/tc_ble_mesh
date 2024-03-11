@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -31,18 +32,21 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
+import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.LogInfo;
 
 import java.util.List;
-
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * provision list adapter
@@ -77,6 +81,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         holder.tv_log_latest = itemView.findViewById(R.id.tv_log_latest);
         holder.btn_add = itemView.findViewById(R.id.btn_add);
         holder.iv_close = itemView.findViewById(R.id.iv_close);
+        holder.iv_cert = itemView.findViewById(R.id.iv_cert);
         return holder;
     }
 
@@ -91,13 +96,8 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         NetworkingDevice device = mDevices.get(position);
 
         NodeInfo nodeInfo = device.nodeInfo;
-        int iconRes = R.drawable.ic_bulb_on;
-        if (nodeInfo.compositionData != null && nodeInfo.compositionData.lowPowerSupport()) {
-            iconRes = R.drawable.ic_low_power;
-        }
-        holder.iv_device.setImageResource(iconRes);
-
-
+        int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, nodeInfo.isSensor()));
         String deviceDesc = mContext.getString(R.string.device_prov_desc, nodeInfo.meshAddress == -1 ? "[Unallocated]" : "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {
             deviceDesc += "\nmac: " + nodeInfo.macAddress;
@@ -108,6 +108,10 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
 //        holder.pb_provision.setIndeterminate(false);
         holder.btn_add.setVisibility(!processing && device.state == NetworkingState.IDLE ? View.VISIBLE : View.INVISIBLE);
         holder.iv_close.setVisibility(!processing && device.state == NetworkingState.IDLE ? View.VISIBLE : View.INVISIBLE);
+
+        boolean certVisible = MeshUtils.isCertSupported(device.oobInfo);
+        holder.iv_cert.setVisibility(certVisible ? View.VISIBLE : View.GONE);
+
         if (device.state == NetworkingState.IDLE) {
             holder.pb_provision.setVisibility(View.GONE);
         } else if (device.state == NetworkingState.WAITING) {
@@ -179,7 +183,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         public ProgressBar pb_provision;
         public RecyclerView rv_networking_log;
         public View ll_info;
-        public ImageView iv_arrow, iv_close;
+        public ImageView iv_arrow, iv_close, iv_cert;
         public Button btn_add;
         public TextView tv_log_latest;
 

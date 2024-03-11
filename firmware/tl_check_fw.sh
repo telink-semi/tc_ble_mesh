@@ -10,4 +10,27 @@ tc32-elf-objcopy -v -O binary $2.elf  $1.bin
 #par[4]: "2.elf" means that if there is 'key_encode_bin' in firmware, encryption mode will be enable. 0 means no encryption mode. (Optional)
 
 ../tl_auth_check_fw.exe  $1.bin  1  0  $2.elf
+exec_result=$?
+#echo result=${exec_result}
+if [ "${exec_result}" == "0" ]
+then
+echo  "exec successful"
+else
+echo  "###########################  Error: Run tl_auth_check_fw.exe failed  ###########################"
+echo  "###########################  Error: Run tl_auth_check_fw.exe failed  ###########################"
+echo  "###########################  Error: Run tl_auth_check_fw.exe failed  ###########################"
+echo  "Error: exec failed, exit code=${exec_result}"
+rm -rf $1.bin
+exit ${exec_result}
+fi
+
+echo  "---------------------------  SDK version info ---------------------------"
+str=$(grep -E "[\$]{3}[a-zA-Z0-9 _.]+[\$]{3}" --text -o $1.bin | sed 's/\$//g')
+if [ -z "$str" ]; then
+    echo "no SDK version found at the end of firmware, please check sdk_version.c and sdk_version.h"
+else
+    echo "$str"
+fi
+echo  "---------------------------  SDK version end  ---------------------------"
+
 echo "**************** end of post build ******************"

@@ -3,11 +3,3 @@ include ':TelinkBleMeshDemo'
 
 // mesh library
 include ':TelinkBleMeshLib'
-
-// file selector
-//include ':TelinkFileSelector'
-
-// bluetooth library
-//include ':TelinkBleLib'
-
-//include ':TelinkBleTest'

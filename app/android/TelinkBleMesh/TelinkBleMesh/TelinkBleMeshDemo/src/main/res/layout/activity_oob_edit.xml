@@ -51,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:digits="@string/hex_input"
-            android:hint="input 16 bytes oob"
+            android:hint="input 16 or 32 bytes oob"
             android:textSize="@dimen/msg_input_size" />
 
     </LinearLayout>

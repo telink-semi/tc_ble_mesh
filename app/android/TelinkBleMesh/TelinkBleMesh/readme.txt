@@ -1,5 +1,61 @@
 
-version record
+version record:
+versionName - version code - date
+
+
+V4.1.0.0 - 7 - 20231108
+
+- Add support for multi-network, users can create, delete, switch networks. The network data store format is changed from serialize to objectBox
+- Add the network subpage to display network information and related control functions.
+- Add support for private beacon and added related configuration page
+- Add support for enhanced feature: large cps, on-demand, sar and solicitation
+- Add the default root certificate for verifying certificate based devices
+- Optimize the setting page to display different configuration items by category
+- Improve code comments
+
+----------------
+
+
+V3.3.3.7 - 6 - 20221130
+
+1. update icon
+2. update app name to TelinkSigMesh
+
+----------------
+
+V3.3.3.6
+
+1. remove inIndex in JSON storage
+2. update icon generation by check pid bitmask
+3. update app icon
+4. support B91 SIG MESH SDK 和 B85 SIG MESH SDK
+
+----------------
+
+V3.3.3.5
+
+1. add support for private beacon and enhanced opcode aggregator in draft feature
+
+----------------
+
+V3.3.4 (skip V3.3.3 that only update firmware)
+
+1. add support for switch devices
+2. add support for subnet bridge
+3. update mesh OTA, supports app and directly connected nodes as distributor
+4. update JSON database to version R11
+5. add device config page in device setting, used for send and receive config messages
+
+----------------
+
+V3.3.2 (skip V3.3.1 that only update firmware)
+
+1. Add support for subnet bridge in draft feature;
+2. Add support for certificate based provisioning in draft feature;
+3. Add support for multiple network key and application key in mesh info;
+4. Update local address range from 0x0100 to 0x0400.
+
+----------------
 
 V3.3.0
 
@@ -41,3 +97,5 @@ V3.2.0
 
 
 // draft feature
+
+

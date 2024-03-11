@@ -1,36 +1,35 @@
 /********************************************************************************************************
- * @file     SingleDeviceViewController.m 
+ * @file     SingleDeviceViewController.m
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/10
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SingleDeviceViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/10.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "SingleDeviceViewController.h"
 #import "DeviceControlViewController.h"
 #import "DeviceGroupViewController.h"
 #import "DeviceSettingViewController.h"
+#import "DeviceRemoteVC.h"
+
+#define kControlTitle   @"CONTROL"
+#define kGroupTitle   @"GROUP"
+#define kSettingsTitle   @"SETTINGS"
 
 @interface SingleDeviceViewController ()
 
@@ -41,7 +40,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
     [self configUI];
 }
 
@@ -68,63 +66,63 @@
     }
 }
 
-- (void)configUI{
+- (void)configUI {
     self.title = @"Device Setting";
-    
-    // add sub vc
-    [self setUpAllViewController];
-    
+    WMZPageParam *param = PageParam();
+    NSArray *titleArray = @[kControlTitle, kGroupTitle, kSettingsTitle];
+    // 遥控器不需要分组界面
+    if (self.model.isRemote == YES) {
+        titleArray = @[kControlTitle, kSettingsTitle];
+    }
     __weak typeof(self) weakSelf = self;
-    double h = kGetRectNavAndStatusHight;
-    [self setUpContentViewFrame:^(UIView *contentView) {
-        contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
-    }];
-    
-    [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
-        *norColor = [UIColor lightGrayColor];
-        *selColor = [UIColor blackColor];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / 3;
-    }];
-    
-    // 标题渐变
-    // *推荐方式(设置标题渐变)
-    [self setUpTitleGradient:^(YZTitleColorGradientStyle *titleColorGradientStyle, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor) {
-        
-    }];
-    
-    [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
-        *underLineColor = kDefultColor;
-        *isUnderLineEqualTitleWidth = YES;
-    }];
+    param.wTitleArrSet(titleArray)
+    .wViewControllerSet(^UIViewController *(NSInteger index) {
+        NSString *title = titleArray[index];
+        if ([title isEqualToString:kControlTitle]) {
+            // control
+            if (weakSelf.model.isRemote) {
+                DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storyboard:@"DeviceSetting"];
+                wordVc1.model = weakSelf.model;
+                return wordVc1;
+            } else {
+                DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storyboard:@"DeviceSetting"];
+                wordVc1.model = weakSelf.model;
+                return wordVc1;
+            }
+        } else if ([title isEqualToString:kGroupTitle]) {
+            // group
+            if (weakSelf.model.isRemote == NO) {
+                DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
+                wordVc2.model = weakSelf.model;
+                return wordVc2;
+            }
+        }
+        // settings
+        DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
+        wordVc3.model = weakSelf.model;
+        return wordVc3;
+     })
+    .wMenuPositionSet(PageMenuPositionCenter)
+    .wMenuAnimalTitleGradientSet(NO)
+    .wMenuTitleColorSet([UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]])
+    .wMenuTitleSelectColorSet([UIColor blackColor])
+    .wMenuTitleWidthSet(SCREENWIDTH/titleArray.count)
+    .wScrollCanTransferSet(NO)
+    .wMenuTitleSelectUIFontSet(param.wMenuTitleUIFont)
+    .wMenuIndicatorColorSet(UIColor.telinkBlue)
+    .wMenuIndicatorWidthSet(SCREENWIDTH/titleArray.count)
+    .wCustomTabbarYSet(^CGFloat(CGFloat nowY) {
+        return 0;
+    })
+    .wMenuAnimalSet(PageTitleMenuPDD);
+    self.param = param;
 
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
-
-}
-
-- (void)setUpAllViewController
-{
-    // control
-    DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storybroad:@"DeviceSetting"];
-    wordVc1.title = @"CONTROL";
-    wordVc1.model = self.model;
-    [self addChildViewController:wordVc1];
-    
-    // group
-    DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storybroad:@"DeviceSetting"];
-    wordVc2.title = @"GROUP";
-    wordVc2.model = self.model;
-    [self addChildViewController:wordVc2];
-    
-    // settings
-    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storybroad:@"DeviceSetting"];
-    wordVc3.title = @"SETTINGS";
-    wordVc3.model = self.model;
-    [self addChildViewController:wordVc3];
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TelinkLogDebug(@"");
 }
 
 @end
