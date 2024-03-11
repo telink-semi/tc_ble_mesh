@@ -6397,10 +6397,8 @@ _attribute_ram_code_ int mesh_blc_aux_adv_filter(u8 *raw_pkt)
 
 #if USER_EXT_ADV_FILTER_EN  
 	// user can set rules to filter the extend adv.
-	if(MAX_AUX_OFFSET_MS_DEF != max_aux_offset_ms){
-		if(is_provision_success()){
-			max_aux_offset_ms = MAX_AUX_OFFSET_MS_DEF;
-		}
+	if(is_provision_success()){
+		max_aux_offset_ms = MAX_AUX_OFFSET_MS_DEF;
 	}else if(0 == accept_flag){ 
 		if(BLE_LL_EXT_ADV_MODE_NON_CONN_NON_SCAN == pExtAdv->adv_mode){ 
 			accept_flag = 1; 
