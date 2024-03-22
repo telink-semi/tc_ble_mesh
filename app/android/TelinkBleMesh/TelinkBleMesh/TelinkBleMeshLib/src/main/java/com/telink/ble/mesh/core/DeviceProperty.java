@@ -30,6 +30,33 @@ import java.io.Serializable;
  */
 public enum DeviceProperty implements Serializable {
 
+
+    LC_AMBIENT_LUX_LEVEL_ON(0x002B, 3, "Ambient Lux Level On", "Illuminance",
+            "This property represents the minimum ambient illuminance level as measured by a lux sensor that determines if a light or a group of lights transitions from the standby state to a run state. "),
+
+    LC_AMBIENT_LUX_LEVEL_PROLONG(0x002C, 3, "Ambient Lux Level Prolong", "Illuminance",
+                    "This property represents the ambient light level for a light or a group of lights in the prolong state."),
+
+    LC_AMBIENT_LUX_LEVEL_STANDBY(0x002D, 3, "Ambient Lux Level Standby", "Illuminance",
+            "This property represents the ambient light level for a light or a group of lights to remain in a standby state."),
+
+    LC_REGULATOR_ACCURACY(0x0031, 1, "Regulator Accuracy", "Percentage 8",
+                    "This property represents the accuracy of a proportional-integral light regulator. "),
+
+    LC_REGULATOR_KID(0x0032, 1, "Regulator Kid", "Percentage 8",
+            "This property represents the integral coefficient K_i in a decreasing output operation mode of a proportional-integral light controller."),
+
+    LC_REGULATOR_KIU(0x0033, 1, "Regulator Kiu", "Percentage 8",
+            "This property represents the integral coefficient K_i in an increasing output operation mode of a proportional-integral light controller. "),
+
+    LC_REGULATOR_KPD(0x0034, 1, "Regulator Kpd", "Percentage 8",
+                    "This property represents the proportional coefficient K_p in a decreasing output operation mode of a proportional-integral light controller."),
+
+    LC_REGULATOR_KPU(0x0035, 1, "Regulator Kpu", "Percentage 8",
+            "This property represents the proportional coefficient K_p in an increasing output operation mode of a proportional-integral light controller. "),
+
+
+
     LC_LIGHTNESS_ON(0x002E, 2, "Lightness On", "Perceived Lightness",
             "This property represents the light lightness level of a light or a group of lights in a run state."),
 
@@ -66,7 +93,9 @@ public enum DeviceProperty implements Serializable {
     MOTION_SENSED(0x0042, 1, "Motion Sensed", "Percentage 8",
             "This property represents the activity level, as, for example, detected by a motion sensor."),
 
-    PRESENT_AMBIENT_LIGHT_LEVEL(0x004E, 3, "Present Ambient Light Level", "Illuminance",
+//    PRESENT_AMBIENT_LIGHT_LEVEL(0x004E, 3, "Present Ambient Light Level", "Illuminance",
+//            "This property represents the light level as measured by a light sensor measuring illuminance (Lux)."),
+    PRESENT_AMBIENT_LIGHT_LEVEL(0x004E, 3, "Present Ambient", "Illuminance",
             "This property represents the light level as measured by a light sensor measuring illuminance (Lux)."),
 
     PRESENCE_DETECTED(0x004D, 1, "Presence Detected", "Boolean",
@@ -122,13 +151,22 @@ public enum DeviceProperty implements Serializable {
                 LC_LIGHTNESS_ON,
                 LIGHTNESS_PROLONG,
                 LIGHTNESS_STANDBY,
-                TIME_FADE,
+                LC_AMBIENT_LUX_LEVEL_ON,
+                LC_AMBIENT_LUX_LEVEL_PROLONG,
+                LC_AMBIENT_LUX_LEVEL_STANDBY,
                 TIME_FADE_ON,
+                TIME_RUN_ON,
+                TIME_FADE,
+                TIME_PROLONG,
                 TIME_FADE_STANDBY_AUTO,
                 TIME_FADE_STANDBY_MANUAL,
                 TIME_OCCUPANCY_DELAY,
-                TIME_PROLONG,
-                TIME_RUN_ON,
+                LC_REGULATOR_ACCURACY,
+                LC_REGULATOR_KID,
+                LC_REGULATOR_KIU,
+                LC_REGULATOR_KPD,
+                LC_REGULATOR_KPU,
+
         };
     }
 
@@ -138,4 +176,5 @@ public enum DeviceProperty implements Serializable {
         }
         return null;
     }
+
 }
