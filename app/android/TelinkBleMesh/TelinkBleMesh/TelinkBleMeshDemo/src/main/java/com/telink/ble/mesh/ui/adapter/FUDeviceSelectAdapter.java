@@ -116,7 +116,7 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
 
         NodeInfo deviceInfo = mDevices.get(position);
         final int pid = deviceInfo.compositionData != null ? deviceInfo.compositionData.pid : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, deviceInfo.getOnlineState(), deviceInfo.isSensor()));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(deviceInfo));
         String pidInfo = deviceInfo.getPidDesc();
 
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,

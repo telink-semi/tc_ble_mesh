@@ -38,142 +38,157 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/ll_forward"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
+                <ImageView
+                    android:id="@+id/iv_all_visible"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:text="Direct Forwarding(main)"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/btn_enable_df"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="enable"
-                    android:textColor="@color/colorPrimary" />
-
-                <Button
-                    android:id="@+id/btn_disable_df"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="disable"
-                    android:textColor="@color/red" />
+                    android:layout_marginRight="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_eye_on" />
 
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/ll_relay"
+                android:id="@+id/ll_all_control"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:text="Direct Relay"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <LinearLayout
+                    android:id="@+id/ll_forward"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btn_enable_relay"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="enable"
-                    android:textColor="@color/colorPrimary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:text="Direct Forwarding(main)"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/btn_disable_relay"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="disable"
-                    android:textColor="@color/red" />
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/btn_enable_df"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="enable"
+                        android:textColor="@color/colorPrimary" />
+
+                    <Button
+                        android:id="@+id/btn_disable_df"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="disable"
+                        android:textColor="@color/red" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_relay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:text="Direct Relay"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btn_enable_relay"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="enable"
+                        android:textColor="@color/colorPrimary" />
+
+                    <Button
+                        android:id="@+id/btn_disable_relay"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="disable"
+                        android:textColor="@color/red" />
+                </LinearLayout>
 
 
-            <LinearLayout
-                android:id="@+id/ll_proxy"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/ll_proxy"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:text="Direct Proxy"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:text="Direct Proxy"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/btn_enable_proxy"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="enable"
-                    android:textColor="@color/colorPrimary" />
+                    <Button
+                        android:id="@+id/btn_enable_proxy"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="enable"
+                        android:textColor="@color/colorPrimary" />
 
-                <Button
-                    android:id="@+id/btn_disable_proxy"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="disable"
-                    android:textColor="@color/red" />
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/btn_disable_proxy"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="disable"
+                        android:textColor="@color/red" />
+                </LinearLayout>
 
 
-            <LinearLayout
-                android:id="@+id/ll_friend"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/ll_friend"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:text="Direct Friend"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:text="Direct Friend"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/btn_enable_friend"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="enable"
-                    android:textColor="@color/colorPrimary" />
+                    <Button
+                        android:id="@+id/btn_enable_friend"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="enable"
+                        android:textColor="@color/colorPrimary" />
 
-                <Button
-                    android:id="@+id/btn_disable_friend"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="disable"
-                    android:textColor="@color/red" />
+                    <Button
+                        android:id="@+id/btn_disable_friend"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="disable"
+                        android:textColor="@color/red" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>

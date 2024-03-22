@@ -26,10 +26,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -50,6 +52,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
@@ -60,6 +63,8 @@ import com.telink.ble.mesh.ui.SchedulerListActivity;
 import com.telink.ble.mesh.ui.SubnetBridgeActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
+
+import java.util.Objects;
 
 /**
  * device settings
@@ -74,7 +79,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     private Handler delayHandler = new Handler();
     private CheckBox cb_pub, cb_relay;
     private PublishModel pubModel;
-    private TextView tv_pub;
+    private TextView tv_pub, tv_node_name;
     private static final int PUB_INTERVAL = 20 * 1000;
 
     private static final int PUB_ADDRESS = 0xFFFF;
@@ -98,6 +103,10 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         TextView tv_mac = view.findViewById(R.id.tv_mac);
         tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
+
+        tv_node_name = view.findViewById(R.id.tv_node_name);
+        updateNodeName();
+
         cb_pub = view.findViewById(R.id.cb_pub);
         cb_relay = view.findViewById(R.id.cb_relay);
         cb_pub.setChecked(deviceInfo.isPubSet());
@@ -116,11 +125,20 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
         view.findViewById(R.id.view_subnet).setOnClickListener(this);
         view.findViewById(R.id.view_private_beacon).setOnClickListener(this);
+        view.findViewById(R.id.view_name).setOnClickListener(this);
         if (!isSensor) {
             TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
         }
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+    }
+
+    private void updateNodeName() {
+        if (deviceInfo.name == null) {
+            tv_node_name.setText("Name: Node");
+        } else {
+            tv_node_name.setText("Name: " + deviceInfo.name);
+        }
     }
 
     /**
@@ -213,19 +231,9 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         kickDirect = deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress();
         showWaitingDialog("kick out processing");
         if (!kickDirect) {
-            delayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onKickOutFinish();
-                }
-            }, 3 * 1000);
+            delayHandler.postDelayed(this::onKickOutFinish, 3 * 1000);
         } else {
-            delayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onKickOutFinish();
-                }
-            }, 10 * 1000);
+            delayHandler.postDelayed(this::onKickOutFinish, 10 * 1000);
         }
     }
 
@@ -235,7 +243,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         TelinkMeshApplication.getInstance().getMeshInfo().removeNode(deviceInfo);
 //        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity().getApplicationContext());
         dismissWaitingDialog();
-        getActivity().finish();
+        Objects.requireNonNull(getActivity()).finish();
     }
 
     @Override
@@ -350,10 +358,36 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                         .putExtra("meshAddress", deviceInfo.meshAddress));
                 break;
 
+            case R.id.view_name:
+                showNameInputDialog();
+                break;
 
-//                case R.id.
         }
     }
+
+
+    private void showNameInputDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_single_input, null);
+        final EditText et_input = view.findViewById(R.id.et_single_input);
+        et_input.setText(deviceInfo.name);
+        et_input.setHint("please input name");
+        builder.setTitle("Change Node Name");
+        builder.setView(view).setPositiveButton("Confirm", (dialog, which) -> {
+            dialog.dismiss();
+            String name = et_input.getText().toString().trim();
+            if (TextUtils.isEmpty(name)) {
+                toastMsg("input empty");
+                return;
+            }
+            deviceInfo.updateName(name);
+            updateNodeName();
+            MeshInfoService.getInstance().updateNodeInfo(deviceInfo);
+            toastMsg("save name success ");
+        }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
 
     private Runnable pubCmdTimeoutTask = () -> {
         toastMsg("pub timeout");

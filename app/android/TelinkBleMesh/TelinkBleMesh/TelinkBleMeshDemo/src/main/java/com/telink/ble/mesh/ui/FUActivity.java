@@ -80,6 +80,7 @@ import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * firmware update by mesh
@@ -281,6 +282,22 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         exitWarningAlert.show();
     }
 
+    private void showCompleteDialog() {
+        AlertDialog.Builder completeDialog = new AlertDialog.Builder(this);
+        completeDialog.setCancelable(false);
+        completeDialog.setTitle("Warning");
+        int sucCnt = 0;
+        for (MeshUpdatingDevice dev : updatingDevices) {
+            if (dev.state == MeshUpdatingDevice.STATE_SUCCESS) {
+                sucCnt += 1;
+            }
+        }
+        int failCnt = updatingDevices.size() - sucCnt;
+        completeDialog.setMessage(String.format(Locale.getDefault(), "Mesh OTA Complete \nsuccess: %d \nfail: %d", sucCnt, failCnt));
+        completeDialog.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+        completeDialog.show();
+    }
+
     private void checkIsContinue() {
         Intent intent = getIntent();
         boolean isContinue = intent.getBooleanExtra(KEY_FU_CONTINUE, false);
@@ -294,23 +311,19 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             } else {
                 startNewUpdating();
             }
-
         }
     }
 
     private void showContinueDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        DialogInterface.OnClickListener dialogBtnClick = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == DialogInterface.BUTTON_POSITIVE) {
-                    // continue
-                    continueFirmwareUpdate();
-                } else if (which == DialogInterface.BUTTON_NEGATIVE) {
-                    // start new fu processing
-                    FUCacheService.getInstance().clear(FUActivity.this);
-                    startNewUpdating();
-                }
+        DialogInterface.OnClickListener dialogBtnClick = (dialog, which) -> {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                // continue
+                continueFirmwareUpdate();
+            } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                // start new fu processing
+                FUCacheService.getInstance().clear(FUActivity.this);
+                startNewUpdating();
             }
         };
 
@@ -775,6 +788,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         }
         if (state == FUState.UPDATE_COMPLETE || state == FUState.UPDATE_FAIL) {
             this.isComplete = true;
+            runOnUiThread(this::showCompleteDialog);
+
         }
     }
 

@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -37,6 +38,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.NodeSortType;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
@@ -70,6 +72,7 @@ import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -84,6 +87,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
     private OnlineDeviceListAdapter mAdapter;
     private List<NodeInfo> mDevices;
     private Handler mCycleHandler = new Handler();
+    private MenuItem sortItem;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -96,6 +100,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         setTitle(view, "Device");
         Toolbar toolbar = view.findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_tab);
+        sortItem = toolbar.getMenu().findItem(R.id.item_sort);
+        resetSortIcon();
         toolbar.setNavigationIcon(R.drawable.ic_refresh);
 
         toolbar.setNavigationOnClickListener(v -> {
@@ -114,18 +120,17 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 }
                 mAdapter.notifyDataSetChanged();
             }
-
         });
 
         toolbar.setOnMenuItemClickListener(item -> {
-            if (TelinkMeshApplication.getInstance().getMeshInfo().ivIndex == MeshInfo.UNINITIALIZED_IVI) {
-                showIvWarningDialog();
-//                toastMsg("");
-                return false;
-            }
+
             if (item.getItemId() == R.id.item_add) {
 //                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
-
+                if (TelinkMeshApplication.getInstance().getMeshInfo().ivIndex == MeshInfo.UNINITIALIZED_IVI) {
+                    showIvWarningDialog();
+//                toastMsg("");
+                    return false;
+                }
                 if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
                     startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
                 } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
@@ -135,6 +140,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 } else {
                     startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
                 }
+            } else if (item.getItemId() == R.id.item_sort) {
+                showSortDialog();
             }
             return false;
         });
@@ -224,14 +231,75 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         setSubTitle(getView(), meshInfo.meshName);
 //        mDevices = TelinkMeshApplication.getInstance().getMeshInfo().devices;
 //        mAdapter.notifyDataSetChanged();
+        updateNodeBySort(TelinkMeshApplication.getInstance().getSortType());
         mAdapter.resetDevices(mDevices);
     }
+
+    private void updateNodeBySort(NodeSortType sortType) {
+        switch (sortType) {
+            case NAME_ASC:
+                Collections.sort(mDevices, (o1, o2) -> (o1.name == null ? ("" + o1.meshAddress) : o1.name).compareTo(o2.name == null ? ("" + o2.meshAddress) : o2.name));
+                break;
+
+            case NAME_DESC:
+                Collections.sort(mDevices, (o1, o2) -> -(o1.name == null ? ("" + o1.meshAddress) : o1.name).compareTo(o2.name == null ? ("" + o2.meshAddress) : o2.name));
+                break;
+
+            case ADDRESS_ASC:
+                Collections.sort(mDevices, (o1, o2) -> o1.meshAddress - o2.meshAddress);
+                break;
+
+            case ADDRESS_DESC:
+                Collections.sort(mDevices, (o1, o2) -> o2.meshAddress - o1.meshAddress);
+                break;
+        }
+        mAdapter.notifyDataSetChanged();
+//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
+    }
+
+    private void resetSortIcon() {
+        NodeSortType sortType = TelinkMeshApplication.getInstance().getSortType();
+        switch (sortType) {
+            case NAME_ASC:
+                sortItem.setIcon(R.drawable.ic_sort_name_asc);
+                break;
+
+            case NAME_DESC:
+                sortItem.setIcon(R.drawable.ic_sort_name_desc);
+                break;
+
+            case ADDRESS_ASC:
+                sortItem.setIcon(R.drawable.ic_sort_adr_asc);
+                break;
+
+            case ADDRESS_DESC:
+                sortItem.setIcon(R.drawable.ic_sort_adr_desc);
+                break;
+        }
+    }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(this);
         mCycleHandler.removeCallbacksAndMessages(null);
+    }
+
+    public void showSortDialog() {
+        AlertDialog.Builder actionSelectDialog = new AlertDialog.Builder(getActivity());
+        String[] actions = new String[NodeSortType.values().length];
+        for (int i = 0; i < actions.length; i++) {
+            actions[i] = NodeSortType.values()[i].name;
+        }
+        actionSelectDialog.setItems(actions, (dialog, which) -> {
+            NodeSortType sortType = NodeSortType.values()[which];
+            TelinkMeshApplication.getInstance().resetSortType(sortType);
+            resetSortIcon();
+            updateNodeBySort(sortType);
+        });
+        actionSelectDialog.setTitle("Select Sort Type");
+        actionSelectDialog.show();
     }
 
     private void toastMsg(String s) {

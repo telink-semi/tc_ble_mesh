@@ -43,6 +43,7 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.ui.DeviceBatchSettingActivity;
 import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
@@ -78,6 +79,7 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
         view.findViewById(R.id.view_df).setOnClickListener(this);
         view.findViewById(R.id.view_sol).setOnClickListener(this);
+        view.findViewById(R.id.view_node_batch).setOnClickListener(this);
         pb_sol = view.findViewById(R.id.pb_sol);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
     }
@@ -127,6 +129,10 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
                 }
                 toastMsg("start solicitation");
                 startSolicitation();
+                break;
+
+            case R.id.view_node_batch:
+                startActivity(new Intent(getActivity(), DeviceBatchSettingActivity.class));
                 break;
         }
     }

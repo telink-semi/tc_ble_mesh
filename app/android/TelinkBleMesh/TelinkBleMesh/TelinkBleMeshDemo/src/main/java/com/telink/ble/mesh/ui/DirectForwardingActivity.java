@@ -255,7 +255,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
         NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedOrigin);
         int pid = node.compositionData != null ? node.compositionData.pid : 0;
-        iv_origin.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, node.isSensor()));
+        iv_origin.setImageResource(IconGenerator.getIcon(node, OnlineState.ON));
         tv_origin.setText(String.format("Node-%04X", selectedOrigin));
     }
 
@@ -270,7 +270,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
         NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedTarget);
         int pid = node.compositionData != null ? node.compositionData.pid : 0;
-        iv_target.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, node.isSensor()));
+        iv_target.setImageResource(IconGenerator.getIcon(node, OnlineState.ON));
         tv_target.setText(String.format("Node-%04X", selectedTarget));
     }
 

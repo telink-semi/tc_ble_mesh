@@ -27,7 +27,7 @@ import android.os.Handler;
 import android.view.MenuItem;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
@@ -62,7 +62,7 @@ import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.model.db.MeshInfoService;
-import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
+import com.telink.ble.mesh.ui.adapter.DeviceRemoteProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -90,7 +90,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
      */
     private List<NetworkingDevice> devices = new ArrayList<>();
 
-    private DeviceAutoProvisionListAdapter mListAdapter;
+    private DeviceRemoteProvisionListAdapter mListAdapter;
 
     /**
      * scanned devices timeout remote-scanning
@@ -101,7 +101,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private boolean proxyComplete = false;
 
-    private static final byte THRESHOLD_REMOTE_RSSI = -85;
+    private static final byte THRESHOLD_REMOTE_RSSI = -90;
+
+    private static final byte THRESHOLD_PROXY_RSSI = -75;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,13 +116,12 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         initTitle();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
 
-        mListAdapter = new DeviceAutoProvisionListAdapter(this, devices);
-        rv_devices.setLayoutManager(new GridLayoutManager(this, 2));
+        mListAdapter = new DeviceRemoteProvisionListAdapter(this, devices);
+        rv_devices.setLayoutManager(new LinearLayoutManager(this));
         rv_devices.setAdapter(mListAdapter);
 
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-
         TelinkMeshApplication.getInstance().addEventListener(ScanReportStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, this);
@@ -139,7 +140,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan", "Remote");
+        setTitle("Device Scan", "Remote Provision");
 
         MenuItem refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
@@ -220,6 +221,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             nodeInfo.macAddress = advertisingDevice.device.getAddress();
             nodeInfo.deviceUUID = deviceUUID;
             NetworkingDevice device = new NetworkingDevice(nodeInfo);
+            device.rssi = advertisingDevice.rssi;
             device.bluetoothDevice = advertisingDevice.device;
             device.state = NetworkingState.PROVISIONING;
             devices.add(device);
@@ -313,13 +315,16 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             MeshLogger.e("no Available server address");
             return;
         }
+        long delay = 0;
         for (int address : serverAddresses) {
             ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(address, 1, SCAN_LIMIT, SCAN_TIMEOUT);
-            MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+//            MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+            delayHandler.postDelayed(() -> MeshService.getInstance().sendMeshMessage(remoteScanMessage), delay);
+            delay += 3000;
         }
 
-        delayHandler.removeCallbacksAndMessages(null);
-        delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000);
+        delayHandler.removeCallbacks(remoteScanTimeoutTask);
+        delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000 + delay);
     }
 
     private void onRemoteComplete() {
@@ -356,6 +361,12 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         delayHandler.removeCallbacksAndMessages(null);
     }
 
+    /**
+     * remote device found
+     *
+     * @param src
+     * @param scanReportStatusMessage
+     */
     private void onRemoteDeviceScanned(int src, ScanReportStatusMessage scanReportStatusMessage) {
         final byte rssi = scanReportStatusMessage.getRssi();
         final byte[] uuid = scanReportStatusMessage.getUuid();
@@ -379,11 +390,28 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         if (index >= 0) {
             // exists
             RemoteProvisioningDevice device = remoteDevices.get(index);
+            int proxyAdr = MeshService.getInstance().getDirectConnectedNodeAddress();
             if (device != null) {
-                if (device.getRssi() < remoteProvisioningDevice.getRssi() && device.getServerAddress() != remoteProvisioningDevice.getServerAddress()) {
-                    MeshLogger.log("remote device replaced");
-                    device.setRssi(remoteProvisioningDevice.getRssi());
-                    device.setServerAddress(device.getServerAddress());
+                boolean needReplace;
+                MeshLogger.d(" proxy - " + Integer.toHexString(proxyAdr));
+                MeshLogger.d(" address - " + Integer.toHexString(device.getServerAddress()) + " -- " + Integer.toHexString(remoteProvisioningDevice.getServerAddress()));
+                MeshLogger.d(" rssi - " + device.getRssi() + " -- " + remoteProvisioningDevice.getRssi());
+                if (device.getServerAddress() != remoteProvisioningDevice.getServerAddress()) { // device.getRssi() < remoteProvisioningDevice.getRssi() &&
+                    if (device.getServerAddress() == proxyAdr) {
+                        needReplace = device.getRssi() <= THRESHOLD_PROXY_RSSI && device.getRssi() < remoteProvisioningDevice.getRssi();
+                    } else if (remoteProvisioningDevice.getServerAddress() == proxyAdr) {
+                        needReplace = remoteProvisioningDevice.getRssi() > THRESHOLD_PROXY_RSSI;
+                    } else {
+                        needReplace = device.getRssi() < remoteProvisioningDevice.getRssi();
+                    }
+                    if (needReplace) {
+                        MeshLogger.log("remote device replaced");
+                        device.setRssi(remoteProvisioningDevice.getRssi());
+                        device.setServerAddress(device.getServerAddress());
+                    } else {
+                        MeshLogger.log("remote device no need to replace");
+                    }
+
                 }
             }
         } else {
@@ -421,7 +449,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
         nodeInfo.meshAddress = address;
         NetworkingDevice networkingDevice = new NetworkingDevice(nodeInfo);
+        networkingDevice.rssi = device.getRssi();
         networkingDevice.state = NetworkingState.PROVISIONING;
+        networkingDevice.serverAddress = device.getServerAddress();
         devices.add(networkingDevice);
         mListAdapter.notifyDataSetChanged();
 
@@ -528,12 +558,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         final BindingDevice bindingDevice = new BindingDevice(networkingDevice.nodeInfo.meshAddress, networkingDevice.nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setBearer(BindingBearer.Any);
         delayHandler.removeCallbacksAndMessages(null);
-        delayHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
-            }
-        }, 3000);
+        delayHandler.postDelayed(() -> MeshService.getInstance().startBinding(new BindingParameters(bindingDevice)), 3000);
 
     }
 

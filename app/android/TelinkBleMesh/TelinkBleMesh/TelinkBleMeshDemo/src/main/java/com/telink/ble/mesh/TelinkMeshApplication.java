@@ -68,6 +68,8 @@ public class TelinkMeshApplication extends MeshApplication {
 
     private MeshInfo meshInfo;
 
+    private NodeSortType sortType= NodeSortType.ADDRESS_ASC;
+
     private Handler mOfflineCheckHandler;
 
     @Override
@@ -79,9 +81,10 @@ public class TelinkMeshApplication extends MeshApplication {
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         AppCrashHandler.init(this);
+        closePErrorDialog();
         ObjectBox.init(this);
         checkMeshInfo();
-        closePErrorDialog();
+        loadSortType();
     }
 
     /**
@@ -154,6 +157,23 @@ public class TelinkMeshApplication extends MeshApplication {
 
     public static TelinkMeshApplication getInstance() {
         return mThis;
+    }
+
+    public NodeSortType getSortType() {
+        return sortType;
+    }
+
+    private void loadSortType() {
+        int type = SharedPreferenceHelper.getNodeSortType(this);
+        sortType = NodeSortType.values()[type];
+        if (sortType == null) {
+            sortType = NodeSortType.NAME_ASC;
+        }
+    }
+
+    public void resetSortType(NodeSortType sortType) {
+        this.sortType = sortType;
+        SharedPreferenceHelper.setNodeSortType(this, sortType);
     }
 
     @Override

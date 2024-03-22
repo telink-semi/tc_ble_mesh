@@ -28,8 +28,6 @@ import com.telink.ble.mesh.demo.BuildConfig;
 import com.telink.ble.mesh.model.MyObjectBox;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.io.File;
-
 import io.objectbox.BoxStore;
 import io.objectbox.BoxStoreBuilder;
 import io.objectbox.android.Admin;
@@ -71,10 +69,11 @@ public class ObjectBox {
     }
 
     public static void deleteAll(Context context) {
-        File objectBoxDirectory = new File(context.getFilesDir(), BoxStoreBuilder.DEFAULT_NAME);
+        BoxStore.deleteAllFiles(context, null);
+        /*File objectBoxDirectory = new File(context.getFilesDir(), BoxStoreBuilder.DEFAULT_NAME);
         if (objectBoxDirectory.exists()) {
             boolean deleteRe = objectBoxDirectory.delete();
             MeshLogger.d("delete - " + objectBoxDirectory.getName() + " re - " + deleteRe);
-        }
+        }*/
     }
 }

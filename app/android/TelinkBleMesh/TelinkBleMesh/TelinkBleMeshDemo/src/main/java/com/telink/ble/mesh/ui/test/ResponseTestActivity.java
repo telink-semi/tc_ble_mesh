@@ -166,13 +166,10 @@ public class ResponseTestActivity extends BaseActivity implements View.OnClickLi
     private void showActionDialog() {
         if (cmdDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(CMD_ACTION, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    cmdType = which;
-                    et_cmd_action.setText(CMD_ACTION[which]);
-                    cmdDialog.dismiss();
-                }
+            builder.setItems(CMD_ACTION, (dialog, which) -> {
+                cmdType = which;
+                et_cmd_action.setText(CMD_ACTION[which]);
+                cmdDialog.dismiss();
             });
             builder.setTitle("Select First Command");
             cmdDialog = builder.create();

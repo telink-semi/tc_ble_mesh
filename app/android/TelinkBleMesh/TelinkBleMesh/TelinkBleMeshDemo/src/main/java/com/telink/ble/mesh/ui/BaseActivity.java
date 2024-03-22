@@ -144,16 +144,13 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     }
 
     public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick) {
-        if (confirmDialogBuilder == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setCancelable(true);
-            builder.setTitle("Warning");
-            builder.setPositiveButton("Confirm", confirmClick);
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-            confirmDialogBuilder = builder.create();
-        }
-        confirmDialogBuilder.setMessage(msg);
-        confirmDialogBuilder.show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle("Warning");
+        builder.setPositiveButton("Confirm", confirmClick);
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.setMessage(msg);
+        builder.show();
     }
 
     public void dismissConfirmDialog() {

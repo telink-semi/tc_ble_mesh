@@ -846,7 +846,8 @@ public class MeshStorageService {
         node.netKeys = new ArrayList<>();
         node.netKeys.add(new MeshStorage.NodeKey(0, false));
         node.configComplete = true;
-        node.name = "Common Node";
+//        node.name = "Common Node";
+        node.name = deviceInfo.name;
 
         // check if appKey list exists to confirm device bound state
         if (deviceInfo.bound) {

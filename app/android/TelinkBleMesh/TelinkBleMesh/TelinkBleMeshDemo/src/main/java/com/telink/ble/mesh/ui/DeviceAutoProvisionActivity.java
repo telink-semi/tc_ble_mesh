@@ -199,13 +199,14 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.meshAddress = address;
             nodeInfo.deviceUUID = deviceUUID;
+
             nodeInfo.macAddress = advertisingDevice.device.getAddress();
 
             NetworkingDevice device = new NetworkingDevice(nodeInfo);
             device.bluetoothDevice = advertisingDevice.device;
             device.state = NetworkingState.PROVISIONING;
             device.oobInfo = oobInfo;
-
+            device.rssi = advertisingDevice.rssi;
             devices.add(device);
             mListAdapter.notifyDataSetChanged();
         } else {

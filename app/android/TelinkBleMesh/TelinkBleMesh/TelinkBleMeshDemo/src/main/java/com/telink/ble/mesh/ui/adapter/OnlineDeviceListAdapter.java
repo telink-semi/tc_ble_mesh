@@ -31,12 +31,14 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.core.DeviceProperty;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeSensorState;
 import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
 
@@ -62,8 +64,9 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_online_device, null, false);
         ViewHolder holder = new ViewHolder(itemView);
-        holder.tv_name = itemView.findViewById(R.id.tv_name);
+        holder.tv_pid = itemView.findViewById(R.id.tv_pid);
         holder.img_icon = itemView.findViewById(R.id.img_icon);
+        holder.tv_name = itemView.findViewById(R.id.tv_name);
         return holder;
     }
 
@@ -77,30 +80,17 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         super.onBindViewHolder(holder, position);
 
         NodeInfo device = mDevices.get(position);
-        final int pid = device.compositionData != null ? device.compositionData.pid : 0;
-        boolean isSensor = device.isSensor();
 
-        holder.img_icon.setImageResource(IconGenerator.getIcon(pid, device.getOnlineState(), isSensor));
-
+        holder.img_icon.setImageResource(IconGenerator.getIcon(device));
+        holder.tv_name.setText(device.name == null ? "Node" : device.name);
         if (device.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
+            holder.tv_pid.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
         } else {
+            holder.tv_pid.setTextColor(mContext.getResources().getColor(R.color.black));
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
         }
-
-        /*if (device.getOnOff() == -1) {
-//            holder.img_icon.setImageResource(R.drawable.icon_light_offline);
-            holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
-        } else {
-            if (device.macAddress != null && device.macAddress.equals(MeshService.getInstance().getCurDeviceMac())) {
-                holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
-            } else {
-                holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
-            }
-        }*/
-
-
-//        holder.tv_name.setText(models.get(position).getAddress());
+        boolean isSensor = device.isSensor();
         String info;
         if (device.meshAddress <= 0xFF) {
             info = String.format("%02X", device.meshAddress);
@@ -111,14 +101,8 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         if (device.bound && device.compositionData != null) {
             if (isSensor) {
                 NodeSensorState sensorState = device.getFirstSensorState();
-
                 if (sensorState != null) {
-                    /*if (sensorState.propertyID == DeviceProperty.PRESENT_AMBIENT_LIGHT_LEVEL.id) {
-                        info += ("Light Level");
-                    } else if (sensorState.propertyID == DeviceProperty.MOTION_SENSED.id) {
-                        info += ("MOTION");
-                    }*/
-//                    info += (String.format("(Sensor-%04X)", sensorState.propertyID, sensorState.state));
+                    MeshLogger.d("sensorState : " + sensorState.toString());
                     info += (String.format("(%04X-%s)", sensorState.propertyID, Arrays.bytesToHexString(sensorState.state)));
                 } else {
                     info += ("(Sensor-NULL)");
@@ -135,14 +119,14 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         } else {
             info += "(unbound)";
         }
-        holder.tv_name.setText(info);
+        holder.tv_pid.setText(info);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
-
         public ImageView img_icon;
-        public TextView tv_name;
+        public TextView tv_pid, tv_name;
+
 
         public ViewHolder(View itemView) {
             super(itemView);

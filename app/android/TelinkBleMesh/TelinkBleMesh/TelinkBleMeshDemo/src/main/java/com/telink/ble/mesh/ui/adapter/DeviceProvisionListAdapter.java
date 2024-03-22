@@ -96,12 +96,12 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         NetworkingDevice device = mDevices.get(position);
 
         NodeInfo nodeInfo = device.nodeInfo;
-        int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, nodeInfo.isSensor()));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(nodeInfo, OnlineState.ON));
         String deviceDesc = mContext.getString(R.string.device_prov_desc, nodeInfo.meshAddress == -1 ? "[Unallocated]" : "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {
             deviceDesc += "\nmac: " + nodeInfo.macAddress;
         }
+        deviceDesc += " - rssi: " + device.rssi + "dBm";
         holder.tv_device_info.setText(deviceDesc);
         holder.tv_state.setText(device.state.desc);
 
@@ -169,6 +169,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
                 ((DeviceProvisionActivity) mContext).provisionNext();
             } else if (v.getId() == R.id.iv_close) {
                 mDevices.remove(position);
+                ((DeviceProvisionActivity) mContext).updateDeviceCountInfo(-1);
                 notifyDataSetChanged();
             }
         }

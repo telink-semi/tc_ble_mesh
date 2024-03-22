@@ -241,7 +241,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         NetworkingDevice processingDevice = new NetworkingDevice(nodeInfo);
         processingDevice.bluetoothDevice = advertisingDevice.device;
         processingDevice.oobInfo = oobInfo;
-
+        processingDevice.rssi = advertisingDevice.rssi;
         processingDevice.state = NetworkingState.IDLE;
         processingDevice.addLog(NetworkingDevice.TAG_SCAN, "device found");
         devices.add(processingDevice);
@@ -249,7 +249,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         updateDeviceCountInfo(1);
     }
 
-    private void updateDeviceCountInfo(int variation) {
+    public void updateDeviceCountInfo(int variation) {
         unpvDevCnt += variation;
         runOnUiThread(() -> {
             tv_dev_cnt.setText("unprovisioned device count: " + unpvDevCnt);

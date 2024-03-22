@@ -12,6 +12,11 @@
         android:title="refresh"
         app:showAsAction="ifRoom" />-->
 
+    <item
+        android:id="@+id/item_sort"
+        android:icon="@drawable/ic_sort"
+        android:title="add"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/item_add"

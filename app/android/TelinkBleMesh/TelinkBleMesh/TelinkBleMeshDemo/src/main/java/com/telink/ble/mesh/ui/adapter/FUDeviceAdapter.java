@@ -31,9 +31,12 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
@@ -48,9 +51,11 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
 
     private Context mContext;
     private List<MeshUpdatingDevice> mDevices;
+    private MeshInfo meshInfo;
 
     public FUDeviceAdapter(Context context) {
         this.mContext = context;
+        meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
     }
 
     public void resetDevices(List<MeshUpdatingDevice> mDevices) {
@@ -80,9 +85,8 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
         super.onBindViewHolder(holder, position);
 
         MeshUpdatingDevice deviceInfo = mDevices.get(position);
-
-        final int pid = deviceInfo.pid;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, deviceInfo.isSensor));
+        NodeInfo nodeInfo = meshInfo.getDeviceByMeshAddress(deviceInfo.meshAddress);
+        holder.iv_device.setImageResource(IconGenerator.getIcon(nodeInfo, OnlineState.ON));
         String pidInfo = deviceInfo.pidInfo;
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,
                 String.format("%04X", deviceInfo.meshAddress),

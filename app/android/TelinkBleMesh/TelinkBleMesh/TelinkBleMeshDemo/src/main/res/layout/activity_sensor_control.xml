@@ -99,6 +99,14 @@
                 android:gravity="right">
 
                 <Button
+                    android:id="@+id/btn_get_pub"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Get"
+                    android:textColor="@color/colorPrimary" />
+
+                <Button
                     android:id="@+id/btn_set_pub"
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="wrap_content"

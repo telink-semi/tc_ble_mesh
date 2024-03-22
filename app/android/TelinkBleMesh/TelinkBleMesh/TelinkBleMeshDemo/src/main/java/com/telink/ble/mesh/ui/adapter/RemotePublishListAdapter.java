@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -116,7 +115,7 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
     private void showAddressSelectDialog(ViewHolder holder, int position) {
         String modelIdInput = holder.et_mdl_id.getText().toString();
         String[] items;
-        boolean isLevelModel = modelIdInput.equals("1002");
+        boolean isLevelModel = modelIdInput.equals("1002") || modelIdInput.equals("1003");
         if (isLevelModel && isLevelServiceEnable) {
             items = extendGroups;
         } else {

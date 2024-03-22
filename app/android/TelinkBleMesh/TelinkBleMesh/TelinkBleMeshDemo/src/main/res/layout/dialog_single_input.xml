@@ -14,7 +14,7 @@
             android:id="@+id/et_single_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="please input content" />
+            android:hint="please input" />
     </com.google.android.material.textfield.TextInputLayout>
 
 </LinearLayout>

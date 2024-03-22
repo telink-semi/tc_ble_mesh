@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
+import com.telink.ble.mesh.core.message.config.ModelPublicationGetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.sensor.SensorCadenceGetMessage;
@@ -117,6 +118,7 @@ public class SensorControlActivity extends BaseActivity implements View.OnClickL
         et_period = findViewById(R.id.et_period);
 
         findViewById(R.id.btn_set_pub).setOnClickListener(this);
+        findViewById(R.id.btn_get_pub).setOnClickListener(this);
     }
 
     private void updatePubSt() {
@@ -170,7 +172,7 @@ public class SensorControlActivity extends BaseActivity implements View.OnClickL
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_set_pub:
+            case R.id.btn_set_pub: {
                 if (!checkPubInput()) {
                     return;
                 }
@@ -186,6 +188,15 @@ public class SensorControlActivity extends BaseActivity implements View.OnClickL
                     delayHandler.postDelayed(pubCmdTimeoutTask, 5 * 1000);
                 }
                 break;
+            }
+
+            case R.id.btn_get_pub: {
+                int modelId = pubModel.modelId;
+                int eleAdr = nodeInfo.getTargetEleAdr(modelId);
+                ModelPublicationGetMessage getMessage = ModelPublicationGetMessage.getSimple(nodeInfo.meshAddress, eleAdr, modelId);
+                MeshService.getInstance().sendMeshMessage(getMessage);
+            }
+            break;
         }
     }
 

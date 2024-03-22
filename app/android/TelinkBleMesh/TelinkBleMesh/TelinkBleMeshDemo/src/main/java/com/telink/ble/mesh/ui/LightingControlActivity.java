@@ -41,10 +41,15 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.DeviceProperty;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.core.message.lighting.LcLightOnOffGetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcModeGetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcModeSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcModeStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcOmGetMessage;
+import com.telink.ble.mesh.core.message.lighting.LcOmSetMessage;
+import com.telink.ble.mesh.core.message.lighting.LcOmStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LcPropertyGetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcPropertySetMessage;
 import com.telink.ble.mesh.core.message.lighting.LcPropertyStatusMessage;
@@ -70,7 +75,7 @@ import java.util.List;
 public class LightingControlActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
     //    private Button btn_back;
-    private Switch switch_mode, switch_set_on_off;
+    private Switch switch_mode, switch_lc_om, switch_set_on_off;
     private NodeInfo nodeInfo;
     private MeshInfo meshInfo;
     private int lcEleAdr;
@@ -78,6 +83,18 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
     private List<LcPropItem> lcPropItems;
     private LcPropertyListAdapter adapter;
     private Handler delayHandler = new Handler();
+
+    /**
+     * Enable LC Occupancy mode
+     */
+    private boolean lcOmEnabled = true;
+
+    /**
+     * Enable LC mode
+     */
+    private boolean lcEnabled = true;
+
+    private boolean lcOn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,16 +120,28 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         initProps();
         initViews();
         TelinkMeshApplication.getInstance().addEventListener(LcModeStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(LcOmStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(LcLightOnOffStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(LcPropertyStatusMessage.class.getName(), this);
         MeshService.getInstance().idle(false);
+
+        getOnOffState();
+    }
+
+
+    private void getOnOffState() {
+        MeshService.getInstance().sendMeshMessage(LcOmGetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(), 1));
+        delayHandler.postDelayed(() -> MeshService.getInstance().sendMeshMessage(LcModeGetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(), 1)), 500);
+        delayHandler.postDelayed(() -> MeshService.getInstance().sendMeshMessage(LcLightOnOffGetMessage.getSimple(nodeInfo.meshAddress, meshInfo.getDefaultAppKeyIndex(), 1)), 500);
     }
 
     private void initViews() {
         switch_mode = findViewById(R.id.switch_mode);
+        switch_lc_om = findViewById(R.id.switch_lc_om);
         switch_set_on_off = findViewById(R.id.switch_set_on_off);
-        updateLcModeStatus();
+//        updateLcModeStatus();
         switch_mode.setOnCheckedChangeListener(SWITCH_CHECK_LSN);
+        switch_lc_om.setOnCheckedChangeListener(SWITCH_CHECK_LSN);
         switch_set_on_off.setChecked(false);
         switch_set_on_off.setOnCheckedChangeListener(SWITCH_CHECK_LSN);
 
@@ -212,12 +241,12 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             if (buttonView == switch_mode) {
-                if (isChecked && !nodeLcProps.enabled) {
+                if (isChecked && !lcEnabled) {
                     MeshService.getInstance().sendMeshMessage(
                             LcModeSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                     (byte) 1, true, 1)
                     );
-                } else if (!isChecked && nodeLcProps.enabled) {
+                } else if (!isChecked && lcEnabled) {
                     MeshService.getInstance().sendMeshMessage(
                             LcModeSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                     (byte) 0, true, 1)
@@ -228,6 +257,19 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
                         LcLightOnOffSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
                                 (byte) (isChecked ? 1 : 0), true, 1)
                 );
+                delayedRefresh();
+            } else if (buttonView == switch_lc_om) {
+                if (isChecked && !lcOmEnabled) {
+                    MeshService.getInstance().sendMeshMessage(
+                            LcOmSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
+                                    (byte) 1, true, 1)
+                    );
+                } else if (!isChecked && lcOmEnabled) {
+                    MeshService.getInstance().sendMeshMessage(
+                            LcOmSetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(),
+                                    (byte) 0, true, 1)
+                    );
+                }
             }
         }
     };
@@ -249,11 +291,27 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         }
     }
 
-    private void updateLcModeStatus() {
-        runOnUiThread(() -> {
-            switch_mode.setChecked(nodeLcProps.enabled);
-            switch_set_on_off.setEnabled(nodeLcProps.enabled);
-        });
+    private void delayedRefresh() {
+        delayHandler.removeCallbacks(REFRESH_TASK);
+        delayHandler.postDelayed(REFRESH_TASK, getRefreshDelay());
+    }
+
+    private Runnable REFRESH_TASK = new Runnable() {
+        @Override
+        public void run() {
+            MeshService.getInstance().sendMeshMessage(
+                    LcLightOnOffGetMessage.getSimple(lcEleAdr, meshInfo.getDefaultAppKeyIndex(), 1));
+        }
+    };
+
+    private long getRefreshDelay() {
+        NodeLcProps prop = nodeInfo.getLcProps();
+        long timeFadeOn = prop.timeFadeOn == -1 ? 2000 : prop.timeFadeOn;
+        long timeRunOn = prop.timeRunOn == -1 ? 5000 : prop.timeRunOn;
+        long timeFade = prop.timeFade == -1 ? 2000 : prop.timeFade;
+        long timeProlong = prop.timeProlong == -1 ? 4000 : prop.timeProlong;
+        long timeFadeStandbyAuto = prop.timeFadeStandbyAuto == -1 ? 3000 : prop.timeFadeStandbyAuto;
+        return timeFadeOn + timeRunOn + timeFade + timeProlong + timeFadeStandbyAuto;
     }
 
     @Override
@@ -261,9 +319,11 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         if (event.getType().equals(LcModeStatusMessage.class.getName())) {
             //
             LcModeStatusMessage statusMessage = (LcModeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            nodeLcProps.enabled = statusMessage.getMode() == 1;
-            saveProps();
-            updateLcModeStatus();
+            lcEnabled = statusMessage.getMode() == 1;
+
+            runOnUiThread(() -> {
+                switch_mode.setChecked(lcEnabled);
+            });
         } else if (event.getType().equals(LcLightOnOffStatusMessage.class.getName())) {
 
         } else if (event.getType().equals(LcPropertyStatusMessage.class.getName())) {
@@ -277,6 +337,10 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
                 saveProps();
                 runOnUiThread(() -> adapter.notifyDataSetChanged());
             }
+        } else if (event.getType().equals(LcOmStatusMessage.class.getName())) {
+            LcOmStatusMessage statusMessage = (LcOmStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
+            lcOn = statusMessage.getMode() == 1;
+            runOnUiThread(() -> switch_lc_om.setChecked(lcOn));
         }
     }
 

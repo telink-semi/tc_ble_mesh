@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.core.DeviceProperty;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.SensorControlActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -71,7 +72,9 @@ public class SensorItemAdapter extends BaseRecyclerViewAdapter<SensorItemAdapter
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
         SensorControlActivity.SensorItem sensorItem = sensorItems.get(position);
-        holder.tv_prop_id.setText(String.format("Property ID : %04X", sensorItem.propertyId));
+        DeviceProperty property = DeviceProperty.getById(sensorItem.propertyId);
+        String propName = property == null ? "UNKNOWN" : property.name;
+        holder.tv_prop_id.setText(String.format("Property ID : 0x%04X(%s)", sensorItem.propertyId, propName));
         if (sensorItem.descriptor == null) {
             holder.tv_desc.setText("[NULL]");
         } else {
@@ -89,10 +92,10 @@ public class SensorItemAdapter extends BaseRecyclerViewAdapter<SensorItemAdapter
             String cadInfo = String.format("Fast Cadence Period Divisor : %02X \n", sensorItem.cadence.fastCadencePeriodDivisor)
                     + String.format("Status Trigger Type : %02X \n", sensorItem.cadence.statusTriggerType)
                     + "Status Trigger Delta Down : " + Arrays.bytesToHexString(sensorItem.cadence.statusTriggerDeltaDown) + " \n"
-                    + "Status Trigger Delta Up : " + Arrays.bytesToHexString(sensorItem.cadence.statusTriggerDeltaUp) +  " \n"
+                    + "Status Trigger Delta Up : " + Arrays.bytesToHexString(sensorItem.cadence.statusTriggerDeltaUp) + " \n"
                     + String.format("Status Min Interval : %02X \n", sensorItem.cadence.statusMinInterval)
-                    + "Fast Cadence Low : " + Arrays.bytesToHexString(sensorItem.cadence.fastCadenceLow) +  " \n"
-                    + "Fast Cadence High : " + Arrays.bytesToHexString(sensorItem.cadence.fastCadenceLow)+  " \n";
+                    + "Fast Cadence Low : " + Arrays.bytesToHexString(sensorItem.cadence.fastCadenceLow) + " \n"
+                    + "Fast Cadence High : " + Arrays.bytesToHexString(sensorItem.cadence.fastCadenceLow) + " \n";
             holder.tv_cad.setText(cadInfo);
         }
 

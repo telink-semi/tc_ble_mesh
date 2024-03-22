@@ -78,15 +78,14 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
         NetworkingDevice device = mDevices.get(position);
-
         NodeInfo nodeInfo = device.nodeInfo;
-        int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON, nodeInfo.isSensor()));
+        holder.iv_device.setImageResource(IconGenerator.getIcon(nodeInfo, OnlineState.ON));
 //        holder.tv_name.setText(mDevices.get(position).getAddress());
         String deviceDesc = mContext.getString(R.string.device_prov_desc, "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {
             deviceDesc += " - mac: " + nodeInfo.macAddress;
         }
+        deviceDesc += " - rssi: " + device.rssi + "dBm";
         holder.tv_device_info.setText(deviceDesc);
 
         holder.tv_state.setText(device.state.desc);

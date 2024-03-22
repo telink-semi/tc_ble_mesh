@@ -67,6 +67,7 @@ import com.telink.ble.mesh.core.message.lighting.HslStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslTargetStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LcLightOnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LcModeStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LcOmStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LcPropertyStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyStatusMessage;
@@ -184,6 +185,7 @@ public class MeshStatus {
             register(Opcode.LIGHT_HSL_TARGET_STATUS.value, HslTargetStatusMessage.class);
 
             register(Opcode.LIGHT_LC_MODE_STATUS.value, LcModeStatusMessage.class);
+            register(Opcode.LIGHT_LC_OM_STATUS.value, LcOmStatusMessage.class);
             register(Opcode.LIGHT_LC_ONOFF_STATUS.value, LcLightOnOffStatusMessage.class);
             register(Opcode.LIGHT_LC_PROPERTY_STATUS.value, LcPropertyStatusMessage.class);
 

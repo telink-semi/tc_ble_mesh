@@ -44,6 +44,11 @@ public class NetworkingDevice {
 
     public NodeInfo nodeInfo;
 
+    // rssi
+    public int rssi;
+
+    public int serverAddress;
+
     public List<LogInfo> logs = new ArrayList<>();
 
     public boolean logExpand = false;

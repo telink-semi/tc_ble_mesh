@@ -95,6 +95,10 @@ public class SharedPreferenceHelper {
 
     public static final int IMPORT_COMPLETE_ACTION_AUTO_SWITCH = 1;
 
+    /**
+     * sort type
+     */
+    private static final String KEY_NODE_SORT_TYPE = "com.telink.bluetooth.light.KEY_NODE_SORT_TYPE";
 
     public static boolean isLocationIgnore(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
@@ -234,4 +238,16 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putInt(KEY_SHARE_IMPORT_COMPLETE_ACTION, action).apply();
     }
+
+
+    public static int getNodeSortType(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(KEY_NODE_SORT_TYPE, 0);
+    }
+
+    public static void setNodeSortType(Context context, NodeSortType sortType) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putInt(KEY_NODE_SORT_TYPE, sortType.ordinal()).apply();
+    }
+
 }

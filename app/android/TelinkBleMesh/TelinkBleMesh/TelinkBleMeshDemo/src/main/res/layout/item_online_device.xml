@@ -14,12 +14,22 @@
         android:src="@drawable/ic_bulb_off" />
 
     <TextView
-        android:id="@+id/tv_name"
+        android:id="@+id/tv_pid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:gravity="center"
         android:text="sample"
-        android:textSize="10sp" />
+        android:textSize="9sp" />
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:gravity="center"
+        android:text="sample"
+        android:textSize="11sp" />
+
 
 </LinearLayout>

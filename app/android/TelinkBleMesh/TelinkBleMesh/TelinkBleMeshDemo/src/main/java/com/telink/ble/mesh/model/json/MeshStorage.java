@@ -431,7 +431,7 @@ public class MeshStorage {
         nodeInfo.meshAddress = MeshUtils.hexToIntB(node.unicastAddress);
 //                    deviceInfo.deviceUUID =  Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", ""));
         nodeInfo.deviceUUID = MeshUtils.uuidToByteArray(node.UUID);
-
+        nodeInfo.name = node.name;
         nodeInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
         nodeInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
 

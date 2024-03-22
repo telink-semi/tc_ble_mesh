@@ -22,25 +22,25 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.directforwarding.DirectedControlSetMessage;
 import com.telink.ble.mesh.core.message.directforwarding.DirectedControlStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
+import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -70,6 +70,10 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
 
     int curIndex = 0;
     int action = 0;
+    private boolean isBatchSetting = false;
+    private boolean isAllVisible = true;
+    private View ll_all_control;
+    private ImageView iv_all_visible;
 
 
     @Override
@@ -96,7 +100,9 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
         findViewById(R.id.btn_disable_proxy).setOnClickListener(this);
         findViewById(R.id.btn_enable_friend).setOnClickListener(this);
         findViewById(R.id.btn_disable_friend).setOnClickListener(this);
-
+        iv_all_visible = findViewById(R.id.iv_all_visible);
+        iv_all_visible.setOnClickListener(this);
+        ll_all_control = findViewById(R.id.ll_all_control);
         TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
     }
 
@@ -137,6 +143,11 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
                 listAdapter.notifyDataSetChanged();
                 node.save();
             }
+        } else if (event.getType().equals(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE)) {
+            ReliableMessageProcessEvent processEvent = (ReliableMessageProcessEvent) event;
+            if (isBatchSetting && processEvent.getOpcode() == Opcode.DIRECTED_CONTROL_SET.value) {
+                setNext();
+            }
         }
     }
 
@@ -151,15 +162,18 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
 
     private void setAll(int action) {
         showWaitingDialog("Setting Direct...");
-        handler.postDelayed(this::dismissWaitingDialog, 500 * meshInfo.nodes.size());
+        isBatchSetting = true;
+        handler.postDelayed(this::dismissWaitingDialog, 800 * meshInfo.nodes.size());
         curIndex = 0;
         this.action = action;
         setNext();
     }
 
     private void setNext() {
+        MeshLogger.d("set next - " + curIndex);
         if (curIndex >= meshInfo.nodes.size()) {
             // all complete
+            isBatchSetting = false;
             dismissWaitingDialog();
             return;
         }
@@ -226,8 +240,7 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
                 setMessage.directedFriend = ((byte) 0);
                 break;
         }
-
-
+        MeshService.getInstance().sendMeshMessage(setMessage);
     }
 
     @Override
@@ -257,6 +270,13 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
             case R.id.btn_disable_friend:
                 setAll(ACTION_DISABLE_FRIEND);
                 break;
+
+            case R.id.iv_all_visible:
+                isAllVisible = !isAllVisible;
+                iv_all_visible.setImageResource(isAllVisible ? R.drawable.ic_eye_on : R.drawable.ic_eye_off);
+                ll_all_control.setVisibility(isAllVisible ? View.VISIBLE : View.GONE);
+                break;
+
         }
     }
 }

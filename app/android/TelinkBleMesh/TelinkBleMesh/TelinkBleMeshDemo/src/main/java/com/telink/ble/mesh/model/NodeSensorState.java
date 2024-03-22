@@ -25,6 +25,7 @@ package com.telink.ble.mesh.model;
 import com.telink.ble.mesh.core.DeviceProperty;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
@@ -41,4 +42,13 @@ public class NodeSensorState implements Serializable {
     public int propertyID;
 
     public byte[] state;
+
+    @Override
+    public String toString() {
+        return "NodeSensorState{" +
+                "id=" + id +
+                ", propertyID=" + Integer.toHexString(propertyID) +
+                ", state=" + Arrays.toString(state) +
+                '}';
+    }
 }

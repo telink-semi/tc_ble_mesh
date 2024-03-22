@@ -240,6 +240,11 @@ public class NodeInfo implements Serializable {
         return publishModel.getTarget() != null;
     }
 
+    public void updateName(String newName) {
+        this.name = newName;
+        TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
+    }
+
     /**
      * used in db
      */
@@ -530,6 +535,7 @@ public class NodeInfo implements Serializable {
             st.propertyID = sensorData.keyAt(i);
             st.state = sensorData.valueAt(i);
             this.sensorStateList.add(st);
+            this.save();
         }
     }
 

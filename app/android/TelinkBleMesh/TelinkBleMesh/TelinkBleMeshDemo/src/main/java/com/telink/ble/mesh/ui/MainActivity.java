@@ -233,6 +233,14 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
 
     public void getSensorStates() {
+        boolean anySensorExists = false;
+        for (NodeInfo node : TelinkMeshApplication.getInstance().getMeshInfo().nodes) {
+            if (node.isSensor()) {
+                anySensorExists = true;
+                break;
+            }
+        }
+        if (!anySensorExists) return;
         int address = 0xFFFF;
         int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
         SensorGetMessage sensorGetMessage = SensorGetMessage.getSimple(address, appKeyIndex, null);

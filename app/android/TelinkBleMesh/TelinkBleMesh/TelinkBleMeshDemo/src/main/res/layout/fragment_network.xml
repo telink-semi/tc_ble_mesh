@@ -17,6 +17,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+
+            <!--  mesh info  -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/view_mesh_info"
                 android:layout_width="match_parent"
@@ -50,14 +52,72 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:textStyle="bold"
-                            android:text="Mesh Info" />
+                            android:text="Mesh Info"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/tv_mesh_name"
-                            android:layout_marginTop="2dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textSize="11sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="@color/gray" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+
+            <!--  node  -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/view_node_batch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_multi_node"
+                        android:tint="@color/gray" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Node Batch Setting"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Change name, Kick out"
                             android:textSize="11sp"
                             android:textStyle="italic" />
 
@@ -102,7 +162,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Scenes" />
+                        android:text="Scenes"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -121,8 +182,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                app:cardCornerRadius="4dp"
                 android:visibility="gone"
+                app:cardCornerRadius="4dp"
                 app:cardPreventCornerOverlap="false"
                 app:cardUseCompatPadding="true">
 
@@ -185,7 +246,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Direct Forwarding" />
+                        android:text="Direct Forwarding"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -225,7 +287,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Mesh OTA" />
+                        android:text="Mesh OTA"
+                        android:textStyle="bold" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -266,7 +329,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Proxy Solicitation" />
+                        android:text="Proxy Solicitation"
+                        android:textStyle="bold" />
 
                     <ProgressBar
                         android:id="@+id/pb_sol"
@@ -277,7 +341,6 @@
                 </LinearLayout>
 
             </androidx.cardview.widget.CardView>
-
 
 
         </LinearLayout>
