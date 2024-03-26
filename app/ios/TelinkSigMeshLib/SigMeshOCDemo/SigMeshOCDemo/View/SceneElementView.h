@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     SceneItemCell.h
+ * @file     SceneElementView.h
  *
- * @brief    for TLSR chips
+ * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2018/9/25
+ * @date     2024/3/25
  *
- * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,16 +21,16 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "BaseCell.h"
+#import <UIKit/UIKit.h>
 
-@interface SceneItemCell : BaseCell
-/// Handle block of click recall button.
-@property (copy, nonatomic) void(^clickRecallBlock)(void);
-/// Handle block of click edit button.
-@property (copy, nonatomic) void(^clickEditBlock)(void);
+NS_ASSUME_NONNULL_BEGIN
 
-/// Update content with model.
-/// - Parameter model: model of cell.
-- (void)updateContent:(SigSceneModel *)model;
+@interface SceneElementView : UIView
+
+@property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
+@property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+@property (weak, nonatomic) IBOutlet UIButton *playButton;
 
 @end
+
+NS_ASSUME_NONNULL_END

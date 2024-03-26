@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     SceneItemCell.m
+ * @file     SceneDetailCell.h
  *
- * @brief    for TLSR chips
+ * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2018/9/25
+ * @date     2024/3/25
  *
- * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,48 +21,22 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "SceneItemCell.h"
+#import "BaseCell.h"
 
-@interface SceneItemCell()
+NS_ASSUME_NONNULL_BEGIN
+
+@interface SceneDetailCell : BaseCell
+
 /// Image layer used to set icon image.
 @property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
 /// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
 @property (weak, nonatomic) IBOutlet UIView *bgView;
 
-@property (strong, nonatomic) SigSceneModel *model;
-@end
-
-@implementation SceneItemCell
-
-- (void)awakeFromNib {
-    [super awakeFromNib];
-    // Initialization code
-}
-
 /// Update content with model.
 /// - Parameter model: model of cell.
-- (void)updateContent:(SigSceneModel *)model{
-    _model = model;
-    _nameLabel.text = [NSString stringWithFormat:@"name: %@\nID: 0x%04X", model.name, [LibTools uint32From16String:model.number]];
-    [self configurationCornerWithBgView:_bgView];
-}
-
-- (IBAction)clickRecallScene:(UIButton *)sender {
-    if (self.clickRecallBlock) {
-        self.clickRecallBlock();
-    }
-}
-
-- (IBAction)clickEditScene:(UIButton *)sender {
-    if (self.clickEditBlock) {
-        self.clickEditBlock();
-    }
-}
-
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    [super setSelected:NO animated:animated];
-    // Configure the view for the selected state
-}
+- (void)updateContent:(SigNodeModel *)model;
 
 @end
+
+NS_ASSUME_NONNULL_END

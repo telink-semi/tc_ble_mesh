@@ -1,81 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="KGk-i7-Jjw" customClass="SceneItemCell">
-            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="89" id="KGk-i7-Jjw" customClass="SceneItemCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="89"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="43.5"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="89"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="scene" translatesAutoresizingMaskIntoConstraints="NO" id="bRu-S4-gvQ">
-                        <rect key="frame" x="15" y="7" width="25" height="25"/>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OXO-OQ-42a">
+                        <rect key="frame" x="7" y="7" width="306" height="75"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="scene" translatesAutoresizingMaskIntoConstraints="NO" id="bRu-S4-gvQ">
+                                <rect key="frame" x="15" y="25" width="25" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="25" id="ZnK-oE-MO3"/>
+                                    <constraint firstAttribute="height" constant="25" id="piv-O2-IyU"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="scene name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="916-5e-ZMM">
+                                <rect key="frame" x="50" y="29.5" width="170" height="16"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="13"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kiX-JU-3bY">
+                                <rect key="frame" x="263" y="21" width="33" height="33"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="kiX-JU-3bY" secondAttribute="height" multiplier="1:1" id="YQ9-4B-uVF"/>
+                                </constraints>
+                                <state key="normal" image="ic_edit"/>
+                                <connections>
+                                    <action selector="clickEditScene:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="wR7-0W-nPb"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rey-EK-jiX">
+                                <rect key="frame" x="225" y="21" width="33" height="33"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="33" id="6z6-uQ-dDQ"/>
+                                    <constraint firstAttribute="width" secondItem="rey-EK-jiX" secondAttribute="height" multiplier="1:1" id="Xlm-am-Wnk"/>
+                                </constraints>
+                                <state key="normal" image="ic_play"/>
+                                <connections>
+                                    <action selector="clickRecallScene:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="Yg3-JH-TQH"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstAttribute="width" constant="25" id="ZnK-oE-MO3"/>
-                            <constraint firstAttribute="height" constant="25" id="piv-O2-IyU"/>
+                            <constraint firstItem="kiX-JU-3bY" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="2UH-bd-emk"/>
+                            <constraint firstAttribute="trailing" secondItem="kiX-JU-3bY" secondAttribute="trailing" constant="10" id="59s-Hs-8po"/>
+                            <constraint firstItem="kiX-JU-3bY" firstAttribute="leading" secondItem="rey-EK-jiX" secondAttribute="trailing" constant="5" id="74L-XL-EpU"/>
+                            <constraint firstItem="rey-EK-jiX" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="CnT-z8-eXZ"/>
+                            <constraint firstItem="rey-EK-jiX" firstAttribute="leading" secondItem="916-5e-ZMM" secondAttribute="trailing" constant="5" id="N7G-tb-nVB"/>
+                            <constraint firstItem="916-5e-ZMM" firstAttribute="leading" secondItem="bRu-S4-gvQ" secondAttribute="trailing" constant="10" id="PRo-yU-17E"/>
+                            <constraint firstItem="bRu-S4-gvQ" firstAttribute="leading" secondItem="OXO-OQ-42a" secondAttribute="leading" constant="15" id="ZCQ-41-UZf"/>
+                            <constraint firstItem="kiX-JU-3bY" firstAttribute="width" secondItem="rey-EK-jiX" secondAttribute="width" id="iDO-bp-1rL"/>
+                            <constraint firstItem="916-5e-ZMM" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="s6j-9x-rWY"/>
+                            <constraint firstItem="bRu-S4-gvQ" firstAttribute="top" secondItem="OXO-OQ-42a" secondAttribute="top" constant="25" id="xrx-1V-fIK"/>
                         </constraints>
-                    </imageView>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="scene name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="916-5e-ZMM">
-                        <rect key="frame" x="50" y="11.5" width="73" height="16"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                        <nil key="textColor"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rey-EK-jiX">
-                        <rect key="frame" x="228" y="1.5" width="36" height="36"/>
-                        <constraints>
-                            <constraint firstAttribute="width" constant="36" id="6z6-uQ-dDQ"/>
-                        </constraints>
-                        <state key="normal" image="ic_play"/>
-                        <connections>
-                            <action selector="clickRecallScene:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="Yg3-JH-TQH"/>
-                        </connections>
-                    </button>
-                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kiX-JU-3bY">
-                        <rect key="frame" x="274" y="1.5" width="36" height="36"/>
-                        <constraints>
-                            <constraint firstAttribute="width" constant="36" id="vIl-Cc-IW2"/>
-                        </constraints>
-                        <state key="normal" image="ic_edit"/>
-                        <connections>
-                            <action selector="clickEditScene:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="wR7-0W-nPb"/>
-                        </connections>
-                    </button>
+                    </view>
                 </subviews>
                 <constraints>
-                    <constraint firstItem="kiX-JU-3bY" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="7Yl-Ae-4wc"/>
-                    <constraint firstItem="916-5e-ZMM" firstAttribute="leading" secondItem="bRu-S4-gvQ" secondAttribute="trailing" constant="10" id="9VC-nN-Ztr"/>
-                    <constraint firstItem="rey-EK-jiX" firstAttribute="width" secondItem="rey-EK-jiX" secondAttribute="height" multiplier="1:1" id="Xlm-am-Wnk"/>
-                    <constraint firstItem="kiX-JU-3bY" firstAttribute="width" secondItem="kiX-JU-3bY" secondAttribute="height" multiplier="1:1" id="YQ9-4B-uVF"/>
-                    <constraint firstItem="rey-EK-jiX" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="Yg1-d7-r11"/>
-                    <constraint firstItem="916-5e-ZMM" firstAttribute="centerY" secondItem="bRu-S4-gvQ" secondAttribute="centerY" id="lW3-WT-lKx"/>
-                    <constraint firstItem="kiX-JU-3bY" firstAttribute="leading" secondItem="rey-EK-jiX" secondAttribute="trailing" constant="10" id="mHL-OH-N7d"/>
-                    <constraint firstItem="bRu-S4-gvQ" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="mmf-y2-Bz7"/>
-                    <constraint firstItem="bRu-S4-gvQ" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="7" id="yiw-Bo-g12"/>
-                    <constraint firstAttribute="trailing" secondItem="kiX-JU-3bY" secondAttribute="trailing" constant="10" id="zmD-n8-DUB"/>
+                    <constraint firstItem="OXO-OQ-42a" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="7" id="25p-QK-Kzy"/>
+                    <constraint firstAttribute="trailing" secondItem="OXO-OQ-42a" secondAttribute="trailing" constant="7" id="jGn-Wf-MCk"/>
+                    <constraint firstItem="OXO-OQ-42a" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="7" id="vhb-Ul-F8b"/>
+                    <constraint firstAttribute="bottom" secondItem="OXO-OQ-42a" secondAttribute="bottom" constant="7" id="ygx-TE-hcl"/>
                 </constraints>
             </tableViewCellContentView>
             <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
             <connections>
+                <outlet property="bgView" destination="OXO-OQ-42a" id="J2k-EE-S6T"/>
                 <outlet property="iconImageView" destination="bRu-S4-gvQ" id="I1v-kX-9sH"/>
                 <outlet property="nameLabel" destination="916-5e-ZMM" id="lae-Pz-udM"/>
             </connections>
+            <point key="canvasLocation" x="137.59999999999999" y="137.18140929535232"/>
         </tableViewCell>
     </objects>
     <resources>
         <image name="ic_edit" width="50" height="50"/>
         <image name="ic_play" width="50" height="50"/>
         <image name="scene" width="50" height="50"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
     </resources>
 </document>
