@@ -251,6 +251,8 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 + (BOOL)validateNumberString:(NSString *)numberString;
 
++ (BOOL)validateFloatString:(NSString *)numberString;
+
 #pragma mark - UTF-8相关
 
 + (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData;

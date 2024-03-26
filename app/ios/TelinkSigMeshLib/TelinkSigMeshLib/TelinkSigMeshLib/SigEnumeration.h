@@ -2148,28 +2148,6 @@ typedef enum : UInt8 {
     MajorProductType_spiritLPN = 4,
 } MajorProductType;
 
-/*LC property id number*/
-typedef enum : UInt16 {
-    LightControlPropertyID_LuxLevelOn     = 0x002B,
-    LightControlPropertyID_LuxLevelProlong   = 0x002C,
-    LightControlPropertyID_LuxLevelStandby = 0x002D,
-    LightControlPropertyID_LightnessOn = 0x002E,
-    LightControlPropertyID_LightnessProlong = 0x002F,
-    LightControlPropertyID_LightnessStandby = 0x0030,
-    LightControlPropertyID_RegulatorAccuracy = 0x0031,
-    LightControlPropertyID_RegulatorKid = 0x0032,
-    LightControlPropertyID_RegulatorKiu = 0x0033,
-    LightControlPropertyID_RegulatorKpd = 0x0034,
-    LightControlPropertyID_RegulatorKpu = 0x0035,
-    LightControlPropertyID_TimeFade = 0x0036,
-    LightControlPropertyID_TimeFadeOn = 0x0037,
-    LightControlPropertyID_TimeFadeStandbyAuto = 0x0038,
-    LightControlPropertyID_TimeFadeStandbyManual = 0x0039,
-    LightControlPropertyID_TimeOccupancyDelay = 0x003A,
-    LightControlPropertyID_TimeProlong = 0x003B,
-    LightControlPropertyID_TimeRun = 0x003C,
-} LightControlPropertyID;
-
 /// 3.3 Property identifiers
 /// - seeAlso: Device_Properties.pdf  (page.53)
 typedef enum : UInt16 {

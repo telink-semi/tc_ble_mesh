@@ -97,9 +97,9 @@
 
 - (void)configDefaultData {
     self.dataArray = [NSMutableArray array];
-    NSArray *titleArray = @[@"Lightness On",@"Lightness Prolong",@"Lightness Standby",@"Time Fade On",@"Time Run On",@"Time Fade",@"Time Prolong",@"Time Fade Standby Auto",@"Time Fade Standby Manual",@"Time Occupancy Delay"];
-    NSArray *detailArray = @[@"This property represents the light lightness level of a light or a group of lights in a run state.\nCharacteristic: Perceived Lightness", @"This property represents the light lightness level of a light or a group of lights when in a prolong state.\nCharacteristic: Perceived Lightness", @"This property represents the light lightness level of a light or a group of lights when in a standby state.\nCharacteristic: Perceived Lightness", @"This property represents the time lights take to transition from a standby state to a run state.\nCharacteristic: Time Millisecond 24", @"This property represents the duration of the run state after last occupancy was detected.\nCharacteristic: Time Millisecond 24", @"This property represents the time a light takes to transition from a run state to a prolong state. The run state is the state when the light is running at normal light level, the prolong state is an intermediate state of a light between the run and the standby state.\nCharacteristic: Time Millisecond 24", @"This property represents the duration of the prolong state, which is the state of a device between its run state and its standby state.\nCharacteristic: Time Millisecond 24", @"This property represents the time lights take to transition from a prolong state to a standby state when the transition is automatic(such as when triggered by an occupancy or light sensor).\nCharacteristic: Time Millisecond 24", @"This property represents the time lights take to transition to a standby state when the transition is triggered by a manual operation(e.g., by a user operating a light switch).\nCharacteristic: Time Millisecond 24", @"This property represents the time delay between receiving a signal from an occupancy sensor and a light controller executing a state change as a result of the signal.\nCharacteristic: Time Millisecond 24"];
-    NSArray *propertyIDs = @[@(LightControlPropertyID_LightnessOn), @(LightControlPropertyID_LightnessProlong), @(LightControlPropertyID_LightnessStandby), @(LightControlPropertyID_TimeFadeOn), @(LightControlPropertyID_TimeRun), @(LightControlPropertyID_TimeFade), @(LightControlPropertyID_TimeProlong), @(LightControlPropertyID_TimeFadeStandbyAuto), @(LightControlPropertyID_TimeFadeStandbyManual), @(LightControlPropertyID_TimeOccupancyDelay)];
+    NSArray *titleArray = @[@"Lightness On",@"Lightness Prolong",@"Lightness Standby",@"Lux Level On", @"Lux Level Prolong", @"Lux Level Standby", @"Time Fade On",@"Time Run On",@"Time Fade",@"Time Prolong",@"Time Fade Standby Auto",@"Time Fade Standby Manual",@"Time Occupancy Delay", @"Regulator Accuracy", @"Regulator Kid", @"Regulator Kiu", @"Regulator Kpd", @"Regulator Kpu"];
+    NSArray *detailArray = @[@"This property represents the light lightness level of a light or a group of lights in a run state.\nCharacteristic: Perceived Lightness", @"This property represents the light lightness level of a light or a group of lights when in a prolong state.\nCharacteristic: Perceived Lightness", @"This property represents the light lightness level of a light or a group of lights when in a standby state.\nCharacteristic: Perceived Lightness", @"The Light LC Ambient LuxLevel On is a state representing the Ambient LuxLevel level that determines if the controller transitions from the Light Control Standby state.\nCharacteristic: Illuminance", @"The Light LC Ambient LuxLevel Prolong is a state representing the required Ambient LuxLevel level in the Prolong state.\nCharacteristic: Illuminance", @"The Light LC Ambient LuxLevel Standby is a state representing the required Ambient LuxLevel level in the Standby state.\nCharacteristic: Illuminance", @"This property represents the time lights take to transition from a standby state to a run state.\nCharacteristic: Time Millisecond 24", @"This property represents the duration of the run state after last occupancy was detected.\nCharacteristic: Time Millisecond 24", @"This property represents the time a light takes to transition from a run state to a prolong state. The run state is the state when the light is running at normal light level, the prolong state is an intermediate state of a light between the run and the standby state.\nCharacteristic: Time Millisecond 24", @"This property represents the duration of the prolong state, which is the state of a device between its run state and its standby state.\nCharacteristic: Time Millisecond 24", @"This property represents the time lights take to transition from a prolong state to a standby state when the transition is automatic(such as when triggered by an occupancy or light sensor).\nCharacteristic: Time Millisecond 24", @"This property represents the time lights take to transition to a standby state when the transition is triggered by a manual operation(e.g., by a user operating a light switch).\nCharacteristic: Time Millisecond 24", @"This property represents the time delay between receiving a signal from an occupancy sensor and a light controller executing a state change as a result of the signal.\nCharacteristic: Time Millisecond 24", @"The Light LC Regulator Accuracy is a state representing the percentage accuracy of the Light LC PI Feedback Regulator.\nCharacteristic: Percentage 8", @"The Light LC Regulator Kid is a float32 state representing the integral coefficient that determines the integral part of the equation defining the output of the Light LC PI Feedback Regulator, when Light LC Ambient LuxLevel is greater than or equal to the value of the LuxLevel Out state.\nCharacteristic: Coefficient", @"The Light LC Regulator Kiu is a float32 state representing the integral coefficient that determines the integral part of the equation defining the output of the Light LC PI Feedback Regulator, when Light LC Ambient LuxLevel is less than LuxLevel Out.\nCharacteristic: Coefficient", @"The Light LC Regulator Kpd is a float32 state representing the proportional coefficient that determines the proportional part of the equation defining the output of the Light LC PI Feedback Regulator, when Light LC Ambient LuxLevel is greater than or equal to the value of the LuxLevel Out state.\nCharacteristic: Coefficient", @"The Light LC Regulator Kpu is a float32 state representing the proportional coefficient that determines the proportional part of the equation defining the output of the Light LC PI Feedback Regulator, when Light LC Ambient LuxLevel is less than the value of the LuxLevel Out state.\nCharacteristic: Coefficient"];
+    NSArray *propertyIDs = @[@(DevicePropertyID_LightControlLightnessOn), @(DevicePropertyID_LightControlLightnessProlong), @(DevicePropertyID_LightControlLightnessStandby), @(DevicePropertyID_LightControlAmbientLuxLevelOn), @(DevicePropertyID_LightControlAmbientLuxLevelProlong), @(DevicePropertyID_LightControlAmbientLuxLevelStandby), @(DevicePropertyID_LightControlTimeFadeOn), @(DevicePropertyID_LightControlTimeRunOn), @(DevicePropertyID_LightControlTimeFade), @(DevicePropertyID_LightControlTimeProlong), @(DevicePropertyID_LightControlTimeFadeStandbyAuto), @(DevicePropertyID_LightControlTimeFadeStandbyManual), @(DevicePropertyID_LightControlTimeOccupancyDelay), @(DevicePropertyID_LightControlRegulatorAccuracy), @(DevicePropertyID_LightControlRegulatorKid), @(DevicePropertyID_LightControlRegulatorKiu), @(DevicePropertyID_LightControlRegulatorKpd), @(DevicePropertyID_LightControlRegulatorKpu)];
     for (int i=0; i<titleArray.count; i++) {
         NSNumber *propertyID = propertyIDs[i];
         NSString *propertyIDKey = [SigHelper.share getUint16String:propertyID.intValue];
@@ -151,7 +151,7 @@
     [SDKLibCommand lightLCLightOnOffGetWithDestination:self.lightLCServerAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightLCLightOnOffStatus * _Nonnull responseMessage) {
         if (source == weakSelf.lightLCServerAddress) {
             weakSelf.model.lightControlLightOnOffState = responseMessage.presentLightOnOff;
-            if (responseMessage.presentLightOnOff != responseMessage.targetLightOnOff) {
+            if (responseMessage.presentLightOnOff != responseMessage.targetLightOnOff && weakSelf.model.lightControlModeEnable == YES) {
                 [weakSelf addDelayTimer];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -167,7 +167,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(lightLCLightOnOffGetAction) object:nil];
         NSInteger ms = 0;
-        NSArray *propertyIDKeys = @[[SigHelper.share getUint16String:LightControlPropertyID_TimeFadeOn], [SigHelper.share getUint16String:LightControlPropertyID_TimeRun], [SigHelper.share getUint16String:LightControlPropertyID_TimeFade], [SigHelper.share getUint16String:LightControlPropertyID_TimeProlong], [SigHelper.share getUint16String:LightControlPropertyID_TimeFadeStandbyAuto]];
+        NSArray *propertyIDKeys = @[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFadeOn], [SigHelper.share getUint16String:DevicePropertyID_LightControlTimeRunOn], [SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFade], [SigHelper.share getUint16String:DevicePropertyID_LightControlTimeProlong], [SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFadeStandbyAuto]];
         NSArray *defaultValue = @[@(2000), @(5000), @(2000), @(4000), @(3000)];
         for (int i=0; i<propertyIDKeys.count; i++) {
             if ([self.model.lightControlPropertyDictionary.allKeys containsObject:propertyIDKeys[i]]) {
@@ -269,7 +269,15 @@
     valueLabel.textAlignment = NSTextAlignmentRight;
     valueLabel.textColor = UIColor.telinkBlue;
     NSInteger value = self.dataArray[section].value;
-    valueLabel.text = value == -1 ? @"value: UNKNOWN" : [NSString stringWithFormat:@"value: %ld", (long)value];
+    if (section > 13) {
+        //float32
+        NSData *data = [NSData dataWithBytes:&value length:4];
+        const unsigned char *byteBuffer = [data bytes];
+        Float32 f32 = *(Float32*)byteBuffer;
+        valueLabel.text = value == -1 ? @"value: UNKNOWN" : [NSString stringWithFormat:@"value: %.01f", f32];
+    } else {
+        valueLabel.text = value == -1 ? @"value: UNKNOWN" : [NSString stringWithFormat:@"value: %ld", (long)value];
+    }
 
     if (self.dataArray[section].isExpand) {
         turnImageView.image = [[UIImage imageNamed:@"fb_top"] imageWithRenderingMode:1];
@@ -347,26 +355,53 @@
             if (isConfirm) {
                 //CONFIRM
                 NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSpace;
-                BOOL result = [LibTools validateNumberString:ttlString];
-                if (result == NO || ttlString.length == 0) {
-                    [weakSelf showTips:@"Please enter decimal string!"];
-                    return;
-                }
-                int value = [ttlString intValue];
-                if (indexPath.section <= 2) {
-                    if (value > 0xFFFF) {
-                        [weakSelf showTips:@"The range of value is 0~65535."];
+                if (indexPath.section > 13) {
+                    //float32
+                    BOOL result = [LibTools validateFloatString:ttlString];
+                    if (result == NO || ttlString.length == 0) {
+                        [weakSelf showTips:@"Please enter float32 string!"];
                         return;
                     }
                 } else {
-                    if (value > 0xFFFFFF) {
-                        [weakSelf showTips:@"The range of value is 0~16777215."];
+                    BOOL result = [LibTools validateNumberString:ttlString];
+                    if (result == NO || ttlString.length == 0) {
+                        [weakSelf showTips:@"Please enter decimal string!"];
                         return;
                     }
                 }
-                //The Ambient LuxLevel Input value represents the value of the Light LC Ambient LuxLevel state (see Section 6.2.3.5).
-                int length = indexPath.section > 2 ? 3 : 2;
+                int value = [ttlString intValue];
+                int length = 1;//see `+ (UInt8)valueLengthOfDevicePropertyID:(DevicePropertyID)propertyID;`
+                if (indexPath.section == 13) {
+                    if (value > 0xFF) {
+                        [weakSelf showTips:@"The range of value is 0~255(0xFF)."];
+                        return;
+                    }
+                } else if (indexPath.section <= 2) {
+                    if (value > 0xFFFF) {
+                        [weakSelf showTips:@"The range of value is 0~65535(0xFFFF)."];
+                        return;
+                    }
+                    length = 2;
+                } else if (indexPath.section <= 12) {
+                    if (value > 0xFFFFFF) {
+                        [weakSelf showTips:@"The range of value is 0~16777215(0xFFFFFF)."];
+                        return;
+                    }
+                    length = 3;
+                } else {
+                    Float32 floatValue = [ttlString floatValue];
+                    if (floatValue < 0.0 || floatValue > 1000.0) {
+                        [weakSelf showTips:@"The range of value is 0.0~1000.0."];
+                        return;
+                    }
+                    length = 4;
+                }
                 NSData *data = [NSData dataWithBytes:&value length:length];
+                if (indexPath.section > 13) {
+                    //float32
+                    Float32 floatValue = [ttlString floatValue];
+                    data = [NSData dataWithBytes:&floatValue length:4];
+                }
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set %@...", m.title]];
                 [SDKLibCommand lightLCPropertySetWithDestination:weakSelf.lightLCServerAddress propertyID:m.propertyID propertyValue:data retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightLCPropertyStatus * _Nonnull responseMessage) {
                     TelinkLogInfo(@"lightLCPropertySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
