@@ -32,6 +32,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.IconGenerator;
@@ -79,17 +80,22 @@ public class NodeElementSelectAdapter extends BaseRecyclerViewAdapter<NodeElemen
         /*holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc,
                 String.format("%04X", deviceInfo.meshAddress),
                 deviceInfo.getOnlineState().toString()));*/
-        holder.tv_device_info.setText(String.format("address: %04X", deviceInfo.meshAddress));
 
-        ElementSelectAdapter elementSelectAdapter = new ElementSelectAdapter(mContext, deviceInfo);
-        elementSelectAdapter.setOnItemClickListener(position1 ->
-                ((SceneSettingActivity) mContext).setScene(
-                        deviceInfo.meshAddress + position1,
-                        !elementSelectAdapter.isSelected(position1),
-                        deviceInfo
-                ));
-        holder.rv_element.setLayoutManager(new LinearLayoutManager(mContext));
-        holder.rv_element.setAdapter(elementSelectAdapter);
+        boolean sceneSupported = deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId) != -1;
+        if (!sceneSupported) {
+            holder.tv_device_info.setText(String.format("%s\naddress: 0x%04X - scene not supported", deviceInfo.getName(), deviceInfo.meshAddress));
+        } else {
+            holder.tv_device_info.setText(String.format("%s\naddress: %04X", deviceInfo.getName(), deviceInfo.meshAddress));
+            ElementSelectAdapter elementSelectAdapter = new ElementSelectAdapter(mContext, deviceInfo);
+            elementSelectAdapter.setOnItemClickListener(position1 ->
+                    ((SceneSettingActivity) mContext).setScene(
+                            deviceInfo.meshAddress + position1,
+                            !elementSelectAdapter.isSelected(position1),
+                            deviceInfo
+                    ));
+            holder.rv_element.setLayoutManager(new LinearLayoutManager(mContext));
+            holder.rv_element.setAdapter(elementSelectAdapter);
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

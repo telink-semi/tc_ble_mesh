@@ -38,6 +38,9 @@ import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.SceneSettingActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * select device element that contains scene server model
  */
@@ -46,10 +49,23 @@ public class ElementSelectAdapter extends BaseRecyclerViewAdapter<ElementSelectA
     private Context mContext;
     private NodeInfo nodeInfo;
 
+    // elements that support scene
+    List<Element> eleList;
+
 
     public ElementSelectAdapter(Context context, NodeInfo nodeInfo) {
         this.mContext = context;
         this.nodeInfo = nodeInfo;
+        eleList = new ArrayList<>();
+        if (nodeInfo.compositionData != null) {
+            Element element;
+            for (int i = 0; i < nodeInfo.compositionData.elements.size(); i++) {
+                element = nodeInfo.compositionData.elements.get(i);
+                if (element.containModel(MeshSigModel.SIG_MD_SCENE_S.modelId)) {
+                    eleList.add(element);
+                }
+            }
+        }
     }
 
     public boolean isSelected(int position) {
@@ -69,17 +85,19 @@ public class ElementSelectAdapter extends BaseRecyclerViewAdapter<ElementSelectA
 
     @Override
     public int getItemCount() {
-        return nodeInfo.compositionData == null ? 0 : nodeInfo.compositionData.elements.size();
+//        return nodeInfo.compositionData == null ? 0 : nodeInfo.compositionData.elements.size();
+        return eleList.size();
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        Element element = nodeInfo.compositionData.elements.get(position);
-        int adr = position + nodeInfo.meshAddress;
+        Element element = eleList.get(position);
+        int adr = element.location + nodeInfo.meshAddress;
 
         holder.tv_element_info.setText(String.format("element: 0x%04X", adr));
-        boolean support = element.containModel(MeshSigModel.SIG_MD_SCENE_S.modelId);
+//        boolean support = element.containModel(MeshSigModel.SIG_MD_SCENE_S.modelId);
+        boolean support = true;
         holder.cb_element.setVisibility(support ? View.VISIBLE : View.GONE);
 
         holder.tv_not_sp.setVisibility(!support ? View.VISIBLE : View.GONE);

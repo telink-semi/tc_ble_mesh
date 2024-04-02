@@ -81,7 +81,7 @@ public class DeviceInBatchAdapter extends BaseRecyclerViewAdapter<DeviceInBatchA
         } else {
             holder.tv_device_adr.setTextColor(mContext.getResources().getColor(R.color.black));
         }
-        holder.tv_device_name.setText(deviceInfo.name == null ? "Node" : deviceInfo.name);
+        holder.tv_device_name.setText(deviceInfo.getName());
         holder.iv_rename.setOnClickListener(v -> ((DeviceBatchSettingActivity) mContext).showNameInputDialog(deviceInfo));
         holder.iv_remove.setOnClickListener(v -> ((DeviceBatchSettingActivity) mContext).showKickConfirmDialog(deviceInfo));
     }

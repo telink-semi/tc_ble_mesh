@@ -39,6 +39,7 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.CertListActivity;
 import com.telink.ble.mesh.ui.DebugActivity;
+import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.NetworkListActivity;
 import com.telink.ble.mesh.ui.OobListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
@@ -78,6 +79,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
         view.findViewById(R.id.view_oob).setOnClickListener(this);
+        view.findViewById(R.id.view_log).setOnClickListener(this);
         view.findViewById(R.id.view_tests).setOnClickListener(this);
 
         view.findViewById(R.id.view_tests).setVisibility(View.GONE); // for release
@@ -129,6 +131,10 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 break;
             case R.id.view_cert:
                 startActivity(new Intent(getActivity(), CertListActivity.class));
+                break;
+
+            case R.id.view_log:
+                startActivity(new Intent(getActivity(), LogActivity.class));
                 break;
 
         }

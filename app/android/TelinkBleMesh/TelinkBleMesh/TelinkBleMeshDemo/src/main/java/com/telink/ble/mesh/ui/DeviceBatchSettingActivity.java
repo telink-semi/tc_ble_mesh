@@ -119,7 +119,7 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
     }
 
     public void showKickConfirmDialog(NodeInfo node) {
-        showConfirmDialog(String.format("Delete Node(%s)", node.name == null ? "Node" : node.name), new DialogInterface.OnClickListener() {
+        showConfirmDialog(String.format("Delete Node(%s)", node.getName()), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 kickOut(node);

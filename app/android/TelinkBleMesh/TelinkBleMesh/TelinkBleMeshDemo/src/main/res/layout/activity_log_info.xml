@@ -23,6 +23,15 @@
             android:onClick="save"
             android:text="save in file" />
 
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="share"
+            android:text="share" />
+
+
         <Button
             android:layout_width="0dp"
             android:layout_height="wrap_content"

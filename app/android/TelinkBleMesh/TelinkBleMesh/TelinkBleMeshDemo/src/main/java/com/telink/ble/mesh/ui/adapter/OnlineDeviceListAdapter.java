@@ -82,7 +82,7 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         NodeInfo device = mDevices.get(position);
 
         holder.img_icon.setImageResource(IconGenerator.getIcon(device));
-        holder.tv_name.setText(device.name == null ? "Node" : device.name);
+        holder.tv_name.setText(device.getName());
         if (device.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
             holder.tv_pid.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));

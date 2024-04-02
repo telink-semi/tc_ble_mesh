@@ -240,6 +240,10 @@ public class NodeInfo implements Serializable {
         return publishModel.getTarget() != null;
     }
 
+    public String getName(){
+        return name == null ? "Node" : name;
+    }
+
     public void updateName(String newName) {
         this.name = newName;
         TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));

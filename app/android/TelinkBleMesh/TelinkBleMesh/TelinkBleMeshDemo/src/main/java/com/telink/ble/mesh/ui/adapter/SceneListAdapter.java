@@ -38,6 +38,8 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.scene.SceneRecallMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.SceneListActivity;
@@ -51,9 +53,11 @@ import java.util.List;
 public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.ViewHolder> {
     private List<Scene> sceneList;
     private Context mContext;
+    private MeshInfo meshInfo;
 
     public SceneListAdapter(Context context) {
         mContext = context;
+        meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
     }
 
     public Scene get(int position) {
@@ -178,10 +182,12 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
         public void onBindViewHolder(SimpleDeviceViewHolder holder, int position) {
             super.onBindViewHolder(holder, position);
             String address = scene.addressList.get(position);
+            int adr = MeshUtils.hexToIntB(address);
             holder.iv_address.setImageResource(R.drawable.ic_element);
-            holder.tv_address.setText("element address: 0x" + address);
+            NodeInfo nodeInfo = meshInfo.getDeviceByElementAddress(adr);
+            holder.tv_address.setText(nodeInfo.getName() + "\nelement address: 0x" + address);
             holder.iv_recall_ele.setOnClickListener(
-                    v -> ((SceneListActivity) (mContext)).recall(MeshUtils.hexToIntB(address), scene.sceneId)
+                    v -> ((SceneListActivity) (mContext)).recall(adr, scene.sceneId)
             );
         }
 

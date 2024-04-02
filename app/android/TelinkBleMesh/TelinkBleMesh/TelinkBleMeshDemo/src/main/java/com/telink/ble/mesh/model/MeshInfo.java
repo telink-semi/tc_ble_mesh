@@ -174,6 +174,7 @@ public class MeshInfo implements Serializable, Cloneable {
 
     // solicitation sequence number
     public int solSeq = 1;
+
     /**
      * static-oob info
      */
@@ -195,6 +196,17 @@ public class MeshInfo implements Serializable, Cloneable {
 
         for (NodeInfo info : nodes) {
             if (info.meshAddress == meshAddress)
+                return info;
+        }
+        return null;
+    }
+
+    public NodeInfo getDeviceByElementAddress(int elementAddress) {
+        if (this.nodes == null)
+            return null;
+
+        for (NodeInfo info : nodes) {
+            if (elementAddress >= info.meshAddress && elementAddress < info.meshAddress + info.elementCnt)
                 return info;
         }
         return null;

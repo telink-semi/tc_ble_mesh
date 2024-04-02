@@ -134,11 +134,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     }
 
     private void updateNodeName() {
-        if (deviceInfo.name == null) {
-            tv_node_name.setText("Name: Node");
-        } else {
-            tv_node_name.setText("Name: " + deviceInfo.name);
-        }
+        tv_node_name.setText("Name: " + deviceInfo.getName());
     }
 
     /**
@@ -361,10 +357,8 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             case R.id.view_name:
                 showNameInputDialog();
                 break;
-
         }
     }
-
 
     private void showNameInputDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
