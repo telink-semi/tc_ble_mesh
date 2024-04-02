@@ -23,6 +23,9 @@
 package com.telink.ble.mesh.ui;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -32,6 +35,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -45,6 +49,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -56,6 +61,7 @@ public class LogActivity extends BaseActivity {
     private LogInfoAdapter adapter;
     private Handler mHandler = new Handler();
     private static final String LOG_FILE_PATH = "TelinkBleMesh";
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY_MMdd_HHmmss", Locale.CHINA);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +106,7 @@ public class LogActivity extends BaseActivity {
                         Toast.makeText(LogActivity.this, "fileName cannot be null", Toast.LENGTH_SHORT).show();
                     } else {
                         showWaitingDialog("saving......");
-                        saveLog(editText.getText().toString().trim());
+                        saveLog(editText.getText().toString().trim(), false);
                     }
                 }
             });
@@ -109,8 +115,14 @@ public class LogActivity extends BaseActivity {
         dialog.show();
     }
 
+    public void share(View view) {
+        String fileName = "telink_sig_mesh_log_" + dateFormat.format(new Date());
+        saveLog(fileName, true);
+    }
 
-    private void saveLog(final String fileName) {
+
+    private void saveLog(final String fileName, boolean share) {
+        showWaitingDialog("log saving...");
         new Thread(() -> {
             SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
 
@@ -121,9 +133,9 @@ public class LogActivity extends BaseActivity {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-
+            boolean suc;
+            File file = new File(dir, fileName + ".txt");
             try {
-                File file = new File(dir, fileName + ".txt");
                 if (!file.exists())
                     file.createNewFile();
                 FileWriter writer = new FileWriter(file, true);
@@ -136,15 +148,43 @@ public class LogActivity extends BaseActivity {
                 }
                 writer.flush();
                 writer.close();
+                suc = true;
             } catch (IOException e) {
                 e.printStackTrace();
+                suc = false;
             }
-
+            MeshLogger.d("save log complete - " + suc + " " + fileName);
+            boolean finalSuc = suc;
             mHandler.post(() -> {
                 dismissWaitingDialog();
-                Toast.makeText(LogActivity.this, fileName + " saved", Toast.LENGTH_SHORT).show();
+                if (finalSuc) {
+                    if (share) {
+                        shareFile(file);
+                    } else {
+                        Toast.makeText(LogActivity.this, fileName + " saved", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(LogActivity.this, "save file error", Toast.LENGTH_SHORT).show();
+                }
+
             });
         }).start();
+    }
+
+    public void shareFile(File file) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("*/*");
+
+        Uri uri;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } else {
+            uri = Uri.fromFile(file);
+        }
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(intent, "share log file"));
     }
 
     public void saveLogInFile(String fileName, String logInfo) {
