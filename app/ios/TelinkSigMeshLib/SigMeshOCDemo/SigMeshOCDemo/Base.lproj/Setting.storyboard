@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -18,9 +18,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="TtM-Ox-xcM">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="TtM-Ox-xcM">
                                 <rect key="frame" x="0.0" y="20" width="375" height="647"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
                                 <connections>
                                     <outlet property="dataSource" destination="vIR-7T-Xtz" id="gKN-mF-aQc"/>
                                     <outlet property="delegate" destination="vIR-7T-Xtz" id="38P-TR-P4a"/>
@@ -133,49 +133,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="wYu-0m-B0Q">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="wYu-0m-B0Q">
                                 <rect key="frame" x="0.0" y="64" width="375" height="603"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <view key="tableHeaderView" contentMode="scaleToFill" id="VNX-Q3-Ufi">
-                                    <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                    <subviews>
-                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RBu-hG-yC1">
-                                            <rect key="frame" x="319" y="7" width="30" height="30"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="30" id="Lsc-fC-G7H"/>
-                                                <constraint firstAttribute="width" secondItem="RBu-hG-yC1" secondAttribute="height" multiplier="1:1" id="bTC-kG-j82"/>
-                                            </constraints>
-                                            <state key="normal" image="unxuan"/>
-                                            <state key="selected" image="xuan"/>
-                                            <connections>
-                                                <action selector="clickAllButton:" destination="u2y-lB-RGA" eventType="touchUpInside" id="ucK-fs-v1D"/>
-                                            </connections>
-                                        </button>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Devices:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xzI-DN-Gtt">
-                                            <rect key="frame" x="10" y="14" width="52" height="16"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <nil key="textColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="All" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bQn-hs-DtZ">
-                                            <rect key="frame" x="349" y="14" width="16" height="16"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <nil key="textColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                    <constraints>
-                                        <constraint firstItem="RBu-hG-yC1" firstAttribute="centerY" secondItem="xzI-DN-Gtt" secondAttribute="centerY" id="25X-4d-dzi"/>
-                                        <constraint firstAttribute="trailing" secondItem="bQn-hs-DtZ" secondAttribute="trailing" constant="10" id="4jc-Kt-7WS"/>
-                                        <constraint firstItem="RBu-hG-yC1" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="xzI-DN-Gtt" secondAttribute="trailing" constant="8" symbolic="YES" id="Psp-ee-63p"/>
-                                        <constraint firstItem="bQn-hs-DtZ" firstAttribute="leading" secondItem="RBu-hG-yC1" secondAttribute="trailing" id="YI6-IW-Hpy"/>
-                                        <constraint firstItem="bQn-hs-DtZ" firstAttribute="centerY" secondItem="xzI-DN-Gtt" secondAttribute="centerY" id="jsl-Xu-ElW"/>
-                                        <constraint firstItem="xzI-DN-Gtt" firstAttribute="leading" secondItem="VNX-Q3-Ufi" secondAttribute="leading" constant="10" id="tbU-PE-mM5"/>
-                                        <constraint firstItem="xzI-DN-Gtt" firstAttribute="centerY" secondItem="VNX-Q3-Ufi" secondAttribute="centerY" id="z2x-1o-o7a"/>
-                                    </constraints>
-                                </view>
+                                <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
                                 <connections>
                                     <outlet property="dataSource" destination="u2y-lB-RGA" id="ilw-eA-YaD"/>
                                     <outlet property="delegate" destination="u2y-lB-RGA" id="SxN-28-cIt"/>
@@ -194,7 +154,6 @@
                     <navigationItem key="navigationItem" id="gSP-Vo-VS2"/>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                     <connections>
-                        <outlet property="allButton" destination="RBu-hG-yC1" id="om0-3a-S7U"/>
                         <outlet property="tableView" destination="wYu-0m-B0Q" id="x5C-zl-LUz"/>
                     </connections>
                 </viewController>

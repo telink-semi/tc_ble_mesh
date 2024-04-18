@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     DeviceElementItemView.h
+ * @file     SceneElementView.m
  *
  * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2023/7/20
+ * @date     2024/3/25
  *
- * @par     Copyright (c) 2023, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,22 +21,23 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "SceneElementView.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation SceneElementView
 
-@interface DeviceElementItemView : UIView
-/// Image layer used to set state image.
-@property (weak, nonatomic) IBOutlet UIImageView *stateImageView;
-/// Text layer used to set state.
-@property (weak, nonatomic) IBOutlet UILabel *stateLabel;
-/// Button layer used to set select image icon.
-@property (weak, nonatomic) IBOutlet UIButton *selectButton;
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    // Initialization code
+    _iconImageView.clipsToBounds = YES;
+    _iconImageView.layer.cornerRadius = _iconImageView.bounds.size.width/2;
+}
 
-/// Update content with model.
-/// - Parameter model: model of cell.
-- (void)updateContent:(ActionModel *)model;
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
 
 @end
-
-NS_ASSUME_NONNULL_END

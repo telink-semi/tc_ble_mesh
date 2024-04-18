@@ -204,7 +204,7 @@
     //创建一个带有属性的字符串比如说颜色，字体等文字的属性
     NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc] initWithString:str];
     //设置title的字体大小
-    [attrStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:16] range:[str rangeOfString:title]];
+    [attrStr addAttribute:NSFontAttributeName value:[UIFont boldSystemFontOfSize:16] range:[str rangeOfString:title]];
     //设置subTitle的字体大小
     [attrStr addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:13] range:[str rangeOfString:subTitle]];
     //设置有属性的text

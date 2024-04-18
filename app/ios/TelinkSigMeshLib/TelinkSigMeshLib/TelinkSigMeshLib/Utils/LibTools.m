@@ -677,6 +677,12 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
     return [strPredicate evaluateWithObject:numberString];
 }
 
++ (BOOL)validateFloatString:(NSString *)numberString {
+    NSString *strRegex = @"^[-+]?([0-9]*\\.[0-9]+|[0-9]+)$";
+    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
+    return [strPredicate evaluateWithObject:numberString];
+}
+
 #pragma mark - UTF-8相关
 //UTF8 用途:https://blog.csdn.net/yetaibing1990/article/details/84766661
 //UTF8 格式：https://blog.csdn.net/sandyen/article/details/1108168?utm_medium=distribute.wap_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.wap_blog_relevant_pic&dist_request_id=&depth_1-utm_source=distribute.wap_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.wap_blog_relevant_pic
@@ -883,8 +889,12 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 /// - Parameter propertyID: device propertyID
 + (UInt8)valueLengthOfDevicePropertyID:(DevicePropertyID)propertyID {
     UInt8 length = 1;
+    //Coefficient, float32
+    if (propertyID == DevicePropertyID_LightControlRegulatorKid || propertyID == DevicePropertyID_LightControlRegulatorKiu || propertyID == DevicePropertyID_LightControlRegulatorKpd || propertyID == DevicePropertyID_LightControlRegulatorKpu || propertyID == DevicePropertyID_SensorGain) {
+        length = 4;
+    }
     //Illuminance
-    if (propertyID == DevicePropertyID_LightControlAmbientLuxLevelOn || propertyID == DevicePropertyID_LightControlAmbientLuxLevelProlong || propertyID == DevicePropertyID_LightControlAmbientLuxLevelStandby || propertyID == DevicePropertyID_PresentAmbientLightLevel || propertyID == DevicePropertyID_PresentIlluminance) {
+    else if (propertyID == DevicePropertyID_LightControlAmbientLuxLevelOn || propertyID == DevicePropertyID_LightControlAmbientLuxLevelProlong || propertyID == DevicePropertyID_LightControlAmbientLuxLevelStandby || propertyID == DevicePropertyID_PresentAmbientLightLevel || propertyID == DevicePropertyID_PresentIlluminance) {
         length = 3;
     }
     //Perceived Lightness

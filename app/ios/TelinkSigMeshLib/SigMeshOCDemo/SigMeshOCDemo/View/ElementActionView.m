@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     SceneItemCell.h
+ * @file     ElementActionView.m
  *
- * @brief    for TLSR chips
+ * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2018/9/25
+ * @date     2024/3/25
  *
- * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,16 +21,23 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "BaseCell.h"
+#import "ElementActionView.h"
 
-@interface SceneItemCell : BaseCell
-/// Handle block of click recall button.
-@property (copy, nonatomic) void(^clickRecallBlock)(void);
-/// Handle block of click edit button.
-@property (copy, nonatomic) void(^clickEditBlock)(void);
+@implementation ElementActionView
 
-/// Update content with model.
-/// - Parameter model: model of cell.
-- (void)updateContent:(SigSceneModel *)model;
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    // Initialization code
+    _iconImageView.clipsToBounds = YES;
+    _iconImageView.layer.cornerRadius = _iconImageView.bounds.size.width/2;
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
 
 @end
