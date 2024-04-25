@@ -64,6 +64,7 @@ public class MeshInfoService {
         oobInfoBox = store.boxFor(OobInfo.class);
         sceneBox = store.boxFor(Scene.class);
         nodeLcPropsBox = store.boxFor(NodeLcProps.class);
+        groupInfoBox = store.boxFor(GroupInfo.class);
         oobInfoQuery = oobInfoBox.query().build();
     }
 
