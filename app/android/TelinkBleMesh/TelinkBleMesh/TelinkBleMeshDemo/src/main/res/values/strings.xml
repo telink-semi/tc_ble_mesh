@@ -128,13 +128,11 @@
     </string-array>
 
     <string name="provision_mode_tip">
-        Enabled for scanning , provisioning and key-binding one by one;
-        Disabled for selectable networking.
+        ①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\t1. Scan for an unprovisioned device, connect and provision;\n\t2. Keep the connection state, send scan command to the device;\n\t3. Some remote devices info will be upload;\n\t4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device.
     </string>
 
     <string name="sub_level_service_tip">
-        Enabled for scanning , provisioning and key-binding one by one;
-        Disabled for selectable networking.
+        The flag added in demo v4.1.0.0 and later indicates whether the Service Level ModelID (0x1003) is also subscribed when subscribing to the group address.\nIf the customer has a Mesh remote control product and the Mesh remote control product has a Level control function, this function needs to be enabled on the app side. The default value is off.
     </string>
 
     <string name="auto_provision_tip">
@@ -144,7 +142,7 @@
 
     <string name="log_tip">
         TIP:
-        Enabled for default bound when key-binding;
+        Enabled to record app log information.
     </string>
 
     <string name="private_mode_tip">
@@ -174,7 +172,7 @@
 
 
     <string name="online_status_tip">
-        Use No-OOB if device UUID not found when device is static-OOB supported
+        Check whether the specified uuid exists in the att service list of the directly connected node to determine whether the online status function enabled.
     </string>
 
     <string name="dle_tip">

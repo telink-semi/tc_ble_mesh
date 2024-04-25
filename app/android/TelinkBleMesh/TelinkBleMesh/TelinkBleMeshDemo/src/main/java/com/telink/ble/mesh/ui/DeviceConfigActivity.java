@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -328,7 +327,14 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 toastMsg("input empty");
                 return;
             }
-            byte ttl = Byte.parseByte(ttlInput, 16);
+
+            byte ttl;
+            try {
+                ttl = Byte.parseByte(ttlInput, 16);
+            } catch (Exception e) {
+                toastMsg("parse byte input error");
+                return;
+            }
             DefaultTTLSetMessage setMessage = DefaultTTLSetMessage.getSimple(deviceInfo.meshAddress, ttl);
             boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
             if (cmdSent) {
@@ -360,29 +366,32 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
         });
         builder.setView(view).setPositiveButton("confirm", (dialog, which) -> {
             dialog.dismiss();
+            try {
+                String countInput = et_ret_cnt.getText().toString().trim();
+                if (countInput.isEmpty()) {
+                    toastMsg("pls input count");
+                    return;
+                }
+                int count = Integer.parseInt(countInput, 16);
 
-            String countInput = et_ret_cnt.getText().toString().trim();
-            if (countInput.isEmpty()) {
-                toastMsg("pls input count");
-                return;
-            }
-            int count = Integer.parseInt(countInput, 16);
+                String stepInput = et_ret_step.getText().toString().trim();
+                if (stepInput.isEmpty()) {
+                    toastMsg("pls input steps");
+                    return;
+                }
+                int steps = Integer.parseInt(stepInput, 16);
 
-            String stepInput = et_ret_step.getText().toString().trim();
-            if (stepInput.isEmpty()) {
-                toastMsg("pls input steps");
-                return;
-            }
-            int steps = Integer.parseInt(stepInput, 16);
-
-            byte value = (byte) (selectedIndex[0] == 0 ? 1 : 0);
-            RelaySetMessage setMessage = RelaySetMessage.getSimple(deviceInfo.meshAddress,
-                    value, (byte) count, (byte) steps);
-            boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
-            if (cmdSent) {
-                showSendWaitingDialog("setting Relay ...");
-            } else {
-                toastMsg("set message send error ");
+                byte value = (byte) (selectedIndex[0] == 0 ? 1 : 0);
+                RelaySetMessage setMessage = RelaySetMessage.getSimple(deviceInfo.meshAddress,
+                        value, (byte) count, (byte) steps);
+                boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
+                if (cmdSent) {
+                    showSendWaitingDialog("setting Relay ...");
+                } else {
+                    toastMsg("set message send error ");
+                }
+            } catch (Exception e) {
+                toastMsg("parse input error");
             }
         });
     }
@@ -454,25 +463,29 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
 
         builder.setView(view).setPositiveButton("confirm", (dialog, which) -> {
             dialog.dismiss();
-            String countInput = et_trans_cnt.getText().toString().trim();
-            if (countInput.isEmpty()) {
-                toastMsg("pls input count");
-                return;
-            }
-            int count = Integer.parseInt(countInput, 16);
+            try {
+                String countInput = et_trans_cnt.getText().toString().trim();
+                if (countInput.isEmpty()) {
+                    toastMsg("pls input count");
+                    return;
+                }
+                int count = Integer.parseInt(countInput, 16);
 
-            String stepInput = et_trans_step.getText().toString().trim();
-            if (stepInput.isEmpty()) {
-                toastMsg("pls input steps");
-                return;
-            }
-            int steps = Integer.parseInt(stepInput, 16);
-            MeshMessage message = NetworkTransmitSetMessage.getSimple(deviceInfo.meshAddress, count, steps);
-            boolean cmdSent = MeshService.getInstance().sendMeshMessage(message);
-            if (cmdSent) {
-                showSendWaitingDialog("setting network transmit ...");
-            } else {
-                toastMsg("set message send error ");
+                String stepInput = et_trans_step.getText().toString().trim();
+                if (stepInput.isEmpty()) {
+                    toastMsg("pls input steps");
+                    return;
+                }
+                int steps = Integer.parseInt(stepInput, 16);
+                MeshMessage message = NetworkTransmitSetMessage.getSimple(deviceInfo.meshAddress, count, steps);
+                boolean cmdSent = MeshService.getInstance().sendMeshMessage(message);
+                if (cmdSent) {
+                    showSendWaitingDialog("setting network transmit ...");
+                } else {
+                    toastMsg("set message send error ");
+                }
+            } catch (Exception e) {
+                toastMsg("parse input error");
             }
         });
     }
@@ -487,7 +500,13 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 toastMsg("input empty");
                 return;
             }
-            byte value = Byte.parseByte(ttlInput, 16);
+            byte value;
+            try {
+                value = Byte.parseByte(ttlInput, 16);
+            } catch (Exception e) {
+                toastMsg("parse byte input error");
+                return;
+            }
             OnDemandPrivateProxySetMessage setMessage = new OnDemandPrivateProxySetMessage(deviceInfo.meshAddress);
             setMessage.privateProxy = value;
             boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);

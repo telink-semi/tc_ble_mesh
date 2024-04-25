@@ -121,7 +121,7 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
         super.onBindViewHolder(holder, position);
 
         Scene scene = sceneList.get(position);
-        holder.tv_scene_info.setText(String.format("name: %s \nID: %02X", scene.name, scene.id));
+        holder.tv_scene_info.setText(String.format("name: %s \nID: %02X", scene.name, scene.sceneId));
 
         holder.iv_recall.setOnClickListener(
                 v -> ((SceneListActivity) (mContext)).recall(MeshUtils.ADDRESS_BROADCAST, scene.sceneId)

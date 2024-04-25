@@ -320,7 +320,7 @@ public class MeshStorageService {
         MeshStorage.Scene scene;
         for (Scene meshScene : mesh.scenes) {
             scene = new MeshStorage.Scene();
-            scene.number = String.format("%04X", meshScene.id);
+            scene.number = String.format("%04X", meshScene.sceneId);
             scene.name = meshScene.name;
             if (meshScene.addressList != null) {
                 scene.addresses = new ArrayList<>();
@@ -488,7 +488,7 @@ public class MeshStorageService {
             MeshStorage.Scene scene;
             for (Scene meshScene : mesh.scenes) {
                 scene = new MeshStorage.Scene();
-                scene.number = String.format("%04X", meshScene.id);
+                scene.number = String.format("%04X", meshScene.sceneId);
                 scene.name = meshScene.name;
                 if (meshScene.addressList != null) {
                     scene.addresses = new ArrayList<>();
@@ -709,7 +709,7 @@ public class MeshStorageService {
             Scene scene;
             for (MeshStorage.Scene outerScene : meshStorage.scenes) {
                 scene = new Scene();
-                scene.id = MeshUtils.hexToIntB(outerScene.number);
+                scene.sceneId = MeshUtils.hexToIntB(outerScene.number);
                 scene.name = outerScene.name;
                 if (outerScene.addresses != null) {
                     for (String adrInScene : outerScene.addresses) {

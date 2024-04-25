@@ -77,7 +77,13 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
         int adr = mAdrList.get(position);
-        holder.tv_ele.setText("ele adr: " + adr);
+
+        if (adr <= 0xFF) {
+            holder.tv_ele.setText(String.format("ele adr: %02X", adr));
+        } else {
+            holder.tv_ele.setText(String.format("ele adr: %04X", adr));
+        }
+//        holder.tv_ele.setText(String.format("ele adr: %04X", adr));
         holder.switch_ele.setTag(adr);
         holder.switch_ele.setOnCheckedChangeListener(switchChangeListener);
     }

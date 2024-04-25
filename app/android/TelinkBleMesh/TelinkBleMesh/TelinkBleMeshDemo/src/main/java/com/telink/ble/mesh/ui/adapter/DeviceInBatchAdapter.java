@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.ui.adapter;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.DeviceBatchSettingActivity;
 import com.telink.ble.mesh.ui.IconGenerator;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
 
@@ -74,8 +76,16 @@ public class DeviceInBatchAdapter extends BaseRecyclerViewAdapter<DeviceInBatchA
         super.onBindViewHolder(holder, position);
         NodeInfo deviceInfo = mDevices.get(position);
         holder.iv_device.setImageResource(IconGenerator.getIcon(deviceInfo));
-        String deviceDesc = String.format("address: %04X mac: %s", deviceInfo.meshAddress, deviceInfo.macAddress);
-        holder.tv_device_adr.setText(deviceDesc);
+
+        if (TextUtils.isEmpty(deviceInfo.macAddress)) {
+            holder.tv_device_adr.setText(String.format("address: %04X UUID: %s", deviceInfo.meshAddress, Arrays.bytesToHexString(deviceInfo.deviceUUID)));
+//            tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
+        } else {
+            holder.tv_device_adr.setText(String.format("address: %04X UUID: %s \nmac: %s", deviceInfo.meshAddress, Arrays.bytesToHexString(deviceInfo.deviceUUID), deviceInfo.macAddress));
+        }
+
+//        String deviceDesc = String.format("address: %04X mac: %s", deviceInfo.meshAddress, deviceInfo.macAddress);
+//        holder.tv_device_adr.setText(deviceDesc);
         if (deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
             holder.tv_device_adr.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
         } else {

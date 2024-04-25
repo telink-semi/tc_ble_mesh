@@ -130,6 +130,7 @@ public class FastProvisioningController {
 
     public static final int STATE_SUCCESS = 0x19;
 
+    public static final int STATE_SET_ADDR_FAIL = 0x20;
 
     private int state;
 
@@ -400,6 +401,8 @@ public class FastProvisioningController {
 
         if (opcode == Opcode.VD_MESH_ADDR_SET.value && state == STATE_SET_ADDR) {
             if (!success) {
+                FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex);
+                onStateUpdate(STATE_SET_ADDR_FAIL, "device set address fail", provisioningDevice);
                 setNextMeshAddress();
             }
         }
@@ -416,11 +419,12 @@ public class FastProvisioningController {
 
                     MeshAddressStatusMessage statusMessage = (MeshAddressStatusMessage) message.getStatusMessage();
                     int originAddress = message.getSrc();
-                    int pid = statusMessage.getPid() & 0x0FFF;
+//                    int pid = statusMessage.getPid() & 0x0FFF;
+                    int pid = statusMessage.getPid();
                     log("device address notify: " + Arrays.bytesToHexString(statusMessage.getMac()));
-                    int newAddress = getProvisioningMeshAddress(pid);
+                    int newAddress = getProvisioningMeshAddress(pid & 0x0FFF);
                     if (newAddress != 0) {
-                        int elementCount = configuration.getElementCount(pid);
+                        int elementCount = configuration.getElementCount(pid & 0x0FFF);
                         FastProvisioningDevice fastProvisioningDevice = new FastProvisioningDevice(
                                 originAddress,
                                 newAddress,

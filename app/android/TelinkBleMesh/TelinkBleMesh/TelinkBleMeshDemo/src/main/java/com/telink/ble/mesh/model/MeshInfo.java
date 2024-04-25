@@ -245,21 +245,21 @@ public class MeshInfo implements Serializable, Cloneable {
             }
         }
         this.nodes.remove(node);
+        MeshInfoService.getInstance().removeNodeInfo(node);
         saveOrUpdate();
     }
 
     public boolean removeDeviceByUUID(byte[] deviceUUID) {
-
         if (this.nodes == null || this.nodes.size() == 0) return false;
         Iterator<NodeInfo> iterator = nodes.iterator();
         while (iterator.hasNext()) {
             NodeInfo deviceInfo = iterator.next();
             if (Arrays.equals(deviceUUID, deviceInfo.deviceUUID)) {
                 iterator.remove();
+                MeshInfoService.getInstance().removeNodeInfo(deviceInfo);
                 return true;
             }
         }
-
         return false;
     }
 

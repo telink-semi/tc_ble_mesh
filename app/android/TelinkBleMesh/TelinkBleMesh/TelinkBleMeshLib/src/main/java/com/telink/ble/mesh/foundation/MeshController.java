@@ -2891,6 +2891,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 FastProvisioningEvent event = new FastProvisioningEvent(this, eventType);
                 event.setFastProvisioningDevice(device);
                 onEventPrepared(event);
+            } else if (state == FastProvisioningController.STATE_SET_ADDR_FAIL) {
+                FastProvisioningDevice device = (FastProvisioningDevice) obj;
+                String eventType = FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL;
+                FastProvisioningEvent event = new FastProvisioningEvent(this, eventType);
+                event.setFastProvisioningDevice(device);
+                onEventPrepared(event);
             }
         }
     }

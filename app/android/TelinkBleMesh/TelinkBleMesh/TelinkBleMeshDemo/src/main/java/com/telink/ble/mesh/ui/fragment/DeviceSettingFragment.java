@@ -101,7 +101,11 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             initPubModel();
         }
         TextView tv_mac = view.findViewById(R.id.tv_mac);
-        tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
+        if (TextUtils.isEmpty(deviceInfo.macAddress)) {
+            tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
+        } else {
+            tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID) + "\nmac: " + deviceInfo.macAddress);
+        }
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
 
         tv_node_name = view.findViewById(R.id.tv_node_name);
@@ -203,19 +207,9 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             builder.setCancelable(true);
             builder.setTitle("Warn");
             builder.setMessage("Confirm to remove device?");
-            builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    kickOut();
-                }
-            });
+            builder.setPositiveButton("Confirm", (dialog, which) -> kickOut());
 
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
             confirmDialog = builder.create();
         }
         confirmDialog.show();

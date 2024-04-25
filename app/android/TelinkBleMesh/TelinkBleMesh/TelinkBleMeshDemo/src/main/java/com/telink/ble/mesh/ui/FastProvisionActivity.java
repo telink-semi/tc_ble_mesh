@@ -94,6 +94,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
 
         TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS, this);
 
@@ -112,8 +113,8 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
 
     private void actionStart() {
         enableUI(false);
-
         int provisionIndex = meshInfo.getProvisionIndex();
+        MeshLogger.d(String.format("adr index : %04X", provisionIndex));
         SparseIntArray targetDevicePid = new SparseIntArray(targetDevices.length);
 
         CompositionData compositionData;
@@ -144,7 +145,9 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":");
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
-        nodeInfo.compositionData = CompositionData.from(getCompositionData(fastProvisioningDevice.getPid()));
+        CompositionData cpsData = CompositionData.from(getCompositionData(fastProvisioningDevice.getPid()));
+        cpsData.pid = fastProvisioningDevice.getPid();
+        nodeInfo.compositionData = cpsData;
 
         NetworkingDevice device = new NetworkingDevice(nodeInfo);
         device.state = NetworkingState.PROVISIONING;
@@ -153,6 +156,9 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
     }
 
+    private void onDeviceSetAddressFail(FastProvisioningDevice fastProvisioningDevice) {
+        meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
+    }
 
     @Override
     protected void onDestroy() {
@@ -172,6 +178,8 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
             onFastProvisionComplete(false);
         } else if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS)) {
             onFastProvisionComplete(true);
+        } else if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL)) {
+            onDeviceSetAddressFail(((FastProvisioningEvent) event).getFastProvisioningDevice());
         }
     }
 
@@ -191,7 +199,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
 
     private byte[] getCompositionData(int pid) {
         for (PrivateDevice privateDevice : targetDevices) {
-            if (pid == privateDevice.getPid()) {
+            if ((pid & 0x0FFF) == (privateDevice.getPid() & 0xFFF)) {
                 return privateDevice.getCpsData();
             }
         }

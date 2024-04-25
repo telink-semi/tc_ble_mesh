@@ -115,9 +115,9 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
             case No_changes:
                 return "No changes to CPS";
             case CPS_CHANGED_1:
-                return "CPS changed, remote pv is not supported";
+                return "CPS changed, remote PRV is not supported";
             case CPS_CHANGED_2:
-                return "CPS changed, remote pv is supported";
+                return "CPS changed, remote PRV is supported";
             case NODE_UNPROVISIONED:
                 return "Node unprovisioned, device will be removed after successful update";
         }
