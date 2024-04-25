@@ -335,7 +335,7 @@ class FUInitiator implements BlobTransferCallback {
                 } else {
                     startMessage.distributionMulticastAddress = groupAddress;
                 }
-                log("distribute start address: " + startMessage.distributionMulticastAddress);
+                log(String.format("distribute start address: %04X", startMessage.distributionMulticastAddress));
                 onMeshMessagePrepared(startMessage);
                 break;
         }

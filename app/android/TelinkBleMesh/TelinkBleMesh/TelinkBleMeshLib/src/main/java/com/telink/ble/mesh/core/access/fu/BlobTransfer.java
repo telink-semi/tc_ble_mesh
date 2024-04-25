@@ -409,8 +409,11 @@ class BlobTransfer {
             nextAction();
             return;
         }*/
-
-        meshMessage.setRetryCnt(10); // ble stack may cache the packets and the mesh message may not receive response , so set retry count larger to wait for longer time
+        if (meshMessage.getOpcode() == Opcode.BLOB_BLOCK_GET.value){
+            meshMessage.setRetryCnt(30);
+        }else{
+            meshMessage.setRetryCnt(10); // ble stack may cache the packets and the mesh message may not receive response , so set retry count larger to wait for longer time
+        }
         log("mesh message prepared: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X", meshMessage.getOpcode(), meshMessage.getDestinationAddress()));
         if (transferCallback != null) {

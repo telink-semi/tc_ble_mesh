@@ -274,4 +274,16 @@ public class FirmwareUpdateConfiguration {
                 ", proxyAddress=" + proxyAddress +
                 '}';
     }
+
+    /**
+     * show on ui
+     */
+    public String getBriefDesc(ExtendBearerMode extendBearerMode) {
+        //
+        return "Mesh OTA Params: " + " proxyAddress=" + proxyAddress +
+                ", distributorType=" + distributorType +
+                ", extendBearerMode=" + extendBearerMode;
+
+
+    }
 }

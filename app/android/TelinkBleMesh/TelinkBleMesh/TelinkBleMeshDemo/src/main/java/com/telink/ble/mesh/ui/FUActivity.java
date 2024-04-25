@@ -42,6 +42,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.fu.BlobTransferType;
@@ -54,6 +55,7 @@ import com.telink.ble.mesh.core.message.config.NetworkTransmitGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
@@ -215,6 +217,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     private LogInfoAdapter logInfoAdapter;
 
+    private ExtendBearerMode extendBearerMode;
+
 
     @SuppressLint("HandlerLeak")
     private Handler infoHandler = new Handler() {
@@ -249,6 +253,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             return;
         }
         setContentView(R.layout.activity_fu);
+        extendBearerMode = SharedPreferenceHelper.getExtendBearerMode(this);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         setTitle("Mesh OTA");
         enableBackNav(true);
@@ -340,7 +345,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         enableUI(true);
         // for test
 //        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin"); // little
-        readFirmware("/storage/emulated/0/.a0kee/8258_mesh_LPN_noRebootWhenError.bin"); // lpn
+//        readFirmware("/storage/emulated/0/.a0kee/8258_mesh_LPN_noRebootWhenError.bin"); // lpn
 
 //        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
@@ -385,7 +390,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             isComplete = false;
             MeshService.getInstance().startMeshOta(meshOtaParameters);
 
-            infoHandler.obtainMessage(MSG_INFO, "continue firmware update...").sendToTarget();
+            infoHandler.obtainMessage(MSG_INFO, "continue firmware update : " + configuration.getBriefDesc(extendBearerMode)).sendToTarget();
         }
     }
 
@@ -567,6 +572,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
                 isComplete = false;
+                infoHandler.obtainMessage(MSG_INFO, "start firmware update : " + configuration.getBriefDesc(extendBearerMode)).sendToTarget();
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
                 break;
 
@@ -616,13 +622,10 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private void appendLog(String logInfo) {
         MeshLogger.d("mesh-OTA appendLog: " + logInfo);
         logInfoList.add(new LogInfo("FW-UPDATE", logInfo, MeshLogger.LEVEL_DEBUG));
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (bottomDialog.isShowing()) {
-                    logInfoAdapter.notifyDataSetChanged();
-                    rv_log.smoothScrollToPosition(logInfoList.size() - 1);
-                }
+        runOnUiThread(() -> {
+            if (bottomDialog.isShowing()) {
+                logInfoAdapter.notifyDataSetChanged();
+                rv_log.smoothScrollToPosition(logInfoList.size() - 1);
             }
         });
 
@@ -693,12 +696,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private void onDeviceOtaFail(MeshUpdatingDevice updatingDevice, String desc) {
         updatingDevice.state = MeshUpdatingDevice.STATE_FAIL;
         appendLog("device update fail - " + updatingDevice.meshAddress + " --- " + desc);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceAdapter.notifyDataSetChanged();
-            }
-        });
+        runOnUiThread(() -> deviceAdapter.notifyDataSetChanged());
     }
 
     @Override
