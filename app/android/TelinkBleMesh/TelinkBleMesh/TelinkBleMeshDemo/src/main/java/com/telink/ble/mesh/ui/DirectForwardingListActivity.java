@@ -54,7 +54,6 @@ import java.util.List;
  */
 public class DirectForwardingListActivity extends BaseActivity implements EventListener<String>, View.OnClickListener {
 
-
     private MeshInfo meshInfo;
     private NodeInfo nodeInfo;
     private int meshAddress;

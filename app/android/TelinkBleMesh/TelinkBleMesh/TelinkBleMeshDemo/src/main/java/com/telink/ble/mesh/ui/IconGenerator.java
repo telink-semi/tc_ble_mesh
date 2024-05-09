@@ -48,6 +48,9 @@ public class IconGenerator {
      * @return resId
      */
     public static int getIcon(NodeInfo device, OnlineState onlineState) {
+        if (device == null) {
+            return R.drawable.ic_question;
+        }
         boolean isSensor = device.isSensor();
         final int pid = device.compositionData != null ? device.compositionData.pid : 0;
         if (device.compositionData != null) {
@@ -69,7 +72,7 @@ public class IconGenerator {
                 }
                 if (onlineState == OnlineState.OFFLINE) {
                     return R.drawable.ic_sensor_offline;
-                }else{
+                } else {
                     return R.drawable.ic_sensor_on;
                 }
             }
@@ -142,9 +145,9 @@ public class IconGenerator {
     }
 
     /**
-     * @deprecated
      * @param onOff
      * @return
+     * @deprecated
      */
     public static int generateDeviceIconRes(int onOff) {
 //        return R.drawable.ic_low_power;

@@ -94,9 +94,10 @@ public class DeviceSelectAdapter extends BaseSelectableListAdapter<DeviceSelectA
 
         final int pid = deviceInfo.compositionData != null ? deviceInfo.compositionData.pid : 0;
         holder.iv_device.setImageResource(IconGenerator.getIcon(deviceInfo));
-        holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc,
+        holder.tv_device_info.setText(String.format("Name-%s\nAdr-0x%04X\non/off:%s", deviceInfo.getName(), deviceInfo.meshAddress, deviceInfo.getOnlineState().toString()));;
+        /*holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc,
                 String.format("%04X", deviceInfo.meshAddress),
-                deviceInfo.getOnlineState().toString()));
+                deviceInfo.getOnlineState().toString()));*/
 
         holder.cb_device.setTag(position);
 

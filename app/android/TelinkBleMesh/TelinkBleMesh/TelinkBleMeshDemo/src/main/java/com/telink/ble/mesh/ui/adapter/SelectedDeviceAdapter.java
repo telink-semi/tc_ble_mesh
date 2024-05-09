@@ -39,7 +39,7 @@ import com.telink.ble.mesh.ui.IconGenerator;
 import java.util.List;
 
 /**
- * mesh ota adapter
+ * direct forwarding device adapter
  * Created by kee on 2017/8/18.
  */
 public class SelectedDeviceAdapter extends BaseRecyclerViewAdapter<SelectedDeviceAdapter.ViewHolder> {
@@ -77,8 +77,8 @@ public class SelectedDeviceAdapter extends BaseRecyclerViewAdapter<SelectedDevic
         NodeInfo deviceInfo = mDevices.get(position);
         final int pid = deviceInfo.compositionData == null ? 0 : deviceInfo.compositionData.pid;
         holder.iv_device.setImageResource(IconGenerator.getIcon(deviceInfo, OnlineState.ON));
-
-        holder.tv_device_info.setText(String.format("Node-%04X", deviceInfo.meshAddress));
+        holder.tv_device_info.setText(String.format("Name-%s\nAdr-0x%04X", deviceInfo.getName(), deviceInfo.meshAddress));
+//        holder.tv_device_info.setText(String.format("Node-%04X", deviceInfo.meshAddress));
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

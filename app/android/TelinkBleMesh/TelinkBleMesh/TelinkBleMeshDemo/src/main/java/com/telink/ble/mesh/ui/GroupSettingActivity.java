@@ -235,8 +235,6 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         List<NodeInfo> innerDevices = new ArrayList<>();
         outer:
         for (NodeInfo device : localDevices) {
-
-
             if (device.subList != null) {
                 for (String groupAdr : device.subList) {
                     if (MeshUtils.hexToIntB(groupAdr) == group.address) {
