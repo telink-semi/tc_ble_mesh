@@ -438,10 +438,7 @@ public class FastProvisioningController {
                             log("provisioning device exists: " + Arrays.bytesToHexString(statusMessage.getMac()));
                         }
                     }
-
                 }
-
-
                 break;
 
             case VD_MESH_ADDR_SET_STS: {
@@ -449,8 +446,13 @@ public class FastProvisioningController {
                     int srcAdr = message.getSrc();
                     FastProvisioningDevice device = getProvisioningDeviceByAddress(srcAdr);
                     if (device != null) {
-                        onStateUpdate(STATE_SET_ADDR_SUCCESS, "device set address success", device);
-                        setNextMeshAddress();
+                        if (!device.isSetAdrComplete()) {
+                            device.setSetAdrComplete(true);
+                            onStateUpdate(STATE_SET_ADDR_SUCCESS, "device set address success", device);
+                            setNextMeshAddress();
+                        } else {
+                            log(String.format("device already set address complete : %04X", device.getOriginAddress()));
+                        }
                     }
                 }
             }

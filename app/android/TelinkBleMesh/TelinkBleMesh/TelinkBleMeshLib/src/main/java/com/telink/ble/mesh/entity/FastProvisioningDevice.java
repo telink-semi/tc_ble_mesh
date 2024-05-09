@@ -61,6 +61,9 @@ public class FastProvisioningDevice implements Parcelable {
      */
     private byte[] deviceKey;
 
+//    public static final int STATE_SET_ADR_SUCCESS = 0x01;
+
+    private boolean isSetAdrComplete = false;
 
     public FastProvisioningDevice() {
 
@@ -76,6 +79,7 @@ public class FastProvisioningDevice implements Parcelable {
         System.arraycopy(mac, 0, deviceKey, 0, 6);
     }
 
+
     protected FastProvisioningDevice(Parcel in) {
         originAddress = in.readInt();
         newAddress = in.readInt();
@@ -83,6 +87,7 @@ public class FastProvisioningDevice implements Parcelable {
         elementCount = in.readInt();
         mac = in.createByteArray();
         deviceKey = in.createByteArray();
+        isSetAdrComplete = in.readByte() != 0;
     }
 
     public static final Creator<FastProvisioningDevice> CREATOR = new Creator<FastProvisioningDevice>() {
@@ -158,6 +163,27 @@ public class FastProvisioningDevice implements Parcelable {
         this.elementCount = elementCount;
     }
 
+    public boolean isSetAdrComplete() {
+        return isSetAdrComplete;
+    }
+
+    public void setSetAdrComplete(boolean setAdrComplete) {
+        isSetAdrComplete = setAdrComplete;
+    }
+
+
+    @Override
+    public String toString() {
+        return "FastProvisioningDevice{" +
+                "originAddress=" + originAddress +
+                ", newAddress=" + newAddress +
+                ", pid=" + pid +
+                ", elementCount=" + elementCount +
+                ", mac=" + java.util.Arrays.toString(mac) +
+                ", deviceKey=" + java.util.Arrays.toString(deviceKey) +
+                '}';
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -171,17 +197,6 @@ public class FastProvisioningDevice implements Parcelable {
         dest.writeInt(elementCount);
         dest.writeByteArray(mac);
         dest.writeByteArray(deviceKey);
-    }
-
-    @Override
-    public String toString() {
-        return "FastProvisioningDevice{" +
-                "originAddress=" + originAddress +
-                ", newAddress=" + newAddress +
-                ", pid=" + pid +
-                ", elementCount=" + elementCount +
-                ", mac=" + java.util.Arrays.toString(mac) +
-                ", deviceKey=" + java.util.Arrays.toString(deviceKey) +
-                '}';
+        dest.writeByte((byte) (isSetAdrComplete ? 1 : 0));
     }
 }
