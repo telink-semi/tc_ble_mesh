@@ -77,14 +77,18 @@
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             if (successful) {
                 [ConnectTools.share startConnectToolsWithNodeList:@[weakSelf.model] timeout:20 Complete:^(BOOL successful) {
-                    if (successful) {
-                        [weakSelf.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
-                    } else {
-                        [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
-                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (successful) {
+                            [weakSelf.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
+                        } else {
+                            [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                        }
+                    });
                 }];
             } else {
-                [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                });
             }
         }];
     }
@@ -105,8 +109,11 @@
         model = ele.models.firstObject;
     }
     UInt16 pubAdr = 0;
-    if (model) {
+    if (model && model.publish) {
         pubAdr = [LibTools uint16From16String:model.publish.address];
+    } else if (indexPath.row < SigDataSource.share.groups.count) {
+        //默认值，按照Group来顺序设置
+        pubAdr = SigDataSource.share.groups[indexPath.row].intAddress;
     }
     cell.eleAdrTF.text = [NSString stringWithFormat:@"%04X",eleAdr];
     cell.modelTF.text = model.modelId;

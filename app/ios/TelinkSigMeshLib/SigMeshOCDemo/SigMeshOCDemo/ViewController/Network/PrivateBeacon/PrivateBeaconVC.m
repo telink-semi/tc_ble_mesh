@@ -92,6 +92,8 @@
     cell.secondTitleLabel.text = self.dataArray[indexPath.row * 2 + 1];
     cell.firstSwitch.on = NO;
     cell.secondSwitch.on = NO;
+    [cell.firstSwitch removeTarget:nil action:nil forControlEvents:UIControlEventValueChanged];
+    [cell.secondSwitch removeTarget:nil action:nil forControlEvents:UIControlEventValueChanged];
     if (indexPath.row == 0) {
         cell.firstSwitch.on = [SigDataSource.share getLocalConfigGattProxyStateOfUnicastAddress:self.model.address];
         cell.secondSwitch.on = [SigDataSource.share getLocalPrivateGattProxyStateOfUnicastAddress:self.model.address];
@@ -180,6 +182,13 @@
     UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
+    if (switchButton.on) {
+        [self startTimerForPrivateNodeIdentity];
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(privateNodeIdentityTimerAction) object:nil];
+        });
+    }
     SigPrivateNodeIdentityState privateIdentity = switchButton.isOn ? SigPrivateNodeIdentityState_enabled : SigPrivateNodeIdentityState_notEnabled;
     //1. Private Node Identity
     [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index privateIdentity:privateIdentity destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
@@ -244,13 +253,6 @@
     UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
-    if (switchButton.on) {
-        [self startTimerForPrivateNodeIdentity];
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(privateNodeIdentityTimerAction) object:nil];
-        });
-    }
     SigPrivateBeaconState privateBeacon = switchButton.isOn ? SigPrivateBeaconState_enable : SigPrivateBeaconState_disable;
     [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeacon destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
         if (source == des && responseMessage.privateBeacon == privateBeacon) {

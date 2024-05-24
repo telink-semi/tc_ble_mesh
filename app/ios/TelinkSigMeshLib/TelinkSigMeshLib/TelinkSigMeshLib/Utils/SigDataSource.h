@@ -822,6 +822,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setLocalConfigBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
 
+/// remove local state
+/// @param unicastAddress the unicastAddress of node.
+- (void)removeLocalStateWithUnicastAddress:(UInt16)unicastAddress;
+
+/// clean local state
+- (void)cleanLocalPrivateBeaconStateWithMeshUUID:(NSString *)meshUUID;
+
+/// clean local state
+- (void)cleanAllLocalPrivateBeaconState;
+
 #pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
 
 /**

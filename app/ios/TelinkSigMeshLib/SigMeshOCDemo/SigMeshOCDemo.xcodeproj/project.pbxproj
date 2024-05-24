@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		17E6862A11CFA7E5907A3797 /* Pods_SigLoopAddDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 47AB2B773123C1C88A7E7261 /* Pods_SigLoopAddDemo.framework */; };
+		06960AED8A1FA2DCA6F12B54 /* Pods_SigMeshOCDemoTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2ABCAD7B2910B505866CFA15 /* Pods_SigMeshOCDemoTests.framework */; };
+		0801C8BC1449EB7351C69C35 /* Pods_SigMeshOCDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E1E2E87CA9B50BF3A959948 /* Pods_SigMeshOCDemo.framework */; };
+		158072033D4F0530832172ED /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CD8ED7615212E7CB1E76826 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */; };
+		1608912BA10C0C84C8DD684E /* Pods_SigLoopAddDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B3553C2BEF057314FF76338A /* Pods_SigLoopAddDemo.framework */; };
 		2512BB3B27E41CD7000B353B /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
 		2512BB4627E4284F000B353B /* AddForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4527E4284F000B353B /* AddForwardingTableVC.m */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
@@ -142,142 +145,9 @@
 		25589C562721408B00F4F880 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
 		258B6296282CAB6500AE9B35 /* PTSViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 258B6294282CAB6500AE9B35 /* PTSViewController.m */; };
 		258B6297282CAB6500AE9B35 /* PTSViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258B6295282CAB6500AE9B35 /* PTSViewController.xib */; };
-		2590C4ED285C287D00E19DE9 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
-		2590C4EE285C287D00E19DE9 /* UIImage+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A5A2721403D00F4F880 /* UIImage+Extension.m */; };
-		2590C4F0285C287D00E19DE9 /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABD2721403E00F4F880 /* InfoSwitchCell.m */; };
-		2590C4F2285C287D00E19DE9 /* SensorVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B032721403E00F4F880 /* SensorVC.m */; };
-		2590C4F4285C287D00E19DE9 /* DeviceGroupListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */; };
-		2590C4F6285C287D00E19DE9 /* SingleOTAViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B572721403E00F4F880 /* SingleOTAViewController.m */; };
-		2590C4F9285C287D00E19DE9 /* ChooseItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A7A2721403E00F4F880 /* ChooseItemCell.m */; };
-		2590C4FA285C287D00E19DE9 /* OTAFileSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A672721403D00F4F880 /* OTAFileSource.m */; };
-		2590C4FB285C287D00E19DE9 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AAB2721403E00F4F880 /* ColorPickerView.m */; };
-		2590C4FD285C287D00E19DE9 /* GroupCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A7F2721403E00F4F880 /* GroupCell.m */; };
-		2590C4FE285C287D00E19DE9 /* OnOffModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB62721403E00F4F880 /* OnOffModelCell.m */; };
-		2590C4FF285C287D00E19DE9 /* DeviceNetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AD12721403E00F4F880 /* DeviceNetKeyListVC.m */; };
-		2590C500285C287D00E19DE9 /* ExtendBearerModeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABA2721403E00F4F880 /* ExtendBearerModeCell.m */; };
-		2590C501285C287D00E19DE9 /* ResponseTestVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B162721403E00F4F880 /* ResponseTestVC.m */; };
-		2590C503285C287D00E19DE9 /* ReKeyBindViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFE2721403E00F4F880 /* ReKeyBindViewController.m */; };
-		2590C504285C287D00E19DE9 /* SchedulerDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2D2721403E00F4F880 /* SchedulerDetailViewController.m */; };
-		2590C505285C287D00E19DE9 /* ChooseModelIDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABB2721403E00F4F880 /* ChooseModelIDCell.m */; };
-		2590C506285C287D00E19DE9 /* GroupDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B502721403E00F4F880 /* GroupDetailViewController.m */; };
-		2590C507285C287D00E19DE9 /* DeviceControlViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AD92721403E00F4F880 /* DeviceControlViewController.m */; };
-		2590C508285C287D00E19DE9 /* AddForwardingTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB4527E4284F000B353B /* AddForwardingTableVC.m */; };
-		2590C509285C287D00E19DE9 /* SchedulerListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4E2721403E00F4F880 /* SchedulerListViewController.m */; };
-		2590C50C285C287D00E19DE9 /* DeviceSubscriptionListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AF22721403E00F4F880 /* DeviceSubscriptionListViewController.m */; };
-		2590C50D285C287D00E19DE9 /* CustomAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A762721403E00F4F880 /* CustomAlertView.m */; };
-		2590C50E285C287D00E19DE9 /* DeviceSettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ADF2721403E00F4F880 /* DeviceSettingViewController.m */; };
-		2590C50F285C287D00E19DE9 /* LevelAndSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A882721403E00F4F880 /* LevelAndSliderCell.m */; };
-		2590C511285C287D00E19DE9 /* EditOOBVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B212721403E00F4F880 /* EditOOBVC.m */; };
-		2590C517285C287D00E19DE9 /* NetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B3B2721403E00F4F880 /* NetKeyListVC.m */; };
-		2590C519285C287D00E19DE9 /* zipAndUnzip+zipString.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A642721403D00F4F880 /* zipAndUnzip+zipString.m */; };
-		2590C51A285C287D00E19DE9 /* ChooseBinCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB72721403E00F4F880 /* ChooseBinCell.m */; };
-		2590C51B285C287D00E19DE9 /* HomeItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA22721403E00F4F880 /* HomeItemCell.m */; };
-		2590C51C285C287D00E19DE9 /* SchedulerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A9E2721403E00F4F880 /* SchedulerCell.m */; };
-		2590C51E285C287D00E19DE9 /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A6D2721403D00F4F880 /* BaseTableView.m */; };
-		2590C51F285C287D00E19DE9 /* ColorModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB42721403E00F4F880 /* ColorModelCell.m */; };
-		2590C521285C287D00E19DE9 /* DeviceRemoteVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AEE2721403E00F4F880 /* DeviceRemoteVC.m */; };
-		2590C522285C287D00E19DE9 /* PTSViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 258B6294282CAB6500AE9B35 /* PTSViewController.m */; };
-		2590C523285C287D00E19DE9 /* MeshOTAVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFA2721403E00F4F880 /* MeshOTAVC.m */; };
-		2590C524285C287D00E19DE9 /* ShareInVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4A2721403E00F4F880 /* ShareInVC.m */; };
-		2590C525285C287D00E19DE9 /* AddDeviceItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB12721403E00F4F880 /* AddDeviceItemCell.m */; };
-		2590C52A285C287D00E19DE9 /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ACA2721403E00F4F880 /* HomeViewController.m */; };
-		2590C52C285C287D00E19DE9 /* GroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC92721403E00F4F880 /* GroupViewController.m */; };
-		2590C52E285C287D00E19DE9 /* ShareOutVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4B2721403E00F4F880 /* ShareOutVC.m */; };
-		2590C530285C287D00E19DE9 /* SingleDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AF12721403E00F4F880 /* SingleDeviceViewController.m */; };
-		2590C531285C287D00E19DE9 /* DeviceGroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE22721403E00F4F880 /* DeviceGroupViewController.m */; };
-		2590C532285C287D00E19DE9 /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
-		2590C534285C287D00E19DE9 /* HSLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B092721403E00F4F880 /* HSLViewController.m */; };
-		2590C536285C287D00E19DE9 /* DeviceConfigCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE72721403E00F4F880 /* DeviceConfigCell.m */; };
-		2590C537285C287D00E19DE9 /* CMDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B042721403E00F4F880 /* CMDViewController.m */; };
-		2590C538285C287D00E19DE9 /* CertificateListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD7D092728E58D0029037A /* CertificateListVC.m */; };
-		2590C539285C287D00E19DE9 /* ChooseEntryVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CC927EC024C009F7626 /* ChooseEntryVC.m */; };
-		2590C53A285C287D00E19DE9 /* UIButton+extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFB2721403E00F4F880 /* UIButton+extension.m */; };
-		2590C53B285C287D00E19DE9 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B532721403E00F4F880 /* SettingViewController.m */; };
-		2590C53D285C287D00E19DE9 /* ActionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B422721403E00F4F880 /* ActionViewController.m */; };
-		2590C53E285C287D00E19DE9 /* ChooseOOBFileVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B242721403E00F4F880 /* ChooseOOBFileVC.m */; };
-		2590C53F285C287D00E19DE9 /* SubnetBridgeListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ADD2721403E00F4F880 /* SubnetBridgeListVC.m */; };
-		2590C541285C287D00E19DE9 /* DemoCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC42721403E00F4F880 /* DemoCommand.m */; };
-		2590C542285C287D00E19DE9 /* ScanView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A5B2721403D00F4F880 /* ScanView.m */; };
-		2590C543285C287D00E19DE9 /* ScanCodeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A5C2721403D00F4F880 /* ScanCodeVC.m */; };
-		2590C544285C287D00E19DE9 /* SceneListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B4F2721403E00F4F880 /* SceneListViewController.m */; };
-		2590C545285C287D00E19DE9 /* ShowQRCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B482721403E00F4F880 /* ShowQRCodeViewController.m */; };
-		2590C547285C287D00E19DE9 /* MeshInfoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2F2721403E00F4F880 /* MeshInfoVC.m */; };
-		2590C54A285C287D00E19DE9 /* BaseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A6C2721403D00F4F880 /* BaseViewController.m */; };
-		2590C54C285C287D00E19DE9 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AAE2721403E00F4F880 /* ColorManager.m */; };
-		2590C54F285C287D00E19DE9 /* OOBListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B272721403E00F4F880 /* OOBListVC.m */; };
-		2590C550285C287D00E19DE9 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B112721403E00F4F880 /* FileChooseVC.m */; };
-		2590C552285C287D00E19DE9 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE32721403E00F4F880 /* DeviceCompositionDataVC.m */; };
-		2590C553285C287D00E19DE9 /* ModelIDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A872721403E00F4F880 /* ModelIDCell.m */; };
-		2590C554285C287D00E19DE9 /* FastProvisionAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC82721403E00F4F880 /* FastProvisionAddVC.m */; };
-		2590C555285C287D00E19DE9 /* MeshOTAItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AF92721403E00F4F880 /* MeshOTAItemCell.m */; };
-		2590C556285C287D00E19DE9 /* ShowTipsView.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AC22721403E00F4F880 /* ShowTipsView.m */; };
-		2590C557285C287D00E19DE9 /* SceneDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B1F2721403E00F4F880 /* SceneDetailViewController.m */; };
-		2590C558285C287D00E19DE9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
-		2590C559285C287D00E19DE9 /* RemoteAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AFF2721403E00F4F880 /* RemoteAddVC.m */; };
-		2590C55B285C287D00E19DE9 /* UIStoryboard+extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A6A2721403D00F4F880 /* UIStoryboard+extension.m */; };
-		2590C55C285C287D00E19DE9 /* SceneItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A7E2721403E00F4F880 /* SceneItemCell.m */; };
-		2590C55E285C287D00E19DE9 /* NetKeyAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B392721403E00F4F880 /* NetKeyAddVC.m */; };
-		2590C55F285C287D00E19DE9 /* InputItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A732721403E00F4F880 /* InputItemCell.m */; };
-		2590C560285C287D00E19DE9 /* CustomAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A772721403E00F4F880 /* CustomAlert.m */; };
-		2590C561285C287D00E19DE9 /* DeviceAppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ACF2721403E00F4F880 /* DeviceAppKeyListVC.m */; };
-		2590C562285C287D00E19DE9 /* ShareTipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B492721403E00F4F880 /* ShareTipsVC.m */; };
-		2590C565285C287D00E19DE9 /* BridgeTableItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB52721403E00F4F880 /* BridgeTableItemCell.m */; };
-		2590C566285C287D00E19DE9 /* AppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B412721403E00F4F880 /* AppKeyListVC.m */; };
-		2590C567285C287D00E19DE9 /* NSString+extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A662721403D00F4F880 /* NSString+extension.m */; };
-		2590C568285C287D00E19DE9 /* AppKeyAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B372721403E00F4F880 /* AppKeyAddVC.m */; };
-		2590C56A285C287D00E19DE9 /* zipAndUnzip.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A612721403D00F4F880 /* zipAndUnzip.m */; };
-		2590C56B285C287D00E19DE9 /* NSString+calculate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A692721403D00F4F880 /* NSString+calculate.m */; };
-		2590C56C285C287D00E19DE9 /* LogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B512721403E00F4F880 /* LogViewController.m */; };
-		2590C56D285C287D00E19DE9 /* OnOffItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AA92721403E00F4F880 /* OnOffItemCell.m */; };
-		2590C56E285C287D00E19DE9 /* OOBItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B2C2721403E00F4F880 /* OOBItemCell.m */; };
-		2590C56F285C287D00E19DE9 /* UIViewController+Message.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A552721403D00F4F880 /* UIViewController+Message.m */; };
-		2590C570285C287D00E19DE9 /* DeviceChooseKeyVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AD42721403E00F4F880 /* DeviceChooseKeyVC.m */; };
-		2590C572285C287D00E19DE9 /* RemoteElementCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AB82721403E00F4F880 /* RemoteElementCell.m */; };
-		2590C573285C287D00E19DE9 /* AddBridgeTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ADC2721403E00F4F880 /* AddBridgeTableVC.m */; };
-		2590C574285C287D00E19DE9 /* DeviceConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AEB2721403E00F4F880 /* DeviceConfigVC.m */; };
 		2590C575285C287D00E19DE9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A24272115DA00F4F880 /* main.m */; };
-		2590C579285C287D00E19DE9 /* LevelAndSliderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AC02721403E00F4F880 /* LevelAndSliderCell.xib */; };
-		2590C57B285C287D00E19DE9 /* ChooseBinCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A992721403E00F4F880 /* ChooseBinCell.xib */; };
 		2590C57C285C287D00E19DE9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A20272115DA00F4F880 /* LaunchScreen.storyboard */; };
-		2590C57D285C287D00E19DE9 /* PTSViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258B6295282CAB6500AE9B35 /* PTSViewController.xib */; };
-		2590C57E285C287D00E19DE9 /* MeshOTAItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AF62721403E00F4F880 /* MeshOTAItemCell.xib */; };
-		2590C57F285C287D00E19DE9 /* DeviceChooseKeyVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AD82721403E00F4F880 /* DeviceChooseKeyVC.xib */; };
-		2590C580285C287D00E19DE9 /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A952721403E00F4F880 /* InfoSwitchCell.xib */; };
-		2590C581285C287D00E19DE9 /* ShowTipsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589ABE2721403E00F4F880 /* ShowTipsView.xib */; };
-		2590C582285C287D00E19DE9 /* EditOOBVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B2A2721403E00F4F880 /* EditOOBVC.xib */; };
-		2590C583285C287D00E19DE9 /* DeviceConfigVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE62721403E00F4F880 /* DeviceConfigVC.xib */; };
 		2590C584285C287D00E19DE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1E272115DA00F4F880 /* Assets.xcassets */; };
-		2590C585285C287D00E19DE9 /* AppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B332721403E00F4F880 /* AppKeyListVC.xib */; };
-		2590C587285C287D00E19DE9 /* MeshOTAVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AF52721403E00F4F880 /* MeshOTAVC.xib */; };
-		2590C588285C287D00E19DE9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
-		2590C589285C287D00E19DE9 /* BridgeTableItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A892721403E00F4F880 /* BridgeTableItemCell.xib */; };
-		2590C58A285C287D00E19DE9 /* ChooseModelIDCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AA12721403E00F4F880 /* ChooseModelIDCell.xib */; };
-		2590C58B285C287D00E19DE9 /* InputItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A7B2721403E00F4F880 /* InputItemCell.xib */; };
-		2590C58C285C287D00E19DE9 /* RemoteElementCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A862721403E00F4F880 /* RemoteElementCell.xib */; };
-		2590C58D285C287D00E19DE9 /* ChooseOOBFileVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B292721403E00F4F880 /* ChooseOOBFileVC.xib */; };
-		2590C58E285C287D00E19DE9 /* ExtendBearerModeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AB32721403E00F4F880 /* ExtendBearerModeCell.xib */; };
-		2590C58F285C287D00E19DE9 /* OnOffItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A902721403E00F4F880 /* OnOffItemCell.xib */; };
-		2590C591285C287D00E19DE9 /* AddDeviceItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AB22721403E00F4F880 /* AddDeviceItemCell.xib */; };
-		2590C592285C287D00E19DE9 /* ColorModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AA62721403E00F4F880 /* ColorModelCell.xib */; };
-		2590C593285C287D00E19DE9 /* DeviceNetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AD62721403E00F4F880 /* DeviceNetKeyListVC.xib */; };
-		2590C594285C287D00E19DE9 /* ChooseItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A752721403E00F4F880 /* ChooseItemCell.xib */; };
-		2590C595285C287D00E19DE9 /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
-		2590C598285C287D00E19DE9 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
-		2590C599285C287D00E19DE9 /* DeviceConfigCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE82721403E00F4F880 /* DeviceConfigCell.xib */; };
-		2590C59A285C287D00E19DE9 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
-		2590C59B285C287D00E19DE9 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
-		2590C59D285C287D00E19DE9 /* DeviceAppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589ACE2721403E00F4F880 /* DeviceAppKeyListVC.xib */; };
-		2590C59E285C287D00E19DE9 /* OnOffModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A8E2721403E00F4F880 /* OnOffModelCell.xib */; };
-		2590C5A1285C287D00E19DE9 /* ResponseTestVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B142721403E00F4F880 /* ResponseTestVC.xib */; };
-		2590C5A2285C287D00E19DE9 /* NetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B3D2721403E00F4F880 /* NetKeyListVC.xib */; };
-		2590C5A4285C287D00E19DE9 /* NetKeyAddVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B3F2721403E00F4F880 /* NetKeyAddVC.xib */; };
-		2590C5A5285C287D00E19DE9 /* ModelIDCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A832721403E00F4F880 /* ModelIDCell.xib */; };
-		2590C5A6285C287D00E19DE9 /* OOBListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B252721403E00F4F880 /* OOBListVC.xib */; };
-		2590C5A7285C287D00E19DE9 /* OOBItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B262721403E00F4F880 /* OOBItemCell.xib */; };
-		2590C5A8285C287D00E19DE9 /* AppKeyAddVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589B3A2721403E00F4F880 /* AppKeyAddVC.xib */; };
-		2590C5AA285C287D00E19DE9 /* CustomAlert.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A782721403E00F4F880 /* CustomAlert.xib */; };
-		2590C5AB285C287D00E19DE9 /* SchedulerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589A912721403E00F4F880 /* SchedulerCell.xib */; };
-		2590C5AC285C287D00E19DE9 /* SceneItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589ABF2721403E00F4F880 /* SceneItemCell.xib */; };
 		2590C5C1285C293400E19DE9 /* TestAddDevice.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2590C5BC285C293400E19DE9 /* TestAddDevice.storyboard */; };
 		2590C5C2285C293400E19DE9 /* TestAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590C5BD285C293400E19DE9 /* TestAddDeviceVC.m */; };
 		2590C5C3285C293400E19DE9 /* TLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590C5C0285C293400E19DE9 /* TLog.m */; };
@@ -287,9 +157,6 @@
 		25FE6CCA27EC024C009F7626 /* ChooseEntryVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CC927EC024C009F7626 /* ChooseEntryVC.m */; };
 		25FE6CD227EC14D5009F7626 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
 		25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
-		2FBA9DDEFD5A63B18FC21E57 /* Pods_SigMeshOCDemoTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB7373C3F66FD065DDB5052E /* Pods_SigMeshOCDemoTests.framework */; };
-		41C9DCE462E5B1D878BD0DA9 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 122AA15D5FA2228DCFA216B5 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */; };
-		5636220D96C0C7E1D4431B72 /* Pods_SigMeshOCDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC472D93356A04D919AE4ADB /* Pods_SigMeshOCDemo.framework */; };
 		9105B16B2BB1765D00EA0DD6 /* ElementActionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9105B16A2BB1765D00EA0DD6 /* ElementActionView.m */; };
 		9105B1712BB1767700EA0DD6 /* ElementActionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9105B1702BB1767700EA0DD6 /* ElementActionView.xib */; };
 		91075BA62B0D97EC00F933EA /* BaseCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91075BA52B0D97EC00F933EA /* BaseCell.m */; };
@@ -304,11 +171,16 @@
 		911217D72B4643A600A79A3E /* BinFileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 911217D42B4643A600A79A3E /* BinFileChooseVC.m */; };
 		911217D82B4643A600A79A3E /* BinFileChooseVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911217D52B4643A600A79A3E /* BinFileChooseVC.xib */; };
 		911217D92B4643A600A79A3E /* BinFileChooseVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911217D52B4643A600A79A3E /* BinFileChooseVC.xib */; };
+		9124E39D2BE07F7200E44AB2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
+		9124E39E2BE07F9200E44AB2 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
+		9124E39F2BE080CF00E44AB2 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6022B293BDA00BB08B4 /* TelinkSigMeshLib.framework */; };
 		912A58062B35660700531DA4 /* ShareNetKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 912A58042B35660700531DA4 /* ShareNetKeyCell.m */; };
 		912A58072B35660700531DA4 /* ShareNetKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 912A58042B35660700531DA4 /* ShareNetKeyCell.m */; };
 		912A58082B35660700531DA4 /* ShareNetKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 912A58052B35660700531DA4 /* ShareNetKeyCell.xib */; };
 		912A58092B35660700531DA4 /* ShareNetKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 912A58052B35660700531DA4 /* ShareNetKeyCell.xib */; };
 		912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */; };
+		9130614F2BC29FA5003D2972 /* DeviceSelectVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9130614E2BC29FA5003D2972 /* DeviceSelectVC.xib */; };
+		913061502BC29FA5003D2972 /* DeviceSelectVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9130614D2BC29FA5003D2972 /* DeviceSelectVC.m */; };
 		9130FC452B215EF400392F2B /* ActivityIndicatorCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9130FC432B215EF400392F2B /* ActivityIndicatorCell.m */; };
 		9130FC462B215EF400392F2B /* ActivityIndicatorCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9130FC442B215EF400392F2B /* ActivityIndicatorCell.xib */; };
 		91343AF02B590B04008FC4F6 /* SensorConfigCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91343AEE2B590B04008FC4F6 /* SensorConfigCell.m */; };
@@ -353,7 +225,6 @@
 		915958CB2AD5391F00D85CA4 /* SettingTitleItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 915958C92AD5391F00D85CA4 /* SettingTitleItemCell.xib */; };
 		915958CE2AD545BC00D85CA4 /* DirectForwardingVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 915958CD2AD545BC00D85CA4 /* DirectForwardingVC.m */; };
 		9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
-		9161956E290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
 		9163A3DD2B33E0F9006960B6 /* AppKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9163A3DB2B33E0F9006960B6 /* AppKeyCell.m */; };
 		9163A3DE2B33E0F9006960B6 /* AppKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9163A3DB2B33E0F9006960B6 /* AppKeyCell.m */; };
 		9163A3DF2B33E0F9006960B6 /* AppKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9163A3DC2B33E0F9006960B6 /* AppKeyCell.xib */; };
@@ -608,7 +479,7 @@
 		91F6A93F2AEFB0E50076E54B /* PrivateBeaconCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */; };
 		91F6A9402AEFB0E50076E54B /* PrivateBeaconCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91F6A93E2AEFB0E50076E54B /* PrivateBeaconCell.xib */; };
 		91FAEB192AD7D2AE00F951CE /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FAEB182AD7D2AE00F951CE /* SettingsViewController.m */; };
-		D5692A0E9A8D634FCE9DDC58 /* Pods_SigMeshCloud.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B00639ECD4E99A5430C32AA /* Pods_SigMeshCloud.framework */; };
+		ABE8A50E72098127AD3555C3 /* Pods_SigMeshCloud.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2873F62ACC87BB4D3CCF965A /* Pods_SigMeshCloud.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -650,8 +521,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0F3958C37EEA82AD50385CC9 /* Pods-SigLoopAddDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigLoopAddDemo.release.xcconfig"; path = "Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo.release.xcconfig"; sourceTree = "<group>"; };
-		122AA15D5FA2228DCFA216B5 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2512BB3927E41CD7000B353B /* DirectControlListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectControlListVC.h; sourceTree = "<group>"; };
 		2512BB3A27E41CD7000B353B /* DirectControlListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DirectControlListVC.m; sourceTree = "<group>"; };
 		2512BB4427E4284F000B353B /* AddForwardingTableVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddForwardingTableVC.h; sourceTree = "<group>"; };
@@ -898,14 +767,13 @@
 		25FE6CCF27EC14D5009F7626 /* EntryCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EntryCell.h; sourceTree = "<group>"; };
 		25FE6CD027EC14D5009F7626 /* EntryCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EntryCell.m; sourceTree = "<group>"; };
 		25FE6CD127EC14D5009F7626 /* EntryCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EntryCell.xib; sourceTree = "<group>"; };
-		2647AA8FCF6F60859A2DD36C /* Pods-SigMeshOCDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemoTests.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemoTests/Pods-SigMeshOCDemoTests.release.xcconfig"; sourceTree = "<group>"; };
-		29CD57A553B69CBD4D344050 /* Pods-SigMeshOCDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo.debug.xcconfig"; sourceTree = "<group>"; };
-		3B00639ECD4E99A5430C32AA /* Pods_SigMeshCloud.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshCloud.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		3EDB291215675F1769013E5F /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig"; sourceTree = "<group>"; };
-		47AB2B773123C1C88A7E7261 /* Pods_SigLoopAddDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigLoopAddDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B69AB72E562FF388DDC9B01 /* Pods-SigMeshOCDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo.release.xcconfig"; sourceTree = "<group>"; };
-		873B3C3EDECB805F6D2D6E21 /* Pods-SigMeshOCDemoTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemoTests.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemoTests/Pods-SigMeshOCDemoTests.debug.xcconfig"; sourceTree = "<group>"; };
-		8F9969BBC366B21634584216 /* Pods-SigMeshCloud.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshCloud.release.xcconfig"; path = "Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud.release.xcconfig"; sourceTree = "<group>"; };
+		285252C8E76A0D7388C02698 /* Pods-SigLoopAddDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigLoopAddDemo.release.xcconfig"; path = "Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo.release.xcconfig"; sourceTree = "<group>"; };
+		2873F62ACC87BB4D3CCF965A /* Pods_SigMeshCloud.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshCloud.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2ABCAD7B2910B505866CFA15 /* Pods_SigMeshOCDemoTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemoTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		41BC7051316E0EFCE6490038 /* Pods-SigMeshOCDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemoTests.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemoTests/Pods-SigMeshOCDemoTests.release.xcconfig"; sourceTree = "<group>"; };
+		51D11DAFDC379942F1F4A09A /* Pods-SigMeshOCDemoTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemoTests.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemoTests/Pods-SigMeshOCDemoTests.debug.xcconfig"; sourceTree = "<group>"; };
+		7CDEEAA87809C13353416C77 /* Pods-SigMeshCloud.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshCloud.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud.debug.xcconfig"; sourceTree = "<group>"; };
+		8CD8ED7615212E7CB1E76826 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9105B1692BB1765D00EA0DD6 /* ElementActionView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ElementActionView.h; sourceTree = "<group>"; };
 		9105B16A2BB1765D00EA0DD6 /* ElementActionView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ElementActionView.m; sourceTree = "<group>"; };
 		9105B1702BB1767700EA0DD6 /* ElementActionView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ElementActionView.xib; sourceTree = "<group>"; };
@@ -930,6 +798,9 @@
 		912A58052B35660700531DA4 /* ShareNetKeyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ShareNetKeyCell.xib; sourceTree = "<group>"; };
 		912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPExportVC.h; sourceTree = "<group>"; };
 		912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPExportVC.m; sourceTree = "<group>"; };
+		9130614C2BC29FA5003D2972 /* DeviceSelectVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceSelectVC.h; sourceTree = "<group>"; };
+		9130614D2BC29FA5003D2972 /* DeviceSelectVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceSelectVC.m; sourceTree = "<group>"; };
+		9130614E2BC29FA5003D2972 /* DeviceSelectVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceSelectVC.xib; sourceTree = "<group>"; };
 		9130FC422B215EF400392F2B /* ActivityIndicatorCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ActivityIndicatorCell.h; sourceTree = "<group>"; };
 		9130FC432B215EF400392F2B /* ActivityIndicatorCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ActivityIndicatorCell.m; sourceTree = "<group>"; };
 		9130FC442B215EF400392F2B /* ActivityIndicatorCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ActivityIndicatorCell.xib; sourceTree = "<group>"; };
@@ -1092,11 +963,14 @@
 		91F6A93E2AEFB0E50076E54B /* PrivateBeaconCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrivateBeaconCell.xib; sourceTree = "<group>"; };
 		91FAEB172AD7D2AE00F951CE /* SettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		91FAEB182AD7D2AE00F951CE /* SettingsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
-		920AAB5256E0E70C15D1EC09 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig"; sourceTree = "<group>"; };
-		A6449E272F3DB67D0992434F /* Pods-SigMeshCloud.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshCloud.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud.debug.xcconfig"; sourceTree = "<group>"; };
-		CB7373C3F66FD065DDB5052E /* Pods_SigMeshOCDemoTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemoTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		FC472D93356A04D919AE4ADB /* Pods_SigMeshOCDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		FF5728CEC944718026323F05 /* Pods-SigLoopAddDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigLoopAddDemo.debug.xcconfig"; path = "Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		9E1E2E87CA9B50BF3A959948 /* Pods_SigMeshOCDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigMeshOCDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A44F781A27276A416A99F333 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		A6F1E214279C5DD6DC264AD4 /* Pods-SigMeshCloud.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshCloud.release.xcconfig"; path = "Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud.release.xcconfig"; sourceTree = "<group>"; };
+		AA18E521323DC250D73B853E /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig"; sourceTree = "<group>"; };
+		B3553C2BEF057314FF76338A /* Pods_SigLoopAddDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SigLoopAddDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA400EAFC83211F70BA294BB /* Pods-SigLoopAddDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigLoopAddDemo.debug.xcconfig"; path = "Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		D236127F6BD4859BAD30384C /* Pods-SigMeshOCDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo.release.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo.release.xcconfig"; sourceTree = "<group>"; };
+		E817DEB97958A34D4543DDFB /* Pods-SigMeshOCDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SigMeshOCDemo.debug.xcconfig"; path = "Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1105,7 +979,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				919BC73D2B2987830011991B /* TelinkSigMeshLib.framework in Frameworks */,
-				5636220D96C0C7E1D4431B72 /* Pods_SigMeshOCDemo.framework in Frameworks */,
+				0801C8BC1449EB7351C69C35 /* Pods_SigMeshOCDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1113,7 +987,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2FBA9DDEFD5A63B18FC21E57 /* Pods_SigMeshOCDemoTests.framework in Frameworks */,
+				06960AED8A1FA2DCA6F12B54 /* Pods_SigMeshOCDemoTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1121,7 +995,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41C9DCE462E5B1D878BD0DA9 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework in Frameworks */,
+				158072033D4F0530832172ED /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1129,7 +1003,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				17E6862A11CFA7E5907A3797 /* Pods_SigLoopAddDemo.framework in Frameworks */,
+				9124E39F2BE080CF00E44AB2 /* TelinkSigMeshLib.framework in Frameworks */,
+				1608912BA10C0C84C8DD684E /* Pods_SigLoopAddDemo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1138,7 +1013,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				919BC73E2B29887E0011991B /* TelinkCloudSigMeshLib.framework in Frameworks */,
-				D5692A0E9A8D634FCE9DDC58 /* Pods_SigMeshCloud.framework in Frameworks */,
+				ABE8A50E72098127AD3555C3 /* Pods_SigMeshCloud.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1148,16 +1023,16 @@
 		09B8A6CB9DA0CE1132FB5AA1 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				FF5728CEC944718026323F05 /* Pods-SigLoopAddDemo.debug.xcconfig */,
-				0F3958C37EEA82AD50385CC9 /* Pods-SigLoopAddDemo.release.xcconfig */,
-				A6449E272F3DB67D0992434F /* Pods-SigMeshCloud.debug.xcconfig */,
-				8F9969BBC366B21634584216 /* Pods-SigMeshCloud.release.xcconfig */,
-				29CD57A553B69CBD4D344050 /* Pods-SigMeshOCDemo.debug.xcconfig */,
-				6B69AB72E562FF388DDC9B01 /* Pods-SigMeshOCDemo.release.xcconfig */,
-				3EDB291215675F1769013E5F /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */,
-				920AAB5256E0E70C15D1EC09 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */,
-				873B3C3EDECB805F6D2D6E21 /* Pods-SigMeshOCDemoTests.debug.xcconfig */,
-				2647AA8FCF6F60859A2DD36C /* Pods-SigMeshOCDemoTests.release.xcconfig */,
+				CA400EAFC83211F70BA294BB /* Pods-SigLoopAddDemo.debug.xcconfig */,
+				285252C8E76A0D7388C02698 /* Pods-SigLoopAddDemo.release.xcconfig */,
+				7CDEEAA87809C13353416C77 /* Pods-SigMeshCloud.debug.xcconfig */,
+				A6F1E214279C5DD6DC264AD4 /* Pods-SigMeshCloud.release.xcconfig */,
+				E817DEB97958A34D4543DDFB /* Pods-SigMeshOCDemo.debug.xcconfig */,
+				D236127F6BD4859BAD30384C /* Pods-SigMeshOCDemo.release.xcconfig */,
+				A44F781A27276A416A99F333 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */,
+				AA18E521323DC250D73B853E /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */,
+				51D11DAFDC379942F1F4A09A /* Pods-SigMeshOCDemoTests.debug.xcconfig */,
+				41BC7051316E0EFCE6490038 /* Pods-SigMeshOCDemoTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -1203,7 +1078,7 @@
 				2590C5B7285C28F700E19DE9 /* SigLoopAddDemo */,
 				25589A10272115D700F4F880 /* Products */,
 				09B8A6CB9DA0CE1132FB5AA1 /* Pods */,
-				59349B310DADA3F220B602B8 /* Frameworks */,
+				7ED24C72DF0029D499A0D13C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1597,6 +1472,9 @@
 				91DC47F32B450707009B07DA /* SelectUpdateDeviceVC.h */,
 				91DC47F42B450707009B07DA /* SelectUpdateDeviceVC.m */,
 				91DC47F52B450707009B07DA /* SelectUpdateDeviceVC.xib */,
+				9130614C2BC29FA5003D2972 /* DeviceSelectVC.h */,
+				9130614D2BC29FA5003D2972 /* DeviceSelectVC.m */,
+				9130614E2BC29FA5003D2972 /* DeviceSelectVC.xib */,
 				911217D32B4643A600A79A3E /* BinFileChooseVC.h */,
 				911217D42B4643A600A79A3E /* BinFileChooseVC.m */,
 				911217D52B4643A600A79A3E /* BinFileChooseVC.xib */,
@@ -1736,14 +1614,14 @@
 			path = RootCertificate;
 			sourceTree = "<group>";
 		};
-		59349B310DADA3F220B602B8 /* Frameworks */ = {
+		7ED24C72DF0029D499A0D13C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				47AB2B773123C1C88A7E7261 /* Pods_SigLoopAddDemo.framework */,
-				3B00639ECD4E99A5430C32AA /* Pods_SigMeshCloud.framework */,
-				FC472D93356A04D919AE4ADB /* Pods_SigMeshOCDemo.framework */,
-				122AA15D5FA2228DCFA216B5 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */,
-				CB7373C3F66FD065DDB5052E /* Pods_SigMeshOCDemoTests.framework */,
+				B3553C2BEF057314FF76338A /* Pods_SigLoopAddDemo.framework */,
+				2873F62ACC87BB4D3CCF965A /* Pods_SigMeshCloud.framework */,
+				9E1E2E87CA9B50BF3A959948 /* Pods_SigMeshOCDemo.framework */,
+				8CD8ED7615212E7CB1E76826 /* Pods_SigMeshOCDemo_SigMeshOCDemoUITests.framework */,
+				2ABCAD7B2910B505866CFA15 /* Pods_SigMeshOCDemoTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1951,11 +1829,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 25589A3E272115DB00F4F880 /* Build configuration list for PBXNativeTarget "SigMeshOCDemo" */;
 			buildPhases = (
-				516CEB44409790BEF85FF2FC /* [CP] Check Pods Manifest.lock */,
+				6C54FD8CB961BC64AEBD73CC /* [CP] Check Pods Manifest.lock */,
 				25589A0B272115D700F4F880 /* Sources */,
 				25589A0C272115D700F4F880 /* Frameworks */,
 				25589A0D272115D700F4F880 /* Resources */,
-				AF7EC414BD97ADE508115FB3 /* [CP] Embed Pods Frameworks */,
+				0F42B9C2B5F35C1D1405BE41 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1970,7 +1848,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 25589A41272115DB00F4F880 /* Build configuration list for PBXNativeTarget "SigMeshOCDemoTests" */;
 			buildPhases = (
-				9563DC9BE071A1CC1CE7B02D /* [CP] Check Pods Manifest.lock */,
+				FF8FE7B293DE0D3A7A1CF73D /* [CP] Check Pods Manifest.lock */,
 				25589A26272115DB00F4F880 /* Sources */,
 				25589A27272115DB00F4F880 /* Frameworks */,
 				25589A28272115DB00F4F880 /* Resources */,
@@ -1989,11 +1867,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 25589A44272115DB00F4F880 /* Build configuration list for PBXNativeTarget "SigMeshOCDemoUITests" */;
 			buildPhases = (
-				DA83B549950F60CC2216B754 /* [CP] Check Pods Manifest.lock */,
+				FA77D9962419199B4A2621E4 /* [CP] Check Pods Manifest.lock */,
 				25589A30272115DB00F4F880 /* Sources */,
 				25589A31272115DB00F4F880 /* Frameworks */,
 				25589A32272115DB00F4F880 /* Resources */,
-				5EF05BE24DF53595FB2BC205 /* [CP] Embed Pods Frameworks */,
+				034A9F900D633D15718DBE4E /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2009,10 +1887,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2590C5AD285C287D00E19DE9 /* Build configuration list for PBXNativeTarget "SigLoopAddDemo" */;
 			buildPhases = (
-				50D2883F6D16B9A31E8CB92E /* [CP] Check Pods Manifest.lock */,
+				A61318F06E792176B1192CEF /* [CP] Check Pods Manifest.lock */,
 				2590C4EC285C287D00E19DE9 /* Sources */,
 				2590C576285C287D00E19DE9 /* Frameworks */,
 				2590C578285C287D00E19DE9 /* Resources */,
+				5CFEF76370D7F310CFF06997 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2027,11 +1906,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 91BF47E12B27FFA300254CB6 /* Build configuration list for PBXNativeTarget "SigMeshCloud" */;
 			buildPhases = (
-				5FD43D126EDB30CA2E2F2F9B /* [CP] Check Pods Manifest.lock */,
+				0751618B2B072754E22D8DD1 /* [CP] Check Pods Manifest.lock */,
 				91BF46FB2B27FFA300254CB6 /* Sources */,
 				91BF479B2B27FFA300254CB6 /* Frameworks */,
 				91BF479D2B27FFA300254CB6 /* Resources */,
-				C4E15F4540615A2B69315DF2 /* [CP] Embed Pods Frameworks */,
+				B816412185EA41E76F676C68 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2168,6 +2047,7 @@
 				916FEF2D29E654F800206FE6 /* ProxyFilterCell.xib in Resources */,
 				917BE4C42AD689B10073FC35 /* ShareButtonCell.xib in Resources */,
 				25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */,
+				9130614F2BC29FA5003D2972 /* DeviceSelectVC.xib in Resources */,
 				25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */,
 				25589BF92721403F00F4F880 /* DeviceConfigCell.xib in Resources */,
 				25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */,
@@ -2215,50 +2095,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2590C579285C287D00E19DE9 /* LevelAndSliderCell.xib in Resources */,
-				2590C57B285C287D00E19DE9 /* ChooseBinCell.xib in Resources */,
 				2590C57C285C287D00E19DE9 /* LaunchScreen.storyboard in Resources */,
-				2590C57D285C287D00E19DE9 /* PTSViewController.xib in Resources */,
-				2590C57E285C287D00E19DE9 /* MeshOTAItemCell.xib in Resources */,
-				2590C57F285C287D00E19DE9 /* DeviceChooseKeyVC.xib in Resources */,
-				2590C580285C287D00E19DE9 /* InfoSwitchCell.xib in Resources */,
-				2590C581285C287D00E19DE9 /* ShowTipsView.xib in Resources */,
-				2590C582285C287D00E19DE9 /* EditOOBVC.xib in Resources */,
-				2590C583285C287D00E19DE9 /* DeviceConfigVC.xib in Resources */,
 				2590C5C5285C2E6100E19DE9 /* SigLoopAddDemo.plist in Resources */,
 				2590C584285C287D00E19DE9 /* Assets.xcassets in Resources */,
-				2590C585285C287D00E19DE9 /* AppKeyListVC.xib in Resources */,
-				2590C587285C287D00E19DE9 /* MeshOTAVC.xib in Resources */,
-				2590C588285C287D00E19DE9 /* Main.storyboard in Resources */,
-				2590C589285C287D00E19DE9 /* BridgeTableItemCell.xib in Resources */,
-				2590C58A285C287D00E19DE9 /* ChooseModelIDCell.xib in Resources */,
-				2590C58B285C287D00E19DE9 /* InputItemCell.xib in Resources */,
-				2590C58C285C287D00E19DE9 /* RemoteElementCell.xib in Resources */,
-				2590C58D285C287D00E19DE9 /* ChooseOOBFileVC.xib in Resources */,
-				2590C58E285C287D00E19DE9 /* ExtendBearerModeCell.xib in Resources */,
-				2590C58F285C287D00E19DE9 /* OnOffItemCell.xib in Resources */,
-				2590C591285C287D00E19DE9 /* AddDeviceItemCell.xib in Resources */,
-				2590C592285C287D00E19DE9 /* ColorModelCell.xib in Resources */,
-				2590C593285C287D00E19DE9 /* DeviceNetKeyListVC.xib in Resources */,
-				2590C594285C287D00E19DE9 /* ChooseItemCell.xib in Resources */,
-				2590C595285C287D00E19DE9 /* CertificateListVC.xib in Resources */,
 				2590C5C1285C293400E19DE9 /* TestAddDevice.storyboard in Resources */,
-				2590C598285C287D00E19DE9 /* EntryCell.xib in Resources */,
-				2590C599285C287D00E19DE9 /* DeviceConfigCell.xib in Resources */,
-				2590C59A285C287D00E19DE9 /* DeviceSetting.storyboard in Resources */,
-				2590C59B285C287D00E19DE9 /* Setting.storyboard in Resources */,
-				2590C59D285C287D00E19DE9 /* DeviceAppKeyListVC.xib in Resources */,
-				2590C59E285C287D00E19DE9 /* OnOffModelCell.xib in Resources */,
-				2590C5A1285C287D00E19DE9 /* ResponseTestVC.xib in Resources */,
-				2590C5A2285C287D00E19DE9 /* NetKeyListVC.xib in Resources */,
-				2590C5A4285C287D00E19DE9 /* NetKeyAddVC.xib in Resources */,
-				2590C5A5285C287D00E19DE9 /* ModelIDCell.xib in Resources */,
-				2590C5A6285C287D00E19DE9 /* OOBListVC.xib in Resources */,
-				2590C5A7285C287D00E19DE9 /* OOBItemCell.xib in Resources */,
-				2590C5A8285C287D00E19DE9 /* AppKeyAddVC.xib in Resources */,
-				2590C5AA285C287D00E19DE9 /* CustomAlert.xib in Resources */,
-				2590C5AB285C287D00E19DE9 /* SchedulerCell.xib in Resources */,
-				2590C5AC285C287D00E19DE9 /* SceneItemCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2350,51 +2190,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		50D2883F6D16B9A31E8CB92E /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SigLoopAddDemo-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		516CEB44409790BEF85FF2FC /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemo-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		5EF05BE24DF53595FB2BC205 /* [CP] Embed Pods Frameworks */ = {
+		034A9F900D633D15718DBE4E /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2411,7 +2207,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		5FD43D126EDB30CA2E2F2F9B /* [CP] Check Pods Manifest.lock */ = {
+		0751618B2B072754E22D8DD1 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2433,29 +2229,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		9563DC9BE071A1CC1CE7B02D /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemoTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		AF7EC414BD97ADE508115FB3 /* [CP] Embed Pods Frameworks */ = {
+		0F42B9C2B5F35C1D1405BE41 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2472,7 +2246,68 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C4E15F4540615A2B69315DF2 /* [CP] Embed Pods Frameworks */ = {
+		5CFEF76370D7F310CFF06997 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6C54FD8CB961BC64AEBD73CC /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A61318F06E792176B1192CEF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SigLoopAddDemo-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		B816412185EA41E76F676C68 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2489,7 +2324,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		DA83B549950F60CC2216B754 /* [CP] Check Pods Manifest.lock */ = {
+		FA77D9962419199B4A2621E4 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2505,6 +2340,28 @@
 			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemo-SigMeshOCDemoUITests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		FF8FE7B293DE0D3A7A1CF73D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemoTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2652,6 +2509,7 @@
 				915709DF2B54FF7900C9D502 /* LightingControlVC.m in Sources */,
 				25589BEE2721403F00F4F880 /* DeviceChooseKeyVC.m in Sources */,
 				9175845629E535B7008FE98A /* ProxyFilterVC.m in Sources */,
+				913061502BC29FA5003D2972 /* DeviceSelectVC.m in Sources */,
 				25589BDC2721403F00F4F880 /* RemoteElementCell.m in Sources */,
 				9105B16B2BB1765D00EA0DD6 /* ElementActionView.m in Sources */,
 				25589BF22721403F00F4F880 /* AddBridgeTableVC.m in Sources */,
@@ -2684,102 +2542,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2590C4ED285C287D00E19DE9 /* EntryCell.m in Sources */,
-				2590C4EE285C287D00E19DE9 /* UIImage+Extension.m in Sources */,
-				2590C4F0285C287D00E19DE9 /* InfoSwitchCell.m in Sources */,
-				2590C4F2285C287D00E19DE9 /* SensorVC.m in Sources */,
-				2590C4F4285C287D00E19DE9 /* DeviceGroupListCell.m in Sources */,
-				2590C4F6285C287D00E19DE9 /* SingleOTAViewController.m in Sources */,
-				2590C4F9285C287D00E19DE9 /* ChooseItemCell.m in Sources */,
-				2590C4FA285C287D00E19DE9 /* OTAFileSource.m in Sources */,
-				2590C4FB285C287D00E19DE9 /* ColorPickerView.m in Sources */,
-				2590C4FD285C287D00E19DE9 /* GroupCell.m in Sources */,
-				2590C4FE285C287D00E19DE9 /* OnOffModelCell.m in Sources */,
-				2590C4FF285C287D00E19DE9 /* DeviceNetKeyListVC.m in Sources */,
-				2590C500285C287D00E19DE9 /* ExtendBearerModeCell.m in Sources */,
-				2590C501285C287D00E19DE9 /* ResponseTestVC.m in Sources */,
-				2590C503285C287D00E19DE9 /* ReKeyBindViewController.m in Sources */,
-				2590C504285C287D00E19DE9 /* SchedulerDetailViewController.m in Sources */,
-				2590C505285C287D00E19DE9 /* ChooseModelIDCell.m in Sources */,
-				2590C506285C287D00E19DE9 /* GroupDetailViewController.m in Sources */,
-				2590C507285C287D00E19DE9 /* DeviceControlViewController.m in Sources */,
-				2590C508285C287D00E19DE9 /* AddForwardingTableVC.m in Sources */,
+				9124E39E2BE07F9200E44AB2 /* UIColor+Telink.m in Sources */,
+				9124E39D2BE07F7200E44AB2 /* AppDelegate.m in Sources */,
 				2590C5C3285C293400E19DE9 /* TLog.m in Sources */,
-				2590C509285C287D00E19DE9 /* SchedulerListViewController.m in Sources */,
-				2590C50C285C287D00E19DE9 /* DeviceSubscriptionListViewController.m in Sources */,
-				2590C50D285C287D00E19DE9 /* CustomAlertView.m in Sources */,
-				2590C50E285C287D00E19DE9 /* DeviceSettingViewController.m in Sources */,
-				2590C50F285C287D00E19DE9 /* LevelAndSliderCell.m in Sources */,
-				2590C511285C287D00E19DE9 /* EditOOBVC.m in Sources */,
-				2590C517285C287D00E19DE9 /* NetKeyListVC.m in Sources */,
-				2590C519285C287D00E19DE9 /* zipAndUnzip+zipString.m in Sources */,
-				2590C51A285C287D00E19DE9 /* ChooseBinCell.m in Sources */,
-				2590C51B285C287D00E19DE9 /* HomeItemCell.m in Sources */,
-				2590C51C285C287D00E19DE9 /* SchedulerCell.m in Sources */,
-				2590C51E285C287D00E19DE9 /* BaseTableView.m in Sources */,
-				2590C51F285C287D00E19DE9 /* ColorModelCell.m in Sources */,
-				2590C521285C287D00E19DE9 /* DeviceRemoteVC.m in Sources */,
-				2590C522285C287D00E19DE9 /* PTSViewController.m in Sources */,
-				2590C523285C287D00E19DE9 /* MeshOTAVC.m in Sources */,
-				2590C524285C287D00E19DE9 /* ShareInVC.m in Sources */,
-				2590C525285C287D00E19DE9 /* AddDeviceItemCell.m in Sources */,
-				2590C52A285C287D00E19DE9 /* HomeViewController.m in Sources */,
-				2590C52C285C287D00E19DE9 /* GroupViewController.m in Sources */,
-				2590C52E285C287D00E19DE9 /* ShareOutVC.m in Sources */,
-				2590C530285C287D00E19DE9 /* SingleDeviceViewController.m in Sources */,
-				2590C531285C287D00E19DE9 /* DeviceGroupViewController.m in Sources */,
-				9161956E290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */,
-				2590C532285C287D00E19DE9 /* DirectControlListVC.m in Sources */,
-				2590C534285C287D00E19DE9 /* HSLViewController.m in Sources */,
-				2590C536285C287D00E19DE9 /* DeviceConfigCell.m in Sources */,
-				2590C537285C287D00E19DE9 /* CMDViewController.m in Sources */,
-				2590C538285C287D00E19DE9 /* CertificateListVC.m in Sources */,
-				2590C539285C287D00E19DE9 /* ChooseEntryVC.m in Sources */,
-				2590C53A285C287D00E19DE9 /* UIButton+extension.m in Sources */,
-				2590C53B285C287D00E19DE9 /* SettingViewController.m in Sources */,
-				2590C53D285C287D00E19DE9 /* ActionViewController.m in Sources */,
-				2590C53E285C287D00E19DE9 /* ChooseOOBFileVC.m in Sources */,
-				2590C53F285C287D00E19DE9 /* SubnetBridgeListVC.m in Sources */,
-				2590C541285C287D00E19DE9 /* DemoCommand.m in Sources */,
-				2590C542285C287D00E19DE9 /* ScanView.m in Sources */,
-				2590C543285C287D00E19DE9 /* ScanCodeVC.m in Sources */,
-				2590C544285C287D00E19DE9 /* SceneListViewController.m in Sources */,
-				2590C545285C287D00E19DE9 /* ShowQRCodeViewController.m in Sources */,
-				2590C547285C287D00E19DE9 /* MeshInfoVC.m in Sources */,
-				2590C54A285C287D00E19DE9 /* BaseViewController.m in Sources */,
-				2590C54C285C287D00E19DE9 /* ColorManager.m in Sources */,
-				2590C54F285C287D00E19DE9 /* OOBListVC.m in Sources */,
-				2590C550285C287D00E19DE9 /* FileChooseVC.m in Sources */,
-				2590C552285C287D00E19DE9 /* DeviceCompositionDataVC.m in Sources */,
-				2590C553285C287D00E19DE9 /* ModelIDCell.m in Sources */,
-				2590C554285C287D00E19DE9 /* FastProvisionAddVC.m in Sources */,
-				2590C555285C287D00E19DE9 /* MeshOTAItemCell.m in Sources */,
-				2590C556285C287D00E19DE9 /* ShowTipsView.m in Sources */,
-				2590C557285C287D00E19DE9 /* SceneDetailViewController.m in Sources */,
-				2590C558285C287D00E19DE9 /* AppDelegate.m in Sources */,
-				2590C559285C287D00E19DE9 /* RemoteAddVC.m in Sources */,
-				2590C55B285C287D00E19DE9 /* UIStoryboard+extension.m in Sources */,
-				2590C55C285C287D00E19DE9 /* SceneItemCell.m in Sources */,
-				2590C55E285C287D00E19DE9 /* NetKeyAddVC.m in Sources */,
-				2590C55F285C287D00E19DE9 /* InputItemCell.m in Sources */,
-				2590C560285C287D00E19DE9 /* CustomAlert.m in Sources */,
-				2590C561285C287D00E19DE9 /* DeviceAppKeyListVC.m in Sources */,
-				2590C562285C287D00E19DE9 /* ShareTipsVC.m in Sources */,
-				2590C565285C287D00E19DE9 /* BridgeTableItemCell.m in Sources */,
-				2590C566285C287D00E19DE9 /* AppKeyListVC.m in Sources */,
-				2590C567285C287D00E19DE9 /* NSString+extension.m in Sources */,
-				2590C568285C287D00E19DE9 /* AppKeyAddVC.m in Sources */,
-				2590C56A285C287D00E19DE9 /* zipAndUnzip.m in Sources */,
-				2590C56B285C287D00E19DE9 /* NSString+calculate.m in Sources */,
-				2590C56C285C287D00E19DE9 /* LogViewController.m in Sources */,
 				2590C5C2285C293400E19DE9 /* TestAddDeviceVC.m in Sources */,
-				2590C56D285C287D00E19DE9 /* OnOffItemCell.m in Sources */,
-				2590C56E285C287D00E19DE9 /* OOBItemCell.m in Sources */,
-				2590C56F285C287D00E19DE9 /* UIViewController+Message.m in Sources */,
-				2590C570285C287D00E19DE9 /* DeviceChooseKeyVC.m in Sources */,
-				2590C572285C287D00E19DE9 /* RemoteElementCell.m in Sources */,
-				2590C573285C287D00E19DE9 /* AddBridgeTableVC.m in Sources */,
-				2590C574285C287D00E19DE9 /* DeviceConfigVC.m in Sources */,
 				2590C575285C287D00E19DE9 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3113,7 +2879,7 @@
 		};
 		25589A3F272115DB00F4F880 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 29CD57A553B69CBD4D344050 /* Pods-SigMeshOCDemo.debug.xcconfig */;
+			baseConfigurationReference = E817DEB97958A34D4543DDFB /* Pods-SigMeshOCDemo.debug.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3160,7 +2926,7 @@
 		};
 		25589A40272115DB00F4F880 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6B69AB72E562FF388DDC9B01 /* Pods-SigMeshOCDemo.release.xcconfig */;
+			baseConfigurationReference = D236127F6BD4859BAD30384C /* Pods-SigMeshOCDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -3205,7 +2971,7 @@
 		};
 		25589A42272115DB00F4F880 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 873B3C3EDECB805F6D2D6E21 /* Pods-SigMeshOCDemoTests.debug.xcconfig */;
+			baseConfigurationReference = 51D11DAFDC379942F1F4A09A /* Pods-SigMeshOCDemoTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -3229,7 +2995,7 @@
 		};
 		25589A43272115DB00F4F880 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2647AA8FCF6F60859A2DD36C /* Pods-SigMeshOCDemoTests.release.xcconfig */;
+			baseConfigurationReference = 41BC7051316E0EFCE6490038 /* Pods-SigMeshOCDemoTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -3253,7 +3019,7 @@
 		};
 		25589A45272115DB00F4F880 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3EDB291215675F1769013E5F /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */;
+			baseConfigurationReference = A44F781A27276A416A99F333 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -3275,7 +3041,7 @@
 		};
 		25589A46272115DB00F4F880 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 920AAB5256E0E70C15D1EC09 /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */;
+			baseConfigurationReference = AA18E521323DC250D73B853E /* Pods-SigMeshOCDemo-SigMeshOCDemoUITests.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -3297,7 +3063,7 @@
 		};
 		2590C5AE285C287D00E19DE9 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FF5728CEC944718026323F05 /* Pods-SigLoopAddDemo.debug.xcconfig */;
+			baseConfigurationReference = CA400EAFC83211F70BA294BB /* Pods-SigLoopAddDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -3331,7 +3097,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.00;
+				MARKETING_VERSION = 4.1.01;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3342,7 +3108,7 @@
 		};
 		2590C5AF285C287D00E19DE9 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0F3958C37EEA82AD50385CC9 /* Pods-SigLoopAddDemo.release.xcconfig */;
+			baseConfigurationReference = 285252C8E76A0D7388C02698 /* Pods-SigLoopAddDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -3376,7 +3142,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.00;
+				MARKETING_VERSION = 4.1.01;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3387,14 +3153,14 @@
 		};
 		91BF47E22B27FFA300254CB6 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A6449E272F3DB67D0992434F /* Pods-SigMeshCloud.debug.xcconfig */;
+			baseConfigurationReference = 7CDEEAA87809C13353416C77 /* Pods-SigMeshCloud.debug.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -3422,7 +3188,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.00;
+				MARKETING_VERSION = 4.1.01;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshCloud;
@@ -3434,13 +3200,13 @@
 		};
 		91BF47E32B27FFA300254CB6 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8F9969BBC366B21634584216 /* Pods-SigMeshCloud.release.xcconfig */;
+			baseConfigurationReference = A6F1E214279C5DD6DC264AD4 /* Pods-SigMeshCloud.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -3468,7 +3234,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.00;
+				MARKETING_VERSION = 4.1.01;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshCloud;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -53,18 +53,22 @@
             view.nameLabel.text = [NSString stringWithFormat:@"element: 0x%04X", a.address];
             view.selectButton.selected = [self.model.actionList containsObject:a];
             __weak typeof(self) weakSelf = self;
+            __block SigSceneRegisterStatus *response = nil;
             [view.selectButton addAction:^(UIButton *button) {
                 if (a.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
-                    __block SigSceneRegisterStatus *response = nil;
                     if ([weakSelf.model.actionList containsObject:a]) {
                         //移除
+                        [ShowTipsHandle.share show:@"delete scene···"];
                         [DemoCommand delSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                             TelinkLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
                             response = responseMessage;
                         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                             if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
                                 [weakSelf removeActionModelWithElementAddress:a.address];
+                                [ShowTipsHandle.share show:@"delete scene success"];
+                                [ShowTipsHandle.share delayHidden:0.5];
                             } else {
+                                [ShowTipsHandle.share hidden];
                                 if (error) {
                                     [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
                                 } else {
@@ -80,13 +84,17 @@
                         }];
                     } else {
                         //添加
+                        [ShowTipsHandle.share show:@"add scene···"];
                         [DemoCommand saveSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                             TelinkLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                             response = responseMessage;
                         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                             if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
                                 [weakSelf addActionModelWithElementAddress:a.address];
+                                [ShowTipsHandle.share show:@"add scene success"];
+                                [ShowTipsHandle.share delayHidden:0.5];
                             } else {
+                                [ShowTipsHandle.share hidden];
                                 if (error) {
                                     [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
                                 } else {
@@ -104,25 +112,32 @@
                 }
             }];
             [view.refreshButton addAction:^(UIButton *button) {
-                [DemoCommand getSceneRegisterStatusWithAddress:a.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                    TelinkLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
-                    BOOL hasScene = NO;
-                    if (responseMessage.statusCode == SigSceneResponseStatus_sceneNotFound) {
-                        hasScene = NO;
+                //更新
+                [ShowTipsHandle.share show:@"update scene···"];
+                [DemoCommand saveSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                    TelinkLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
+                    response = responseMessage;
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+                    if (error == nil && response && response.statusCode == SigSceneResponseStatus_success) {
+                        if (![weakSelf.model.actionList containsObject:a]) {
+                            [weakSelf addActionModelWithElementAddress:a.address];
+                        }
+                        [ShowTipsHandle.share show:@"update scene success"];
+                        [ShowTipsHandle.share delayHidden:0.5];
                     } else {
-                        if ([responseMessage.scenes containsObject:@([LibTools uint16From16String:weakSelf.model.number])]) {
-                            hasScene = YES;
+                        [ShowTipsHandle.share hidden];
+                        if (error) {
+                            [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
                         } else {
-                            hasScene = NO;
+                            if (response && response.statusCode == SigSceneResponseStatus_sceneRegisterFull) {
+                                [weakSelf showTips:@"Scene Register Full"];
+                            } else if (response && response.statusCode == SigSceneResponseStatus_sceneNotFound) {
+                                [weakSelf showTips:@"Scene Not Found"];
+                            } else {
+                                [weakSelf showTips:[NSString stringWithFormat:@"SigSceneRegisterStatus error code=0x%X", response.statusCode]];
+                            }
                         }
                     }
-                    if (hasScene) {
-                        [weakSelf addActionModelWithElementAddress:a.address];
-                    } else {
-                        [weakSelf removeActionModelWithElementAddress:a.address];
-                    }
-                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-
                 }];
             }];
             [cell.contentView addSubview:view];

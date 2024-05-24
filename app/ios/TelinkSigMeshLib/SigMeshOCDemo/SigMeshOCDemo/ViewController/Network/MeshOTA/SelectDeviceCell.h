@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet UIView *bgView;
 @property (weak, nonatomic) IBOutlet UIImageView *iconImage;
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+@property (weak, nonatomic) IBOutlet UILabel *notSupportLabel;
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
 @property (nonatomic, strong) SigNodeModel *model;

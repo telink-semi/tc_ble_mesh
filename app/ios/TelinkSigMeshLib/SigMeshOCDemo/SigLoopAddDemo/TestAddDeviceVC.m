@@ -75,7 +75,7 @@ static NSUInteger provisionAddress;
     NSString *mac = [self getCurrentMac];
 //    NSString *mac = nil;
     if (mac == nil) {
-        mac = @"C419D1B92236";
+        mac = @"C419D1888C7A";
 
         [self saveCurrentMac:mac];
     }
@@ -190,7 +190,8 @@ static NSUInteger provisionAddress;
                         [weakSelf showAndSaveLog:@"[Start] provisioning"];
                         NSData *staticOOBData = nil;
                         [SDKLibCommand startProvisionWithPeripheral:peripheral networkKey:[SigDataSource.share curNetKey] netkeyIndex:SigDataSource.share.curNetkeyModel.index staticOOBData:staticOOBData capabilitiesResponse:^UInt16(SigProvisioningCapabilitiesPdu * _Nonnull capabilitiesPdu) {
-                            return [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
+//                            return [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
+                            return provisionAddress;
                         } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                             weakSelf.currentProvisionTime = [[NSDate date] timeIntervalSince1970] - weakSelf.time;
                             [weakSelf showAndSaveLog:[NSString stringWithFormat:@"[End] provision success, provisionT:%0.2f",weakSelf.currentProvisionTime]];
@@ -265,7 +266,7 @@ static NSUInteger provisionAddress;
     __weak typeof(self) weakSelf = self;
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         //注释以下方法，循环流程某阶段失败就好停止后面的流程。不注释则会继续测试。
-        [weakSelf enterInitMeshInfoModel];
+//        [weakSelf enterInitMeshInfoModel];
     }];
 }
 

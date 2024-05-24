@@ -135,9 +135,9 @@
     [self.source addObject:@"Mesh OTA"];
     [self.iconSource addObject:@"ic_meshota"];
     [self.vcIdentifiers addObject:@""];
-    [self.source addObject:@"Proxy Filter"];
-    [self.iconSource addObject:@"ic_proxyFilter"];
-    [self.vcIdentifiers addObject:@""];
+//    [self.source addObject:@"Proxy Filter"];
+//    [self.iconSource addObject:@"ic_proxyFilter"];
+//    [self.vcIdentifiers addObject:@""];
     //Solicitation PDU
     [self.source addObject:kSolicitationPDU];
     [self.iconSource addObject:@"ic_publish"];

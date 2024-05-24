@@ -401,7 +401,7 @@
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fastProvisionSuccessAction) object:nil];
-        [self performSelector:@selector(fastProvisionSuccessAction) withObject:nil afterDelay:(delayMillisecond + 100)/1000.0];
+        [self performSelector:@selector(fastProvisionSuccessAction) withObject:nil afterDelay:(delayMillisecond + 240)/1000.0];
     });
 }
 

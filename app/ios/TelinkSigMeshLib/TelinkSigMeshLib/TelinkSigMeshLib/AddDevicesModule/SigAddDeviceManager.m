@@ -289,6 +289,8 @@ typedef enum : NSUInteger {
         }
         return;
     }
+    self.startConnectBlock = configModel.startConnectBlock;
+    self.startProvisionBlock = configModel.startProvisionBlock;
     [self startAddDeviceWithNetworkKey:configModel.networkKey netkeyIndex:configModel.netkeyIndex appkeyModel:appkeyModel peripheral:configModel.peripheral staticOOBData:configModel.staticOOBData keyBindType:configModel.keyBindType productID:configModel.productID cpsData:configModel.cpsData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 /*

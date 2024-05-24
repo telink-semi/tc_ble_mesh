@@ -4586,7 +4586,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_timeStatus;
-        if (parameters == nil || parameters.length != 10) {
+        if (parameters == nil || (parameters.length != 5 && parameters.length != 10)) {
             return nil;
         }else{
             _timeModel = [[SigTimeModel alloc] initWithParameters:parameters];

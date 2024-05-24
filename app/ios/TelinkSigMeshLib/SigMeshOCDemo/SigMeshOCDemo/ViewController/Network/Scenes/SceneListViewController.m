@@ -44,7 +44,7 @@
     __weak typeof(self) weakSelf = self;
     //set recall scene block
     [cell setClickRecallBlock:^{
-        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
             TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
@@ -99,7 +99,7 @@
 
 - (void)refreshTableViewUI {
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
-    [self.tableView reloadData];
+    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
 - (void)normalSetting{

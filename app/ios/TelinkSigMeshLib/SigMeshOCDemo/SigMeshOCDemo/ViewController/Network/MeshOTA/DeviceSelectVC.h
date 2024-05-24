@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     SelectDeviceCell.m
+ * @file     DeviceSelectVC.h
  *
  * @brief    A concise description.
  *
  * @author   Telink, 梁家誌
- * @date     2024/1/3
+ * @date     2024/4/7
  *
  * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -21,29 +21,14 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import "SelectDeviceCell.h"
+#import "BaseViewController.h"
 
-@implementation SelectDeviceCell
+NS_ASSUME_NONNULL_BEGIN
 
-- (void)awakeFromNib {
-    [super awakeFromNib];
-    // Initialization code
-    [self configurationCornerWithBgView:_bgView];
-}
+@interface DeviceSelectVC : BaseViewController
 
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    [super setSelected:selected animated:animated];
-
-    // Configure the view for the selected state
-}
-
-- (void)setModel:(SigNodeModel *)model {
-    _model = model;
-    self.iconImage.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
-    self.nameLabel.text = [NSString stringWithFormat:@"Name:%@\nAdr-0x%04X\ncid-%@ pid-%@", model.name, model.address, model.cid, model.pid];
-    self.notSupportLabel.hidden = model.hasFirmwareDistributionServerModel;
-    [self.selectButton setImage:[UIImage imageNamed:model.state == DeviceStateOutOfLine ? @"bukexuan" : @"unxuan"] forState:UIControlStateNormal];
-    self.selectButton.enabled = model.state != DeviceStateOutOfLine;
-}
+@property (copy, nonatomic) void(^backSelectNodes)(NSArray <SigNodeModel *>*nodes);
 
 @end
+
+NS_ASSUME_NONNULL_END

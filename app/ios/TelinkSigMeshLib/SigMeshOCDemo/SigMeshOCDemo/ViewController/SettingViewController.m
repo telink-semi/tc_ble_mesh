@@ -209,7 +209,7 @@
     //v3.3.3.6新增 Get More Telink Apps
     [self.titleSource addObject:@"Get More Telink Apps"];
     [self.detailSource addObject:@"prompt users on how to obtain more Telink tool apps."];
-    [self.iconSource addObject:@"setting_modeAPP"];
+    [self.iconSource addObject:@"setting_moreAPP"];
     [self.vcIdentifiers addObject:@""];
 }
 

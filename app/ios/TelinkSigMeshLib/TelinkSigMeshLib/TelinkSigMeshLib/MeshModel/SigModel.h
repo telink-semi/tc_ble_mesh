@@ -2011,6 +2011,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 ///            the given address, `false` otherwise.
 - (BOOL)hasAllocatedAddr:(UInt16)addr;
 
+/// has FirmwareDistributionServerModel
+- (BOOL)hasFirmwareDistributionServerModel;
+
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID;
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress;
 

@@ -1879,10 +1879,10 @@
             tem = @"NO changes to CPS";
             break;
         case SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataUnsupportedRemote:
-            tem = @"CPS changed, remove pv is not supported";
+            tem = @"CPS changed, remote PRV is not supported";
             break;
         case SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataSupportRemote:
-            tem = @"CPS changed, remove pv is supported";
+            tem = @"CPS changed, remote PRV is supported";
             break;
         case SigFirmwareUpdateAdditionalInformationStatusType_nodeUnprovisioned:
             tem = @"Node is unprovisioned";

@@ -16,10 +16,16 @@ DerivedData
 .idea/
 *.hmap
 *.xccheckout
-*.xcworkspace
 !default.xcworkspace
+xcuserdata
+
 #CocoaPods
 Pods
 !Podfile
 !Podfile.lock
 
+# Xcode workspace scheduling files
+xcshareddata/
+ 
+# Application support
+*.xcworkspace

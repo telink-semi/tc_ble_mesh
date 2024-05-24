@@ -7,6 +7,12 @@ target 'SigLoopAddDemo' do
 
   # Pods for SigLoopAddDemo
 
+  pod 'AFNetworking'
+  pod 'Reachability'
+  pod 'BRPickerView'
+  pod 'IQKeyboardManager' #iOS11 and later
+  pod 'WMZPageController'
+
 end
 
 target 'SigMeshCloud' do

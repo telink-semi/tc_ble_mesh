@@ -297,10 +297,12 @@
                     [weakSelf addNodeAfterProvisionSuccessWithNodeAddress:currentProvisionAddress];
                     model.state = AddDeviceModelStateBinding;
                     [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                    [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                 } provisionFail:^(NSError * _Nullable error) {
                     [weakSelf releaseNodeAddressWithNodeAddress:currentProvisionAddress elementCount:currentElementCount tcVendorId:tcVendorID];
                     model.state = AddDeviceModelStateProvisionFail;
                     [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                    [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                     error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                     dispatch_semaphore_signal(semaphore);
                 } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {

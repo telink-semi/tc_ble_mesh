@@ -119,12 +119,23 @@
     [self setSequenceNumberUInt32:0];
     _partial = false;
     _encryptedArray = [NSMutableArray array];
-    _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_LightLCServer_ID),@(kSigModel_LightLCSetupServer_ID)]];
+    _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_LightLCServer_ID)]];
     _defaultNodeInfos = [NSMutableArray array];
-    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_Panel compositionData:nil];
-    DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT compositionData:nil];
-    DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_HSL compositionData:nil];
-    DeviceTypeModel *model4 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_LPN compositionData:nil];
+    struct TelinkPID telinkPid_8258_CT = {};
+    struct TelinkPID telinkPid_8258_HSL = {};
+    struct TelinkPID telinkPid_8258_PANNEL = {};
+    struct TelinkPID telinkPid_8258_LPN = {};
+    telinkPid_8258_CT.MCUChipType = telinkPid_8258_HSL.MCUChipType = telinkPid_8258_PANNEL.MCUChipType = telinkPid_8258_LPN.MCUChipType = CHIP_TYPE_8258;
+    telinkPid_8258_CT.majorProductType = telinkPid_8258_HSL.majorProductType = telinkPid_8258_PANNEL.majorProductType = MajorProductType_light;
+    telinkPid_8258_LPN.majorProductType = MajorProductType_LPN;
+    telinkPid_8258_CT.minorProductType = SigNodePID_CT;
+    telinkPid_8258_HSL.minorProductType = SigNodePID_HSL;
+    telinkPid_8258_PANNEL.minorProductType = SigNodePID_PANEL;
+    telinkPid_8258_LPN.minorProductType = SigNodePID_CT;
+    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_PANNEL.value compositionData:nil];
+    DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_CT.value compositionData:nil];
+    DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_HSL.value compositionData:nil];
+    DeviceTypeModel *model4 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_LPN.value compositionData:nil];
     [_defaultNodeInfos addObject:model1];
     [_defaultNodeInfos addObject:model2];
     [_defaultNodeInfos addObject:model3];
@@ -1191,6 +1202,7 @@
         [self saveLocationData];
         [self deleteScanRspModelWithUnicastAddress:deviceAddress];
         [self deleteSigEncryptedModelWithUnicastAddress:deviceAddress];
+        [self removeLocalStateWithUnicastAddress:deviceAddress];
     }
 }
 
@@ -2286,18 +2298,23 @@
  */
 - (BOOL)getLocalStateWithUnicastAddress:(UInt16)unicastAddress key:(NSString *)key {
     NSDictionary *dict = @{};
-    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalPrivateBeaconDictionary_key];
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
         dict = [LibTools getDictionaryWithJSONData:data];
     }
-    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
-    if ([mDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
-        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:mDict[[SigHelper.share getUint16String:unicastAddress]]];
+    NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
+    if ([networkListDict.allKeys containsObject:self.meshUUID]) {
+        networkDict = [NSMutableDictionary dictionaryWithDictionary:networkListDict[self.meshUUID]];
+    }
+    if ([networkDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
+        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:networkDict[[SigHelper.share getUint16String:unicastAddress]]];
         return [nodeDict[key] boolValue];
     } else {
         NSDictionary *nodeDict = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
-        mDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
-        [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:mDict] forKey:kLocalPrivateBeaconDictionary_key];
+        networkDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
+        networkListDict[self.meshUUID] = networkDict;
+        [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
         [[NSUserDefaults standardUserDefaults] synchronize];
         return [nodeDict[key] boolValue];
     }
@@ -2352,19 +2369,62 @@
  */
 - (void)setLocalWithState:(BOOL)state unicastAddress:(UInt16)unicastAddress key:(NSString *)key {
     NSDictionary *dict = @{};
-    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalPrivateBeaconDictionary_key];
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
         dict = [LibTools getDictionaryWithJSONData:data];
     }
-    NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
-    if ([mDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
-        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:mDict[[SigHelper.share getUint16String:unicastAddress]]];
-        nodeDict[key] = @(state);
-        mDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
-    } else {
-        mDict[[SigHelper.share getUint16String:unicastAddress]] = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
+    NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
+    if ([networkListDict.allKeys containsObject:self.meshUUID]) {
+        networkDict = [NSMutableDictionary dictionaryWithDictionary:networkListDict[self.meshUUID]];
     }
-    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:mDict] forKey:kLocalPrivateBeaconDictionary_key];
+    if ([networkDict.allKeys containsObject:[SigHelper.share getUint16String:unicastAddress]]) {
+        NSMutableDictionary *nodeDict = [NSMutableDictionary dictionaryWithDictionary:networkDict[[SigHelper.share getUint16String:unicastAddress]]];
+        nodeDict[key] = @(state);
+        networkDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
+    } else {
+        networkDict[[SigHelper.share getUint16String:unicastAddress]] = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
+    }
+    networkListDict[self.meshUUID] = networkDict;
+    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/// remove local state
+/// @param unicastAddress the unicastAddress of node.
+- (void)removeLocalStateWithUnicastAddress:(UInt16)unicastAddress {
+    NSDictionary *dict = @{};
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
+    if (data != nil) {
+        dict = [LibTools getDictionaryWithJSONData:data];
+    }
+    NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
+    if ([networkListDict.allKeys containsObject:self.meshUUID]) {
+        networkDict = [NSMutableDictionary dictionaryWithDictionary:networkListDict[self.meshUUID]];
+    }
+    [networkDict removeObjectForKey:[SigHelper.share getUint16String:unicastAddress]];
+    networkListDict[self.meshUUID] = networkDict;
+    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/// clean local state
+- (void)cleanLocalPrivateBeaconStateWithMeshUUID:(NSString *)meshUUID {
+    NSDictionary *dict = @{};
+    NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
+    if (data != nil) {
+        dict = [LibTools getDictionaryWithJSONData:data];
+    }
+    NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    [networkListDict removeObjectForKey:meshUUID];
+    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+/// clean local state
+- (void)cleanAllLocalPrivateBeaconState {
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2469,7 +2529,7 @@
 - (UInt32)getLocalSolicitationSequenceNumber {
     UInt32 tem = 0;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    NSDictionary *dict = [defaults objectForKey:kLocalSolicitationSequenceNumberDictionary_key];
     if (dict != nil) {
         NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
         if ([dict.allKeys containsObject:key]) {
@@ -2486,14 +2546,14 @@
 - (void)saveLocalSolicitationSequenceNumber:(UInt32)sequenceNumber {
     sequenceNumber = sequenceNumber&0xFFFFFF;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [defaults objectForKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    NSDictionary *dict = [defaults objectForKey:kLocalSolicitationSequenceNumberDictionary_key];
     if (dict == nil) {
         dict = @{};
     }
     NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dict];
     NSString *key = [NSString stringWithFormat:@"%@+%@+%@", self.meshUUID, self.curProvisionerModel.UUID, self.curLocationNodeModel.unicastAddress];
     [mDict setValue:@(sequenceNumber) forKey:key];
-    [defaults setObject:mDict forKey:kLocatlSolicitationSequenceNumberDictionary_key];
+    [defaults setObject:mDict forKey:kLocalSolicitationSequenceNumberDictionary_key];
     [defaults synchronize];
 }
 

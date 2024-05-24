@@ -203,6 +203,25 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
+- (IBAction)clickLCLightOnOffSwitch:(UISwitch *)sender {
+    UInt16 lightLCServerAddress = self.model.intAddress;
+    if (self.model.groupDevices.count > 0) {
+        NSArray *array = [NSArray arrayWithArray:self.model.groupDevices];
+        for (SigNodeModel *node in array) {
+            SigElementModel *element = [node getElementModelWithModelIds:@[@(kSigModel_LightLCServer_ID)]];
+            if (element != nil) {
+                lightLCServerAddress = element.unicastAddress;
+                break;
+            }
+        }
+        [SDKLibCommand lightLCLightOnOffSetWithDestination:lightLCServerAddress isOn:sender.isOn retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightLCLightOnOffStatus * _Nonnull responseMessage) {
+            
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+
+        }];
+    }
+}
+
 - (void)normalSetting{
     [super normalSetting];
     //add group level line UI

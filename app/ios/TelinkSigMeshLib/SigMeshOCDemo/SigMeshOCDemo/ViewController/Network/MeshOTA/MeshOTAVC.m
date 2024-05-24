@@ -26,11 +26,14 @@
 #import "UIButton+extension.h"
 #import "HomeViewController.h"
 #import "UIViewController+Message.h"
-#import "SelectUpdateDeviceVC.h"
 #ifndef kIsTelinkCloudSigMeshLib
 #import "OTAFileSource.h"
 #import "BinFileChooseVC.h"
+#import "DeviceSelectVC.h"
+#else
+#import "SelectUpdateDeviceVC.h"
 #endif
+
 
 /**
  Attention: more detail about mesh OTA can look document Mesh_Firmware_update_20180228_d05r05.pdf
@@ -511,7 +514,11 @@
 }
 
 - (IBAction)clickSelectDevicesButton:(UIButton *)sender {
+#ifndef kIsTelinkCloudSigMeshLib
+    DeviceSelectVC *vc = [[DeviceSelectVC alloc] init];
+#else
     SelectUpdateDeviceVC *vc = [[SelectUpdateDeviceVC alloc] init];
+#endif    
     __weak typeof(self) weakSelf = self;
     [vc setBackSelectNodes:^(NSArray<SigNodeModel *> * _Nonnull nodes) {
         weakSelf.selectItemArray = [NSMutableArray arrayWithArray:nodes];
@@ -786,7 +793,7 @@
         [tem addObject:@(model.address)];
     }
 
-    NSString *tip = [NSString stringWithFormat:@"Mesh ota fail, error = %@", error];
+    NSString *tip = [NSString stringWithFormat:@"Mesh ota fail, error string = %@, error code = %ld", error.domain, (long)error.code];
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];

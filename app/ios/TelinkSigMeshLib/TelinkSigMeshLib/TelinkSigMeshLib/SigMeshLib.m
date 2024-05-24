@@ -553,6 +553,9 @@ static SigMeshLib *shareLib = nil;
     }
     SDKLibCommand *command = [self getCommandWithSendMessageOpCode:messageId.opCode];
     [self commandResponseFinishWithCommand:command];
+    if (command.resultCallback) {
+        command.resultCallback(NO, [NSError errorWithDomain:@"cancel message!" code:-1 userInfo:nil]);
+    }
 }
 
 /// cancel all commands and retry of commands and retry of segment PDU.
@@ -896,10 +899,18 @@ static SigMeshLib *shareLib = nil;
     [self commandResponseFinishWithCommand:command];
 
     //callback
-    if (command && command.responseFilterStatusCallBack) {
-        command.responseFilterStatusCallBack(source,destination,(SigFilterStatus *)message);
+    if (command && command.responseAllMessageCallBack) {
+        command.responseAllMessageCallBack(source, destination, (SigMeshMessage *)message);
     }
-    [self handleResultCallback:command error:nil];
+    if (command && command.resultCallback) {
+        command.resultCallback(YES, nil);
+    }
+
+//    if (command && command.responseFilterStatusCallBack) {
+//        command.responseFilterStatusCallBack(source,destination,(SigFilterStatus *)message);
+//    }
+    //没有必要再此处处理，因为理论不应该出现发送ProxyConfiguration时指令列表里面还有其它指令。
+//    [self handleResultCallback:command error:nil];
 }
 
 #pragma mark - Private

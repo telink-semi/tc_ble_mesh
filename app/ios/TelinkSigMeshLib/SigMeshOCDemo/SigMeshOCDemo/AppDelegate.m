@@ -141,7 +141,7 @@
     SigDataSource.share.defaultSequenceNumberIncrement = kSequenceNumberIncrement;
     
     //3.(可选，旧判断)SDK的分组默认绑定5个modelID，可通过以下接口修改分组默认绑定的modelIDs
-//    SigDataSource.share.defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_LightLCServer_ID),@(kSigModel_LightLCSetupServer_ID)]];
+//    SigDataSource.share.defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID),@(kSigModel_LightLCServer_ID)]];
 //    [SigDataSource.share.defaultGroupSubscriptionModels addObject:@(0x00000211)];//新增vendorModelID用于测试加组及vendor组控。
 
     //4.(可选，新判断)demo v4.1.0.0及之后添加的标志，标志订阅组地址时是否把Service Level ModelID（0x1003）也订阅了。
@@ -339,31 +339,22 @@
 
     telinkPid_8258_CT.majorProductType = telinkPid_8258_HSL.majorProductType = telinkPid_8258_Panel.majorProductType = telinkPid_8278_CT.majorProductType = telinkPid_8278_HSL.majorProductType = telinkPid_8278_Panel.majorProductType = telinkPid_8269_CT.majorProductType = telinkPid_8269_HSL.majorProductType = telinkPid_8269_Panel.majorProductType = telinkPid_9518_CT.majorProductType = telinkPid_9518_HSL.majorProductType = telinkPid_9518_Panel.majorProductType = MajorProductType_light;
     telinkPid_8258_LPN.majorProductType = telinkPid_8278_LPN.majorProductType = telinkPid_8269_LPN.majorProductType = telinkPid_9518_LPN.majorProductType = MajorProductType_LPN;
-    telinkPid_8258_CT.minorProductType = telinkPid_8278_CT.minorProductType = telinkPid_8269_CT.minorProductType = telinkPid_9518_CT.minorProductType = SigNodePID_CT;
+    telinkPid_8258_CT.minorProductType = telinkPid_8278_CT.minorProductType = telinkPid_8269_CT.minorProductType = telinkPid_9518_CT.minorProductType = telinkPid_8258_LPN.minorProductType = telinkPid_8278_LPN.minorProductType = telinkPid_8269_LPN.minorProductType = telinkPid_9518_LPN.minorProductType = SigNodePID_CT;
     telinkPid_8258_HSL.minorProductType = telinkPid_8278_HSL.minorProductType = telinkPid_8269_HSL.minorProductType = telinkPid_9518_HSL.minorProductType = SigNodePID_HSL;
-    telinkPid_8258_Panel.minorProductType = telinkPid_8278_Panel.minorProductType = telinkPid_8269_Panel.minorProductType = telinkPid_9518_Panel.minorProductType = SigNodePID_Panel;
-    telinkPid_8258_LPN.minorProductType = telinkPid_8278_LPN.minorProductType = telinkPid_8269_LPN.minorProductType = telinkPid_9518_LPN.minorProductType = 1;
+    telinkPid_8258_Panel.minorProductType = telinkPid_8278_Panel.minorProductType = telinkPid_8269_Panel.minorProductType = telinkPid_9518_Panel.minorProductType = SigNodePID_PANEL;
 
-    DeviceTypeModel *deviceType_CT = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:SigNodePID_CT];
     DeviceTypeModel *model_8278_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_CT.value compositionData:nil];
     DeviceTypeModel *model_8269_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_CT.value compositionData:nil];
     DeviceTypeModel *model_9518_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_CT.value compositionData:nil];
-    model_8278_CT.defaultCompositionData = model_8269_CT.defaultCompositionData = model_9518_CT.defaultCompositionData = deviceType_CT.defaultCompositionData;
-    DeviceTypeModel *deviceType_HSL = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:SigNodePID_HSL];
     DeviceTypeModel *model_8278_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_HSL.value compositionData:nil];
     DeviceTypeModel *model_8269_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_HSL.value compositionData:nil];
     DeviceTypeModel *model_9518_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_HSL.value compositionData:nil];
-    model_8278_HSL.defaultCompositionData = model_8269_HSL.defaultCompositionData = model_9518_HSL.defaultCompositionData = deviceType_HSL.defaultCompositionData;
-    DeviceTypeModel *deviceType_Panel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:SigNodePID_Panel];
     DeviceTypeModel *model_8278_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_Panel.value compositionData:nil];
     DeviceTypeModel *model_8269_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_Panel.value compositionData:nil];
     DeviceTypeModel *model_9518_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_Panel.value compositionData:nil];
-    model_8278_Panel.defaultCompositionData = model_8269_Panel.defaultCompositionData = model_9518_Panel.defaultCompositionData = deviceType_Panel.defaultCompositionData;
-    DeviceTypeModel *deviceType_LPN = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:SigNodePID_LPN];
     DeviceTypeModel *model_8278_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_LPN.value compositionData:nil];
     DeviceTypeModel *model_8269_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_LPN.value compositionData:nil];
     DeviceTypeModel *model_9518_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_LPN.value compositionData:nil];
-    model_8278_LPN.defaultCompositionData = model_8269_LPN.defaultCompositionData = model_9518_LPN.defaultCompositionData = deviceType_LPN.defaultCompositionData;
     [SigDataSource.share.defaultNodeInfos addObjectsFromArray:@[model_8278_CT, model_8269_CT, model_9518_CT, model_8278_HSL, model_8269_HSL, model_9518_HSL, model_8278_Panel, model_8269_Panel, model_9518_Panel, model_8278_LPN, model_8269_LPN, model_9518_LPN]];
 }
 

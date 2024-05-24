@@ -267,7 +267,7 @@
             cell.originDeviceNameLabel.hidden = NO;
             cell.originDeviceImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:self.forwardingTableModel.tableSource];
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:self.forwardingTableModel.tableSource];
-            cell.originDeviceNameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-%04X", node.name, self.forwardingTableModel.tableSource];
+            cell.originDeviceNameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-0x%04X", node.name, self.forwardingTableModel.tableSource];
         }
         if (self.forwardingTableModel.tableDestination == 0) {
             cell.targetDeviceImageView.hidden = YES;
@@ -276,8 +276,8 @@
             cell.targetDeviceImageView.hidden = NO;
             cell.targetDeviceNameLabel.hidden = NO;
             cell.targetDeviceImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:self.forwardingTableModel.tableDestination];
-            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:self.forwardingTableModel.tableSource];
-            cell.targetDeviceNameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-%04X", node.name, self.forwardingTableModel.tableDestination];
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:self.forwardingTableModel.tableDestination];
+            cell.targetDeviceNameLabel.text = [NSString stringWithFormat:@"Name-%@\nAdr-0x%04X", node.name, self.forwardingTableModel.tableDestination];
         }
         [cell.selectOriginButton addAction:^(UIButton *button) {
             [weakSelf pushToSelectOriginDeviceVC];

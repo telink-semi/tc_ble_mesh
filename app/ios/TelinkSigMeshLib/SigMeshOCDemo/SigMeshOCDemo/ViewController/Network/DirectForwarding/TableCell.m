@@ -44,8 +44,8 @@
             [subview removeFromSuperview];
         }
     }
-    _originLabel.text = [NSString stringWithFormat:@"0x%04X", model.tableSource];
-    _targetLabel.text = [NSString stringWithFormat:@"0x%04X", model.tableDestination];
+    _originLabel.text = [NSString stringWithFormat:@"Name-%@, Adr-0x%04X", [SigDataSource.share getNodeWithAddress:model.tableSource].name, model.tableSource];
+    _targetLabel.text = [NSString stringWithFormat:@"Name-%@, Adr-0x%04X", [SigDataSource.share getNodeWithAddress:model.tableDestination].name, model.tableDestination];
     for (int i=0; i<model.entryNodeAddress.count; i++) {
         UILabel *nodeLabel = nil;
         if (i == 0) {
@@ -62,7 +62,7 @@
             nodeLabel.textColor = oldLabel.textColor;
             [nextNodeBgView addSubview:nodeLabel];
         }
-        nodeLabel.text = [NSString stringWithFormat:@"Node-%04X", [model.entryNodeAddress[i] intValue]];
+        nodeLabel.text = [NSString stringWithFormat:@"Name-%@, Adr-0x%04X", [SigDataSource.share getNodeWithAddress:[model.entryNodeAddress[i] intValue]].name, [model.entryNodeAddress[i] intValue]];
     }
 }
 

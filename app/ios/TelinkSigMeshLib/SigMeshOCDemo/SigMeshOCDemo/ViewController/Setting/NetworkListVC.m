@@ -108,6 +108,7 @@
 - (IBAction)clickRemoveAllButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
     [self showAlertSureAndCancelWithTitle:@"Warning" message:@"remove all and create a new mesh?" sure:^(UIAlertAction *action) {
+        [SigDataSource.share cleanAllLocalPrivateBeaconState];
         [weakSelf.source removeAllObjects];
         SigDataSource *ds = [[SigDataSource alloc] initDefaultMesh];
         [self.source addObject:ds];
@@ -197,6 +198,7 @@
     NSString *msg = [NSString stringWithFormat:@"Are you sure delete mesh network, name:%@ uuid:%@",network.meshName,network.meshUUID];
     __weak typeof(self) weakSelf = self;
     [self showAlertSureAndCancelWithTitle:@"Warning" message:msg sure:^(UIAlertAction *action) {
+        [SigDataSource.share cleanLocalPrivateBeaconStateWithMeshUUID:network.meshUUID];
         [weakSelf.source removeObject:network];
         [weakSelf saveMeshList];
         [weakSelf.tableView reloadData];

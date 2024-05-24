@@ -2147,6 +2147,43 @@ typedef enum : UInt8 {
     MajorProductType_switch    = 3,
     MajorProductType_spiritLPN = 4,
 } MajorProductType;
+/// 1.3 LIGHT_TYPE_SEL 介绍
+/// - seeAlso: AN-17120401-C_Telink SIG Mesh SDK Developer Handbook.pdf  (page.29)
+typedef enum : UInt8 {
+    SigNodePID_NONE = 0,
+    /// CT 是色温灯的简写，对应的产品类型是色温灯，包含色温相关的 model，
+    /// 比如 Light CTL Server，Light CTL SetupServer，LightCTLTemperatureServer
+    /// 以及对应的extendmodel，比如:GenericOnOffServer，Generic Level Server，Light Lightness Server 等。
+    SigNodePID_CT = 1,
+    /// 对应的产品类型是彩色灯 (HSL 灯)，包含 Light HSL Server，Light HSL Hue Server，Light HSL Saturation Server，Light HSL Setup Server，
+    /// 以及对应的 extend model，比如:Generic OnOff Server，Generic Level Server，Light Lightness Server 等。
+    SigNodePID_HSL = 2,
+    /// 对应的产品类型是 XYL 灯，包含 Light xyL Server，Light xyL Setup Server，
+    /// 以及对应的 extend model，比 如:Generic OnOff Server，Generic Level Server，Light Lightness Server 等。
+    SigNodePID_XYL = 3,
+    /// 对应的产品类型是 power adapter 等，包含 Generic Power Level Server，Generic Power Level Setup Server， 
+    /// 以及对应的 extend model，比如:Generic OnOff Server，Generic Level Server 等。
+    SigNodePID_POWER = 4,
+    /// 对应的产品类型是色温灯 + 彩色灯 (HSL 灯)，包含色温以及 HSL 对应的 model，
+    /// 以及 Generic OnOff Server， Generic Level Server，Light Lightness Server 等，
+    /// 其中色温灯珠和 HSL 灯珠共用一个 lightness 和 onoff 值。 另外，同一时间只有一种灯珠在点亮。
+    SigNodePID_CT_HSL = 5,
+    /// 对应的产品类型是调光灯，包含 Light Lightness Server，Light Lightness Setup Server 
+    /// 以及对应的 extend model，比如:Generic OnOff Server，Generic Level Server 等。
+    SigNodePID_DIM = 6,// only single PWM
+    /// 对应的产品类型是开关面板，该面板处于 server ⻆色，也就是被 app 等设备控制并执行 onoff 切换。
+    /// 包含 Generic OnOff Server model。默认开关个数是 3 个(由 LIGHT_CNT 定义)。
+    SigNodePID_PANEL = 7,// only ON/OFF model
+    /// 对应的产品类型是 LPN 设备，默认包含 Generic OnOff Server model 等，mesh OTA model 关闭。
+    /// 主要用于 demo LPN 的功能。
+    SigNodePID_LPN_ON_OFF_LEVEL = 8,// only ON/OFF  , LEVEL model
+    /// 对应的产品类型是客戶定制的产品。
+    SigNodePID_BRUSH = 9,
+    /// 对应的产品类型是 Mesh V1.1 的 NLC feature，详⻅此章节DICNLCP。
+    SigNodePID_NLC_CTRL_CLIENT = 10,
+    /// 对应的产品类型是 Mesh V1.1 的 NLC feature，详⻅此章节OCSSNLCP，ALSNLCP 和ENMNLCP。
+    SigNodePID_NLC_SENSOR = 11,
+} SigNodePID;
 
 /// 3.3 Property identifiers
 /// - seeAlso: Device_Properties.pdf  (page.53)

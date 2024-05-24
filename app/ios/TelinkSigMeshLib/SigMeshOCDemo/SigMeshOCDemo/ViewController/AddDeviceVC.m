@@ -104,6 +104,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     [itemCell.closeButton addAction:^(UIButton *button) {
         [weakSelf.source removeObject:model];
         [weakSelf refreshTableView];
+        [weakSelf refreshUnProvisionedLabel];
     }];
     [itemCell.addButton addAction:^(UIButton *button) {
         weakSelf.userEnable = NO;
@@ -247,9 +248,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                     } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddDeviceModelStateBinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                     } provisionFail:^(NSError * _Nullable error) {
                         model.state = AddDeviceModelStateProvisionFail;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                         error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                         dispatch_semaphore_signal(semaphore);
                     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
@@ -286,9 +289,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                     } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddDeviceModelStateBinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                     } provisionFail:^(NSError * _Nullable error) {
                         model.state = AddDeviceModelStateProvisionFail;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                         error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                         dispatch_semaphore_signal(semaphore);
                     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {

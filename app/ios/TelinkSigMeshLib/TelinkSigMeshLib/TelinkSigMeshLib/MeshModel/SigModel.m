@@ -1060,6 +1060,8 @@
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }
         }
+        compositionData.companyIdentifier = cid;
+        compositionData.productIdentifier = pid;
         _defaultCompositionData = compositionData;
     }
     return self;
@@ -1068,17 +1070,19 @@
 /// Get Default Composition Data With Pid.
 /// @param pid product ID.
 - (NSData *)getDefaultCompositionDataWithPid:(UInt16)pid {
+    struct TelinkPID telinkPid = {};
+    telinkPid.value = pid;
     NSData *data = nil;
-    if (pid == SigNodePID_Panel) {
+    if (telinkPid.minorProductType == SigNodePID_PANEL) {
         //set default compositionData of panel
         data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-    }else if (pid == SigNodePID_HSL) {
+    }else if (telinkPid.minorProductType == SigNodePID_HSL) {
         //set default compositionData of HSL
         data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
-    }else if (pid == SigNodePID_CT) {
+    }else if (telinkPid.minorProductType == SigNodePID_CT) {
         //set default compositionData of CT
         data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-    }else if (pid == SigNodePID_LPN) {
+    }else if (telinkPid.majorProductType == MajorProductType_LPN) {
         //set default compositionData of LPN
         data = [NSData dataWithBytes:LPNByte length:sizeof(LPNByte)];
     }
@@ -1941,18 +1945,20 @@
     UInt64 tem64 = _TAISeconds & 0xFFFFFFFF;
     NSData *data = [NSData dataWithBytes:&tem64 length:8];
     [mData appendData:[data subdataWithRange:NSMakeRange(0, 5)]];
-    tem8 = _subSeconds;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
-    tem8 = _uncertainty;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
-    tem16 = ((UInt16)_timeAuthority << 15) | _subSeconds;
-    data = [NSData dataWithBytes:&tem16 length:2];
-    [mData appendData:data];
-    tem8 = _timeZoneOffset;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
+    if (_TAISeconds != 0) {
+        tem8 = _subSeconds;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = _uncertainty;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem16 = ((UInt16)_timeAuthority << 15) | _subSeconds;
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        tem8 = _timeZoneOffset;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+    }
     return mData;
 }
 
@@ -3702,6 +3708,12 @@
     return addr >= self.address && addr <= self.lastUnicastAddress;
 }
 
+/// has FirmwareDistributionServerModel
+- (BOOL)hasFirmwareDistributionServerModel {
+    SigModelIDModel *modelId = [self getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+    return modelId != nil;
+}
+
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
@@ -4168,7 +4180,12 @@
         for (SigModelIDModel *modelID in all) {
             [self setBindSigNodeKeyModel:self.appKeys.firstObject toSigModelIDModel:modelID];
         }
-        [array addObject:element];
+        //修复fast Provision添加多个相同PID的设备时，出现不同node共用相同的element数据的问题。
+        NSDictionary *elementDict = [element getDictionaryOfSigElementModel];
+        SigElementModel *newElement = [[SigElementModel alloc] init];
+        newElement.parentNodeAddress = self.address;
+        [newElement setDictionaryToSigElementModel:elementDict];
+        [array addObject:newElement];
     }
     BOOL modelChange = NO;
     if (self.elements.count != elements.count) {

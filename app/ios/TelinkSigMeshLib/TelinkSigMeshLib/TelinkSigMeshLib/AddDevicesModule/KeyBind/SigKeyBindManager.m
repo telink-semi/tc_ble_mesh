@@ -265,6 +265,9 @@
                     TelinkLogVerbose(@"app needn't Bind modelID=%@",modelID.modelId);
                     continue;
                 }
+                if (weakSelf.isKeybinding == NO) {
+                    return;
+                }
                 TelinkLogVerbose(@"appBind modelID=%@",modelID.modelId);
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -303,7 +306,7 @@
                 if (self.messageHandle == nil) {
                     isFail = YES;
                 } else {
-                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 20.0));
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
                 }
                 if (isFail) {
                     break;

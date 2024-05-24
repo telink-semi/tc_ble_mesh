@@ -823,8 +823,38 @@ mac:AABBCCDDEEFF</string>
                                     <constraint firstItem="Tex-8N-NU7" firstAttribute="leading" secondItem="7Aj-0m-YMD" secondAttribute="leading" constant="30" id="zuI-ay-Q7d"/>
                                 </constraints>
                             </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ldO-M0-LQW">
+                                <rect key="frame" x="0.0" y="371" width="375" height="40"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Set LC light on/off" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UYF-w5-RhF">
+                                        <rect key="frame" x="10" y="9.5" width="268" height="21"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                                        <color key="textColor" name="telinkTitleGray"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="f9R-hM-mPP">
+                                        <rect key="frame" x="288" y="4.5" width="49" height="31"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="31" id="1oc-2H-znV"/>
+                                            <constraint firstAttribute="width" constant="47" id="YzU-QS-ejS"/>
+                                        </constraints>
+                                        <connections>
+                                            <action selector="clickLCLightOnOffSwitch:" destination="FB2-oW-ilE" eventType="valueChanged" id="CwM-4D-ysj"/>
+                                        </connections>
+                                    </switch>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstItem="f9R-hM-mPP" firstAttribute="centerY" secondItem="UYF-w5-RhF" secondAttribute="centerY" id="COZ-ba-gq9"/>
+                                    <constraint firstItem="UYF-w5-RhF" firstAttribute="centerY" secondItem="ldO-M0-LQW" secondAttribute="centerY" id="g4V-cb-l0a"/>
+                                    <constraint firstAttribute="trailing" secondItem="f9R-hM-mPP" secondAttribute="trailing" constant="40" id="nBY-Er-8c4"/>
+                                    <constraint firstItem="f9R-hM-mPP" firstAttribute="leading" secondItem="UYF-w5-RhF" secondAttribute="trailing" constant="10" id="uv3-12-0my"/>
+                                    <constraint firstAttribute="height" constant="40" id="vtq-Wq-9oT"/>
+                                    <constraint firstItem="UYF-w5-RhF" firstAttribute="leading" secondItem="ldO-M0-LQW" secondAttribute="leading" constant="10" id="yCd-SI-KJk"/>
+                                </constraints>
+                            </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Eut-oz-oks">
-                                <rect key="frame" x="10" y="376" width="355" height="236"/>
+                                <rect key="frame" x="10" y="416" width="355" height="196"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Extend Address Control:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YiK-HN-fSY">
                                         <rect key="frame" x="10" y="15" width="335" height="16"/>
@@ -836,10 +866,10 @@ mac:AABBCCDDEEFF</string>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Plt-DT-6Wo">
-                                        <rect key="frame" x="0.0" y="36" width="355" height="50"/>
+                                        <rect key="frame" x="0.0" y="36" width="355" height="40"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Lum Level(at ele adr:2):" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1eH-dF-gzy">
-                                                <rect key="frame" x="10" y="16.5" width="114.5" height="17"/>
+                                                <rect key="frame" x="10" y="11.5" width="114.5" height="17"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="17" id="W1o-cx-mGt"/>
                                                 </constraints>
@@ -848,7 +878,7 @@ mac:AABBCCDDEEFF</string>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" tag="100" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qlb-nV-F5a">
-                                                <rect key="frame" x="187" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="187" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="34" id="H6A-VU-rdN"/>
@@ -860,7 +890,7 @@ mac:AABBCCDDEEFF</string>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" tag="101" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ivl-th-5Bf">
-                                                <rect key="frame" x="271" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="271" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="34" id="KUW-h6-CBC"/>
@@ -875,7 +905,7 @@ mac:AABBCCDDEEFF</string>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstItem="1eH-dF-gzy" firstAttribute="leading" secondItem="Plt-DT-6Wo" secondAttribute="leading" constant="10" id="C89-eE-VUe"/>
-                                            <constraint firstAttribute="height" constant="50" id="Iay-wz-vfx"/>
+                                            <constraint firstAttribute="height" constant="40" id="Iay-wz-vfx"/>
                                             <constraint firstItem="1eH-dF-gzy" firstAttribute="centerY" secondItem="Plt-DT-6Wo" secondAttribute="centerY" id="PJe-hS-kOa"/>
                                             <constraint firstAttribute="trailing" secondItem="ivl-th-5Bf" secondAttribute="trailing" constant="50" id="QTs-Nq-Nii"/>
                                             <constraint firstItem="ivl-th-5Bf" firstAttribute="centerY" secondItem="1eH-dF-gzy" secondAttribute="centerY" id="a7G-vL-wEE"/>
@@ -885,10 +915,10 @@ mac:AABBCCDDEEFF</string>
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="45F-vA-qoG">
-                                        <rect key="frame" x="0.0" y="86" width="355" height="50"/>
+                                        <rect key="frame" x="0.0" y="76" width="355" height="40"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Temp Level(at ele adr:2):" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SvX-zK-jHa">
-                                                <rect key="frame" x="10" y="16.5" width="120" height="17"/>
+                                                <rect key="frame" x="10" y="11.5" width="120" height="17"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="17" id="Mzf-6e-uSa"/>
                                                 </constraints>
@@ -897,7 +927,7 @@ mac:AABBCCDDEEFF</string>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" tag="100" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2Qw-06-wYI">
-                                                <rect key="frame" x="187" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="187" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="34" id="Czr-ro-yW6"/>
@@ -909,7 +939,7 @@ mac:AABBCCDDEEFF</string>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" tag="101" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="LSc-rx-Ruu">
-                                                <rect key="frame" x="271" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="271" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="34" id="G6v-eD-RX1"/>
@@ -923,7 +953,6 @@ mac:AABBCCDDEEFF</string>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="50" id="7Er-Ok-gxm"/>
                                             <constraint firstItem="2Qw-06-wYI" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="SvX-zK-jHa" secondAttribute="trailing" constant="8" symbolic="YES" id="ABj-v2-zbu"/>
                                             <constraint firstItem="SvX-zK-jHa" firstAttribute="leading" secondItem="45F-vA-qoG" secondAttribute="leading" constant="10" id="GRd-Jn-qE7"/>
                                             <constraint firstItem="LSc-rx-Ruu" firstAttribute="leading" secondItem="2Qw-06-wYI" secondAttribute="trailing" constant="50" id="KR2-c0-IkY"/>
@@ -934,10 +963,10 @@ mac:AABBCCDDEEFF</string>
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wOv-4V-UvB">
-                                        <rect key="frame" x="0.0" y="136" width="355" height="50"/>
+                                        <rect key="frame" x="0.0" y="116" width="355" height="40"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hue Level(at ele adr:2):" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RC3-fU-6m8">
-                                                <rect key="frame" x="10" y="16.5" width="113" height="17"/>
+                                                <rect key="frame" x="10" y="11.5" width="113" height="17"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="17" id="rlJ-H7-dtr"/>
                                                 </constraints>
@@ -946,7 +975,7 @@ mac:AABBCCDDEEFF</string>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" tag="100" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nWN-4T-J98">
-                                                <rect key="frame" x="187" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="187" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="34" id="Uoh-Ps-JDU"/>
@@ -958,7 +987,7 @@ mac:AABBCCDDEEFF</string>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" tag="101" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9xM-Pp-diQ">
-                                                <rect key="frame" x="271" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="271" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="34" id="JWN-oD-luE"/>
@@ -975,7 +1004,6 @@ mac:AABBCCDDEEFF</string>
                                             <constraint firstItem="9xM-Pp-diQ" firstAttribute="leading" secondItem="nWN-4T-J98" secondAttribute="trailing" constant="50" id="HCw-xw-9ru"/>
                                             <constraint firstItem="nWN-4T-J98" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="RC3-fU-6m8" secondAttribute="trailing" constant="8" symbolic="YES" id="L9Z-hp-hpG"/>
                                             <constraint firstItem="nWN-4T-J98" firstAttribute="centerY" secondItem="RC3-fU-6m8" secondAttribute="centerY" id="M5h-EJ-Xet"/>
-                                            <constraint firstAttribute="height" constant="50" id="QJc-d9-wnp"/>
                                             <constraint firstItem="RC3-fU-6m8" firstAttribute="centerY" secondItem="wOv-4V-UvB" secondAttribute="centerY" id="TJe-8b-LBv"/>
                                             <constraint firstItem="RC3-fU-6m8" firstAttribute="leading" secondItem="wOv-4V-UvB" secondAttribute="leading" constant="10" id="bsE-62-lCn"/>
                                             <constraint firstAttribute="trailing" secondItem="9xM-Pp-diQ" secondAttribute="trailing" constant="50" id="tWV-Vp-KhJ"/>
@@ -983,10 +1011,10 @@ mac:AABBCCDDEEFF</string>
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UqR-Yt-vkZ">
-                                        <rect key="frame" x="0.0" y="186" width="355" height="50"/>
+                                        <rect key="frame" x="0.0" y="156" width="355" height="40"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Sat Level(at ele adr:2):" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DO8-K0-b43">
-                                                <rect key="frame" x="10" y="16.5" width="110" height="17"/>
+                                                <rect key="frame" x="10" y="11.5" width="110" height="17"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="17" id="Hng-UJ-3dT"/>
                                                 </constraints>
@@ -995,7 +1023,7 @@ mac:AABBCCDDEEFF</string>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" tag="100" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zdv-ox-cqp">
-                                                <rect key="frame" x="187" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="187" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="34" id="7pb-4O-mf6"/>
@@ -1007,7 +1035,7 @@ mac:AABBCCDDEEFF</string>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" tag="101" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fm3-Nu-JbT">
-                                                <rect key="frame" x="271" y="8" width="34" height="34"/>
+                                                <rect key="frame" x="271" y="3" width="34" height="34"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="34" id="KB2-CA-thH"/>
@@ -1025,7 +1053,6 @@ mac:AABBCCDDEEFF</string>
                                             <constraint firstItem="DO8-K0-b43" firstAttribute="centerY" secondItem="UqR-Yt-vkZ" secondAttribute="centerY" id="F00-jF-uM5"/>
                                             <constraint firstItem="DO8-K0-b43" firstAttribute="leading" secondItem="UqR-Yt-vkZ" secondAttribute="leading" constant="10" id="Nyf-VB-vbn"/>
                                             <constraint firstItem="zdv-ox-cqp" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="DO8-K0-b43" secondAttribute="trailing" constant="8" symbolic="YES" id="SOg-gf-EdW"/>
-                                            <constraint firstAttribute="height" constant="50" id="TEa-5u-Q3b"/>
                                             <constraint firstAttribute="trailing" secondItem="fm3-Nu-JbT" secondAttribute="trailing" constant="50" id="d6M-i0-jyz"/>
                                             <constraint firstItem="fm3-Nu-JbT" firstAttribute="leading" secondItem="zdv-ox-cqp" secondAttribute="trailing" constant="50" id="lO7-Pf-cDh"/>
                                             <constraint firstItem="fm3-Nu-JbT" firstAttribute="centerY" secondItem="DO8-K0-b43" secondAttribute="centerY" id="zd6-r3-G3F"/>
@@ -1034,10 +1061,13 @@ mac:AABBCCDDEEFF</string>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
+                                    <constraint firstItem="45F-vA-qoG" firstAttribute="height" secondItem="Plt-DT-6Wo" secondAttribute="height" id="2Fd-Pg-Yhl"/>
+                                    <constraint firstItem="UqR-Yt-vkZ" firstAttribute="height" secondItem="Plt-DT-6Wo" secondAttribute="height" id="3ca-rM-ZA2"/>
                                     <constraint firstAttribute="trailing" secondItem="YiK-HN-fSY" secondAttribute="trailing" constant="10" id="9Ty-an-5OO"/>
                                     <constraint firstItem="wOv-4V-UvB" firstAttribute="leading" secondItem="Eut-oz-oks" secondAttribute="leading" id="BZe-ew-Smx"/>
                                     <constraint firstItem="45F-vA-qoG" firstAttribute="top" secondItem="Plt-DT-6Wo" secondAttribute="bottom" id="FUw-BA-tiq"/>
                                     <constraint firstItem="UqR-Yt-vkZ" firstAttribute="leading" secondItem="Eut-oz-oks" secondAttribute="leading" id="Jlc-Mz-vwN"/>
+                                    <constraint firstItem="wOv-4V-UvB" firstAttribute="height" secondItem="Plt-DT-6Wo" secondAttribute="height" id="Jlc-YV-AtD"/>
                                     <constraint firstItem="Plt-DT-6Wo" firstAttribute="leading" secondItem="Eut-oz-oks" secondAttribute="leading" id="Lox-E9-nky"/>
                                     <constraint firstAttribute="trailing" secondItem="45F-vA-qoG" secondAttribute="trailing" id="OQL-Py-nw4"/>
                                     <constraint firstAttribute="bottom" secondItem="UqR-Yt-vkZ" secondAttribute="bottom" id="QsO-OJ-dsz"/>
@@ -1056,10 +1086,11 @@ mac:AABBCCDDEEFF</string>
                         <viewLayoutGuide key="safeArea" id="p6n-JD-IKj"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="ldO-M0-LQW" firstAttribute="leading" secondItem="p6n-JD-IKj" secondAttribute="leading" id="0EG-dN-MfE"/>
                             <constraint firstItem="xNW-Rs-qh0" firstAttribute="leading" secondItem="p6n-JD-IKj" secondAttribute="leading" id="0pq-E0-khI"/>
                             <constraint firstItem="FHt-be-8e8" firstAttribute="top" secondItem="xfI-Ni-fkq" secondAttribute="bottom" constant="10" id="62B-ZX-ru3"/>
+                            <constraint firstItem="p6n-JD-IKj" firstAttribute="trailing" secondItem="ldO-M0-LQW" secondAttribute="trailing" id="6ap-M6-Asd"/>
                             <constraint firstItem="Eut-oz-oks" firstAttribute="trailing" secondItem="p6n-JD-IKj" secondAttribute="trailing" constant="-10" id="FVf-HF-Myi"/>
-                            <constraint firstItem="Eut-oz-oks" firstAttribute="top" secondItem="7Aj-0m-YMD" secondAttribute="bottom" constant="10" id="K1w-E6-13v"/>
                             <constraint firstItem="MbK-bu-zh7" firstAttribute="leading" secondItem="p6n-JD-IKj" secondAttribute="leading" id="L4W-T6-Poi"/>
                             <constraint firstItem="FHt-be-8e8" firstAttribute="leading" secondItem="oB9-la-IHA" secondAttribute="leading" constant="10" id="MYj-jn-a12"/>
                             <constraint firstItem="xNW-Rs-qh0" firstAttribute="trailing" secondItem="p6n-JD-IKj" secondAttribute="trailing" id="OmO-mW-CLA"/>
@@ -1068,7 +1099,9 @@ mac:AABBCCDDEEFF</string>
                             <constraint firstItem="xNW-Rs-qh0" firstAttribute="top" secondItem="FHt-be-8e8" secondAttribute="bottom" constant="10" id="Y3s-mQ-KY2"/>
                             <constraint firstItem="MbK-bu-zh7" firstAttribute="top" secondItem="Eut-oz-oks" secondAttribute="bottom" constant="10" id="YdV-d4-Rum"/>
                             <constraint firstItem="MbK-bu-zh7" firstAttribute="trailing" secondItem="p6n-JD-IKj" secondAttribute="trailing" id="eo8-fJ-cyN"/>
+                            <constraint firstItem="ldO-M0-LQW" firstAttribute="top" secondItem="7Aj-0m-YMD" secondAttribute="bottom" constant="5" id="h8D-06-6L4"/>
                             <constraint firstItem="MbK-bu-zh7" firstAttribute="bottom" secondItem="p6n-JD-IKj" secondAttribute="bottom" id="iYB-9C-Zey"/>
+                            <constraint firstItem="Eut-oz-oks" firstAttribute="top" secondItem="ldO-M0-LQW" secondAttribute="bottom" constant="5" id="imn-im-Uwh"/>
                             <constraint firstItem="7Aj-0m-YMD" firstAttribute="trailing" secondItem="p6n-JD-IKj" secondAttribute="trailing" id="jgD-Dv-GX6"/>
                             <constraint firstItem="p6n-JD-IKj" firstAttribute="trailing" secondItem="FHt-be-8e8" secondAttribute="trailing" constant="10" id="uxj-Xf-nQM"/>
                             <constraint firstItem="7Aj-0m-YMD" firstAttribute="top" secondItem="xNW-Rs-qh0" secondAttribute="bottom" id="vX7-Fj-X9z"/>
@@ -1503,11 +1536,14 @@ mac:AABBCCDDEEFF</string>
         <namedColor name="telinkTabBarBackgroundColor">
             <color red="0.96862745098039216" green="0.96862745098039216" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray5Color">
-            <color red="0.89803921568627454" green="0.89803921568627454" blue="0.91764705882352937" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.8980392157" green="0.8980392157" blue="0.91764705879999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

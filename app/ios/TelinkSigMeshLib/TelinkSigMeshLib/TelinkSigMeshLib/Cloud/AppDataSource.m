@@ -914,6 +914,7 @@
 
 - (void)importCloudNetworkDetailModel:(CloudNetworkDetailModel *)model toSigDataSource:(SigDataSource *)dataSource {
     dataSource.meshName = model.name;
+    dataSource.meshUUID = [NSString stringWithFormat:@"%ld", (long)model.networkId];
     //获取到iv和seq后，使用- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber;来缓存本地，
     dataSource.ivIndexUInt32 = (UInt32)model.ivIndex;
     [dataSource setSequenceNumberUInt32:(UInt32)model.provisioner.sequenceNumber + dataSource.defaultSequenceNumberIncrement];//导入时，需要添加步长

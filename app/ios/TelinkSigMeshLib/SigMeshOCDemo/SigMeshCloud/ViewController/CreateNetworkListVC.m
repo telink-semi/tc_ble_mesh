@@ -193,6 +193,7 @@
                 [self showAlertSureWithTitle:@"Hits" message:[NSString stringWithFormat:@"Delete mesh network fail, %@", err.localizedDescription] sure:nil];
             } else {
                 TelinkLogInfo(@"delete success")
+                [SigDataSource.share cleanLocalPrivateBeaconStateWithMeshUUID:[NSString stringWithFormat:@"%ld", (long)network.networkId]];
                 [AppDataSource.share.createdNetwordList removeObject:network];
                 [SigDataSource.share saveLocationData];
                 [weakSelf.createdList removeObject:network];

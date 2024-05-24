@@ -181,6 +181,7 @@
             if (code == 200) {
                 TelinkLogInfo(@"leaveNetwork successful! dic=%@", dic);
                 [weakSelf clickRefreshJoinedButton];
+                [SigDataSource.share cleanLocalPrivateBeaconStateWithMeshUUID:[NSString stringWithFormat:@"%ld", (long)network.networkId]];
             } else {
                 TelinkLogInfo(@"leaveNetwork result = %@", dic);
                 [weakSelf showTips:[NSString stringWithFormat:@"leaveNetwork errorCode = %d, message = %@", code, dic[@"message"]]];

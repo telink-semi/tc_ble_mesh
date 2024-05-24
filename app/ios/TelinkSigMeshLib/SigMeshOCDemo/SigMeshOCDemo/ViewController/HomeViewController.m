@@ -250,7 +250,15 @@
 
 - (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
     __weak typeof(self) weakSelf = self;
-    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+    BOOL hasOnOffResponse = NO;
+    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in nodes) {
+        if (node.isKeyBindSuccess) {
+            hasOnOffResponse = YES;
+            break;
+        }
+    }
+    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:hasOnOffResponse ? 1 : 0 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //get response and refresh UI in `- (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination`
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         [weakSelf showMeshOTAWarningAlertController];
@@ -368,6 +376,7 @@
                     dispatch_async(dispatch_get_main_queue(), ^{
                         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning - MeshOTA is still running" message:@"MeshOTA distribution is still running, continue?\nclick GO to enter MeshOTA processing page\nclick STOP to stop distribution" preferredStyle:UIAlertControllerStyleAlert];
                         [alertController addAction:[UIAlertAction actionWithTitle:@"STOP" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+                            MeshOTAManager.share.distributorAddress = [addressNumber intValue];
                             [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
                                 [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
                                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
@@ -434,7 +443,7 @@
     SigBearer.share.dataDelegate = self;
     SigMeshLib.share.delegateForDeveloper = self;
     if (SigBearer.share.isOpen) {
-        if ([LibTools uint16From16String:SigDataSource.share.getCurrentConnectedNode.pid] == SigNodePID_Switch) {
+        if (SigDataSource.share.getCurrentConnectedNode.isRemote) {
             [SigDataSource.share setAllDevicesOutline];
             [self delayReloadCollectionView];
             __weak typeof(self) weakSelf = self;

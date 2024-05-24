@@ -163,7 +163,11 @@
 #pragma mark - Life method
 - (void)normalSetting{
     [super normalSetting];
-    self.macLabel.text = [NSString stringWithFormat:@"UUID:%@",self.model.UUID];
+    if (self.model.macAddress.length > 0) {
+        self.macLabel.text = [NSString stringWithFormat:@"UUID:%@ MAC:%@", self.model.UUID, self.model.macAddress];
+    } else {
+        self.macLabel.text = [NSString stringWithFormat:@"UUID:%@",self.model.UUID];
+    }
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(EntryCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(EntryCell.class)];

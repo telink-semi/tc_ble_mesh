@@ -358,7 +358,7 @@
             });
         }];
     } else if (indexPath.section == 8) {
-        [ShowTipsHandle.share show:@"Get Default TTL..."];
+        [ShowTipsHandle.share show:@"Get onDemandPrivateProxy..."];
         //Get onDemandPrivateProxy
         [SDKLibCommand onDemandPrivateProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigOnDemandPrivateProxyStatus * _Nonnull responseMessage) {
             TelinkLogInfo(@"onDemandPrivateProxyGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -736,7 +736,7 @@
                     return;
                 }
                 if (ttlString.length > 2) {
-                    [weakSelf showTips:@"The length of TTL is 1 byte!"];
+                    [weakSelf showTips:@"The length of onDemandPrivateProxy is 1 byte!"];
                     return;
                 }
                 int value = [LibTools uint8From16String:ttlString];

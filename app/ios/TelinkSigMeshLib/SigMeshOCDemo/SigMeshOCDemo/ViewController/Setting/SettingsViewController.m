@@ -37,7 +37,7 @@
 /// Tips Title of Provision Mode
 #define kProvisionModeTitle  @"Provision Mode"
 /// Tips message of Provision Mode
-#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\n1. Scan for an unprovisioned device, connect and provision;\n\n2. Keep the connection state, send scan command to the device;\n\n3. Some remote devices info will be upload;\n\n4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
+#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\t1. Scan for an unprovisioned device, connect and\n\tprovision;\n\t2. Keep the connection state, send scan command\n\tto the device;\n\t3. Some remote devices info will be upload;\n\t4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
 /// 3.subscription level
 #define kSubscriptionLevel   @"Enable subscription level service model ID"
 /// Tips Title of subscription level

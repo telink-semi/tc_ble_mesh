@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -58,12 +59,6 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
-                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" verticalHuggingPriority="251" text="TIP: set pubAdr 0 to cancel publication." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VCJ-R7-sDe">
-                                <rect key="frame" x="5" y="140" width="220" height="12"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="10"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g8s-x4-OZr">
                                 <rect key="frame" x="235" y="131" width="60" height="30"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -90,23 +85,31 @@
                                     <action selector="clickAddressList:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="aOc-KQ-yEC"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="TIP: set pubAdr 0 to reset default publication." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="psw-26-44K">
+                                <rect key="frame" x="5" y="126" width="220" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="630-pT-8ot"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemGray6Color"/>
                         <constraints>
-                            <constraint firstItem="g8s-x4-OZr" firstAttribute="centerY" secondItem="VCJ-R7-sDe" secondAttribute="centerY" id="5o1-Jr-8pQ"/>
                             <constraint firstItem="g8s-x4-OZr" firstAttribute="trailing" secondItem="5j5-MZ-nVl" secondAttribute="trailing" id="75l-br-WOr"/>
-                            <constraint firstItem="g8s-x4-OZr" firstAttribute="leading" secondItem="VCJ-R7-sDe" secondAttribute="trailing" constant="10" id="7Lq-67-Zwu"/>
                             <constraint firstItem="w3Z-z6-sS5" firstAttribute="trailing" secondItem="5j5-MZ-nVl" secondAttribute="trailing" id="9QT-sm-15M"/>
                             <constraint firstItem="g8s-x4-OZr" firstAttribute="top" secondItem="Dg9-CO-o7P" secondAttribute="bottom" constant="10" id="AvR-0d-nhC"/>
                             <constraint firstItem="Dg9-CO-o7P" firstAttribute="centerY" secondItem="r5n-Rv-f8c" secondAttribute="centerY" id="DAQ-Hi-xUc"/>
                             <constraint firstItem="r5n-Rv-f8c" firstAttribute="top" secondItem="FWi-mA-gvC" secondAttribute="bottom" constant="25" id="GBB-Lz-fW1"/>
                             <constraint firstItem="7sI-FP-Qia" firstAttribute="trailing" secondItem="5j5-MZ-nVl" secondAttribute="trailing" id="GhD-7S-uFc"/>
                             <constraint firstItem="w3Z-z6-sS5" firstAttribute="leading" secondItem="Dg9-CO-o7P" secondAttribute="trailing" constant="5" id="Ov6-zf-dI9"/>
+                            <constraint firstItem="psw-26-44K" firstAttribute="leading" secondItem="r5n-Rv-f8c" secondAttribute="leading" id="Q11-Ad-ZcL"/>
                             <constraint firstAttribute="bottom" secondItem="g8s-x4-OZr" secondAttribute="bottom" constant="5" id="QVD-gb-TDQ"/>
                             <constraint firstAttribute="trailing" secondItem="5j5-MZ-nVl" secondAttribute="trailing" constant="5" id="TDi-vQ-UYV"/>
+                            <constraint firstItem="g8s-x4-OZr" firstAttribute="centerY" secondItem="psw-26-44K" secondAttribute="centerY" id="Tcs-bA-2Ke"/>
                             <constraint firstItem="Dg9-CO-o7P" firstAttribute="leading" secondItem="5j5-MZ-nVl" secondAttribute="leading" id="Xl8-vc-UF2"/>
                             <constraint firstItem="r5n-Rv-f8c" firstAttribute="leading" secondItem="jjK-8J-eNr" secondAttribute="leading" id="ZEe-Je-18q"/>
-                            <constraint firstItem="VCJ-R7-sDe" firstAttribute="leading" secondItem="r5n-Rv-f8c" secondAttribute="leading" id="ZRR-ra-8QU"/>
                             <constraint firstItem="FWi-mA-gvC" firstAttribute="leading" secondItem="jjK-8J-eNr" secondAttribute="leading" id="bRC-IG-QbL"/>
                             <constraint firstItem="5j5-MZ-nVl" firstAttribute="centerY" secondItem="jjK-8J-eNr" secondAttribute="centerY" id="bv0-x4-iwO"/>
                             <constraint firstItem="w3Z-z6-sS5" firstAttribute="centerY" secondItem="Dg9-CO-o7P" secondAttribute="centerY" id="e0d-Jw-f0D"/>
@@ -116,6 +119,7 @@
                             <constraint firstItem="r5n-Rv-f8c" firstAttribute="trailing" secondItem="jjK-8J-eNr" secondAttribute="trailing" id="lgV-TU-fq3"/>
                             <constraint firstItem="FWi-mA-gvC" firstAttribute="top" secondItem="jjK-8J-eNr" secondAttribute="bottom" constant="25" id="osL-eh-VQi"/>
                             <constraint firstItem="7sI-FP-Qia" firstAttribute="centerY" secondItem="FWi-mA-gvC" secondAttribute="centerY" id="r60-mR-9X0"/>
+                            <constraint firstItem="g8s-x4-OZr" firstAttribute="leading" secondItem="psw-26-44K" secondAttribute="trailing" constant="10" id="rrf-rm-aZT"/>
                             <constraint firstItem="FWi-mA-gvC" firstAttribute="trailing" secondItem="jjK-8J-eNr" secondAttribute="trailing" id="uEJ-43-Lgb"/>
                             <constraint firstItem="jjK-8J-eNr" firstAttribute="top" secondItem="wCC-Al-dRU" secondAttribute="top" constant="20" id="w68-GD-gW6"/>
                         </constraints>
@@ -136,12 +140,15 @@
                 <outlet property="pubAdrTF" destination="Dg9-CO-o7P" id="502-qg-ZqU"/>
                 <outlet property="sendButton" destination="g8s-x4-OZr" id="Fvk-mq-uog"/>
             </connections>
-            <point key="canvasLocation" x="-26.086956521739133" y="82.03125"/>
+            <point key="canvasLocation" x="-26.086956521739133" y="81.696428571428569"/>
         </tableViewCell>
     </objects>
     <resources>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="systemGray6Color">
-            <color red="0.94901960784313721" green="0.94901960784313721" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.94901960780000005" green="0.94901960780000005" blue="0.96862745100000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
