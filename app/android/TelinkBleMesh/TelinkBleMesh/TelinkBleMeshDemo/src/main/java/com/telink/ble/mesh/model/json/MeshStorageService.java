@@ -726,6 +726,7 @@ public class MeshStorageService {
     // convert nodeInfo(mesh.java) to node(json)
     public MeshStorage.Node convertDeviceInfoToNode(NodeInfo deviceInfo, int appKeyIndex) {
         MeshStorage.Node node = new MeshStorage.Node();
+        boolean levelServiceEnable = SharedPreferenceHelper.isLevelServiceEnable(TelinkMeshApplication.getInstance());
         node.UUID = MeshUtils.byteArrayToUuid(deviceInfo.deviceUUID);
         node.unicastAddress = String.format("%04X", deviceInfo.meshAddress);
 
@@ -770,14 +771,14 @@ public class MeshStorageService {
                     // find the offset ? (C000 + 1000 + ?)
                     MeshSigModel[] levelAssociatedModels = MeshSigModel.getLevelAssociatedList();
                     int levelModelIndex = -1;
-                    for (int j = 0; j < levelAssociatedModels.length; j++) {
-                        if (ele.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId) && ele.sigModels.contains(levelAssociatedModels[j].modelId)) {
-                            levelModelIndex = j;
-                            break;
+                    if (levelServiceEnable){
+                        for (int j = 0; j < levelAssociatedModels.length; j++) {
+                            if (ele.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId) && ele.sigModels.contains(levelAssociatedModels[j].modelId)) {
+                                levelModelIndex = j;
+                                break;
+                            }
                         }
                     }
-
-
                     if (ele.sigNum != 0 && ele.sigModels != null) {
                         for (int modelId : ele.sigModels) {
                             model = new MeshStorage.Model();

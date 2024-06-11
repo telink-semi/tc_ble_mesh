@@ -2274,7 +2274,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().contains("FF:FF:BB:CC:DD")) return;
+//            if (!device.getAddress().contains("FF:FF:BB:CC:DD:81")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 

@@ -446,6 +446,8 @@ public class MeshStorage {
 
                     if (model.subscribe != null) {
                         for (String sub : model.subscribe) {
+                            int subAdr = Integer.parseInt(sub, 16);
+                            if (subAdr >= 0xD000) continue;
                             if (!MeshUtils.hexListContains(subList, sub)) {
                                 subList.add(sub);
                             }

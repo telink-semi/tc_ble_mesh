@@ -124,8 +124,8 @@ public class NetworkLayerPDU {
      * @return pdu data
      */
     public byte[] generateEncryptedPayload() {
-        final byte iviNid = (byte) ((ivi << 7) | nid);
-        final byte ctlTTL = (byte) ((ctl << 7) | ttl);
+        final byte iviNid = (byte) ((ivi << 7) | (nid & 0x7F));
+        final byte ctlTTL = (byte) ((ctl << 7) | (ttl & 0x7F));
 
         final byte[] encryptedPayload = encryptNetworkPduPayload(transportPDU);
 //        MeshLogger.log("encryptedPayload: " + Arrays.bytesToHexString(encryptedPayload, ""));

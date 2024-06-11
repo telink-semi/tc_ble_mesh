@@ -18,7 +18,7 @@ public class TelinkPlatformUuidInfo_bak {
     // Telink assign. 0x0000 for reserve, 0x0001 ~ 0x000f for telink, 0x0010 ~ 0xfffe will be assigned to coustomer.
     public int cidPlatform;
 
-    // defined by customer. used to represent composition data, so it must be different if composition data(exclude version ID) is diffrent.
+    // defined by customer. used to represent composition data, so it must be different if composition data(exclude version ID) is different.
     public int pid;
 
     // 6 bytes , little endian
