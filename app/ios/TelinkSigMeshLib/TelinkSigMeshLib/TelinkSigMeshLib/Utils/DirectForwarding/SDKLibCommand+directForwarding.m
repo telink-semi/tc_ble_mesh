@@ -442,34 +442,16 @@
     }
 }
 
-/// Get description string.
-- (NSString *)getDescription {
-    NSString *target = @"";
-    if (_unicastDestinationFlag) {
-        target = [NSString stringWithFormat:@"TargetUnicastAddrRange:%@", _pathTargetUnicastAddrRange.getDescription];
+/// Determine if the data of two SigForwardingTableModel is the same
+- (BOOL)isEqual:(id)object {
+    if ([object isKindOfClass:[SigForwardingTableModel class]]) {
+        //tableSource and tableDestination are the unique identifier of SigForwardingTableModel.
+        SigForwardingTableModel *table = (SigForwardingTableModel *)object;
+        return self.tableSource == table.tableSource && self.tableDestination == table.tableDestination;
     } else {
-        target = [NSString stringWithFormat:@"multicastDestination:0x%X", _multicastDestination];
+        //Two SigForwardingTableModel object is different.
+        return NO;
     }
-    NSString *tem = [NSString stringWithFormat:@"Forwarding Table:\nNetKeyIndex:0x%04X\nunicastDestinationFlag:%@\nbackwardPathValidatedFlag:%@\npathOriginUnicastAddrRange:%@\n%@\nbearerTowardPathOrigin:0x%X\nbearerTowardPathTarget:0x%X\nEntryNodeAddress=%@", _netKeyIndex, _unicastDestinationFlag ? @"True" : @"False", _backwardPathValidatedFlag ? @"True" : @"False", _pathOriginUnicastAddrRange.getDescription, target, _bearerTowardPathOrigin, _bearerTowardPathTarget, [self getEntryNodeAddressString]];
-
-    return tem;
-}
-
-/// Get String of Entry Node Address.
-- (NSString *)getEntryNodeAddressString {
-    NSString *tem = @"";
-    NSArray *array = [NSArray arrayWithArray:_entryNodeAddress];
-    for (NSNumber *add in array) {
-        if (tem.length) {
-            tem = [NSString stringWithFormat:@"%@, 0x%X", tem, add.intValue];
-        } else {
-            tem = [NSString stringWithFormat:@"0x%X",add.intValue];
-        }
-    }
-    if (tem.length == 0) {
-        tem = @"NULL";
-    }
-    return tem;
 }
 
 @end

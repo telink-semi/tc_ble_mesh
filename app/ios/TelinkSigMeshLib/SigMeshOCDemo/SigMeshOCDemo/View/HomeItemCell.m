@@ -25,61 +25,39 @@
 
 @implementation HomeItemCell
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigNodeModel *)model{
-    UInt16 deviceAddress = 0;
-    NSString *iconName = @"";
-
-    SigNodeModel *btModel = (SigNodeModel *)model;
-    switch (btModel.state) {
-        case DeviceStateOutOfLine:
-            iconName = @"dengo";
-            break;
-        case DeviceStateOff:
-            iconName = @"dengn";
-            break;
-        case DeviceStateOn:
-            iconName = @"dengs";
-            break;
-        default:
-            break;
-    }
-    if (!btModel.isKeyBindSuccess) {
-        iconName = @"dengo";
-    }
-    //传感器sensor特殊处理
-    if (btModel.isSensor) {
-        iconName = @"ic_battery-20-bluetooth";
-    }
-    //遥控器remote特殊处理
-    if (btModel.isRemote) {
-        iconName = @"ic_rmt";
-    }
-
-    self.icon.image = [UIImage imageNamed:iconName];
-    deviceAddress = btModel.address;
+    UInt16 deviceAddress = model.address;
+    self.icon.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
     NSString *tempAddress = [NSString stringWithFormat:@"%02X",deviceAddress];
     if (deviceAddress > 0xff) {
         tempAddress = [NSString stringWithFormat:@"%04X",deviceAddress];
     }
     NSString *tempType = @"";
-    if ([LibTools uint16From16String:btModel.cid] == kCompanyID) {
-        tempType = [NSString stringWithFormat:@"Pid-%02X",[LibTools uint16From16String:btModel.pid]];
-    }else{
-        tempType = [NSString stringWithFormat:@"Cid-%04X",[LibTools uint16From16String:btModel.cid]];
+    if (model.isSensor) {
+        if (model.sensorDataArray.count > 0) {
+            SigSensorDataModel *sensorData = model.sensorDataArray.firstObject;
+            tempType = [NSString stringWithFormat:@"%04X-%@", sensorData.propertyID, [LibTools convertDataToHexStr:sensorData.rawValueData]];
+        } else {
+            tempType = @"Sensor-NULL";
+        }
+    } else {
+        if ([LibTools uint16From16String:model.cid] == kCompanyID) {
+            tempType = [NSString stringWithFormat:@"Pid-%02X",[LibTools uint16From16String:model.pid]];
+        }else{
+            tempType = [NSString stringWithFormat:@"Cid-%04X",[LibTools uint16From16String:model.cid]];
+        }
     }
-
-    //原做法：显示短地址+亮度+色温
-//    NSString *tempBrightness = [NSString stringWithFormat:@"%d",btModel.trueBrightness];
-//    NSString *tempTemperatrure = [NSString stringWithFormat:@"%d",btModel.trueTemperature];
-//    self.address.text = btModel.state == DeviceStateOn ? [NSString stringWithFormat:@"%@ : %@ : %@",tempAddress,tempBrightness,tempTemperatrure]:[NSString stringWithFormat:@"%@ : 0 : 0",tempAddress];
-    //新做法：显示短地址+PID
+    //显示短地址+PID
     self.address.text = [NSString stringWithFormat:@"%@(%@)",tempAddress,tempType];
 
-    if (!btModel.isKeyBindSuccess) {
+    if (!model.isKeyBindSuccess) {
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }
-    self.address.textColor = [UIColor grayColor];
-    //新做法：直连设备显示蓝色
+    self.nodeName.text = model.name;
+    self.address.textColor = self.nodeName.textColor = [UIColor grayColor];
+    //直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
         self.address.textColor = HEX(#4A87EE);
     }

@@ -210,9 +210,21 @@ struct TelinkPID {
     union{
         UInt16 value;
         struct{
-            UInt8 minorProductType      :8;//value的低8个bit
+            SigNodePID minorProductType      :8;//value的低8个bit
             MajorProductType majorProductType :4;//val的中间位4个bit
             CHIP_TYPE MCUChipType :4;//val的高位4个bit
+        };
+    };
+};
+
+struct TCProtocolFeature {
+    union{
+        UInt8 value;
+        struct{
+            UInt8 uuid_version      :2;//value的低2个bit, initial version is 0
+            UInt8 static_oob_en      :1;//value的低位第2个bit, 0 “no static OOB”; 1 "static OOB".
+            UInt8 key_bind_needed    :1; //value的低位第3个bit, 0 means no need to send key bind for APP. 1 means need.
+            // 4-7 Reserved For Future Use
         };
     };
 };

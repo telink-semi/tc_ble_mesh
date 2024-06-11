@@ -38,9 +38,19 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 * Xcode 11.0及以上.
 * 一个支持蓝牙功能的系统是iOS11及以上的苹果设备。
 
+## 如何运行实例APP `TelinkSigMesh`
+
+* 1.由于项目使用pod导入了第三方库，所以需要开发者使用命令行分别进入文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo`和文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib`，再运行命令`pod install`进行pod第三方库的下载与配置。
+* 2.双击打开pod生成的项目图标`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo/SigMeshOCDemo.xcworkspace`即可。
+* 3.项目`SigMeshOCDemo`各个Target的说明：
+* * `SigMeshOCDemo` - 离线版本的TelinkSigMesh App，Mesh数据存储在手机本地，已经上架APP Store。
+* * `SigMeshCloud` - 云端版本的TelinkSigMesh App，Mesh数据存储在Telink的云端服务器。
+* * `SigLoopAddDemo` - 循环测试添加和剔除Mesh设备的测试APP，显示添加各个阶段的平均耗时和添加的成功率。
+
 ## 集成步骤
 
-* 拷贝文件夹`TelinkSigMeshLib`到开发者自己工程文件夹，将TelinkSigMeshLib.xcodepro拖进开发者自己的工程中，添加头文件搜索路径（即与文件TelinkSigMeshLib.xcodepro同级的文件夹TelinkSigMeshLib的路径），然后编译选项中链接二进制库`TelinkSigMeshLib.framework`。
+* 1.由于项目使用pod导入了第三方库，所以需要开发者使用命令行分别进入文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo`和文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib`，再运行命令`pod install`进行pod第三方库的下载与配置。
+* 2.拷贝文件夹`TelinkSigMeshLib`到开发者自己工程文件夹，将TelinkSigMeshLib.xcodepro拖进开发者自己的工程中，添加头文件搜索路径（即与文件TelinkSigMeshLib.xcodepro同级的文件夹TelinkSigMeshLib的路径），然后编译选项中链接二进制库`TelinkSigMeshLib.framework`。
 
 ## 开发接口
 

@@ -46,6 +46,8 @@
     // Configure the view for the selected state
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SchedulerModel *)model{
     _nameLabel.text = [NSString stringWithFormat:@"SchedulerID:0x%llX",model.schedulerID];
     NSString *year,*month=@"",*day,*hour,*minute,*second,*week=@"",*action;

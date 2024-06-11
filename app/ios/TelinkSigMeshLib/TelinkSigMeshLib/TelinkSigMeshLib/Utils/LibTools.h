@@ -61,6 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 返回当前时间字符串格式："yyyy-MM-dd HH:mm:ss"
 + (NSString *)getNowTimeTimeString;
 
+/// 返回当前时间字符串格式："HH:mm:ss"
++ (NSString *)getNowTimeStringInFormatHHmmss;
+
 /// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z". 如果要使用该特定格式，则必须将时区设置为UTC.当时北京时间为2021-10-08T16:33:16。
 + (NSString *)getNowTimeStringOfJson;
 
@@ -246,6 +249,10 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 + (BOOL)validateHex:(NSString *)uuidString;
 
++ (BOOL)validateNumberString:(NSString *)numberString;
+
++ (BOOL)validateFloatString:(NSString *)numberString;
+
 #pragma mark - UTF-8相关
 
 + (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData;
@@ -269,6 +276,12 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
  * @return device UUID, eg: D7009091D6B5D93590C8DE0DF7803463
  */
 + (NSData *)calcUuidByMac:(NSData *)macAddress;
+
+#pragma mark - Device property相关
+
+/// Get value length with propertyID
+/// - Parameter propertyID: device propertyID
++ (UInt8)valueLengthOfDevicePropertyID:(DevicePropertyID)propertyID;
 
 @end
 

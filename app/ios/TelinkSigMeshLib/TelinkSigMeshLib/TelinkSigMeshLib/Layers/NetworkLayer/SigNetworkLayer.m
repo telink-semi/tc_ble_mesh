@@ -28,6 +28,7 @@
 #import "SigLowerTransportPdu.h"
 #import "SigControlMessage.h"
 #import "SigSegmentAcknowledgmentMessage.h"
+#import "SDKLibCommand+minor_ENH.h"
 
 /*
  The network layer defines how transport messages are addressed towards one or more elements.
@@ -384,11 +385,13 @@
         TelinkLogError(@"controlMessage == nil");
         return;
     }
-//    TelinkLogInfo(@"%@ received (decrypted using key: %@)",controlMessage,controlMessage.networkKey);
-    SigFilterStatus *filterStatus = [[SigFilterStatus alloc] init];
-    if (controlMessage.opCode == filterStatus.opCode) {
-        SigFilterStatus *message = [[SigFilterStatus alloc] initWithParameters:controlMessage.upperTransportPdu];
-//        TelinkLogVerbose(@"%@ received SigFilterStatus data:%@ from: 0x%x to: 0x%x",message,controlMessage.upperTransportPdu,proxyPdu.source,proxyPdu.destination);
+    if (controlMessage.opCode == SigProxyFilerOpcode_filterStatus || controlMessage.opCode == SigProxyFilerOpcode_directedProxyCapabilitiesStatus) {
+        SigProxyConfigurationMessage *message = nil;
+        if (controlMessage.opCode == SigProxyFilerOpcode_filterStatus) {
+            message = [[SigFilterStatus alloc] initWithParameters:controlMessage.upperTransportPdu];
+        } else if (controlMessage.opCode == SigProxyFilerOpcode_directedProxyCapabilitiesStatus) {
+            message = [[SigDirectedProxyCapabilitiesStatus alloc] initWithParameters:controlMessage.upperTransportPdu];
+        }
         if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
             [_networkManager.manager.delegate didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
         }

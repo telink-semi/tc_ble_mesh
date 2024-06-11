@@ -25,7 +25,9 @@
 #import "SceneItemCell.h"
 #import "SceneDetailViewController.h"
 #import "UIViewController+Message.h"
-#import "DeviceElementItemView.h"
+#import "SceneElementView.h"
+#import "NSString+extension.h"
+#import "UIButton+extension.h"
 
 @interface SceneListViewController ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -42,7 +44,7 @@
     __weak typeof(self) weakSelf = self;
     //set recall scene block
     [cell setClickRecallBlock:^{
-        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
             TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
@@ -56,20 +58,28 @@
     }];
 
     for (UIView *view in cell.contentView.subviews) {
-        if ([view isMemberOfClass:[DeviceElementItemView class]]) {
+        if ([view isMemberOfClass:[SceneElementView class]]) {
             [view removeFromSuperview];
         }
     }
     if (model.actionList.count > 0) {
         for (int i=0; i<model.actionList.count; i++) {
-            DeviceElementItemView *view = [[NSBundle mainBundle] loadNibNamed:@"DeviceElementItemView" owner:self options:nil].firstObject;
-            view.selectButton.hidden = YES;
-            view.frame = CGRectMake(20, 44+45.0*i, [UIScreen mainScreen].bounds.size.width-20, 45.0);
-            [view updateContent:model.actionList[i]];
+            ActionModel *action = model.actionList[i];
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:action.address];
+            SceneElementView *view = [[NSBundle mainBundle] loadNibNamed:@"SceneElementView" owner:self options:nil].firstObject;
+            view.frame = CGRectMake(40, 89-20+44.0*i, [UIScreen mainScreen].bounds.size.width-80, 44.0);
+            view.nameLabel.text = [NSString stringWithFormat:@"name: %@\nelement address: 0x%04X", node.name, action.address];
             [cell.contentView addSubview:view];
+            [view.playButton addAction:^(UIButton *button) {
+                [DemoCommand recallSceneWithAddress:action.address sceneId:[LibTools uint16From16String:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+                    TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+
+                }];
+            }];
         }
     }
-
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return cell;
 }
 
@@ -78,22 +88,26 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 44.0 + 45.0*self.source[indexPath.row].actionList.count;
+    return 89 + 44.0*self.source[indexPath.row].actionList.count;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
+    [self refreshTableViewUI];
+}
 
+- (void)refreshTableViewUI {
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
-    [self.tableView reloadData];
+    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 }
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = @"Scenes";
+    self.title = @"Scene List";
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_SceneItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_SceneItemCellID];
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd)];
     self.navigationItem.rightBarButtonItem = rightItem;
     //longpress to delete scene
@@ -102,13 +116,31 @@
 
 }
 
-- (void)clickAdd{
-    SigSceneModel *model = [[SigSceneModel alloc] init];
-    model.number = [NSString stringWithFormat:@"%04X",[[SigDataSource share] getNewSceneAddress]];
-    model.name = [NSString stringWithFormat:@"scene:0x%lX",(long)model.number];
-    SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storyboard:@"Setting"];
-    vc.model = model;
-    [self.navigationController pushViewController:vc animated:YES];
+- (void)clickAdd {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Create Scene" message:@"please input content" preferredStyle: UIAlertControllerStyleAlert];
+    [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"new scene name";
+    }];
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        NSString *sceneName = [[alertVc textFields] objectAtIndex:0].text;
+        sceneName = sceneName.removeHeadAndTailSpacePro;
+        TelinkLogInfo(@"new scene is %@", sceneName);
+        if (sceneName == nil || sceneName.length == 0) {
+            [weakSelf showTips:@"Scene name can not be empty!"];
+            return;
+        }
+        SigSceneModel *model = [[SigSceneModel alloc] init];
+        model.number = [NSString stringWithFormat:@"%04X",[[SigDataSource share] getNewSceneAddress]];
+        model.name = sceneName;
+        [SigDataSource.share.scenes addObject:model];
+        [SigDataSource.share saveLocationData];
+        [weakSelf performSelectorOnMainThread:@selector(refreshTableViewUI) withObject:nil waitUntilDone:YES];
+    }];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleCancel handler:nil];
+    [alertVc addAction:action2];
+    [alertVc addAction:action1];
+    [self presentViewController:alertVc animated:YES completion:nil];
 }
 
 #pragma  mark LongPressGesture
@@ -118,7 +150,7 @@
         if (indexPath != nil) {
             SigSceneModel *model = [self.source[indexPath.item] copy];
             TelinkLogDebug(@"%@",indexPath);
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%@",model.number];
+            NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene ID:0x%@?",model.number];
             if (model.actionList) {
                 BOOL hasOutLine = NO;
                 NSArray *actionList = [NSArray arrayWithArray:model.actionList];
@@ -130,11 +162,11 @@
                     }
                 }
                 if (hasOutLine) {
-                    msg = [NSString stringWithFormat:@"There are some nodes offline, are you sure delete scene:0x%@",model.number];
+                    msg = [NSString stringWithFormat:@"There are some nodes offline, are you sure delete scene ID:0x%@?",model.number];
                 }
             }
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:@"Warning" message:msg sure:^(UIAlertAction *action) {
                 [weakSelf deleteSceneAction:model];
             } cancel:^(UIAlertAction *action) {
 
@@ -183,9 +215,8 @@
 - (void)showDeleteSceneSuccess:(SigSceneModel *)scene{
     TelinkLogDebug(@"delect success");
     [[SigDataSource share] deleteSceneModelWithModel:scene];
-    self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
+    [self refreshTableViewUI];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.tableView reloadData];
         [ShowTipsHandle.share show:Tip_DeleteSceneSuccess];
         [ShowTipsHandle.share delayHidden:0.5];
     });

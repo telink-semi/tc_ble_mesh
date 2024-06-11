@@ -26,14 +26,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface AddDeviceCell : UITableViewCell
+/// Background layer for setting rounded corners.
 @property (weak, nonatomic) IBOutlet UIView *bgView;
+/// Image layer used to set icon image.
 @property (weak, nonatomic) IBOutlet UIImageView *icon;
+/// Image layer used to set icon certificate image.
 @property (weak, nonatomic) IBOutlet UIImageView *icon_cert;
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+/// Text layer used to set state.
 @property (weak, nonatomic) IBOutlet UILabel *stateLabel;
+/// Button layer used to set close button title..
 @property (weak, nonatomic) IBOutlet UIButton *closeButton;
+/// Button layer used to set add button title..
 @property (weak, nonatomic) IBOutlet UIButton *addButton;
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(AddDeviceModel *)model;
 
 @end

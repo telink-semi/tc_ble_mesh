@@ -168,7 +168,6 @@ typedef enum : UInt8 {
 @property (nonatomic,assign) UInt8 retryCount;//default is 2.
 @property (nonatomic,assign) NSTimeInterval timeout;//default is 1.28s,SigDataSource.share.defaultReliableIntervalOfNotLPN.
 @property (nonatomic,assign) UInt8 hadRetryCount;//default is 0.
-@property (nonatomic, assign) BOOL needTid;//default is NO.
 @property (nonatomic, assign) UInt8 tidPosition;//default is 0.
 @property (nonatomic, assign) BOOL hadReceiveAllResponse;//default is NO.
 @property (nonatomic, assign) UInt8 tid;//default is 0.
@@ -2528,37 +2527,37 @@ typedef enum : UInt8 {
  * @brief   The Set Filter Type message can be sent by a Proxy Client to change the proxy filter type and clear the proxy filter list.
  * @param   type    the unicastAddress of destination.
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.1 Set Filter Type, seeAlso: Mesh_v1.0.pdf  (page.263)
  */
-+ (void)setType:(SigProxyFilerType)type successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
++ (void)setType:(SigProxyFilerType)type successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback;
 
 /**
  * @brief   The Add Addresses to Filter message is sent by a Proxy Client to add destination addresses to the proxy filter list.
  * @param   addresses    List of addresses where N is the number of addresses in this message..
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.2 Add Addresses to Filter, seeAlso: Mesh_v1.0.pdf  (page.264)
  */
-+ (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
++ (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback;
 
 /**
  * @brief   The Remove Addresses from Filter message is sent by a Proxy Client to remove destination addresses from the proxy filter list.
  * @param   addresses    List of addresses where N is the number of addresses in this message..
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.3 Remove Addresses from Filter, seeAlso: Mesh_v1.0.pdf  (page.264)
  */
-+ (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
++ (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback;
 
 /**
  * @brief   Adds all the addresses the Provisioner is subscribed to to the Proxy Filter.
  * @param   provisioner    the provisioner that need to set filter
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    This API will auto call setFilterType+AddAddressList, seeAlso: Mesh_v1.0.pdf  (page.263)
  */
-+ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)failCallback;
++ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback;
 
 
 #pragma mark - API by Telink
@@ -2769,6 +2768,12 @@ typedef enum : UInt8 {
  */
 + (void)stopScan;
 
+/**
+ * @brief   advertising Manufacturer Data.
+ * @param   data Manufacturer Data.
+ * @param   interval advertising Interval.
+ */
++ (void)advertisingManufacturerData:(NSData *)data advertisingInterval:(NSTimeInterval)interval;
 
 #pragma mark - deprecated API
 

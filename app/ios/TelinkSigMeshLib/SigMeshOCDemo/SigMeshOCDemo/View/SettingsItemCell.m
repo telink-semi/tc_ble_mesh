@@ -45,16 +45,7 @@
     }
     //init bgView
     self.bgView = [[UIView alloc] initWithFrame:CGRectMake(10, 10, self.frame.size.width-20, 5+kTitleHeight+5+(30+10)*items.count)];
-    //cornerRadius
-    self.bgView.layer.cornerRadius = 7;
-    //borderWidth
-    self.bgView.layer.borderWidth = 1;
-    //borderColor
-    self.bgView.layer.borderColor = [UIColor telinkBorderColor].CGColor;
-    //masksToBounds
-    self.bgView.layer.masksToBounds = YES;
-    //backgroundColor
-    self.bgView.backgroundColor = UIColor.telinkBackgroundWhite;
+    [self configurationCornerWithBgView:self.bgView];
     //addSubview
     [self addSubview:self.bgView];
 

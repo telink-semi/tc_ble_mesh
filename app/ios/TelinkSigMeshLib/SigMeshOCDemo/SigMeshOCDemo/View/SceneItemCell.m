@@ -24,8 +24,11 @@
 #import "SceneItemCell.h"
 
 @interface SceneItemCell()
+/// Image layer used to set icon image.
 @property (weak, nonatomic) IBOutlet UIImageView *iconImageView;
+/// Text layer used to set name.
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+@property (weak, nonatomic) IBOutlet UIView *bgView;
 
 @property (strong, nonatomic) SigSceneModel *model;
 @end
@@ -37,9 +40,12 @@
     // Initialization code
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigSceneModel *)model{
     _model = model;
-    _nameLabel.text = [NSString stringWithFormat:@"sceneID:0X%@",model.number];
+    _nameLabel.text = [NSString stringWithFormat:@"name: %@\nID: 0x%04X", model.name, [LibTools uint32From16String:model.number]];
+    [self configurationCornerWithBgView:_bgView];
 }
 
 - (IBAction)clickRecallScene:(UIButton *)sender {

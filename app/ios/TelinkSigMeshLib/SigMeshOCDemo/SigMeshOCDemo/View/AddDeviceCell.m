@@ -37,6 +37,8 @@
     [_closeButton setTitle:@"" forState:UIControlStateNormal];
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(AddDeviceModel *)model {
     NSString *addressString = @"";
     if (model.state == AddDeviceModelStateScanned || model.state == AddDeviceModelStateConnecting || model.scanRspModel.address == 0) {

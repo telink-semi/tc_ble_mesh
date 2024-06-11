@@ -24,9 +24,13 @@
 #import <UIKit/UIKit.h>
 
 @interface GroupCell : UITableViewCell
+/// Text layer used to set groupID.
 @property (weak, nonatomic) IBOutlet UILabel *groupID;
+/// UISwitch used to show on off status of group.
 @property (weak, nonatomic) IBOutlet UISwitch *sw;
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigGroupModel *)model;
 
 @end

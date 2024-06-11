@@ -44,8 +44,8 @@
 - (void)pushPublicAddressList {
     NSArray *groups = [NSArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
     //判断model合法性
-    NSString *modelIdString = self.modelTF.text.removeAllSapceAndNewlines;
-    if ([modelIdString isEqualToString:@"1002"]) {
+    NSString *modelIdString = self.modelTF.text.removeAllSpaceAndNewlines;
+    if ([modelIdString isEqualToString:[SigHelper.share getUint16String:kSigModel_GenericLevelServer_ID]] || [modelIdString isEqualToString:[SigHelper.share getUint16String:kSigModel_GenericLevelClient_ID]]) {
         NSMutableArray *mArray = [NSMutableArray arrayWithArray:SigDataSource.share.getAllExtendGroupList];
         [mArray addObjectsFromArray:SigDataSource.share.getAllInvalidGroupList];
         groups = mArray;

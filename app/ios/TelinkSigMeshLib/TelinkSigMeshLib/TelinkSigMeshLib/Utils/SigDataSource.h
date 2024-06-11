@@ -35,7 +35,15 @@ NS_ASSUME_NONNULL_BEGIN
  * @param   sequenceNumber sequenceNumber of current provisioner.
  * @param   ivIndex ivIndex of current mesh network.
  */
-- (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex;
+- (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex DEPRECATED_MSG_ATTRIBUTE("Use 'onUpdateSequenceNumber:' or 'onUpdateIvIndex:' instead");
+
+/// Callback called when the sequenceNumber change. Since v3.3.3.7
+/// @param sequenceNumber sequenceNumber of current provisioner.
+- (void)onUpdateSequenceNumber:(UInt32)sequenceNumber;
+
+/// Callback called when the ivIndex change. Since v3.3.3.7
+/// @param ivIndex ivIndex of current mesh network.
+- (void)onUpdateIvIndex:(UInt32)ivIndex;
 
 /**
  * @brief   Callback called when the unicastRange of provisioner had been changed.
@@ -163,7 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
 /* cache value */
 @property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
 /// nodes should show in HomeViewController
-@property (nonatomic,strong, nullable) NSMutableArray <SigNodeModel *>*curNodes;
+@property (nonatomic, strong) NSMutableArray <SigNodeModel *>*curNodes;
 /// modelID of subscription group
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*defaultGroupSubscriptionModels;
 /// default nodeInfo for fast bind.
@@ -226,7 +234,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) SigProxyFilterModel *filterModel;
 //@property (nonatomic, strong) NSMutableArray <SigNodeSeqZeroModel *>*nodeSequenceNumberCacheList;
 @property (nonatomic, strong) NSMutableArray <SigNodeSequenceNumberCacheModel *>*nodeSequenceNumberCacheList;
-
+/// v4.1.0.1及之后的版本添加。
+/// SigSortType of nodeList, default is SigSortType_sortByAddressAscending.
+@property (nonatomic, assign) SigSortType sortTypeOfNodeList;
 
 //取消该限制：客户可以初始化该类型的对象，创建一个中间的mesh数据，用于比较前后的mesh信息。
 //+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -619,6 +629,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (DeviceTypeModel * _Nullable)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID;
 
+/// Return the device dictionary classified by PID.
+- (NSMutableDictionary *)currentProductNodesDictionary;
+
 #pragma mark - OOB存取相关
 
 /**
@@ -809,6 +822,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setLocalConfigBeaconState:(BOOL)state unicastAddress:(UInt16)unicastAddress;
 
+/// remove local state
+/// @param unicastAddress the unicastAddress of node.
+- (void)removeLocalStateWithUnicastAddress:(UInt16)unicastAddress;
+
+/// clean local state
+- (void)cleanLocalPrivateBeaconStateWithMeshUUID:(NSString *)meshUUID;
+
+/// clean local state
+- (void)cleanAllLocalPrivateBeaconState;
+
 #pragma mark - Special handling: store the ivIndex+sequenceNumber of current mesh
 
 /**
@@ -844,6 +867,19 @@ NS_ASSUME_NONNULL_BEGIN
  * @return  `YES` means store, `NO` means no store.
  */
 - (BOOL)existLocationIvIndexAndLocationSequenceNumber;
+
+/**
+ * @brief   Get local solicitation sequenceNumber.
+ * @return  the solicitation sequenceNumber of mesh.
+ * @note    This API is used to get the value of solicitation sequenceNumber stored locally.
+ */
+- (UInt32)getLocalSolicitationSequenceNumber;
+
+/**
+ * @brief   Use the key meshUUID+provisionerUUID+unicastAddress to store solicitation sequenceNumber locally.
+ * @param   sequenceNumber    the solicitation sequenceNumber of mesh.
+ */
+- (void)saveLocalSolicitationSequenceNumber:(UInt32)sequenceNumber;
 
 #pragma mark - provisioner UUID API
 

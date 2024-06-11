@@ -36,6 +36,8 @@
     self.groupAddress = 0;
 }
 
+/// Update content with model.
+/// - Parameter model: model of cell.
 - (void)updateContent:(SigGroupModel *)model{
     self.model = model;
     self.groupID.text = model.name;
@@ -54,11 +56,6 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
     }];
-//    [DemoCommand switchOnOffWithIsOn:on address:self.groupAddress responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-//        weakSelf.sw.on = on;
-//    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//
-//    }];
 }
 
 @end

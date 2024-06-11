@@ -25,7 +25,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.0";
+NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.1";
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
 NSString * const AccessError_invalidSource = @"Local Provisioner does not have Unicast Address specified.";
@@ -57,7 +57,8 @@ NSString * const kScanList_key = @"scanList_key";
 NSString * const kJsonMeshUUID_key = @"MeshUUID";
 NSString * const kCurrentProvisionerUUID_key = @"currentProvisionerUUID_key";
 NSString * const kLocationIvIndexAndSequenceNumberDictionary_key = @"locationIvIndexAndSequenceNumberDictionary_key";
-NSString * const kLocalPrivateBeaconDictionary_key = @"kLocalPrivateBeaconDictionary_key";//缓存private beacon页面的数据。
+NSString * const kLocalSolicitationSequenceNumberDictionary_key = @"kLocalSolicitationSequenceNumberDictionary_key";
+NSString * const kLocalNetworkPrivateBeaconDictionary_key = @"kLocalNetworkPrivateBeaconDictionary_key";//缓存private beacon页面的数据。
 NSString * const kLocalPrivateGattProxy_key = @"kLocalPrivateGattProxy_key";//缓存private beacon页面的数据。
 NSString * const kLocalPrivateBeacon_key = @"kLocalPrivateBeacon_key";//缓存private beacon页面的数据。
 NSString * const kLocalConfigGattProxy_key = @"kLocalConfigGattProxy_key";//缓存private beacon页面的数据。
@@ -558,13 +559,6 @@ NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage = @"Invalid Ap
 /*Mesh未连接*/
 UInt32 const kSigMeshLibCommandMeshDisconnectedErrorCode = 0x02110108;
 NSString * const kSigMeshLibCommandMeshDisconnectedErrorMessage = @"Mesh Disconnected.";
-
-/*telink当前定义的两个设备类型*/
-UInt16 const SigNodePID_CT = 1;
-UInt16 const SigNodePID_HSL = 2;
-UInt16 const SigNodePID_Panel = 7;
-UInt16 const SigNodePID_LPN = 0x0201;
-UInt16 const SigNodePID_Switch = 0x0301;
 
 float const kCMDInterval = 0.32;
 float const kSDKLibCommandTimeout = 1.28;

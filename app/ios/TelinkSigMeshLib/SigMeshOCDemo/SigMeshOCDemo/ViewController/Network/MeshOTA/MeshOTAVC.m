@@ -22,11 +22,18 @@
  *******************************************************************************************************/
 
 #import "MeshOTAVC.h"
-#import "MeshOTAItemCell.h"
+#import "MeshOTACell.h"
 #import "UIButton+extension.h"
 #import "HomeViewController.h"
-#import "OTAFileSource.h"
 #import "UIViewController+Message.h"
+#ifndef kIsTelinkCloudSigMeshLib
+#import "OTAFileSource.h"
+#import "BinFileChooseVC.h"
+#import "DeviceSelectVC.h"
+#else
+#import "SelectUpdateDeviceVC.h"
+#endif
+
 
 /**
  Attention: more detail about mesh OTA can look document Mesh_Firmware_update_20180228_d05r05.pdf
@@ -46,68 +53,72 @@
 @property (weak, nonatomic) IBOutlet UIProgressView *initiatorProgressView;
 @property (weak, nonatomic) IBOutlet UILabel *distributorProgressLabel;
 @property (weak, nonatomic) IBOutlet UIProgressView *distributorProgressView;
-@property (nonatomic, strong) NSMutableArray <SigNodeModel *>*allItemArray;
-@property (nonatomic, strong) NSMutableArray <NSNumber *>*allItemAddressArray;
-@property (nonatomic, strong) NSMutableArray *binStringArray;
+@property (weak, nonatomic) IBOutlet UIButton *binFileNameButton;
+@property (weak, nonatomic) IBOutlet UILabel *binFileVersionLabel;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *tableViewBottom;
 @property (nonatomic, strong) NSMutableArray <SigNodeModel *>*selectItemArray;
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*selectItemAddressArray;
-@property (nonatomic, assign) NSInteger binIndex;
+//@property (nonatomic, assign) NSInteger binIndex;
 @property (nonatomic, strong) NSMutableDictionary *allItemVIDDict;
+/// key: @(address), value: SigFirmwareUpdateInformationStatus
+@property (nonatomic, strong) NSMutableDictionary *allNodeFirmwareUpdateInformationStatusDict;
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
 @property (nonatomic, strong) NSMutableArray <SigUpdatingNodeEntryModel *>*receiversList;
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*successAddresses;
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*failAddresses;
+#ifdef kIsTelinkCloudSigMeshLib
+@property (nonatomic, strong) CloudVersionInfoModel *currentVersionInfo;
+#else
+@property (nonatomic, strong) NSString *currentBinString;
+#endif
 @end
 
 @implementation MeshOTAVC
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+#ifdef kIsTelinkCloudSigMeshLib
+//隐藏选择Bin文件的UI
+    self.tableViewBottom.constant = 0;
+#endif
     self.startButton.backgroundColor = UIColor.telinkButtonBlue;
     self.getFWInfoButton.backgroundColor = UIColor.telinkButtonBlue;
     self.title = @"Mesh OTA";
     self.needDelayReloadData = NO;
-    self.verifyOnlyButton.selected = NO;
+    [self clickPhone:self.phoneButton];
     self.verifyAndApplyButton.selected = YES;
-    self.connectedDeviceButton.selected = YES;
-    self.phoneButton.selected = NO;
+    self.verifyOnlyButton.selected = NO;
     [self updateInitiatorProgress:0];
     [self updateDistributorProgress:0];
-
+    //init rightBarButtonItem
     UIBarButtonItem *leftItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back"] style:UIBarButtonItemStylePlain target:self action:@selector(clickBackButton)];
     self.navigationItem.leftBarButtonItem = leftItem;
 
-    UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
-    //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
-    if(@available(iOS 15.0,*)) {
-        self.tableView.sectionHeaderTopPadding = 0;
-    }
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(MeshOTACell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(MeshOTACell.class)];
 
-    self.binIndex = -1;
     self.selectItemArray = [NSMutableArray array];
     self.selectItemAddressArray = [NSMutableArray array];
-    self.allItemArray = [[NSMutableArray alloc] initWithArray:SigDataSource.share.curNodes];
-    self.allItemAddressArray = [NSMutableArray array];
-    for (SigNodeModel *node in self.allItemArray) {
-        [self.allItemAddressArray addObject:@(node.address)];
-    }
-    self.binStringArray = [NSMutableArray arrayWithArray:OTAFileSource.share.getAllBinFile];
+#ifndef kIsTelinkCloudSigMeshLib
+    self.currentBinString = nil;
+#endif
     self.allItemVIDDict = [NSMutableDictionary dictionary];
+    self.allNodeFirmwareUpdateInformationStatusDict = [NSMutableDictionary dictionary];
     self.successAddresses = [NSMutableArray array];
     self.failAddresses = [NSMutableArray array];
 
     [MeshOTAManager.share saveIsMeshOTAing:NO];
 
     if (_isContinue) {
+        self.connectedDeviceButton.selected = YES;
+        self.phoneButton.selected = NO;
+        self.policyLabel.hidden = self.verifyOnlyButton.hidden = self.verifyOnlyLabel.hidden = self.verifyAndApplyButton.hidden = self.verifyAndApplyLabel.hidden = NO;
         [self refreshContinueUI];
     } else {
         NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
         if (addressNumber == nil || addressNumber.intValue == 0 || addressNumber.intValue == SigDataSource.share.curLocationNodeModel.address) {
             //不弹框
-
+            [self refreshDistributorUI];
         } else {
             //弹框
             __weak typeof(self) weakSelf = self;
@@ -118,14 +129,25 @@
                     [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
                     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
                     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+                    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorBinString];
                     [[NSUserDefaults standardUserDefaults] synchronize];
                 }];
+                [weakSelf refreshDistributorUI];
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:@"CONTINUE" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 [weakSelf refreshContinueUI];
             }]];
             [self presentViewController:alertController animated:YES completion:nil];
         }
+    }
+}
+
+- (void)refreshDistributorUI {
+    SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
+    SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+    if (modelId == nil) {
+        [self.connectedDeviceButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
+        [self clickPhone:self.phoneButton];
     }
 }
 
@@ -143,6 +165,11 @@
     } else {
         [self clickVerifyAndApply:self.verifyAndApplyButton];
     }
+#ifndef kIsTelinkCloudSigMeshLib
+    NSString *binString = [NSUserDefaults.standardUserDefaults valueForKey:kDistributorBinString];
+    self.currentBinString = binString;
+    [self refreshBinFileUI];
+#endif
     NSMutableArray <NSNumber *>*mutableList = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUpdateNodeAddresses]];
     [self continueFirmwareUpdateWithDeviceAddresses:mutableList];
 }
@@ -159,6 +186,49 @@
         }
     }
     [weakSelf.tableView reloadData];
+#ifdef kIsTelinkCloudSigMeshLib
+    // 云端APP不可OTA到不同的PID的Bin文件
+    NSArray *selectArray = [NSArray arrayWithArray:self.selectItemArray];
+    NSMutableArray <NSNumber *>*pidArray = [NSMutableArray array];
+    for (SigNodeModel *node in selectArray) {
+        if (![pidArray containsObject:@([LibTools uint16From16String:node.pid])]) {
+            [pidArray addObject:@([LibTools uint16From16String:node.pid])];
+        }
+    }
+    if (pidArray.count != 1) {
+        [self showTips:@"Please choose the device with the same productId."];
+        return;
+    }
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        [self getCloudVersionInfoWithResultBlock:^(id  _Nullable result, NSError * _Nullable err) {
+            dispatch_semaphore_signal(semaphore);
+        }];
+        dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+        NSData *data = [self loadBinFileWithCloudVersionInfoModel:self.currentVersionInfo];
+        TelinkLogVerbose(@"选中的bin文件为%@", self.currentVersionInfo.name);
+        if (data == nil || data.length == 0) {
+            [self showTips:@"APP can't load this Bin file."];
+            return;
+        }
+        MeshOTAManager.share.otaData = data;
+    }];
+#else
+    if (self.currentBinString == nil || self.currentBinString.length == 0) {
+        [self showTips:@"Please choose the bin file for mesh OTA."];
+        return;
+    }
+    TelinkLogVerbose(@"选中的bin文件为%@",self.currentBinString);
+    NSData *data = [OTAFileSource.share getDataWithBinName:self.currentBinString];
+    if (data == nil || data.length == 0) {
+        [self showTips:@"APP can't load this Bin file."];
+        return;
+    }
+    MeshOTAManager.share.otaData = data;
+#endif
+
     MeshOTAManager.share.needCheckVersionAfterApply = YES;
     [MeshOTAManager.share continueFirmwareUpdateWithDeviceAddresses:addresses advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
         [weakSelf showAdvDistributionProgressHandle:responseMessage];
@@ -187,12 +257,12 @@
 
 - (void)updateInitiatorProgress:(float)progress {
     self.initiatorProgressView.progress = progress;
-    self.initiatorProgressLabel.text = progress == 0 ? @"Initiator Progress:" : [NSString stringWithFormat:@"Initiator Progress: %d%%",(int)(progress*100)];
+    self.initiatorProgressLabel.text = progress == 0 ? @"Initiate Progress:" : [NSString stringWithFormat:@"Initiate Progress: %d%%",(int)(progress*100)];
 }
 
 - (void)updateDistributorProgress:(float)progress {
     self.distributorProgressView.progress = progress;
-    self.distributorProgressLabel.text = progress == 0 ? @"Distributor Progress:" : [NSString stringWithFormat:@"Distributor Progress: %d%%",(int)(progress*100)];
+    self.distributorProgressLabel.text = progress == 0 ? @"Distribute Progress:" : [NSString stringWithFormat:@"Distribute Progress: %d%%",(int)(progress*100)];
 }
 
 - (void)updateNodeModelVidWithAddress:(UInt16)address vid:(UInt16)vid{
@@ -201,7 +271,7 @@
     [self performSelectorOnMainThread:@selector(delayReloadTableViewView) withObject:nil waitUntilDone:YES];
 }
 
-//刷新UI需要间隔0.1秒，防止100个设备时出现界面卡顿。
+// Refreshing the UI requires an interval of 0.1 seconds to prevent interface stuttering when there are 100 devices.
 - (void)delayReloadTableViewView {
     if (!self.needDelayReloadData) {
         self.needDelayReloadData = YES;
@@ -239,6 +309,7 @@
                 [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorBinString];
                 [[NSUserDefaults standardUserDefaults] synchronize];
             }];
         }]];
@@ -254,14 +325,6 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-}
-
-- (void)viewWillDisappear:(BOOL)animated{
-    [super viewWillDisappear:animated];
-//    //界面可手动返回的情况，需要手动调用stopMeshOTA
-//    if (MeshOTAManager.share.isMeshOTAing) {
-//        [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:nil];
-//    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated{
@@ -283,6 +346,12 @@
 }
 
 - (IBAction)clickConnectedDevice:(UIButton *)sender {
+    SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
+    SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+    if (modelId == nil) {
+        [self showTips:@"The current directly connected node does not support serving as a distributor role."];
+        return;
+    }
     sender.selected = YES;
     self.phoneButton.selected = !sender.selected;
     self.policyLabel.hidden = NO;
@@ -302,7 +371,59 @@
     self.verifyAndApplyLabel.hidden = YES;
 }
 
+#ifdef kIsTelinkCloudSigMeshLib
+- (void)getCloudVersionInfoWithResultBlock:(MyBlock)block {
+    if (self.selectItemArray.count > 0) {
+        SigNodeModel *node = self.selectItemArray.firstObject;
+        __weak typeof(self) weakSelf = self;
+        [TelinkHttpTool getLatestVersionInfoRequestWithProductId:[LibTools uint16From16String:node.pid] didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+            if (err) {
+                [weakSelf showTips:[NSString stringWithFormat:@"%@", err.localizedDescription]];
+            } else {
+                NSDictionary *dic = (NSDictionary *)result;
+                int code = [dic[@"code"] intValue];
+                if (code == 200) {
+                    TelinkLogInfo(@"getLatestVersionInfo successful! dic=%@", dic);
+                    NSDictionary *dict = dic[@"data"];
+                    if (dict.count > 0) {
+                        CloudVersionInfoModel *version = [[CloudVersionInfoModel alloc] init];
+                        [version setDictionaryToCloudVersionInfoModel:dict];
+                        weakSelf.currentVersionInfo = version;
+                    }
+                } else {
+                    NSString *msg = [NSString stringWithFormat:@"getLatestVersionInfo errorCode = %d, message = %@", code, dic[@"message"]];
+                    [weakSelf showTips:msg];
+                }
+            }
+            if (block) {
+                block(result, err);
+            }
+        }];
+    }
+}
+#else
+- (void)refreshBinFileUI {
+    if (self.currentBinString == nil || self.currentBinString.length == 0) {
+        [self.binFileNameButton setTitle:@"file error" forState:UIControlStateNormal];
+        self.binFileVersionLabel.text = @"bin version: null";
+    } else {
+        [self.binFileNameButton setTitle:self.currentBinString forState:UIControlStateNormal];
+        NSData *data = [OTAFileSource.share getDataWithBinName:self.currentBinString];
+        if (data && data.length) {
+            UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
+            vid = CFSwapInt16HostToBig(vid);
+            self.binFileVersionLabel.text = [NSString stringWithFormat:@"bin version: pid-0x%X vid-0x%X", [OTAFileSource.share getPidWithOTAData:data], vid];//vid显示两个字节的ASCII
+        } else {
+            self.binFileVersionLabel.text = @"read bin fail!";
+        }
+    }
+}
+#endif
+
 - (IBAction)clickGetFwInfo:(UIButton *)sender {
+#ifdef kIsTelinkCloudSigMeshLib
+    [self getCloudVersionInfoWithResultBlock:nil];
+#endif
     if (SigMeshLib.share.isBusyNow) {
         TelinkLogInfo(@"send request for GetFwInfo, but busy now.");
         [self showTips:@"busy now."];
@@ -310,7 +431,6 @@
     }
     __weak typeof(self) weakSelf = self;
     [self.allItemVIDDict removeAllObjects];
-
     //2.firmwareUpdateInformationGet，该消息在modelID：kSigModel_FirmwareUpdateServer_ID里面。
     UInt16 modelIdentifier = kSigModel_FirmwareUpdateServer_ID;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
@@ -325,7 +445,6 @@
             [LPNArray addObject:model];
         }
     }
-
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
@@ -346,6 +465,7 @@
                         vid = CFSwapInt16HostToBig(vid);
                         TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                         [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+                        weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -355,7 +475,6 @@
             //Most provide 4 seconds
             dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
         }
-
         if (LPNArray && LPNArray.count) {
             for (SigNodeModel *model in LPNArray) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
@@ -394,173 +513,67 @@
     }
 }
 
-#pragma mark - UITableViewDataSource
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return section == 0 ? self.allItemArray.count+1 : self.binStringArray.count;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(MeshOTAItemCell.class) forIndexPath:indexPath];
-    [self configureCell:cell forRowAtIndexPath:indexPath];
-
-    return cell;
-}
-
-- (void)configureCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
-    MeshOTAItemCell *itemCell = (MeshOTAItemCell *)cell;
+- (IBAction)clickSelectDevicesButton:(UIButton *)sender {
+#ifndef kIsTelinkCloudSigMeshLib
+    DeviceSelectVC *vc = [[DeviceSelectVC alloc] init];
+#else
+    SelectUpdateDeviceVC *vc = [[SelectUpdateDeviceVC alloc] init];
+#endif    
     __weak typeof(self) weakSelf = self;
-
-    if (indexPath.section == 0) {
-        if (indexPath.row == 0) {
-            itemCell.titleLabel.text = @"choose all";
-            itemCell.selectButton.selected = self.selectItemArray.count == self.allItemArray.count;
-            [itemCell.selectButton addAction:^(UIButton *button) {
-                if (!button.selected) {
-                    NSArray *allItemArray = [NSArray arrayWithArray:weakSelf.allItemArray];
-                    NSMutableArray *selectNodes = [NSMutableArray array];
-                    NSMutableArray *selectAddresses = [NSMutableArray array];
-                    for (SigNodeModel *model in allItemArray) {
-                        if (model.state != DeviceStateOutOfLine || model.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
-                            [selectNodes addObject:model];
-                            [selectAddresses addObject:@(model.address)];
-                        }
-                    }
-                    weakSelf.selectItemArray = selectNodes;
-                    weakSelf.selectItemAddressArray = selectAddresses;
-                } else {
-                    [weakSelf.selectItemArray removeAllObjects];
-                    [weakSelf.selectItemAddressArray removeAllObjects];
-                }
-                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-            }];
-        }else{
-            SigNodeModel *model = self.allItemArray[indexPath.row-1];
-            NSNumber *address = self.allItemAddressArray[indexPath.row-1];
-            int vid = 0;
-            if ([self.allItemVIDDict.allKeys containsObject:address]) {
-                vid = [self.allItemVIDDict[address] intValue];
-            }
-            UInt16 modelIdentifier = kSigModel_BLOBTransferServer_ID;
-            NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
-            if (addressArray && addressArray.count > 0) {
-                NSString *str = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];
-                if ([self.selectItemAddressArray containsObject:@(model.address)]) {
-                    SigUpdatingNodeEntryModel *nodeEntryModel = [self getSigUpdatingNodeEntryModelWithAddress:model.address];
-                    if (nodeEntryModel != nil) {
-                        str = [NSString stringWithFormat:@"%@ %@",str,[self getDetailStringOfSigUpdatingNodeEntryModel:nodeEntryModel]];
-                    } else if ([self.failAddresses containsObject:@(model.address)]) {
-                        str = [NSString stringWithFormat:@"%@ %@",str,@"fail"];
-                    } else if ([self.successAddresses containsObject:@(model.address)]) {
-                        str = [NSString stringWithFormat:@"%@ %@",str,@"success"];
-                    }
-                }
-                itemCell.titleLabel.text = str;
-            } else {
-                vid = [LibTools uint16From16String:model.vid];
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X Not support",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];//显示两个字节的ASCII
-            }
-
-            if (self.selectItemAddressArray.count > 0) {
-                itemCell.selectButton.selected = [self.selectItemAddressArray containsObject:address];
-            } else {
-                itemCell.selectButton.selected = NO;
-            }
-            [itemCell.selectButton addAction:^(UIButton *button) {
-                if (model.state != DeviceStateOutOfLine || model.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
-                    if ([weakSelf.selectItemAddressArray containsObject:address]) {
-                        [weakSelf.selectItemArray removeObject:model];
-                        [weakSelf.selectItemAddressArray removeObject:address];
-                    }else{
-                        [weakSelf.selectItemArray addObject:model];
-                        [weakSelf.selectItemAddressArray addObject:address];
-                    }
-                    [weakSelf.tableView reloadData];
-                } else {
-                    [weakSelf showTips:@"This node is outline."];
-                    return;
-                }
-            }];
-        }
-    } else {
-        NSString *binString = self.binStringArray[indexPath.row];
-        NSData *data = [OTAFileSource.share getDataWithBinName:binString];
-        if (data && data.length) {
-            UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-            vid = CFSwapInt16HostToBig(vid);
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:0x%X",binString,[OTAFileSource.share getPidWithOTAData:data], vid];//vid显示两个字节的ASCII
-        } else {
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
-        }
-        itemCell.selectButton.selected = indexPath.row == _binIndex;
-        [itemCell.selectButton addAction:^(UIButton *button) {
-            weakSelf.binIndex = indexPath.row;
-            [weakSelf checkPID];
-            [weakSelf.tableView reloadData];
-        }];
-    }
+    [vc setBackSelectNodes:^(NSArray<SigNodeModel *> * _Nonnull nodes) {
+        weakSelf.selectItemArray = [NSMutableArray arrayWithArray:nodes];
+        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+        [weakSelf clickGetFwInfo:weakSelf.getFWInfoButton];
+    }];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    if (section == 0) {
-        return @"Device list";
-    } else {
-        return @"OTA file";
-    }
+- (IBAction)clickSelectBinFileButton:(UIButton *)sender {
+#ifndef kIsTelinkCloudSigMeshLib
+    BinFileChooseVC *vc = [[BinFileChooseVC alloc] init];
+    __weak typeof(self) weakSelf = self;
+    [vc setBackSelectBinString:^(NSString * _Nonnull binString) {
+        weakSelf.currentBinString = binString;
+        [weakSelf refreshBinFileUI];
+    }];
+    [self.navigationController pushViewController:vc animated:YES];
+#endif
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 44;
+#pragma mark - UITableViewDataSource
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.selectItemArray.count;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.section == 0) {
-        if (indexPath.row == 0) {
-            __weak typeof(self) weakSelf = self;
-            MeshOTAItemCell *itemCell = [tableView cellForRowAtIndexPath:indexPath];
-            if (!itemCell.selectButton.selected) {
-                NSArray *allItemArray = [NSArray arrayWithArray:weakSelf.allItemArray];
-                NSMutableArray *selectNodes = [NSMutableArray array];
-                NSMutableArray *selectAddresses = [NSMutableArray array];
-                for (SigNodeModel *model in allItemArray) {
-                    if (model.state != DeviceStateOutOfLine || model.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
-                        [selectNodes addObject:model];
-                        [selectAddresses addObject:@(model.address)];
-                    }
-                }
-                weakSelf.selectItemArray = selectNodes;
-                weakSelf.selectItemAddressArray = selectAddresses;
-            } else {
-                [weakSelf.selectItemArray removeAllObjects];
-                [weakSelf.selectItemAddressArray removeAllObjects];
-            }
-        }else{
-            SigNodeModel *model = self.allItemArray[indexPath.row-1];
-            NSNumber *address = self.allItemAddressArray[indexPath.row-1];
-            if (model.state != DeviceStateOutOfLine || model.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
-                if ([self.selectItemAddressArray containsObject:address]) {
-                    [self.selectItemArray removeObject:model];
-                    [self.selectItemAddressArray removeObject:address];
-                }else{
-                    [self.selectItemArray addObject:model];
-                    [self.selectItemAddressArray addObject:address];
-                }
-            } else {
-                [self showTips:@"This node is outline."];
-                return;
-            }
-        }
-        [self.tableView reloadData];
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    MeshOTACell *cell = (MeshOTACell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(MeshOTACell.class) forIndexPath:indexPath];
+    SigNodeModel *node = self.selectItemArray[indexPath.row];
+    [cell setModel:node];
+    if ([self.allNodeFirmwareUpdateInformationStatusDict.allKeys containsObject:@(node.address)]) {
+        SigFirmwareUpdateInformationStatus *status = self.allNodeFirmwareUpdateInformationStatusDict[@(node.address)];
+        cell.firmwareLabel.text = [NSString stringWithFormat:@"FwId:%@", status.firmwareInformationList.firstObject.getFirmwareIDString];
     } else {
-        if (_binIndex != indexPath.row) {
-            _binIndex = indexPath.row;
-            [self checkPID];
-            [self.tableView reloadData];
-        }
+        cell.firmwareLabel.text = @"FwId:NULL";
     }
+    cell.stateImage.image = [UIImage imageNamed:@"ic_mesh_ota"];
+    if ([self.successAddresses containsObject:@(node.address)]) {
+        cell.stateImage.image = [UIImage imageNamed:@"ic_mesh_ota_complete"];
+    } else if ([self.failAddresses containsObject:@(node.address)]) {
+        cell.stateImage.image = [UIImage imageNamed:@"ic_mesh_ota_fail"];
+    }
+    NSString *string = @"state: INIT\n";
+    SigUpdatingNodeEntryModel *nodeEntryModel = [self getSigUpdatingNodeEntryModelWithAddress:node.address];
+    if (nodeEntryModel) {
+        string = [NSString stringWithFormat:@"state: %@\n", [self getDetailStringOfSigUpdatingNodeEntryModel:nodeEntryModel]];
+    }
+    if ([MeshOTAManager.share.additionalInformationDictionary.allKeys containsObject:@(node.address)]) {
+        string = [string stringByAppendingFormat:@"additional: %@", [SigHelper.share getDetailOfSigFirmwareUpdateAdditionalInformationStatusType:[MeshOTAManager.share.additionalInformationDictionary[@(node.address)] intValue]]];
+    } else {
+        string = [string stringByAppendingString:@"additional: NULL"];
+    }
+    cell.stateLabel.text = string;
+    return cell;
 }
 
 - (void)updateSigUpdatingNodeEntryModel:(SigUpdatingNodeEntryModel *)model {
@@ -584,9 +597,12 @@
 }
 
 - (void)checkPID {
-    NSString *binString = self.binStringArray[_binIndex];
-    NSData *data = [OTAFileSource.share getDataWithBinName:binString];
+#ifdef kIsTelinkCloudSigMeshLib
+    UInt16 pid = self.currentVersionInfo.productId;
+#else
+    NSData *data = [OTAFileSource.share getDataWithBinName:self.currentBinString];
     UInt16 pid = [OTAFileSource.share getPidWithOTAData:data];
+#endif
 
     //如果存在非当前PID的设备选中了要进行MeshOTA，则全部取消设备的选中，让客户重新选择。
     BOOL chooseDifferent = NO;
@@ -613,13 +629,29 @@
         [self showTips:@"Please choose some devices for mesh OTA."];
         return;
     }
-    if (self.binIndex < 0) {
+#ifdef kIsTelinkCloudSigMeshLib
+    // 云端APP不可OTA到不同的PID的Bin文件
+    NSArray *selectArray = [NSArray arrayWithArray:self.selectItemArray];
+    NSMutableArray <NSNumber *>*pidArray = [NSMutableArray array];
+    for (SigNodeModel *node in selectArray) {
+        if (![pidArray containsObject:@([LibTools uint16From16String:node.pid])]) {
+            [pidArray addObject:@([LibTools uint16From16String:node.pid])];
+        }
+    }
+    if (pidArray.count != 1) {
+        [self showTips:@"Please choose the device with the same productId."];
+        return;
+    }
+    NSData *data = [self loadBinFileWithCloudVersionInfoModel:self.currentVersionInfo];
+    TelinkLogVerbose(@"选中的bin文件为%@", self.currentVersionInfo.name);
+#else
+    if (self.currentBinString == nil || self.currentBinString.length == 0) {
         [self showTips:@"Please choose the bin file for mesh OTA."];
         return;
     }
-
-    TelinkLogVerbose(@"选中的bin文件为%@",self.binStringArray[self.binIndex]);
-    NSData *data = [OTAFileSource.share getDataWithBinName:self.binStringArray[self.binIndex]];
+    TelinkLogVerbose(@"选中的bin文件为%@",self.currentBinString);
+    NSData *data = [OTAFileSource.share getDataWithBinName:self.currentBinString];
+#endif
     if (data == nil || data.length == 0) {
         [self showTips:@"APP can't load this Bin file."];
         return;
@@ -629,7 +661,6 @@
     for (SigNodeModel *model in selectItemArray) {
         [tem addObject:@(model.address)];
     }
-
     NSData *incomingFirmwareMetadata = nil;
     if (data && data.length >= 6) {
         //incomingFirmwareMetadata默认为8个字节的0。需要bin文件里面从index为2开始取4个字节的数据，再补充4个字节的0。
@@ -671,8 +702,14 @@
 
     [[NSUserDefaults standardUserDefaults] setValue:tem forKey:kUpdateNodeAddresses];
     [[NSUserDefaults standardUserDefaults] setValue:@(MeshOTAManager.share.updatePolicy) forKey:kDistributorPolicy];
+#ifndef kIsTelinkCloudSigMeshLib
+    [[NSUserDefaults standardUserDefaults] setValue:self.currentBinString forKey:kDistributorBinString];
+#endif
     [[NSUserDefaults standardUserDefaults] synchronize];
 
+    [MeshOTAManager.share setFirmwareUpdateFirmwareMetadataCheckSuccessHandle:^(NSDictionary *dict) {
+        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    }];
     [MeshOTAManager.share startFirmwareUpdateWithDeviceAddresses:tem otaData:data incomingFirmwareMetadata:incomingFirmwareMetadata gattDistributionProgressHandle:^(NSInteger progress) {
         [weakSelf showGattDistributionProgressHandle:progress];
     } advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
@@ -684,6 +721,24 @@
     }];
     [self configReconnectUI];
 }
+
+#ifdef kIsTelinkCloudSigMeshLib
+/// 从沙盒里面读取bin文件，nil则本地没有该文件
+- (NSData *)loadBinFileWithCloudVersionInfoModel:(CloudVersionInfoModel *)versionInfo {
+    NSData *data = nil;
+    NSArray *array = [versionInfo.binFilePath componentsSeparatedByString:@"\\"]; //从字符/中分隔成多个元素的数组
+    NSString *fileName = [array lastObject];
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *path = [paths objectAtIndex:0];
+    NSString *filePath = [path stringByAppendingPathComponent:fileName];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    BOOL result = [fileManager fileExistsAtPath:filePath];
+    if (result) {
+        data = [[NSFileHandle fileHandleForReadingAtPath:filePath] readDataToEndOfFile];
+    }
+    return data;
+}
+#endif
 
 - (void)showGattDistributionProgressHandle:(NSInteger)progress {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -711,11 +766,11 @@
     NSString *tip = [NSString stringWithFormat:@"Mesh ota finish, success:%ld,fail:%ld", (long)successAddresses.count, (long)failAddresses.count];
     self.successAddresses = [NSMutableArray arrayWithArray:successAddresses];
     self.failAddresses = [NSMutableArray arrayWithArray:failAddresses];
-    [self.receiversList removeAllObjects];
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorBinString];
         [[NSUserDefaults standardUserDefaults] synchronize];
         [self userAbled:YES];
         [ShowTipsHandle.share delayHidden:0];
@@ -738,16 +793,16 @@
         [tem addObject:@(model.address)];
     }
 
-    NSString *tip = [NSString stringWithFormat:@"Mesh ota fail, error = %@", error];
+    NSString *tip = [NSString stringWithFormat:@"Mesh ota fail, error string = %@, error code = %ld", error.domain, (long)error.code];
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorBinString];
         [[NSUserDefaults standardUserDefaults] synchronize];
         [self userAbled:YES];
         [ShowTipsHandle.share delayHidden:0];
         [self showTips:tip];
-        [self.receiversList removeAllObjects];
         self.failAddresses = [NSMutableArray arrayWithArray:tem];
         [self.tableView reloadData];
     });

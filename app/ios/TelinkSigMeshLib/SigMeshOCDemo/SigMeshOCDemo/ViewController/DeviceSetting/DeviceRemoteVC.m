@@ -77,14 +77,18 @@
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             if (successful) {
                 [ConnectTools.share startConnectToolsWithNodeList:@[weakSelf.model] timeout:20 Complete:^(BOOL successful) {
-                    if (successful) {
-                        [weakSelf.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
-                    } else {
-                        [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
-                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (successful) {
+                            [weakSelf.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
+                        } else {
+                            [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                        }
+                    });
                 }];
             } else {
-                [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                });
             }
         }];
     }
@@ -105,8 +109,11 @@
         model = ele.models.firstObject;
     }
     UInt16 pubAdr = 0;
-    if (model) {
+    if (model && model.publish) {
         pubAdr = [LibTools uint16From16String:model.publish.address];
+    } else if (indexPath.row < SigDataSource.share.groups.count) {
+        //默认值，按照Group来顺序设置
+        pubAdr = SigDataSource.share.groups[indexPath.row].intAddress;
     }
     cell.eleAdrTF.text = [NSString stringWithFormat:@"%04X",eleAdr];
     cell.modelTF.text = model.modelId;
@@ -129,7 +136,7 @@
         //2.判断model合法性
         UInt16 newModelID;
         UInt16 newCompanyIdentifier = model.getIntCompanyIdentifier;
-        if ([weakSelf validateString:cell.modelTF.text.removeAllSapceAndNewlines] && cell.modelTF.text.length <= 8) {
+        if ([LibTools validateHex:cell.modelTF.text.removeAllSpaceAndNewlines] && cell.modelTF.text.length <= 8) {
             UInt32 tem = [LibTools uint32From16String:cell.modelTF.text];
             SigModelIDModel *temModel =  [self.model getModelIDModelWithModelID:tem andElementAddress:eleAdr];
             if (temModel) {
@@ -150,7 +157,7 @@
 
         //3.判断pubAdr合法性
         UInt16 newPubAdr;
-        if ([weakSelf validateString:cell.pubAdrTF.text.removeAllSapceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
+        if ([LibTools validateHex:cell.pubAdrTF.text.removeAllSpaceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
             newPubAdr = [LibTools uint16From16String:cell.pubAdrTF.text];
         } else {
             [self showTips:@"Please enter the correct pubAdr!"];
@@ -192,12 +199,6 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 176.0;
-}
-
-- (BOOL)validateString:(NSString *)str{
-    NSString *strRegex = @"^[0-9a-fA-F]{0,}$";
-    NSPredicate *strPredicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",strRegex];
-    return [strPredicate evaluateWithObject:str];
 }
 
 @end

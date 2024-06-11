@@ -22,8 +22,9 @@
  *******************************************************************************************************/
 
 #import "DeviceChooseKeyVC.h"
-#import "DeviceKeyCell.h"
 #import "UIViewController+Message.h"
+#import "NetKeyCell.h"
+#import "AppKeyCell.h"
 
 @interface DeviceChooseKeyVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -38,6 +39,7 @@
     [super viewDidLoad];
 
     if (self.backNetKeyModel) {
+        [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(NetKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(NetKeyCell.class)];
         self.title = @"Choose add NetKey";
         self.netkeyArray = [NSMutableArray array];
         for (SigNetkeyModel *netKey in SigDataSource.share.netKeys) {
@@ -54,6 +56,7 @@
         }
     }
     if (self.backAppKeyModel) {
+        [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(AppKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(AppKeyCell.class)];
         self.title = @"Choose add AppKey";
         self.appkeyArray = [NSMutableArray array];
         for (SigAppkeyModel *appKey in SigDataSource.share.appKeys) {
@@ -74,10 +77,6 @@
             }
         }
     }
-
-    UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(DeviceKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(DeviceKeyCell.class)];
 }
 
 #pragma mark - UITableViewDataSource
@@ -92,14 +91,19 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    DeviceKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(DeviceKeyCell.class) forIndexPath:indexPath];
     if (self.backNetKeyModel) {
-        [cell setNetKeyModel:self.netkeyArray[indexPath.row]];
+        NetKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(NetKeyCell.class) forIndexPath:indexPath];
+        [cell setModel:self.netkeyArray[indexPath.row]];
+        cell.editButton.hidden = YES;
+        return cell;
     }
     if (self.backAppKeyModel) {
-        [cell setAppKeyModel:self.appkeyArray[indexPath.row]];
+        AppKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(AppKeyCell.class) forIndexPath:indexPath];
+        [cell setModel:self.appkeyArray[indexPath.row]];
+        cell.editButton.hidden = YES;
+        return cell;
     }
-    return cell;
+    return [[UITableViewCell alloc] init];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -133,10 +137,6 @@
             }];
         }
     }
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
 }
 
 @end

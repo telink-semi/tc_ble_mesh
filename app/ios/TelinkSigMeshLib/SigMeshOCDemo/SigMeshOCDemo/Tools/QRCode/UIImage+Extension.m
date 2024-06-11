@@ -75,4 +75,32 @@
     return [UIImage createQRImageWithData:[string dataUsingEncoding:NSUTF8StringEncoding] rate:rate];
 }
 
+- (UIImage *)imageRotatedOnDegrees:(CGFloat)degrees {
+    // Follow ing code can only rotate images on 90, 180, 270.. degrees.
+    CGFloat roundedDegrees = (CGFloat)(round(degrees / 90.0) * 90.0);
+    BOOL sameOrientationType = ((NSInteger)roundedDegrees) % 180 == 0;
+    CGFloat radians = M_PI * roundedDegrees / 180.0;
+    CGSize newSize = sameOrientationType ? self.size : CGSizeMake(self.size.height, self.size.width);
+    
+    UIGraphicsBeginImageContext(newSize);
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    CGImageRef cgImage = self.CGImage;
+    if (ctx == NULL || cgImage == NULL) {
+        UIGraphicsEndImageContext();
+        return self;
+    }
+    
+    CGContextTranslateCTM(ctx, newSize.width / 2.0, newSize.height / 2.0);
+    CGContextRotateCTM(ctx, radians);
+    CGContextScaleCTM(ctx, 1, -1);
+    CGPoint origin = CGPointMake(-(self.size.width / 2.0), -(self.size.height / 2.0));
+    CGRect rect = CGRectZero;
+    rect.origin = origin;
+    rect.size = self.size;
+    CGContextDrawImage(ctx, rect, cgImage);
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return image ?: self;
+}
+
 @end

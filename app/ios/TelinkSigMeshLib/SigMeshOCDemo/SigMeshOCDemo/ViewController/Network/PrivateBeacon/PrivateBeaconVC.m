@@ -92,23 +92,23 @@
     cell.secondTitleLabel.text = self.dataArray[indexPath.row * 2 + 1];
     cell.firstSwitch.on = NO;
     cell.secondSwitch.on = NO;
-    if (SigDataSource.share.unicastAddressOfConnected != 0) {
-        if (indexPath.row == 0) {
-            cell.firstSwitch.on = [SigDataSource.share getLocalConfigGattProxyStateOfUnicastAddress:SigDataSource.share.unicastAddressOfConnected];
-            cell.secondSwitch.on = [SigDataSource.share getLocalPrivateGattProxyStateOfUnicastAddress:SigDataSource.share.unicastAddressOfConnected];
-            [cell.firstSwitch addTarget:self action:@selector(clickConfigGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
-            [cell.secondSwitch addTarget:self action:@selector(clickPrivateGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
-        } else if (indexPath.row == 1) {
-            cell.firstSwitch.on = _nodeIdentityEnable;
-            cell.secondSwitch.on = _privateNodeIdentityEnable;
-            [cell.firstSwitch addTarget:self action:@selector(clickConfigNodeIdentitySwitch:) forControlEvents:UIControlEventValueChanged];
-            [cell.secondSwitch addTarget:self action:@selector(clickPrivateNodeIdentitySwitch:) forControlEvents:UIControlEventValueChanged];
-        } else if (indexPath.row == 2) {
-            cell.firstSwitch.on = [SigDataSource.share getLocalConfigBeaconStateOfUnicastAddress:SigDataSource.share.unicastAddressOfConnected];
-            cell.secondSwitch.on = [SigDataSource.share getLocalPrivateBeaconStateOfUnicastAddress:SigDataSource.share.unicastAddressOfConnected];
-            [cell.firstSwitch addTarget:self action:@selector(clickConfigBeaconSwitch:) forControlEvents:UIControlEventValueChanged];
-            [cell.secondSwitch addTarget:self action:@selector(clickPrivateBeaconSwitch:) forControlEvents:UIControlEventValueChanged];
-        }
+    [cell.firstSwitch removeTarget:nil action:nil forControlEvents:UIControlEventValueChanged];
+    [cell.secondSwitch removeTarget:nil action:nil forControlEvents:UIControlEventValueChanged];
+    if (indexPath.row == 0) {
+        cell.firstSwitch.on = [SigDataSource.share getLocalConfigGattProxyStateOfUnicastAddress:self.model.address];
+        cell.secondSwitch.on = [SigDataSource.share getLocalPrivateGattProxyStateOfUnicastAddress:self.model.address];
+        [cell.firstSwitch addTarget:self action:@selector(clickConfigGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
+        [cell.secondSwitch addTarget:self action:@selector(clickPrivateGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
+    } else if (indexPath.row == 1) {
+        cell.firstSwitch.on = _nodeIdentityEnable;
+        cell.secondSwitch.on = _privateNodeIdentityEnable;
+        [cell.firstSwitch addTarget:self action:@selector(clickConfigNodeIdentitySwitch:) forControlEvents:UIControlEventValueChanged];
+        [cell.secondSwitch addTarget:self action:@selector(clickPrivateNodeIdentitySwitch:) forControlEvents:UIControlEventValueChanged];
+    } else if (indexPath.row == 2) {
+        cell.firstSwitch.on = [SigDataSource.share getLocalConfigBeaconStateOfUnicastAddress:self.model.address];
+        cell.secondSwitch.on = [SigDataSource.share getLocalPrivateBeaconStateOfUnicastAddress:self.model.address];
+        [cell.firstSwitch addTarget:self action:@selector(clickConfigBeaconSwitch:) forControlEvents:UIControlEventValueChanged];
+        [cell.secondSwitch addTarget:self action:@selector(clickPrivateBeaconSwitch:) forControlEvents:UIControlEventValueChanged];
     }
     return cell;
 }
@@ -121,12 +121,12 @@
         return;
     }
     //1. Private GATT Proxy
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     SigPrivateGattProxyState privateGattProxy = switchButton.isOn ? SigPrivateGattProxyState_enable : SigPrivateGattProxyState_disable;
     [SDKLibCommand privateGattProxySetWithPrivateGattProxy:privateGattProxy destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
-        if (source == SigDataSource.share.unicastAddressOfConnected && responseMessage.privateGattProxy == privateGattProxy) {
+        if (source == des && responseMessage.privateGattProxy == privateGattProxy) {
             result = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -150,7 +150,7 @@
         return;
     }
     //2. Config GATT Proxy
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     SigNodeGATTProxyState nodeGATTProxyState = switchButton.isOn ? SigNodeGATTProxyState_enabled : SigNodeGATTProxyState_notEnabled;
@@ -179,9 +179,16 @@
         return;
     }
     //3. Private Node Identity
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
+    if (switchButton.on) {
+        [self startTimerForPrivateNodeIdentity];
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(privateNodeIdentityTimerAction) object:nil];
+        });
+    }
     SigPrivateNodeIdentityState privateIdentity = switchButton.isOn ? SigPrivateNodeIdentityState_enabled : SigPrivateNodeIdentityState_notEnabled;
     //1. Private Node Identity
     [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index privateIdentity:privateIdentity destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
@@ -208,7 +215,7 @@
         return;
     }
     //4. Config Node Identity
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     if (switchButton.on) {
@@ -243,16 +250,9 @@
         return;
     }
     //5. Private Beacon
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
-    if (switchButton.on) {
-        [self startTimerForPrivateNodeIdentity];
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(privateNodeIdentityTimerAction) object:nil];
-        });
-    }
     SigPrivateBeaconState privateBeacon = switchButton.isOn ? SigPrivateBeaconState_enable : SigPrivateBeaconState_disable;
     [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeacon destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
         if (source == des && responseMessage.privateBeacon == privateBeacon) {
@@ -279,7 +279,7 @@
         return;
     }
     //2. Config Beacon
-    UInt16 des = [SigDataSource.share unicastAddressOfConnected];
+    UInt16 des = self.model.address;
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     SigSecureNetworkBeaconState secureNetworkBeaconState = switchButton.isOn ? SigSecureNetworkBeaconState_open : SigSecureNetworkBeaconState_close;

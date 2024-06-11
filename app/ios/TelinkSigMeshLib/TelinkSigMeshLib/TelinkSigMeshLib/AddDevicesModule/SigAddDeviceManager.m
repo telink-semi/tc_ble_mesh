@@ -289,6 +289,8 @@ typedef enum : NSUInteger {
         }
         return;
     }
+    self.startConnectBlock = configModel.startConnectBlock;
+    self.startProvisionBlock = configModel.startProvisionBlock;
     [self startAddDeviceWithNetworkKey:configModel.networkKey netkeyIndex:configModel.netkeyIndex appkeyModel:appkeyModel peripheral:configModel.peripheral staticOOBData:configModel.staticOOBData keyBindType:configModel.keyBindType productID:configModel.productID cpsData:configModel.cpsData capabilitiesResponse:capabilitiesResponse provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 /*
@@ -351,6 +353,9 @@ typedef enum : NSUInteger {
         } else {
             TelinkLogInfo(@"start keyBind.");
             weakSelf.addStatus = SigAddStatusKeyBinding;
+#ifdef kIsTelinkCloudSigMeshLib
+            KeyBindType currentKeyBindType = weakSelf.keyBindType;
+#else
             KeyBindType currentKeyBindType = KeyBindType_Normal;
             if (weakSelf.keyBindType == KeyBindType_Fast) {
                 if (weakSelf.fastKeybindCpsData && weakSelf.fastKeybindCpsData.length > 0) {
@@ -365,6 +370,7 @@ typedef enum : NSUInteger {
                     }
                 }
             }
+#endif
             [SigKeyBindManager.share keyBind:weakSelf.unicastAddress appkeyModel:weakSelf.appkeyModel keyBindType:currentKeyBindType productID:weakSelf.fastKeybindProductID cpsData:weakSelf.fastKeybindCpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (weakSelf.keyBindSuccessBlock) {
                     weakSelf.keyBindSuccessBlock(weakSelf.curPeripheral.identifier.UUIDString, address);

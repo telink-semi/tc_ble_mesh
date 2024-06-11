@@ -3674,7 +3674,7 @@
  * @note    6.3.6.1 Light LC Property Get, seeAlso: Mesh_Model_Specification v1.0.pdf  (page.232)
  */
 + (SigMessageHandle *)lightLCPropertyGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigLightLCPropertyGet *message = [[SigLightLCPropertyGet alloc] init];
+    SigLightLCPropertyGet *message = [[SigLightLCPropertyGet alloc] initWithLightLCPropertyID:propertyID];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseLightLCPropertyStatusCallBack = successCallback;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
@@ -3726,16 +3726,16 @@
  * @brief   The Set Filter Type message can be sent by a Proxy Client to change the proxy filter type and clear the proxy filter list.
  * @param   type    the unicastAddress of destination.
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.1 Set Filter Type, seeAlso: Mesh_v1.0.pdf  (page.263)
  */
-+ (void)setType:(SigProxyFilerType)type successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
++ (void)setType:(SigProxyFilerType)type successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback {
     SigSetFilterType *message = [[SigSetFilterType alloc] initWithType:type];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFilterStatusCallBack = successCallback;
-    command.resultCallback = failCallback;
+    command.resultCallback = finishCallback;
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
@@ -3743,16 +3743,18 @@
  * @brief   The Add Addresses to Filter message is sent by a Proxy Client to add destination addresses to the proxy filter list.
  * @param   addresses    List of addresses where N is the number of addresses in this message..
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.2 Add Addresses to Filter, seeAlso: Mesh_v1.0.pdf  (page.264)
  */
-+ (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
++ (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback {
     SigAddAddressesToFilter *message = [[SigAddAddressesToFilter alloc] initWithAddresses:addresses];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFilterStatusCallBack = successCallback;
-    command.resultCallback = failCallback;
+    command.resultCallback = finishCallback;
+    command.retryCount = SigDataSource.share.defaultRetryCount;
+    command.responseMaxCount = 1;
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
@@ -3760,16 +3762,16 @@
  * @brief   The Remove Addresses from Filter message is sent by a Proxy Client to remove destination addresses from the proxy filter list.
  * @param   addresses    List of addresses where N is the number of addresses in this message..
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    6.5.3 Remove Addresses from Filter, seeAlso: Mesh_v1.0.pdf  (page.264)
  */
-+ (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
++ (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback {
     SigRemoveAddressesFromFilter *message = [[SigRemoveAddressesFromFilter alloc] initWithAddresses:addresses];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFilterStatusCallBack = successCallback;
-    command.resultCallback = failCallback;
+    command.resultCallback = finishCallback;
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
@@ -3777,10 +3779,10 @@
  * @brief   Adds all the addresses the Provisioner is subscribed to to the Proxy Filter.
  * @param   provisioner    the provisioner that need to set filter
  * @param   successCallback    callback when node response the status message.
- * @param   failCallback    Callback when command sending fails.
+ * @param   finishCallback    Callback when command sending finish.
  * @note    This API will auto call setFilterType+AddAddressList, seeAlso: Mesh_v1.0.pdf  (page.263)
  */
-+ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)failCallback {
++ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)finishCallback {
     SigNodeModel *node = provisioner.node;
     if (!node) {
         TelinkLogError(@"provisioner.node = nil.");
@@ -3868,30 +3870,31 @@
         }
         [NSThread sleepForTimeInterval:0.1];
         TelinkLogVerbose(@"filter addresses:%@",addresses);
-        [self setType:SigMeshLib.share.dataSource.filterModel.filterType successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        [weakSelf setType:SigMeshLib.share.dataSource.filterModel.filterType successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
             TelinkLogVerbose(@"filter type:%@",responseMessage);
-            //逻辑1.for循环每次只添加一个地址
-            //逻辑2.一次添加多个地址
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-//                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
-                    SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
-                    if (successCallback) {
-                        successCallback(source,destination,responseMessage);
-                    }
-                } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
-                    if (failCallback) {
-                        failCallback(error==nil,error);
-                    }
-                }];
-            });
-        } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 //            TelinkLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
             if (error != nil) {
-                if (failCallback) {
-                    failCallback(NO,error);
+                if (finishCallback) {
+                    finishCallback(NO, error);
                 }
+            } else {
+                //逻辑1.for循环每次只添加一个地址
+                //逻辑2.一次添加多个地址
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+    //                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
+                        SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
+                        if (successCallback) {
+                            successCallback(source,destination,responseMessage);
+                        }
+                    } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+    //                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
+                        if (finishCallback) {
+                            finishCallback(isResponseAll, error);
+                        }
+                    }];
+                });
             }
         }];
     }];
@@ -3958,7 +3961,7 @@
     if (model.vendorId) {
         message.opCode = (op << 16) | ((model.vendorId & 0xff) << 8) | (model.vendorId >> 8);
         //vendor的控制指令的tid特殊处理:添加tid在commandData里面tidPosition-1的位置。
-        if (model.tidPosition) {
+        if (model.tidPosition && model.commandData.length >= model.tidPosition) {
             NSMutableData *mData = [NSMutableData dataWithData:model.commandData];
             UInt8 tid = model.tid;
             [mData replaceBytesInRange:NSMakeRange(model.tidPosition-1, 1) withBytes:&tid length:1];
@@ -3976,7 +3979,7 @@
             message.responseOpCode = model.responseOpcode;
         }
     } else {
-        message.responseOpCode = [SigHelper.share getResponseOpcodeWithSendOpcode:op];
+        message.responseOpCode = [SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode];
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:model.retryCount responseMaxCount:model.responseMax responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.curNetkey = model.curNetkey;
@@ -3991,14 +3994,14 @@
 
     if (model.isEncryptByDeviceKey) {
         //mesh数据使用DeviceKey进行加密
-        return [SigMeshLib.share sendConfigMessage:(SigConfigMessage *)message toDestination:model.address command:command];
+        return [SigMeshLib.share sendConfigMessage:(SigConfigMessage *)message toDestination:model.address withTtl:model.ttl command:command];
     } else {
         SigMeshAddress *destination = [[SigMeshAddress alloc] initWithAddress:model.address];
         if (model.meshAddressModel) {
             destination = model.meshAddressModel;
         }
         //mesh数据使用AppKey进行加密
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:destination usingApplicationKey:model.curAppkey command:command];
+        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:destination withTtl:model.ttl usingApplicationKey:model.curAppkey command:command];
     }
 }
 
@@ -4069,6 +4072,7 @@
         TelinkLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
     }];
+    [[TPeripheralManager share] initSDK];
 
 //    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
 //    [SigBluetooth.share setWaitScanRseponseEnable:YES];
@@ -4326,6 +4330,9 @@
     [SigBluetooth.share stopScan];
 }
 
++ (void)advertisingManufacturerData:(NSData *)data advertisingInterval:(NSTimeInterval)interval {
+    [TPeripheralManager.share advertisingManufacturerData:data advertisingInterval:interval result:nil];
+}
 
 #pragma mark - deprecated API
 

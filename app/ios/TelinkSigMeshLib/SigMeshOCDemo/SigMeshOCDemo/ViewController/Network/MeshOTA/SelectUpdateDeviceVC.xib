@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SelectUpdateDeviceVC">
+            <connections>
+                <outlet property="confirmButton" destination="kLC-nH-xgu" id="b5Z-V6-kTz"/>
+                <outlet property="tableView" destination="lQV-AP-Bff" id="blA-m2-whh"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="lQV-AP-Bff">
+                    <rect key="frame" x="0.0" y="99" width="393" height="669"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="dWs-Fa-fqt"/>
+                        <outlet property="delegate" destination="-1" id="KTN-qP-bFF"/>
+                    </connections>
+                </tableView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tip: only devices of the same product can be selected." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ew5-DM-aqg">
+                    <rect key="frame" x="10" y="59" width="373" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="1Lu-1v-E7j"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="boldSystem" pointSize="13"/>
+                    <color key="textColor" name="telinkTitleGray"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kLC-nH-xgu">
+                    <rect key="frame" x="0.0" y="768" width="393" height="50"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="NdZ-FS-5Zn"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                    <state key="normal" title="CONFIRM">
+                        <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </state>
+                    <connections>
+                        <action selector="clickConfirmButton:" destination="-1" eventType="touchUpInside" id="mSL-vE-0zq"/>
+                    </connections>
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="bottom" secondItem="kLC-nH-xgu" secondAttribute="bottom" id="0Z8-YI-FJ6"/>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="trailing" secondItem="ew5-DM-aqg" secondAttribute="trailing" constant="10" id="I8Y-AQ-wK4"/>
+                <constraint firstItem="lQV-AP-Bff" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" id="RK2-iY-CA8"/>
+                <constraint firstItem="kLC-nH-xgu" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" id="VJv-fB-bhA"/>
+                <constraint firstItem="kLC-nH-xgu" firstAttribute="top" secondItem="lQV-AP-Bff" secondAttribute="bottom" id="eVU-gH-SWw"/>
+                <constraint firstItem="ew5-DM-aqg" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" id="fly-bh-7iw"/>
+                <constraint firstItem="lQV-AP-Bff" firstAttribute="trailing" secondItem="Q5M-cg-NOt" secondAttribute="trailing" id="jRE-i6-DCa"/>
+                <constraint firstItem="ew5-DM-aqg" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" constant="10" id="ocK-HW-8ZN"/>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="trailing" secondItem="kLC-nH-xgu" secondAttribute="trailing" id="q4s-ti-wsA"/>
+                <constraint firstItem="lQV-AP-Bff" firstAttribute="top" secondItem="ew5-DM-aqg" secondAttribute="bottom" id="wN5-Uy-Obo"/>
+            </constraints>
+            <point key="canvasLocation" x="46.564885496183201" y="19.718309859154932"/>
+        </view>
+    </objects>
+    <resources>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

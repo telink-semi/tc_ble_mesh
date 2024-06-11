@@ -35,6 +35,7 @@
 - (void)normalSetting {
     [super normalSetting];
     self.title = @"Composition Data";
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefreshCompositionData)];
     self.navigationItem.rightBarButtonItem = rightItem;
     self.compositionDataTV.font = [UIFont systemFontOfSize:12.0];

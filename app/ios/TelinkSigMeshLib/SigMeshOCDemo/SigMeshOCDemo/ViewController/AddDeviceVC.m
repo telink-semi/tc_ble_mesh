@@ -30,6 +30,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 @interface AddDeviceVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *addAllButton;
+@property (weak, nonatomic) IBOutlet UILabel *unprovisionedLabel;
 @property (strong, nonatomic) UIBarButtonItem *rightItem;
 @property (strong, nonatomic) UIBarButtonItem *leftItem;
 @property (strong, nonatomic) NSMutableArray <AddDeviceModel *>*source;
@@ -42,7 +43,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = @"Device Scan";
+    [self setTitle:@"Device Scan" subTitle:@"Selectable"];
     self.source = [[NSMutableArray alloc] init];
 
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_AddDeviceCellID];
@@ -50,9 +51,10 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     self.tableView.tableFooterView = footerView;
     self.tableView.estimatedRowHeight = 50.0;
     self.tableView.allowsSelection = NO;
-
+    //init rightBarButtonItem
     self.rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickScanButton)];
     self.navigationItem.rightBarButtonItem = self.rightItem;
+    //init leftBarButtonItem
     self.leftItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back"] style:UIBarButtonItemStylePlain target:self action:@selector(clickBackButton)];
     self.navigationItem.leftBarButtonItem = self.leftItem;
 
@@ -63,6 +65,17 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
+}
+
+- (void)refreshUnProvisionedLabel {
+    NSInteger count = 0;
+    NSArray *array = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in array) {
+        if (model.state == AddDeviceModelStateScanned) {
+            count ++;
+        }
+    }
+    self.unprovisionedLabel.text = [NSString stringWithFormat:@"unprovisioned device count: %ld", (long)count];
 }
 
 -(void)dealloc{
@@ -91,6 +104,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     [itemCell.closeButton addAction:^(UIButton *button) {
         [weakSelf.source removeObject:model];
         [weakSelf refreshTableView];
+        [weakSelf refreshUnProvisionedLabel];
     }];
     [itemCell.addButton addAction:^(UIButton *button) {
         weakSelf.userEnable = NO;
@@ -112,6 +126,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     self.userEnable = NO;
     self.source = [NSMutableArray array];
     [self.tableView reloadData];
+    [self refreshUnProvisionedLabel];
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -131,6 +146,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                         [weakSelf.source replaceObjectAtIndex:index withObject:model];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf refreshUnProvisionedLabel];
                         [weakSelf.tableView reloadData];
                         [weakSelf scrollToBottom];
                     });
@@ -232,9 +248,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                     } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddDeviceModelStateBinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                     } provisionFail:^(NSError * _Nullable error) {
                         model.state = AddDeviceModelStateProvisionFail;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                         error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                         dispatch_semaphore_signal(semaphore);
                     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
@@ -271,9 +289,11 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
                     } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddDeviceModelStateBinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                     } provisionFail:^(NSError * _Nullable error) {
                         model.state = AddDeviceModelStateProvisionFail;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
                         error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                         dispatch_semaphore_signal(semaphore);
                     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {

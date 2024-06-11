@@ -331,6 +331,8 @@
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
+        NSLock *lock = [[NSLock alloc] init];
+        [lock lock];
         if (weakSelf.connectedPeripherals && weakSelf.connectedPeripherals.count > 0) {
             NSArray *tem = [NSArray arrayWithArray:weakSelf.connectedPeripherals];
             for (CBPeripheral *p in tem) {
@@ -344,6 +346,7 @@
                 }
             }
         }
+        [lock unlock];
         if (weakSelf.currentPeripheral) {
             [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                 [weakSelf resetParameters];
@@ -678,15 +681,21 @@
 }
 
 - (void)addConnectedPeripheralToLocations:(CBPeripheral *)peripheral {
+    NSLock *lock = [[NSLock alloc] init];
+    [lock lock];
     if (![self.connectedPeripherals containsObject:peripheral]) {
         [self.connectedPeripherals addObject:peripheral];
     }
+    [lock unlock];
 }
 
 - (void)removeConnectedPeripheralFromLocations:(CBPeripheral *)peripheral {
+    NSLock *lock = [[NSLock alloc] init];
+    [lock lock];
     if ([self.connectedPeripherals containsObject:peripheral]) {
         [self.connectedPeripherals removeObject:peripheral];
     }
+    [lock unlock];
 }
 
 - (void)resetParameters {

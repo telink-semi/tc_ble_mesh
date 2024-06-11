@@ -53,6 +53,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIColor *)telinkButtonBlue;
 
++ (UIColor *)telinkLabelBlue;
+
 + (UIColor *)telinkButtonUnableBlue;
 
 + (UIColor *)telinkButtonRed;
@@ -62,6 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (UIColor *)telinkBackgroundWhite;
 
 + (UIColor *)telinkBorderColor;
+
++ (UIColor *)telinkTitleGray;
 
 @end
 

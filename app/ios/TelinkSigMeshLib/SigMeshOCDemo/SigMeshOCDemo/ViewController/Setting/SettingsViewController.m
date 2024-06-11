@@ -37,7 +37,7 @@
 /// Tips Title of Provision Mode
 #define kProvisionModeTitle  @"Provision Mode"
 /// Tips message of Provision Mode
-#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\n1. Scan for an unprovisioned device, connect and provision;\n\n2. Keep the connection state, send scan command to the device;\n\n3. Some remote devices info will be upload;\n\n4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
+#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\t1. Scan for an unprovisioned device, connect and\n\tprovision;\n\t2. Keep the connection state, send scan command\n\tto the device;\n\t3. Some remote devices info will be upload;\n\t4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
 /// 3.subscription level
 #define kSubscriptionLevel   @"Enable subscription level service model ID"
 /// Tips Title of subscription level
@@ -68,13 +68,6 @@
 #define kOnlineStatusTitle  @"Online Status"
 /// Tips message of Online Status
 #define kOnlineStatusMessage  @"Telink private profile for get the status of all nodes, including on、 off and offline status."
-/// 8.Directed Security
-#define kDirectedSecurity  @"Directed Security"
-/// Tips Title of Directed Security
-#define kDirectedSecurityTitle  @"Directed Security"
-/// Tips message of Directed Security
-#define kDirectedSecurityMessage  @"A new configuration item is added in demo v3.3.3.6 and later to mark whether the data sent by the APP is encrypted using The directed security material. The default value is NO."
-
 
 
 @interface SettingsViewController ()<UITableViewDataSource,UITableViewDelegate>
@@ -108,6 +101,25 @@
     NSMutableArray *items = [NSMutableArray array];
     NSMutableArray *tipsTitles = [NSMutableArray array];
     NSMutableArray *tipsMessage = [NSMutableArray array];
+#ifdef kIsTelinkCloudSigMeshLib
+    [array addObject:kProvision_Mode];
+    //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+//    [items addObject:@[@"normal(selectable)", @"normal(auto)", @"remote provision", @"fast provision"]];
+    [items addObject:@[@"normal(selectable)", @"remote provision"]];
+    //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+    [tipsTitles addObject:kProvisionModeTitle];
+    [tipsMessage addObject:kProvisionModeMessage];
+
+//    [array addObject:kSubscriptionLevel];
+//    [items addObject:@[]];
+//    [tipsTitles addObject:kSubscriptionLevelTitle];
+//    [tipsMessage addObject:kSubscriptionLevelMessage];
+
+    [array addObject:kExtend_Bearer_Mode];
+    [items addObject:@[@"No Extend", @"Extend GATT Only", @"Extend GATT & ADV"]];
+    [tipsTitles addObject:kExtendBearerModeTitle];
+    [tipsMessage addObject:kExtendBearerModeMessage];
+#else
     [array addObject:kDefaultBound];
     [items addObject:@[]];
     [tipsTitles addObject:kDefaultBoundTitle];
@@ -128,7 +140,6 @@
     [tipsTitles addObject:kExtendBearerModeTitle];
     [tipsMessage addObject:kExtendBearerModeMessage];
 
-
     [array addObject:kUseNoOOBAutomatically];
     [items addObject:@[]];
     [tipsTitles addObject:kUseNoOOBAutomaticallyTitle];
@@ -138,16 +149,11 @@
     [items addObject:@[@"Manual Switch(Default)", @"Auto Switch"]];
     [tipsTitles addObject:kShareImportTitle];
     [tipsMessage addObject:kShareImportMessage];
-
+#endif
     [array addObject:[NSString stringWithFormat:@"%@: %@", kOnlineStatus, [DemoCommand isPrivatelyGetOnlineStatus] == YES ? @"ENABLED" : @"DISABLED"]];
     [items addObject:@[]];
     [tipsTitles addObject:kOnlineStatusTitle];
     [tipsMessage addObject:kOnlineStatusMessage];
-
-    [array addObject:kDirectedSecurity];
-    [items addObject:@[]];
-    [tipsTitles addObject:kDirectedSecurityTitle];
-    [tipsMessage addObject:kDirectedSecurityMessage];
 
     _titleSource = array;
     _itemsSource = items;
@@ -163,11 +169,13 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
+#ifndef kIsTelinkCloudSigMeshLib
 - (void)clickSwitch:(UISwitch *)sender {
     NSNumber *type = [NSNumber numberWithInteger:sender.on == YES ? KeyBindType_Fast : KeyBindType_Normal];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kKeyBindType];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
+#endif
 
 - (void)clickLevelSwitch:(UISwitch *)sender {
     if (sender.on) {
@@ -191,28 +199,22 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (void)clickDirectedSecuritySwitch:(UISwitch *)sender {
-    SigDataSource.share.sendByDirectedSecurity = sender.on;
-    NSNumber *type = [NSNumber numberWithBool:sender.on];
-    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kDirectedSecurityEnable];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
 - (IBAction)clickResetSettingButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Reset all settings to default values?" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"点击确认");
+#ifndef kIsTelinkCloudSigMeshLib
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:KeyBindType_Normal] forKey:kKeyBindType];
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:ProvisionMode_normalSelectable] forKey:kProvisionMode];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:ImportSwitchMode_manual] forKey:kImportCompleteAction];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kSubscribeLevelServiceModelID];
         if ([SigDataSource.share.defaultGroupSubscriptionModels containsObject:@(kSigModel_GenericLevelServer_ID)]) {
             [SigDataSource.share.defaultGroupSubscriptionModels removeObject:@(kSigModel_GenericLevelServer_ID)];
         }
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kSubscribeLevelServiceModelID];
+#endif
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:ProvisionMode_normalSelectable] forKey:kProvisionMode];
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:SigTelinkExtendBearerMode_noExtend] forKey:kExtendBearerMode];
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:YES] forKey:kAddStaticOOBDeviceByNoOOBEnable];
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:ImportSwitchMode_manual] forKey:kImportCompleteAction];
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kDirectedSecurityEnable];
         [[NSUserDefaults standardUserDefaults] synchronize];
         [weakSelf refreshSourceAndUI];
         [weakSelf showTips:@"Reset all settings success!"];
@@ -226,36 +228,55 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     SettingsItemCell *cell = (SettingsItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingsItemCell.class) forIndexPath:indexPath];
-    [cell configUIWithTitle:self.titleSource[indexPath.row] items:self.itemsSource[indexPath.row]];
+    NSString *title = self.titleSource[indexPath.row];
+    [cell configUIWithTitle:title items:self.itemsSource[indexPath.row]];
     cell.enableSwitch.hidden = NO;
     __weak typeof(self) weakSelf = self;
     [cell.tipsButton addAction:^(UIButton *button) {
         [weakSelf pushToTipsVCWithTitle:weakSelf.tipsTitleSource[indexPath.row] message:weakSelf.tipsMessageSource[indexPath.row]];
     }];
-    if (indexPath.row == 0) {
+    if ([title isEqualToString:kDefaultBound]) {
+#ifndef kIsTelinkCloudSigMeshLib
         // kDefaultBound
         BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType] boolValue];
         //set state
         cell.enableSwitch.on = on;
         //add action
         [cell.enableSwitch addTarget:self action:@selector(clickSwitch:) forControlEvents:UIControlEventValueChanged];
-    } else if (indexPath.row == 1) {
+#endif
+    } else if ([title isEqualToString:kProvision_Mode]) {
         // kProvision_Mode
         NSNumber *provisionMode = [[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode];
+#ifdef kIsTelinkCloudSigMeshLib
+        //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+        [cell setSelectIndex:provisionMode.intValue == 0 ? 0 : 1];
+        [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
+            NSNumber *mode = nil;
+            if (selectIndex == 0) {
+                mode = [NSNumber numberWithInteger:ProvisionMode_normalSelectable];
+            } else {
+                mode = [NSNumber numberWithInteger:ProvisionMode_remoteProvision];
+            }
+            [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }];
+        //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+#else
         [cell setSelectIndex:provisionMode.intValue];
         [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
             NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
             [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
             [[NSUserDefaults standardUserDefaults] synchronize];
         }];
-    } else if (indexPath.row == 2) {
+#endif
+    } else if ([title isEqualToString:kSubscriptionLevel]) {
         // kSubscriptionLevel
         BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kSubscribeLevelServiceModelID] boolValue];
         //set state
         cell.enableSwitch.on = on;
         //add action
         [cell.enableSwitch addTarget:self action:@selector(clickLevelSwitch:) forControlEvents:UIControlEventValueChanged];
-    } else if (indexPath.row == 3) {
+    } else if ([title isEqualToString:kExtend_Bearer_Mode]) {
         //kExtend_Bearer_Mode
         NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
         [cell setSelectIndex:extendBearerMode.intValue];
@@ -269,14 +290,14 @@
             [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kExtendBearerMode];
             [[NSUserDefaults standardUserDefaults] synchronize];
         }];
-    } else if (indexPath.row == 4) {
+    } else if ([title isEqualToString:kUseNoOOBAutomatically]) {
         // kUseNoOOBAutomatically
         BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable] boolValue];
         //set state
         cell.enableSwitch.on = on;
         //add action
         [cell.enableSwitch addTarget:self action:@selector(clickAddStaticOOBDeviceByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
-    } else if (indexPath.row == 5) {
+    } else if ([title isEqualToString:kShareImport]) {
         //kShareImport
         NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
         [cell setSelectIndex:importCompleteAction.intValue];
@@ -285,16 +306,9 @@
             [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kImportCompleteAction];
             [[NSUserDefaults standardUserDefaults] synchronize];
         }];
-    } else if (indexPath.row == 6) {
+    } else if ([title hasPrefix:kOnlineStatus]) {
         // kOnlineStatus
         cell.enableSwitch.hidden = YES;
-    } else if (indexPath.row == 7) {
-        // kDirectedSecurity
-        BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kDirectedSecurityEnable] boolValue];
-        //set state
-        cell.enableSwitch.on = on;
-        //add action
-        [cell.enableSwitch addTarget:self action:@selector(clickDirectedSecuritySwitch:) forControlEvents:UIControlEventValueChanged];
     }
     return cell;
 }

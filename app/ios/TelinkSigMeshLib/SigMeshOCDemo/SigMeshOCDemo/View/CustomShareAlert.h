@@ -37,7 +37,9 @@ typedef enum : NSUInteger {
 @property(nonatomic,strong) NSString *textString;
 @property (nonatomic,strong) UIColor *textColor;
 @property (nonatomic,strong) UIImage *iconImage;
-//@property (nonatomic, assign) ResponseShareState state;
+#ifdef kIsTelinkCloudSigMeshLib
+@property (nonatomic, assign) ResponseShareState state;
+#endif
 @end
 
 @interface CustomShareAlert : UIView

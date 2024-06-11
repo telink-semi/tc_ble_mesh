@@ -22,10 +22,10 @@
  *******************************************************************************************************/
 
 #import "AppKeyListVC.h"
-#import "KeyCell.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
 #import "AppKeyAddVC.h"
+#import "AppKeyCell.h"
 
 @interface AppKeyListVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -42,9 +42,14 @@
     self.sourceArray = [NSMutableArray arrayWithArray:self.network.appKeys];
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(AppKeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(AppKeyCell.class)];
+#ifndef kIsTelinkCloudSigMeshLib
+    //init rightBarButtonItem
     UIBarButtonItem *rightItem1 = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickAdd:)];
     self.navigationItem.rightBarButtonItem = rightItem1;
+#else
+    self.tableView.allowsSelection = NO;
+#endif
     //longpress to delete scene
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
@@ -135,9 +140,12 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
+    AppKeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(AppKeyCell.class) forIndexPath:indexPath];
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
-    [cell setAppKeyModel:model];
+    [cell setModel:model];
+#ifdef kIsTelinkCloudSigMeshLib
+    cell.editButton.hidden = YES;
+#endif
     __weak typeof(self) weakSelf = self;
     [cell.editButton addAction:^(UIButton *button) {
         AppKeyAddVC *vc = [[AppKeyAddVC alloc] init];
@@ -157,6 +165,7 @@
     return cell;
 }
 
+#ifndef kIsTelinkCloudSigMeshLib
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
@@ -176,9 +185,6 @@
         }];
     }
 }
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 55;
-}
+#endif
 
 @end

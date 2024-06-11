@@ -71,7 +71,8 @@ UIKIT_EXTERN NSString * const kScanList_key;
 UIKIT_EXTERN NSString * const kJsonMeshUUID_key;
 UIKIT_EXTERN NSString * const kCurrentProvisionerUUID_key;
 UIKIT_EXTERN NSString * const kLocationIvIndexAndSequenceNumberDictionary_key;//缓存当前首页的所有mesh的provisioner与ivIndex+sequenceNumber的映射字典。
-UIKIT_EXTERN NSString * const kLocalPrivateBeaconDictionary_key;//缓存private beacon页面的数据。
+UIKIT_EXTERN NSString * const kLocalSolicitationSequenceNumberDictionary_key;//缓存当前首页的所有mesh的provisioner与Solicitation sequenceNumber的映射字典。
+UIKIT_EXTERN NSString * const kLocalNetworkPrivateBeaconDictionary_key;//缓存private beacon页面的数据。
 UIKIT_EXTERN NSString * const kLocalPrivateGattProxy_key;//缓存private beacon页面的数据。
 UIKIT_EXTERN NSString * const kLocalPrivateBeacon_key;//缓存private beacon页面的数据。
 UIKIT_EXTERN NSString * const kLocalConfigGattProxy_key;//缓存private beacon页面的数据。
@@ -573,13 +574,6 @@ UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage;/
 /*Mesh未连接*/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandMeshDisconnectedErrorCode;// 0x02110108
 UIKIT_EXTERN NSString * const kSigMeshLibCommandMeshDisconnectedErrorMessage;// Mesh Disconnected
-
-/*telink当前定义的三个设备类型*/
-UIKIT_EXTERN UInt16 const SigNodePID_CT;// 1
-UIKIT_EXTERN UInt16 const SigNodePID_HSL;// 2
-UIKIT_EXTERN UInt16 const SigNodePID_Panel;// 7
-UIKIT_EXTERN UInt16 const SigNodePID_LPN;// 0x0201
-UIKIT_EXTERN UInt16 const SigNodePID_Switch;// 0x0301
 
 UIKIT_EXTERN float const kCMDInterval;// 0.32
 UIKIT_EXTERN float const kSDKLibCommandTimeout;// 1.28

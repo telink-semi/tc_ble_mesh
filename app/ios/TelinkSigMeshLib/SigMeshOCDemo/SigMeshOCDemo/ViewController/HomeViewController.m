@@ -28,16 +28,19 @@
 #import "HomeItemCell.h"
 #import "SingleDeviceViewController.h"
 #import "UIViewController+Message.h"
-#import "SensorVC.h"
 #import "MeshOTAVC.h"
+#import "RemoteAddVC.h"
+#import "AddDeviceByCloudVC.h"
+#import "CMDViewController.h"
 
 @interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate,SigDataSourceDelegate,SigMessageDelegate,SigBluetoothDelegate>
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*source;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIButton *allONButton;
 @property (weak, nonatomic) IBOutlet UIButton *allOFFButton;
+@property (weak, nonatomic) IBOutlet UIButton *sensorGetAllButton;
 @property (weak, nonatomic) IBOutlet UIButton *cmdButton;
-@property (weak, nonatomic) IBOutlet UIButton *logButton;
+@property (strong, nonatomic) UIButton *sortButton;
 @property (assign, nonatomic) BOOL shouldSetAllOffline;//APP will set all nodes offline when user click refresh button.
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
@@ -62,7 +65,40 @@
     }];
 }
 
+#pragma mark see log entrance
+
+- (IBAction)clickCMDButton:(UIButton *)sender {
+    CMDViewController *vc = (CMDViewController *)[UIStoryboard initVC:NSStringFromClass(CMDViewController.class)];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
 #pragma mark add node entrance
+
+- (void)clickSortNodeList {
+    NSArray *sortTypeList = @[@"Sort by address ascending", @"Sort by address descending", @"Sort by name ascending", @"Sort by name descending"];
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Actions" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for (int i=0; i<sortTypeList.count; i++) {
+        UIAlertAction *alertT = [UIAlertAction actionWithTitle:sortTypeList[i] style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            SigDataSource.share.sortTypeOfNodeList = i;
+            [SigDataSource.share saveLocationData];
+            [weakSelf delayReloadCollectionView];
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:i] forKey:kSortTypeOfNodeList];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            [weakSelf updateSortButtonIcon];
+        }];
+        [actionSheet addAction:alertT];
+    }
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    }];
+    [actionSheet addAction:alertF];
+    actionSheet.popoverPresentationController.sourceView = self.sortButton;
+    actionSheet.popoverPresentationController.sourceRect =  self.sortButton.frame;
+    [self presentViewController:actionSheet animated:YES completion:nil];
+}
+
+#pragma mark add node entrance
+
 - (void)addNewDevice {
     //v3.3.3.6及之后版本，初次分享过来，没有ivIndex时，需要连接mesh成功或者用户手动输入ivIndex。
     if (!SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
@@ -107,6 +143,31 @@
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     [SigDataSource.share setAllDevicesOutline];
     ProvisionMode mode = [[[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode] intValue];
+#ifdef kIsTelinkCloudSigMeshLib
+    //云端版本
+    if (mode == ProvisionMode_normalSelectable) {
+        TelinkLogVerbose(@"click normal selectable add device");
+        //先扫描，用户选择添加设备
+        UIViewController *vc = [UIStoryboard initVC:NSStringFromClass(AddDeviceByCloudVC.class) storyboard:@"Cloud"];
+        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_normalAuto) {
+        TelinkLogVerbose(@"click normal auto add device");
+        //自动添加多个设备
+//        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_AutoAddDeviceVCID];
+//        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_remoteProvision) {
+        //remote Provision
+        TelinkLogVerbose(@"click remote provision add device");
+        UIViewController *vc = [UIStoryboard initVC:NSStringFromClass(RemoteAddVC.class) storyboard:@"Cloud"];
+        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_fastProvision) {
+        //fast provision
+        TelinkLogVerbose(@"click fast provision add device");
+//        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
+//        [self.navigationController pushViewController:vc animated:YES];
+    }
+#else
+    //离线版本
     if (mode == ProvisionMode_normalSelectable) {
         TelinkLogVerbose(@"click normal selectable add device");
         //先扫描，用户选择添加设备
@@ -120,7 +181,7 @@
     } else if (mode == ProvisionMode_remoteProvision) {
         //remote Provision
         TelinkLogVerbose(@"click remote provision add device");
-        UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
+        UIViewController *vc = [UIStoryboard initVC:NSStringFromClass(RemoteAddVC.class)];
         [self.navigationController pushViewController:vc animated:YES];
     } else if (mode == ProvisionMode_fastProvision) {
         //fast provision
@@ -128,18 +189,38 @@
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
         [self.navigationController pushViewController:vc animated:YES];
     }
+#endif
 }
 
-#pragma mark see log entrance
-
-- (IBAction)clickToCMDVC:(UIButton *)sender {
-    CMDViewController *vc = (CMDViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_CMDViewControllerID];
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (IBAction)clickToLogVC:(UIButton *)sender {
-    UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_LogViewControllerID];
-    [self.navigationController pushViewController:vc animated:YES];
+- (IBAction)clickSensorGetAllButton:(UIButton *)sender {
+    NSArray *allNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [ShowTipsHandle.share show:@"Sensor Get All..."];
+    [operationQueue addOperationWithBlock:^{
+        __block BOOL needSave = NO;
+        //这个block语句块在子线程中执行
+        for (SigNodeModel *node in allNodes) {
+            if (node.isSensor) {
+                UInt16 elementAddress = [node getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]].unicastAddress;
+                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                [SDKLibCommand sensorGetWithDestination:elementAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorStatus * _Nonnull responseMessage) {
+                    if (elementAddress == source && responseMessage.sensorDataModelArray) {
+                        node.sensorDataArray = [NSMutableArray arrayWithArray:responseMessage.sensorDataModelArray];
+                        needSave = YES;
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    dispatch_semaphore_signal(semaphore);
+                }];
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+            }
+        }
+        if (needSave) {
+            [SigDataSource.share saveLocationData];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share hidden];
+        });
+    }];
 }
 
 - (IBAction)freshOnline:(UIBarButtonItem *)sender {
@@ -169,8 +250,16 @@
 
 - (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
     __weak typeof(self) weakSelf = self;
-    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-        //界面刷新统一在SDK回调函数didReceiveMessage:中进行
+    BOOL hasOnOffResponse = NO;
+    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in nodes) {
+        if (node.isKeyBindSuccess) {
+            hasOnOffResponse = YES;
+            break;
+        }
+    }
+    BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:hasOnOffResponse ? 1 : 0 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+        //get response and refresh UI in `- (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination`
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         [weakSelf showMeshOTAWarningAlertController];
         if (resultCallback) {
@@ -184,7 +273,7 @@
     }
 }
 
-//刷新UI需要间隔0.1秒，防止100个设备时出现界面卡顿。
+// Refreshing the UI requires an interval of 0.1 seconds to prevent interface stuttering when there are 100 devices.
 - (void)delayReloadCollectionView {
     if (!self.needDelayReloadData) {
         self.needDelayReloadData = YES;
@@ -236,16 +325,10 @@
     }
 
     [DemoCommand switchOnOffWithIsOn:!(model.state == DeviceStateOn) address:model.address responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
-        //界面刷新统一在SDK回调函数didReceiveMessage:中进行
+        //get response and refresh UI in `- (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination`
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
     }];
-}
-
-- (void)scrollToBottom {
-    NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
-    NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
-    [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
 }
 
 - (void)workNormal {
@@ -293,10 +376,12 @@
                     dispatch_async(dispatch_get_main_queue(), ^{
                         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning - MeshOTA is still running" message:@"MeshOTA distribution is still running, continue?\nclick GO to enter MeshOTA processing page\nclick STOP to stop distribution" preferredStyle:UIAlertControllerStyleAlert];
                         [alertController addAction:[UIAlertAction actionWithTitle:@"STOP" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+                            MeshOTAManager.share.distributorAddress = [addressNumber intValue];
                             [MeshOTAManager.share stopFirmwareUpdateWithCompleteHandle:^(BOOL isSuccess) {
                                 [[NSUserDefaults standardUserDefaults] setValue:@(0) forKey:kDistributorAddress];
                                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorPolicy];
                                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:kUpdateNodeAddresses];
+                                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDistributorBinString];
                                 [[NSUserDefaults standardUserDefaults] synchronize];
                                 dispatch_async(dispatch_get_main_queue(), ^{
                                     [weakSelf showTips:@"Stop Mesh ota finish!"];
@@ -318,6 +403,10 @@
 
 #pragma mark - Life method
 
+-(void)dealloc {
+    TelinkLogInfo(@"%s",__func__);
+}
+
 //将tabBar.hidden移到viewDidAppear，解决下一界面的手势返回动作取消时导致界面下方出现白条的问题。
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
@@ -327,14 +416,34 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     [self setTitle:@"Device" subTitle:SigDataSource.share.meshName];
-//    self.tabBarController.tabBar.hidden = NO;
+    //init rightBarButtonItem
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDevice)];
-    self.navigationItem.rightBarButtonItem = item;
+    self.sortButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
+    [self updateSortButtonIcon];
+    [self.sortButton addTarget:self action:@selector(clickSortNodeList) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *item2 = [[UIBarButtonItem alloc] initWithCustomView:self.sortButton];
+    self.navigationItem.rightBarButtonItems = @[item, item2];
+#ifdef kIsTelinkCloudSigMeshLib
+    if (AppDataSource.share.curNetworkId && AppDataSource.share.curMeshNetworkDetailModel) {
+        [self connectMeshAndGetStatus];
+    }
+#else
+    [self connectMeshAndGetStatus];
+#endif
+}
+
+- (void)updateSortButtonIcon {
+    NSArray *icons = @[@"ic_sort_address_ascending", @"ic_sort_address_descending", @"ic_sort_name_ascending", @"ic_sort_name_descending"];
+    NSNumber *sortTypeOfNodeList = [[NSUserDefaults standardUserDefaults] valueForKey:kSortTypeOfNodeList];
+    [self.sortButton setImage:[UIImage imageNamed:icons[[sortTypeOfNodeList intValue]]] forState:UIControlStateNormal];
+}
+
+- (void)connectMeshAndGetStatus {
     //get status of node
     SigBearer.share.dataDelegate = self;
     SigMeshLib.share.delegateForDeveloper = self;
     if (SigBearer.share.isOpen) {
-        if ([LibTools uint16From16String:SigDataSource.share.getCurrentConnectedNode.pid] == SigNodePID_Switch) {
+        if (SigDataSource.share.getCurrentConnectedNode.isRemote) {
             [SigDataSource.share setAllDevicesOutline];
             [self delayReloadCollectionView];
             __weak typeof(self) weakSelf = self;
@@ -364,14 +473,18 @@
     [super normalSetting];
     self.allONButton.backgroundColor = UIColor.telinkButtonBlue;
     self.allOFFButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.sensorGetAllButton.backgroundColor = UIColor.telinkButtonBlue;
     self.cmdButton.backgroundColor = UIColor.telinkButtonBlue;
-    self.logButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.sensorGetAllButton.titleLabel.numberOfLines = 0;
     self.needDelayReloadData = NO;
     SigDataSource.share.delegate = self;
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
     [self.view addGestureRecognizer:gesture];
     self.source = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
     SigBluetooth.share.delegate = self;
+//    [self showMeshOTAHits];
+    //做法1 自动登录
+//    [self checkLoginState];
 }
 
 //获取手机当前显示的ViewController
@@ -444,8 +557,31 @@
 }
 
 #pragma  mark - SigDataSourceDelegate
+
+/// Callback called when the sequenceNumber change. Since v3.3.3.7
+/// @param sequenceNumber sequenceNumber of current provisioner.
+- (void)onUpdateSequenceNumber:(UInt32)sequenceNumber {
+    TelinkLogVerbose(@"update sequenceNumber=0x%X to the cloud",sequenceNumber);
+#ifdef kIsTelinkCloudSigMeshLib
+    [AppDataSource.share updateSequenceNumber:sequenceNumber resultBlock:^(NSError * _Nullable error) {
+//        TelinkLogInfo(@"error=%@");
+    }];
+#endif
+}
+
+/// Callback called when the ivIndex change. Since v3.3.3.7
+/// @param ivIndex ivIndex of current mesh network.
+- (void)onUpdateIvIndex:(UInt32)ivIndex {
+    TelinkLogVerbose(@"update ivIndex=0x%X to the cloud",ivIndex);
+#ifdef kIsTelinkCloudSigMeshLib
+    [AppDataSource.share updateIvIndex:ivIndex resultBlock:^(NSError * _Nullable error) {
+//        TelinkLogInfo(@"error=%@");
+    }];
+#endif
+}
+
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
-    TelinkLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
+    TelinkLogVerbose(@"已经废弃的代理回调方法，本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
 /**
@@ -505,6 +641,26 @@
         || [message isKindOfClass:[SigLightLCLightOnOffStatus class]]) {
         [self delayReloadCollectionView];
     }
+#ifdef kIsTelinkCloudSigMeshLib
+    CloudNodeModel *node = [AppDataSource.share getCloudNodeModelWithNodeAddress:source];
+    if (node) {
+        NSString *status = nil;
+        if ([message isKindOfClass:[SigGenericOnOffStatus class]]) {
+            SigGenericOnOffStatus *onOffStatus = (SigGenericOnOffStatus *)message;
+            status = onOffStatus.targetState == YES ? @"ON" : @"OFF";
+        } else if ([message isKindOfClass:[SigTelinkOnlineStatusMessage class]]) {
+            SigTelinkOnlineStatusMessage *onOffStatus = (SigTelinkOnlineStatusMessage *)message;
+            status = onOffStatus.state == DeviceStateOutOfLine ? @"OFFLINE" : (onOffStatus.state == DeviceStateOn ? @"ON" : @"OFF");
+        }
+        if (status != nil) {
+            [TelinkHttpTool uploadRecordRequestWithNodeId:node.nodeId status:status didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+                if (err) {
+                    TelinkLogInfo(@"uploadRecord error = %@", err);
+                }
+            }];
+        }
+    }
+#endif
 }
 
 /// A callback called whenever a SigSecureNetworkBeacon Message has been received from the mesh network.
@@ -529,6 +685,67 @@
 //        return YES;
 //    }
 //    return NO;
+//}
+
+#pragma mark - auto login handle
+
+//- (void)loginSuccessAction {
+//    if (AppDataSource.share.createdNetwordList && AppDataSource.share.createdNetwordList.count > 0) {
+//        //存在网络，判断是否已经选择网络。
+//        NSString *uuid = [NSUserDefaults.standardUserDefaults valueForKey:kSelectNetworkUuid];
+//        if (uuid) {
+//            AppMeshNetworkModel *network = [AppDataSource.share getAppMeshNetworkModelWithUuid:uuid];
+//            if (network) {
+//                AppDataSource.share.curAppMeshNetworkModel = network;
+//                [self connetMeshAndGetStatus];
+//            } else {
+//                [self showNetworkListVC];
+//            }
+//        } else {
+//            [self showNetworkListVC];
+//        }
+//    } else {
+//        [self showNetworkListVC];
+//    }
+//}
+//
+//- (void)showNetworkListVC {
+//    //不存在网络，弹出网络选择界面
+//    [self pushToNetworkListVCWithHiddenBackButton:YES];
+//}
+//
+//- (void)checkLoginState {
+//    __weak typeof(self) weakSelf = self;
+//    if (AppDataSource.share.shouldAutoLogin) {
+//        //处于登录成功状态，后台自动登录。
+//        [AppDataSource.share autoLoginActionWithResultBlock:^(NSError * _Nonnull error) {
+//            if (error) {
+//                //登录出错，弹出登录界面。
+//                [weakSelf pushToLogInVCWithAnimated:YES completion:^{
+//
+//                } loginSuccessAction:^{
+//
+//                }];
+//            } else {
+//                //登录成功，提示
+//                [weakSelf showTips:@"login success!"];
+//                [AppDataSource.share getCreatedListAndJoinedListWithResultBlock:^(NSError * _Nullable error) {
+//                    if (error) {
+//                        [weakSelf showTips:[NSString stringWithFormat:@"get network info fail, error = %@", error.localizedDescription]];
+//                    } else {
+//                        [weakSelf connetMeshAndGetStatus];
+//                    }
+//                }];
+//            }
+//        }];
+//    } else {
+//        //未处于登录成功状态，弹出登录界面。
+//        [self pushToLogInVCWithAnimated:YES completion:^{
+//
+//        } loginSuccessAction:^{
+//            [weakSelf pushToNetworkListVCWithHiddenBackButton:YES];
+//        }];
+//    }
 //}
 
 @end

@@ -1870,6 +1870,31 @@
     return tem;
 }
 
+/// Get Detail Of SigFirmwareUpdateAdditionalInformationStatusType.
+/// @param type The SigFirmwareUpdateAdditionalInformationStatusType value.
+- (NSString *)getDetailOfSigFirmwareUpdateAdditionalInformationStatusType:(SigFirmwareUpdateAdditionalInformationStatusType)type {
+    NSString *tem = @"";
+    switch (type) {
+        case SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData:
+            tem = @"NO changes to CPS";
+            break;
+        case SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataUnsupportedRemote:
+            tem = @"CPS changed, remote PRV is not supported";
+            break;
+        case SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataSupportRemote:
+            tem = @"CPS changed, remote PRV is supported";
+            break;
+        case SigFirmwareUpdateAdditionalInformationStatusType_nodeUnprovisioned:
+            tem = @"Node is unprovisioned";
+            break;
+        default:
+            //show RFU phase.
+            tem = [NSString stringWithFormat:@"RFU:0x4–0x1F, value=0x%X", type];
+            break;
+    }
+    return tem;
+}
+
 /// Get Detail Of SigFirmwareUpdateServerAndClientModelStatusType
 /// @param statusType The SigFirmwareUpdateServerAndClientModelStatusType value.
 - (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType {
@@ -2025,6 +2050,53 @@
             break;
         default:
             break;
+    }
+    return tem;
+}
+
+/// Get Detail Of SigSensorSamplingFunctionType
+/// @param type The SigSensorSamplingFunctionType value.
+- (NSString *)getDetailOfSigSensorSamplingFunctionType:(SigSensorSamplingFunctionType)type {
+    NSString *tem = @"Unknown";
+    switch (type) {
+        case SigSensorSamplingFunctionType_unspecified:
+            tem = @"Unspecified";
+            break;
+        case SigSensorSamplingFunctionType_instantaneous:
+            tem = @"Instantaneous";
+            break;
+        case SigSensorSamplingFunctionType_arithmeticMean:
+            tem = @"Arithmetic Mean";
+            break;
+        case SigSensorSamplingFunctionType_RMS:
+            tem = @"RMS";
+            break;
+        case SigSensorSamplingFunctionType_maximum:
+            tem = @"Maximum";
+            break;
+        case SigSensorSamplingFunctionType_minimum:
+            tem = @"Minimum";
+            break;
+        case SigSensorSamplingFunctionType_accumulated:
+            tem = @"Accumulated";
+            break;
+        case SigSensorSamplingFunctionType_count:
+            tem = @"Count";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+/// Get Sensor Name With PropertyID>
+/// @param propertyID Property ID.
+- (NSString *)getSensorNameWithPropertyID:(UInt16)propertyID {
+    NSString *tem = @"UnDefault Name";
+    if (propertyID == DevicePropertyID_MotionSensed) {
+        tem = @"Motion Sensed";
+    } else if (propertyID == DevicePropertyID_PresentAmbientLightLevel) {
+        tem = @"Ambient Light";
     }
     return tem;
 }

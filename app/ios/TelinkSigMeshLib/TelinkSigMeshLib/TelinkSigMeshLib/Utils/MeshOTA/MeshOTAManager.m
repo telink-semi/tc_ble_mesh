@@ -39,7 +39,6 @@
 @interface MeshOTAManager()<SigBearerDataDelegate,SigMessageDelegate>
 @property (nonatomic, copy) FinishBlock finishBlock;
 @property (nonatomic, copy) ErrorBlock errorBlock;
-@property (nonatomic, strong) NSData *otaData;
 @property (nonatomic, assign) UInt8 blockSizeLog;//记录本次meshOTA的block大小，size为2的kBlockSizeLog次幂，默认是2^12=4096字节
 @property (nonatomic, assign) UInt16 chunkSize;//记录本次meshOTA的chunk大小
 @property (nonatomic, strong) NSError *failError;
@@ -116,7 +115,8 @@
     _allAddressArray = [NSMutableArray array];
     _successAddressArray = [NSMutableArray array];
     _failAddressArray = [NSMutableArray array];
-
+    _additionalInformationDictionary = [NSMutableDictionary dictionary];
+    
     // config parameters for meshOTA R04
     _transferModeOfDistributor = SigTransferModeState_pushBLOBTransferMode;
     _transferModeOfUpdateNodes = SigTransferModeState_pushBLOBTransferMode;
@@ -256,6 +256,107 @@
     NSLog(@"%s",__func__);
 }
 
+- (NSString *)getProgressNameWithFirmwareUpdateProgress:(SigFirmwareUpdateProgress)firmwareUpdateProgress {
+    NSString *tem = @"";
+    switch (firmwareUpdateProgress) {
+        case SigFirmwareUpdateProgressIdle:
+            tem = @"idle";
+            break;
+        case SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue:
+            tem = @"checkLastFirmwareUpdateStatue(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionCapabilitiesGet:
+            tem = @"firmwareDistributionCapabilitiesGet(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareUpdateInformationGet:
+            tem = @"firmwareUpdateInformationGet(Initiator->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareUpdateFirmwareMetadataCheck:
+            tem = @"firmwareUpdateFirmwareMetadataCheck(Initiator->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressSubscriptionAdd:
+            tem = @"configModelSubscriptionAdd(Initiator->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd:
+            tem = @"firmwareDistributionReceiversAdd(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionUploadStart:
+            tem = @"firmwareDistributionUploadStart(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferGet:
+            tem = @"BLOBTransferGet(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBInformationGet:
+            tem = @"BLOBInformationGet(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferStart:
+            tem = @"BLOBTransferStart(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockStart:
+            tem = @"BLOBBlockStart(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer:
+            tem = @"BLOBChunkTransfer(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockGet:
+            tem = @"BLOBBlockGet(initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionStart:
+            tem = @"firmwareDistributionStart(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareUpdateStart:
+            tem = @"firmwareUpdateStart(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet:
+            tem = @"BLOBTransferGet(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet:
+            tem = @"BLOBInformationGet(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart:
+            tem = @"BLOBTransferStart(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart:
+            tem = @"BLOBBlockStart(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer:
+            tem = @"BLOBChunkTransfer(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet:
+            tem = @"BLOBBlockGet(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionReceiversGet:
+            tem = @"firmwareDistributionReceiversGet(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionApply:
+            tem = @"firmwareDistributionApply(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateProgressFirmwareUpdateGet:
+            tem = @"firmwareUpdateGet(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareUpdateApply:
+            tem = @"firmwareUpdateApply(Distributor->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionGet:
+            tem = @"firmwareDistributionGet(Initiator->Distributor)";
+            break;
+        case SigFirmwareUpdateInformationGetCheckVersion:
+            tem = @"firmwareUpdateInformationGetCheckVersion(Initiator->updating node(s))";
+            break;
+        case SigFirmwareUpdateProgressFirmwareDistributionCancel:
+            tem = @"firmwareDistributionCancel(Initiator->Distributor)";
+            break;
+
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (void)createErrorWithString:(NSString *)errorString {
+    self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"%@, %@, extend=%@, connected address=0x%04X", [self getProgressNameWithFirmwareUpdateProgress:self.firmwareUpdateProgress], errorString, SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength == kUnsegmentedMessageLowerTransportPDUMaxLength?@"NO":@"YES", SigDataSource.share.unicastAddressOfConnected] code:-self.firmwareUpdateProgress userInfo:nil];
+}
+
 #pragma  mark - SigBearerDataDelegate
 
 /// Callback called when the Bearer is no longer open.
@@ -264,15 +365,13 @@
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
     TelinkLogVerbose(@"");
     if (self.isMeshOTAing) {
-        [self performSelector:@selector(cancelAllAfterDelay) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         if (self.semaphore) {
             dispatch_semaphore_signal(self.semaphore);
         }
+        [self performSelector:@selector(cancelAllAfterDelay) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 
         if (self.firmwareUpdateProgress != SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue && ((self.phoneIsDistributor && self.firmwareUpdateProgress < SigFirmwareUpdateProgressFirmwareDistributionApply) || (!self.phoneIsDistributor && self.firmwareUpdateProgress < SigFirmwareUpdateProgressFirmwareDistributionStart))) {
-            if (self.semaphore) {
-                dispatch_semaphore_signal(self.semaphore);
-            }
+            [self createErrorWithString:@"Node is disconnected, MeshOTA fail"];
             [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         } else {
             if ((self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet && self.firmwareUpdateProgress != SigFirmwareUpdateProgressFirmwareDistributionApply) || self.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue || self.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer) {
@@ -431,6 +530,7 @@
         TelinkLogVerbose(@"self.LPNReachablleTimerCounter = %d",weakSelf.LPNReachablleTimerCounter);
         if (weakSelf.LPNReachablleTimerCounter > [weakSelf getCounterOfBLOBPartialBlockReport]) {
             //总超时已经到，meshOTA失败
+            [weakSelf createErrorWithString:@"LPN reachable timeout"];
             [weakSelf stopLPNReachablleTimer];
             [weakSelf performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         } else {
@@ -481,7 +581,7 @@
     if (_meshOTAThread.isCancelled && !_meshOTAThread.isExecuting) {
         [_meshOTAThread start];
     }
-
+    self.failError = nil;
     self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
     self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
     self.otaData = otaData;
@@ -494,6 +594,7 @@
     [self.allAddressArray removeAllObjects];
     [self.successAddressArray removeAllObjects];
     [self.failAddressArray removeAllObjects];
+    [self.additionalInformationDictionary removeAllObjects];
     [self.allAddressArray addObjectsFromArray:deviceAddresses];
     self.testFinish = otaData.length > 1024*3;
     self.incomingFirmwareMetadata = incomingFirmwareMetadata;
@@ -569,7 +670,7 @@
     if (_meshOTAThread.isCancelled && !_meshOTAThread.isExecuting) {
         [_meshOTAThread start];
     }
-
+    self.failError = nil;
 //    self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
     self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
     self.advDistributionProgressBlock = advDistributionProgressBlock;
@@ -840,28 +941,52 @@
         self.gattDistributionProgressBlock(0);
     }
 
-    __block BOOL hasFail = NO;
-    self.successActionInCurrentProgress = 0;
-    __weak typeof(self) weakSelf = self;
-    self.semaphore = dispatch_semaphore_create(0);
-    [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
-        TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
+    BOOL needCheckDistributionCapabilities = NO;
+    if (self.phoneIsDistributor == NO) {
+        NSArray *allNode = [NSArray arrayWithArray:self.allAddressArray];
+        for (NSNumber *addressNumber in allNode) {
+            if (addressNumber.intValue != SigDataSource.share.getCurrentConnectedNode.address) {
+                needCheckDistributionCapabilities = YES;
+                break;
+            }
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
-    }];
-    //Most provide 3 seconds to firmwareDistributionCapabilitiesGet every node.
-    dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+    }
+    if (needCheckDistributionCapabilities) {
+        SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
+        SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+        if (modelId == nil) {
+            [self createErrorWithString:@"distributor have not FirmwareDistributionServer_ID"];
+            [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+        } else {
+            __block BOOL hasFail = NO;
+            self.successActionInCurrentProgress = 0;
+            __weak typeof(self) weakSelf = self;
+            self.semaphore = dispatch_semaphore_create(0);
+            [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
+                TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (error) {
+                    hasFail = YES;
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionCapabilitiesStatus", weakSelf.distributorAddress]];
+                }
+                dispatch_semaphore_signal(weakSelf.semaphore);
+            }];
+            //Most provide 3 seconds to firmwareDistributionCapabilitiesGet every node.
+            dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
 
-    //新做法：直连节点不支持distributor，提示meshOTA失败
-    if (hasFail) {
-        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionCapabilitiesGet"] code:-self.firmwareUpdateProgress userInfo:nil];
-        [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+            //新做法：直连节点不支持distributor，提示meshOTA失败
+            if (hasFail) {
+                [self firmwareUpdateFirmwareDistributionCapabilitiesGetFailAction];
+            } else {
+                self.phoneIsDistributor = NO;
+                self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
+                self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
+                [self firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction];
+            }
+        }
     } else {
-        self.phoneIsDistributor = NO;
+        //待验证
         self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
         self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
         [self firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction];
@@ -929,7 +1054,7 @@
             //Most provide 3 seconds to firmwareUpdateInformationGet every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateInformationGet, node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -939,6 +1064,9 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareUpdateInformationGetSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareUpdateInformationStatus"];
+        }
         [self firmwareUpdateFirmwareUpdateInformationGetFailAction];
     }
 }
@@ -976,6 +1104,7 @@
                 TelinkLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (source == nodeAddress.intValue) {
                     if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
+                        weakSelf.additionalInformationDictionary[@(source)] = @(responseMessage.additionalInformation);
 //                            if (responseMessage.additionalInformation == SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData) {
                             hasSuccess = YES;
 //                            } else {
@@ -983,7 +1112,7 @@
 //                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
 //                            }
                     } else {
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareUpdateStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
@@ -1000,7 +1129,7 @@
             //Most provide 3 seconds to firmwareUpdateFirmwareMetadataCheck every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck, node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -1009,11 +1138,17 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareMetadataCheckSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareUpdateFirmwareMetadataStatus"];
+        }
         [self firmwareUpdateFirmwareMetadataCheckFailAction];
     }
 }
 
 - (void)firmwareUpdateFirmwareMetadataCheckSuccessAction {
+    if (self.firmwareUpdateFirmwareMetadataCheckSuccessHandle) {
+        self.firmwareUpdateFirmwareMetadataCheckSuccessHandle(self.additionalInformationDictionary);
+    }
     [self performSelector:@selector(firmwareUpdateConfigModelSubscriptionAdd) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
@@ -1055,7 +1190,7 @@
                             if (responseMessage.status == SigConfigMessageStatus_success) {
                                 hasSuccess = YES;
                             } else {
-                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in configModelSubscriptionAdd,SigConfigModelSubscriptionStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                                [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigConfigModelSubscriptionStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
                                 TelinkLogError(@"fail in configModelSubscriptionAdd,SigConfigModelSubscriptionStatus.status=0x%x",responseMessage.status);
                                 if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                                     [weakSelf.failAddressArray addObject:nodeAddress];
@@ -1070,13 +1205,13 @@
                 //Most provide 3 seconds to configModelSubscriptionAdd every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in configModelSubscriptionAdd, there is no modelID = 0xFF00"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                [self createErrorWithString:[NSString stringWithFormat:@"node=0x%04X has not modelID = BLOBTransferServer_ID", node.address]];
                 if (![self.failAddressArray containsObject:nodeAddress]) {
                     [self.failAddressArray addObject:nodeAddress];
                 }
             }
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in configModelSubscriptionAdd, node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -1085,6 +1220,9 @@
     if (hasSuccess) {
         [self firmwareUpdateConfigModelSubscriptionAddSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigConfigModelSubscriptionStatus"];
+        }
         [self firmwareUpdateConfigModelSubscriptionAddFailAction];
     }
 }
@@ -1119,7 +1257,7 @@
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
-            weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
         }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
@@ -1139,12 +1277,17 @@
             TelinkLogDebug(@"firmwareDistributionReceiversDeleteAll=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (source != weakSelf.distributorAddress) {
                 TelinkLogInfo(@"response from other node.");
+            } else {
+                if (responseMessage.status != SigFirmwareDistributionServerAndClientModelStatusType_success) {
+                    hasFail = YES;
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionReceiversStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+                }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
                 hasFail = YES;
-                weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
             }
             dispatch_semaphore_signal(weakSelf.semaphore);
         }];
@@ -1184,9 +1327,8 @@
                         hasSuccess = YES;
                     } else {
                         hasFail = YES;
-                        NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionReceiversAdd fail,status=0x%x",responseMessage.status];
-                        weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                        TelinkLogInfo(@"%@",errorString);
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionReceiversStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+                        TelinkLogInfo(@"%@",[NSString stringWithFormat:@"SigFirmwareDistributionReceiversStatus.status=0x%x, source=0x%04X", responseMessage.status, source]);
                     }
                 } else {
                     TelinkLogInfo(@"response from other node.");
@@ -1195,6 +1337,7 @@
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 if (error) {
                     hasFail = YES;
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
                 }
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
@@ -1207,7 +1350,7 @@
             //Most provide 3 seconds to firmwareDistributionReceiversAdd every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareDistributionReceiversAdd, node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -1216,6 +1359,9 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareDistributionReceiversAddSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareDistributionReceiversStatus"];
+        }
         [self firmwareUpdateFirmwareDistributionReceiversAddFailAction];
     }
 }
@@ -1277,9 +1423,8 @@
 
             } else {
                 hasFail = YES;
-                NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionUploadStart fail,status=0x%x",responseMessage.status];
-                weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TelinkLogInfo(@"%@",errorString);
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionUploadStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+                TelinkLogInfo(@"%@",[NSString stringWithFormat:@"SigFirmwareDistributionUploadStatus.status=0x%x, source=0x%04X", responseMessage.status, source]);
             }
         } else {
             TelinkLogInfo(@"response from other node.");
@@ -1288,6 +1433,7 @@
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionUploadStatus", weakSelf.distributorAddress]];
         }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
@@ -1340,15 +1486,17 @@
     self.messageHandle = [SDKLibCommand BLOBTransferGetWithDestination:self.distributorAddress retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
         TelinkLogDebug(@"BLOBTransferGet(initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == weakSelf.distributorAddress) {
-//                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
+//            if (responseMessage.status == SigBLOBTransferStatusType_success) {
                 hasSuccess = YES;
-//                        } else {
-//                           hasFail = YES;
-//                           weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferGet,SigBLOBTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-//                        }
+//            } else {
+//                [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBTransferStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+//            }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (error) {
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+        }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1426,7 +1574,10 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            dispatch_semaphore_signal(weakSelf.semaphore);
+        if (error) {
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBInformationStatus", weakSelf.distributorAddress]];
+        }
+        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1449,7 +1600,7 @@
             //存在合法的blockSizeLog和chunkSize，进行下一步流程。
             [self initiatorToDistributorBLOBInformationGetSuccessAction];
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet(initiator->Distributor), BLOBInformation is empty."] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"BLOBInformation is empty of distributorAddress=0x%04X", weakSelf.distributorAddress]];
             [self initiatorToDistributorBLOBInformationGetFailAction];
         }
     } else {
@@ -1507,6 +1658,9 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (error) {
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+        }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1662,6 +1816,7 @@
     }
     if (!hasSuccess) {
         if (SigBearer.share.isOpen) {
+            [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to distributorAddress=0x%04X fail", self.distributorAddress]];
             [self initiatorToDistributorBLOBChunkTransferFailAction];
         } else {
             return;
@@ -1726,7 +1881,7 @@
                     TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer(initiator->Distributor), error=%@.",error.domain] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
                         dispatch_semaphore_signal(weakSelf.semaphore);
                     } else {
                         weakSelf.successActionInCurrentProgress ++;
@@ -1804,9 +1959,8 @@
                     weakSelf.losePacketsDict[@(source)] = chunkIndexes;
                 }
             } else {
-                NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(initiator->Distributor),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
-                weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TelinkLogInfo(@"%@",errorString);
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, blockIndex=%d, source=0x%04X", responseMessage.status, weakSelf.blockIndex, source]];
+                TelinkLogInfo(@"%@",[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, blockIndex=%d, source=0x%04X", responseMessage.status, weakSelf.blockIndex, source]);
                 if (![weakSelf.failAddressArray containsObject:@(weakSelf.distributorAddress)]) {
                     [weakSelf.failAddressArray addObject:@(weakSelf.distributorAddress)];
                 }
@@ -1814,6 +1968,9 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (error) {
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBBlockStatus", weakSelf.distributorAddress]];
+        }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -1879,7 +2036,7 @@
 //        [self performSelector:@selector(firmwareUpdateFirmwareDistributionFirmwareGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         [self performSelector:@selector(firmwareUpdateFirmwareDistributionStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet, self.blockIndex > self.allBlockCount - 1."] code:-self.firmwareUpdateProgress userInfo:nil];
+        [self createErrorWithString:@"self.blockIndex > self.allBlockCount - 1."];
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -1890,7 +2047,8 @@
         self.retryCountInBLOBChunkTransfer ++;
         [self performSelector:@selector(initiatorToDistributorBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        TelinkLogInfo(@"send block fail.");
+        TelinkLogInfo(@"%@", [NSString stringWithFormat:@"App retry transfer BLOBChunk to distributorAddress=0x%04X three times but still failed", self.distributorAddress]);
+        [self createErrorWithString:[NSString stringWithFormat:@"App retry transfer BLOBChunk to distributorAddress=0x%04X three times but still failed", self.distributorAddress]];
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -1917,9 +2075,8 @@
             if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
             } else {
                 hasFail = YES;
-                NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionStart(Initiator->Distributor) fail,status=0x%x",responseMessage.status];
-                weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                TelinkLogInfo(@"%@",errorString);
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+                TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, source=0x%04X", responseMessage.status, source]);
             }
         } else {
             TelinkLogInfo(@"response from other node.");
@@ -1928,6 +2085,7 @@
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
         }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
@@ -2019,7 +2177,7 @@
 //                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
 //                            }
                     } else {
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart(Distributor->updating node(s)),SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareUpdateStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
@@ -2036,7 +2194,7 @@
             //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -2045,6 +2203,9 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareUpdateStartSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareUpdateStatus"];
+        }
         [self firmwareUpdateFirmwareUpdateStartFailAction];
     }
 }
@@ -2100,7 +2261,7 @@
             //Most provide 3 seconds to BLOBTransferGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferGet(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -2109,6 +2270,9 @@
     if (hasSuccess) {
         [self distributorToUpdatingNodesBLOBTransferGetSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigBLOBTransferStatus"];
+        }
         [self distributorToUpdatingNodesBLOBTransferGetFailAction];
     }
 }
@@ -2179,7 +2343,7 @@
             //Most provide 3 seconds to BLOBInformationGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -2212,6 +2376,7 @@
             [self distributorToUpdatingNodesBLOBInformationGetFailAction];
         }
     } else {
+        [self createErrorWithString:@"All nodes have not response SigBLOBInformationStatus"];
         [self distributorToUpdatingNodesBLOBInformationGetFailAction];
     }
 }
@@ -2266,7 +2431,7 @@
                 //Most provide 3 seconds to BLOBTransferStart(Distributor->updating node(s)) every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferStart(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
                 if (![self.failAddressArray containsObject:nodeAddress]) {
                     [self.failAddressArray addObject:nodeAddress];
                 }
@@ -2275,6 +2440,7 @@
     if (hasSuccess) {
         [self distributorToUpdatingNodesBLOBTransferStartSuccessAction];
     } else {
+        [self createErrorWithString:@"All nodes have not response SigBLOBTransferStatus"];
         [self distributorToUpdatingNodesBLOBTransferStartFailAction];
     }
 }
@@ -2348,7 +2514,7 @@
             //Most provide 3 seconds to BLOBBlockStart(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockStart(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -2359,6 +2525,7 @@
             if (hasSuccess) {
                 [self distributorToUpdatingNodesBLOBBlockStartSuccessAction];
             } else {
+                [self createErrorWithString:@"All nodes have not response SigBLOBBlockStatus"];
                 [self distributorToUpdatingNodesBLOBBlockStartFailAction];
             }
         } else {
@@ -2450,6 +2617,7 @@
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             if (error) {
+                [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
                 dispatch_semaphore_signal(weakSelf.semaphore);
             } else {
                 hasSuccess = YES;
@@ -2557,7 +2725,7 @@
                     TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer(Distributor->updating node(s)), error=%@.",error.domain] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
                         dispatch_semaphore_signal(weakSelf.semaphore);
                     } else {
                         weakSelf.successActionInCurrentProgress ++;
@@ -2650,21 +2818,18 @@
                         hasSuccess = YES;
                         if (responseMessage.format == SigBLOBBlockFormatType_someChunksMissing && responseMessage.missingChunksList && responseMessage.missingChunksList.count > 0) {
                             hasLost = YES;
-                            NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
-                            weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TelinkLogInfo(@"%@",errorString);
+                            [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]];
+                            TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]);
                             weakSelf.losePacketsDict[@(source)] = responseMessage.missingChunksList;
                         } else if (responseMessage.format == SigBLOBBlockFormatType_encodedMissingChunks && responseMessage.encodedMissingChunksList && responseMessage.encodedMissingChunksList.count > 0) {
                             hasLost = YES;
-                            NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
-                            weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TelinkLogInfo(@"%@",errorString);
+                            [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]];
+                            TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]);
                             weakSelf.losePacketsDict[@(source)] = responseMessage.encodedMissingChunksList;
                         } else if (responseMessage.format == SigBLOBBlockFormatType_allChunksMissing) {
                             hasLost = YES;
-                            NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
-                            weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                            TelinkLogInfo(@"%@",errorString);
+                            [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]];
+                            TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]);
                             NSMutableArray *chunkIndexes = [NSMutableArray array];
                             for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
                                 [chunkIndexes addObject:@(i)];
@@ -2672,9 +2837,8 @@
                             weakSelf.losePacketsDict[@(source)] = chunkIndexes;
                         }
                     } else {
-                        NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)),SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
-                        weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                        TelinkLogInfo(@"%@",errorString);
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, blockIndex=%d, source=0x%04X", responseMessage.status, weakSelf.blockIndex, source]];
+                        TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, blockIndex=%d, source=0x%04X", responseMessage.status, weakSelf.blockIndex, source]);
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
@@ -2692,7 +2856,7 @@
             //Most provide 3 seconds to BLOBBlockGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -2751,7 +2915,7 @@
         TelinkLogVerbose(@"");
         [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet(Distributor->updating node(s)), self.blockIndex > self.allBlockCount - 1."] code:-self.firmwareUpdateProgress userInfo:nil];
+        [self createErrorWithString:@"self.blockIndex > self.allBlockCount - 1."];
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -2762,7 +2926,8 @@
         self.retryCountInBLOBChunkTransfer ++;
         [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
-        TelinkLogInfo(@"send block fail.");
+        TelinkLogInfo(@"App retry transfer BLOBChunk to nodes three times but still failed");
+        [self createErrorWithString:@"App retry transfer BLOBChunk to nodes three times but still failed"];
         [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     }
 }
@@ -2793,9 +2958,7 @@
             [weakSelf callbackAdvDistributionProgressBlock];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            if (error) {
-                weakSelf.failError = [NSError errorWithDomain:error.domain code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-            }
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
             dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         if (self.phoneIsDistributor) {
@@ -2870,10 +3033,11 @@
 - (void)firmwareDistributionReceiversGetFinishAction {
     if (self.failAddressArray.count == self.allAddressArray.count) {
         //所有设备都已经失败
-        NSString *errorString = @"firmware update fail, firmwareDistributionReceiversGet(Initiator->Distributor) fail";
-        self.failError = [NSError errorWithDomain:errorString code:-self.firmwareUpdateProgress userInfo:nil];
-        TelinkLogInfo(@"%@",errorString);
-        [self fiemwareUpdateFirmwareDistributionReceiversGetFailAction];
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have ota fail."];
+        }
+        TelinkLogInfo(@"%@",@"All nodes have ota fail.");
+        [self firmwareUpdateFirmwareDistributionReceiversGetFailAction];
     } else {
         //所有设备已经校验固件完成或者OTA失败，进行下一步
         NSMutableArray *temArr = [NSMutableArray arrayWithArray:self.allAddressArray];
@@ -2928,7 +3092,7 @@
     }
 }
 
-- (void)fiemwareUpdateFirmwareDistributionReceiversGetFailAction {
+- (void)firmwareUpdateFirmwareDistributionReceiversGetFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
@@ -2969,9 +3133,8 @@
                     });
                 } else {
                     hasFail = YES;
-                    NSString *errorString = [NSString stringWithFormat:@"firmware update fail, firmwareDistributionApply(Initiator->Distributor) fail,status=0x%x",responseMessage.status];
-                    weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-                    TelinkLogInfo(@"%@",errorString);
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
+                    TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, source=0x%04X", responseMessage.status, source]);
                 }
             }
         } else {
@@ -2981,6 +3144,7 @@
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
         }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
@@ -3047,7 +3211,7 @@
 //                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet(Distributor->updating node(s)),SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
 //                            }
                     } else {
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet(Distributor->updating node(s)),SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionReceiversStatus.status=0x%x, source=0x%04X", responseMessage.status, source]];
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
@@ -3064,7 +3228,7 @@
             //Most provide 3 seconds to firmwareUpdateGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -3073,6 +3237,9 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareUpdateGetSuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareDistributionReceiversStatus"];
+        }
         [self firmwareUpdateFirmwareUpdateGetFailAction];
     }
 }
@@ -3125,13 +3292,13 @@
 //                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply(Distributor->updating node(s)),responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
 //                                }
                         } else {
-                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply(Distributor->updating node(s)),SigFirmwareUpdateStatus.updatePhase=0x%x",responseMessage.updatePhase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                            [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareUpdateStatus.status=0x%x, updatePhase=0x%x, source=0x%04X", responseMessage.status, responseMessage.updatePhase, source]];
                             if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                                 [weakSelf.failAddressArray addObject:nodeAddress];
                             }
                         }
                     } else {
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply(Distributor->updating node(s)),SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareUpdateStatus.status=0x%x, updatePhase=0x%x, source=0x%04X", responseMessage.status, responseMessage.updatePhase, source]];
                         if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
                             [weakSelf.failAddressArray addObject:nodeAddress];
                         }
@@ -3148,7 +3315,7 @@
             //Most provide 3 seconds to BLOBBlockStart every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply(Distributor->updating node(s)), node is outOfLine"] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [self createErrorWithString:[NSString stringWithFormat:@"node=0x%4X is offline", nodeAddress.intValue]];
             if (![self.failAddressArray containsObject:nodeAddress]) {
                 [self.failAddressArray addObject:nodeAddress];
             }
@@ -3157,6 +3324,9 @@
     if (hasSuccess) {
         [self firmwareUpdateFirmwareUpdateApplySuccessAction];
     } else {
+        if (!self.failError) {
+            [self createErrorWithString:@"All nodes have not response SigFirmwareUpdateStatus"];
+        }
         [self firmwareUpdateFirmwareUpdateApplyFailAction];
     }
 }
@@ -3192,10 +3362,13 @@
         if (responseMessage.distributionPhase == SigDistributionPhaseState_completed || responseMessage.distributionPhase == SigDistributionPhaseState_applyingUpdate || (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle)) {//Distributor apply完成但未重启 或者 Distributor 正在apply 或者 Distributor apply完成并重启
             needGetAgain = NO;
         } else {
-            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareDistributionGet(Initiator->Distributor),SigFirmwareDistributionStatus.distributionPhase=0x%x",responseMessage.distributionPhase] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, distributionPhase=0x%x, source=0x%04X", responseMessage.status, responseMessage.distributionPhase, source]];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (error) {
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+        }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
@@ -3242,7 +3415,7 @@
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
-#pragma mark - Firmware update step27:SigFirmwareUpdateInformationGetCheckVersion(Initiator->updating node(s))
+#pragma mark - Firmware update step27:firmwareUpdateInformationGetCheckVersion(Initiator->updating node(s))
 - (void)firmwareUpdateInformationGetCheckVersion {
     self.firmwareUpdateProgress = SigFirmwareUpdateInformationGetCheckVersion;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
@@ -3274,9 +3447,22 @@
                     if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                     TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
-                    UInt16 oldVid = [[weakSelf.oFirmwareInformation[@(source)] objectForKey:kVid] intValue];
-                    if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformation.allKeys containsObject:@(source)] && oldVid != vid)) {
+                    BOOL checkVidResult = NO;
+                    if (weakSelf.otaData) {
+                        //存在Bin数据则获取Bin的vid，如果当前设备的vid == Bin的vid则OTA成功
+                        UInt16 binVersion = [weakSelf getVidWithOTAData:weakSelf.otaData];
+                        if (binVersion == vid) {
+                            checkVidResult = YES;
+                        }
+                    } else {
+                        //不存在Bin数据，则获取设备旧的vid，如果当前设备的vid != 旧的vid则OTA成功
+                        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress.intValue];
+                        UInt16 oldVid = [[weakSelf.oFirmwareInformation[@(source)] objectForKey:kVid] intValue];
+                        if ([LibTools uint16From16String:node.vid] != vid || ([weakSelf.oFirmwareInformation.allKeys containsObject:@(source)] && oldVid != vid)) {
+                            checkVidResult = YES;
+                        }
+                    }
+                    if (checkVidResult) {
                         weakSelf.nFirmwareInformation[@(source)] = @{kPid:@(pid),kVid:@(vid)};
                         [SigDataSource.share updateNodeModelVidWithAddress:nodeAddress.intValue vid:vid];
                         receiveStatusDict[@(source)] = responseMessage;
@@ -3287,6 +3473,9 @@
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareUpdateInformationStatus", nodeAddress.intValue]];
+            }
             dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         //Most provide 3 seconds to firmwareUpdateInformationGet every node.
@@ -3321,6 +3510,7 @@
     if (hasSuccess) {
         [self firmwareUpdateInformationGetCheckVersionSuccessAction];
     } else {
+        [self createErrorWithString:@"No nodes updated to the new bin version"];
         [self firmwareUpdateInformationGetCheckVersionFailAction];
     }
 }
@@ -3351,6 +3541,7 @@
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
             hasFail = YES;
+            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
         }
         dispatch_semaphore_signal(weakSelf.semaphore);
     }];
@@ -3415,6 +3606,15 @@
     if (self.firmwareDistributionReceiversList && self.advDistributionProgressBlock) {
         self.advDistributionProgressBlock(self.firmwareDistributionReceiversList);
     }
+}
+
+- (UInt16)getVidWithOTAData:(NSData *)data {
+    UInt16 vid = 0;
+    Byte *tempBytes = (Byte *)[data bytes];
+    if (data && data.length >= 6) {
+        memcpy(&vid, tempBytes + 0x4, 2);
+    }
+    return vid;
 }
 
 @end

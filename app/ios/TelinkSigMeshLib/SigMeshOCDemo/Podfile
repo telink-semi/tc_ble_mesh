@@ -1,0 +1,63 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '11.0'
+
+target 'SigLoopAddDemo' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for SigLoopAddDemo
+
+  pod 'AFNetworking'
+  pod 'Reachability'
+  pod 'BRPickerView'
+  pod 'IQKeyboardManager' #iOS11 and later
+  pod 'WMZPageController'
+
+end
+
+target 'SigMeshCloud' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for SigMeshCloud
+
+  pod 'AFNetworking'
+  pod 'Reachability'
+  pod 'BRPickerView'
+  pod 'IQKeyboardManager' #iOS11 and later
+  pod 'WMZPageController'
+
+end
+
+target 'SigMeshOCDemo' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for SigMeshOCDemo
+
+  pod 'Reachability'
+  pod 'BRPickerView'
+  pod 'IQKeyboardManager' #iOS11 and later
+  pod 'WMZPageController'
+
+  target 'SigMeshOCDemoTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  target 'SigMeshOCDemoUITests' do
+    # Pods for testing
+  end
+
+end
+
+# 添加一下代码的原因：https://blog.csdn.net/crasowas/article/details/129901398
+post_install do |installer|
+  installer.generated_projects.each do |project|
+      project.targets.each do |target|
+        target.build_configurations.each do |config|
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+        end
+      end
+  end
+end

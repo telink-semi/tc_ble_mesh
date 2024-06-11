@@ -222,6 +222,22 @@
 /// queue.
 @implementation SchedulerModel
 
+- (instancetype)initWithSchedulerDataAndSceneIdData:(NSData *)data {
+    if (self = [super init]) {
+        if (data.length < 10) {
+            return nil;
+        }
+        Byte *dataByte = (Byte *)data.bytes;
+        UInt64 tem64 = 0;
+        memcpy(&tem64, dataByte, 8);
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+8, 2);
+        [self setSchedulerData:tem64];
+        [self setSceneId:tem16];
+    }
+    return self;
+}
+
 /// get dictionary from SchedulerModel object.
 /// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSchedulerModel {
@@ -248,6 +264,102 @@
     if ([allKeys containsObject:@"schedulerData"]) {
         _schedulerData = [LibTools uint64From16String:dictionary[@"schedulerData"]];
     }
+}
+
+- (NSString *)getDetailString {
+    NSArray *monthStrings = @[@"Jan",@"Feb",@"Mar",@"Apr",@"May",@"June",@"July",@"Aug",@"Sep",@"Oct",@"Nov",@"Dec"];
+    NSArray *weekStrings = @[@"Monday",@"Tuesday",@"Wednesday",@"Thursday",@"Friday",@"Saturday",@"Sunday"];
+
+    NSString *year,*month=@"",*day,*hour,*minute,*second,*week=@"",*action;
+    //year
+    year = [NSString stringWithFormat:@"%llu",self.year];
+    if (self.year >= 0 && self.year <= 0x63) {
+        year = [NSString stringWithFormat:@"%llu",self.year];
+    }else if (self.year == 0x64){
+        year = @"Any";
+    }
+    //month
+    for (int i=0; i<12; i++) {
+        BOOL isExist = ((self.month>>i)&0x1)==1;
+        if (isExist) {
+            if (month.length != 0) {
+                month = [month stringByAppendingString:@"/"];
+            }
+            month = [month stringByAppendingString:monthStrings[i]];
+        }
+    }
+    if (month.length == 0) {
+        month = [NSString stringWithFormat:@"%llu",self.month];
+    }
+    //day
+    day = [NSString stringWithFormat:@"%llu",self.day];
+    if (self.day >= 1 && self.day <= 0x1F) {
+        day = [NSString stringWithFormat:@"%llu",self.day];
+    }else if (self.day == 0){
+        day = @"Any";
+    }
+    //hour
+    hour = [NSString stringWithFormat:@"%llu",self.hour];
+    if (self.hour >= 0 && self.hour <= 0x17) {
+        hour = [NSString stringWithFormat:@"%llu",self.hour];
+    }else if (self.hour == 0x18){
+        hour = @"Any";
+    }else if (self.hour == 0x19){
+        hour = @"Once a day";
+    }
+    //minute
+    minute = [NSString stringWithFormat:@"%llu",self.minute];
+    if (self.minute >= 0 && self.minute <= 0x3B) {
+        minute = [NSString stringWithFormat:@"%llu",self.minute];
+    }else if (self.minute == 0x3C){
+        minute = @"Any";
+    }else if (self.minute == 0x3D){
+        minute = @"Every 15 minutes";
+    }else if (self.minute == 0x3E){
+        minute = @"Every 20 minutes";
+    }else if (self.minute == 0x3F){
+        minute = @"Once an hour";
+    }
+    //second
+    second = [NSString stringWithFormat:@"%llu",self.second];
+    if (self.second >= 0 && self.second <= 0x3B) {
+        second = [NSString stringWithFormat:@"%llu",self.second];
+    }else if (self.second == 0x3C){
+        second = @"Any";
+    }else if (self.second == 0x3D){
+        second = @"Every 15 seconds";
+    }else if (self.second == 0x3E){
+        second = @"Every 20 seconds";
+    }else if (self.second == 0x3F){
+        second = @"Once an minute";
+    }
+    //week
+    for (int i=0; i<7; i++) {
+        BOOL isExist = ((self.week>>i)&0x1)==1;
+        if (isExist) {
+            if (week.length != 0) {
+                week = [week stringByAppendingString:@"/"];
+            }
+            week = [week stringByAppendingString:weekStrings[i]];
+        }
+    }
+    if (week.length == 0) {
+        week = [NSString stringWithFormat:@"%llu",self.week];
+    }
+    //action
+    action = [NSString stringWithFormat:@"%lu",(unsigned long)self.action];
+    if (self.action == 0x0) {
+        action = @"Off";
+    }else if (self.action == 0x1){
+        action = @"On";
+    }else if (self.action == 0x2){
+        action = [NSString stringWithFormat:@"Scene -- %llu",self.sceneId];
+    }else if (self.action == 0xF){
+        action = @"NO";
+    }
+    //result
+    NSString *result = [NSString stringWithFormat:@"Year:%@\nMonth:%@\nDay:%@\nHour:%@\nMinute:%@\nSecond:%@\nWeek:%@\nAction:%@",year,month,day,hour,minute,second,week,action];
+    return result;
 }
 
 /// Initialize SchedulerModel object.
@@ -409,6 +521,66 @@
 - (void)setTransitionTime:(UInt64)transitionTime {
     UInt64 tem = 0xFF;
     _schedulerData = (_schedulerData & (~tem<<56)) | ((transitionTime & tem) << 56);
+}
+
+@end
+
+
+@implementation SigPlatformTelinkDeviceUuidModel
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 16) {
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem16, dataByte, 2);
+            _tcFlag = tem16;
+            memcpy(&tem8, dataByte+2, 1);
+            struct TCProtocolFeature feature = {};
+            feature.value = tem8;
+            _protocolFeature = feature;
+            memcpy(&tem16, dataByte+3, 2);
+            _tcVendorID = tem16;
+            memcpy(&tem16, dataByte+5, 2);
+            _pid = tem16;
+            _macData = [parameters subdataWithRange:NSMakeRange(7, 6)];
+            _feature_rsv2 = [parameters subdataWithRange:NSMakeRange(13, 2)];
+            memcpy(&tem8, dataByte+15, 1);
+            _check_sum = tem8;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem16 = 0;
+    NSData *data = nil;
+    tem16 = _tcFlag;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _protocolFeature.value;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem16 = _tcVendorID;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _pid;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    if (_macData && _macData.length > 0) {
+        [mData appendData:_macData];
+    }
+    if (_feature_rsv2 && _feature_rsv2.length > 0) {
+        [mData appendData:_feature_rsv2];
+    }
+    tem8 = _check_sum;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+
+    return mData;
 }
 
 @end
@@ -617,6 +789,31 @@
     }
 }
 
+- (BOOL)isTelinkPlatformDevice {
+    SigPlatformTelinkDeviceUuidModel *uuid = self.getPlatformTelinkDeviceUuid;
+    UInt16 checkSum = [self getCheckSum:[self.advertisementDataServiceData subdataWithRange:NSMakeRange(0, 15)]];
+    return (checkSum & 0xFF) == uuid.check_sum;
+}
+
+- (SigPlatformTelinkDeviceUuidModel *)getPlatformTelinkDeviceUuid {
+    SigPlatformTelinkDeviceUuidModel *uuid = nil;
+    if (self.advertisementDataServiceData && self.advertisementDataServiceData.length >= 16) {
+        uuid = [[SigPlatformTelinkDeviceUuidModel alloc] initWithParameters:self.advertisementDataServiceData];
+    }
+    return uuid;
+}
+
+- (UInt16)getCheckSum:(NSData *)data {
+    UInt16 tem16 = 0;
+    Byte *byte = (Byte *)data.bytes;
+    for (int i=0; i<data.length; i++) {
+        UInt8 tem8 = 0;
+        memcpy(&tem8, byte+i, 1);
+        tem16 += tem8;
+    }
+    return tem16;
+}
+
 @end
 
 
@@ -674,6 +871,31 @@
 /// change the log string of SigRemoteScanRspModel.
 - (NSString *)description {
     return [NSString stringWithFormat:@"unicastAddress=%@,uuid=%@,macAddress=%@,RSSI=%@,OOB=%@",@(self.reportNodeAddress),_reportNodeUUID,self.macAddress,@(_RSSI),@(_oob.value)];
+}
+
+- (BOOL)isTelinkPlatformDevice {
+    SigPlatformTelinkDeviceUuidModel *uuid = self.getPlatformTelinkDeviceUuid;
+    UInt16 checkSum = [self getCheckSum:[_reportNodeUUID subdataWithRange:NSMakeRange(0, 15)]];
+    return (checkSum & 0xFF) == uuid.check_sum;
+}
+
+- (SigPlatformTelinkDeviceUuidModel *)getPlatformTelinkDeviceUuid {
+    SigPlatformTelinkDeviceUuidModel *uuid = nil;
+    if (_reportNodeUUID && _reportNodeUUID.length >= 16) {
+        uuid = [[SigPlatformTelinkDeviceUuidModel alloc] initWithParameters:_reportNodeUUID];
+    }
+    return uuid;
+}
+
+- (UInt16)getCheckSum:(NSData *)data {
+    UInt16 tem16 = 0;
+    Byte *byte = (Byte *)data.bytes;
+    for (int i=0; i<data.length; i++) {
+        UInt8 tem8 = 0;
+        memcpy(&tem8, byte+i, 1);
+        tem16 += tem8;
+    }
+    return tem16;
 }
 
 @end
@@ -838,6 +1060,8 @@
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }
         }
+        compositionData.companyIdentifier = cid;
+        compositionData.productIdentifier = pid;
         _defaultCompositionData = compositionData;
     }
     return self;
@@ -846,17 +1070,19 @@
 /// Get Default Composition Data With Pid.
 /// @param pid product ID.
 - (NSData *)getDefaultCompositionDataWithPid:(UInt16)pid {
+    struct TelinkPID telinkPid = {};
+    telinkPid.value = pid;
     NSData *data = nil;
-    if (pid == SigNodePID_Panel) {
+    if (telinkPid.minorProductType == SigNodePID_PANEL) {
         //set default compositionData of panel
         data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-    }else if (pid == SigNodePID_HSL) {
+    }else if (telinkPid.minorProductType == SigNodePID_HSL) {
         //set default compositionData of HSL
         data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
-    }else if (pid == SigNodePID_CT) {
+    }else if (telinkPid.minorProductType == SigNodePID_CT) {
         //set default compositionData of CT
         data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-    }else if (pid == SigNodePID_LPN) {
+    }else if (telinkPid.majorProductType == MajorProductType_LPN) {
         //set default compositionData of LPN
         data = [NSData dataWithBytes:LPNByte length:sizeof(LPNByte)];
     }
@@ -925,6 +1151,7 @@
     if (self = [super init]) {
         /// Initialize self.
         [self setDefaultEncryptKey];
+        _ttl = SigMeshLib.share.defaultTtl;
     }
     return self;
 }
@@ -955,6 +1182,7 @@
         _address = address;
         _opcode = opcode;
         _commandData = commandData;
+        _ttl = SigMeshLib.share.defaultTtl;
         [self setDefaultEncryptKey];
     }
     return self;
@@ -974,16 +1202,14 @@
 /// 0 means sig model command, other means vendor model command.
 ///   - responseOpcode: The response opcode of command, only for reliable command.
 /// eg: The response opcode of VendorOnOffSet is 0xC4.
-///   - needTid: The position of tid in the ini command.
-///   when needTid is NO, parameter tidPosition and tid is invalid.
-///   - tidPosition: The position of tid in the ini command.
+///   - tidPosition: The position of tid in the ini command. 0 mean no tid in this IniCommandModel.
 ///   - tid: The value of tid in the ini command.
 ///   - commandData: The Hex command data.
 ///   eg: SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}.
 ///   eg: SigGenericOnOffSet: commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
 /// - returns:
 /// return `nil` when initialize vendor model IniCommandModel object fail.
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData {
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
@@ -995,10 +1221,10 @@
         _opcode = opcode;
         _vendorId = vendorId;
         _responseOpcode = responseOpcode;
-        _needTid = needTid;
         _tidPosition = tidPosition;
         _tid = tid;
         _commandData = commandData;
+        _ttl = SigMeshLib.share.defaultTtl;
         [self setDefaultEncryptKey];
     }
     return self;
@@ -1017,6 +1243,7 @@
             return nil;
         }
         [self setDefaultEncryptKey];
+        _ttl = SigMeshLib.share.defaultTtl;
         Byte *pu = (Byte *)[iniCommandData bytes];
         UInt16 tem16 = 0;
         UInt8 tem8 = 0;
@@ -1040,7 +1267,6 @@
             memcpy(&tem8, pu+13, 1);
             _responseOpcode = tem8;
             memcpy(&tem8, pu+14, 1);
-            _needTid = tem8 != 0;
             _tidPosition = tem8;
             if (tem8 != 0) {
                 if (iniCommandData.length >= 15+tem8) {
@@ -1719,18 +1945,20 @@
     UInt64 tem64 = _TAISeconds & 0xFFFFFFFF;
     NSData *data = [NSData dataWithBytes:&tem64 length:8];
     [mData appendData:[data subdataWithRange:NSMakeRange(0, 5)]];
-    tem8 = _subSeconds;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
-    tem8 = _uncertainty;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
-    tem16 = ((UInt16)_timeAuthority << 15) | _subSeconds;
-    data = [NSData dataWithBytes:&tem16 length:2];
-    [mData appendData:data];
-    tem8 = _timeZoneOffset;
-    data = [NSData dataWithBytes:&tem8 length:1];
-    [mData appendData:data];
+    if (_TAISeconds != 0) {
+        tem8 = _subSeconds;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = _uncertainty;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem16 = ((UInt16)_timeAuthority << 15) | _subSeconds;
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        tem8 = _timeZoneOffset;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+    }
     return mData;
 }
 
@@ -1757,10 +1985,10 @@
             memcpy(&tem16, dataByte, 2);
             _propertyID = tem16;
             if (parameters.length > 2) {
-                memcpy(&tem16, dataByte+2, 2);
-                _positiveTolerance = tem16;
-                memcpy(&tem16, dataByte+4, 2);
-                _negativeTolerance = tem16;
+                UInt32 tem32 = 0;
+                memcpy(&tem32, dataByte+2, 3);
+                _negativeTolerance = (tem32 & 0xFFFFFF) >> 12;
+                _positiveTolerance = (tem32 & 0xFFFFFF) & 0xFFF;
                 UInt8 tem8 = 0;
                 memcpy(&tem8, dataByte+5, 1);
                 _samplingFunction = tem8;
@@ -1783,12 +2011,11 @@
     NSData *data = [NSData dataWithBytes:&tem16 length:2];
     [mData appendData:data];
     if (_positiveTolerance != 0) {
-        tem16 = _positiveTolerance;
-        data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        tem16 = _negativeTolerance;
-        data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
+        UInt32 tem32 = 0;
+        tem32 = _negativeTolerance;
+        tem32 = (tem32 << 12) | _positiveTolerance;
+        NSData *data = [NSData dataWithBytes:&tem32 length:4];
+        [mData appendData:[data subdataWithRange:NSMakeRange(0, 3)]];
         UInt8 tem8 = _samplingFunction;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
@@ -1800,6 +2027,205 @@
         [mData appendData:data];
     }
     return mData;
+}
+
+/// Determine if the data of two SigSensorDescriptorModel is the same
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[SigSensorDescriptorModel class]]) {
+        //propertyID is the unique identifier of SigSensorDescriptorModel.
+        return _propertyID == ((SigSensorDescriptorModel *)object).propertyID;
+    } else {
+        //Two SigSensorDescriptorModel object is different.
+        return NO;
+    }
+}
+
+@end
+
+
+/// The Sensor Cadence state controls the cadence of sensor reports. It allows a sensor to be configured to send measured
+/// values using Sensor Status messages (see Section 4.2.14) at a different cadence for a range of measured values. It also
+/// allows a sensor to be configured to send measured values when the value changes up or down by more than a configured
+/// delta value.
+/// 4.1.3 Sensor Cadence
+/// Table 4.12: Sensor Cadence states
+/// - seeAlso: MshMDL_v1.1.pdf  (page.118)
+@implementation SigSensorCadenceModel
+
+/// Initialize SigSensorCadenceModel object.
+/// - Parameter parameters: The hex of SigSensorCadenceModel object.
+/// - returns:
+/// return `nil` when initialize SigSensorCadenceModel object fail.
+- (instancetype)initWithSensorCadenceParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        if (parameters != nil && (parameters.length == 2 || parameters.length >= 8)) {
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem16, dataByte, 2);
+            _propertyID = tem16;
+            if (parameters.length > 2) {
+                UInt8 tem8 = 0;
+                memcpy(&tem8, dataByte+2, 1);
+                _fastCadencePeriodDivisor = tem8 & 0x7F;
+                _statusTriggerType = (tem8 >> 7) & 0x1;
+                UInt8 lengthOfPropertyID = [LibTools valueLengthOfDevicePropertyID:_propertyID];
+                UInt8 lengthOfStatusTriggerDelta = lengthOfPropertyID;
+                if (_statusTriggerType == 1) {
+                    lengthOfStatusTriggerDelta = 2;
+                }
+                UInt32 tem32 = 0;
+                if (parameters.length >= 3+lengthOfStatusTriggerDelta) {
+                    memcpy(&tem32, dataByte+3, lengthOfStatusTriggerDelta);
+                    _statusTriggerDeltaDown = tem32;
+                }
+                if (parameters.length >= 3+lengthOfStatusTriggerDelta*2) {
+                    memcpy(&tem32, dataByte+3+lengthOfStatusTriggerDelta, lengthOfStatusTriggerDelta);
+                    _statusTriggerDeltaUp = tem32;
+                }
+                if (parameters.length >= 3+lengthOfStatusTriggerDelta*2+1) {
+                    memcpy(&tem8, dataByte+3+lengthOfStatusTriggerDelta*2, 1);
+                    _statusMinInterval = tem8;
+                }
+                if (parameters.length >= 3+lengthOfStatusTriggerDelta*2+1+lengthOfPropertyID) {
+                    memcpy(&tem32, dataByte+3+lengthOfStatusTriggerDelta*2+1, lengthOfPropertyID);
+                    _fastCadenceLow = tem32;
+                }
+                if (parameters.length >= 3+lengthOfStatusTriggerDelta*2+1+lengthOfPropertyID*2) {
+                    memcpy(&tem32, dataByte+3+lengthOfStatusTriggerDelta*2+1+lengthOfPropertyID, lengthOfPropertyID);
+                    _fastCadenceHigh = tem32;
+                }
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+/// Get Sensor Cadence hex data.
+- (NSData *)getSensorCadenceParameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _propertyID;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    if (_fastCadencePeriodDivisor != 0 || _statusTriggerType != 0 || _statusTriggerDeltaDown != 0 || _statusTriggerDeltaUp != 0 || _statusMinInterval != 0 || _fastCadenceLow != 0 || _fastCadenceHigh != 0) {
+        UInt8 tem8 = (_fastCadencePeriodDivisor & 0x7F) | (_statusTriggerType << 7);
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+        UInt8 lengthOfPropertyID = [LibTools valueLengthOfDevicePropertyID:_propertyID];
+        UInt8 lengthOfStatusTriggerDelta = lengthOfPropertyID;
+        if (_statusTriggerType == 1) {
+            lengthOfStatusTriggerDelta = 2;
+        }
+        UInt32 tem32 = _statusTriggerDeltaDown;
+        [mData appendData:[NSData dataWithBytes:&tem32 length:lengthOfStatusTriggerDelta]];
+        tem32 = _statusTriggerDeltaUp;
+        [mData appendData:[NSData dataWithBytes:&tem32 length:lengthOfStatusTriggerDelta]];
+        tem8 = _statusMinInterval;
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+        tem32 = _fastCadenceLow;
+        [mData appendData:[NSData dataWithBytes:&tem32 length:lengthOfPropertyID]];
+        tem32 = _fastCadenceHigh;
+        [mData appendData:[NSData dataWithBytes:&tem32 length:lengthOfPropertyID]];
+    }
+    return mData;
+}
+
+/// Determine if the data of two SigSensorCadenceModel is the same
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[SigSensorCadenceModel class]]) {
+        //propertyID is the unique identifier of SigSensorCadenceModel.
+        return _propertyID == ((SigSensorCadenceModel *)object).propertyID;
+    } else {
+        //Two SigSensorCadenceModel object is different.
+        return NO;
+    }
+}
+
+@end
+
+
+/// The Marshalled Sensor Data field represents the marshalled Sensor Data state(s) (see Section 4.1.4).
+/// Special marshalling is used in order to facilitate forward compatibility and to optimize the payload of
+/// the message, as illustrated by the figure below.
+/// Marshalling is based on a type-length-value (TLV) concept. A Marshalled Property ID (MPID) is a
+/// concatenation of a 1-bit Format field, a 4-bit or 7-bit Length of the Property Value field, and an 11-bit
+/// or 16-bit Property ID.
+/// 4.2.14 Sensor Status
+/// Figure 4.4: Sensor data marshalling
+/// - seeAlso: MshMDL_v1.1.pdf  (page.130)
+@implementation SigSensorDataModel
+
+/// Initialize SigSensorDataModel object.
+/// - Parameter parameters: The hex of SigSensorDataModel object.
+/// - returns:
+/// return `nil` when initialize SigSensorDataModel object fail.
+- (instancetype)initWithSensorDataParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        if (parameters != nil && parameters.length >= 2) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            _sensorDataFormat = tem8 & 0x1;
+            if (_sensorDataFormat == SigSensorDataFormatA) {
+                _length = ((tem8 >> 1) & 0xF) + 1;
+                _propertyID = (tem8 >> 5) & 0x7;
+                memcpy(&tem8, dataByte+1, 1);
+                _propertyID = (_propertyID << 8) | tem8;
+            } else {
+                _length = ((tem8 >> 1) & 0x7F) + 1;
+                if (_length == 0x7F + 1) {
+                    _length = 0;
+                }
+                if (parameters.length >= 3) {
+                    UInt16 tem16 = 0;
+                    memcpy(&tem16, dataByte+1, 2);
+                    _propertyID = tem16;
+                }
+            }
+            if (parameters.length >= ((_sensorDataFormat == SigSensorDataFormatA ? 2 : 3) + _length)) {
+                _rawValueData = [parameters subdataWithRange:NSMakeRange(_sensorDataFormat == SigSensorDataFormatA ? 2 : 3, _length)];
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+/// Get Sensor data hex data.
+- (NSData *)getSensorDataParameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    if (_sensorDataFormat == SigSensorDataFormatA) {
+        tem8 = (((_length - 1) & 0xF) << 1) | ((_propertyID >> 8) & 0x7);
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+        tem8 = _propertyID & 0xFF;
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+    } else {
+        tem8 = _sensorDataFormat | (((_length == 0 ? 0x7F : (_length-1)) & 0x7F) << 1);
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+        UInt16 tem16 = _propertyID;
+        [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
+    }
+    if (_rawValueData) {
+        [mData appendData:_rawValueData];
+    }
+    return mData;
+}
+
+/// Determine if the data of two SigSensorDataModel is the same
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[SigSensorDataModel class]]) {
+        //propertyID is the unique identifier of SigSensorDataModel.
+        return _propertyID == ((SigSensorDataModel *)object).propertyID;
+    } else {
+        //Two SigSensorDataModel object is different.
+        return NO;
+    }
 }
 
 @end
@@ -2025,11 +2451,6 @@
 /// A Primary Network Key may not be removed from the mesh network.
 - (BOOL)isPrimary {
     return _index == 0;
-}
-
-/// Get detail string of SigNetkeyModel object.
-- (NSString *)getNetKeyDetailString {
-    return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tkey:0x%@\toldKey:0x%@\tphase:%d\tminSecurity:%@\ttimestamp:%@",_name,(long)_index,_key,_oldKey,_phase,_minSecurity,_timestamp];
 }
 
 @end
@@ -2469,11 +2890,6 @@
     return nil;
 }
 
-/// Get detail string of SigAppkeyModel object.
-- (NSString *)getAppKeyDetailString {
-    return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tboundNetKey:0x%04lX\tkey:0x%@\toldKey:0x%@",_name,(long)_index,(long)_boundNetKey,_key,_oldKey];
-}
-
 @end
 
 
@@ -2706,7 +3122,7 @@
     if (self = [super init]) {
         /// Initialize self.
         _groupBrightness = 100;
-        _groupTempareture = 100;
+        _groupTemperature = 100;
     }
     return self;
 }
@@ -2744,7 +3160,7 @@
         _parentAddress = dictionary[@"parentAddress"];
     }
     _groupBrightness = 100;
-    _groupTempareture = 100;
+    _groupTemperature = 100;
 }
 
 - (SigMeshAddress *)meshAddress {
@@ -2886,13 +3302,17 @@
         _appKeys = [NSMutableArray array];
 
         _schedulerList = [[NSMutableArray alloc] init];
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionary];
+        _sensorDataArray = [NSMutableArray array];
+        _sensorDescriptorArray = [NSMutableArray array];
+        _sensorCadenceArray = [NSMutableArray array];
 
         _state = DeviceStateOutOfLine;
         _macAddress = @"";
         _name = @"";
         _security = @"secure";
         _features = [[SigNodeFeatures alloc] init];
-        _relayRetransmit = [[SigRelayretransmitModel alloc] init];
+        _relayRetransmit = [[SigRelayRetransmitModel alloc] init];
         _networkTransmit = [[SigNetworktransmitModel alloc] init];
 
         _defaultTTL = 10;
@@ -2906,7 +3326,9 @@
         _subnetBridgeList = [[NSMutableArray alloc] init];
         _subnetBridgeEnable = NO;
         _directControlStatus = nil;
+        _onDemandPrivateGATTProxy = 10;//default is 0x0A.
         _excluded = false;
+        _lightControlOccupancyModeEnable = YES;
     }
     return self;
 }
@@ -2936,6 +3358,10 @@
         _elements = [NSMutableArray arrayWithArray:node.elements];
         _netKeys = [NSMutableArray arrayWithArray:node.netKeys];
         _appKeys = [NSMutableArray arrayWithArray:node.appKeys];
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionaryWithDictionary:node.lightControlPropertyDictionary];
+        _sensorDataArray = [NSMutableArray arrayWithArray:node.sensorDataArray];
+        _sensorDescriptorArray = [NSMutableArray arrayWithArray:node.sensorDescriptorArray];
+        _sensorCadenceArray = [NSMutableArray arrayWithArray:node.sensorCadenceArray];
 
         _state = node.state;
         _brightness = node.brightness;
@@ -2947,6 +3373,7 @@
         _subnetBridgeEnable = node.subnetBridgeEnable;
         _excluded = node.excluded;
         _directControlStatus = node.directControlStatus;
+        _onDemandPrivateGATTProxy = node.onDemandPrivateGATTProxy;
     }
     return self;
 }
@@ -2973,6 +3400,10 @@
     device.elements = [NSMutableArray arrayWithArray:self.elements];
     device.netKeys = [NSMutableArray arrayWithArray:self.netKeys];
     device.appKeys = [NSMutableArray arrayWithArray:self.appKeys];
+    device.lightControlPropertyDictionary = [NSMutableDictionary dictionaryWithDictionary:self.lightControlPropertyDictionary];
+    device.sensorDataArray = [NSMutableArray arrayWithArray:self.sensorDataArray];
+    device.sensorDescriptorArray = [NSMutableArray arrayWithArray:self.sensorDescriptorArray];
+    device.sensorCadenceArray = [NSMutableArray arrayWithArray:self.sensorCadenceArray];
 
     device.state = self.state;
     device.brightness = self.brightness;
@@ -2984,6 +3415,7 @@
     device.subnetBridgeEnable = self.subnetBridgeEnable;
     device.excluded = self.excluded;
     device.directControlStatus = self.directControlStatus;
+    device.onDemandPrivateGATTProxy = self.onDemandPrivateGATTProxy;
     return device;
 }
 
@@ -3003,9 +3435,36 @@
     }
 }
 
-- (BOOL)isSensor{
+/// Return whether the node is a motion sensor.
+- (BOOL)isSensor {
+    if ([self getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]]) {
+        return YES;
+    }
     return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
 //    return [LibTools uint16From16String:self.cid] == 0x201;
+}
+
+/// Return whether the node is a motion sensor.
+- (BOOL)isMotionSensor {
+    return [self hasPropertyID:DevicePropertyID_MotionSensed];
+}
+
+/// Return whether the node is a ambient light sensor.
+- (BOOL)isAmbientLightSensor {
+    return [self hasPropertyID:DevicePropertyID_PresentAmbientLightLevel];
+}
+
+/// Return whether the node has this propertyID.
+/// @param propertyID property ID
+- (BOOL)hasPropertyID:(UInt16)propertyID {
+    BOOL tem = NO;
+    for (SigSensorDataModel *data in self.sensorDataArray) {
+        if (data.propertyID == propertyID) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
 }
 
 - (BOOL)isRemote {
@@ -3130,10 +3589,12 @@
     return [self getAddressesWithModelID:@(self.publishModelID)];
 }
 
-///publish首选SIG_MD_LIGHT_CTL_S，次选SIG_MD_LIGHT_HSL_S，SIG_MD_LIGHTNESS_S，SIG_MD_G_ONOFF_S
+///publish首选SIG_MD_LIGHT_CTL_S，次选SIG_MD_LIGHT_HSL_S，SIG_MD_LIGHTNESS_S，SIG_MD_G_ONOFF_S，如果设备是sensor，则首选kSigModel_SensorServer_ID。
 - (UInt16)publishModelID{
     UInt16 tem = 0;
-    if ([self getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0) {
+    if ([self getAddressesWithModelID:@(kSigModel_SensorServer_ID)].count > 0) {
+        tem = (UInt16)kSigModel_SensorServer_ID;
+    } else if ([self getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0) {
         tem = (UInt16)kSigModel_LightCTLServer_ID;
     } else if ([self getAddressesWithModelID:@(kSigModel_LightHSLServer_ID)].count > 0){
         tem = (UInt16)kSigModel_LightHSLServer_ID;
@@ -3247,6 +3708,12 @@
     return addr >= self.address && addr <= self.lastUnicastAddress;
 }
 
+/// has FirmwareDistributionServerModel
+- (BOOL)hasFirmwareDistributionServerModel {
+    SigModelIDModel *modelId = [self getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+    return modelId != nil;
+}
+
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
@@ -3302,7 +3769,7 @@
     }
     dict[@"secureNetworkBeacon"] = [NSNumber numberWithBool:_secureNetworkBeacon];
     if (_relayRetransmit) {
-        dict[@"relayRetransmit"] = [_relayRetransmit getDictionaryOfSigRelayretransmitModel];
+        dict[@"relayRetransmit"] = [_relayRetransmit getDictionaryOfSigRelayRetransmitModel];
     }
     if (_networkTransmit) {
         dict[@"networkTransmit"] = [_networkTransmit getDictionaryOfSigNetworktransmitModel];
@@ -3393,6 +3860,37 @@
     if (_directControlStatus) {
         dict[@"directControlStatus"] = [_directControlStatus getDictionaryOfSigDirectControlStatus];
     }
+    dict[@"onDemandPrivateGATTProxy"] = [NSNumber numberWithInt:_onDemandPrivateGATTProxy];
+    dict[@"lightControlModeEnable"] = [NSNumber numberWithBool:_lightControlModeEnable];
+    dict[@"lightControlOccupancyModeEnable"] = [NSNumber numberWithBool:_lightControlOccupancyModeEnable];
+    dict[@"lightControlLightOnOffState"] = [NSNumber numberWithBool:_lightControlLightOnOffState];
+    if (_lightControlPropertyDictionary.allKeys > 0) {
+        dict[@"lightControlPropertyDictionary"] = _lightControlPropertyDictionary;
+    }
+    if (_sensorDataArray && _sensorDataArray.count > 0) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *sensorDataArray = [NSArray arrayWithArray:_sensorDataArray];
+        for (SigSensorDataModel *model in sensorDataArray) {
+            [array addObject:[LibTools convertDataToHexStr:model.getSensorDataParameters]];
+        }
+        dict[@"sensorDataArray"] = array;
+    }
+    if (_sensorDescriptorArray && _sensorDescriptorArray.count > 0) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *sensorDescriptorArray = [NSArray arrayWithArray:_sensorDescriptorArray];
+        for (SigSensorDescriptorModel *model in sensorDescriptorArray) {
+            [array addObject:[LibTools convertDataToHexStr:model.getDescriptorParameters]];
+        }
+        dict[@"sensorDescriptorArray"] = array;
+    }
+    if (_sensorCadenceArray && _sensorCadenceArray.count > 0) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *sensorCadenceArray = [NSArray arrayWithArray:_sensorCadenceArray];
+        for (SigSensorCadenceModel *model in sensorCadenceArray) {
+            [array addObject:[LibTools convertDataToHexStr:model.getSensorCadenceParameters]];
+        }
+        dict[@"sensorCadenceArray"] = array;
+    }
     return dict;
 }
 
@@ -3416,8 +3914,8 @@
         _secureNetworkBeacon = [dictionary[@"secureNetworkBeacon"] boolValue];
     }
     if ([allKeys containsObject:@"relayRetransmit"]) {
-        SigRelayretransmitModel *relayRetransmit = [[SigRelayretransmitModel alloc] init];
-        [relayRetransmit setDictionaryToSigRelayretransmitModel:dictionary[@"relayRetransmit"]];
+        SigRelayRetransmitModel *relayRetransmit = [[SigRelayRetransmitModel alloc] init];
+        [relayRetransmit setDictionaryToSigRelayRetransmitModel:dictionary[@"relayRetransmit"]];
         _relayRetransmit = relayRetransmit;
     }
     if ([allKeys containsObject:@"networkTransmit"]) {
@@ -3534,6 +4032,51 @@
         [tem setDictionaryToSigDirectControlStatus:dictionary[@"directControlStatus"]];
         _directControlStatus = tem;
     }
+    if ([allKeys containsObject:@"onDemandPrivateGATTProxy"]) {
+        _onDemandPrivateGATTProxy = [dictionary[@"onDemandPrivateGATTProxy"] intValue];
+    }
+    if ([allKeys containsObject:@"lightControlModeEnable"]) {
+        _lightControlModeEnable = [dictionary[@"lightControlModeEnable"] boolValue];
+    }
+    if ([allKeys containsObject:@"lightControlOccupancyModeEnable"]) {
+        _lightControlOccupancyModeEnable = [dictionary[@"lightControlOccupancyModeEnable"] boolValue];
+    }
+    if ([allKeys containsObject:@"lightControlLightOnOffState"]) {
+        _lightControlLightOnOffState = [dictionary[@"lightControlLightOnOffState"] boolValue];
+    }
+    if ([allKeys containsObject:@"lightControlPropertyDictionary"]) {
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionaryWithDictionary:dictionary[@"lightControlPropertyDictionary"]];
+    }
+    if ([allKeys containsObject:@"sensorDataArray"]) {
+        NSMutableArray *sensorDataArray = [NSMutableArray array];
+        NSArray *array = dictionary[@"sensorDataArray"];
+        for (NSString *string in array) {
+            NSData *data = [LibTools nsstringToHex:string];
+            SigSensorDataModel *model = [[SigSensorDataModel alloc] initWithSensorDataParameters:data];
+            [sensorDataArray addObject:model];
+        }
+        _sensorDataArray = sensorDataArray;
+    }
+    if ([allKeys containsObject:@"sensorDescriptorArray"]) {
+        NSMutableArray *sensorDescriptorArray = [NSMutableArray array];
+        NSArray *array = dictionary[@"sensorDescriptorArray"];
+        for (NSString *string in array) {
+            NSData *data = [LibTools nsstringToHex:string];
+            SigSensorDescriptorModel *model = [[SigSensorDescriptorModel alloc] initWithDescriptorParameters:data];
+            [sensorDescriptorArray addObject:model];
+        }
+        _sensorDescriptorArray = sensorDescriptorArray;
+    }
+    if ([allKeys containsObject:@"sensorCadenceArray"]) {
+        NSMutableArray *sensorCadenceArray = [NSMutableArray array];
+        NSArray *array = dictionary[@"sensorCadenceArray"];
+        for (NSString *string in array) {
+            NSData *data = [LibTools nsstringToHex:string];
+            SigSensorCadenceModel *model = [[SigSensorCadenceModel alloc] initWithSensorCadenceParameters:data];
+            [sensorCadenceArray addObject:model];
+        }
+        _sensorCadenceArray = sensorCadenceArray;
+    }
 }
 
 - (NSDictionary *)getFormatDictionaryOfSigNodeModel {
@@ -3546,7 +4089,7 @@
     }
     dict[@"secureNetworkBeacon"] = [NSNumber numberWithBool:_secureNetworkBeacon];
     if (_relayRetransmit) {
-        dict[@"relayRetransmit"] = [_relayRetransmit getDictionaryOfSigRelayretransmitModel];
+        dict[@"relayRetransmit"] = [_relayRetransmit getDictionaryOfSigRelayRetransmitModel];
     }
     if (_networkTransmit) {
         dict[@"networkTransmit"] = [_networkTransmit getDictionaryOfSigNetworktransmitModel];
@@ -3637,7 +4180,12 @@
         for (SigModelIDModel *modelID in all) {
             [self setBindSigNodeKeyModel:self.appKeys.firstObject toSigModelIDModel:modelID];
         }
-        [array addObject:element];
+        //修复fast Provision添加多个相同PID的设备时，出现不同node共用相同的element数据的问题。
+        NSDictionary *elementDict = [element getDictionaryOfSigElementModel];
+        SigElementModel *newElement = [[SigElementModel alloc] init];
+        newElement.parentNodeAddress = self.address;
+        [newElement setDictionaryToSigElementModel:elementDict];
+        [array addObject:newElement];
     }
     BOOL modelChange = NO;
     if (self.elements.count != elements.count) {
@@ -4142,6 +4690,88 @@
     }
 }
 
+/// Get SigSensorDescriptorModel With PropertyID
+/// @param propertyID sensor property id
+- (SigSensorDescriptorModel *)getSigSensorDescriptorModelWithPropertyID:(UInt16)propertyID {
+    SigSensorDescriptorModel *tem = nil;
+    NSArray *array = [NSArray arrayWithArray:self.sensorDescriptorArray];
+    for (SigSensorDescriptorModel *model in array) {
+        if (model.propertyID == propertyID) {
+            tem = model;
+            break;
+        }
+    }
+    return tem;
+}
+
+/// Get SigSensorCadenceModel With PropertyID
+/// @param propertyID sensor property id
+- (SigSensorCadenceModel *)getSigSensorCadenceModelWithPropertyID:(UInt16)propertyID {
+    SigSensorCadenceModel *tem = nil;
+    NSArray *array = [NSArray arrayWithArray:self.sensorCadenceArray];
+    for (SigSensorCadenceModel *model in array) {
+        if (model.propertyID == propertyID) {
+            tem = model;
+            break;
+        }
+    }
+    return tem;
+}
+
+/// Update a list of SigSensorDataModel to node.sensorDataArray.
+/// @param sensorDataModelArray A list of SigSensorDataModel
+- (void)updateSigSensorDataModelArray:(NSArray <SigSensorDataModel *>*)sensorDataModelArray {
+    for (SigSensorDataModel *model in sensorDataModelArray) {
+        if ([self.sensorDataArray containsObject:model]) {
+            [self.sensorDataArray replaceObjectAtIndex:[self.sensorDataArray indexOfObject:model] withObject:model];
+        } else {
+            [self.sensorDataArray addObject:model];
+        }
+    }
+}
+
+/// Update a list of SigSensorDescriptorModel to node.sensorDescriptorArray.
+/// @param sensorDescriptorModelArray A list of SigSensorDescriptorModel
+- (void)updateSigSensorDescriptorModelArray:(NSArray <SigSensorDescriptorModel *>*)sensorDescriptorModelArray {
+    for (SigSensorDescriptorModel *model in sensorDescriptorModelArray) {
+        if ([self.sensorDescriptorArray containsObject:model]) {
+            [self.sensorDescriptorArray replaceObjectAtIndex:[self.sensorDescriptorArray indexOfObject:model] withObject:model];
+        } else {
+            [self.sensorDescriptorArray addObject:model];
+        }
+    }
+}
+
+/// Update a list of SigSensorCadenceModel to node.sensorCadenceArray.
+/// @param sensorCadenceModelArray A list of SigSensorCadenceModel
+- (void)updateSigSensorCadenceModelArray:(NSArray <SigSensorCadenceModel *>*)sensorCadenceModelArray {
+    for (SigSensorCadenceModel *model in sensorCadenceModelArray) {
+        if ([self.sensorCadenceArray containsObject:model]) {
+            [self.sensorCadenceArray replaceObjectAtIndex:[self.sensorCadenceArray indexOfObject:model] withObject:model];
+        } else {
+            [self.sensorCadenceArray addObject:model];
+        }
+    }
+}
+
+/// Update SigConfigModelPublicationStatus To Device Config
+/// @param responseMessage The SigConfigModelPublicationStatus object.
+- (void)updateSigConfigModelPublicationStatusToDeviceConfig:(SigConfigModelPublicationStatus *)responseMessage {
+    SigModelIDModel *model = [self getModelIDModelWithModelID:responseMessage.modelId andElementAddress:responseMessage.elementAddress];
+    model.publish = [[SigPublishModel alloc] init];
+    SigRetransmitModel *retransmit = [[SigRetransmitModel alloc] init];
+    retransmit.count = responseMessage.publish.retransmit.count;
+    retransmit.interval = responseMessage.publish.retransmit.interval;
+    model.publish.retransmit = retransmit;
+    model.publish.index = responseMessage.publish.index;
+    model.publish.credentials = responseMessage.publish.credentials;
+    model.publish.ttl = responseMessage.publish.ttl;
+    model.publish.period.numberOfSteps = responseMessage.publish.periodSteps;
+    model.publish.period.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:responseMessage.publish.periodResolution];
+    model.publish.address = [NSString stringWithFormat:@"%04lX",(long)responseMessage.publish.publicationAddress.address];
+    [SigDataSource.share saveLocationData];
+}
+
 @end
 
 
@@ -4149,20 +4779,20 @@
 /// messages relayed by a mesh node [1].
 /// @note   - seeAlso: MshCDB_1.0.1.pdf (page.16),
 /// 2.1.4.4 Relay retransmit object.
-@implementation SigRelayretransmitModel
+@implementation SigRelayRetransmitModel
 
-/// get dictionary from SigRelayretransmitModel object.
+/// get dictionary from SigRelayRetransmitModel object.
 /// @returns return dictionary object.
-- (NSDictionary *)getDictionaryOfSigRelayretransmitModel {
+- (NSDictionary *)getDictionaryOfSigRelayRetransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"count"] = @(_relayRetransmitCount);
     dict[@"interval"] = @([self getIntervalOfJsonFile]);
     return dict;
 }
 
-/// Set dictionary to SigRelayretransmitModel object.
-/// @param dictionary SigRelayretransmitModel dictionary object.
-- (void)setDictionaryToSigRelayretransmitModel:(NSDictionary *)dictionary {
+/// Set dictionary to SigRelayRetransmitModel object.
+/// @param dictionary SigRelayRetransmitModel dictionary object.
+- (void)setDictionaryToSigRelayRetransmitModel:(NSDictionary *)dictionary {
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
     }
@@ -5038,6 +5668,27 @@
 /// @note   - seeAlso: MshCDB_1.0.1.pdf (page.19)x  xXx,
 /// 2.1.4.6.1.2 Publish period object.
 @implementation SigPeriodModel
+
+- (instancetype)initWithMillisecond:(NSInteger)millisecond {
+    if (self = [super init]) {
+        _numberOfSteps = 0;
+        _resolution = 0;
+        if (millisecond > 0 && (millisecond <= (0x3F * 100))) {
+            _resolution = SigStepResolution_hundredsOfMilliseconds;
+            _numberOfSteps = millisecond / 100;
+        } else if (millisecond <= (0x3F * 1000)) {
+            _resolution = SigStepResolution_seconds;
+            _numberOfSteps = millisecond / 1000;
+        } else if (millisecond <= (0x3F * 10000)) {
+            _resolution = SigStepResolution_tensOfSeconds;
+            _numberOfSteps = millisecond / 10000;
+        } else if (millisecond <= (0x3F * 600000)) {
+            _resolution = SigStepResolution_tensOfMinutes;
+            _numberOfSteps = millisecond / 600000;
+        }
+    }
+    return self;
+}
 
 /// get dictionary from SigPeriodModel object.
 /// @returns return dictionary object.

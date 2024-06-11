@@ -27,6 +27,10 @@
 #import "DeviceSettingViewController.h"
 #import "DeviceRemoteVC.h"
 
+#define kControlTitle   @"CONTROL"
+#define kGroupTitle   @"GROUP"
+#define kSettingsTitle   @"SETTINGS"
+
 @interface SingleDeviceViewController ()
 
 @end
@@ -36,7 +40,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-
     [self configUI];
 }
 
@@ -63,70 +66,59 @@
     }
 }
 
-- (void)configUI{
+- (void)configUI {
     self.title = @"Device Setting";
-
-    // add sub vc
-    [self setUpAllViewController];
-
+    WMZPageParam *param = PageParam();
+    NSArray *titleArray = @[kControlTitle, kGroupTitle, kSettingsTitle];
+    // 遥控器不需要分组界面
+    if (self.model.isRemote == YES) {
+        titleArray = @[kControlTitle, kSettingsTitle];
+    }
     __weak typeof(self) weakSelf = self;
-    double h = kGetRectNavAndStatusHeight;
-    [self setUpContentViewFrame:^(UIView *contentView) {
-        contentView.frame = CGRectMake(0, 0, weakSelf.view.frame.size.width, weakSelf.view.frame.size.height-h);
-    }];
-
-    [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
-        *norColor = [UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]];
-        *selColor = [UIColor blackColor];
-        *titleScrollViewColor = [UIColor dynamicColorWithLight:[UIColor whiteColor] dark:[UIColor grayColor]];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / (weakSelf.model.isRemote ? 2 : 3);
-    }];
-
-    // 标题渐变
-    // *推荐方式(设置标题渐变)
-    [self setUpTitleGradient:^(YZTitleColorGradientStyle *titleColorGradientStyle, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor) {
-
-    }];
-
-    [self setUpUnderLineEffect:^(BOOL *isUnderLineDelayScroll, CGFloat *underLineH, UIColor *__autoreleasing *underLineColor,BOOL *isUnderLineEqualTitleWidth) {
-        *underLineColor = UIColor.telinkButtonBlue;
-        *isUnderLineEqualTitleWidth = YES;
-    }];
+    param.wTitleArrSet(titleArray)
+    .wViewControllerSet(^UIViewController *(NSInteger index) {
+        NSString *title = titleArray[index];
+        if ([title isEqualToString:kControlTitle]) {
+            // control
+            if (weakSelf.model.isRemote) {
+                DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storyboard:@"DeviceSetting"];
+                wordVc1.model = weakSelf.model;
+                return wordVc1;
+            } else {
+                DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storyboard:@"DeviceSetting"];
+                wordVc1.model = weakSelf.model;
+                return wordVc1;
+            }
+        } else if ([title isEqualToString:kGroupTitle]) {
+            // group
+            if (weakSelf.model.isRemote == NO) {
+                DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
+                wordVc2.model = weakSelf.model;
+                return wordVc2;
+            }
+        }
+        // settings
+        DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
+        wordVc3.model = weakSelf.model;
+        return wordVc3;
+     })
+    .wMenuPositionSet(PageMenuPositionCenter)
+    .wMenuAnimalTitleGradientSet(NO)
+    .wMenuTitleColorSet([UIColor dynamicColorWithLight:[UIColor lightGrayColor] dark:[UIColor darkGrayColor]])
+    .wMenuTitleSelectColorSet([UIColor blackColor])
+    .wMenuTitleWidthSet(SCREENWIDTH/titleArray.count)
+    .wScrollCanTransferSet(NO)
+    .wMenuTitleSelectUIFontSet(param.wMenuTitleUIFont)
+    .wMenuIndicatorColorSet(UIColor.telinkBlue)
+    .wMenuIndicatorWidthSet(SCREENWIDTH/titleArray.count)
+    .wCustomTabbarYSet(^CGFloat(CGFloat nowY) {
+        return 0;
+    })
+    .wMenuAnimalSet(PageTitleMenuPDD);
+    self.param = param;
 
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
-
-}
-
-- (void)setUpAllViewController
-{
-    // control
-    if (self.model.isRemote) {
-        DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storyboard:@"DeviceSetting"];
-        wordVc1.title = @"CONTROL";
-        wordVc1.model = self.model;
-        [self addChildViewController:wordVc1];
-    } else {
-        DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storyboard:@"DeviceSetting"];
-        wordVc1.title = @"CONTROL";
-        wordVc1.model = self.model;
-        [self addChildViewController:wordVc1];
-    }
-
-    // group
-    // 遥控器不需要分组界面
-    if (self.model.isRemote == NO) {
-        DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
-        wordVc2.title = @"GROUP";
-        wordVc2.model = self.model;
-        [self addChildViewController:wordVc2];
-    }
-
-    // settings
-    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
-    wordVc3.title = @"SETTINGS";
-    wordVc3.model = self.model;
-    [self addChildViewController:wordVc3];
 }
 
 -(void)dealloc{

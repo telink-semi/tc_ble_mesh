@@ -62,7 +62,7 @@ typedef enum : UInt8 {
 } SigFirmwareUpdateProgress;
 
 @interface MeshOTAManager : NSObject
-
+@property (nonatomic, strong) NSData *otaData;
 @property (nonatomic, assign) UInt16 distributionAppKeyIndex;//parameters for step1:firmwareDistributionStart
 @property (nonatomic, assign) SigTransferModeState transferModeOfDistributor;//parameters for step9:BLOBTransferStart and step8:BLOBTransferStart
 @property (nonatomic, assign) SigTransferModeState transferModeOfUpdateNodes;//parameters for step1:firmwareDistributionStart and step8:BLOBTransferStart
@@ -90,8 +90,10 @@ typedef enum : UInt8 {
 /// default is NO. YES则在apply后获取设备的固件版本号进行比较，版本号增大则OTA成功；NO则在apply后不比较版本号就返回OTA结果，apply成功则OTA成功。
 @property (nonatomic, assign) BOOL needCheckVersionAfterApply;
 @property (nonatomic, assign) NSInteger checkVersionCount;//记录当前还需要检查固件版本号的次数，检查一次减一，等零后进入下一步骤。
-
-
+/// cache all additionalInformation
+@property (nonatomic, strong) NSMutableDictionary *additionalInformationDictionary;
+/// Check FirmwareMetadata success handle.
+@property (nonatomic, copy) void(^firmwareUpdateFirmwareMetadataCheckSuccessHandle)(NSDictionary *dict);
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));

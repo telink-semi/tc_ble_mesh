@@ -29,12 +29,16 @@
 #import "OnOffModelCell.h"
 #import "LevelAndSliderCell.h"
 #import "BaseTableView.h"
+#import "SettingTitleItemCell.h"
+#import "LightingControlVC.h"
+#import "SensorConfigVC.h"
 
 typedef enum : NSUInteger {
     ModelUITypeHSL = 0,
     ModelUITypeOnOff = 1,
     ModelUITypeLum = 2,
     ModelUITypeTemp = 3,
+    ModelUITypeLightingControl = 4,
 } ModelUIType;
 
 @interface ModelType : NSObject
@@ -50,12 +54,10 @@ typedef enum : NSUInteger {
 @property (assign, nonatomic) BOOL hadChangeBrightness;
 @property (assign, nonatomic) BOOL hasNextBrightness;
 @property (assign, nonatomic) UInt8 nextBrightness;
-@property (assign, nonatomic) BOOL hadChangeTempareture;
-@property (assign, nonatomic) BOOL hasNextTempareture;
-@property (assign, nonatomic) UInt8 nextTempareture;
+@property (assign, nonatomic) BOOL hadChangeTemperature;
+@property (assign, nonatomic) BOOL hasNextTemperature;
+@property (assign, nonatomic) UInt8 nextTemperature;
 @property (strong, nonatomic) ColorModelCell *colorModelCell;
-
-
 
 @property (strong, nonatomic) NSMutableArray <NSNumber *>*onoffStateSource;
 @property (strong, nonatomic) NSMutableArray <ModelType *>*dataSource;
@@ -76,17 +78,16 @@ typedef enum : NSUInteger {
     self.hadChangeBrightness = NO;
     self.hasNextBrightness = NO;
     self.nextBrightness = 0;
-    self.hadChangeTempareture = NO;
-    self.hasNextTempareture = NO;
-    self.nextTempareture = 0;
-
-
-
+    self.hadChangeTemperature = NO;
+    self.hasNextTemperature = NO;
+    self.nextTemperature = 0;
 
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    self.tableView.allowsSelection = NO;
+//    self.tableView.allowsSelection = NO;
     self.tableView.baseTableViewDelegate = self;
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
+
     self.dataSource = [NSMutableArray array];
     if (self.model.HSLAddresses.count > 0) {
         self.colorModel = [self getColorWithHue:self.model.HSL_Hue100 saturation:self.model.HSL_Saturation100 ligntness:self.model.HSL_Lightness100];
@@ -96,6 +97,19 @@ typedef enum : NSUInteger {
         type.addresses = [NSMutableArray arrayWithArray:self.model.HSLAddresses];
         [self.dataSource addObject:type];
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ColorModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ColorModelCellID];
+    }
+    if (self.model.isSensor) {
+        if ([self.model getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]]) {
+            ModelType *type = [[ModelType alloc] init];
+            type.uiType = ModelUITypeLightingControl;
+            [self.dataSource addObject:type];
+        }
+    } else {
+        if ([self.model getElementModelWithModelIds:@[@(kSigModel_LightLCServer_ID)]]) {
+            ModelType *type = [[ModelType alloc] init];
+            type.uiType = ModelUITypeLightingControl;
+            [self.dataSource addObject:type];
+        }
     }
     if (self.model.onoffAddresses.count > 0) {
         ModelType *type = [[ModelType alloc] init];
@@ -244,10 +258,17 @@ typedef enum : NSUInteger {
             ((LevelAndSliderCell *)cell).valueSlider.value = temp;
             ((LevelAndSliderCell *)cell).delegate = self;
             break;
+        case ModelUITypeLightingControl:
+        {
+            cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingTitleItemCell.class) forIndexPath:indexPath];
+            ((SettingTitleItemCell *)cell).nameLabel.text = self.model.isSensor ? @"Sensor Control" : @"Network Lighting Control";
+            ((SettingTitleItemCell *)cell).iconImageView.image = [UIImage imageNamed:self.model.isSensor ? @"ic_sensor" : @"ic_motion_sensor_online"];
+        }
+            break;
         default:
             break;
     }
-
+    cell.selectionStyle = type.uiType == ModelUITypeLightingControl ? UITableViewCellSelectionStyleDefault : UITableViewCellSelectionStyleNone;
     return cell;
 }
 
@@ -266,10 +287,66 @@ typedef enum : NSUInteger {
         case ModelUITypeTemp:
             return 109;
             break;
+        case ModelUITypeLightingControl:
+            return 74;
+            break;
         default:
             break;
     }
     return 0;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+    ModelType *type = self.dataSource[indexPath.row];
+    if (type.uiType == ModelUITypeLightingControl) {
+        if (self.model.isSensor) {
+            //push to sensor config vc
+            SensorConfigVC *vc = (SensorConfigVC *)[UIStoryboard initVC:NSStringFromClass(SensorConfigVC.class) storyboard:@"DeviceSetting"];
+            vc.model = self.model;
+            [self.navigationController pushViewController:vc animated:YES];
+
+            //sensorGet
+//            [SDKLibCommand sensorGetWithDestination:[self.model getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]].unicastAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorStatus * _Nonnull responseMessage) {
+//        
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//        
+//            }];
+
+//            //sensorSettingsGet
+//            [SDKLibCommand sensorSettingsGetWithDestination:self.model.address propertyID:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSettingsStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorSettingGet
+//            [SDKLibCommand sensorSettingGetWithDestination:self.model.address propertyID:0 settingPropertyID:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSettingStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorColumnGet
+//            [SDKLibCommand sensorColumnGetWithDestination:self.model.address propertyID:0 rawValueX:[NSData data] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorColumnStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+//            //sensorSeriesGet
+//            [SDKLibCommand sensorSeriesGetWithDestination:self.model.address propertyID:0 rawValueX1Data:[NSData data] rawValueX2Data:[NSData data] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorSeriesStatus * _Nonnull responseMessage) {
+//                
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                
+//            }];
+        } else if ([self.model getElementModelWithModelIds:@[@(kSigModel_LightLCServer_ID)]]) {
+            //push to lighting control vc
+            LightingControlVC *vc = (LightingControlVC *)[UIStoryboard initVC:NSStringFromClass(LightingControlVC.class) storyboard:@"DeviceSetting"];
+            vc.model = self.model;
+            [self.navigationController pushViewController:vc animated:YES];
+        } else {
+            [self showTips:@"Lighting control not support!"];
+        }
+    }
 }
 
 #pragma mark - BaseTableViewDelegate
@@ -383,12 +460,12 @@ typedef enum : NSUInteger {
         [self changeUIBylightnessOfHSLModel:value/100.0];
     } else if (type.uiType == ModelUITypeTemp) {
         cell.showValueLabel.text = [NSString stringWithFormat:@"Temp(%d)(at ele adr:0x%X):",(int)value,self.model.temperatureAddresses.firstObject.intValue];
-        if (!self.hadChangeTempareture) {
-            self.nextTempareture = value;
-            [self changeTemparetureWithModelType:type];
+        if (!self.hadChangeTemperature) {
+            self.nextTemperature = value;
+            [self changeTemperatureWithModelType:type];
         } else {
-            self.hasNextTempareture = YES;
-            self.nextTempareture = value;
+            self.hasNextTemperature = YES;
+            self.nextTemperature = value;
         }
     }
 }
@@ -421,22 +498,22 @@ typedef enum : NSUInteger {
     }
 }
 
-- (void)changeTemparetureWithModelType:(ModelType *)type {
-    self.hadChangeTempareture = YES;
-    self.hasNextTempareture = NO;
-    self.model.temperature = [LibTools temp100ToTemp:self.nextTempareture];
+- (void)changeTemperatureWithModelType:(ModelType *)type {
+    self.hadChangeTemperature = YES;
+    self.hasNextTemperature = NO;
+    self.model.temperature = [LibTools temp100ToTemp:self.nextTemperature];
     UInt16 elementAddress = [type.addresses.firstObject intValue];
-    [DemoCommand changeTemperatureWithTemperature100:self.nextTempareture address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+    [DemoCommand changeTemperatureWithTemperature100:self.nextTemperature address:elementAddress retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinishWithModelType:) object:type];
-        [self performSelector:@selector(changeTemparetureFinishWithModelType:) withObject:type afterDelay:kCommandInterval];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemperatureFinishWithModelType:) object:type];
+        [self performSelector:@selector(changeTemperatureFinishWithModelType:) withObject:type afterDelay:kCommandInterval];
     });
 }
 
-- (void)changeTemparetureFinishWithModelType:(ModelType *)type {
-    self.hadChangeTempareture = NO;
-    if (self.hasNextTempareture) {
-        [self changeTemparetureWithModelType:type];
+- (void)changeTemperatureFinishWithModelType:(ModelType *)type {
+    self.hadChangeTemperature = NO;
+    if (self.hasNextTemperature) {
+        [self changeTemperatureWithModelType:type];
     }
 }
 

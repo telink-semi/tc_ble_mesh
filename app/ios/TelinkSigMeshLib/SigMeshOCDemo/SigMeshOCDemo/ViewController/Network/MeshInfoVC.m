@@ -25,13 +25,13 @@
 #import "OOBListVC.h"
 #import "AppKeyListVC.h"
 #import "NetKeyListVC.h"
-#import "InfoNextCell.h"
-#import "InfoButtonCell.h"
+#import "SettingDetailItemCell.h"
 
 @interface MeshInfoVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic, strong) NSMutableArray <NSString *>*source;
-@property (assign, nonatomic) UInt32 ivIndex;
+@property (nonatomic, strong) NSMutableArray <NSString *>*iconArray;
+@property (nonatomic, strong) NSMutableArray <NSString *>*titleArray;
+@property (nonatomic, strong) NSMutableArray <NSString *>*valueArray;
 @end
 
 @implementation MeshInfoVC
@@ -39,14 +39,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoNextCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoNextCellID];
-    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoButtonCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoButtonCellID];
-    //add rightBarButtonItem for edit mesh name
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingDetailItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingDetailItemCell.class)];
+    //init rightBarButtonItem
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_edit_bar"] style:UIBarButtonItemStylePlain target:self action:@selector(clickEditMeshName)];
     self.navigationItem.rightBarButtonItem = item;
     [self setTitle:@"Mesh Info" subTitle:self.network.meshName];
-    _ivIndex = self.network.getIvIndexUInt32;
-    [self refreshSourceAndUI];
 }
 
 - (void)clickEditMeshName {
@@ -75,27 +72,18 @@
         }
     }]];
     [self presentViewController:inputAlertController animated:YES completion:nil];
-
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
+    [self refreshSourceAndUI];
 }
 
 - (void)refreshSourceAndUI {
-    NSMutableArray *array = [NSMutableArray array];
-    [array addObject:[NSString stringWithFormat:@"Mesh Name: %@",self.network.meshName]];
-    [array addObject:[NSString stringWithFormat:@"Mesh UUID: %@",self.network.meshUUID.uppercaseString]];
-    [array addObject:[NSString stringWithFormat:@"IV Index: 0x%08X",(unsigned int)_ivIndex]];
-    [array addObject:[NSString stringWithFormat:@"Sequence Number: 0x%06X",(unsigned int)self.network.getSequenceNumberUInt32]];
-    [array addObject:[NSString stringWithFormat:@"Local Address: 0x%04X",(unsigned int)self.network.curLocationNodeModel.address]];
-    [array addObject:@"NetKey List"];
-    [array addObject:@"AppKey List"];
-    //==========test==========//
-//    [array addObject:@"IvUpdate"];
-    //==========test==========//
-    _source = array;
+    self.iconArray = [NSMutableArray arrayWithArray:@[@"ic_name", @"ic_id", @"ic_iv_index", @"ic_sequence_number", @"ic_local_address", @"ic_keys", @"ic_keys"]];
+    self.titleArray = [NSMutableArray arrayWithArray:@[@"Mesh Name", @"Mesh UUID", @"IV Index", @"Sequence Number", @"Local Address", @"Net Keys", @"App Keys"]];
+    self.valueArray = [NSMutableArray arrayWithArray:@[self.network.meshName, self.network.meshUUID.uppercaseString, [NSString stringWithFormat:@"0x%08X",(unsigned int)self.network.getIvIndexUInt32], [NSString stringWithFormat:@"0x%06X",(unsigned int)self.network.getSequenceNumberUInt32], [NSString stringWithFormat:@"0x%04X",(unsigned int)self.network.curLocationNodeModel.address], [NSString stringWithFormat:@"%lu Net Keys", (unsigned long)self.network.netKeys.count], [NSString stringWithFormat:@"%lu App Keys", (unsigned long)self.network.appKeys.count]]];
     [self.tableView reloadData];
 }
 
@@ -113,59 +101,13 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)clickIvUpdate:(UIButton *)sender {
-    if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
-        return;
-    }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSString *t = @"sending ivUpdate...";
-        [ShowTipsHandle.share show:t];
-    });
-
-    __weak typeof(self) weakSelf = self;
-    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-    [operationQueue addOperationWithBlock:^{
-        //强行使用weakSelf.ivIndex + 1和sequenceNumber=0x01进行发包。
-        [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:weakSelf.network.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:weakSelf.network.curNetkeyModel];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ShowTipsHandle.share delayHidden:0.5];
-        });
-
-    }];
-
-}
-
-- (void)ivUpdateTimeout {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [ShowTipsHandle.share hidden];
-        [self showTips:@"ivUpdate fail."];
-    });
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row <= 4) {
-        InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.showLabel.text = _source[indexPath.row];
-//        cell.showButton.hidden = YES;
-        [cell.showButton removeFromSuperview];
-        return cell;
-    } else if (indexPath.row == 5 || indexPath.row == 6) {
-        InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-        cell.showLabel.text = _source[indexPath.row];
-        return cell;
-    } else  if (indexPath.row == 7) {
-        InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.showLabel.text = _source[indexPath.row];
-        cell.showButton.hidden = NO;
-        [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
-        [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
-        return cell;
-    }
-    return [[UITableViewCell alloc] init];
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    SettingDetailItemCell *cell = (SettingDetailItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingDetailItemCell.class) forIndexPath:indexPath];
+    cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
+    cell.nameLabel.text = self.titleArray[indexPath.row];
+    cell.detailLabel.text = self.valueArray[indexPath.row];
+    cell.nextImageView.hidden = indexPath.row < 5;
+    return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -174,17 +116,10 @@
     } else if (indexPath.row == 6) {
         [self clickAppKeyListButton];
    }
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.selected = NO;
-    [tableView reloadData];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return self.source.count;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 51.0;
+    return self.iconArray.count;
 }
 
 @end

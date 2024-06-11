@@ -97,6 +97,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    //init rightBarButtonItem
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"tishi"] style:UIBarButtonItemStylePlain target:self action:@selector(clickPushToTipsVC)];
     self.navigationItem.rightBarButtonItem = item;
     self.selectIndex = -1;

@@ -31,6 +31,15 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <TelinkSigMeshLib/PublicHeader.h>
 
+/*注意：
+ 1.没有宏定义‘#define kIsTelinkCloudSigMeshLib’，生成不包含云端相关代码的库TelinkSigMeshLib.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
+ 2.default release TelinkSigMeshLib.framework.
+ 3.SDK通过以下代码来添加云端SDK特有的代码逻辑：
+  #ifdef kIsTelinkCloudSigMeshLib
+  <* some code *>
+  #endif
+ */
+
 #import <CoreBluetooth/CoreBluetooth.h>
 
 #import <TelinkSigMeshLib/SigConst.h>
@@ -58,6 +67,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/MeshOTAManager.h>
 #import <TelinkSigMeshLib/SigRemoteAddManager.h>
 #import <TelinkSigMeshLib/SigBluetooth.h>
+#import <TelinkSigMeshLib/TPeripheralManager.h>
 #import <TelinkSigMeshLib/SigAddDeviceManager.h>
 #import <TelinkSigMeshLib/SigPdu.h>
 #import <TelinkSigMeshLib/ConnectTools.h>

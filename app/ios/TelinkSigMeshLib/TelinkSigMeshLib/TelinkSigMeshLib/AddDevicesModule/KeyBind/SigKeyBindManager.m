@@ -109,12 +109,17 @@
      3.appkey add
      4.bind model to appkey
      KeyBindType_Quick:
-     1.appkey add
+        1.no cloud: appkey add
+        2.have cloud: compositiomDataGet + AppKeyAdd
      */
     if (self.type == KeyBindType_Normal) {
         [self getCompositionData];
     } else if (self.type == KeyBindType_Fast) {
+#ifdef kIsTelinkCloudSigMeshLib
+        [self getCompositionData];
+#else
         [self appkeyAdd];
+#endif
     }else{
         TelinkLogError(@"KeyBindType is error");
     }
@@ -131,6 +136,8 @@
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.address retryCount:self.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
         TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
+        [weakSelf.node setCompositionData:(SigPage0 *)weakSelf.page];
+        [SigDataSource.share saveLocationData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         if (weakSelf.isKeybinding) {
             if (!isResponseAll || error) {
@@ -139,26 +146,32 @@
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
                 });
-                BOOL hasOpCodes = NO;
-                SigPage0 *page0 = (SigPage0 *)weakSelf.page;
-                NSArray *elements = [NSArray arrayWithArray:page0.elements];
-                for (SigElementModel *element in elements) {
-                    element.parentNodeAddress = weakSelf.node.address;
-                    NSArray *models = [NSArray arrayWithArray:element.models];
-                    for (SigModelIDModel *modelID in models) {
-                        if (modelID.getIntModelID == kSigModel_OpcodesAggregatorServer_ID) {
-                            hasOpCodes = YES;
+                if (weakSelf.type == KeyBindType_Normal) {
+                    BOOL hasOpCodes = NO;
+                    SigPage0 *page0 = (SigPage0 *)weakSelf.page;
+                    NSArray *elements = [NSArray arrayWithArray:page0.elements];
+                    for (SigElementModel *element in elements) {
+                        element.parentNodeAddress = weakSelf.node.address;
+                        NSArray *models = [NSArray arrayWithArray:element.models];
+                        for (SigModelIDModel *modelID in models) {
+                            if (modelID.getIntModelID == kSigModel_OpcodesAggregatorServer_ID) {
+                                hasOpCodes = YES;
+                                break;
+                            }
+                        }
+                        if (hasOpCodes) {
                             break;
                         }
                     }
-                    if (hasOpCodes) {
-                        break;
+                    if (hasOpCodes && SigDataSource.share.aggregatorEnable) {
+                        [weakSelf sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequence];
+                    } else {
+                        [weakSelf appkeyAdd];
                     }
-                }
-                if (hasOpCodes && SigDataSource.share.aggregatorEnable) {
-                    [weakSelf sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequence];
-                } else {
+                } else if (weakSelf.type == KeyBindType_Fast) {
                     [weakSelf appkeyAdd];
+                } else {
+                    TelinkLogError(@"KeyBindType is error");
                 }
             }
         }
@@ -187,6 +200,7 @@
                 if (weakSelf.type == KeyBindType_Normal) {
                     [weakSelf bindModel];
                 } else if (weakSelf.type == KeyBindType_Fast) {
+#ifndef kIsTelinkCloudSigMeshLib
                     DeviceTypeModel *deviceType = nil;
                     if (weakSelf.fastKeybindCpsData != nil) {
                         TelinkLogVerbose(@"init cpsData from config.cpsdata.");
@@ -203,6 +217,9 @@
                         deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:1 compositionData:nil];
                     }
                     weakSelf.page = deviceType.defaultCompositionData;
+                    [weakSelf.node setCompositionData:(SigPage0 *)weakSelf.page];
+                    [SigDataSource.share saveLocationData];
+#endif
                     [weakSelf keyBindSuccessAction];
                 }else{
                     TelinkLogError(@"KeyBindType is error");
@@ -248,6 +265,9 @@
                     TelinkLogVerbose(@"app needn't Bind modelID=%@",modelID.modelId);
                     continue;
                 }
+                if (weakSelf.isKeybinding == NO) {
+                    return;
+                }
                 TelinkLogVerbose(@"appBind modelID=%@",modelID.modelId);
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -267,7 +287,7 @@
                     TelinkLogInfo(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
                     if (responseMessage.modelIdentifier == modelID.getIntModelIdentifier && responseMessage.companyIdentifier == modelID.getIntCompanyIdentifier && responseMessage.elementAddress == element.unicastAddress) {
 //                        if (responseMessage.status == SigConfigMessageStatus_success || modelID.isVendorModelID) {//sig model判断状态，vendor model不判断状态
-                        if (responseMessage.status == SigConfigMessageStatus_success) {//v3.3.3.6及之后的版本 sig model判断状态，vendor model也判断状态
+                        if (responseMessage.status == SigConfigMessageStatus_success || responseMessage.status == SigConfigMessageStatus_cannotBind) {//v3.3.3.6及之后的版本 sig model判断状态，vendor model也判断状态
                             isFail = NO;
                         } else {
                             isFail = YES;
@@ -286,7 +306,7 @@
                 if (self.messageHandle == nil) {
                     isFail = YES;
                 } else {
-                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 20.0));
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
                 }
                 if (isFail) {
                     break;
@@ -424,9 +444,9 @@
             //后台发送25字节长度的ACK，需要一定的时间。
             NSInteger mtu = [SigBearer.share.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
             if (mtu < 25) {
-                [weakSelf performSelector:@selector(finishTimePublicationAction) withObject:nil afterDelay:0.1];
+                [weakSelf performSelector:@selector(sendSensorGetAfterTimePublication) withObject:nil afterDelay:0.1];
             } else {
-                [weakSelf finishTimePublicationAction];
+                [weakSelf sendSensorGetAfterTimePublication];
             }
         }
     }];
@@ -482,9 +502,9 @@
                         //后台发送25字节长度的ACK，需要一定的时间。
                         NSInteger mtu = [SigBearer.share.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
                         if (mtu < 25) {
-                            [weakSelf performSelector:@selector(finishTimePublicationAction) withObject:nil afterDelay:0.1];
+                            [weakSelf performSelector:@selector(sendSensorGetAfterTimePublication) withObject:nil afterDelay:0.1];
                         } else {
-                            [weakSelf finishTimePublicationAction];
+                            [weakSelf sendSensorGetAfterTimePublication];
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -505,12 +525,39 @@
             });
         }else{
             TelinkLogInfo(@"SDK needn't publish time");
-            [self finishTimePublicationAction];
+            [self sendSensorGetAfterTimePublication];
         }
     }
 }
 
-- (void)finishTimePublicationAction {
+- (void)sendSensorGetAfterTimePublication {
+    SigNodeModel *node = [[SigNodeModel alloc] init];
+    [node setAddress:self.node.address];
+    [node setAddSigAppkeyModelSuccess:self.appkeyModel];
+    [node setCompositionData:(SigPage0 *)self.page];
+    NSArray *elementAddresses = [node getAddressesWithModelID:@(kSigModel_SensorServer_ID)];
+    if (elementAddresses.count > 0) {
+        UInt16 elementAddress = [elementAddresses.firstObject intValue];
+        __weak typeof(self) weakSelf = self;
+        [SDKLibCommand sensorGetWithDestination:elementAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSensorStatus * _Nonnull responseMessage) {
+            if (elementAddress == source && responseMessage.sensorDataModelArray) {
+                weakSelf.node.sensorDataArray = [NSMutableArray arrayWithArray:responseMessage.sensorDataModelArray];
+            }
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            if (error) {
+                if (weakSelf.failBlock) {
+                    weakSelf.failBlock(error);
+                }
+            } else {
+                [weakSelf finishSensorGetAction];
+            }
+        }];
+    } else {
+        [self finishSensorGetAction];
+    }
+}
+
+- (void)finishSensorGetAction {
     [self saveKeyBindSuccessToLocationData];
     [SigMeshLib.share cleanAllCommandsAndRetry];
     SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;

@@ -471,12 +471,6 @@ struct ForwardingTableEntryHeader {
 /// @param dictionary SigForwardingTableModel dictionary object.
 - (void)setDictionaryToSigForwardingTableModel:(NSDictionary *)dictionary;
 
-/// Get description string.
-- (NSString *)getDescription;
-
-/// Get String of Entry Node Address.
-- (NSString *)getEntryNodeAddressString;
-
 @end
 
 

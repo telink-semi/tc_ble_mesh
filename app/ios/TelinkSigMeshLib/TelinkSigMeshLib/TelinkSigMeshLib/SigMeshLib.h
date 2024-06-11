@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
+#import "TPeripheralManager.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -264,6 +265,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param message The Proxy Configuration message to be sent.
 /// @param command The command save message and callback.
 - (nullable SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
+
+/// Advertising Solicitation PDU With Mesh Message.
+/// @param source The source Unicast Address.
+/// @param destination The destination address of the message received.
+/// @param interval advertising interval
+/// @param result advertising result
+- (void)advertisingSolicitationPDUWithSource:(UInt16)source destination:(UInt16)destination advertisingInterval:(NSTimeInterval)interval result:(advertisingResult)result;
 
 /// Sends the telink's onlineStatus command.
 /// @param message The onlineStatus message to be sent.

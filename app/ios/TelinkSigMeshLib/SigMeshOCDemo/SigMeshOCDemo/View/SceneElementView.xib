@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="SceneElementView">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="SpK-Rd-OIZ">
+                    <rect key="frame" x="20" y="79" width="8" height="8"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="8" id="hEt-yP-oiM"/>
+                        <constraint firstAttribute="width" constant="8" id="wGz-2y-fnr"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="scene name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qdj-YA-lZK">
+                    <rect key="frame" x="38" y="76.333333333333329" width="300" height="13.333333333333329"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cKG-sx-mq2">
+                    <rect key="frame" x="348" y="70.666666666666671" width="25" height="25"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="cKG-sx-mq2" secondAttribute="height" multiplier="1:1" id="UPd-ct-Y1N"/>
+                        <constraint firstAttribute="width" constant="25" id="cNi-hT-D69"/>
+                    </constraints>
+                    <state key="normal" image="ic_play_blue"/>
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="qdj-YA-lZK" firstAttribute="leading" secondItem="SpK-Rd-OIZ" secondAttribute="trailing" constant="10" id="5YZ-4e-dUn"/>
+                <constraint firstItem="SpK-Rd-OIZ" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" constant="20" id="5ml-QK-paP"/>
+                <constraint firstItem="cKG-sx-mq2" firstAttribute="leading" secondItem="qdj-YA-lZK" secondAttribute="trailing" constant="10" id="fgS-mL-9zv"/>
+                <constraint firstItem="qdj-YA-lZK" firstAttribute="centerY" secondItem="SpK-Rd-OIZ" secondAttribute="centerY" id="igD-Qc-TrF"/>
+                <constraint firstItem="SpK-Rd-OIZ" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="20" id="jZg-xI-dcp"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="cKG-sx-mq2" secondAttribute="trailing" constant="20" id="pMi-Kd-yyf"/>
+                <constraint firstItem="cKG-sx-mq2" firstAttribute="centerY" secondItem="SpK-Rd-OIZ" secondAttribute="centerY" id="t2G-gi-gBi"/>
+            </constraints>
+            <connections>
+                <outlet property="iconImageView" destination="SpK-Rd-OIZ" id="jDP-qB-hq4"/>
+                <outlet property="nameLabel" destination="qdj-YA-lZK" id="iHj-3d-SDC"/>
+                <outlet property="playButton" destination="cKG-sx-mq2" id="0Zq-To-8dy"/>
+            </connections>
+            <point key="canvasLocation" x="48" y="20"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ic_play_blue" width="50" height="50"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

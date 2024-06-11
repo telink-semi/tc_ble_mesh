@@ -1,0 +1,18 @@
+# Xcode
+.DS_Store
+/.DS_Store
+xcuserdata
+
+#CocoaPods
+Pods/
+Pods
+!Podfile
+!Podfile.lock
+Podfile.lock
+/Podfile.lock
+
+# Xcode workspace scheduling files
+xcshareddata/
+ 
+# Application support
+*.xcworkspace
