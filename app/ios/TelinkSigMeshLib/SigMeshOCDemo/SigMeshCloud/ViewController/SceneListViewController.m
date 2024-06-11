@@ -107,7 +107,7 @@
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new scene name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *sceneName = [[alertVc textFields] objectAtIndex:0].text;
         sceneName = sceneName.removeHeadAndTailSpacePro;
         TelinkLogInfo(@"new scene is %@", sceneName);
@@ -117,7 +117,7 @@
         }
         [weakSelf addSceneActionWithName:sceneName];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];
@@ -159,7 +159,7 @@
 //                }
 //            }
 //            __weak typeof(self) weakSelf = self;
-//            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+//            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:msg sure:^(UIAlertAction *action) {
 //                [weakSelf deleteSceneAction:model];
 //            } cancel:^(UIAlertAction *action) {
 //                

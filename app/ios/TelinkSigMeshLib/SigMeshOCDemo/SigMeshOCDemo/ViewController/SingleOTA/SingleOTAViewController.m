@@ -57,12 +57,9 @@
     }
     UInt16 pid = [OTAFileSource.share getPidWithOTAData:self.localData];
     if (pid != [LibTools uint16From16String:self.model.pid]) {
-        NSString *msg = [NSString stringWithFormat:@"The PID of node is different from the PID of Bin file, are you sure still OTA this node?"];
         __weak typeof(self) weakSelf = self;
-        [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+        [self showAlertTitle:kDefaultAlertTitle message:@"The PID of node is different from the PID of Bin file, still OTA this node?" sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
-        } cancel:^(UIAlertAction *action) {
-
         }];
     } else {
         [self otaAction];

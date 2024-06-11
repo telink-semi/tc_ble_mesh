@@ -120,17 +120,6 @@
     }
 }
 
-- (void)showTips:(NSString *)tips{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:tips preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TelinkLogDebug(@"点击确认");
-            [self.navigationController popViewControllerAnimated:YES];
-        }]];
-        [self presentViewController:alertController animated:YES completion:nil];
-    });
-}
-
 -(void)dealloc{
     TelinkLogDebug(@"%s",__func__);
 }

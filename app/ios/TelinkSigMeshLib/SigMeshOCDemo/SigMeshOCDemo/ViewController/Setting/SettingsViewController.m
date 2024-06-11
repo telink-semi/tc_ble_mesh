@@ -201,9 +201,7 @@
 
 - (IBAction)clickResetSettingButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Reset all settings to default values?" preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        TelinkLogDebug(@"点击确认");
+    [self showAlertTitle:kDefaultAlertTitle message:@"Reset all settings to default values?" sure:^(UIAlertAction *action) {
 #ifndef kIsTelinkCloudSigMeshLib
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:KeyBindType_Normal] forKey:kKeyBindType];
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:ImportSwitchMode_manual] forKey:kImportCompleteAction];
@@ -218,12 +216,7 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
         [weakSelf refreshSourceAndUI];
         [weakSelf showTips:@"Reset all settings success!"];
-    }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        TelinkLogDebug(@"点击取消");
-
-    }]];
-    [self presentViewController:alertController animated:YES completion:nil];
+    }];    
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

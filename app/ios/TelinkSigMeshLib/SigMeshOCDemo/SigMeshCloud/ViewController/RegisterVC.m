@@ -178,13 +178,9 @@
                 int code = [dic[@"code"] intValue];
                 if (code == 200) {
                     TelinkLogInfo(@"register successful!");
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"Register successful! You can log in with mailAddress:%@ or name:%@", emailString, name] preferredStyle:UIAlertControllerStyleAlert];
-                        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [weakSelf dismissViewControllerAnimated:YES completion:nil];
-                        }]];
-                        [weakSelf presentViewController:alertController animated:YES completion:nil];
-                    });
+                    [weakSelf showAlertTitle:@"Register successful" message:[NSString stringWithFormat:@"You can log in with mailAddress:%@ or name:%@", emailString, name] sure:^(UIAlertAction *action) {
+                        [weakSelf dismissViewControllerAnimated:YES completion:nil];
+                    }];
                 } else {
                     TelinkLogInfo(@"register result = %@", dic);
                     [weakSelf showTips:[NSString stringWithFormat:@"register errorCode = %d, message = %@", code, dic[@"message"]]];

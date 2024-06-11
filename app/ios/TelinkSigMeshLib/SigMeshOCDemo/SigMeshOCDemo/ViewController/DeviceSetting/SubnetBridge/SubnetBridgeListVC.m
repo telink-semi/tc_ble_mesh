@@ -176,17 +176,14 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             if (!SigBearer.share.isOpen) {
-                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
+                [self showTips:@"The mesh network is not online!"];
                 return;
             }
 
             SigSubnetBridgeModel *subnetBridgeModel = self.model.subnetBridgeList[indexPath.row];
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete this subnet "];
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete this subnet "] sure:^(UIAlertAction *action) {
                 [weakSelf deleteSubnetBridgeOfDevice:subnetBridgeModel];
-            } cancel:^(UIAlertAction *action) {
-
             }];
         }
     }

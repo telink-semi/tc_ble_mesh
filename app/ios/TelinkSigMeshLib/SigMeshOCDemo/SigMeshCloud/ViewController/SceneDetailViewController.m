@@ -379,7 +379,7 @@
 //
 //- (void)showTips:(NSString *)message{
 //    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:message preferredStyle:UIAlertControllerStyleAlert];
-//    UIAlertAction *revoke = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil];
+//    UIAlertAction *revoke = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleCancel handler:nil];
 //    [alert addAction:revoke];
 //    [self presentViewController:alert animated:YES completion:nil];
 //}

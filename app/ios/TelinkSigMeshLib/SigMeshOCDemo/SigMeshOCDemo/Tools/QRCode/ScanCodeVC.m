@@ -101,15 +101,12 @@
     }
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(backToMain) name:@"BackToMain" object:nil];
     if (!self.isCanUseCamera) {
-        __weak typeof(self) weakSelf = self;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf showAlertSureWithTitle:@"Hits" message:@"请到设置界面打开TelinkSigMesh的相机权限。" sure:^(UIAlertAction *action) {
-                NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
-                if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                    [[UIApplication sharedApplication] openURL:url];
-                }
-            }];
-        });
+        [self showAlertSureWithTitle:kDefaultAlertTitle message:@"Please go to the settings interface to open camera permissions for TelinkSigMesh." sure:^(UIAlertAction *action) {
+            NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+            if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                [[UIApplication sharedApplication] openURL:url];
+            }
+        }];
     }
 }
 

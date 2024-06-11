@@ -90,8 +90,8 @@
         textField.placeholder = @"please input new netKey index";
         textField.text = [NSString stringWithFormat:@"%03lX",(long)weakSelf.showAppKeyModel.index];
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入AppKey index完成");
         UITextField *indexTextField = inputAlertController.textFields.firstObject;
         NSString *index = indexTextField.text.removeAllSpaceAndNewlines;
@@ -147,8 +147,8 @@
         textField.placeholder = @"please input new Bound NetKey Index";
         textField.text = [NSString stringWithFormat:@"%03lX",(long)weakSelf.showAppKeyModel.boundNetKey];
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入Bound NetKey index完成");
         UITextField *indexTextField = inputAlertController.textFields.firstObject;
         NSString *index = indexTextField.text.removeAllSpaceAndNewlines;
@@ -197,8 +197,8 @@
         textField.placeholder = @"please input new appKey value";
         textField.text = weakSelf.showAppKeyModel.key;
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入AppKey value完成");
         UITextField *valueTF = inputAlertController.textFields.firstObject;
         NSString *value = valueTF.text.removeAllSpaceAndNewlines;
@@ -266,7 +266,7 @@
         }
     }
     if (hadBound) {
-        [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t edit it!" sure:nil];
+        [self showTips:@"Some nodes have already bound this appkey, you can`t edit it!"];
         /*客户需要保证绑定该AppKey的设备都在线，并且给所有绑定该AppKey的设备发送SigConfigAppKeyUpdate指令且成功后，才可以修改mesh里面的AppKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个AppKey的功能：可以先从设备里面移除该AppKey，再在setting界面修改AppKey，再给设备重新绑定AppKey。*/
         return;
     }

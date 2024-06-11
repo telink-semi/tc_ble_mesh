@@ -209,11 +209,11 @@
 
 - (void)clickAddMeshNetwork {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Tips" message:@"Please input new mesh network name!" preferredStyle: UIAlertControllerStyleAlert];
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input new mesh network name!" preferredStyle: UIAlertControllerStyleAlert];
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new network name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *networkName = [[alertVc textFields] objectAtIndex:0].text;
         networkName = networkName.removeHeadAndTailSpacePro;
         NSLog(@"new networkName is %@", networkName);
@@ -223,7 +223,7 @@
         }
         [weakSelf addMeshNetworkActionWithMeshNetworkName:networkName];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];

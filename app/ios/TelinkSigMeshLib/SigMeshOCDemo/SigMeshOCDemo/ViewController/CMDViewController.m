@@ -332,8 +332,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertF];
     actionSheet.popoverPresentationController.sourceView = button;
     actionSheet.popoverPresentationController.sourceRect =  button.frame;
@@ -342,7 +341,7 @@
 
 - (void)clickSelectAccessTypeButton:(UIButton *)button {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Tpyes" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Types" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     for (int i=0; i<2; i++) {
         UIAlertAction *alertT = [UIAlertAction actionWithTitle:i == 0 ? @"Application(APP Key)" : @"Device(Device Key)" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             weakSelf.currentCommand.isEncryptByDeviceKey = i == 1;
@@ -350,8 +349,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertF];
     actionSheet.popoverPresentationController.sourceView = button;
     actionSheet.popoverPresentationController.sourceRect =  button.frame;

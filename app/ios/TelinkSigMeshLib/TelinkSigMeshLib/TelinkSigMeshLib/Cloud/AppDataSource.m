@@ -998,8 +998,8 @@
         node.UUID = SigDataSource.share.getCurrentProvisionerUUID;
         SigElementModel *ele = [[SigElementModel alloc] init];
         ele.parentNodeAddress = model.provisioner.address;
-        NSMutableArray *eles = [NSMutableArray arrayWithObject:ele];
-        node.elements = eles;
+        NSMutableArray *elements = [NSMutableArray arrayWithObject:ele];
+        node.elements = elements;
         [nodes addObject:node];
     }
     dataSource.nodes = nodes;

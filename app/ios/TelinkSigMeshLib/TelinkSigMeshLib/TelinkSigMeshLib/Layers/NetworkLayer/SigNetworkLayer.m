@@ -392,12 +392,14 @@
         } else if (controlMessage.opCode == SigProxyFilerOpcode_directedProxyCapabilitiesStatus) {
             message = [[SigDirectedProxyCapabilitiesStatus alloc] initWithParameters:controlMessage.upperTransportPdu];
         }
-        if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
-            [_networkManager.manager.delegate didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
-        }
-        if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
-            [_networkManager.manager.delegateForDeveloper didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
-        }
+        dispatch_async(self.networkManager.manager.delegateQueue, ^{
+            if ([self.networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
+                [self.networkManager.manager.delegate didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
+            }
+            if ([self.networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
+                [self.networkManager.manager.delegateForDeveloper didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
+            }
+        });
     }else{
         TelinkLogInfo(@"Unsupported proxy configuration message (opcode: 0x%x)",controlMessage.opCode);
     }

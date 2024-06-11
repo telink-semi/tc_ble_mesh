@@ -88,8 +88,8 @@
         textField.placeholder = @"please input new netKey index";
         textField.text = [NSString stringWithFormat:@"%03lX",(long)weakSelf.showNetKeyModel.index];
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入NetKey index完成");
         UITextField *indexTextField = inputAlertController.textFields.firstObject;
         NSString *index = indexTextField.text.removeAllSpaceAndNewlines;
@@ -145,8 +145,8 @@
         textField.placeholder = @"please input new netKey value";
         textField.text = weakSelf.showNetKeyModel.key;
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入NetKey value完成");
         UITextField *valueTF = inputAlertController.textFields.firstObject;
         NSString *value = valueTF.text.removeAllSpaceAndNewlines;
@@ -209,7 +209,7 @@
             }
         }
         if (hadBound) {
-            [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this netkey, you can`t edit it!" sure:nil];
+            [self showTips:@"Some nodes have already bound this netkey, you can`t edit it!"];
             /*客户需要保证添加了该NetKey的设备都在线，并且给所有添加了该NetKey的设备发送SigConfigNetKeyUpdate指令且成功后，才可以修改mesh里面的NetKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个NetKey的功能：可以先从设备里面移除该NetKey，再在setting界面修改NetKey，再给设备重新添加NetKey。*/
             return;
         }

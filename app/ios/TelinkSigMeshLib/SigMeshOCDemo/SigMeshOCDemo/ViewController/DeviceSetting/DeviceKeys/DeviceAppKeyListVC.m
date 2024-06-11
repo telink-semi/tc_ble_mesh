@@ -196,26 +196,22 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             if (self.model.appKeys.count == 1) {
-                [self showAlertSureWithTitle:@"Hits" message:@"The node needs at least one appkey!" sure:nil];
+                [self showTips:@"The node needs at least one appkey!"];
                 return;
             }
             if (!SigBearer.share.isOpen) {
-                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
+                [self showTips:@"The mesh network is not online!"];
                 return;
             }
 
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
             if (model.index == SigDataSource.share.curAppkeyModel.index) {
-                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a app key in use!" sure:nil];
+                [self showTips:@"You cannot delete a app key in use!"];
                 return;
             }
-
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
                 [weakSelf deleteAppKeyOfDevice:model];
-            } cancel:^(UIAlertAction *action) {
-
             }];
         }
     }

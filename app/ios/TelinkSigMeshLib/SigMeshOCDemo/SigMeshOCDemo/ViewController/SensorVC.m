@@ -29,7 +29,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *GetSensorStatusButton;
 
 @property (nonatomic,strong) NSString *logString;
-@property (nonatomic, assign) BOOL hasClickKickout;
+@property (nonatomic, assign) BOOL hasClickKickOut;
 
 @end
 
@@ -85,8 +85,8 @@
 
 //- (IBAction)clickKictOut:(UIButton *)sender {
 //    TelinkLogDebug(@"");
-//    self.hasClickKickout = YES;
-//    [ShowTipsHandle.share show:Tip_KickoutDevice];
+//    self.hasClickKickOut = YES;
+//    [ShowTipsHandle.share show:Tip_KickOutDevice];
 //
 //    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
 //

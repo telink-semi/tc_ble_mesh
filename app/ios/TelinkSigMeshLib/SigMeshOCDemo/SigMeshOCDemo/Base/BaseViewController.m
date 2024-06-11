@@ -168,9 +168,17 @@
 - (void)nilBlock{}
 
 /// Show alert with message
+/// - Parameters:
+///   - title: title string
+///   - tips: message string
+- (void)showTitle:(NSString *)title tips:(NSString *)tips {
+    [self showAlertSureWithTitle:title message:tips sure:nil];
+}
+
+/// Show alert with message
 /// - Parameter message: message
 - (void)showTips:(NSString *)message {
-    [self showTips:message sure:nil];
+    [self showAlertSureWithTitle:kDefaultAlertTitle message:message sure:nil];
 }
 
 /// Show alert with message and sure handle block
@@ -178,10 +186,15 @@
 ///   - message: message
 ///   - sure: sure handle block
 - (void)showTips:(NSString *)message sure:(void (^) (UIAlertAction *action))sure {
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:sure];
-    });
+    [self showAlertSureWithTitle:kDefaultAlertTitle message:message sure:sure];
+}
+
+/// Show alert with message and sure handle block
+/// - Parameters:
+///   - message: message
+///   - sure: sure handle block
+- (void)showAlertTitle:(NSString *)title message:(NSString *)message sure:(void (^) (UIAlertAction *action))sure {
+    [self showAlertSureWithTitle:title message:message sure:sure];
 }
 
 /// 设置导航栏标题和副标题，为了同时显示Title和Mesh名称在导航栏而新增的方法。
@@ -254,36 +267,20 @@
 /// - Parameter dict: 新导入的Mesh数据
 - (void)handleMeshDictionaryFromShareImport:(NSDictionary *)dict {
     __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        //提示是否导入Mesh
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Mesh JSON receive complete, import data?" preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            TelinkLogDebug(@"点击确认");
-            [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
-            NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
-            if (importCompleteAction.intValue == ImportSwitchMode_manual) {
-                //弹框提示用户选择是否切换Mesh
-                __weak typeof(self) weakSelf = self;
-                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Share import success, switch to the new mesh?" preferredStyle:UIAlertControllerStyleAlert];
-                [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    TelinkLogDebug(@"点击确认");
-                    [weakSelf switchMeshActionWithMeshDictionary:dict];
-                }]];
-                [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                    TelinkLogDebug(@"点击取消");
-
-                }]];
-                [weakSelf presentViewController:alertController animated:YES completion:nil];
-            } else {
-                //自动切换Mesh
+    //提示是否导入Mesh
+    [self showAlertTitle:kDefaultAlertTitle message:@"Mesh JSON receive complete, import data?" sure:^(UIAlertAction *action) {
+        [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
+        NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
+        if (importCompleteAction.intValue == ImportSwitchMode_manual) {
+            //弹框提示用户选择是否切换Mesh
+            [weakSelf showAlertTitle:kDefaultAlertTitle message:@"Share import success, switch to the new mesh?" sure:^(UIAlertAction *action) {
                 [weakSelf switchMeshActionWithMeshDictionary:dict];
-            }
-        }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TelinkLogDebug(@"点击取消");
-        }]];
-        [weakSelf presentViewController:alert animated:YES completion:nil];
-    });
+            }];
+        } else {
+            //自动切换Mesh
+            [weakSelf switchMeshActionWithMeshDictionary:dict];
+        }
+    }];
 }
 
 /// 切换到其中一份Mesh数据

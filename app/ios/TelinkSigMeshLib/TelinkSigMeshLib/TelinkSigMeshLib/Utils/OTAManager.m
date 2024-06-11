@@ -389,8 +389,8 @@ typedef enum : NSUInteger {
         }
         __weak typeof(self) weakSelf = self;
         [self sendOTAData:writeData index:(int)self.otaIndex complete:^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:weakSelf.writeOTAInterval];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(weakSelf.writeOTAInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [weakSelf sendPartDataAvailableIOS11];
             });
         }];
     }
@@ -439,8 +439,8 @@ typedef enum : NSUInteger {
             }];
             return;
         }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self performSelector:@selector(sendPartData) withObject:nil afterDelay:self.writeOTAInterval];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.writeOTAInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self sendPartData];
         });
     }
 }

@@ -135,7 +135,7 @@
         while (allArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             SigNodeModel *curDevice = allArray.firstObject;
-            [DemoCommand setSchedulerActionWithAddress:curDevice.address schedulerModel:weakSelf.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
+            [DemoCommand setSchedulerActionWithAddress:curDevice.schedulerAddress[0].intValue schedulerModel:weakSelf.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
                 TelinkLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
                 UInt16 sceneID = weakSelf.model.sceneId;
                 UInt64 scheduler = weakSelf.model.schedulerData;

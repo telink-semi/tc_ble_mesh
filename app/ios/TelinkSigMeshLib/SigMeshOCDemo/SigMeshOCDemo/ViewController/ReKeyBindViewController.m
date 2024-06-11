@@ -24,11 +24,11 @@
 #import "ReKeyBindViewController.h"
 
 @interface ReKeyBindViewController()
-@property (nonatomic, assign) BOOL hasClickKickout;
+@property (nonatomic, assign) BOOL hasClickKickOut;
 @property (nonatomic, assign) BOOL hasClickKeyBind;
 @property (weak, nonatomic) IBOutlet UILabel *detailLabel;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
-@property (weak, nonatomic) IBOutlet UIButton *keindyButton;
+@property (weak, nonatomic) IBOutlet UIButton *keyBindButton;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @end
 
@@ -36,8 +36,8 @@
 
 - (IBAction)kickOut:(UIButton *)sender {
     TelinkLogDebug(@"");
-    self.hasClickKickout = YES;
-    [ShowTipsHandle.share show:Tip_KickoutDevice];
+    self.hasClickKickOut = YES;
+    [ShowTipsHandle.share show:Tip_KickOutDevice];
 
     if (SigBearer.share.isOpen) {
         [self kickoutAction];
@@ -110,7 +110,7 @@
 }
 
 - (void)kickoutConnectPeripheralWithUUIDTimeout{
-    self.hasClickKickout = NO;
+    self.hasClickKickOut = NO;
     [ShowTipsHandle.share hidden];
     [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
     [self pop];
@@ -129,16 +129,10 @@
             TelinkLogDebug(@"stopMeshConnect fail");
         }
     }];
-
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:Tip_ReKeyBindDeviceFail preferredStyle:UIAlertControllerStyleAlert];
     __weak typeof(self) weakSelf = self;
-    UIAlertAction *action = [UIAlertAction actionWithTitle:@"confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [weakSelf keyBind:weakSelf.keindyButton];
+    [self showAlertTitle:kDefaultAlertTitle message:Tip_ReKeyBindDeviceFail sure:^(UIAlertAction *action) {
+        [weakSelf keyBind:weakSelf.keyBindButton];
     }];
-    UIAlertAction *revoke = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
-    [alert addAction:action];
-    [alert addAction:revoke];
-    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)kickoutAction{
@@ -182,7 +176,7 @@
     self.title = @"Key Bind";
     self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nUUID:%@",self.model.address,self.model.UUID];
     self.kickOutButton.backgroundColor = UIColor.telinkButtonRed;
-    self.keindyButton.backgroundColor = UIColor.telinkButtonBlue;
+    self.keyBindButton.backgroundColor = UIColor.telinkButtonBlue;
 }
 
 - (void)viewWillAppear:(BOOL)animated{

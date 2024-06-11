@@ -176,14 +176,14 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             if (!SigBearer.share.isOpen) {
-                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
+                [self showTips:@"The mesh network is not online!"];
                 return;
             }
 
             SigForwardingTableModel *forwardingTableModel = self.forwardingTableModelList[indexPath.row];
             NSString *msg = [NSString stringWithFormat:@"Confirm to delete table?"];
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Warning" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:msg sure:^(UIAlertAction *action) {
                 [weakSelf removeForwardingTable:forwardingTableModel];
             } cancel:^(UIAlertAction *action) {
 

@@ -351,7 +351,7 @@
         item.itemType = ItemType_Input;
         item.headerString = @"please input content";
         item.defaultString = @"";
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:[NSString stringWithFormat:@"Set %@", m.title] detail:@"input new value" itemArray:@[item] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:[NSString stringWithFormat:@"Set %@", m.title] detail:@"input new value" itemArray:@[item] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSpace;

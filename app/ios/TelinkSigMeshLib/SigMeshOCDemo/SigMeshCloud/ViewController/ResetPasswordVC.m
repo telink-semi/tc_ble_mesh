@@ -146,13 +146,9 @@
                 int code = [dic[@"code"] intValue];
                 if (code == 200) {
                     TelinkLogInfo(@"resetPassword successful!");
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"resetPassword successful! You can log in with mailAddress:%@ and new password.", emailString] preferredStyle:UIAlertControllerStyleAlert];
-                        [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [weakSelf dismissViewControllerAnimated:YES completion:nil];
-                        }]];
-                        [weakSelf presentViewController:alertController animated:YES completion:nil];
-                    });
+                    [weakSelf showAlertTitle:@"ResetPassword successful" message:[NSString stringWithFormat:@"resetPassword successful! You can log in with mailAddress:%@ and new password.", emailString] sure:^(UIAlertAction *action) {
+                        [weakSelf dismissViewControllerAnimated:YES completion:nil];
+                    }];
                 } else {
                     TelinkLogInfo(@"resetPassword result = %@", dic);
                     [weakSelf showTips:[NSString stringWithFormat:@"resetPassword errorCode = %d, message = %@", code, dic[@"message"]]];

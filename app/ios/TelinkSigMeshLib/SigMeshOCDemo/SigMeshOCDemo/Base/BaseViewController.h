@@ -41,6 +41,12 @@
 - (void)nilBlock;
 
 /// Show alert with message
+/// - Parameters:
+///   - title: title string
+///   - tips: message string
+- (void)showTitle:(NSString *)title tips:(NSString *)tips;
+
+/// Show alert with message
 /// - Parameter message: message
 - (void)showTips:(NSString *)message;
 
@@ -49,6 +55,12 @@
 ///   - message: message
 ///   - sure: sure handle block
 - (void)showTips:(NSString *)message sure:(void (^) (UIAlertAction *action))sure;
+
+/// Show alert with message and sure handle block
+/// - Parameters:
+///   - message: message
+///   - sure: sure handle block
+- (void)showAlertTitle:(NSString *)title message:(NSString *)message sure:(void (^) (UIAlertAction *action))sure;
 
 /// 设置导航栏标题和副标题，为了同时显示Title和Mesh名称在导航栏而新增的方法。
 /// - Parameters:

@@ -142,7 +142,7 @@
     UIAlertAction *alertT2 = [UIAlertAction actionWithTitle:@"Set Time" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [weakSelf clickSetTime];
     }];
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
     }];
     [actionSheet addAction:alertT];
     [actionSheet addAction:alertT2];
@@ -239,7 +239,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
     }];
     [actionSheet addAction:alertF];
     actionSheet.popoverPresentationController.sourceView = sender;

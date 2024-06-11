@@ -101,7 +101,7 @@
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new scheduler name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *schedulerName = [[alertVc textFields] objectAtIndex:0].text;
         schedulerName = schedulerName.removeHeadAndTailSpacePro;
         TelinkLogInfo(@"new schedulerName is %@", schedulerName);
@@ -111,7 +111,7 @@
         }
         [weakSelf addSchedulerActionWithName:schedulerName];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];
