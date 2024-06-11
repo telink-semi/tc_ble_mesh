@@ -129,9 +129,7 @@
         [actionSheet addAction:alertT];
     }
 
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Cancel");
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertF];
     [self presentViewController:actionSheet animated:YES completion:nil];
 }

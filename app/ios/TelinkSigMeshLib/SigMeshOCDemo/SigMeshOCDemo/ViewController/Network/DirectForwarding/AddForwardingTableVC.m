@@ -183,12 +183,12 @@
 
 - (void)showRetryAlertWithMessage:(NSString *)message {
     [ShowTipsHandle.share hidden];
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Tips" message:message preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:message preferredStyle:UIAlertControllerStyleAlert];
     __weak typeof(self) weakSelf = self;
     UIAlertAction *action = [UIAlertAction actionWithTitle:@"Retry" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [weakSelf addForwardingTable:weakSelf.addButton];
     }];
-    UIAlertAction *revoke = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *revoke = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alert addAction:action];
     [alert addAction:revoke];
     [self presentViewController:alert animated:YES completion:nil];

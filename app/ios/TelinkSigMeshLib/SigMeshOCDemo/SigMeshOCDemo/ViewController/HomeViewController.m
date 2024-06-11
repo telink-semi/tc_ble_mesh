@@ -89,8 +89,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertF];
     actionSheet.popoverPresentationController.sourceView = self.sortButton;
     actionSheet.popoverPresentationController.sourceRect =  self.sortButton.frame;
@@ -103,15 +102,15 @@
     //v3.3.3.6及之后版本，初次分享过来，没有ivIndex时，需要连接mesh成功或者用户手动输入ivIndex。
     if (!SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
         __weak typeof(self) weakSelf = self;
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Input IV index" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             TelinkLogDebug(@"点击输入ivIndex");
-            UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
             [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
                 textField.placeholder = @"Please input IV index in input box";
                 textField.text = @"0";
             }];
-            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 TelinkLogDebug(@"输入ivIndex完成");
                 UITextField *ivIndex = inputAlertController.textFields.firstObject;
                 UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
@@ -119,20 +118,16 @@
                 [SigDataSource.share setSequenceNumberUInt32:0];
                 [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
                 TelinkLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
-                UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
                 [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Add Devices" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                     [weakSelf pushToAddDeviceVC];
                 }]];
                 [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
             }]];
-            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                TelinkLogDebug(@"点击取消");
-            }]];
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil]];
             [weakSelf presentViewController:inputAlertController animated:YES completion:nil];
         }]];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-            TelinkLogDebug(@"点击取消");
-        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
         [self pushToAddDeviceVC];

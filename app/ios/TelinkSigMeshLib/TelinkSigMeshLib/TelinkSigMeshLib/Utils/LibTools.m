@@ -87,10 +87,18 @@
 
 ///NSData字节翻转
 + (NSData *)turnOverData:(NSData *)data {
-    NSMutableData *backData = [NSMutableData data];
-    for (int i=0; i<data.length; i++) {
-        [backData appendData:[data subdataWithRange:NSMakeRange(data.length-1-i, 1)]];
+    // 预先计算需要的内存大小
+    NSMutableData *backData = [NSMutableData dataWithCapacity:data.length];
+    // 创建一个缓冲区来存储字节
+    uint8_t *bytes = (uint8_t *)malloc(data.length);
+    // 读取数据的字节到缓冲区
+    [data getBytes:bytes length:data.length];
+    // 从后往前写入字节到NSMutableData
+    for (NSInteger i = data.length - 1; i >= 0; i--) {
+        [backData appendBytes:&bytes[i] length:1];
     }
+    // 释放缓冲区内存
+    free(bytes);
     return backData;
 }
 

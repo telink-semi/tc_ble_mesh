@@ -92,7 +92,7 @@
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
             if (self.network.appKeys.count == 1) {
-                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network needs at least one appkey!" sure:nil];
+                [self showTips:@"The mesh network needs at least one appkey!"];
                 return;
             }
 
@@ -114,21 +114,17 @@
             }
             TelinkLogDebug(@"%@",indexPath);
             if (hadBound) {
-                [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t delete it!" sure:nil];
+                [self showTips:@"Some nodes have already bound this appkey, you can`t delete it!"];
                 return;
             }
-
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
                 [weakSelf.network.appKeys removeObject:model];
                 if (weakSelf.backNetwork) {
                     weakSelf.backNetwork(weakSelf.network);
                 }
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-            } cancel:^(UIAlertAction *action) {
-
             }];
         }
     }
@@ -175,13 +171,10 @@
     }
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
     if (model != self.network.curAppkeyModel) {
-        NSString *msg = [NSString stringWithFormat:@"Are you sure change current appKey to index:0x%04lX key:%@",(long)model.index,model.key];
         __weak typeof(self) weakSelf = self;
-        [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+        [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure change current appKey to index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
             SigDataSource.share.curAppkeyModel = model;
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-        } cancel:^(UIAlertAction *action) {
-
         }];
     }
 }

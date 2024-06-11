@@ -53,8 +53,8 @@
         textField.placeholder = @"please input new mesh name";
         textField.text = weakSelf.network.meshName;
     }];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:nil]];
-    [inputAlertController addAction:[UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleDefault handler:nil]];
+    [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"输入mesh name完成");
         UITextField *addressTF = inputAlertController.textFields.firstObject;
         //check input length

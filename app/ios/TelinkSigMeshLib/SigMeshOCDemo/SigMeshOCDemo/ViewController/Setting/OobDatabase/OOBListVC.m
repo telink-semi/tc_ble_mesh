@@ -70,9 +70,7 @@
     UIAlertAction *alertT2 = [UIAlertAction actionWithTitle:@"Import from file" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [weakSelf addOobByImportFromFile];
     }];
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Cancel");
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertT];
     [actionSheet addAction:alertT2];
     [actionSheet addAction:alertF];
@@ -142,12 +140,10 @@
 
 - (void)clickDeleteAll {
     __weak typeof(self) weakSelf = self;
-    [self showAlertSureAndCancelWithTitle:@"Hits" message:@"Wipe all oob info?" sure:^(UIAlertAction *action) {
+    [self showAlertTitle:kDefaultAlertTitle message:@"Wipe all oob info?" sure:^(UIAlertAction *action) {
         [SigDataSource.share deleteAllSigOOBModel];
         weakSelf.sourceArray = [NSMutableArray array];
         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    } cancel:^(UIAlertAction *action) {
-
     }];
 }
 
@@ -158,14 +154,11 @@
         if (indexPath != nil) {
             SigOOBModel *model = self.sourceArray[indexPath.row];
             TelinkLogDebug(@"%@",indexPath);
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete oob data, UUID:%@",model.UUIDString];
             __weak typeof(self) weakSelf = self;
-            [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Delete OOB data, UUID:%@ ?",model.UUIDString] sure:^(UIAlertAction *action) {
                 [SigDataSource.share deleteSigOOBModel:model];
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-            } cancel:^(UIAlertAction *action) {
-
             }];
         }
     }

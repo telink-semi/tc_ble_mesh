@@ -628,12 +628,6 @@ static SigMeshLib *shareLib = nil;
     TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
     NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
     [self handleResultCallback:command error:error];
-
-//    if (command.resultCallback && !command.hadReceiveAllResponse) {
-//        TelinkLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
-//        NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
-//        command.resultCallback(NO, error);
-//    }
 }
 
 /// Handle command finish action.
@@ -791,15 +785,11 @@ static SigMeshLib *shareLib = nil;
         });
     }
     if (command.responseMaxCount != 0) {
-//        if (command && command.responseSourceArray.count >= command.responseMaxCount) {
         //优化：当实际回调的response多于传入的responseMaxCount时，使用==判断即可实现只回调一次resultCallback。
         if (command && command.responseSourceArray.count == command.responseMaxCount) {
             [self commandResponseFinishWithCommand:command];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self handleResultCallback:command error:nil];
-//                if (command.resultCallback) {
-//                    command.resultCallback(YES, nil);
-//                }
             });
         }
     } else {
@@ -839,9 +829,7 @@ static SigMeshLib *shareLib = nil;
             shouldCallback = YES;
         }
         if (command && shouldCallback) {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-                [self commandResponseFinishWithCommand:command];
-//            });
+            [self commandResponseFinishWithCommand:command];
         }
 
         //send finished of noAckMessage callback in this code.
@@ -1089,38 +1077,40 @@ static SigMeshLib *shareLib = nil;
 /// @param command The SDKLibCommand object.
 - (void)retrySendSDKLibCommand:(SDKLibCommand *)command {
     __weak typeof(self) weakSelf = self;
-    if (command && command.retryTimer) {
-        [command.retryTimer invalidate];
-        command.retryTimer = nil;
-    }
-    if (command.hadRetryCount >= command.retryCount) {
-        // 重试完成，一个command.timeout没有足够response则报超时。
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-            [weakSelf commandTimeoutWithCommand:command];
-        }];
-        command.retryTimer = timer;
-    } else {
-        // 重试未完成，继续重试。
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-            if (command.hadRetryCount < command.retryCount) {
-                command.hadRetryCount ++;
-                TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
-                dispatch_async(weakSelf.queue, ^{
-                    [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
-                    if (command.commandType == SigCommandType_meshMessage) {
-                        [weakSelf.networkManager sendMeshMessage:(SigMeshMessage *)command.curMeshMessage fromElement:command.source toDestination:command.destination withTtl:command.initialTtl usingApplicationKey:command.curAppkey command:command];
-                    } else if (command.commandType == SigCommandType_configMessage) {
-                        [weakSelf.networkManager sendConfigMessage:(SigConfigMessage *)command.curMeshMessage toDestination:command.destination.address withTtl:command.initialTtl command:command];
-                    } else if (command.commandType == SigCommandType_proxyConfigurationMessage) {
-                        [weakSelf.networkManager sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)command.curMeshMessage];
-                    }
-                });
-            } else {
-                TelinkLogError(@"retry error!");
-            }
-        }];
-        command.retryTimer = timer;
-    }
+    dispatch_async(weakSelf.queue, ^{
+        if (command && command.retryTimer) {
+            [command.retryTimer invalidate];
+            command.retryTimer = nil;
+        }
+        if (command.hadRetryCount >= command.retryCount) {
+            // 重试完成，一个command.timeout没有足够response则报超时。
+            BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+                [weakSelf commandTimeoutWithCommand:command];
+            }];
+            command.retryTimer = timer;
+        } else {
+            // 重试未完成，继续重试。
+            BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+                if (command.hadRetryCount < command.retryCount) {
+                    command.hadRetryCount ++;
+                    TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
+                    dispatch_async(weakSelf.queue, ^{
+                        [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
+                        if (command.commandType == SigCommandType_meshMessage) {
+                            [weakSelf.networkManager sendMeshMessage:(SigMeshMessage *)command.curMeshMessage fromElement:command.source toDestination:command.destination withTtl:command.initialTtl usingApplicationKey:command.curAppkey command:command];
+                        } else if (command.commandType == SigCommandType_configMessage) {
+                            [weakSelf.networkManager sendConfigMessage:(SigConfigMessage *)command.curMeshMessage toDestination:command.destination.address withTtl:command.initialTtl command:command];
+                        } else if (command.commandType == SigCommandType_proxyConfigurationMessage) {
+                            [weakSelf.networkManager sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)command.curMeshMessage];
+                        }
+                    });
+                } else {
+                    TelinkLogError(@"retry error!");
+                }
+            }];
+            command.retryTimer = timer;
+        }
+    });
 }
 
 @end

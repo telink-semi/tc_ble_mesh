@@ -51,7 +51,7 @@
  @param actionOneTitle 标题
  @param handlerOne     点击标题的事件
  */
-- (void)showSheetOneaction:(NSString *)actionOneTitle handlerOne:(void(^)(UIAlertAction *action))handlerOne;
+- (void)showSheetOneAction:(NSString *)actionOneTitle handlerOne:(void(^)(UIAlertAction *action))handlerOne;
 
 /**
  弹出UIAlerController
@@ -61,6 +61,6 @@
  @param handlerOne     第一个标题点击事件
  @param handlerTwo     第二个标题点击事件
  */
-- (void)showSheetTwoaction:(NSString *)actionOneTitle actionTwo:(NSString *)actionTwoTitle handlerOne:(void(^)(UIAlertAction *action))handlerOne handlerTwo:(void (^) (UIAlertAction *action))handlerTwo;
+- (void)showSheetTwoAction:(NSString *)actionOneTitle actionTwo:(NSString *)actionTwoTitle handlerOne:(void(^)(UIAlertAction *action))handlerOne handlerTwo:(void (^) (UIAlertAction *action))handlerTwo;
 
 @end

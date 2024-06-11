@@ -244,8 +244,8 @@
             stringPickerView.title = @"please choose directions";
             stringPickerView.dataSourceArr = @[@"Unidirectional(0x1)", @"Directional(0x2)"];
             stringPickerView.selectIndex = self.bridgeModel.directions == SigDirectionsFieldValues_unidirectional ? 0 : 1;
-            stringPickerView.pickerStyle.cancelBtnTitle = @"Cancel";
-            stringPickerView.pickerStyle.doneBtnTitle = @"Done";
+            stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
+            stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
             stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
                 weakSelf.bridgeModel.directions = resultModel.index == 0 ? SigDirectionsFieldValues_unidirectional : SigDirectionsFieldValues_bidirectional;
                 textField.text = resultModel.value;
@@ -262,8 +262,8 @@
             stringPickerView.dataSourceArr = self.netkeyArr;
             SigNetkeyModel *selectModel = [SigDataSource.share getNetkeyModelWithNetkeyIndex:self.bridgeModel.netKeyIndex1];
             stringPickerView.selectIndex = [SigDataSource.share.netKeys indexOfObject:selectModel];
-            stringPickerView.pickerStyle.cancelBtnTitle = @"Cancel";
-            stringPickerView.pickerStyle.doneBtnTitle = @"Done";
+            stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
+            stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
             stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
                 self.bridgeModel.netKeyIndex1 = SigDataSource.share.netKeys[resultModel.index].index;
                 textField.text = resultModel.value;
@@ -280,8 +280,8 @@
             stringPickerView.dataSourceArr = self.netkeyArr;
             SigNetkeyModel *selectModel = [SigDataSource.share getNetkeyModelWithNetkeyIndex:self.bridgeModel.netKeyIndex2];
             stringPickerView.selectIndex = [SigDataSource.share.netKeys indexOfObject:selectModel];
-            stringPickerView.pickerStyle.cancelBtnTitle = @"Cancel";
-            stringPickerView.pickerStyle.doneBtnTitle = @"Done";
+            stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
+            stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
             stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
                 self.bridgeModel.netKeyIndex2 = SigDataSource.share.netKeys[resultModel.index].index;
                 textField.text = resultModel.value;

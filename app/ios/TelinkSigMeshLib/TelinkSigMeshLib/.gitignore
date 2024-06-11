@@ -20,9 +20,12 @@ DerivedData
 xcuserdata
 
 #CocoaPods
+Pods/
 Pods
 !Podfile
 !Podfile.lock
+Podfile.lock
+/Podfile.lock
 
 # Xcode workspace scheduling files
 xcshareddata/

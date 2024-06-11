@@ -68,7 +68,7 @@
     if (self.model.hasLumLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress isAdd:NO];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has lum level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has lum level capability!", self.model.name]];
     }
 }
 
@@ -76,7 +76,7 @@
     if (self.model.hasLumLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress isAdd:YES];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has lum level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has lum level capability!", self.model.name]];
     }
 }
 
@@ -84,7 +84,7 @@
     if (self.model.hasTempLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+1 isAdd:NO];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has temperature level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has temperature level capability!", self.model.name]];
     }
 }
 
@@ -92,7 +92,7 @@
     if (self.model.hasTempLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+1 isAdd:YES];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has temperature level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has temperature level capability!", self.model.name]];
     }
 }
 
@@ -100,7 +100,7 @@
     if (self.model.hasHueLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+2 isAdd:NO];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Hue level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Hue level capability!", self.model.name]];
     }
 }
 
@@ -108,7 +108,7 @@
     if (self.model.hasHueLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+2 isAdd:YES];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Hue level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Hue level capability!", self.model.name]];
     }
 }
 
@@ -116,7 +116,7 @@
     if (self.model.hasSatLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+3 isAdd:NO];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Saturation level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Saturation level capability!", self.model.name]];
     }
 }
 
@@ -124,7 +124,7 @@
     if (self.model.hasSatLevelCapability) {
         [self changeLevelWithGroupAddress:self.extendGroupAddress+3 isAdd:YES];
     } else {
-        [self showAlertSureWithTitle:@"Tips" message:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Saturation level capability!", self.model.name] sure:nil];
+        [self showTips:[NSString stringWithFormat:@"The group \"%@\" hasn`t device that has Saturation level capability!", self.model.name]];
     }
 }
 

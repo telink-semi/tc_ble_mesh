@@ -394,7 +394,7 @@
         item.itemType = ItemType_Input;
         item.headerString = @"TTL(7 bits):0x";
         item.defaultString = @"";
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Default TTL" detail:@"input new value" itemArray:@[item] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Default TTL" detail:@"input new value" itemArray:@[item] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSpace;
@@ -453,7 +453,7 @@
         item3.itemType = ItemType_Input;
         item3.headerString = @"RelayRetransmit Interval Steps(5 bits):0x";
         item3.defaultString = @"";
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Relay & RelayRetransmit" detail:@"input new value" itemArray:@[item1,item2,item3] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Relay & RelayRetransmit" detail:@"input new value" itemArray:@[item1,item2,item3] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *networkTransmitCountString = [alertView getTextFieldOfRow:1].text.removeAllSpace;
@@ -520,7 +520,7 @@
         [mArray addObject:@"opened"];
         [mArray addObject:@"closed"];
         item1.chooseItemsArray = mArray;
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Secure Network Beacon" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Secure Network Beacon" detail:@"input new value" itemArray:@[item1] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 [ShowTipsHandle.share show:@"Set Secure Network Beacon..."];
@@ -556,7 +556,7 @@
         [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_notEnabled]];
         [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_enabled]];
         item1.chooseItemsArray = mArray;
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set GATT Proxy" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set GATT Proxy" detail:@"input new value" itemArray:@[item1] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 [ShowTipsHandle.share show:@"Set GATT Proxy..."];
@@ -592,7 +592,7 @@
         [mArray addObject:[SigHelper.share getDetailOfSigNodeIdentityState:SigNodeIdentityState_notEnabled]];
         [mArray addObject:[SigHelper.share getDetailOfSigNodeIdentityState:SigNodeIdentityState_enabled]];
         item1.chooseItemsArray = mArray;
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Node Identity" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Node Identity" detail:@"input new value" itemArray:@[item1] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 [ShowTipsHandle.share show:@"Set Node Identity..."];
@@ -628,7 +628,7 @@
         [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_notEnabled]];
         [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_enabled]];
         item1.chooseItemsArray = mArray;
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Friend" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Friend" detail:@"input new value" itemArray:@[item1] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 [ShowTipsHandle.share show:@"Set Friend..."];
@@ -664,7 +664,7 @@
         item2.itemType = ItemType_Input;
         item2.headerString = @"Transmit Interval Steps(5 bits):0x";
         item2.defaultString = @"";
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Network Transmit" detail:@"input new value" itemArray:@[item1,item2] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Network Transmit" detail:@"input new value" itemArray:@[item1,item2] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *networkTransmitCountString = [alertView getTextFieldOfRow:0].text.removeAllSpace;
@@ -726,7 +726,7 @@
         item.itemType = ItemType_Input;
         item.headerString = @"value(1 byte):0x";
         item.defaultString = @"";
-        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set onDemandPrivateProxy" detail:@"input new value" itemArray:@[item] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set onDemandPrivateProxy" detail:@"input new value" itemArray:@[item] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSpace;

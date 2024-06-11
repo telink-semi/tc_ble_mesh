@@ -165,12 +165,12 @@
 
 - (IBAction)clickEditButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Tips" message:@"Please input new nickname!" preferredStyle:
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input new nickname!" preferredStyle:
 UIAlertControllerStyleAlert];
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new nickname";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *nickname = [[alertVc textFields] objectAtIndex:0].text;
         nickname = nickname.removeHeadAndTailSpacePro;
         NSLog(@"new nickname is %@", nickname);
@@ -184,7 +184,7 @@ UIAlertControllerStyleAlert];
         }
         [weakSelf changeNicknameAction:nickname];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];
@@ -192,8 +192,8 @@ UIAlertControllerStyleAlert];
 
 - (void)logoutAction {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Are you sure to logout?" preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Are you sure to logout?" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"点击确认");
         [TelinkHttpTool logoutRequestWithDidLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             if (err) {
@@ -219,7 +219,7 @@ UIAlertControllerStyleAlert];
             }
         }];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    [alertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         TelinkLogDebug(@"点击取消");
         
     }]];

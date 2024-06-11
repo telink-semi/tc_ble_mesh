@@ -298,7 +298,7 @@
 - (void)clickBackButton {
     if (MeshOTAManager.share.isMeshOTAing) {
         __weak typeof(self) weakSelf = self;
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Mesh OTA is still running, stop it?\nclick STOP to stop updating;\nclick FORCE CLOSE to exit;\nclick CANCEL to dismiss dialog" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Mesh OTA is still running, stop it?\nclick STOP to stop updating;\nclick FORCE CLOSE to exit;\nclick CANCEL to dismiss dialog" preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction actionWithTitle:@"FORCE CLOSE" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             //强制返回上一页
             [weakSelf.navigationController popViewControllerAnimated:YES];
@@ -313,7 +313,7 @@
                 [[NSUserDefaults standardUserDefaults] synchronize];
             }];
         }]];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        [alertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             //取消
         }]];
         [self presentViewController:alertController animated:YES completion:nil];
@@ -616,7 +616,7 @@
         [self.selectItemArray removeAllObjects];
         [self.selectItemAddressArray removeAllObjects];
         [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-        [self showAlertSureWithTitle:@"Hits" message:@"The PID of node is different from the PID of Bin file! Please choose device again." sure:nil];
+        [self showTips:@"The PID of node is different from the PID of Bin file! Please choose device again."];
     }
 }
 

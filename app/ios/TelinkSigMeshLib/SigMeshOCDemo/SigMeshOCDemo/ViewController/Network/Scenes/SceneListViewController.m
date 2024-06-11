@@ -122,7 +122,7 @@
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new scene name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *sceneName = [[alertVc textFields] objectAtIndex:0].text;
         sceneName = sceneName.removeHeadAndTailSpacePro;
         TelinkLogInfo(@"new scene is %@", sceneName);
@@ -137,7 +137,7 @@
         [SigDataSource.share saveLocationData];
         [weakSelf performSelectorOnMainThread:@selector(refreshTableViewUI) withObject:nil waitUntilDone:YES];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];

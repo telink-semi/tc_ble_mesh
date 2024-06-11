@@ -58,9 +58,7 @@
         }];
         [actionSheet addAction:alertT];
     }
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Cancel");
-    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertTitle style:UIAlertActionStyleCancel handler:nil];
     [actionSheet addAction:alertF];
     actionSheet.popoverPresentationController.sourceView = self.pubAdrTF;
     actionSheet.popoverPresentationController.sourceRect =  self.pubAdrTF.frame;

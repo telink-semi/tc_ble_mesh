@@ -62,7 +62,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
-@property (nonatomic, assign) BOOL hasClickKickout;
+@property (nonatomic, assign) BOOL hasClickKickOut;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconArray;
 @property (nonatomic, strong) NSMutableArray <NSString *>*titleArray;
@@ -74,12 +74,11 @@
 
 - (IBAction)kickOut:(UIButton *)sender {
     TelinkLogDebug(@"");
-    //add a alert for kickout device.
+    //add a alert for kickOut device.
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warn" message:@"Confirm to remove device?" preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *action = [UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        weakSelf.hasClickKickout = YES;
-        [ShowTipsHandle.share show:Tip_KickoutDevice];
+    [self showAlertTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
+        weakSelf.hasClickKickOut = YES;
+        [ShowTipsHandle.share show:Tip_KickOutDevice];
 
         if (weakSelf.model.hasPublishFunction && weakSelf.model.hasOpenPublish) {
             [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
@@ -97,10 +96,6 @@
             [weakSelf pop];
         }
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
-    [alert addAction:action];
-    [alert addAction:action2];
-    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)kickoutAction{
@@ -336,11 +331,11 @@
 
 - (void)clickRenameButton {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Tips" message:@"Please input new node name!" preferredStyle: UIAlertControllerStyleAlert];
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input new node name!" preferredStyle: UIAlertControllerStyleAlert];
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *nodeName = [[alertVc textFields] objectAtIndex:0].text;
         nodeName = nodeName.removeHeadAndTailSpacePro;
         TelinkLogDebug(@"new nodeName is %@", nodeName);
@@ -356,7 +351,7 @@
         [SigDataSource.share saveLocationData];
         [weakSelf showTips:@"Rename success!"];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];

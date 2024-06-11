@@ -148,11 +148,11 @@
 
 - (void)addMeshNetwork {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Tips" message:@"Please input new mesh network name!" preferredStyle: UIAlertControllerStyleAlert];
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input new mesh network name!" preferredStyle: UIAlertControllerStyleAlert];
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         textField.placeholder = @"new network name";
     }];
-    UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *networkName = [[alertVc textFields] objectAtIndex:0].text;
         networkName = networkName.removeHeadAndTailSpacePro;
         TelinkLogInfo(@"new networkName is %@", networkName);
@@ -162,7 +162,7 @@
         }
         [weakSelf addMeshNetworkActionWithMeshNetworkName:networkName];
     }];
-    UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];
     [alertVc addAction:action1];
     [self presentViewController:alertVc animated:YES completion:nil];
@@ -184,13 +184,13 @@
 }
 
 - (void)deleteNetwork:(AppMeshNetworkModel *)network {
-    NSString *msg = [NSString stringWithFormat:@"Are you sure delete mesh network, name:%@ uuid:%@",network.name,network.uuid];
+    NSString *msg = [NSString stringWithFormat:@"Delete mesh network, name:%@ uuid:%@ ?",network.name,network.uuid];
     __weak typeof(self) weakSelf = self;
-    [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:msg sure:^(UIAlertAction *action) {
         [TelinkHttpTool deleteNetworkByNetworkIdRequestWithNetworkId:network.networkId didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             if (err) {
                 TelinkLogInfo(@"delete fail")
-                [self showAlertSureWithTitle:@"Hits" message:[NSString stringWithFormat:@"Delete mesh network fail, %@", err.localizedDescription] sure:nil];
+                [weakSelf showTips:[NSString stringWithFormat:@"Delete mesh network fail, %@", err.localizedDescription]];
             } else {
                 TelinkLogInfo(@"delete success")
                 [SigDataSource.share cleanLocalPrivateBeaconStateWithMeshUUID:[NSString stringWithFormat:@"%ld", (long)network.networkId]];

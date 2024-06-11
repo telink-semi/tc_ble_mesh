@@ -104,13 +104,9 @@
             int code = [dic[@"code"] intValue];
             if (code == 200) {
                 TelinkLogInfo(@"updatePassword successful!");
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Update password successful!" preferredStyle:UIAlertControllerStyleAlert];
-                    [alertController addAction:[UIAlertAction actionWithTitle:@"Sure" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                        [weakSelf.navigationController popViewControllerAnimated:YES];
-                    }]];
-                    [weakSelf presentViewController:alertController animated:YES completion:nil];
-                });
+                [weakSelf showAlertTitle:@"Update password successful" message:nil sure:^(UIAlertAction *action) {
+                    [weakSelf.navigationController popViewControllerAnimated:YES];
+                }];
             } else {
                 TelinkLogInfo(@"updatePassword result = %@", dic);
                 [weakSelf showTips:[NSString stringWithFormat:@"updatePassword errorCode = %d, message = %@", code, dic[@"message"]]];
