@@ -96,9 +96,9 @@ public class BridgingTableRemoveMessage extends ConfigMessage {
     @Override
     public byte[] getParams() {
         int netKeyIndexes = (netKeyIndex1 & 0x0FFF) | ((netKeyIndex2 & 0x0FFF) << 12);
-        byte[] indexesBuf = MeshUtils.integer2Bytes(netKeyIndexes, 3, ByteOrder.LITTLE_ENDIAN);
+        byte[] indexBuf = MeshUtils.integer2Bytes(netKeyIndexes, 3, ByteOrder.LITTLE_ENDIAN);
         return ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN)
-                .put(indexesBuf)
+                .put(indexBuf)
                 .putShort((short) address1)
                 .putShort((short) address2).array();
     }
