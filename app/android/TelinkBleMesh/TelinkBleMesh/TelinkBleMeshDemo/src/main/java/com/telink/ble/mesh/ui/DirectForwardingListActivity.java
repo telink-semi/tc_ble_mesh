@@ -32,7 +32,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.message.directforwarding.DirectedControlSetMessage;
 import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableDeleteMessage;
 import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableStatusMessage;
 import com.telink.ble.mesh.demo.R;
@@ -43,7 +42,6 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.DirectForwardingInfo;
 import com.telink.ble.mesh.model.DirectForwardingInfoService;
 import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.adapter.DirectForwardingListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -55,7 +53,6 @@ import java.util.List;
 public class DirectForwardingListActivity extends BaseActivity implements EventListener<String>, View.OnClickListener {
 
     private MeshInfo meshInfo;
-    private NodeInfo nodeInfo;
     private int meshAddress;
     private Handler handler = new Handler();
     private DirectForwardingListAdapter listAdapter;
@@ -131,11 +128,11 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
         } else {
 
             int address;
-            if(deleteIndex == -2){
+            if (deleteIndex == -2) {
                 address = selectInfo.originAdr;
             } else if (deleteIndex == -1) {
                 address = selectInfo.target;
-            }else{
+            } else {
                 address = selectInfo.nodesOnRoute.get(deleteIndex);
             }
 
@@ -191,19 +188,6 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.rl_switch:
-                DirectedControlSetMessage setMessage = DirectedControlSetMessage.getDFEnable(
-                        meshAddress,
-                        meshInfo.getDefaultNetKey().index,
-                        !nodeInfo.directForwardingEnabled
-                );
-
-                showWaitingDialog((nodeInfo.directForwardingEnabled ? "disabling" : "enabling") + " subnet bridge...");
-                handler.removeCallbacksAndMessages(null);
-                handler.postDelayed(timeoutTask, 3 * 1000);
-                MeshService.getInstance().sendMeshMessage(setMessage);
-                break;
-
             case R.id.view_toggle:
                 startActivity(new Intent(this, DirectToggleListActivity.class));
                 break;

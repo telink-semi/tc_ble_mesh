@@ -45,6 +45,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 /**
@@ -279,18 +280,19 @@ public class FastProvisioningController {
             FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex);
             settingIndex++;
             if (provisioningDevice != null) {
-                log(String.format("mesh set next address: mac -- %s originAddress -- %04X newAddress -- %04X index -- %02d",
+                log(String.format(Locale.getDefault(), "mesh set next address: mac -- %s originAddress -- %04X newAddress -- %04X index -- %02d",
                         Arrays.bytesToHexString(provisioningDevice.getMac()),
                         provisioningDevice.getOriginAddress(),
                         provisioningDevice.getNewAddress(), settingIndex));
                 onStateUpdate(STATE_SET_ADDR, "mesh set address", provisioningDevice);
 
                 MeshSetAddressMessage setAddressMessage = MeshSetAddressMessage.getSimple(
-                        provisioningDevice.getOriginAddress(),
+                        0xFFFF, // provisioningDevice.getOriginAddress()
                         configuration.getDefaultAppKeyIndex(),
                         Arrays.reverse(provisioningDevice.getMac()),
                         provisioningDevice.getNewAddress()
                 );
+                delayHandler.postDelayed(SET_ADR_TIMEOUT_TASK, 5 * 1000);
                 onMeshMessagePrepared(setAddressMessage);
             } else {
                 log("provisioning device not found");
@@ -303,6 +305,13 @@ public class FastProvisioningController {
         }
     }
 
+
+    private Runnable SET_ADR_TIMEOUT_TASK = new Runnable() {
+        @Override
+        public void run() {
+
+        }
+    };
 
     /**
      * set mesh info after no device can be found by scanning
@@ -398,10 +407,9 @@ public class FastProvisioningController {
     }
 
     public void onFastProvisioningCommandComplete(boolean success, int opcode, int rspMax, int rspCount) {
-
         if (opcode == Opcode.VD_MESH_ADDR_SET.value && state == STATE_SET_ADDR) {
             if (!success) {
-                FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex);
+                FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex - 1);
                 onStateUpdate(STATE_SET_ADDR_FAIL, "device set address fail", provisioningDevice);
                 setNextMeshAddress();
             }
@@ -453,6 +461,8 @@ public class FastProvisioningController {
                         } else {
                             log(String.format("device already set address complete : %04X", device.getOriginAddress()));
                         }
+                    } else {
+                        log(String.format("device info not found when receive set st : %04X", srcAdr));
                     }
                 }
             }
@@ -526,9 +536,11 @@ public class FastProvisioningController {
         //        pvData[24] = (byte) ((adr >> 8) & 0xFF);
 
         int netAppKeyIndex = (netKeyIndex & 0x0FFF) | ((appKeyIndex & 0x0FFF) << 12);
-        byte[] indexesBuf = MeshUtils.integer2Bytes(netAppKeyIndex, 3, ByteOrder.LITTLE_ENDIAN);
+        byte[] indexBuf = MeshUtils.integer2Bytes(netAppKeyIndex, 3, ByteOrder.LITTLE_ENDIAN);
+
+        // 25 : provision data, 19 : 3 index + 16 key
         return ByteBuffer.allocate(25 + 19).order(ByteOrder.LITTLE_ENDIAN).put(pvData)
-                .put(indexesBuf)
+                .put(indexBuf)
                 .put(appKey).array();
     }
 

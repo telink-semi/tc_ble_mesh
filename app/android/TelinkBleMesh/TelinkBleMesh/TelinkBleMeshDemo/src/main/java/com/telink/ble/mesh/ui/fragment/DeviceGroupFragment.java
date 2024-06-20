@@ -49,9 +49,12 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
+import com.telink.ble.mesh.ui.DeviceSelectActivity;
+import com.telink.ble.mesh.ui.DeviceSettingActivity;
 import com.telink.ble.mesh.ui.adapter.GroupInfoAdapter;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by kee on 2018/10/10.
@@ -217,6 +220,10 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         String eventType = event.getType();
         if (eventType.equals(ModelSubscriptionStatusMessage.class.getName())) {
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
+            if (notificationMessage.getSrc() != nodeAddress) {
+                return;
+            }
+            ((DeviceSettingActivity) Objects.requireNonNull(getActivity())).hideOffline();
             ModelSubscriptionStatusMessage statusMessage = (ModelSubscriptionStatusMessage) notificationMessage.getStatusMessage();
             if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
                 modelIndex++;
