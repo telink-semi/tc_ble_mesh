@@ -1975,6 +1975,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 ///publish是否存在周期上报功能。
 - (BOOL)hasPublishPeriod;
 
+/// Return whether the node is a LPN node.
+- (BOOL)isLPN;
+
 /// Return whether the node is a sensor.
 - (BOOL)isSensor;
 
@@ -2013,6 +2016,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// has FirmwareDistributionServerModel
 - (BOOL)hasFirmwareDistributionServerModel;
+/// has FirmwareUpdateServerModel
+- (BOOL)hasFirmwareUpdateServerModel;
 
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID;
 - (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress;

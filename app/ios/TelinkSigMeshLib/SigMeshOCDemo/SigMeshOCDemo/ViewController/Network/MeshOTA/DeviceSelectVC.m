@@ -30,8 +30,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *selectAllNormalButton;
 @property (weak, nonatomic) IBOutlet UILabel *selectAllNormalLabel;
 @property (weak, nonatomic) IBOutlet UITableView *normalDeviceTableView;
-@property (weak, nonatomic) IBOutlet UIButton *selectAllLPNButton;
-@property (weak, nonatomic) IBOutlet UILabel *selectAllLPNLabel;
 @property (weak, nonatomic) IBOutlet UITableView *lpnDeviceTableView;
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*allNormalNodes;
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*allLPNNodes;
@@ -53,23 +51,17 @@
     
     NSArray *array = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *node in array) {
-        if (node.isSensor) {
+        if (node.isLPN) {
             [self.allLPNNodes addObject:node];
         } else {
             [self.allNormalNodes addObject:node];
         }
-    }
-    if (self.allLPNNodes.count == 0) {
-        self.selectAllLPNButton.hidden = self.selectAllLPNLabel.hidden = YES;
     }
     if (self.allNormalNodes.count == 0) {
         self.selectAllNormalButton.hidden = self.selectAllNormalLabel.hidden = YES;
     }
     __weak typeof(self) weakSelf = self;
     [self.selectAllNormalButton addAction:^(UIButton *button) {
-        [weakSelf clickSelectAllButton:button];
-    }];
-    [self.selectAllLPNButton addAction:^(UIButton *button) {
         [weakSelf clickSelectAllButton:button];
     }];
     [self.normalDeviceTableView registerNib:[UINib nibWithNibName:NSStringFromClass(SelectDeviceCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SelectDeviceCell.class)];
@@ -93,9 +85,7 @@
         }
         for (SigNodeModel *node in array) {
             if (node.state != DeviceStateOutOfLine && node.hasFirmwareDistributionServerModel) {
-                if (node.isSensor && button == self.selectAllLPNButton) {
-                    [mArray addObject:node];
-                } else if (!node.isSensor && button == self.selectAllNormalButton) {
+                if (!node.isLPN && button == self.selectAllNormalButton) {
                     [mArray addObject:node];
                 }
             }
@@ -138,7 +128,7 @@
     for (SigNodeModel *node in array) {
         if (node.state != DeviceStateOutOfLine) {
             if (node.hasFirmwareDistributionServerModel) {
-                if (node.isSensor) {
+                if (node.isLPN) {
                     lpnCount ++;
                 } else {
                     normalCount ++;
@@ -147,7 +137,6 @@
         }
     }
     self.selectAllNormalButton.selected = normalCount == self.selectNormalNodes.count;
-    self.selectAllLPNButton.selected = normalCount == self.selectLPNNodes.count;
 }
 
 #pragma mark - UITableViewDataSource
@@ -173,11 +162,20 @@
         selectArray = self.selectLPNNodes;
     }
     [cell setModel:node];
-    if ([selectArray containsObject:node] && node.state != DeviceStateOutOfLine) {
-        cell.selectButton.selected = YES;
+    if (tableView == self.normalDeviceTableView) {
+        if ([selectArray containsObject:node] && node.state != DeviceStateOutOfLine) {
+            cell.selectButton.selected = YES;
+        } else {
+            cell.selectButton.selected = NO;
+        }
     } else {
-        cell.selectButton.selected = NO;
+        if ([selectArray containsObject:node]) {
+            cell.selectButton.selected = YES;
+        } else {
+            cell.selectButton.selected = NO;
+        }
     }
+
     __weak typeof(self) weakSelf = self;
     [cell.selectButton addAction:^(UIButton *button) {
         if (node.state != DeviceStateOutOfLine) {
@@ -202,14 +200,26 @@
     } else {
         selectArray = self.selectLPNNodes;
     }
-    if (cell.model.state != DeviceStateOutOfLine) {
+    if (cell.model.isLPN) {
         cell.selectButton.selected = !cell.selectButton.selected;
         if ([selectArray containsObject:cell.model]) {
             [selectArray removeObject:cell.model];
         } else {
+            [selectArray removeAllObjects];
             [selectArray addObject:cell.model];
         }
-        [self refreshSelectAllButton];
+        self.selectLPNNodes = selectArray;
+        [self.lpnDeviceTableView reloadData];
+    } else {
+        if (cell.model.state != DeviceStateOutOfLine) {
+            cell.selectButton.selected = !cell.selectButton.selected;
+            if ([selectArray containsObject:cell.model]) {
+                [selectArray removeObject:cell.model];
+            } else {
+                [selectArray addObject:cell.model];
+            }
+            [self refreshSelectAllButton];
+        }
     }
 }
 

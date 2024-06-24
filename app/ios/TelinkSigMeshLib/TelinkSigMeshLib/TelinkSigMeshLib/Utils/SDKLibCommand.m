@@ -3881,20 +3881,18 @@
             } else {
                 //逻辑1.for循环每次只添加一个地址
                 //逻辑2.一次添加多个地址
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-    //                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
-                        SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
-                        if (successCallback) {
-                            successCallback(source,destination,responseMessage);
-                        }
-                    } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-    //                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
-                        if (finishCallback) {
-                            finishCallback(isResponseAll, error);
-                        }
-                    }];
-                });
+                [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+//                    TelinkLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
+                    SigMeshLib.share.dataSource.unicastAddressOfConnected = source;
+                    if (successCallback) {
+                        successCallback(source,destination,responseMessage);
+                    }
+                } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//                    TelinkLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
+                    if (finishCallback) {
+                        finishCallback(isResponseAll, error);
+                    }
+                }];
             }
         }];
     }];

@@ -76,7 +76,7 @@
     TelinkLogDebug(@"");
     //add a alert for kickOut device.
     __weak typeof(self) weakSelf = self;
-    [self showAlertTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
         weakSelf.hasClickKickOut = YES;
         [ShowTipsHandle.share show:Tip_KickOutDevice];
 
@@ -95,7 +95,7 @@
 #endif
             [weakSelf pop];
         }
-    }];
+    } cancel:nil];
 }
 
 - (void)kickoutAction{

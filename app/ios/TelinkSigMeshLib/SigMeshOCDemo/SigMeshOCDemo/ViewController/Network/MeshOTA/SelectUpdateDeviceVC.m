@@ -110,12 +110,21 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     SelectDeviceCell *cell = (SelectDeviceCell *)[tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
-    if (cell.model.state != DeviceStateOutOfLine) {
+    if (cell.model.isLPN) {
         cell.selectButton.selected = !cell.selectButton.selected;
         if ([self.selectNodes containsObject:cell.model]) {
             [self.selectNodes removeObject:cell.model];
         } else {
             [self.selectNodes addObject:cell.model];
+        }
+    } else {
+        if (cell.model.state != DeviceStateOutOfLine) {
+            cell.selectButton.selected = !cell.selectButton.selected;
+            if ([self.selectNodes containsObject:cell.model]) {
+                [self.selectNodes removeObject:cell.model];
+            } else {
+                [self.selectNodes addObject:cell.model];
+            }
         }
     }
 }

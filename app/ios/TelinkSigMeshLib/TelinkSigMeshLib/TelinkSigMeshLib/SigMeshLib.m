@@ -749,7 +749,7 @@ static SigMeshLib *shareLib = nil;
 
     //根据设备是否打开了publish功能来判断是否给该设备添加监测离线的定时器。
     if (message.opCode == SigOpCode_lightCTLStatus || message.opCode == SigOpCode_lightHSLStatus || message.opCode == SigOpCode_lightLightnessStatus || message.opCode == SigOpCode_genericOnOffStatus) {
-        if (node && node.hasOpenPublish && !node.isSensor) {
+        if (node && node.hasOpenPublish && !node.isSensor && !node.isLPN) {
             [SigPublishManager.share startCheckOfflineTimerWithAddress:@(source)];
         }
     }

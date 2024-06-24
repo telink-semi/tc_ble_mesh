@@ -41,9 +41,14 @@
     _model = model;
     self.iconImage.image = [DemoTool getNodeStateImageWithUnicastAddress:model.address];
     self.nameLabel.text = [NSString stringWithFormat:@"Name:%@\nAdr-0x%04X\ncid-%@ pid-%@", model.name, model.address, model.cid, model.pid];
-    self.notSupportLabel.hidden = model.hasFirmwareDistributionServerModel;
-    [self.selectButton setImage:[UIImage imageNamed:model.state == DeviceStateOutOfLine ? @"bukexuan" : @"unxuan"] forState:UIControlStateNormal];
-    self.selectButton.enabled = model.state != DeviceStateOutOfLine;
+    self.notSupportLabel.hidden = model.hasFirmwareUpdateServerModel;
+    if (model.isLPN) {
+        [self.selectButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
+        self.selectButton.enabled = YES;
+    } else {
+        [self.selectButton setImage:[UIImage imageNamed:model.state == DeviceStateOutOfLine ? @"bukexuan" : @"unxuan"] forState:UIControlStateNormal];
+        self.selectButton.enabled = model.state != DeviceStateOutOfLine;
+    }
 }
 
 @end

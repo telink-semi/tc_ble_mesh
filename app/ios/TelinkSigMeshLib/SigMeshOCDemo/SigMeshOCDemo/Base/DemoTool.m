@@ -53,12 +53,13 @@
             iconName = SigBearer.share.isOpen ? @"ic_motion_sensor_online" : @"ic_motion_sensor";
         } else if (node.isAmbientLightSensor) {
             iconName = SigBearer.share.isOpen ? @"ic_ambient_light_online" : @"ic_ambient_light";
-        } else if (node.sensorDataArray .count > 0 && SigBearer.share.isOpen) {
+        } else if (node.sensorDataArray.count > 0 && SigBearer.share.isOpen) {
             iconName = @"ic_sensor";
         }
-    }
-    //遥控器remote特殊处理
-    if (node.isRemote) {
+    } else if (node.isLPN) {
+        iconName = @"ic_battery-20-bluetooth";
+    } else if (node.isRemote) {
+        //遥控器remote特殊处理
         iconName = @"ic_rmt";
     }
     return [UIImage imageNamed:iconName];

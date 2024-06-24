@@ -53,7 +53,7 @@
     int tem = 0;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *node in curNodes) {
-        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess && node.state != DeviceStateOutOfLine) {
+        if (!node.isSensor && !node.isLPN && !node.isRemote && node.isKeyBindSuccess && node.state != DeviceStateOutOfLine) {
             tem++;
         }
     }
@@ -227,7 +227,7 @@
     BOOL hasKeyBindSuccess = NO;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     for (SigNodeModel *model in curNodes) {
-        if (model.isKeyBindSuccess && !model.isSensor && !model.isRemote) {
+        if (model.isKeyBindSuccess && !model.isSensor && !model.isLPN && !model.isRemote) {
             hasKeyBindSuccess = YES;
             break;
         }
@@ -309,7 +309,7 @@
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
     SigNodeModel *model = self.source[indexPath.item];
 
-    if (model.isSensor || model.isRemote) {
+    if (model.isSensor || model.isLPN || model.isRemote) {
         return;
     }
 
