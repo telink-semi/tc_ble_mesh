@@ -424,7 +424,6 @@ public class FastProvisioningController {
         switch (opcode) {
             case VD_MESH_ADDR_GET_STS:
                 if (state == STATE_GET_ADDR) {
-
                     MeshAddressStatusMessage statusMessage = (MeshAddressStatusMessage) message.getStatusMessage();
                     int originAddress = message.getSrc();
 //                    int pid = statusMessage.getPid() & 0x0FFF;

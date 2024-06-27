@@ -71,9 +71,11 @@ public class LogInfoAdapter extends BaseRecyclerViewAdapter<LogInfoAdapter.ViewH
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
         LogInfo logInfo = logInfoList.get(position);
-        String info = mDateFormat.format(logInfo.millis) + "/" + logInfo.tag + " : " + logInfo.logMessage;
-        holder.tv_name.setTextColor(mContext.getResources().getColor(getColorResId(logInfo.level)));
-        holder.tv_name.setText(info);
+        if (logInfo != null) {
+            String info = mDateFormat.format(logInfo.millis) + "/" + logInfo.tag + " : " + logInfo.logMessage;
+            holder.tv_name.setTextColor(mContext.getResources().getColor(getColorResId(logInfo.level)));
+            holder.tv_name.setText(info);
+        }
     }
 
 
