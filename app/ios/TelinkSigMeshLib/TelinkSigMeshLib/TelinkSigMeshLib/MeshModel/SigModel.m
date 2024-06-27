@@ -3435,13 +3435,14 @@
     }
 }
 
+/// Return whether the node is a LPN node.
+- (BOOL)isLPN {
+    return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
+}
+
 /// Return whether the node is a motion sensor.
 - (BOOL)isSensor {
-    if ([self getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]]) {
-        return YES;
-    }
-    return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
-//    return [LibTools uint16From16String:self.cid] == 0x201;
+    return [self getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]] != nil;
 }
 
 /// Return whether the node is a motion sensor.
@@ -3711,6 +3712,12 @@
 /// has FirmwareDistributionServerModel
 - (BOOL)hasFirmwareDistributionServerModel {
     SigModelIDModel *modelId = [self getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
+    return modelId != nil;
+}
+
+/// has FirmwareUpdateServerModel
+- (BOOL)hasFirmwareUpdateServerModel {
+    SigModelIDModel *modelId = [self getModelIDModelWithModelID:kSigModel_FirmwareUpdateServer_ID];
     return modelId != nil;
 }
 

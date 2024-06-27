@@ -503,7 +503,7 @@
                 int64_t delta = (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC);
                 if (weakSelf.allAddressArray.count == 1) {
                     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:weakSelf.allAddressArray.firstObject.intValue];
-                    if (node && node.isSensor && node.address == SigDataSource.share.unicastAddressOfConnected && self.phoneIsDistributor) {
+                    if (node && node.isLPN && node.address == SigDataSource.share.unicastAddressOfConnected && self.phoneIsDistributor) {
                         //直连LPN升级的情况，不需要延时
                         delta = 0;
                     }
@@ -621,7 +621,7 @@
             SigDataSource.share.telinkExtendBearerMode = SigTelinkExtendBearerMode_extendGATTOnly;
             SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
         }
-        if (node && node.isSensor) {//LPN的时候才使用0，非LPN的时候还是使用0xC000这个group地址。LPN只能单独升级，且不能用组播地址进行升级。- seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
+        if (node && node.isLPN) {//LPN的时候才使用0，非LPN的时候还是使用0xC000这个group地址。LPN只能单独升级，且不能用组播地址进行升级。- seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
             UInt16 gAddress = 0;
             _distributionMulticastAddress = [NSData dataWithBytes:&gAddress length:2];
         }
@@ -2363,7 +2363,7 @@
             //v3.3.3新增，对直连LPN升级的情况，push模式，可以使用self.chunkSize=8，也可以使用self.chunkSize=208，后者升级更加快。
             if (weakSelf.allAddressArray.count == 1) {
                 SigNodeModel *node = [SigDataSource.share getNodeWithAddress:weakSelf.allAddressArray.firstObject.intValue];
-                if (node && node.isSensor && node.address == SigDataSource.share.unicastAddressOfConnected && self.phoneIsDistributor) {
+                if (node && node.isLPN && node.address == SigDataSource.share.unicastAddressOfConnected && self.phoneIsDistributor) {
                     self.chunkSize = 208;
                 }
             }
@@ -2574,7 +2574,7 @@
                 } else {
                     TelinkLogInfo(@"只存在一个设备，但不是直连设备");
                     SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:n.intValue];
-                    if (node && node.isSensor) {
+                    if (node && node.isLPN) {
                         destination = n.intValue;
                     }
                 }
@@ -2636,7 +2636,7 @@
                     if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
                         SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
                         float interval = 0.0;
-                        if (node && node.isSensor) {
+                        if (node && node.isLPN) {
                             //延时200ms
                             //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
                             interval = 0.200;
@@ -2744,7 +2744,7 @@
                             if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
                                 SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
                                 float interval = 0.0;
-                                if (node && node.isSensor) {
+                                if (node && node.isLPN) {
                                     //延时200ms
                                     //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
                                     interval = 0.200;
