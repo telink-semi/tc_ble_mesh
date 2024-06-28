@@ -156,6 +156,7 @@
     self.navigationItem.hidesBackButton = NO;
     [self updateInitiatorProgress:1.0];
     MeshOTAManager.share.phoneIsDistributor = NO;
+    [self clickConnectedDevice:self.connectedDeviceButton];
     NSNumber *policyNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorPolicy];
     MeshOTAManager.share.updatePolicy = policyNumber.intValue;
     NSNumber *addressNumber = [[NSUserDefaults standardUserDefaults] valueForKey:kDistributorAddress];
@@ -464,8 +465,8 @@
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                         vid = CFSwapInt16HostToBig(vid);
                         TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                        [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
+                        [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -491,6 +492,7 @@
                             if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                             vid = CFSwapInt16HostToBig(vid);
                             TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                            weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
                             [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         }
                     }
