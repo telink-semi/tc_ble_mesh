@@ -269,10 +269,10 @@
                     TelinkLogInfo(@"set address response error!");
                 }
             } else {
-                TelinkLogInfo(@"set address response error!");
+                TelinkLogInfo(@"set address response error! length=%d", responseMessage.parameters.length);
             }
         } else {
-            TelinkLogInfo(@"set address response error!");
+            TelinkLogInfo(@"set address response error! status=%d", (responseMessage.opCode >> 16) & 0xFF);
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);

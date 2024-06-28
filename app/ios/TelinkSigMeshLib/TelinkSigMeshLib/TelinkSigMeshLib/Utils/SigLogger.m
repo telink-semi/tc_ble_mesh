@@ -169,7 +169,17 @@ static NSFileHandle *TelinkLogFileHandle(void) {
             }
         }
         fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.logFilePath];
-        [fileHandle seekToEndOfFile];
+        if (@available(iOS 13.0, *)) {
+            unsigned long long offset = 0;
+            NSError *error = nil;
+            BOOL result = [fileHandle seekToEndReturningOffset:&offset error:&error];
+            if (!result) {
+                TelinkLogWithFile(YES, @"iOS13 seekToEndReturningOffset error=%@", error.localizedDescription);
+                fileHandle = nil;
+            }
+        } else {
+            [fileHandle seekToEndOfFile];
+        }
     });
     return fileHandle;
 }
