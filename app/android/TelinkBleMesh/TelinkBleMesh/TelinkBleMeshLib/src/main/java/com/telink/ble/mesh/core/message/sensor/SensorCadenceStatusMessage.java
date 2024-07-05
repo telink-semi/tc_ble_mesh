@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SensorDescriptorStatusMessage.java
+ * @file SensorCadenceStatusMessage.java
  *
  * @brief for TLSR chips
  *

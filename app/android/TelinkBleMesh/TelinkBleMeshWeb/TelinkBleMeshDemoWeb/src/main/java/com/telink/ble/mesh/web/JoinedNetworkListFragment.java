@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ShareActivity.java
+ * @file JoinedNetworkListFragment.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AppKeyInfoAdapter.java
+ * @file MeshNetworkAdapter.java
  *
  * @brief for TLSR chips
  *

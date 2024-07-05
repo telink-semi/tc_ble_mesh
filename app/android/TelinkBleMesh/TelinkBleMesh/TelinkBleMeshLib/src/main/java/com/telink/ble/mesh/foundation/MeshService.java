@@ -96,6 +96,13 @@ public class MeshService implements MeshController.EventCallback {
         }
     }
 
+    public void clearNetworkCache() {
+        MeshLogger.log("MeshService#clearNetworkCache");
+        if (this.mController != null) {
+            this.mController.clearNetworkCache();
+        }
+    }
+
     /**
      * setup mesh info
      *

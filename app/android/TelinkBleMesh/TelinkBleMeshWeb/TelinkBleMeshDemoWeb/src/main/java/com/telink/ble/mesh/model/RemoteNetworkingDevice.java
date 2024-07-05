@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file NetworkingDevice.java
+ * @file RemoteNetworkingDevice.java
  *
  * @brief for TLSR chips
  *

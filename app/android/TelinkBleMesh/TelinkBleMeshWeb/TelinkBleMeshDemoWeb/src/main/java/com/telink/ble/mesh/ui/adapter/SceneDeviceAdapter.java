@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceSelectAdapter.java
+ * @file SceneDeviceAdapter.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceProvisionActivity.java
+ * @file RemoteProvisionAssist.java
  *
  * @brief for TLSR chips
  *

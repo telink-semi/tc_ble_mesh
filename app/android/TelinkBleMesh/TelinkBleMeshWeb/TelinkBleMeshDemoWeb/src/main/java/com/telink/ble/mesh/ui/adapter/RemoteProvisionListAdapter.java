@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceAutoProvisionListAdapter.java
+ * @file RemoteProvisionListAdapter.java
  *
  * @brief for TLSR chips
  *

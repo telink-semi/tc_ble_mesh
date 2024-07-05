@@ -375,8 +375,11 @@ public class NetworkingController {
         this.segmentedBusy = false;
         this.reliableBusy = false;
         this.mNetworkingQueue.clear();
-        this.lastSeqAuth = 0;
-        this.lastSegSrc = 0;
+        // last lastSeqAuth and lastSegComplete should keep to avoid the complete seqAuth not saved in completedSeqAuthBuffer
+        // for example , after key bind success, app send publish(segment packet) immediately,
+        // if the device resend the aggregator segment packet, network
+//        this.lastSeqAuth = 0;
+//        this.lastSegSrc = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
         this.receivedSegmentedMessageBuffer.clear();

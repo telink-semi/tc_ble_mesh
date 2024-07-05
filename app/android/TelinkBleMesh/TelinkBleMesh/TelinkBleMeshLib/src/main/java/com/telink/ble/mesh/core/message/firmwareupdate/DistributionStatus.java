@@ -52,6 +52,12 @@ public enum DistributionStatus {
 
     URI_MALFORMED(0x0A, "The format of the Update URI is invalid"),
 
+    URI_UNREACHABLE(0x0B, "The URI is unreachable."),
+
+    NEW_FIRMWARE_NOT_AVAILABLE(0x0C, "The Check Firmware OOB procedure did not find any new firmware."),
+
+    SUSPEND_FAILED(0x0D, "The suspension of the Distribute Firmware procedure failed."),
+
     UNKNOWN_ERROR(0xFF, "unknown error");
 
     public final int code;

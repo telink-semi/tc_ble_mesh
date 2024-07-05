@@ -339,6 +339,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         mContext.registerReceiver(mBluetoothReceiver, filter);
     }
 
+    /**
+     * clear network busy state and cache
+     */
+    void clearNetworkCache() {
+        if (mNetworkingController != null) {
+            mNetworkingController.clear();
+        }
+    }
+
 
     /**
      * Used to listen for changes in the Bluetooth state of the device.
@@ -603,6 +612,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         log("---idle--- " + disconnect);
         mDelayHandler.removeCallbacksAndMessages(null);
         validateActionMode(Mode.IDLE);
+        clearNetworkCache();
         if (disconnect) {
             mGattConnection.disconnect();
         }
@@ -1075,6 +1085,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 isLogin = false;
                 setupMeshNetwork(this.meshConfiguration);
             }
+//            clearNetworkCache();
             actionMode = targetMode;
             return true;
         }

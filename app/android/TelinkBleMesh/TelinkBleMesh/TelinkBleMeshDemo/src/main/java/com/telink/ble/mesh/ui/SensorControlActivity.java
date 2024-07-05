@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file LightingControlActivity.java
+ * @file SensorControlActivity.java
  *
  * @brief for TLSR chips
  *

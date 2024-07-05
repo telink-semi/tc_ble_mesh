@@ -30,7 +30,22 @@ public enum UpdateStatus {
 
     SUCCESS(0x00, "The message was processed successfully"),
 
-    METADATA_CHECK_FAILED(0x01, "The metadata check failed"),
+
+    INSUFFICIENT_RESOURCES(0x01, "Insufficient resources on the node"),
+
+    WRONG_PHASE(0x02, "The operation cannot be performed while the server is in the current phase."),
+
+    INTERNAL_ERROR(0x03, "An internal error occurred on the node."),
+
+    WRONG_FIRMWARE_INDEX(0x04, "The message contains a firmware index value that is not expected."),
+
+    METADATA_CHECK_FAILED(0x05, "The metadata check failed."),
+
+    TEMPORARILY_UNAVAILABLE(0x06, "The server cannot start a firmware update."),
+
+    BLOB_TRANSFER_BUSY(0x07, "Another BLOB transfer is in progress."),
+
+    /*METADATA_CHECK_FAILED(0x01, "The metadata check failed"),
 
     INVALID_FIRMWARE_ID(0x02, "The message contains a Firmware ID value that is not expected"),
 
@@ -42,7 +57,7 @@ public enum UpdateStatus {
 
     TEMPORARILY_UNAVAILABLE(0x06, "The server cannot start a firmware update"),
 
-    INTERNAL_ERROR(0x07, "An internal error occurred on the node"),
+    INTERNAL_ERROR(0x07, "An internal error occurred on the node"),*/
 
     UNKNOWN_ERROR(0xFF, "unknown error");
 

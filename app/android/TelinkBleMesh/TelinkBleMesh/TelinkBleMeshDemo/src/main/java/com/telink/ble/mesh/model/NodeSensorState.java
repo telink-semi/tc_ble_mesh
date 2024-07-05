@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file GroupInfo.java
+ * @file NodeSensorState.java
  *
  * @brief for TLSR chips
  *

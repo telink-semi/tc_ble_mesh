@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceOtaActivity.java
+ * @file DeviceOtaLocalActivity.java
  *
  * @brief for TLSR chips
  *

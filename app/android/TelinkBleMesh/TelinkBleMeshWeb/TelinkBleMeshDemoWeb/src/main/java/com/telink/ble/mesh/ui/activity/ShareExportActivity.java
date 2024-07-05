@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file QRCodeShareActivity.java
+ * @file ShareExportActivity.java
  *
  * @brief for TLSR chips
  *

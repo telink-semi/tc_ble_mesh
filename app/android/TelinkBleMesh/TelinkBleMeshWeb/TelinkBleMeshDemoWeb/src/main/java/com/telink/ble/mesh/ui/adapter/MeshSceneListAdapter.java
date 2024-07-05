@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SceneListAdapter.java
+ * @file MeshSceneListAdapter.java
  *
  * @brief for TLSR chips
  *
