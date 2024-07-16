@@ -669,7 +669,7 @@ class BlobTransfer {
             if (transferMode == TransferMode.PULL) {
                 result = 10;
             } else {
-                result = 100;
+                result = 10; // update from 100, for resend chunk faster
             }
         } else if (this.transferMode == TransferMode.PULL) {
             result = 120;
