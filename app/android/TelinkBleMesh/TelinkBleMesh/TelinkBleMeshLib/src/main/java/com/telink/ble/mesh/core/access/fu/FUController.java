@@ -307,6 +307,7 @@ public class FUController implements FUActionHandler {
      */
     public void clear() {
         currentState = FUState.IDLE;
+        firstIndexInList = 0;
         log("clear FU --------");
         if (initiator.isRunning()) {
             initiator.clear();
