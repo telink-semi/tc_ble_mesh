@@ -30,6 +30,8 @@
 #include "tl_ble_moduleDlg.h"
 
 // CTL_RxTest ¶Ô»°¿ò
+mesh_rcv_t mesh_rx_test_result[MESH_NODE_MAX_NUM];
+int mesh_rx_test_result_cnt;
 
 IMPLEMENT_DYNAMIC(CTL_RxTest, CDialog)
 
@@ -38,21 +40,40 @@ CTL_RxTest::CTL_RxTest(CWnd* pParent /*=NULL*/)
 	, m_cur_cnt(0)
 	, m_interval(500)
 	, m_total_counts(100)
-	, m_transmit(_T("0x00"))
+	, m_transmit(_T("0x15"))
 	, m_RcvCnts(0)
 	, m_testing(false)
 	, m_GetRevCnts(0)
 	, m_total_nodes(50)
-	, m_sel_mode(0)
+	, m_sel_mode(2)
 	, m_max_time(0)
 	, m_min_time(0)
 	, m_average_time(0)
 	, m_pkts_send(8)
 	, m_pkts_receive(8)
-	, m_csAddrGet(_T("0x0000"))
+	, m_csDstAddr(_T("0xffff"))
+	, m_csAddrGet(_T("0xffff"))
 	, m_clear_result(0)
+	, m_rsp_cnt(0)
 {
-	m_csDstAddr.Format(_T("0x%04x"), provision_mag.pro_net_info.unicast_address);
+}
+
+int mesh_rx_test_update(u16 addr, mesh_rcv_t *p_rcv)
+{
+	for(int i = 0; i < mesh_rx_test_result_cnt; i++)
+	{
+		if (addr == mesh_rx_test_result[i].src_addr) {
+			return 0;
+		}
+	}
+
+	if (mesh_rx_test_result_cnt < MESH_NODE_MAX_NUM) {
+		memcpy(&mesh_rx_test_result[mesh_rx_test_result_cnt], p_rcv, sizeof(mesh_rcv_t));
+		mesh_rx_test_result[mesh_rx_test_result_cnt].src_addr = addr;	
+		mesh_rx_test_result_cnt++;
+	}
+
+	return 1;
 }
 
 void CTL_RxTest::StatusNotify (unsigned char *p, int len)
@@ -69,28 +90,75 @@ void CTL_RxTest::StatusNotify (unsigned char *p, int len)
 		u16 par_len = rsp.len - 4 - size_op;
 		if(G_ONOFF_STATUS == op){			
 		}else if(G_LEVEL_STATUS == op){
-			mesh_rcv_t *p_rcv = (mesh_rcv_t *)par;				
-			m_RcvCnts = p_rcv->rcv_cnt;
-			float percent = (float)m_RcvCnts*100/m_total_counts;
-			CString csRcvCnt;
-			csRcvCnt.Format(_T("%d(%0.2f%%)"), m_RcvCnts,percent);
-			GetDlgItem(IDC_RESULT)->SetWindowText(csRcvCnt);	
-
-			m_max_time = p_rcv->max_time;
-			m_min_time = p_rcv->min_time;
-			m_average_time = p_rcv->avr_time;
-
-			csRcvCnt.Format(_T("%d"), m_max_time);
-			GetDlgItem(IDC_MAX)->SetWindowText(csRcvCnt);
-			csRcvCnt.Format(_T("%d"), m_min_time);
-			GetDlgItem(IDC_MIN)->SetWindowText(csRcvCnt);
-			csRcvCnt.Format(_T("%d"), m_average_time);
-			GetDlgItem(IDC_AVERAGE)->SetWindowText(csRcvCnt);
-			if(m_clear_result){
+			mesh_rcv_t* p_rcv = (mesh_rcv_t*)par;
+			u16 dst_addr = (u16)strtol(m_csAddrGet, NULL, 16);
+			if (m_clear_result) {
 				m_clear_result = 0;
 				GetDlgItem(IDC_EDIT_CLEAR)->SetWindowText("clear success");
 			}
-	}
+			else if (is_unicast_adr(dst_addr)) {
+				if (rsp.src == dst_addr) {
+					m_RcvCnts = p_rcv->rcv_cnt;
+					m_max_time = p_rcv->max_time;
+					m_min_time = p_rcv->min_time;
+					m_average_time = p_rcv->avr_time;
+					m_rsp_cnt = 1;
+
+					float percent = (float)m_RcvCnts * 100 / m_total_counts;
+					CString csRcvCnt;
+					csRcvCnt.Format(_T("%d(%0.2f%%)"), m_RcvCnts, percent);
+					GetDlgItem(IDC_RESULT)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_max_time);
+					GetDlgItem(IDC_MAX)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_min_time);
+					GetDlgItem(IDC_MIN)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_average_time);
+					GetDlgItem(IDC_AVERAGE)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_rsp_cnt);
+					GetDlgItem(IDC_RSP_CNT)->SetWindowText(csRcvCnt);
+				}
+			}
+			else{
+				mesh_rx_test_update(rsp.src, p_rcv);
+				if (mesh_rx_test_result_cnt) {
+					m_RcvCnts = mesh_rx_test_result[0].rcv_cnt;
+					m_max_time = mesh_rx_test_result[0].max_time;
+					m_min_time = mesh_rx_test_result[0].min_time;
+					m_average_time = mesh_rx_test_result[0].avr_time;
+					m_rsp_cnt = mesh_rx_test_result_cnt;
+
+					for (int i = 1; i < mesh_rx_test_result_cnt; i++)
+					{
+						if (m_min_time > mesh_rx_test_result[i].min_time) {
+							m_min_time = mesh_rx_test_result[i].min_time;
+						}
+
+						if (m_max_time < mesh_rx_test_result[i].max_time) {
+							m_max_time = mesh_rx_test_result[i].max_time;
+						}
+
+						m_average_time += mesh_rx_test_result[i].avr_time;
+						m_RcvCnts += mesh_rx_test_result[i].rcv_cnt;
+					}
+
+					m_average_time = m_average_time / mesh_rx_test_result_cnt;
+					m_RcvCnts = m_RcvCnts / mesh_rx_test_result_cnt;
+
+					float percent = (float)m_RcvCnts * 100 / m_total_counts;
+					CString csRcvCnt;
+					csRcvCnt.Format(_T("%d(%0.2f%%)"), m_RcvCnts, percent);
+					GetDlgItem(IDC_RESULT)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_max_time);
+					GetDlgItem(IDC_MAX)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_min_time);
+					GetDlgItem(IDC_MIN)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_average_time);
+					GetDlgItem(IDC_AVERAGE)->SetWindowText(csRcvCnt);
+					csRcvCnt.Format(_T("%d"), m_rsp_cnt);
+					GetDlgItem(IDC_RSP_CNT)->SetWindowText(csRcvCnt);
+				}
+			}		
+		}
 	}else if (CFG_SIG_MODEL_SUB_LIST == op){
 	
 	}else if (CFG_MODEL_SUB_STATUS == op){
@@ -140,7 +208,7 @@ void CTL_RxTest::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_INTERVAL, m_interval);
 	DDX_Text(pDX, IDC_TOTAL_COUNTS, m_total_counts);
-	DDV_MinMaxInt(pDX, m_total_counts, 0, 200);
+	//	DDV_MinMaxInt(pDX, m_total_counts, 0, 200);
 	DDX_Text(pDX, IDC_DST_ADDR, m_csDstAddr);
 	DDX_Text(pDX, IDC_TRANSMIT_SET, m_transmit);
 	DDX_Text(pDX, IDC_RESULT, m_RcvCnts);
@@ -155,6 +223,7 @@ void CTL_RxTest::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_PKT_RECEIVE, m_pkts_receive);
 	DDV_MinMaxByte(pDX, m_pkts_receive, 8, 223);
 	DDX_Text(pDX, IDC_ADDR_GET, m_csAddrGet);
+	DDX_Text(pDX, IDC_RSP_CNT, m_rsp_cnt);
 }
 
 
@@ -189,6 +258,7 @@ void CTL_RxTest::OnBnClickedStart()
 		m_cur_cnt = 0; 
 		m_GetRevCnts = 0;
 		m_testing = TRUE;
+		mesh_rx_test_result_cnt = 0;
 		SetTimer(1, m_interval, NULL);
 		GetDlgItem(IDC_GET_RESULT)->EnableWindow(FALSE);		
 	}
@@ -250,11 +320,12 @@ void CTL_RxTest::OnTimer(UINT_PTR nIDEvent)
 			cmd_buf[4] = rsp_max;
 			cmd_buf[5] = ack;
 			cmd_buf[6] = m_cur_cnt;
-			cmd_buf[7] = m_pkts_send;
-			cmd_buf[8] = m_pkts_receive;
+			cmd_buf[7] = m_cur_cnt >> 8;
+			cmd_buf[8] = m_pkts_send;
+			cmd_buf[9] = m_pkts_receive;
 			u16 filter_address = (u16)strtol(m_csDstAddr,NULL,16);
-			cmd_buf[9] = (u8)filter_address;
-			cmd_buf[10] = filter_address>>8;
+			cmd_buf[10] = (u8)filter_address;
+			cmd_buf[11] = filter_address>>8;
 
 			if (ble_module_id_is_gateway()) {
 				void gateway_VC_send_cmd(u8 cmd, u8 * data, int len);
@@ -262,7 +333,7 @@ void CTL_RxTest::OnTimer(UINT_PTR nIDEvent)
 			}
 			else {
 				void write_no_rsps_pkts(u8 * p, u16 len, u16 handle, u8 msg_type);
-				write_no_rsps_pkts(cmd_buf, 11, 0x1e, MSG_RX_TEST_PDU);
+				write_no_rsps_pkts(cmd_buf, 11, proxy_write_handle, MSG_RX_TEST_PDU);
 			}
 			m_cur_cnt++;
 		} 
@@ -307,4 +378,5 @@ void CTL_RxTest::OnBnClickedButtonClear()
 	access_cmd_set_level(dst_addr, 1, 0x1ff, 1, 0);	
 	GetDlgItem(IDC_EDIT_CLEAR)->SetWindowText("");
 	m_clear_result = 1;
+	mesh_rx_test_result_cnt = 0;
 }

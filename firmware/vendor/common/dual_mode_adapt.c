@@ -23,27 +23,18 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh_common.h"
-#if (__TL_LIB_8258__ || MCU_CORE_TYPE == MCU_CORE_8258)
-#include "drivers/8258/rf_drv.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "drivers/8278/rf_drv.h"
-#endif
+#include "drivers.h"
 
 void rf_setTxModeNew(void);
 int is_zigbee_found();
 
 #if (DUAL_MODE_ADAPT_EN || DUAL_MODE_WITH_TLK_MESH_EN)
-u8 dual_mode_state = (FW_START_BY_BOOTLOADER_EN) ? DUAL_MODE_SUPPORT_DISABLE : DUAL_MODE_NOT_SUPPORT;
+u8 dual_mode_state = (FW_START_BY_LEGACY_BOOTLOADER_EN) ? DUAL_MODE_SUPPORT_DISABLE : DUAL_MODE_NOT_SUPPORT;
 u8 rf_mode = RF_MODE_BLE;
 
 #if (DUAL_MODE_WITH_TLK_MESH_EN)
@@ -165,7 +156,7 @@ u8 pair_ltk[17] = MESH_LTK;
 
 void dual_mode_en_init()		// call in mesh_init_all();
 {
-#if (0 == FW_START_BY_BOOTLOADER_EN)
+#if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
 	u8 en = 0;
 	flash_read_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&en);
     LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"dual mode enable flag 0x76080:0x%x",en);
@@ -196,28 +187,28 @@ void dual_mode_en_init()		// call in mesh_init_all();
                 start_reboot();
             }else if(TYPE_DUAL_MODE_STANDBY == mesh_type){
 			    dual_mode_state = DUAL_MODE_SUPPORT_ENABLE;
-                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable");
 			}else{  // only TYPE_SIG_MESH
 			    dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
-                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable");
 			}
             #else
 		    if(TYPE_DUAL_MODE_STANDBY == mesh_type){
 			    dual_mode_state = DUAL_MODE_SUPPORT_ENABLE;
-                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable");
 		    }else{
 			    dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
-                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable");
 			}
 			#endif
 		}else{
-		    #if (0 == FW_START_BY_BOOTLOADER_EN)
+		    #if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
             en = 0;
             #endif
 		}
 	}
 
-#if (0 == FW_START_BY_BOOTLOADER_EN)
+#if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
 	if(en && (DUAL_MODE_SAVE_ENABLE != en)){
 	    en = 0;
 	    flash_write_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&en);
@@ -234,14 +225,14 @@ void dual_mode_en_init()		// call in mesh_init_all();
 
 void dual_mode_disable()
 {
-#if (FW_START_BY_BOOTLOADER_EN)
+#if (FW_START_BY_LEGACY_BOOTLOADER_EN)
     // enable forever
 #else
 	if(DUAL_MODE_NOT_SUPPORT != dual_mode_state){
 		dual_mode_state = DUAL_MODE_NOT_SUPPORT;
 		u8 zero = 0;
 		flash_write_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&zero);
-        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode not support",0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode not support");
 	}
 #endif
 }
@@ -252,13 +243,13 @@ void dual_mode_select()    //
 		dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
 		#if DUAL_MODE_WITH_TLK_MESH_EN
         set_firmware_type_SIG_mesh();
-        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select SIG MESH",0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select SIG MESH");
 		#else
 		if(rf_mode == RF_MODE_BLE){
             set_firmware_type_SIG_mesh();
-            LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select BLE",0);
+            LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select BLE");
 		}else{
-		    #if (FW_START_BY_BOOTLOADER_EN)
+		    #if (FW_START_BY_LEGACY_BOOTLOADER_EN)
             set_firmware_type_zb_with_factory_reset();
 		    #else
             u8 zero = 0;
@@ -748,7 +739,7 @@ void dual_mode_zigbee_init(void){
 // ---------------------dual mode switch check
 int is_ble_found()
 {
-	return ((BLS_LINK_STATE_ADV != blt_state) || (get_provision_state() != STATE_DEV_UNPROV));
+	return ((BLS_LINK_STATE_ADV != blc_ll_getCurrentState()) || (get_provision_state() != STATE_DEV_UNPROV));
 }
 
 int is_zigbee_found()
@@ -883,7 +874,7 @@ u8 dual_mode_proc()
 		else if(DUAL_MODE_NETWORK_PVT_MESH == dual_mode_mesh_found){
 			rf_mode = RF_MODE_PVT_MESH;
 			set_firmware_type_zb_with_factory_reset();
-			if(BLS_LINK_STATE_CONN == blt_state){
+			if(BLS_LINK_STATE_CONN == blc_ll_getCurrentState()){
 				bls_ll_terminateConnection (0x13);
 				sleep_us(500000);
 			}		

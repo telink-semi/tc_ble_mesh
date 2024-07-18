@@ -27,4 +27,5 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
+int mesh_upper_transport_layer_cb(mesh_cmd_bear_t *p_bear);
 

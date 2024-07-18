@@ -76,7 +76,7 @@ SS_DEFINE_GUID(GUID_DEVINTERFACE_USBPRINT, 0x28d78fad, 0x5a12, 0x11D1, 0xae, 0x5
 //GUID DECLSPEC_SELECTANY GUID_DEVINTERFACE_USBPRINT = { 0x28d78fad, 0x5a12, 0x11D1, { 0xae, 0x5b, 0x00, 0x00, 0xf8, 0x03, 0xa8, 0xc2 } };
 GUID GUID_DEVINTERFACE_USBPRINT = { 0x28d78fad, 0x5a12, 0x11D1, { 0xae, 0x5b, 0x00, 0x00, 0xf8, 0x03, 0xa8, 0xc2 } };
 
-int is_B91_gw_usb_id(char * interfacename, unsigned int dev_RAM);
+int is_B91_gw_usb_id(char * interfacename, unsigned int dev_RAM, unsigned int id_target);
 
 extern HANDLE NULLEVENT2;
 HANDLE GetPrintDeviceHandle(unsigned short id)
@@ -180,7 +180,7 @@ HANDLE GetPrintDeviceHandle(unsigned short id)
 
 		#if 1 // use manual usb descriptor
 		str_tlk = strstr (interfacename, "vid_248a&pid_5320"); // mcu default print device
-		if(str_tlk && is_B91_gw_usb_id(interfacename, dev)){
+		if(str_tlk && is_B91_gw_usb_id(interfacename, dev, id)){
 			SetupDiDestroyDeviceInfoList(devs);
 			return usbHandle;
 		}

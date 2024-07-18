@@ -442,7 +442,10 @@ void CTL_provision::OnProvisionStart()
 
 	if(ble_module_id_is_gateway()){
 		if(m_fast_prov_mode){
-			cfg_cmd_ak_add(ele_adr_primary, netidx, ak_idx, app_key);
+			if(0 == get_all_appkey_cnt()){
+				cfg_cmd_ak_add(ele_adr_primary, netidx, ak_idx, app_key);
+			}
+			
 			gateway_start_fast_provision(0xffff, net_info.unicast_address);
 		}
 		else{
@@ -683,7 +686,7 @@ void CTL_provision::OnBnClickedSetPro() // provision self
         // we can use the tbl_mac as the mac adr 
         mesh_json_set_node_info(ele_adr_primary,tbl_mac);
     } 
-    json_set_appkey_bind_self_proc(vc_uuid, swap_u16_data(ak_idx));
+    json_set_appkey_bind_self_proc(vc_uuid, ak_idx);
 	write_json_file_doc(FILE_MESH_DATA_BASE);
 #endif
 	GetDlgItem(IDC_NETWORK_KEY)->EnableWindow(FALSE);
@@ -811,43 +814,39 @@ void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid)
 	p_node = json_mesh_find_node(node_addr);
 	mesh_page0_t * p_mesh_page = 0;
 	int mesh_page_size = 0;
+	
+	u16 pid_with_chip_type = pid;
 	pid &= BIT_MASK_LEN(PID_DEV_TYPE_LEN); // ignore mcu chip type
 	if(LIGHT_TYPE_CT == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_CT;
 		mesh_page_size = sizeof(composition_data_CT);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_CT, node_addr, sizeof(composition_data_CT));
 	}
 	else if (LIGHT_TYPE_HSL == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_HSL;
 		mesh_page_size = sizeof(composition_data_HSL);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_HSL, node_addr, sizeof(composition_data_HSL));
 	}
 	else if(LIGHT_TYPE_XYL == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_XYL;
 		mesh_page_size = sizeof(composition_data_XYL);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_XYL, node_addr, sizeof(composition_data_XYL));
 	}
 	else if(LIGHT_TYPE_CT_HSL == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_CT_HSL;
 		mesh_page_size = sizeof(composition_data_CT_HSL);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_CT_HSL, node_addr, sizeof(composition_data_CT_HSL));
 	}
 	else if(LIGHT_TYPE_PANEL == pid){
 		p_mesh_page = (mesh_page0_t *)&composition_data_PANNEL;
 		mesh_page_size = sizeof(composition_data_PANNEL);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_PANNEL, node_addr, sizeof(composition_data_PANNEL));
 	}
 	else if ((PID_LPN & BIT_MASK_LEN(PID_DEV_TYPE_LEN)) == pid) {
 		p_mesh_page = (mesh_page0_t*)&composition_data_LPN;
 		mesh_page_size = sizeof(composition_data_LPN);
-		VC_node_cps_save((mesh_page0_t*)&composition_data_LPN, node_addr, sizeof(composition_data_LPN));
 	}
 	else{
 		p_mesh_page = (mesh_page0_t *)&composition_data_CT;
 		mesh_page_size = sizeof(composition_data_CT);
-		VC_node_cps_save((mesh_page0_t *)&composition_data_CT, node_addr, sizeof(composition_data_CT));
 	}
 
+	p_mesh_page->head.pid = pid_with_chip_type;
 	VC_node_cps_save(p_mesh_page, node_addr, mesh_page_size);
 	if(p_node){
 		json_set_model_doc(p_node);

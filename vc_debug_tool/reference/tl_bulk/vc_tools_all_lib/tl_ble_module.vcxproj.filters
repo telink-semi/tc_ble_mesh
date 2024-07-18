@@ -34,6 +34,9 @@
     <Filter Include="Header Files\Common_Headers">
       <UniqueIdentifier>{8142539a-713a-42aa-a4ab-ae478304a005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sig_mesh_lib">
+      <UniqueIdentifier>{affa370d-5120-4bfd-8ed2-a9df4fa31890}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\aes_ecb">
       <UniqueIdentifier>{42cb5d04-3ee8-43b0-8445-949ec74e60a8}</UniqueIdentifier>
     </Filter>
@@ -42,12 +45,6 @@
     </Filter>
     <Filter Include="Source Files\mesh_draft_lib\certify_base">
       <UniqueIdentifier>{7f1d6666-33f9-41ca-a206-eeed05bdc600}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\third_party">
-      <UniqueIdentifier>{ec752a48-b2cf-459e-9515-d706d6207a32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\third_party\zlib">
-      <UniqueIdentifier>{13519d53-f150-49df-897c-0032ff6f96c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,9 +80,6 @@
     </ClCompile>
     <ClCompile Include="NewCellTypes\GridURLCell.cpp">
       <Filter>Source Files\New Cell Source</Filter>
-    </ClCompile>
-    <ClCompile Include="CTL_privision.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScanDlg.cpp">
       <Filter>Source Files</Filter>
@@ -228,22 +222,10 @@
     <ClCompile Include="aes_ecb\test_ecb.c">
       <Filter>Source Files\aes_ecb</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\asn_telink.c">
-      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\certify_base_crypto.c">
       <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\pem_der.c">
-      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\certify_base\sha1_telink.c">
-      <Filter>Source Files\mesh_draft_lib\certify_base</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\config_model.c">
-      <Filter>Source Files\Files_common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\utf8_u16_convert.c">
       <Filter>Source Files\Files_common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_log.c">
@@ -288,38 +270,14 @@
     <ClCompile Include="..\..\ble_lt_mesh\vendor\common\gw_node_info.c">
       <Filter>Source Files\Files_common</Filter>
     </ClCompile>
-    <ClCompile Include="third_party\zlib\adler32.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\compress.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\crc32.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\deflate.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\inffast.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\inflate.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\inftrees.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\trees.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\uncompr.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="third_party\zlib\zutil.c">
-      <Filter>Source Files\third_party\zlib</Filter>
-    </ClCompile>
     <ClCompile Include="lib_file\mesh_cdtp_vs.c">
       <Filter>Source Files\Files_master_func</Filter>
+    </ClCompile>
+    <ClCompile Include="CTL_provision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_network_layer.c">
+      <Filter>Source Files\Files_common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

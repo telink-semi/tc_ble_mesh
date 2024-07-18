@@ -22,11 +22,10 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
-#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #define ATTENTION_VAL_100_MS	10

@@ -23,15 +23,10 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "mesh_ota.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 
@@ -153,7 +148,7 @@ void mesh_ota_initiator_ack_timeout_handle()
         mesh_ota_initiator_wait_ack_st_return(0);
     	if((INITIATOR_OTA_ST_DISTR_GET == fw_initiator_proc.st_initiator)
     	|| (INITIATOR_OTA_ST_DISTR_RECEIVER_GET == fw_initiator_proc.st_initiator)){
-			LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "distributor may have been reboot for being updated", 0);
+			LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "distributor may have been reboot for being updated");
 	        mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_CANCEL);	// distributor may have been reboot for being updated.
     	}
     }
@@ -466,18 +461,18 @@ int mesh_ota_initiator_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                         if(BLOB_BLOCK_FORMAT_NO_CHUNK_MISS == p->format){
                         }else if(BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS == p->format){
                             set_bit_by_cnt(distr_proc->miss_mask, sizeof(distr_proc->miss_mask), initiator_get_fw_chunk_cnt()); // all need send
-                            LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS", 0);
+                            LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS");
                         }else if(BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS == p->format){
                             for(int i = 0; i < (miss_chunk_len); ++i){
                                 distr_proc->miss_mask[i] |= p->miss_chunk[i];
                             }
-                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ", 0);
+                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ");
                         }else if(BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK == p->format){
-                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "ENCODE MISS CHUNK ", 0);
+                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "ENCODE MISS CHUNK ");
                             decode_miss_chunk(p->miss_chunk, miss_chunk_len, distr_proc->miss_mask, sizeof(distr_proc->miss_mask));
                         }
                     }else{
-                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG", 0);
+                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG");
                     }
                 }
                 next_st = 1;
@@ -522,7 +517,7 @@ int mesh_ota_initiator_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                 }
             }else if(INITIATOR_OTA_ST_DISTR_GET == distr_proc->st_initiator){
                 if((ST_SUCCESS == p->st) && (DISTRIBUT_PHASE_COMPLETED == p->distrib_phase)){
-                    LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "distribution completed !", 0);
+                    LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "distribution completed !");
                     mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_PRE_CANCEL);
                 }
             }
@@ -550,7 +545,7 @@ int mesh_ota_initiator_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
             		}
             	}
             }else{
-				LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0, "xxxxxxxxxxxxxxx distributor may have been reboot", 0);
+				LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0, "xxxxxxxxxxxxxxx distributor may have been reboot");
 				mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_CANCEL);
             }
             next_st = 1;
@@ -642,7 +637,7 @@ void mesh_ota_initiator_proc()
 		    if(0 == distr_proc->node_num){
                 int err = access_cmd_fw_distr_receivers_add(adr_distributor);
                 if(INITIATOR_ALL_RECEIVER_INVALID_ERR_NO == err){
-					LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"xxxxxxxxxxxxxxxxx all receivers invalid",0); // or error state
+					LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"xxxxxxxxxxxxxxxxx all receivers invalid"); // or error state
 					distr_proc->node_num = 0;
 					mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_CANCEL);
                 }else if(0 == err){
@@ -785,7 +780,7 @@ void mesh_ota_initiator_proc()
 	        }else{
 	            if(0 == is_buf_zero(distr_proc->miss_mask, sizeof(distr_proc->miss_mask))){
                     distr_proc->chunk_num = 0;
-                    LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_blob_chunk_transfer retry",0);
+                    LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_blob_chunk_transfer retry");
                     mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_BLOB_CHUNK_START);
 	            }else{
                     mesh_ota_initiator_next_block();
@@ -816,7 +811,7 @@ void mesh_ota_initiator_proc()
             		}else
             		#endif
             		{
-						LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"xxxxxxxxxxxxxxxxxxxxxxxx all receivers invalid",0); // or error state
+						LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"xxxxxxxxxxxxxxxxxxxxxxxx all receivers invalid"); // or error state
 						mesh_ota_initiator_next_st_set(INITIATOR_OTA_ST_DISTR_CANCEL);
 					}
                 }else{
@@ -885,7 +880,7 @@ void mesh_ota_initiator_proc()
 
 		default :
 		    memset(distr_proc, 0, sizeof(fw_initiator_proc_t));
-            LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"flow completed",0); // or error state
+            LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"flow completed"); // or error state
             #if VC_APP_ENABLE
             extern int disable_log_cmd;
             disable_log_cmd = 1;   // mesh OTA finished

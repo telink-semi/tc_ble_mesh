@@ -30,6 +30,8 @@
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
+
+#if MD_PRIVACY_BEA
 #define PRIVATE_BEACON_GET			0x6080
 #define PRIVATE_BEACON_SET			0x6180
 #define PRIVATE_BEACON_STATUS		0x6280
@@ -106,7 +108,6 @@ void mesh_node_identity_refresh_private();
 void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy);
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t);
 void mesh_key_add_trigger_beacon_send(u8 idx);
-void mesh_prov_para_random_generate();
 
 #if MD_SERVER_EN
 void mesh_private_proxy_sts_init();
@@ -145,7 +146,9 @@ typedef struct{
 	u32 idx;
 	u8  auth_tag[MAX_SUPPORT_AUTH_TAG_CNT][8];
 }auth_tag_cache_t;
+#endif
 
+void mesh_prov_para_random_generate();
 
 #if WIN32
 #pragma pack(1)

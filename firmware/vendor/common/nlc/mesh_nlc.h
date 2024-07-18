@@ -28,7 +28,8 @@
 #include "nlc_blcnlcp.h"
 #include "nlc_ctrl_client.h"
 #include "nlc_sensor.h"
-
+#include "sensor_zsir1000.h"
+#include "sensor_ocs_gpio.h"
 
 
 

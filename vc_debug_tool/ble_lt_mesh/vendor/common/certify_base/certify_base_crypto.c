@@ -22,69 +22,20 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "../user_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
-#include "sha1_telink.h"
+//#include "sha1_telink.h"
 #include "certify_base_crypto.h"
-#include "pem_der.h"
-#include "asn_telink.h"
-#include "proj/common/tstring.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
-
+//#include "pem_der.h"
+//#include "asn_telink.h"
 
 #if CERTIFY_BASE_ENABLE // for the test case ,it should disable EPA
-	char uri_base[]=" //ptswebapiprod.azurewebsites.net/api/meshcert/v/b";
-#define PEM_CERT_S          "-----BEGIN CERTIFICATE-----"
-#define PEM_CERT_E          "-----END CERTIFICATE-----"
-#define PEM_EC_S            "-----BEGIN EC PARAMETERS-----"
-#define PEM_EC_E            "-----END EC PARAMETERS-----"
-#define PEM_PRIVATE_KEY_S 	"-----BEGIN EC PRIVATE KEY-----"
-#define PEM_PRIVATE_KEY_E	"-----END EC PRIVATE KEY-----"
+int mbedtls_crt_pem2der_define(const unsigned char *pem, size_t pem_sz,unsigned char *der_buf, size_t buf_sz,const char* start,const char* end);
+int mbedtls_crt_parse_dev_cert(const unsigned char* crt, u32 crt_sz, dev_cert_tbs_part_t* msc_crt);
 
-typedef struct{
-	int len;
-	u8  key[0x20];
-}cert_pri_t;
-
-typedef struct{
-	int len;
-	u8  key[0x41];
-	u8  rfu[3];
-}cert_pub_t;
-
-typedef struct{
-	int len;
-	u8 key[20];
-}cert_idkey_t;
-
-typedef struct{
-	int len;
-	u8 key[0x40];
-}cert_sign_t;
-
-typedef struct{
-	int val;
-	cert_pri_t pri;
-	cert_pub_t pub;
-}private_cert_str_t;
-
-
-typedef struct{
-	cert_pub_t pub;
-	cert_idkey_t subj;
-	cert_idkey_t author;
-	cert_sign_t sign;
-}dev_cert_tbs_part_t;
-
-
-typedef struct{
-	u16 id;	
-	u16 len;
-	const  char *p_item;
-}cert_item_t;
+char uri_base[]=" //ptswebapiprod.azurewebsites.net/api/meshcert/v/b";
 
 #define MAX_CERT_ITEM_CNT	2
 cert_item_t cert_item[MAX_CERT_ITEM_CNT];
@@ -191,7 +142,7 @@ u8 cert_valid()
 		return CERT_IS_VALID;
 	}else if (flag_flash == 0xffffffff){
 		//cert need to verify 
-		const u8 *p_cert = (const u8 *)(FLASH_ADR_CERTIFY_ADR);
+		const u8 *p_cert = (const u8 *)(FLASH_R_BASE_ADDR + FLASH_ADR_CERTIFY_ADR);
 		flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_CRC_OFFSET, 2, (u8*)(&cert_crc));
 		cert_calc = crc16(p_cert, CERT_CRC_OFFSET);
 		if(cert_crc != cert_calc){
@@ -305,7 +256,7 @@ int cert_item_rsp(u16 id,u16 offset,u16 max_size,u8 *p_buf,u16 *p_len)
 	}else{
 		*p_len = p_cert->len - offset;
 	}
-	memcpy(p_buf,(u8 *)(p_cert->p_item + offset),*p_len);
+	memcpy(p_buf,(u8 *)(FLASH_R_BASE_ADDR + p_cert->p_item + offset),*p_len);
 	return 0;
 }
 
@@ -323,17 +274,24 @@ u32  use_cert_id_get_len(u8 id)
 
 
 
-void cert_id_get(u16 *p_id,u32 *p_cnt)
+/**
+ * @brief       This function server to get number of certificates.
+ * @param[in]   p_id- pointer of certify item list.
+ * @return      number of certificates.
+ * @note        
+ */
+u32 cert_id_get(u16 *p_id)
 {
 	u32 cnt =0;
 	for(u32 i=0;i<MAX_CERT_ITEM_CNT;i++){
 		cert_item_t *p_cert = cert_item+i;
 		if(p_cert->len){
 			*(p_id+i) = p_cert->id;
-			*p_cnt = ++cnt;
+			++cnt;
 		}
 	}
-	return ;
+	
+	return cnt;
 }
 
 
@@ -363,327 +321,7 @@ const char * get_cert_content_by_id(u16 id,u32* p_len)
 	return NULL;
 }
 
-u8 * mebedtls_asn_get_ele(u8 *p,const u8 *end,u8 ele_cnt)
-{
-	int ret;
-	size_t len;
-	u8 *p_start = p;
-	const u8 *p_end = end;
-	for(int i=0;i< ele_cnt;i++ ){
-		if( ( ret = mbedtls_asn1_get_tag( &p_start, p_end, &len,(int)p_start[0] ) ) == 0 ){
-	        p_start += len;
-	    }else{
-			return NULL;
-		}
-	}
-	return p_start;
-}
-
-u8 mebedtls_asn_get_pubkey(u8 *p,u8 *end,cert_pub_t *p_pub)
-{
-	size_t len;
-	int ret;
-	u8 *p_cert_pub = mebedtls_asn_get_ele(p,end,6);
-	// get the ele header part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_cert_pub, end, &len,
-            p_cert_pub[0] ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -2;
-        return ret;
-    }
-	// get the first ele part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_cert_pub, end, &len,
-            p_cert_pub[0] ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -3;
-        return ret;
-    }
-	p_cert_pub+=len;
-	// get the second ele part 
-	if( ( ret = mbedtls_asn1_get_bitstring_null( &p_cert_pub, (const u8 *)end, &len) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -3;
-        return ret;
-    }
-	// get the pubkey pointer
-	p_pub->len = len;
-	memcpy(p_pub->key,p_cert_pub,p_pub->len);
-	return 0;
-}
-
-int mebedtls_ans_proc_id_key(u8 *p,u8 *end,cert_idkey_t *p_key)
-{
-	int ret;
-	size_t len;
-	u8 *p_start = p;
-	if( ( ret = mbedtls_asn1_get_tag( &p_start, end, &len,
-            MBEDTLS_ASN1_SEQUENCE|MBEDTLS_ASN1_CONSTRUCTED ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -2;
-        return ret;
-    }
-	// jump the first protocol part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_start, end, &len,
-            MBEDTLS_ASN1_OID ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -3;
-        return ret;
-    }
-	p_start += len;
-	// jump to the key identify part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_start, end, &len,
-            MBEDTLS_ASN1_OCTET_STRING ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -4;
-        return ret;
-    }
-	if(*p_start & MBEDTLS_ASN1_CONSTRUCTED){
-		// need to get the tag part again 
-		if( ( ret = mbedtls_asn1_get_tag( &p_start, end, &len,
-            p_start[0] ) ) != 0 
-            || len > (size_t)(end - p))
-    	{
-        	ret = -5;
-        	return ret;
-    	}
-	}
-	// jump to the key identify part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_start, end, &len,
-            p_start[0] ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -4;
-        return ret;
-    }
-	// use the p_start ,and the len to set the p_key part 
-	p_key->len = len;
-	memcpy(p_key->key,p_start,len);
-	return 0;
-}
-
-u8 mebedtls_asn_get_key_identi(u8 *p,u8 *end,cert_idkey_t *p_sub,cert_idkey_t * p_auth)
-{
-	size_t len;
-	int ret;
-	u8 *p_cert_pub = mebedtls_asn_get_ele(p,end,7);
-	// jump to the first  subsequence part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_cert_pub, (const u8 *)end, &len,
-           (int)MBEDTLS_ASN1_CONTEXT_SPECIFIC|MBEDTLS_ASN1_CONSTRUCTED|MBEDTLS_ASN1_BIT_STRING ) ) != 0
-            || len > (size_t)(end - p))
-    {
-        ret = -2;
-        return ret;
-    }
-	// jump to the second subsequence part 
-	if( ( ret = mbedtls_asn1_get_tag( &p_cert_pub, end, &len,
-            (int)MBEDTLS_ASN1_SEQUENCE|MBEDTLS_ASN1_CONSTRUCTED ) ) != 0
-            || len > (size_t)(end - p))
-    {
-        ret = -3;
-        return ret;
-    }
-	u8 *p_sub_key_s = mebedtls_asn_get_ele(p_cert_pub,end,2);
-	u8 *p_auth_key_s = mebedtls_asn_get_ele(p_cert_pub,end,3);
-	mebedtls_ans_proc_id_key(p_sub_key_s,end,p_sub);
-	mebedtls_ans_proc_id_key(p_auth_key_s,end,p_auth);
-	return 0;
-}
-
-
-int mbedtls_crt_parse_dev_cert(const unsigned char *crt, u32 crt_sz,dev_cert_tbs_part_t *msc_crt)
-{
-	int ret = 0;
-    unsigned char *p, *end, *p_tmp, *crt_end;
-    size_t len;
-
-    if (!crt || !crt_sz) {
-        return -1;
-    }
-    p = (unsigned char *)crt;
-    end = p + crt_sz;
-
-    /*
-     * Certificate  ::=  SEQUENCE  {
-     *      tbsCertificate       TBSCertificate,
-     *      signatureAlgorithm   AlgorithmIdentifier,
-     *      signatureValue       BIT STRING  }
-     */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -2;
-        goto done;
-    }
-    /* got cert raw and save start and end */
-    crt_end = p+len;
-
-    /*
-     * TBSCertificate  ::=  
-		get pubkey 
-		Subject Key Identifier:
-		Authority Key Identifier:
-     */
-    // get the tbs header part 
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -3;
-        goto done;
-    }
-	p_tmp = p+len;// point to the next sequence
-	mebedtls_asn_get_pubkey(p, end,&(msc_crt->pub));
-	mebedtls_asn_get_key_identi(p,end,&(msc_crt->subj),&(msc_crt->author));
-	
-    /*
-     *  }
-     *  -- end of TBSCertificate
-     *
-     *  signatureAlgorithm   AlgorithmIdentifier,
-     *  signatureValue       BIT STRING
-     */
-    p = p_tmp;
-    end = crt_end;
-	
-	
-    /* parse signatureAlgorithm */
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
-    {
-        ret = -13;
-        goto done;
-    }
-
-    /* parse signatureValue */
-    p += len;
-
-	if( ( ret = mbedtls_asn1_get_bitstring_null( &p,(const u8 *) end, &len ) ) != 0 )
-    {
-        ret = -14;
-        goto done;
-    }
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
-    {
-        ret = -15;
-        goto done;
-		
-    }
-	
-	// jump to the value part 
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_INTEGER ) ) != 0 )
-    {
-        ret = -16;
-        goto done;
-    }
-
-    /* when the first byte > 0x7f, the ASN.1 will prepend 0x00, so remove it */
-    if (len >= 0x20)
-        memcpy(msc_crt->sign.key, p+len-0x20, 0x20);
-    else /* if the bignum less than 32 bytes, prepend 0x00(the bignum is big endian) */
-        memcpy(msc_crt->sign.key+0x20-len, p, len);
-
-    p += len;
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_INTEGER ) ) != 0 )
-    {
-        ret = -17;
-        goto done;
-    }
-
-    if (len >= 0x20)
-        memcpy(msc_crt->sign.key+0x20, p+len-0x20, 0x20);
-    else
-        memcpy(&(msc_crt->sign.key[0x40-len]), p, len);
-	msc_crt->sign.len = 0x40;
-done:
-    return ret;
-}
-
-
-int mbedtls_crt_parse_private(const unsigned char *crt, u32 crt_sz,private_cert_str_t *msc_crt)
-{
-    int ret = 0;
-    unsigned char *p, *end;
-    size_t len;
-
-    if (!crt || !crt_sz) {
-        return -1;
-    }
-    p = (unsigned char *)crt;
-    end = p + crt_sz;
-    if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -2;
-        goto done;
-    }
-	/* got the integer part  */
-	if( ( ret = mbedtls_asn1_get_int( &p, end, &msc_crt->val ) ) != 0)
-    {
-        ret = -3;
-        goto done;
-    }
-	// get the pubkey part 
-	if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_OCTET_STRING ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -4;
-        goto done;
-    }
-	msc_crt->pri.len = len;
-	memcpy(msc_crt->pri.key ,p,len);
-	p+=len;
-
-	// get enc calculation part  
-	if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_CONTEXT_SPECIFIC|MBEDTLS_ASN1_CONSTRUCTED ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -5;
-        goto done;
-    }
-
-	if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-            MBEDTLS_ASN1_OID ) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -5;
-        goto done;
-    }
-	p+=len;
-	// get the pubkey part 
-	
-	if( ( ret = mbedtls_asn1_get_tag( &p, end, &len,
-				MBEDTLS_ASN1_CONTEXT_SPECIFIC|MBEDTLS_ASN1_CONSTRUCTED|MBEDTLS_ASN1_BOOLEAN ) ) != 0 
-				|| len > (size_t)(end - p))
-		{
-			ret = -5;
-			goto done;
-		}
-	if( ( ret = mbedtls_asn1_get_bitstring_null( &p, (const u8 *)end, &len) ) != 0 
-            || len > (size_t)(end - p))
-    {
-        ret = -6;
-        goto done;
-    }
-	msc_crt->pub.len = len;
-	memcpy(msc_crt->pub.key,p,msc_crt->pub.len);//2nd is type (4 means uncompress )
-	
-done:
-    return ret;
-
-}
+#if 0
 u8 cert_info_check_pubkey_info(u8 *pubkey,u8* key_info)
 {
 	u8 sha1out[20];
@@ -693,13 +331,15 @@ u8 cert_info_check_pubkey_info(u8 *pubkey,u8* key_info)
 	}else{
 		len =33;
 	}
-	mbedtls_sha1((const u8 *) pubkey,len,sha1out);
+	mbedtls_sha1((const u8 *) pubkey,len,sha1out); // src: 7b4ef9b898ecee25bb895d73c7c431df71c3a47b // 20231124
 	if(!memcmp(sha1out,key_info,sizeof(sha1out))){
 		return 1;
 	}else{
 		return 0;
 	}
 }
+#endif
+
 static private_cert_str_t private_cert_dat;
 
 int cert_info_parse_init()
@@ -778,7 +418,7 @@ typedef struct{
 	u16 valid;
 	u16 rec_id;
 	u16 rec_len;
-	u8  rec_buf[0x300];
+	u8  rec_buf[0x300]; // for private key from pem: {u8 pre1[7]; u8 private_key[32]; u8 pre2[18]; u8 public_key[64];}
 }provisioner_record_t;
 
 typedef struct{

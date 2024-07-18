@@ -100,7 +100,7 @@ typedef int (*property_set_cb)(const char *data, uint16_t len);
 /**
  * @brief define property get handle. return the data length obtained, -1 is error, 0 is no data
  *        sdk call the function fetch user data and send to the server,
- *        the data should wrapped by user adn skd just transmit
+ *        the data should wrapped by user and skd just transmit
  */
 typedef int (*property_get_cb)(char *buf, uint16_t buf_len);
 

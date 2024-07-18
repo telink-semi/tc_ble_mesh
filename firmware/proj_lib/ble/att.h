@@ -517,7 +517,11 @@ extern u32 att_service_discover_tick;
 
 /******************************* User Interface  ************************************/
 ble_sts_t	bls_att_pushNotifyData (u16 attHandle, u8 *p, int len);
+#define		blc_gatt_pushHandleValueNotify(connHandle, attHandle, p, len)			bls_att_pushNotifyData(attHandle, p, len)
+
 ble_sts_t	bls_att_pushIndicateData (u16 attHandle, u8 *p, int len);
+#define		blc_gatt_pushHandleValueIndicate(connHandle, attHandle, p, len)			bls_att_pushIndicateData(attHandle, p, len)
+
 void		bls_att_setAttributeTable (u8 *p);
 
 void 		bls_att_registerHandleValueConfirmCb (att_handleValueConfirm_callback_t cb);

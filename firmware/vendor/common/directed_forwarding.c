@@ -31,138 +31,6 @@
 STATIC_ASSERT(MD_CLIENT_EN);
 #endif
 
-//--------------------network layer callback------------------------------//
-#if !WIN32
-#if (MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN)
-int mesh_rc_network_layer_df_sbr_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_retrans)
-{
-#if MD_DF_CFG_SERVER_EN
-	path_entry_com_t *p_fwd_entry = 0;
-	if(p_nw_retrans->relay_en && is_directed_forwarding_en(p_nw_retrans->netkey_sel_enc)){			
-		if(MESH_BEAR_ADV == p_nw_retrans->src_bear){ 
-			if(DIRECTED == mesh_key.sec_type_sel){
-				p_nw_retrans->relay_en = 0;
-				if(is_directed_relay_en(p_nw_retrans->netkey_sel_enc)){
-					if(get_forwarding_entry(p_nw_retrans->netkey_sel_enc, p_bear->nw.src, p_bear->nw.dst)){
-						p_nw_retrans->sec_type = DIRECTED;
-						p_nw_retrans->relay_en = 1;
-					}
-				}
-			}
-			else if(FRIENDSHIP == mesh_key.sec_type_sel){ 
-				p_fwd_entry = get_forwarding_entry(p_nw_retrans->netkey_sel_enc, ele_adr_primary, p_bear->nw.dst);
-				if(is_directed_friend_en(p_nw_retrans->netkey_sel_enc)){
-					p_nw_retrans->dpt_ele_cnt = get_directed_friend_dependent_ele_cnt(mesh_key.sec_type_sel, p_bear->nw.src);					
-					if(p_fwd_entry && !p_fwd_entry->fixed_path){
-						mesh_df_path_monitoring(p_fwd_entry);						
-						if(is_address_in_dependent_origin(p_fwd_entry, p_bear->nw.src)){
-							p_nw_retrans->sec_type = DIRECTED;
-						}
-						else{
-							p_nw_retrans->pending_op = CMD_CTL_DEPENDENT_NODE_UPDATE;
-						}
-					}
-					else{
-						//Create Path Origin State Machine
-						p_nw_retrans->pending_op = CMD_CTL_PATH_REQUEST;
-					}
-				}
-			}
-			
-		}
-		else if(MESH_BEAR_GATT == p_nw_retrans->src_bear){
-			if((MASTER == mesh_key.sec_type_sel) && is_proxy_use_directed(mesh_key.sec_type_sel)){	
-				p_nw_retrans->dpt_ele_cnt = get_directed_proxy_dependent_ele_cnt(mesh_key.sec_type_sel, p_bear->nw.src);
-				if(p_nw_retrans->dpt_ele_cnt){
-					p_fwd_entry = get_forwarding_entry(p_nw_retrans->netkey_sel_enc, ele_adr_primary, p_bear->nw.dst);
-					if(p_fwd_entry && !p_fwd_entry->fixed_path){
-						mesh_df_path_monitoring(p_fwd_entry);					
-						if(is_address_in_dependent_origin(p_fwd_entry, p_bear->nw.src)){
-							p_nw_retrans->sec_type = DIRECTED; 
-						}
-						else{
-							p_nw_retrans->pending_op = CMD_CTL_DEPENDENT_NODE_UPDATE; 					
-						}
-					}
-					else{
-						//Create Path Origin State Machine							
-						p_nw_retrans->pending_op = CMD_CTL_PATH_REQUEST;			
-					}
-				}
-			}
-		}
-	}
-#endif
-
-#if (MD_SBR_CFG_SERVER_EN)
-	if(is_subnet_bridge_en()){
-		int index = get_subnet_bridge_index(mesh_key.net_key[mesh_key.netkey_sel_dec][mesh_key.new_netkey_dec].index, p_bear->nw.src, p_bear->nw.dst);
-		if(-1 != index){
-			p_nw_retrans->netkey_sel_enc = get_mesh_net_key_offset((u16)index);
-			p_nw_retrans->need_bridge = 1;	// in pts, relay is disable in initial condition, but need to bridge
-			#if MD_DF_CFG_SERVER_EN
-			p_fwd_entry = get_forwarding_entry(p_nw_retrans->netkey_sel_enc, ele_adr_primary, p_bear->nw.dst);
-			if(p_fwd_entry && !p_fwd_entry->fixed_path){
-				if(is_address_in_dependent_origin(p_fwd_entry, p_bear->nw.src)){
-					p_nw_retrans->sec_type = DIRECTED;
-				}
-				else{
-					p_nw_retrans->pending_op = CMD_CTL_DEPENDENT_NODE_UPDATE;
-				}
-			}
-			else{
-				p_nw_retrans->pending_op = CMD_CTL_PATH_REQUEST;
-			}
-			#endif
-		}
-	}
-#endif
-
-#if MD_DF_CFG_SERVER_EN
-	if(!(!p_bear->nw.ctl && p_bear->lt_unseg.akf)){
-		p_nw_retrans->pending_op = 0;
-	}
-#endif
-
-	return 0;
-}
-
-#if (MD_DF_CFG_SERVER_EN)
-u16 mesh_tx_network_layer_df_cb(mesh_cmd_bear_t *p_bear, mesh_match_type_t *p_match_type, u8 *p_sec_type)
-{
-	u16 path_target = 0;	
-	if(is_directed_forwarding_en(p_match_type->mat.nk_array_idx) && !p_match_type->mat.immutable_flag){
-		path_entry_com_t *p_entry = get_forwarding_entry(p_match_type->mat.nk_array_idx, p_bear->nw.src, p_bear->nw.dst);
-		if(p_entry){
-			mesh_df_path_monitoring(p_entry);			
-			*p_sec_type = DIRECTED;
-		}
-		else{
-			if((!p_bear->nw.ctl) && p_bear->lt_unseg.akf){
-				path_target = p_bear->nw.dst;				
-			}
-		}
-	}
-
-	return path_target;
-}
-
-int mesh_network_df_initial_start(u8 op, u16 netkey_offset, u16 destination, u16 dpt_org, u16 dpt_ele_cnt)
-{
-	int ret = 0;
-	if(CMD_CTL_DEPENDENT_NODE_UPDATE == op){ 	
-		ret = directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_ADD, ele_adr_primary, dpt_org, dpt_ele_cnt);
-	}
-	else if(CMD_CTL_PATH_REQUEST == op){ 		
-		ret = directed_forwarding_initial_start(netkey_offset, destination, dpt_org, dpt_ele_cnt);
-	}
-	return ret;
-}
-#endif
-#endif
-#endif
-//--------------------network layer callback end------------------------------//
-
 #if PTS_TEST_EN
 int path_monitoring_test_mode = 0;
 #endif
@@ -175,14 +43,19 @@ path_origin_state_t path_origin_state[NET_KEY_MAX];
 #endif
 
 #if DF_TEST_MODE_EN
-void mesh_df_led_event(u8 nid)
+void mesh_df_led_event(u8 nid, u8 is_ctl_op)
 {
 	foreach(i,NET_KEY_MAX){
 		u32 cnt = is_key_refresh_use_old_and_new_key(i) ? 2 : 1;
     	foreach(k,cnt){
 			mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
 			if((p_netkey->valid)&&(nid == p_netkey->nid_d)){
-				cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+				if(is_ctl_op){
+					cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+				}
+				else{
+					cfg_led_event(DF_TEST_EXHIBITION_EN ? LED_EVENT_FLASH_4HZ_15S : LED_EVENT_FLASH_4HZ_10S);
+				}
 			}
     	}
 	}
@@ -218,9 +91,9 @@ int is_directed_forwarding_op(u16 op)
     return 0;
 }
 
-int is_proxy_use_directed(u16 netkey_offset)
-{
-	return ((PROXY_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type)) && proxy_mag.directed_server[netkey_offset].use_directed;
+int is_proxy_use_directed(int conn_idx, u16 netkey_offset)
+{	
+	return ((PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type)) && proxy_mag[conn_idx].directed_server[netkey_offset].use_directed;
 }
 
 void mesh_directed_forwarding_bind_state_update()
@@ -262,7 +135,17 @@ void mesh_directed_forwarding_bind_state_update()
 		}
 
 		if(DIRECTED_PROXY_DISABLE == p_control->directed_proxy){
-			directed_proxy_dependent_node_delete();
+			u8 conn_idx = 0;
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+			for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
+				if(blc_ll_isAclConnEstablished(conn_handle)){
+					conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+			#endif
+					directed_proxy_dependent_node_delete(conn_idx);
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+				}
+			}
+			#endif			
 		}
 		#endif
 	}
@@ -270,16 +153,16 @@ void mesh_directed_forwarding_bind_state_update()
 	return;
 }
 
-u8 get_directed_proxy_dependent_ele_cnt(u16 netkey_offset, u16 addr)
+u8 get_directed_proxy_dependent_ele_cnt(int conn_idx, u16 netkey_offset, u16 addr)
 {
 	u8 ele_cnt=0;
 #if MD_SERVER_EN
-	if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
-		if(is_ele_in_node(addr, proxy_mag.directed_server[netkey_offset].client_addr, proxy_mag.directed_server[netkey_offset].client_2nd_ele_cnt+1)){
-			ele_cnt = proxy_mag.directed_server[netkey_offset].client_2nd_ele_cnt+1;
+	if(DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type){
+		if(is_ele_in_node(addr, proxy_mag[conn_idx].directed_server[netkey_offset].client_addr, proxy_mag[conn_idx].directed_server[netkey_offset].client_2nd_ele_cnt+1)){
+			ele_cnt = proxy_mag[conn_idx].directed_server[netkey_offset].client_2nd_ele_cnt+1;
 		}
 	}
-	else if(PROXY_CLIENT == proxy_mag.proxy_client_type){
+	else if(PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type){
 		if(is_proxy_client_addr(addr)){
 			ele_cnt = 1;
 		}
@@ -376,16 +259,24 @@ non_fixed_entry_t * get_non_fixed_path_entry(u16 netkey_offset, u16 src_address,
 	return 0;
 }
 
+/**
+ * @brief       This function server to get forwarding table corresponding to src and dst.
+ * @param[io]   netkey_offset	- netkey offset.
+ * @param[io]   src				- source address.
+ * @param[io]   dst				- destination.
+ * @return      p_entry			- pointer of path entry.
+ * @note        get the non-fixed path first to avoid duplicate non-fixed path establishment in mesh_rc_network_layer_cb().
+ */
 path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 src, u16 dst)
 {
-	path_entry_com_t *p_entry=get_fixed_path_entry(netkey_offset, src, dst);
-	if(p_entry){
-		return p_entry;
-	}
+	path_entry_com_t *p_entry = 0;
 	
 	non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_path_entry(netkey_offset, src, dst);
 	if(p_non_fixed_entry){
 		p_entry = &p_non_fixed_entry->entry;
+	}
+	else{
+		p_entry = get_fixed_path_entry(netkey_offset, src, dst);
 	}
 	
 	return p_entry;	
@@ -406,7 +297,7 @@ int mesh_df_path_monitoring(path_entry_com_t *p_entry){
 
 //--------------directed forwarding command interface end---------------------------//
 #if (MD_DF_CFG_SERVER_EN&&!WIN32)
-#define LOG_DF_DEBUG(pbuf,len,format,...)		LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING,pbuf,len,format,__VA_ARGS__)
+#define LOG_DF_DEBUG(pbuf, len, format, ...)		LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, pbuf, len, format, ##__VA_ARGS__)
 
 void mesh_directed_forwarding_default_val_init()
 {
@@ -419,7 +310,7 @@ void mesh_directed_forwarding_default_val_init()
 		p_df->subnet_state[i].directed_control.directed_friend = DIRECTED_FRIEND_EN ? DIRECTED_FRIEND_DISABLE : DIRECTED_FRIEND_NOT_SUPPORT;
 		
 		p_df->subnet_state[i].path_metric.metric_type = METRIC_TYPE_NODE_COUNT;
-		p_df->subnet_state[i].path_metric.path_lifetime = PATH_LIFETIME_24HOURS;
+		p_df->subnet_state[i].path_metric.path_lifetime = DF_TEST_MODE_EN ? PATH_LIFETIME_12MINS : PATH_LIFETIME_24HOURS;
 		p_df->subnet_state[i].max_concurrent_init = PTS_TEST_EN ? 2 : MAX_CONCURRENT_CNT;	
 		p_df->subnet_state[i].wanted_lanes = DF_TEST_MODE_EN ? 1 : 2; 	// the number of lanes to be discovered for each path in a subnet.
 		p_df->subnet_state[i].two_way_path = 1;
@@ -436,8 +327,10 @@ void mesh_directed_forwarding_default_val_init()
 	p_df->control_relay_transmit.count = PTS_TEST_EN ? 2 : TRANSMIT_CNT_DEF;
 	p_df->control_relay_transmit.invl_steps = PTS_TEST_EN ? 9 : TRANSMIT_INVL_STEPS_DEF;
 		
-	p_df->rssi_threshold.default_rssi_threshold = -86; // should be 10 dB above the receiver sensitivity, user can set bigger in test mode.
-	p_df->rssi_threshold.rssi_margin = 0x0e; // default 0x14 in spec
+	#if PTS_TEST_EN
+	p_df->pts_rssi_threshold = MESH_DEFAULT_RSSI_THRES; // should be 10 dB above the receiver sensitivity, user can set bigger in test mode.
+	#endif
+	p_df->rssi_margin = 0x0e; // default 0x14 in spec
 
 	p_df->directed_paths.node_paths = 20;
 	p_df->directed_paths.relay_paths = 20;
@@ -461,9 +354,19 @@ void mesh_directed_forwarding_default_val_init()
 	return;
 }
 
-int mesh_directed_proxy_capa_report(int netkey_offset)
+int mesh_directed_proxy_capa_report(u16 conn_handle, int netkey_offset)
 {
-	int ret = 0;
+	int ret = -1;
+
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	if(!blc_ll_isAclConnEstablished(conn_handle))
+	#else
+	if((BLS_LINK_STATE_CONN != blc_ll_getCurrentState()))
+	#endif
+	{
+		return ret;
+	}
+	
 	if(!is_provision_success() || (model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy>DIRECTED_PROXY_ENABLE)){
 		return ret;
 	}
@@ -472,42 +375,56 @@ int mesh_directed_proxy_capa_report(int netkey_offset)
 	if(!p_netkey_base->valid){
 		return ret;
 	}
+
+	int conn_idx = 0;
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	#endif
+	
 	proxy_capa.directed_proxy = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
-	proxy_capa.use_directed = proxy_mag.directed_server[netkey_offset].use_directed;
-	return mesh_tx_cmd_layer_cfg_primary_specified_key(DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR, mesh_key.net_key[netkey_offset][0].index);
+	proxy_capa.use_directed = proxy_mag[conn_idx].directed_server[netkey_offset].use_directed;
+
+	return mesh_tx_cmd_layer_proxy_cfg_primary_specified_key(conn_handle, DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR, mesh_key.net_key[netkey_offset][0].index);
 }
 
-int mesh_directed_proxy_capa_report_upon_connection()
+int mesh_directed_proxy_capa_report_upon_connection(u16 conn_handle)
 {
 	int ret = -1;
-	proxy_mag.proxy_client_type = UNSET_CLIENT;
+	int conn_idx = 0;
+	
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	#endif
+	
+	proxy_mag[conn_idx].proxy_client_type = UNSET_CLIENT;
 	for(int i=0; i<NET_KEY_MAX; i++){
-		proxy_mag.directed_server[i].use_directed = (DIRECTED_PROXY_DEFAULT_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_directed_default);
-		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
-		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
-		ret = mesh_directed_proxy_capa_report(i);
+		proxy_mag[conn_idx].directed_server[i].use_directed = (DIRECTED_PROXY_DEFAULT_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_directed_default);
+		proxy_mag[conn_idx].directed_server[i].client_addr = ADR_UNASSIGNED;
+		proxy_mag[conn_idx].directed_server[i].client_2nd_ele_cnt = 0;	
+		
+		ret = mesh_directed_proxy_capa_report(conn_handle, i);
 	}
 
 	return ret;
 }			
 
 #if !FEATURE_LOWPOWER_EN
-void directed_proxy_dependent_node_delete()
+void directed_proxy_dependent_node_delete(int conn_idx)
 {
 	foreach(netkey_offset, NET_KEY_MAX){
 		if(DIRECTED_FORWARDING_DISABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_forwarding){
 			continue;
 		}
 		
-		if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){			
-			if(proxy_mag.directed_server[netkey_offset].client_addr){
-				directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary,  proxy_mag.directed_server[netkey_offset].client_addr, proxy_mag.directed_server[netkey_offset].client_2nd_ele_cnt+1);
+		if(DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type){			
+			if(proxy_mag[conn_idx].directed_server[netkey_offset].client_addr){
+				directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary,  proxy_mag[conn_idx].directed_server[netkey_offset].client_addr, proxy_mag[conn_idx].directed_server[netkey_offset].client_2nd_ele_cnt+1);
 			}
 		}
-		else if((PROXY_CLIENT == proxy_mag.proxy_client_type) && (FILTER_WHITE_LIST == proxy_mag.filter_type)){
+		else if((PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type) && (FILTER_WHITE_LIST == proxy_mag[conn_idx].filter_type)){
 			foreach(idx, MAX_LIST_LEN){
-				if(proxy_mag.addr_list[idx] && is_unicast_adr(proxy_mag.addr_list[idx])){					
-					directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary, proxy_mag.addr_list[idx], 1);
+				if(proxy_mag[conn_idx].addr_list[idx] && is_unicast_adr(proxy_mag[conn_idx].addr_list[idx])){					
+					directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary, proxy_mag[conn_idx].addr_list[idx], 1);
 				}
 			}
 		}	
@@ -564,7 +481,7 @@ int update_discovery_entry_by_path_request(discovery_entry_t *p_dsc_entry, u16 n
 		p_dsc_entry->path_metric = p_path_request->origin_path_metric;
 		p_dsc_entry->next_toward_path_origin = network_src;
 		p_dsc_entry->bearer_toward_path_origin = src_type;
-		LOG_DF_DEBUG(0, 0, " update_discovery_entry_by_path_request", 0);
+		LOG_DF_DEBUG(0, 0, " update_discovery_entry_by_path_request");
 		return 1;
 	}
 	return 0;
@@ -784,8 +701,10 @@ void stop_path_echo_reply_timeout_timer(non_fixed_entry_t *p_fwd_entry)
 void start_path_monitor(non_fixed_entry_t *p_fwd_entry)
 {
 	if(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_monitoring_interval){
-		LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-		p_fwd_entry->state.path_monitoring = 1;
+		if(0 == p_fwd_entry->state.path_monitoring){
+			LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
+			p_fwd_entry->state.path_monitoring = 1;
+		}
 	}
 }
 
@@ -994,14 +913,12 @@ non_fixed_entry_t * add_forwarding_entry_by_path_reply_delay_timer_expired(u16 n
 		else{
 			u8 snd_ele_cnt = 0;
 			if(is_proxy_client_addr(p_dsc_entry->destination)){
-				if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
-					foreach(i, NET_KEY_MAX){
-						if(p_dsc_entry->destination == proxy_mag.directed_server[i].client_addr){
-							snd_ele_cnt = proxy_mag.directed_server[i].client_2nd_ele_cnt;
-							break;
-						}
-					}	
+				u8 netkey_offset = 0;
+				int idx = get_directed_proxy_client_idx(p_dsc_entry->destination, &netkey_offset);				
+				if(-1 != idx){
+					snd_ele_cnt = proxy_mag[idx].directed_server[netkey_offset].client_2nd_ele_cnt;
 				}
+				
 				forwarding_tbl_dependent_add(p_dsc_entry->destination, snd_ele_cnt, tbl_entry.entry.dependent_target);
 			}
 		}
@@ -1284,15 +1201,17 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 			}
 		}
 		
-		u8 need_capa_report = 0;
+		u8 need_capa_report[ACL_PERIPHR_MAX_NUM] = {0};
 		directed_control_t *p_control = (directed_control_t *)&model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].directed_control;
-	
-		if((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type)){
-			if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){// directed proxy enable to disable
-				need_capa_report = 1;
-			}	
-			else if(((DIRECTED_PROXY_DISABLE==p_control->directed_proxy) && (DIRECTED_PROXY_ENABLE == p_set->directed_control.directed_proxy))){ //directed proxy disable to enable
-				need_capa_report = 1;
+
+		foreach(i, ACL_PERIPHR_MAX_NUM){
+			if((UNSET_CLIENT == proxy_mag[i].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[i].proxy_client_type)){
+				if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){// directed proxy enable to disable
+					need_capa_report[i] = BLS_HANDLE_MIN + i;
+				}	
+				else if(((DIRECTED_PROXY_DISABLE==p_control->directed_proxy) && (DIRECTED_PROXY_ENABLE == p_set->directed_control.directed_proxy))){ //directed proxy disable to enable
+					need_capa_report[i] = BLS_HANDLE_MIN + i;
+				}
 			}
 		}
 	
@@ -1312,12 +1231,16 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 		}
 		
 		mesh_directed_forwarding_bind_state_update();	
-		if((DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){
-			memset(&proxy_mag.directed_server[key_offset], 0x00, sizeof(proxy_mag.directed_server[key_offset]));// must after mesh_directed_forwarding_bind_state_update
-		}
-		proxy_mag.directed_server[key_offset].use_directed = (DIRECTED_PROXY_DEFAULT_ENABLE == p_control->directed_proxy_directed_default);
-		if(need_capa_report){
-			mesh_directed_proxy_capa_report(key_offset);
+
+		foreach(i, ACL_PERIPHR_MAX_NUM){
+			if((DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){
+				memset(&proxy_mag[i].directed_server[key_offset], 0x00, sizeof(proxy_mag[i].directed_server[key_offset]));// must after mesh_directed_forwarding_bind_state_update
+			}
+	
+			proxy_mag[i].directed_server[key_offset].use_directed = (DIRECTED_PROXY_DEFAULT_ENABLE == p_control->directed_proxy_directed_default);
+			if(0 != need_capa_report[i]){
+				mesh_directed_proxy_capa_report(need_capa_report[i], key_offset);
+			}
 		}
 		
 		memcpy(&directed_control_sts.directed_control, &model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].directed_control, sizeof(directed_control_t));
@@ -2251,12 +2174,16 @@ int mesh_cmd_sig_cfg_directed_relay_retransmit_set(u8 *par, int par_len, mesh_cb
 
 int mesh_cmd_sig_cfg_rssi_threshold_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err =-1;
 	rssi_threshold_t sts;	
 
-	sts = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold;
-	err = mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp,(u8 *)(&sts),sizeof(sts),cb_par->adr_src);
-	return err;
+	#if PTS_TEST_EN
+	sts.default_rssi_threshold = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.pts_rssi_threshold;
+	#else
+	sts.default_rssi_threshold = MESH_DEFAULT_RSSI_THRES;
+	#endif
+	sts.rssi_margin = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_margin;
+	
+	return mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp,(u8 *)(&sts),sizeof(sts),cb_par->adr_src);
 }
 
 int mesh_cmd_sig_cfg_rssi_threshold_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -2264,14 +2191,20 @@ int mesh_cmd_sig_cfg_rssi_threshold_set(u8 *par, int par_len, mesh_cb_fun_par_t 
 	int err =-1;
 	rssi_threshold_t sts;	
 	if(par[0] < RSSI_MARGIN_PROHIBITED){	
-		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold.rssi_margin = par[0];
+		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_margin = par[0];
 		mesh_common_store(FLASH_ADR_MD_DF_SBR);
 	}else{
 		return err;
 	}
-	sts = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold;
-	err = mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp,(u8 *)(&sts),sizeof(sts),cb_par->adr_src);
-	return err;
+
+	#if PTS_TEST_EN
+	sts.default_rssi_threshold = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.pts_rssi_threshold;
+	#else
+	sts.default_rssi_threshold = MESH_DEFAULT_RSSI_THRES;
+	#endif
+	sts.rssi_margin = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_margin;
+	
+	return mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp,(u8 *)(&sts),sizeof(sts),cb_par->adr_src);
 }
 
 int mesh_cmd_sig_cfg_directed_paths_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -2576,12 +2509,12 @@ int prepare_and_send_path_reply(u16 netkey_offset, discovery_entry_par_t *p_dsc_
 	path_reply.path_origin = p_dsc_entry->entry.path_origin.addr;
 	path_reply.forwarding_number = p_dsc_entry->entry.forwarding_number;
 
-	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REPLY, (u8 *)&path_reply, OFFSETOF(mesh_ctl_path_reply_t, addr_par)+via_par_len, p_dsc_entry->entry.next_toward_path_origin, netkey_offset);
+	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REPLY, (u8 *)&path_reply, OFFSETOF(mesh_ctl_path_reply_t, addr_par)+via_par_len, p_dsc_entry->entry.next_toward_path_origin, get_netkey_index(netkey_offset));
 }
 
 int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netkey_offset)
 {
-	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST, (u8 *)p_path_req, len, ADR_ALL_DIRECTED_FORWARD, netkey_offset);
+	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST, (u8 *)p_path_req, len, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
 }
 
 int cfg_cmd_send_path_echo_request(non_fixed_entry_t * p_fwd_entry)
@@ -2629,8 +2562,9 @@ int directed_forwarding_solication_start(u16 netkey_offset, mesh_ctl_path_reques
 {
 	int err = -1;
 	if(is_provision_success()){// to be done
-		err =  mesh_tx_cmd_layer_upper_ctl_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)p_addr_list, list_num<<1, ele_adr_primary, ADR_ALL_DIRECTED_FORWARD, 0, netkey_offset);
+		err = mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)p_addr_list, list_num<<1, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
 	}
+	
 	return err; 
 }
 
@@ -2700,7 +2634,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 		non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);
 		if(p_dsc_entry->entry.destination){
 			if(p_dsc_entry->state.discovery_timer && clock_time_expired(p_dsc_entry->state.discovery_timer)){
-				LOG_DF_DEBUG(0, 0, "path discovery timer expired", 0);
+				LOG_DF_DEBUG(0, 0, "path discovery timer expired");
 				stop_path_discovery_timer(p_dsc_entry);						
 				if(is_own_ele(p_dsc_entry->entry.path_origin.addr)){ // path origin
 					if(p_fwd_entry){
@@ -2711,7 +2645,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 						if(p_dsc_entry->state.new_lane_established){
 							LOG_DF_DEBUG(0, 0, "new path lane establish counter:%d", p_fwd_entry->state.lane_counter);
 							if(p_fwd_entry->state.lane_counter < model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].wanted_lanes){
-								LOG_DF_DEBUG(0, 0, "start discovery guard timer", 0);
+								LOG_DF_DEBUG(0, 0, "start discovery guard timer");
 								start_path_discovery_guard_timer(p_dsc_entry);// start discovery guard timer.
 							}	
 							else{
@@ -2891,14 +2825,19 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
         u8 op = p_lt_ctl_unseg->opcode;
 		u8 netkey_offset = mesh_key.netkey_sel_dec;
 		non_fixed_entry_t *p_fwd_entry = 0;
-		LOG_MSG_LIB(TL_LOG_NODE_SDK, par, par_len, "receive directed control pdu ttl:%d,src:0x%04x,dst:0x%04x sno:0x%06x op:0x%04x(%s), par_len:%d,par:", p_nw->ttl, p_nw->src, p_nw->dst, p_nw->sno[0] + (p_nw->sno[1]<<8) + (p_nw->sno[1]<<16), op, get_op_string_ctl(op, 0), par_len);
+		LOG_MSG_LIB(TL_LOG_NODE_SDK, par, par_len, "receive directed control pdu ttl:%d,src:0x%04x,dst:0x%04x sno:0x%06x op:0x%04x(%s), par_len:%d,par:", p_nw->ttl, p_nw->src, p_nw->dst, p_nw->sno[0] + (p_nw->sno[1]<<8) + (p_nw->sno[2]<<16), op, get_op_string_ctl(op, 0), par_len);
 		if(CMD_CTL_PATH_REQUEST == op){		
 			mesh_ctl_path_req_t *p_path_req = (mesh_ctl_path_req_t *)par;
 			addr_range_t *p_addr_origin = (addr_range_t *)p_path_req->addr_par;				
 			adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);;
 			s8 rssi = p_extend->rssi;  
-			LOG_DF_DEBUG(par, par_len, "PATH_REQUEST rssi:%d threshold:%d margin:%d par:", rssi, model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold.default_rssi_threshold,  model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold.rssi_margin);
-			if(rssi >= (model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold.default_rssi_threshold + model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_threshold.rssi_margin)){				
+			#if PTS_TEST_EN
+			s8 rssi_thres = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.pts_rssi_threshold + model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_margin;;
+			#else
+			s8 rssi_thres = MESH_DEFAULT_RSSI_THRES + model_sig_g_df_sbr_cfg.df_cfg.directed_forward.rssi_margin;
+			#endif
+			LOG_DF_DEBUG(par, par_len, "PATH_REQUEST rssi:%d thres%d par:", rssi, rssi_thres);
+			if(rssi >= rssi_thres){				
 				if(p_path_req->path_metric_type == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].path_metric.metric_type){					
 					addr_range_t *p_org_range = (addr_range_t *)p_path_req->addr_par;					
 					u16 origin_addr = (p_org_range->length_present_b)?p_org_range->range_start_b:p_org_range->multicast_addr;
@@ -3058,7 +2997,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 				
 				p_fwd_entry = get_non_fixed_path_entry(netkey_offset, ele_adr_primary, p_path_req_solicat->addr_list[i]);
 				if(p_fwd_entry){
-					LOG_DF_DEBUG(0, 0, "path entry found", 0);
+					LOG_DF_DEBUG(0, 0, "path entry found");
 					discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_forwarding_entry(netkey_offset, p_fwd_entry);
 					if(p_dsc_entry){
 						directed_discovery_entry_remove(p_dsc_entry);
@@ -3225,6 +3164,7 @@ int mesh_cmd_sig_cfg_directed_control_relay_transmit_status(u8 *par, int par_len
     }
     return err;
 }
+#endif
 
 int cfg_cmd_send_directed_control_get(u16 adr_dst, u16 netkey_index)
 {
@@ -3246,11 +3186,13 @@ int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_l
 		proxy_ctl.addr_range.length_present_b = 1;
 		proxy_ctl.addr_range.range_length = range_len;
 	}
+	endianness_swap_u16((u8 *)&proxy_ctl.addr_range.multicast_addr);
+	
 	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present_b?3:2);
 	#if WIN32
-	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set",0);
+	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set");
 	#endif
-	return mesh_tx_cmd_layer_cfg_primary(DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
+	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx)
@@ -3500,6 +3442,6 @@ int cfg_cmd_directed_ctl_relay_retransmit_set(u16 node_adr, u8 transmit)
 
 int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num)
 {
-	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, num<<1, ADR_ALL_DIRECTED_FORWARD, netkey_offset);
+	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, num<<1, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
 }
-#endif
+

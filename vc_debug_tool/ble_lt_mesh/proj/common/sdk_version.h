@@ -38,7 +38,7 @@
 #define SDK_VER_SPEC			(4)		// SDK version, don't change!!! //"3" means SIG MESH 1.0.x
 #define SDK_VER_MAJOR			(1)		// SDK version, don't change!!! 
 #define SDK_VER_MINOR			(0)		// SDK version, don't change!!! 
-#define SDK_VER_2ND_MINOR		(0)		// SDK version, don't change!!!	// second minor
+#define SDK_VER_2ND_MINOR		(1)		// SDK version, don't change!!!	// second minor
 
 //#define SDK_VER_PATCH_EN		(0)		// SDK version, don't change!!!	// patch version, 0 or nothing means no patch.
 

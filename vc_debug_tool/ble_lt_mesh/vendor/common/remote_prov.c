@@ -24,23 +24,17 @@
  *******************************************************************************************************/
 #include "remote_prov.h"
 #include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
 #include "user_config.h"
 #include "lighting_model.h"
 #include "sensors_model.h"
 #include "lighting_model_LC.h"
 #include "mesh_ota.h"
 #include "mesh_common.h"
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "proj_lib/mesh_crypto/le_crypto.h"
-#include "proj/common/tstring.h"
 
 #if MI_API_ENABLE 
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
@@ -339,7 +333,7 @@ int mesh_cmd_conn_prov_adv_cb(event_adv_report_t *report)
 	if(uuid!=0x1827){
 		return 0;
 	}else{
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_prov_adv->service_data,16,"mesh proc uuid is ",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_prov_adv->service_data,16,"mesh proc uuid is ");
 	}
     u8 len  = sizeof(PB_GATT_ADV_DAT);
     u8 rssi = report->data[len];
@@ -469,7 +463,7 @@ void mesh_extend_set_scan_str(remote_prov_extend_scan_str *p_scan,event_adv_repo
 	if(is_unprovision_beacon_with_uri(report)){
 		// need to set the uri part .
 		memcpy(p_scan->uri_hash,p_beacon->uri_hash,4);
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->uri_hash,4, "uri hash is",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->uri_hash,4, "uri hash is");
 	}
 	// cpy the uuid info directly to the report uuid part 
 	memcpy(p_scan->report.uuid,p_beacon->device_uuid,16);
@@ -491,7 +485,7 @@ int mesh_extend_unprov_beacon_cb(event_adv_report_t *report)
 				}
 			}else{
 				// cpy the uuid info directly to the report uuid part 
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend scan not have uuid part ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend scan not have uuid part ");
 				mesh_extend_set_scan_str(p_scan,report);	
 			}
 		}
@@ -506,7 +500,7 @@ int mesh_extend_prov_beacon_conn(PB_GATT_ADV_DAT *report,u8*p_mac)
 		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
 		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "prov conn flag is %x ",p_scan->end_flag);
 		if(p_scan->end_flag ){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "extend provision adv",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "extend provision adv");
 			if(!is_buf_zero(p_scan->uuid,sizeof(p_scan->uuid))){// should have const uuid.
 				if(!memcmp(p_scan->uuid,report->service_data,16)){
 					//only the unprov beacon's uuid is the same as the scan's uuid ,we can operate
@@ -518,7 +512,7 @@ int mesh_extend_prov_beacon_conn(PB_GATT_ADV_DAT *report,u8*p_mac)
 				}
 			}else{
 				// cpy the uuid info directly to the report uuid part 
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend scan not have uuid part ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend scan not have uuid part ");
 					// cpy the uuid info directly to the report uuid part 
 				memcpy(p_scan->report.uuid,report->service_data,16);
 				memcpy(p_scan->report.oob_info,report->oob_info,2);
@@ -562,24 +556,24 @@ u8 mesh_extend_filter_set_report_str(remote_prov_extend_scan_str *p_scan,event_a
 	int len =report->len;
 	int idx=0;
 	rp_extend_scan_report_str *p_report = &(p_scan->report);
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "set_report_str",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "set_report_str");
 	if(!is_buf_zero(p_scan->uri_hash, sizeof(p_scan->uri_hash))){
 		// we need to check the uri part 
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "uri hash is no zero",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "uri hash is no zero");
 		int adv_idx =0;
 		while(adv_idx<=len){
 			ad_type_str *p_adv = (ad_type_str *)&(report->data[adv_idx]);
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_adv->len),p_adv->len+1, "uri type packet is ",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_adv->len),p_adv->len+1, "uri type packet is ");
 			if(p_adv->type == AD_TYPE_URI){
 				// need to check the uri part 
 				u8 hash_tmp[16];
 				mesh_sec_func_s1 (hash_tmp, p_adv->data,p_adv->len-1);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,hash_tmp,4, "uri data hash is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,hash_tmp,4, "uri data hash is ");
 				if(!memcmp(hash_tmp,p_scan->uri_hash,4)){
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "uri packet is valid",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "uri packet is valid");
 					break;// the uri packet is valid 
 				}else{
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "uri packet is invalid",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "uri packet is invalid");
 					return 1;// the uri packet is invalid.
 				}
 			}
@@ -587,7 +581,7 @@ u8 mesh_extend_filter_set_report_str(remote_prov_extend_scan_str *p_scan,event_a
 		}
 	}
 	
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "start to get the adv packet",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "start to get the adv packet");
 	while(idx<=len){
 		ad_type_str *p_adv = (ad_type_str *)&(report->data[idx]);
 		if(p_adv->type == 0){
@@ -610,7 +604,7 @@ u8 mesh_extend_filter_set_report_str(remote_prov_extend_scan_str *p_scan,event_a
 				
 			}
 		}else{
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len,"mesh_extend_filter_proc6",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len,"mesh_extend_filter_proc6");
 		}
 		idx+=p_adv->len+1;
 	}
@@ -621,7 +615,7 @@ int mesh_tx_send_extend_scan_report(remote_prov_extend_scan_str *p_scan)
 {
 	int err =-1;
 	rp_extend_scan_report_str *p_report = &(p_scan->report);
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_report,19+p_report->adv_str_len,"mesh_tx_send_extend_scan_report",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_report,19+p_report->adv_str_len,"mesh_tx_send_extend_scan_report");
 	err = mesh_tx_cmd_rsp(REMOTE_PROV_EXTEND_SCAN_REPORT,(u8 *)p_report,19+p_report->adv_str_len,
                       ele_adr_primary,p_scan->src_adr,0,0); 
 
@@ -660,7 +654,7 @@ u8 mesh_exend_filter_check_with_uri_ad(remote_prov_extend_scan_str *p_scan,event
 	int err =-1;
 	if( p_scan->end_flag & EXTEND_END_WITH_ONLY_URI_AD ||
 		p_scan->end_flag & EXTEND_END_WITH_MULTI_URI_AD ){
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_exend_filter_check_with_uri_ad ",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_exend_filter_check_with_uri_ad ");
 		//proc the extend scan report,whether it have the uri adtype packet and proc 
 		if(mesh_extend_filter_set_report_str(p_scan,report,1)){
 			err = mesh_tx_send_extend_scan_report(p_scan);
@@ -677,7 +671,7 @@ int mesh_extend_filter_check_all_ad_type(remote_prov_extend_scan_str *p_scan,eve
 	int err =-1;
 	if(p_scan->end_flag&EXTEND_END_ALL_AD){
 		// proc all the other cmd .
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->ADTypeFilter,p_scan->ADTypeFilterCount,"mesh_extend_filter_check_all_ad_type",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->ADTypeFilter,p_scan->ADTypeFilterCount,"mesh_extend_filter_check_all_ad_type");
 		mesh_extend_filter_set_report_str(p_scan,report,0);
 		// check the adv filter is all proc success or not .
 		if(is_buf_zero(p_scan->ADTypeFilter,sizeof(p_scan->ADTypeFilter))){
@@ -694,7 +688,7 @@ int mesh_extend_filter_check_all_ad_type(remote_prov_extend_scan_str *p_scan,eve
 int mesh_extend_adv_filter_proc(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
 {
 	if((report->event_type&0x0f) == LL_TYPE_SCAN_RSP){
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh rcv scan rsp cmd ",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh rcv scan rsp cmd ");
 		if(mesh_exend_filter_check_without_uri_ad(p_scan,report)){
 			return 1;
 		}
@@ -729,9 +723,9 @@ int mesh_extend_adv_cb(event_adv_report_t *report)
 		}
 		// directly compare the mac adr part ,or the report part has the URI TYPE part 
 		if(!memcmp(p_scan->mac_adr,report->mac,6)||mesh_packet_is_uri_data(report)){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "mac is the same",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "mac is the same");
 			if((report->event_type&0x0f) == LL_TYPE_SCAN_RSP){
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "scan rsp proc ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "scan rsp proc ");
 			}
 			mesh_extend_adv_filter_proc(p_scan,report);
 		}
@@ -774,12 +768,12 @@ int mesh_cmd_extend_loop_cb(event_adv_report_t *report)
 			PB_GATT_ADV_DAT *p_pb_adv = (PB_GATT_ADV_DAT *)(report->data);
 			if(p_pb_adv->uuid_pb_uuid[0]==0x27 && p_pb_adv->uuid_pb_uuid[1]==0x18){
 				// provision service .
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "receive the conn adv",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "receive the conn adv");
 				mesh_extend_prov_beacon_conn(p_pb_adv,report->mac);
 				return 1;
 			}
 		}else if((report->event_type&0x0f) == LL_TYPE_SCAN_RSP){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "rcv scan rsp,the mac is ",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,report->data,report->len, "rcv scan rsp,the mac is ");
 		}
 		mesh_extend_adv_cb(report);
 	}
@@ -797,7 +791,7 @@ void mesh_cmd_extend_timeout_proc()
 			if((p_scan->end_flag & EXTEND_END_TIMEOUT )&& 
 				clock_time_exceed_100ms(p_scan->tick_100ms,p_scan->time_s*10+1)){
 				// need to report the extend scan report 
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "mesh_cmd_extend_timeout_proc",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0, "mesh_cmd_extend_timeout_proc");
 				u8 empty_flag =0;
 				if(is_buf_zero(p_scan->report.uuid,16)){// not receive the uuid part
 					rp_extend_scan_report_str *p_rep = (rp_extend_scan_report_str *)&(p_scan->report);
@@ -904,11 +898,11 @@ int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *c
 	// first find a empty extend buffer first.
 	memset(p_scan,0,sizeof(remote_prov_extend_scan_str));
 	if(p_extend_scan->ADTypeFilterCount == 0 || p_extend_scan->ADTypeFilterCount > MAX_ADTYPE_FILTER_CNT){
-		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter cnt is invalid ",0);
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter cnt is invalid ");
 		return -1;
 	}
 	if(!extend_ad_type_is_valid(p_extend_scan->ADTypeFilter,p_extend_scan->ADTypeFilterCount)){
-		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter value is invalid ",0);
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter value is invalid ");
 		return -2;
 	}
 	if(!mesh_proc_filter_part(p_scan,p_extend_scan)){
@@ -926,9 +920,11 @@ int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *c
 		int err =-1;
 		rp_extend_scan_report_str *p_report = &(p_scan->report);
 		if(p_extend_scan->ADTypeFilter[0]== AD_TYPE_URI){
+			#if URI_DATA_ADV_ENABLE
 			rf_packet_adv_t uri_pkt;
 			set_adv_uri_unprov_beacon(&uri_pkt);
 			mesh_cmd_send_report_self(p_scan,&uri_pkt);
+			#endif
 		}else if (p_extend_scan->ADTypeFilter[0]== 0x2b){
 			rf_packet_adv_t unprov_beacon;
 			set_unprov_beacon_data(&unprov_beacon);
@@ -939,7 +935,7 @@ int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *c
 		memcpy(p_report->uuid,prov_para.device_uuid,16);
 		p_report->oob_info[0]=prov_para.oob_info[1];
 		p_report->oob_info[1]=prov_para.oob_info[0];
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV, (u8*)p_report, 19+p_report->adv_str_len, "extend report self",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV, (u8*)p_report, 19+p_report->adv_str_len, "extend report self");
 		err = mesh_tx_send_extend_scan_report(p_scan);
 		if(err == 0){
 			memset(p_scan,0,sizeof(remote_prov_extend_scan_str));//clear the info if finish ,else it will retry
@@ -954,7 +950,7 @@ int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *c
 		if(!mesh_extend_scan_timeout_is_valid(time_s)){
 			return -4;//timeout is invalid 
 		}
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV, p_scan->ADTypeFilter, p_scan->ADTypeFilterCount, "extend scan",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV, p_scan->ADTypeFilter, p_scan->ADTypeFilterCount, "extend scan");
 		p_scan->end_flag |= EXTEND_END_TIMEOUT;
 		p_scan->time_s = time_s;
 		p_scan->tick_100ms = clock_time_100ms(); 
@@ -1048,10 +1044,10 @@ void mesh_rp_dkri_end_cb()
 	u8 dkri = prov_para.dkri;
 // only process the remote prov dkri success it will proc this cmd .
 	if(dkri & REMOTE_PROV_DKRI_EN_FLAG){
-		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_rp_dkri_end_cb dkri is valid ",0);
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_rp_dkri_end_cb dkri is valid ");
 		dkri &=(~REMOTE_PROV_DKRI_EN_FLAG);
 		if(dkri == RP_DKRI_DEV_KEY_REFRESH){
-			//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"RP_DKRI_DEV_KEY_REFRESH is valid ",0);
+			//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"RP_DKRI_DEV_KEY_REFRESH is valid ");
 		}else if(dkri == RP_DKRI_NODE_ADR_REFRESH){
 			//Set SEQ to its lowest initial value.
 			mesh_adv_tx_cmd_sno = 0;
@@ -1068,7 +1064,6 @@ void mesh_rp_dkri_end_cb()
 			mesh_friend_ship_init_all();
 			#endif
 			#if FEATURE_LOWPOWER_EN
-			mesh_friend_ship_clear_LPN();
 			mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // restart establish procedure
 			#endif
 			//Copy Composition Data Page 128 to Composition Data Page 0, ,perhaps no page 128
@@ -1171,7 +1166,7 @@ int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp link open is %x ",rp_mag.rp_link.RPState);
     // link sts proc 
     if(is_rp_link_idle()){
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp link is idle",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp link is idle");
 		rp_mag.rp_now_s = clock_time_s();
 	    // not use the provision state ,just use the bearer part 
 		if(!mesh_cmd_is_nnpi(par_len)){// uuid para present 
@@ -1199,7 +1194,7 @@ int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			mesh_rp_server_set_link_rp_sts(STS_PR_LINK_OPEN);
 			mesh_rp_server_set_link_sts(REMOTE_PROV_STS_SUC);
 			// rsp the link status 
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"send link status",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"send link status");
 			mesh_cmd_sig_rp_send_link_open_sts();
 			sleep_ms(50);//wait some time to for the sending of the link status
 			#if GATT_RP_EN
@@ -1218,7 +1213,7 @@ int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			#else
 			rp_mag.link_timeout = 0;//reserve more time for the case check
 			#endif
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,rp_mac,6,"gatt connect is  ",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,rp_mac,6,"gatt connect is  ");
 			#else
 			mesh_prov_pdu_send_retry_clear();
 			mesh_adv_prov_link_open(p_link_open->uuid);// send link-open in adv-bearer			
@@ -1298,7 +1293,7 @@ int mesh_cmd_sig_rp_link_close(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if(par_len != sizeof(remote_prov_link_close)){
         return -1;
     }
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp_link_close",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp_link_close");
 	if(is_rp_link_idle()){
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp_link close %x",rp_mag.rp_link.RPState);
 		mesh_rp_server_set_link_sts(REMOTE_PROV_STS_SUC);
@@ -1348,7 +1343,7 @@ int mesh_cmd_sig_rp_link_close(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 				// close the adv-bearer
 				#if GATT_RP_EN
 				rp_gatt_disconnect();
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt disconnect is  ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt disconnect is  ");
 				#else
 				send_rcv_retry_clr();// clear the retry part 
 				prov_set_link_close_code(p_link_cls->reason);
@@ -1441,7 +1436,7 @@ void mesh_rp_srv_tick_loop()
 #if !WIN32
     if(mesh_rp_srv_tick && clock_time_exceed(mesh_rp_srv_tick,MAX_REMOTE_PROV_TIME)){
 		mesh_rp_srv_tick =0;
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote prov timeout",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote prov timeout");
 		#if GATT_RP_EN
 		rp_gatt_disconnect();
 		#endif
@@ -1483,7 +1478,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
 				// only enable the rcv of the provision data part 
 				enable_mesh_adv_filter();
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_INVITE_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_INVITE_SEND");
             }
             break;
         case RP_SRV_START_SEND:
@@ -1498,7 +1493,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
                 mesh_rp_server_set_sts(RP_SRV_START_ACK);
 				enable_mesh_adv_filter();
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_START_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_START_SEND");
             }
             break;
 		//case RP_SRV_START_ACK:// to avoid to get the ack later than the pubkey send
@@ -1513,7 +1508,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
                 mesh_rp_server_set_sts(PR_SRV_PUBKEY_RSP);
 				enable_mesh_adv_filter();
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_PUBKEY_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_PUBKEY_SEND");
             }
             break;
         case PR_SRV_CONFIRM_SEND:
@@ -1527,7 +1522,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
                 mesh_rp_server_set_sts(PR_SRV_CONFIRM_RSP);
 				enable_mesh_adv_filter();
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CONFIRM_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CONFIRM_SEND");
             }
             break;
         case PR_SRV_RANDOM_SEND:
@@ -1541,7 +1536,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
                 mesh_rp_server_set_sts(PR_SRV_RANDOM_RSP);
 				enable_mesh_adv_filter();
 				mesh_rp_server_set_link_rp_sts(STS_PR_OUTBOUND_TRANS);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_RANDOM_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_RANDOM_SEND");
             }
             break;
         case PR_SRV_DATA_SEND:
@@ -1555,7 +1550,7 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len)
                 mesh_adv_prov_data_send(p_send_str,(p_client_rcv->data.encProData));
                 mesh_rp_server_set_sts(PR_SRV_COMPLETE_RSP);    
 				enable_mesh_adv_filter();
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_DATA_SEND",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_DATA_SEND");
             }
             break;
         default:
@@ -1604,16 +1599,16 @@ void mesh_prov_pdu_send_retry_proc()
 	mesh_rp_retry_send_proc();
 	if (retry_type & REMOTE_PROV_SERVER_OUTBOUND_FLAG&& !is_busy_tx_segment_or_reliable_flow()){
         // proc the rsp of the segment cmd ,and proc one packet for some time.
-		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send",0);
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send");
 		if(mesh_cmd_sig_rp_pdu_outbound_send() == 0){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"outbound send suc ,switch to linkactive",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"outbound send suc ,switch to linkactive");
 			mesh_rp_server_set_link_rp_sts(STS_PR_LINK_ACTIVE);
 			#if REMOTE_SET_RETRY_EN
 			retry_type &=~(REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG retry send suc",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG retry send suc");
 			#else
 			p_retry->retry_flag &=~(REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send suc",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send suc");
 			return ;
 			#endif
 		}
@@ -1622,16 +1617,16 @@ void mesh_prov_pdu_send_retry_proc()
 		u8 *prov_data = (p_retry->adv).transStart.data;
 		u8 pro_cmd = prov_data[0];
 		u8 len = get_mesh_pro_str_len(pro_cmd);
-		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send",0);
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send");
 		if(mesh_prov_server_to_client_cmd(prov_data,len)== 0){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp cmd suc ,switch to linkactive",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp cmd suc ,switch to linkactive");
 			mesh_rp_server_set_link_rp_sts(STS_PR_LINK_ACTIVE);
 			#if REMOTE_SET_RETRY_EN
 			retry_type &=~(REMOTE_PROV_SERVER_CMD_FLAG);
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd retry send suc",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd retry send suc");
 			#else
 			p_retry->retry_flag &=~(REMOTE_PROV_SERVER_CMD_FLAG);
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send suc",0);
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send suc");
 			return ;
 			#endif
 		}
@@ -1641,7 +1636,7 @@ void mesh_prov_pdu_send_retry_proc()
 void mesh_prov_report_loop_proc()
 {
 	if(rp_mag.link_timeout && clock_time_exceed_s(rp_mag.rp_now_s ,rp_mag.link_timeout)){
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp_link_timeout_report",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"rp_link_timeout_report");
 		mesh_rp_server_set_link_rp_sts(STS_PR_LINK_IDLE);
 		mesh_cmd_send_link_report(REMOTE_PROV_LINK_OPEN_FAIL,STS_PR_LINK_IDLE,0,2);// no reason field
 		mesh_cmd_sig_rsp_scan_init();// if we receive link open ,we should stop the rp scan part 
@@ -1721,7 +1716,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(RP_SRV_INVITE_SEND); 
 				prov_para.link_id_filter =1;
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_LINK_OPEN_ACK",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_LINK_OPEN_ACK");
 			}
 			break;
 			#if 0
@@ -1748,7 +1743,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
                 mesh_prov_pdu_send_retry_set(p_adv,REMOTE_PROV_SERVER_OUTBOUND_FLAG|REMOTE_PROV_SERVER_CMD_FLAG);// rsp invite bound
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(RP_SRV_START_SEND); 
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CAPA_RCV",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CAPA_RCV");
 				
 			}
 			break;
@@ -1760,7 +1755,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
                 mesh_prov_pdu_send_retry_set(NULL,REMOTE_PROV_SERVER_OUTBOUND_FLAG);// rsp start bound
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(RP_SRV_PUBKEY_SEND);
-                LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_START_ACK",0);
+                LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_SRV_START_ACK");
 	        }
 	        break;
 			#if 0
@@ -1786,7 +1781,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
                 mesh_adv_prov_pubkey_rsp(p_adv);
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(PR_SRV_CONFIRM_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_PUBKEY_RSP",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_PUBKEY_RSP");
                 
 		    }
 		    break;
@@ -1815,7 +1810,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
 				mesh_prov_pdu_send_retry_set(p_adv,REMOTE_PROV_SERVER_OUTBOUND_FLAG|REMOTE_PROV_SERVER_CMD_FLAG);
 				disable_mesh_adv_filter();
 				mesh_rp_server_set_sts(PR_SRV_RANDOM_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CONFIRM_RSP",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_CONFIRM_RSP");
 				
 		    }
 		    break;
@@ -1842,7 +1837,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
                 mesh_prov_pdu_send_retry_set(p_adv,REMOTE_PROV_SERVER_OUTBOUND_FLAG|REMOTE_PROV_SERVER_CMD_FLAG);
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(PR_SRV_DATA_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_RANDOM_RSP",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_RANDOM_RSP");
 		    }
 		    break;
 			#if 0
@@ -1869,7 +1864,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
 				    mesh_prov_pdu_send_retry_set(p_adv,REMOTE_PROV_SERVER_OUTBOUND_FLAG|REMOTE_PROV_SERVER_CMD_FLAG);
 					mesh_prov_end_set_tick();// trigger event callback part 
 					disable_mesh_adv_filter();
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_COMPLETE_RSP",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PR_SRV_COMPLETE_RSP");
 				}
 			break;	
 	    default:
@@ -1943,7 +1938,7 @@ int mesh_rp_dkri_prov_data_proc(u8 dkri,u8* p_dev_key,u8 *p_prov_net)
 {
 	provison_net_info_str *p_net = &(provision_mag.pro_net_info);
 	provison_net_info_str *p_net_data = (provison_net_info_str *)(p_prov_net);
-	//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_rp_dkri_prov_data_proc",0);
+	//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_rp_dkri_prov_data_proc");
 	if(dkri == RP_DKRI_DEV_KEY_REFRESH){// only need to update the devkey candidate
 		// compare the para part 
 		if(	!memcmp(p_net->net_work_key ,p_net_data->net_work_key,sizeof(p_net_data->net_work_key))&&
@@ -2021,10 +2016,10 @@ void mesh_dkri_resend_outpound()
 #if TESTCASE_FLAG_ENABLE
 	// clear the seg busy state.
 	remote_prov_retry_str *p_retry = &(rp_mag.rp_pdu.re_send);
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure resend output",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure resend output");
 
 	if(p_retry->retry_flag == 0){
-		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure resend output1",0);
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure resend output1");
 		mesh_tx_segment_finished();
 		mesh_prov_pdu_send_retry_set(0,REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 	}
@@ -2034,7 +2029,7 @@ void mesh_dkri_resend_outpound()
 void mesh_dkri_precedure_proc(u8 *par,u8 len)
 {
 #if !WIN32
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure start",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:procedure start");
 
 	remote_proc_pdu_sts_str *p_pdu_sts = &(rp_mag.rp_pdu);
 	mesh_pro_data_t *p_rcv = (mesh_pro_data_t *)(par);
@@ -2045,20 +2040,20 @@ void mesh_dkri_precedure_proc(u8 *par,u8 len)
 		case RP_SRV_INVITE_SEND:
 			if(prov_cmd == PRO_INVITE){
 				mesh_rp_srv_tick_set();
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->invite),sizeof(p_rcv->invite),"dkri:invite cmd is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->invite),sizeof(p_rcv->invite),"dkri:invite cmd is ");
 				// rsp the outbound ,and set the capability
 				// reinit the oob part .
 				set_node_prov_capa_oob_init(); // no oob
 				mesh_rp_dkri_invite_capa_proc(p_rcv,p_send);	
 				mesh_prov_pdu_send_retry_set_data((u8*)p_send,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 				mesh_rp_server_set_sts(RP_SRV_START_SEND);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->capa),sizeof(p_send->capa),"dkri:capa cmd is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->capa),sizeof(p_send->capa),"dkri:capa cmd is ");
 			}
 			break;
 		case RP_SRV_START_SEND:
 			if(prov_cmd == PRO_START && dispatch_start_cmd_reliable(p_rcv)){
 				//rsp the outbound 
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->start),sizeof(p_rcv->start),"dkri:start cmd is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->start),sizeof(p_rcv->start),"dkri:start cmd is ");
 				mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_START);
 				set_node_prov_start_oob(p_rcv,&prov_oob);//set the start cmd for the prov oob info 
 				memcpy(confirm_input+12,&(p_rcv->start.algorithms),5);
@@ -2070,12 +2065,12 @@ void mesh_dkri_precedure_proc(u8 *par,u8 len)
 			break;
 		case RP_SRV_PUBKEY_SEND:
 			if(prov_cmd == PRO_PUB_KEY){
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:pubkey rcv suc ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:pubkey rcv suc ");
 				if(mesh_rp_dkri_pubkey_rcv_send(p_rcv,p_send)){
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->pubkey),sizeof(p_rcv->pubkey),"dkri:pubkey rcv cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->pubkey),sizeof(p_rcv->pubkey),"dkri:pubkey rcv cmd is ");
 					mesh_prov_pdu_send_retry_set_data((u8*)p_send,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 					mesh_rp_server_set_sts(PR_SRV_CONFIRM_SEND);
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->pubkey),sizeof(p_send->pubkey),"dkri:pubkey send cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->pubkey),sizeof(p_send->pubkey),"dkri:pubkey send cmd is ");
 				}else{// pubkey is invalid
 					
 				}
@@ -2085,12 +2080,12 @@ void mesh_dkri_precedure_proc(u8 *par,u8 len)
 			break;
 		case PR_SRV_CONFIRM_SEND:
 			if(prov_cmd == PRO_CONFIRM){
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:confirm rcv suc ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:confirm rcv suc ");
 				if(mesh_rp_dkri_confirm_rcv_send(p_rcv,p_send)){
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->confirm),sizeof(p_rcv->confirm),"dkri:confirm rcv cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->confirm),sizeof(p_rcv->confirm),"dkri:confirm rcv cmd is ");
 					mesh_prov_pdu_send_retry_set_data((u8*)p_send,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 					mesh_rp_server_set_sts(PR_SRV_RANDOM_SEND);
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->confirm),sizeof(p_send->confirm),"dkri:confirm send cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->confirm),sizeof(p_send->confirm),"dkri:confirm send cmd is ");
 				}else{//auth data is invalid
 						
 				}
@@ -2100,12 +2095,12 @@ void mesh_dkri_precedure_proc(u8 *par,u8 len)
 			break;
 		case PR_SRV_RANDOM_SEND:
 			if(prov_cmd == PRO_RANDOM){
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:random rcv suc ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"dkri:random rcv suc ");
 				if(mesh_rp_dkri_random_rcv_send(p_rcv,p_send)){
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->random),sizeof(p_rcv->random),"dkri:random rcv cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_rcv->random),sizeof(p_rcv->random),"dkri:random rcv cmd is ");
 					mesh_prov_pdu_send_retry_set_data((u8*)p_send,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
 					mesh_rp_server_set_sts(PR_SRV_DATA_SEND);
-					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->random),sizeof(p_send->random),"dkri:random send cmd is ",0);
+					LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->random),sizeof(p_send->random),"dkri:random send cmd is ");
 				}
 			}else{
 				mesh_dkri_resend_outpound();
@@ -2114,9 +2109,9 @@ void mesh_dkri_precedure_proc(u8 *par,u8 len)
 		case PR_SRV_DATA_SEND:
 			if(prov_cmd == PRO_DATA){
 				int err = mesh_rp_dkri_data_rcv_complete(p_rcv,p_send);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)&provision_mag.pro_net_info,sizeof(provision_mag.pro_net_info),"dkri:complete send cmd is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)&provision_mag.pro_net_info,sizeof(provision_mag.pro_net_info),"dkri:complete send cmd is ");
 				mesh_prov_pdu_send_retry_set_data((u8*)p_send,REMOTE_PROV_SERVER_CMD_FLAG|REMOTE_PROV_SERVER_OUTBOUND_FLAG);
-				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->complete),sizeof(p_send->complete),"dkri:complete send cmd is ",0);
+				LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8*)(&p_send->complete),sizeof(p_send->complete),"dkri:complete send cmd is ");
 				// need to wait for some time to send and retry the outbound packet ,and the complete rsp .
 				mesh_rp_srv_tick_reset();// clear the timeout proc part 
 				if(err){

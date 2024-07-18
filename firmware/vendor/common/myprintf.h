@@ -25,15 +25,28 @@
 #ifndef MYPRINTF_H
 #define MYPRINTF_H
 
+#if __TLSR_RISCV_EN__
+#include "stack/ble/ble.h"
+#else
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#endif
+
 #define SIMU_BAUD_115200    115200
 #define SIMU_BAUD_230400    230400
 #define SIMU_BAUD_1M        1000000
 
 #define BAUD_USE    SIMU_BAUD_1M
+#if __TLSR_RISCV_EN__
+#define SIMU_UART_IRQ_EN    (1&&!blotaSvr.ota_start_tick)
+#else
 #define SIMU_UART_IRQ_EN    (1&&!blcOta.ota_start_flag)
+#endif
 
 #define _PRINT_FUN_RAMCODE_        //_attribute_ram_code_
 
 extern  void uart_simu_send_bytes(u8 *p,int len);
 //#define debugBuffer (*(volatile unsigned char (*)[40])(0x8095d8))
+
+extern volatile u32 log_one_byte_test_flag;
+void uart_put_char_one_byte_test(u8 byte, int enter_flag);
 #endif

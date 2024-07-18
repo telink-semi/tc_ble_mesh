@@ -87,41 +87,6 @@ void test_cmd_wakeup_lpn()
 	#endif
 }
 
-void friend_ship_establish_ok_cb_lpn()
-{
-	gatt_adv_send_flag = 0;
-	rf_link_light_event_callback(LGT_CMD_FRIEND_SHIP_OK);
-    friend_send_current_subsc_list();
-    #if LPN_VENDOR_SENSOR_EN
-        mesh_vd_lpn_pub_set();
-    #endif    
-
-	#if MD_DF_CFG_SERVER_EN
-	foreach(i, NET_KEY_MAX){
-		lpn_df_backup[i] = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding;
-		if(DIRECTED_FORWARDING_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding){
-			model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding = DIRECTED_FORWARDING_DISABLE;
-		}
-	}
-	#endif
-}
-
-void friend_ship_disconnect_cb_lpn()
-{
-	#if GATT_LPN_EN
-	gatt_adv_send_flag = GATT_LPN_EN;
-	#endif
-	if(gatt_adv_send_flag){
-		blt_soft_timer_update(&mesh_lpn_send_gatt_adv, ADV_INTERVAL_MS*1000);
-	}
-
-	#if MD_DF_CFG_SERVER_EN
-	foreach(i, NET_KEY_MAX){
-		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding = lpn_df_backup[i];
-	}
-	#endif
-}
-
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 /**
  * @brief   This function is soft timer callback function.
@@ -181,8 +146,8 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
-			proxy_cfg_list_init_upon_connection();
-			mesh_service_change_report();
+			proxy_cfg_list_init_upon_connection(BLS_HANDLE_MIN);
+			mesh_service_change_report(BLS_HANDLE_MIN);
 		}
 
 	//------------ connection update complete -------------------------------
@@ -215,11 +180,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb(pd->reason);
-		if(LPN_MODE_GATT_OTA == lpn_mode){
-		    lpn_mode_tick = clock_time();
-		    lpn_mode_set(LPN_MODE_NORMAL);
-		}
+		mesh_ble_disconnect_cb(p);
 	}
 
 	if (send_to_hci)
@@ -232,37 +193,12 @@ int app_event_handler (u32 h, u8 *p, int n)
 
 void proc_ui()
 {
-	
-
-	//static u32 A_req_tick;
-	static u8 fri_request_send = 1;
-	if(fri_request_send && (LPN_MODE_GATT_OTA != lpn_mode)){
-		fri_request_send = 0;
-		//A_req_tick = clock_time();
-		//if((!is_in_mesh_friend_st_lpn()) && (!fri_ship_proc_lpn.status)){
-			if(is_provision_success()){
-        		mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
-        	}
-        //}
-	}
-
 	lpn_proc_keyboard(0, 0, 0);
 }
 
 /////////////////////////////////////////////////////////////////////
 // main loop flow
 /////////////////////////////////////////////////////////////////////
-#if (BLT_SOFTWARE_TIMER_ENABLE)
-void soft_timer_mesh_adv_proc()
-{
-	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
-		if(!is_soft_timer_exist(&mesh_lpn_poll_md_wakeup)){
-			mesh_lpn_sleep_prepare(CMD_ST_NORMAL_TX);
-		}
-	}
-}
-#endif
-
 void main_loop ()
 {
 	static u32 tick_loop;
@@ -324,24 +260,10 @@ _attribute_ram_code_
 void user_init_peripheral(int retention_flag)
 {
 	//unprovision:ADV_INTERVAL_MIN;  provision but not friendship:FRI_REQ_TIMEOUT_MS  friendship ok:FRI_POLL_INTERVAL_MS
-	if(BLS_LINK_STATE_ADV == blt_state){
+	if(BLS_LINK_STATE_ADV == blc_ll_getCurrentState()){
 		mesh_lpn_adv_interval_update(0);
-		if(lpn_provision_ok){
-			blc_ll_setScanEnable (0, 0);
-		}
-		else{	
-			bls_pm_setSuspendMask (SUSPEND_DISABLE);
-		}
 	}
 	lpn_node_io_init();
-}
-
-void  lpn_set_sleep_wakeup (u8 e, u8 *p, int n)
-{
-	bls_pm_setWakeupSource(PM_WAKEUP_PAD);
-	if(lpn_provision_ok){
-		blc_ll_setScanEnable (0, 0); // not scan after suspend wakeup
-	}
 }
 
 void user_init()
@@ -350,6 +272,11 @@ void user_init()
     app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
     #endif
 	mesh_global_var_init();
+
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_operation(FLASH_OP_EVT_APP_INITIALIZATION, 0, 0);
+	blc_appRegisterStackFlashOperationCallback(app_flash_protection_operation); //register flash operation callback for stack
+#endif
 	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .
 	lpn_provision_ok = is_net_key_save();
 	proc_telink_mesh_to_sig_mesh();		// must at first
@@ -399,9 +326,8 @@ void user_init()
 	bls_pm_registerFuncBeforeSuspend(app_func_before_suspend);
 	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &lpn_set_sleep_wakeup);	
 	bls_app_registerEventCallback (BLT_EV_FLAG_GPIO_EARLY_WAKEUP, &lpn_proc_keyboard);
-#else
-	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 #endif
+	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 
 	//l2cap initialization
 	//blc_l2cap_register_handler (blc_l2cap_packet_receive);
@@ -451,14 +377,16 @@ void user_init()
 	//bls_set_update_chn_cb(chn_conn_update_dispatch);
 	bls_ota_registerStartCmdCb(entry_ota_mode);
 	bls_ota_registerResultIndicateCb(show_ota_result);
-	
-	app_enable_scan_all_device ();
+
+	if(!lpn_provision_ok){
+		app_enable_scan_all_device ();
+	}
 
 	// mesh_mode and layer init
 	mesh_init_all();
 
 	// OTA init
-	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
+	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_LEGACY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
 	if(DUAL_MODE_NOT_SUPPORT == dual_mode_state)
 	#endif
 	{bls_ota_clearNewFwDataArea(0);	 //must
@@ -501,17 +429,13 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	// should enable IRQ here, because it may use irq here, for example BLE connect.
 	irq_enable();
 	user_init_peripheral(1); 
-	extern u8 blt_busy;
-	if((BLS_LINK_STATE_ADV == blt_state) && is_friend_ship_link_ok_lpn() && (!my_fifo_get(&mesh_adv_cmd_fifo)) && ( (0 == fri_ship_proc_lpn.poll_tick) || clock_time_exceed(fri_ship_proc_lpn.poll_tick, get_lpn_poll_interval_ms()*1000/2)) &&
-		blt_busy && !mesh_lpn_subsc_pending.op && !subsc_list_retry.retry_cnt){ // not soft timer wakeup and not sub list control message pending
-		mesh_friend_ship_start_poll();
+
+	if(get_blt_busy() && clock_time_exceed(fri_ship_proc_lpn.poll_tick, get_lpn_poll_interval_ms()*1000/2)){ // blt_busy true means not early wakeup
+		lpn_set_poll_ready(); // will call mesh_friend_ship_start_poll() in mesh_friend_ship_proc_LPN().
 	}	
 //  if(!is_led_busy()){
 //	    light_pwm_init();   // cost about 1.5ms
 //	}
-#if UI_KEYBOARD_ENABLE
-	deep_wakeup_proc();// fast detect key when powerup
-#endif
 
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();

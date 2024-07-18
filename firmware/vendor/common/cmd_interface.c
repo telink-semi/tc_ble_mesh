@@ -28,12 +28,10 @@
 #include "../../../reference/tl_bulk/lib_file/hw_fun.h"
 #include "app_provison.h"
 #else
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "user_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
-#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #endif
@@ -577,13 +575,23 @@ int cfg_cmd_key_phase_get(u16 node_adr, u16 nk_idx)
  * @return      0: success, others: error code of tx_errno_e.
  * @note        
  */
+#if !WIN32
 int cfg_cmd_key_phase_set(u16 node_adr, u16 nk_idx, u8 transition)
 {
 	mesh_key_refresh_phase_set_t set;
 	set.nk_idx = nk_idx;
 	set.transition = transition;
-	return SendOpParaDebug(node_adr, 0, CFG_KEY_REFRESH_PHASE_SET, (u8 *)&set, sizeof(set));
+	return mesh_tx_cmd2normal_primary_specified_key(CFG_KEY_REFRESH_PHASE_SET, (u8 *)&set, sizeof(set), node_adr, 0, nk_idx, 0);
 }
+#else
+	#if 0
+int cfg_cmd_key_phase_set(u16 node_adr, u16 nk_idx, u8 transition)
+{
+	// TODO: need to specified key index in INI command for this op code.
+	return -1;
+}
+	#endif
+#endif
 
 /**
  * @brief       This function is API to send config command of "Config Node Identity Get".
@@ -972,7 +980,8 @@ int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8* dat,u8 len )
 	#if WIN32
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,dat,len ,"filter send cmd is %d",opcode);
 	#endif
-	return mesh_tx_cmd_layer_cfg_primary(opcode,dat,len ,PROXY_CONFIG_FILTER_DST_ADR);
+	
+	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, opcode, dat, len, PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 /**

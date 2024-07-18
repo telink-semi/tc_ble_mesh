@@ -22,11 +22,11 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "drivers.h"
 #include "flash_fw_check.h"
-#include "drivers/8258/flash.h"
 
 extern _attribute_data_retention_   u32		ota_program_offset;
-extern _attribute_data_retention_	int		ota_program_bootAddr;
+extern _attribute_data_retention_	u32		ota_program_bootAddr;
 extern unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len);
 
 static const unsigned long fw_crc32_half_tbl[16] = {
@@ -40,9 +40,12 @@ static const unsigned long fw_crc32_half_tbl[16] = {
 
 u32 fw_crc_init = 0xFFFFFFFF;
 
-/***********************************
- * this function must be called after the function cpu_wakeup_init.
- * cpu_wakeup_init will set the ota_program_offset value.
+/**
+ * @brief		This function is used to check the firmware is ok or not
+ * @param[in]	crc_init_value - the initial value of CRC
+ * @return		0 - CRC is check success
+ * 				1 - CRC is check fail
+ * @note 		this function must be called after the function sys_init. sys_init will set the ota_program_offset value.
  */
 bool flash_fw_check( u32 crc_init_value ){
 
@@ -76,7 +79,7 @@ bool flash_fw_check( u32 crc_init_value ){
 
 		flash_read_page( (fw_flashAddr+i*FW_READ_SIZE), FW_READ_SIZE, fw_tmpdata);
 
-		//将FW_READ_SIZE byte OTA data拆成32 个 half byte计算CRC
+		//FW_READ_SIZE byte OTA data32  half byteCRC
 		for(int i=0;i<FW_READ_SIZE;i++){
 			ota_dat[i*2] = fw_tmpdata[i]&0x0f;
 			ota_dat[i*2+1] = fw_tmpdata[i]>>4;
@@ -109,6 +112,14 @@ bool flash_fw_check( u32 crc_init_value ){
 
 
 
+void blt_firmware_completeness_check(void)
+{
+	//user can use flash_fw_check() to check whether firmware in flash is modified.
+	//Advice user to do it only when power on.
+	if(flash_fw_check(0xffffffff)){ //if retrun 0, flash fw crc check ok. if retrun 1, flash fw crc check fail
+		while(1);				    //Users can process according to the actual application.
+	}
+}
 
 
 

@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "ble_qiot_sha256.h"
-#include "proj/common/tstring.h"
+#include "tl_common.h"
 
 #ifdef __cplusplus
 extern "C" {

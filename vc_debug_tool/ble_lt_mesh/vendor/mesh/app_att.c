@@ -89,6 +89,8 @@ static u8 my_PnPCharacter = CHAR_PROP_READ;
 
 const u8	my_PnPtrs [] = {0x02, 0x8a, 0x24, 0x66, 0x82, 0x01, 0x00};
 
+u8 my_fwRevisionCharacter = CHAR_PROP_READ;
+
 //////////////////////// Battery /////////////////////////////////////////////////
 const u16 my_batServiceUUID       			= SERVICE_UUID_BATTERY;
 //static u8 my_batProp 						= CHAR_PROP_READ | CHAR_PROP_NOTIFY;

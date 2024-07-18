@@ -100,21 +100,21 @@ alarm_ev_t alarm_list[ALARM_CNT_MAX];
 
 void CTLMeshDlg::get_time_schedule_proc(){
     if(AUTO_GET_ST_GROUP == m_pMeshDlg->schedule_init){
-        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get subscription list to refresh UI......",0);
+        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get subscription list to refresh UI......");
         cfg_cmd_sub_get(NODE_ADR_AUTO, mesh_sel, SIG_MD_G_ONOFF_S);
         schedule_init = AUTO_GET_ST_WAIT_GROUP;
     }else if(AUTO_GET_ST_SCENE == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_SCENE_S,1)){
-            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scene to refresh UI......",0);
+            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scene to refresh UI......");
             access_cmd_scene_reg_get(mesh_sel,1);
             schedule_init = AUTO_GET_ST_WAIT_SCENE;
     	}else{
             schedule_init = AUTO_GET_ST_TIME;
-            // LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "scene model not found, no need auto get scene when double click node......",0);
+            // LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "scene model not found, no need auto get scene when double click node......");
         }
     }else if(AUTO_GET_ST_TIME == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_TIME_S,1)){
-            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get time to refresh UI......",0);
+            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get time to refresh UI......");
             access_cmd_time_get(mesh_sel,1);
             schedule_init = AUTO_GET_ST_WAIT_TIME;
         }else{
@@ -122,7 +122,7 @@ void CTLMeshDlg::get_time_schedule_proc(){
         }
     }else if(AUTO_GET_ST_SCHEDULER == m_pMeshDlg->schedule_init){
         if(is_support_model_dst(mesh_sel,SIG_MD_SCHED_S,1)){
-            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scheduler to refresh UI......",0);
+            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "auto get scheduler to refresh UI......");
             access_cmd_schd_get(mesh_sel, 1);
         }
         schedule_init=0; // end
@@ -358,7 +358,7 @@ void CTLMeshDlg::refresh_time_ui()
     if((mesh_sel != 0xffff) && UI_time.TAI_sec){
         get_UTC((UI_time.TAI_sec + get_time_zone_offset_min(UI_time.zone_offset)*60),&get_utc);
     }else{
-        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "time value is invalid, please set time......",0);
+        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "time value is invalid, please set time......");
     }
     CString msg;
     msg.Format("%d-%02d-%02d %02d:%02d:%02d", get_utc.year,get_utc.month,get_utc.day,get_utc.hour,get_utc.minute,get_utc.second);
@@ -401,7 +401,7 @@ void CTLMeshDlg::StatusNotify (unsigned char *p, int len)
 
 	if ((G_ONOFF_STATUS == op) || (G_LEVEL_STATUS == op) || (LIGHTNESS_STATUS == op)
 	 || (LIGHT_CTL_STATUS == op) || (LIGHTNESS_LINEAR_STATUS == op) || (G_POWER_LEVEL_STATUS == op)
-	 || (LIGHT_HSL_STATUS == op) || (LIGHT_XYL_STATUS == op) || (LIGHT_LC_ONOFF_STATUS == op)){
+	 || (LIGHT_HSL_STATUS == op) || (LIGHT_XYL_STATUS == op)){ //  || (LIGHT_LC_ONOFF_STATUS == op) LC onoff not mean lightness 0, just mean lightness of standby.
 		UpdateNode (&rsp, op, size_op);
 		UpdateOnlineStatus ();
 	}
@@ -1312,7 +1312,7 @@ void CTLMeshDlg::OnGridSceneClick(NMHDR *pNotifyStruct, LRESULT* pResult){
 void CTLMeshDlg::ShowSchedule(int schedule_index)
 {
     if((schedule_index >= 16) || (schedule_index < 0)){
-        LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "schedule_index error",0);
+        LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "schedule_index error");
         return ;
     }
 	current_schedule=schedule_index ;
@@ -2420,7 +2420,7 @@ void CTLMeshDlg::OnBnClickedAdd()
     if(is_support_model_dst(mesh_sel,SIG_MD_SCHED_S,1)){
         access_cmd_schd_action_set(mesh_sel, 0, &c_schd, 1);
     }else{
-        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support scheduler model",0);
+        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support scheduler model");
     }
 }
 
@@ -2581,7 +2581,7 @@ void CTLMeshDlg::OnBnClickedSceneAdd()
         if(is_support_model_dst(mesh_sel,SIG_MD_SCENE_S,1)){
             access_cmd_scene_store(mesh_sel, 0, m_scene_number, 1);
         }else{
-            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support scene model",0);
+            LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support scene model");
         }
 	}
 }
@@ -2613,7 +2613,7 @@ void CTLMeshDlg::OnBnClickedSetTime()
     if(is_support_model_dst(mesh_sel,SIG_MD_TIME_S,1)){
         access_cmd_time_set(mesh_sel, 0, &settime);
     }else{
-        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support time model",0);
+        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support time model");
     }
 }
 
@@ -2628,7 +2628,7 @@ void CTLMeshDlg::OnBnClickedGetTime()
     if(is_support_model_dst(mesh_sel,SIG_MD_TIME_S,1)){
         access_cmd_time_get(mesh_sel,1);
     }else{
-        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support time model",0);
+        LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "Node not support time model");
     }
 }
 

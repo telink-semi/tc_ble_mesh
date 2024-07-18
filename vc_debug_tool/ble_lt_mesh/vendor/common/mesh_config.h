@@ -39,6 +39,10 @@ extern "C" {
 
 #define GATEWAY_MODEL_PLUS_EN   ((!WIN32) && __PROJECT_MESH_PRO__ && (CHIP_TYPE != CHIP_TYPE_8269))
 
+#if (__TLSR_RISCV_EN__)
+#define MESH_IRONMAN_AP2T31F80_EN		0
+#endif
+
 #if (PROXY_HCI_SEL == PROXY_HCI_GATT)
     #if (__DEBUG_MESH_DONGLE_IN_VC__)
 #define DEBUG_MESH_DONGLE_IN_VC_EN		1		// must 1
@@ -53,10 +57,14 @@ extern "C" {
 #define DEBUG_MESH_DONGLE_IN_VC_EN		0		// must 0
 #endif
 
+#ifndef MESH_RX_TEST
+#define MESH_RX_TEST					(0)
+#endif
+
 #define DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN	0
 
-#define DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2		(0 || DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN) // used only by telink internal
-#define DEBUG_CFG_CMD_GROUP_AK_EN				0 // not for user
+#define DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2		(0 || DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN || MESH_RX_TEST) // used only by telink internal
+#define DEBUG_CFG_CMD_GROUP_AK_EN				(0) // not for user
 #define DEBUG_CFG_CMD_GROUP_USE_AK(addr)    	((DEBUG_CFG_CMD_GROUP_AK_EN || DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2) && (addr & 0x8000))
 #if (!WIN32)
 #define DEBUG_LOG_SETTING_DEVELOP_MODE_EN		0 //
@@ -95,14 +103,23 @@ extern "C" {
 
 #define PROXY_GATT_WITH_HEAD ((DEBUG_MESH_DONGLE_IN_VC_EN)||(PROXY_HCI_SEL == PROXY_HCI_USB))
 #if WIN32
-#define 	__PROJECT_MESH_PRO__	 	1
+#define 	__PROJECT_MESH_PRO__	 	1 // "PRO" means provisioner, will be set as 1 for 8258_mesh_gw (gateway) and sig_mesh_tool.exe.
 #define FAST_PROVISION_ENABLE		 	1
 #else
 #define FAST_PROVISION_ENABLE		 	0
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
-#define SMART_PROVISION_ENABLE		 	0 // just for gateway, and node should open PROVISION_FLOW_SIMPLE_EN
+/*
+ * GW SMART PROVISION REMOTE CONTROL PM EN: a product which is a provisioner without "sig_mesh_tool.exe",
+ * and has keyboard to send control message, and is at low power state at most of time.
+ */
+#define GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN		0
+	#if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
+#define SMART_PROVISION_ENABLE		 	1
+	#else
+#define SMART_PROVISION_ENABLE		 	0 // just for gateway, and node must open PROVISION_FLOW_SIMPLE_EN
+	#endif
 #endif
 
 #define BEACON_ENABLE					0
@@ -150,6 +167,65 @@ extern "C" {
 #define SWITCH_PB_ADV_EN			1   // switch support pb adv, time ADV_TIMEOUT
 #endif
 
+//------------ mesh audio config -------------
+#if __TLSR_RISCV_EN__
+	#if __PROJECT_MESH__ || __PROJECT_MESH_PRO__ 	// only for B91 mesh and gateway project
+#define AUDIO_MESH_EN					0
+		#if AUDIO_MESH_EN
+#define CODEC_ALGORITHM_SBC             0
+#define CODEC_ALGORITHM_LC3	            1
+
+#define AUDIO_MESH_MULTY_NODES_TX_EN	0	// only support audio LC3 + 8k sample rate now for multy nodes mode.
+		#if AUDIO_MESH_MULTY_NODES_TX_EN
+#define AUDIO_DATA_NO_TX_WHEN_SILENCE_EN		1
+			#if AUDIO_DATA_NO_TX_WHEN_SILENCE_EN
+#define AUDIO_RX_NODES_MAX				5	// define a node that can receive audio from how many nodes.
+			#else
+#define AUDIO_RX_NODES_MAX				3	// define a node that can receive audio from how many nodes.
+			#endif
+#define CODEC_ALGORITHM_SEL 			CODEC_ALGORITHM_LC3
+		#else
+#define AUDIO_DATA_NO_TX_WHEN_SILENCE_EN		0
+#define CODEC_ALGORITHM_SEL 			CODEC_ALGORITHM_SBC
+#define AUDIO_RX_NODES_MAX				1	// must 1
+		#endif
+
+#define PAIR_PROVISION_ENABLE		 	0 	// provision without app and gateway. // usually for audio mesh
+#define AUDIO_I2S_EN					0   // 0 means analog sampling, 1 means using I2S sampling
+
+/**
+ * @brief 		enum value: sample rate in RF packet
+ */
+#define RF_SEND_AUDIO_SAMPLE_RATE_8K	1
+#define RF_SEND_AUDIO_SAMPLE_RATE_16K	2
+
+		#if(CODEC_ALGORITHM_SEL == CODEC_ALGORITHM_SBC)
+#define RF_SEND_AUDIO_SAMPLE_RATE_SEL	RF_SEND_AUDIO_SAMPLE_RATE_8K	// must 8k for SBC
+#define MIC_SAMPLES_PER_PACKET      	240		
+#define SBC_FRAME_SAMPLES          		(MIC_SAMPLES_PER_PACKET/2)
+#define SBC_BIT_POOL                    20 // 26:compression ratio is 4.53. 20:compression ratio is 5.71. 17:compression ratio is 6.67.  12:compression ratio is 8.89.
+
+#define SBC_BLOCK_NUM                   (SBC_FRAME_SAMPLES / 8)
+#define SBC_FRAME_SIZE                  ((SBC_BIT_POOL * SBC_BLOCK_NUM + 7) / 8 + 4) // for 8k16bit the Compression ratio is SBC_FRAME_SAMPLES*2/SBC_FRAME_SIZE = 8.89
+#define MIC_ENC_SIZE					SBC_FRAME_SIZE
+		#elif(CODEC_ALGORITHM_SEL == CODEC_ALGORITHM_LC3)
+#define RF_SEND_AUDIO_SAMPLE_RATE_SEL	RF_SEND_AUDIO_SAMPLE_RATE_8K 	// Supports 16k and 8k
+#define MIC_SAMPLES_PER_PACKET      	480 // can't change
+#define LC3_BIT_RATE					58400 // base on 480 mic sample which is 10ms frame of 48k16bit // for 8k16bit is (58400/(48/8)) = 9733, then Compression ratio is 13.1.
+#define LC3_ENC_SIZE					((LC3_BIT_RATE*(MIC_SAMPLES_PER_PACKET/120)+3199)/3200) // default is 73
+#define MIC_ENC_SIZE					LC3_ENC_SIZE
+		#endif
+		
+#define AUDIO_RX_TIMEOUT				1000	//unit:ms
+
+#define MESH_AUDIO_RESAMPLE_EN			(RF_SEND_AUDIO_SAMPLE_RATE_SEL != RF_SEND_AUDIO_SAMPLE_RATE_16K)	// because SPEEX_SAMPLERATE of ENC is fixed 16k.
+#define MIC_NUM_MESH_TX					((ACCESS_NO_MIC_LEN_MAX_UNSEG + CONST_DELTA_EXTEND_AND_NORMAL - 3 - 3)/MIC_ENC_SIZE) // MIC_NUM_MESH_TX is 3 for LC3 // param details: 3:vendor opcode size, 3:OFFSETOF(vd_audio_t, data) 
+		#endif
+	#endif
+#endif
+//------------ mesh audio config end -------------
+
+
 //------------ mesh config-------------
 #define MD_CFG_CLIENT_EN            (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__ || TESTCASE_FLAG_ENABLE)   // don't modify
 #define RELIABLE_CMD_EN             (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)   // don't modify
@@ -176,7 +252,7 @@ extern "C" {
 #if __PROJECT_MESH_PRO__
 #define MESH_USER_DEFINE_MODE 		MESH_NORMAL_MODE 	// must normal
 #elif __PROJECT_SPIRIT_LPN__
-#define MESH_USER_DEFINE_MODE 		MESH_SPIRIT_ENABLE 	// must spirit
+#define MESH_USER_DEFINE_MODE 		MESH_NORMAL_MODE
 #else
 #define MESH_USER_DEFINE_MODE 		MESH_NORMAL_MODE	// platform selection
 #endif
@@ -280,17 +356,17 @@ extern "C" {
 	#endif
 #elif((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE))
     #if __PROJECT_BOOTLOADER__
-#define FW_START_BY_BOOTLOADER_EN   0
+#define FW_START_BY_LEGACY_BOOTLOADER_EN   0
     #else
-#define FW_START_BY_BOOTLOADER_EN   1
+#define FW_START_BY_LEGACY_BOOTLOADER_EN   1
     #endif
 #define DUAL_MESH_ZB_BL_EN          1
 #elif(MESH_USER_DEFINE_MODE == MESH_SIG_PVT_DUAL_ENABLE)
 #define PROVISION_FLOW_SIMPLE_EN    0
     #if __PROJECT_BOOTLOADER__
-#define FW_START_BY_BOOTLOADER_EN   0
+#define FW_START_BY_LEGACY_BOOTLOADER_EN   0
     #else
-#define FW_START_BY_BOOTLOADER_EN   1
+#define FW_START_BY_LEGACY_BOOTLOADER_EN   1
     #endif
 #define DUAL_MESH_SIG_PVT_EN        1
 #define MESH_NAME					"telink_mesh1"
@@ -321,6 +397,10 @@ extern "C" {
 // nothing special
 #endif
 
+#ifndef VENDOR_ID
+#define VENDOR_ID					0x0211
+#endif
+
 #define SUBSCRIPTION_BOUND_STATE_SHARE_EN		1	/* must 1 to follow spec. same to "SUBSCRIPTION_SHARE_EN" of legacy version.
 													refer to "1.4.1.1 Bound states -> 1.4.1.1.1 Subscription Lists on bound states".
 													default just share between models with bound states, 
@@ -331,9 +411,6 @@ extern "C" {
 #define DU_ENABLE 			1
 #define DU_LPN_EN			0
 #define DU_ULTRA_PROV_EN	0	
-	#if DU_ULTRA_PROV_EN
-#define	USER_ADV_FILTER_EN	1
-	#endif
 
 	#if DU_LPN_EN
 #define LPN_CONTROL_EN		1
@@ -372,8 +449,8 @@ extern "C" {
 #ifndef NL_API_ENABLE
 #define NL_API_ENABLE 					0
 #endif
-#ifndef FW_START_BY_BOOTLOADER_EN
-#define FW_START_BY_BOOTLOADER_EN  		0
+#ifndef FW_START_BY_LEGACY_BOOTLOADER_EN
+#define FW_START_BY_LEGACY_BOOTLOADER_EN  0
 #endif
 #ifndef DUAL_MESH_ZB_BL_EN
 #define DUAL_MESH_ZB_BL_EN  			0
@@ -406,7 +483,11 @@ extern "C" {
 
 #if __PROJECT_SPIRIT_LPN__
 #define SPIRIT_PRIVATE_LPN_EN			1 // must
+	#if AIS_ENABLE
 #define SPIRIT_VENDOR_EN				1 // must
+	#else
+#define SPIRIT_VENDOR_EN				0	
+	#endif
 #else
 #define SPIRIT_PRIVATE_LPN_EN			0
 #if((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) ||\
@@ -429,6 +510,8 @@ extern "C" {
 
 #define VENDOR_MD_MI_EN             	(MI_API_ENABLE)
 #define VENDOR_MD_NORMAL_EN         	((!MI_API_ENABLE) || AIS_ENABLE)    // include ali
+#define VENDOR_SUB_OP_USER_DEMO_EN      (0) // add user demo subcommand for "VD_GROUP_G_GET, VD_GROUP_G_SET, VD_GROUP_G_SET_NOACK, VD_GROUP_G_STATUS"
+#define VENDOR_OP_USER_DEMO_EN          (0) // add user demo vendor command
 
 #define DUAL_VENDOR_EN              	(VENDOR_MD_MI_EN && VENDOR_MD_NORMAL_EN)
 
@@ -491,10 +574,12 @@ extern "C" {
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_LPN_ONOFF_LEVEL // LIGHT_TYPE_CT
 #elif __PROJECT_MESH_GW_NODE_HK__
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_HSL
-#elif __PROJECT_MESH_SWITCH__
+#elif (__PROJECT_MESH_SWITCH__ || __PROJECT_SPIRIT_LPN__)
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_PANEL	// LIGHT_TYPE_NLC_CTRL_CLIENT
 #elif GATT_LPN_EN
 #define LIGHT_TYPE_SEL 				LIGHT_TYPE_LPN_ONOFF_LEVEL
+#elif AUDIO_MESH_EN
+#define LIGHT_TYPE_SEL 				LIGHT_TYPE_DIM
 #else
 	#if MI_API_ENABLE
 		#if MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT
@@ -544,6 +629,8 @@ extern "C" {
 #ifndef LIGHT_TYPE_CT_EN
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT) || (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
 #define LIGHT_TYPE_CT_EN            1
+#elif __PROJECT_MESH_SWITCH__
+#define LIGHT_TYPE_CT_EN            1
 #else
 #define LIGHT_TYPE_CT_EN            0
 #endif
@@ -557,17 +644,25 @@ extern "C" {
 #endif
 #endif
 
-#if ((LIGHT_TYPE_CT_EN) || (LIGHT_TYPE_HSL_EN) || (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL))
+#if ((LIGHT_TYPE_CT_EN) || (LIGHT_TYPE_HSL_EN) || (LIGHT_TYPE_SEL == LIGHT_TYPE_DIM) || (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL))
     #if(WIN32)
 #define MD_LIGHT_CONTROL_EN			1	// must 1
     #else
 #define MD_LIGHT_CONTROL_EN			(0 || NLCP_BLC_EN)
+		#if MD_LIGHT_CONTROL_EN
+#define LIGHT_CONTROL_MODEL_LOCATE_PRIMARY_ELEMENT			0
+#define LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN	(MD_LIGHT_CONTROL_EN && MD_SERVER_EN && (0 == LIGHT_CONTROL_MODEL_LOCATE_PRIMARY_ELEMENT))
+		#endif
     #endif
 #else
 #define MD_LIGHT_CONTROL_EN			0	// must 0
 #endif
 
-#if ((LIGHT_TYPE_SEL == LIGHT_TYPE_NONE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
+#if __PROJECT_MESH_SWITCH__
+#define MD_LIGHTNESS_EN             1
+#define MD_LEVEL_EN                 0
+#elif ((LIGHT_TYPE_SEL == LIGHT_TYPE_NONE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
+#define MD_LIGHTNESS_EN             0
 #define MD_LIGHTNESS_EN             0
 #define MD_LEVEL_EN                 0
 #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_LPN_ONOFF_LEVEL)
@@ -575,7 +670,7 @@ extern "C" {
 #define MD_LEVEL_EN                 1
 #else
 #define MD_LIGHTNESS_EN             1
-#define MD_LEVEL_EN                 1   // must 1
+#define MD_LEVEL_EN                 1
 #endif
 
 #if(DUAL_VENDOR_EN)
@@ -628,11 +723,11 @@ extern "C" {
 #elif (MI_API_ENABLE)
 #define MD_REMOTE_PROV              0   // must 0
 #elif (__PROJECT_MESH__)
-#define MD_REMOTE_PROV              0   // dufault disable before released by SIG.
+#define MD_REMOTE_PROV              0   // dufault disable
 #elif (__PROJECT_MESH_PRO__)
-#define MD_REMOTE_PROV              0   // dufault disable before released by SIG.
+#define MD_REMOTE_PROV              0   // dufault disable
 #else
-#define MD_REMOTE_PROV              0   // must 0, other project not support now. dufault disable before released by SIG.
+#define MD_REMOTE_PROV              0   // must 0, other project not support due to low power application.
 #endif
 #endif
 
@@ -668,11 +763,13 @@ extern "C" {
     #if WIN32
 #define MD_MESH_OTA_EN				1
     #else // gateway
-#define MD_MESH_OTA_EN				0   // dufault disable before released by SIG.
+#define MD_MESH_OTA_EN				0   // dufault disable
     #endif
+#elif __PROJECT_MESH_SWITCH__			// xxxx_mesh_switch compile project
+#define MD_MESH_OTA_EN				0
 #else
-	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
-#define MD_MESH_OTA_EN				0   // must 0
+	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
+#define MD_MESH_OTA_EN				0   // 
     #elif (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define MD_MESH_OTA_EN				0	// 
     #elif (AIS_ENABLE)
@@ -721,8 +818,8 @@ extern "C" {
 #define MD_PRIVACY_BEA				1
 #define PRIVATE_PROXY_FUN_EN		1
 #else
-#define MD_PRIVACY_BEA				0
-#define PRIVATE_PROXY_FUN_EN		0
+#define MD_PRIVACY_BEA				0	// support advertising with private security beacon (there is no private unprovision beacon)
+#define PRIVATE_PROXY_FUN_EN		0	// support advertising with private network identity and private node identity 
 #endif
 
 /**
@@ -783,7 +880,7 @@ extern "C" {
 #endif
 /************************ mesh V1.1 feature end ********************************/
 
-#define MD_ONOFF_EN                 1   // must 1
+#define MD_ONOFF_EN                 1
 
 #if WIN32
 #define MD_DEF_TRANSIT_TIME_EN      1   // must 1
@@ -800,15 +897,17 @@ extern "C" {
 #define MD_SBR_CFG_CLIENT_EN		1   // subnet bridge client model. 
 #define MD_SAR_EN					1
 #define MD_ON_DEMAND_PROXY_EN		1
+#define MD_SOLI_PDU_RPL_EN			1
 #define	MD_OP_AGG_EN				1
 #define MD_LARGE_CPS_EN				1
-#define MD_SOLI_PDU_RPL_EN			1
+#define MD_CMR_EN					(0 && FEATURE_RELAY_EN)  // controlled mesh relay models
+
 #if DEBUG_SHOW_VC_SELF_EN
-#define MD_SERVER_EN                1   // SIG and vendor models
+#define MD_SERVER_EN                1   // SIG and vendor models, and exclude sensor model.
 #else
-#define MD_SERVER_EN                0   // SIG and vendor models
+#define MD_SERVER_EN                0   // SIG and vendor models, and exclude sensor model.
 #endif
-#define MD_CLIENT_EN                1   // just SIG models
+#define MD_CLIENT_EN                1   // just SIG models, and exclude sensor model.
 #define MD_CLIENT_VENDOR_EN         1
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
 #define MD_SENSOR_SERVER_EN			MD_SERVER_EN	
@@ -827,13 +926,14 @@ extern "C" {
 #define MD_SBR_CFG_SERVER_EN		0   // subnet bridge server model.
 #define MD_SBR_CFG_CLIENT_EN		0
 #define MD_SAR_EN					0
-#define MD_ON_DEMAND_PROXY_EN		(0 && MD_PRIVACY_BEA)
+#define MD_ON_DEMAND_PROXY_EN		(0 && PRIVATE_PROXY_FUN_EN)
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 #define	MD_OP_AGG_EN				0
 #define MD_LARGE_CPS_EN				0
-#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
+#define MD_CMR_EN					(0 && FEATURE_RELAY_EN)  // controlled mesh relay models
 
-#define MD_SERVER_EN                1   // SIG and vendor models
-#define MD_CLIENT_EN                1   // just SIG models
+#define MD_SERVER_EN                1   // SIG and vendor models, and exclude sensor model.
+#define MD_CLIENT_EN                1   // just SIG models, and exclude sensor model.
 #define MD_CLIENT_VENDOR_EN         1
 
 #define MD_SENSOR_SERVER_EN			0	
@@ -874,17 +974,18 @@ extern "C" {
 #define MD_SBR_CFG_SERVER_EN		0   // subnet bridge server model.
 #define MD_SBR_CFG_CLIENT_EN		(0 || MD_SBR_CFG_SERVER_EN)
 #define MD_SAR_EN					0
-#define MD_ON_DEMAND_PROXY_EN		0
+#define MD_ON_DEMAND_PROXY_EN		(0 && PRIVATE_PROXY_FUN_EN)
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 #define	MD_OP_AGG_EN				0
 #define MD_LARGE_CPS_EN				0
-#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
+#define MD_CMR_EN					(0 && FEATURE_RELAY_EN)  // controlled mesh relay models
 
 		#if(__PROJECT_MESH_GW_NODE__)
 #define MD_SERVER_EN                1  
 #define MD_CLIENT_EN                1 
 		#else
-#define MD_SERVER_EN                0   // SIG and vendor models
-#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG models
+#define MD_SERVER_EN                0   // SIG and vendor models, and exclude sensor model.
+#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG models, and exclude sensor model.
 		#endif
 #define MD_CLIENT_VENDOR_EN         1
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
@@ -918,16 +1019,18 @@ extern "C" {
 #define MD_SBR_CFG_CLIENT_EN		0
 	#endif
 #define MD_SAR_EN					0
-#define MD_ON_DEMAND_PROXY_EN		0
+#define MD_ON_DEMAND_PROXY_EN		(0 && PRIVATE_PROXY_FUN_EN)
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 #define	MD_OP_AGG_EN				0
 #define MD_LARGE_CPS_EN				0
-#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
+#define MD_CMR_EN					(0 && FEATURE_RELAY_EN)  // controlled mesh relay models
+
 	#if __PROJECT_MESH_SWITCH__
-#define MD_SERVER_EN                0   // SIG and vendor models
-#define MD_CLIENT_EN                1   // just SIG models
+#define MD_SERVER_EN                0   // SIG and vendor models, and exclude sensor model.
+#define MD_CLIENT_EN                1   // just SIG models, and exclude sensor model.
 	#else
-#define MD_SERVER_EN                1   // SIG and vendor models
-#define MD_CLIENT_EN                0   // just SIG models
+#define MD_SERVER_EN                1   // SIG and vendor models, and exclude sensor model.
+#define MD_CLIENT_EN                0   // just SIG models, and exclude sensor model.
 	#endif
     #if(DUAL_VENDOR_EN)
 #define MD_CLIENT_VENDOR_EN         0
@@ -954,40 +1057,47 @@ extern "C" {
 #if (!WIN32)
 #define KEEP_ONOFF_STATE_AFTER_OTA			1
 #endif
-#define DF_TEST_MODE_EN  					(0 && MD_DF_CFG_SERVER_EN) // Path lifetime is 2 minute in test mode(refer to GET_PATH_LIFETIME_MS).
+#define DF_TEST_MODE_EN  					(0 && MD_DF_CFG_SERVER_EN) // Path lifetime is 12 minute in test mode.
+#if DF_TEST_MODE_EN
+#define DF_TEST_EXHIBITION_EN	0	// It's for the trade show test, all led of the node participating in forwarding blinks
+#endif
 
-#define MESH_RX_TEST						((0 || DEBUG_CFG_CMD_GROUP_AK_EN) &&(!WIN32))
-#define MESH_DELAY_TEST_EN					0
 
 //----------------------------------------------------------------------------------
 
 /*ELE_CNT_EVERY_LIGHT means element count of one instance*/
-#if (__PROJECT_MESH_PRO__ || (0 == MD_SERVER_EN)) // && (!DEBUG_SHOW_VC_SELF_EN))
-#define ELE_CNT_EVERY_LIGHT         1   // APP and gateway use 1 element always,
+#if (__PROJECT_MESH_PRO__ || (0 == MD_SERVER_EN) || PAIR_PROVISION_ENABLE) // && (!DEBUG_SHOW_VC_SELF_EN))
+#define LEVEL_STATE_CNT_EVERY_LIGHT			1   // APP and gateway use 1 element always,
 #else
     #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 2, confirm later
+#define LEVEL_STATE_CNT_EVERY_LIGHT         1   // 2, confirm later
         #else
-#define ELE_CNT_EVERY_LIGHT         2
+#define LEVEL_STATE_CNT_EVERY_LIGHT         2
         #endif
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 3, confirm later
+#define LEVEL_STATE_CNT_EVERY_LIGHT         1   // 3, confirm later
         #else
-#define ELE_CNT_EVERY_LIGHT         3
+#define LEVEL_STATE_CNT_EVERY_LIGHT         3
         #endif
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-#define ELE_CNT_EVERY_LIGHT         3
+#define LEVEL_STATE_CNT_EVERY_LIGHT         3
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
         #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE || LLSYNC_ENABLE)
-#define ELE_CNT_EVERY_LIGHT         1   // 4, confirm later
+#define LEVEL_STATE_CNT_EVERY_LIGHT         1   // 4, confirm later
         #else
-#define ELE_CNT_EVERY_LIGHT         4
+#define LEVEL_STATE_CNT_EVERY_LIGHT         4
         #endif
     #else
-#define ELE_CNT_EVERY_LIGHT         1
+#define LEVEL_STATE_CNT_EVERY_LIGHT         1
     #endif
+#endif
+
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+#define ELE_CNT_EVERY_LIGHT         (LEVEL_STATE_CNT_EVERY_LIGHT + 1) // light control model locate at a exclusive element.
+#else
+#define ELE_CNT_EVERY_LIGHT         LEVEL_STATE_CNT_EVERY_LIGHT
 #endif
 
 #define DEBUG_VC_FUNCTION			0
@@ -1145,7 +1255,7 @@ extern "C" {
 // extend adv should be running on the chip with 64k or more RAM.
 // as default, only some OTA op code use extend adv defined in is_not_use_extend_adv() for compatibility.
 // if needed, user can change the rule defined in is_not_use_extend_adv.
-#define EXTENDED_ADV_ENABLE				0   // BLE mesh extend ADV
+#define EXTENDED_ADV_ENABLE				(0 || AUDIO_MESH_EN)   // BLE mesh extend ADV
 	#if EXTENDED_ADV_ENABLE
 #define EXTENDED_ADV_PROV_ENABLE		0
 	#else
@@ -1179,7 +1289,7 @@ extern "C" {
  *         2. if is_publish_allow() return 0 means too many other nodes are publishing so it will delay current publish, 
  *            but will not delay more than 1/2 period.
  */
-#if FEATURE_RELAY_EN
+#if (FEATURE_RELAY_EN && MD_SERVER_EN)
 #define PUBLISH_REDUCE_COLLISION_EN		1 // 
 #endif
 

@@ -29,14 +29,13 @@
  *  @brief  Definition for Device info
  */
 #if !WIN32
-#include "proj/mcu/config.h"
-#include "proj/mcu/analog.h"
-#include "../rf_drv.h"
-
+//#include "proj/mcu/config.h"
+//#include "proj/mcu/analog.h"
+//#include "../rf_drv.h"
 #endif
 
-#include "tl_common.h"
-#include "vendor/common/dual_mode_adapt.h"
+#include "vendor/common/user_config.h"
+#include "drivers.h"
 #include "../pm.h"
 
 #define PA_ENABLE	0
@@ -86,6 +85,9 @@ enum{
     TYPE_TLK_HOMEKIT        = 0x00000095,// don't change.
 };
 
+#ifndef FLASH_R_BASE_ADDR
+#define FLASH_R_BASE_ADDR			0
+#endif
 
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 /*** static sector information ***/
@@ -143,10 +145,6 @@ typedef struct {
 #define		CALIB_OFFSET_CAP_INFO								(0x0)
 #define		CALIB_OFFSET_TP_INFO								(0x40)
 #define		OFFSET_CUST_RC32K_CAP_INFO                          (0x80)
-    #if 0 // no use in mesh
-#define		CALIB_OFFSET_ADC_VREF								(0xC0)
-#define		CALIB_OFFSET_FIRMWARE_SIGNKEY						(0x180)
-    #endif
 #define     CALIB_OFFSET_FLASH_VREF								0x1c0
 
 /** Calibration Information end ***/
@@ -164,7 +162,15 @@ typedef struct {
 #define		CFG_ADR_MAC_1M_FLASH		   						0xFF000 // don't change
 #define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000 // don't change
 
-#if FLASH_1M_ENABLE
+/**************************** 2 M Flash *******************************/
+#define		CFG_ADR_MAC_2M_FLASH		   						0x1FF000
+#define		CFG_ADR_CALIBRATION_2M_FLASH						0x1FE000
+
+/**************************** 4 M Flash *******************************/
+#define		CFG_ADR_MAC_4M_FLASH		   						0x3FF000
+#define		CFG_ADR_CALIBRATION_4M_FLASH						0x3FE000
+
+#if FLASH_PLUS_ENABLE
     #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define		CFG_SECTOR_ADR_MAC_CODE		        (STATIC_ADDR_MAC_MESH)
 #define		CFG_SECTOR_ADR_CALIBRATION_CODE     (0x7000)
@@ -194,9 +200,7 @@ typedef struct {
 #define FLASH_ADDRESS_EXTERN						\
 		extern unsigned int flash_adr_misc;	
 
-
-
-#if (0 == FLASH_1M_ENABLE)
+#if (0 == FLASH_PLUS_ENABLE)
 #define 		FLASH_ADR_AREA_FIRMWARE_END	0x30000
 /* Flash adr 0x00000 ~ 0x2ffff  is firmware area*/
 #define			FLASH_ADR_AREA_1_START		0x30000
@@ -210,7 +214,7 @@ typedef struct {
 #define			FLASH_ADR_MD_LIGHT_LC		0x37000
 #define			FLASH_ADR_SW_LEVEL			0x38000
 #define 		FLASH_ADR_MD_SENSOR		    0x39000
-#define 		FLASH_ADR_PROVISION_CFG_S	0x3a000
+#define 		FLASH_ADR_PROVISION_CFG_S	0x3a000 // this sector can be deleted for non gateway project later.
 #define			FLASH_ADR_MD_LIGHT_HSL		0x3b000 // cps before V23
 #define			FLASH_ADR_FRIEND_SHIP		0x3c000 // backup both FLASH_ADR_MISC and FLASH_ADR_VC_NODE_INFO(gateway) temporarily
 #define			FLASH_ADR_MISC				0x3d000
@@ -224,6 +228,7 @@ typedef struct {
 #define			FLASH_ADR_MD_DF_SBR			0x41000 
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
+#define			FLASH_ADR_MD_CMR			0x3f000 // just test
 #if GATEWAY_ENABLE
 #define			FLASH_ADR_MD_DF_SBR			FLASH_ADR_MESH_TYPE_FLAG // 3f000 had been use as FLASH_ADR_VC_NODE_INFO in gateway.
 #else
@@ -236,11 +241,11 @@ typedef struct {
 #define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
 	#else
 		#if DEBUG_CFG_CMD_GROUP_AK_EN
-#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info, occupy sector num dependent on  MESH_NODE_MAX_NUM
-#define 		FLASH_ADR_VC_NODE_INFO_END	0x7A000
+#define         FLASH_ADR_VC_NODE_INFO      0x78000 	// vcnode info, occupy sector num dependent on  MESH_NODE_MAX_NUM
+#define 		FLASH_ADR_VC_NODE_INFO_END	0x7A000		// not included
 		#else
 #define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0x40000
+#define 		FLASH_ADR_VC_NODE_INFO_END	0x40000		// not included
 		#endif
 	#endif
 #endif
@@ -311,7 +316,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif
 
 
-#else // 1M flash
+#else // 1M flash // (FLASH_PLUS_ENABLE == 1)
 #if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_SIG_PVT_DUAL_ENABLE))
 #define			FLASH_ADR_RESET_CNT			0x23000
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x24000	// don't change, must same with zigbee mesh SDK
@@ -338,8 +343,8 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_SCENE			0x37000
 #define			FLASH_ADR_MD_MESH_OTA		0x38000
 //#define                                   0x39000 // reserve, before is remote provision. 
-#define 		FLASH_ADR_VC_NODE_INFO		0x3A000		//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0x3B000
+#define 		FLASH_ADR_VC_NODE_INFO		0x3A000	//
+#define 		FLASH_ADR_VC_NODE_INFO_END	0x3B000	// not included
 #define			FLASH_ADR_AREA_1_END		0x3B000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
@@ -381,8 +386,8 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 // 				                                            0xC8000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0xC9000
 //#define                                   0xCA000 // reserve, before is remote provision. 
-#define 		FLASH_ADR_VC_NODE_INFO		0xCB000		//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0xCC000
+#define 		FLASH_ADR_VC_NODE_INFO		0xCB000	//
+#define 		FLASH_ADR_VC_NODE_INFO_END	0xCC000	// not included
 #define			FLASH_ADR_AREA_1_END		0xCC000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
@@ -490,8 +495,8 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 // 				                                            0x53000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0x54000
 //#define                                   0x55000 // reserve, before is remote provision. 
-#define 		FLASH_ADR_VC_NODE_INFO		0x56000		//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0x57000
+#define 		FLASH_ADR_VC_NODE_INFO		0x56000	//
+#define 		FLASH_ADR_VC_NODE_INFO_END	0x57000	// not included
 #define			FLASH_ADR_AREA_1_END		0x57000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
@@ -510,10 +515,10 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 // 0xFD000: FLASH_ADR_MESH_TYPE_FLAG; 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
 #endif /*end of (1 ==SWITCH_FW_ENABLE)*/
 
-#endif /*end of (1 == FLASH_1M_ENABLE)*/
+#endif /*end of (1 == FLASH_PLUS_ENABLE)*/
 
 #if 1// common
-#if (FLASH_1M_ENABLE && (0 == DUAL_MESH_ZB_BL_EN) && (0 == DUAL_MESH_SIG_PVT_EN))
+#if (FLASH_PLUS_ENABLE && (0 == DUAL_MESH_ZB_BL_EN) && (0 == DUAL_MESH_SIG_PVT_EN))
 #define			FLASH_ADR_MESH_TYPE_FLAG	0xFD000	// don't change, must same with telink mesh SDK
 #endif
 
@@ -524,7 +529,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define         FLASH_ADR_EDCH_PARA		    (FLASH_ADR_EDCH_PARA_SECTOR) // size = 0x68 = sizeof(mesh_ecdh_key_str)
 #define 		SECTOR_PAR_SIZE_MAX			        0x100
 #else
-#if (0 == FW_START_BY_BOOTLOADER_EN)
+#if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
 #define			CFG_ADR_DUAL_MODE_EN		(CFG_SECTOR_ADR_MAC_CODE + 0x80) // use fixed addr
 #endif
 #define			CFG_ADR_DUAL_CALI_VAL_FLAG	(CFG_SECTOR_ADR_MAC_CODE + 0x84) // use for DUAL_MODE_WITH_TLK_MESH_EN
@@ -696,6 +701,8 @@ void blc_readFlashSize_autoConfigCustomFlashSector(void);
 #include "stack/ble/blt_config.h"
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #include "stack/ble_8278/blt_config.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+#include "vendor/common/blt_common.h"
 #else
 
 #define RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE			0
@@ -839,6 +846,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 #define		BLS_ADV_INTERVAL_CHECK_ENABLE					1
 #endif
 
+#if (0 == __TLSR_RISCV_EN__)
 #if LIB_TELINK_MESH_SCAN_MODE_ENABLE
 #define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				1
 #endif
@@ -855,7 +863,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 	#define		BLS_BT_STD_SCAN_MODE_ENABLE					1
 	#endif
 #endif
-
+#endif
 
 
 
@@ -863,14 +871,24 @@ static inline void blc_app_loadCustomizedParameters(void)
 #define BLE_LL_ADV_IN_MAINLOOP_ENABLE					1
 #endif
 
-#if (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
+#if FW_START_BY_BOOTLOADER_EN
+#define FW_SIZE_MAX_K			    (FW_SIZE_MAX_USER_K)
+#elif (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
 #define FW_SIZE_MAX_K			    (192) // 192  //192K // can set to 256k max for dual mode with 1M flash.
 #elif (MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE)
 #define FW_SIZE_MAX_K			    (184)
+#elif WIN32
+#define FW_SIZE_MAX_K				(1024)
+#define NEW_FW_MAX_SIZE     		(FW_SIZE_MAX_K * 1024)
 #else
 #define FW_SIZE_MAX_K			    (FLASH_ADR_AREA_FIRMWARE_END / 1024) // 192  //192K
 #endif
+
+#if __TLSR_RISCV_EN__
+#define OTA_CMD_INTER_TIMEOUT_S		1000	// this is total timeout. blc_ota_setOtaDataPacketTimeout_(4s) is packet timeout.
+#else
 #define OTA_CMD_INTER_TIMEOUT_S		30
+#endif
 #define OTA_KMADONGLE_PAUSE_TIMEOUT_S   OTA_CMD_INTER_TIMEOUT_S
 
 #ifndef PM_DEEPSLEEP_RETENTION_ENABLE

@@ -1253,7 +1253,7 @@ typedef struct {
 //-------------   event --------------------------------
 typedef struct {
 	u8	status;
-	u8	handle;
+	u8	connHandle;
 	u8	hh;
 	u8	reason;
 } event_disconnection_t;			//20-byte

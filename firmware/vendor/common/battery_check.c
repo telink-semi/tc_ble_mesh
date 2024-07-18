@@ -417,6 +417,20 @@ _attribute_no_inline_ void battery_power_low_handle(int loop_flag)
     #endif
 }
 
+/**
+ * @brief      This function serves to clear deep wakeup flag.
+ * @param[in]  none.
+ * @return     none
+ */
+static inline void pm_clear_deepPadWakeup(void)
+{
+#if (__TLSR_RISCV_EN__)
+	g_pm_status_info.is_pad_wakeup = 0;
+#else
+	pmParam.is_pad_wakeup = 0;
+#endif
+}
+
 /*****************************************************************************************
  Note: battery check must do before any flash write/erase operation, cause flash write/erase
 	   under a low or unstable power supply will lead to error flash operation
@@ -437,7 +451,7 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
 		#endif
 		)){
 			#if(__PROJECT_MESH_SWITCH__)
-			pmParam.is_pad_wakeup = 0;  // only for retention deep sleep, not for deep sleep.
+			pm_clear_deepPadWakeup();  // only for retention deep sleep, not for deep sleep.
 			#endif
     	    #if __PROJECT_BOOTLOADER__
     	    // clear by product image

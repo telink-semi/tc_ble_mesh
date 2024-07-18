@@ -23,15 +23,15 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj_lib/rf_drv.h"
-#include "proj_lib/pm.h"
-#include "proj_lib/ble/ll/ll.h"
+#include "blt_led.h"
 
-#include "../common/blt_led.h"
+_attribute_data_retention_ device_led_t device_led;
 
-device_led_t device_led;
-
-
+/**
+ * @brief		This function is used to control device led on or off
+ * @param[in]	on - the status of led
+ * @return      none
+ */
 void device_led_on_off(u8 on)
 {
 	gpio_write( device_led.gpio_led, on^device_led.polar );
@@ -39,7 +39,15 @@ void device_led_on_off(u8 on)
 	device_led.isOn = on;
 }
 
+
+/**
+ * @brief		This function is used to initialize device led setting
+ * @param[in]	gpio - the GPIO corresponding to device led
+ * @param[in]	polarity - 1 for high led on, 0 for low led on
+ * @return      none
+ */
 void device_led_init(u32 gpio,u8 polarity){  //polarity: 1 for high led on, 0 for low led on
+#if (BLT_APP_LED_ENABLE)
 	device_led.gpio_led = gpio;
 	device_led.polar = !polarity;
     gpio_set_func(device_led.gpio_led,AS_GPIO);
@@ -47,11 +55,18 @@ void device_led_init(u32 gpio,u8 polarity){  //polarity: 1 for high led on, 0 fo
     gpio_set_output_en(device_led.gpio_led,0);
 
     device_led_on_off(0);
+#endif
 }
 
+/**
+ * @brief		This function is used to create new led task
+ * @param[in]	led_cfg - Configure the parameters for led event
+ * @return      0 - new led event priority not higher than the not ongoing one
+ * 				1 - new led event created successfully
+ */
 int device_led_setup(led_cfg_t led_cfg)
 {
-
+#if (BLT_APP_LED_ENABLE)
 	if( device_led.repeatCount &&  device_led.priority >= led_cfg.priority){
 		return 0; //new led event priority not higher than the not ongoing one
 	}
@@ -80,11 +95,19 @@ int device_led_setup(led_cfg_t led_cfg)
 
 		return 1;
 	}
+#else
+	return 0;
+#endif
 }
 
-
+/**
+ * @brief		This function is used to manage led tasks
+ * @param[in]	none
+ * @return      none
+ */
 void led_proc(void)
 {
+#if (BLT_APP_LED_ENABLE)
 	if(device_led.isOn){
 		if(clock_time_exceed(device_led.startTick,(device_led.onTime_ms-5)*1000)){
 			device_led_on_off(0);
@@ -104,6 +127,7 @@ void led_proc(void)
 			}
 		}
 	}
+#endif
 }
 
 

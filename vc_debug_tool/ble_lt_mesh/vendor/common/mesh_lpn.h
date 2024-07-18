@@ -46,6 +46,7 @@ void lpn_debug_alter_debug_pin(int reset);
 #define lpn_debug_set_event_handle_pin(level)   
 #endif
 
+void lpn_set_poll_ready();
 void friend_cmd_send_poll();
 void mesh_friend_ship_start_poll();
 void mesh_feature_set_lpn();
@@ -68,6 +69,8 @@ int mesh_lpn_send_gatt_adv();
 int mesh_lpn_rcv_delay_wakeup(void);
 int mesh_lpn_poll_md_wakeup(void);
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
+void soft_timer_mesh_adv_proc();
+void  lpn_set_sleep_wakeup (u8 e, u8 *p, int n);
 /************************** access_set_lum **************************
 function : cache the sublist address for lpn  
 para:
@@ -77,7 +80,7 @@ para:
 ret: 0  means OK 
 	-1 or other value means err 
 ****************************************************************************/
-int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int ready);
+int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int overwrite_flag);
 u32 get_lpn_poll_interval_ms();
 
 enum{
@@ -116,7 +119,6 @@ typedef struct{
 	u16 op;
 	u16 sub_list[SUB_LIST_MAX];
 	u32  cnt;
-	int ready;
 }lpn_sub_list_event_t;
 
 extern _align_4_ lpn_sub_list_event_t mesh_lpn_subsc_pending;

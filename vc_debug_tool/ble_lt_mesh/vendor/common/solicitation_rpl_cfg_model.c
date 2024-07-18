@@ -24,13 +24,117 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "config_model.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "solicitation_rpl_cfg_model.h"
+
+service_uuid_t *get_service_uuid(u16 uuid, u8 *payload, u8 len)
+{
+	service_uuid_t *p_service = 0; 
+	int offset = 0;
+
+	while(offset < len){
+		p_service = (service_uuid_t *)(payload + offset);
+
+		if((p_service->len < 2) || (p_service->type > GAP_ADTYPE_SIMPLE_PAIRING_RAND_R256)){
+			return 0;
+		}
+
+		if(GAP_ADTYPE_SERVICE_DATA == p_service->type){
+			if(p_service->uuid == uuid){
+				return p_service;
+			}
+		}
+		
+		offset += (p_service->len + 1);
+	}
+
+	return 0;
+}
+
+#if MD_ON_DEMAND_PROXY_EN
+u32 mesh_on_demand_proxy_time = 0; // max 256s, clock_time() is enough
+
+/**
+ * @brief       This function get if it is valid state to reveive solicitation PDU.
+ * @return      1: yes. 0: no.
+ * @note        
+ */
+_attribute_ram_code_ int mesh_on_demand_is_valid_st_to_rx_solicitation() // ramcode for irq function.
+{
+	return ((GATT_PROXY_SUPPORT_DISABLE == model_sig_cfg_s.gatt_proxy)
+		#if MD_PRIVACY_BEA
+			&& (PRIVATE_PROXY_DISABLE == g_mesh_model_misc_save.privacy_bc.proxy_sts)
+		#endif
+			&& g_mesh_model_misc_save.on_demand_proxy);
+}
+
+/**
+ * @brief       This function server to start the tick of advertising with private network identity type if support.
+ * @return      none
+ * @note        
+ */
+void mesh_on_demand_private_gatt_proxy_start()
+{
+	if(mesh_on_demand_is_valid_st_to_rx_solicitation()){
+		mesh_on_demand_proxy_time = clock_time() | 1;
+	}
+}
+
+/**
+ * @brief       This function server to stop the tick of advertising with private network identity type.
+ * @return      none
+ * @note        
+ */
+void mesh_on_demand_private_gatt_proxy_stop()
+{
+	mesh_on_demand_proxy_time = 0;
+}
+
+/**
+ * @brief       This function ...
+ * @param[in]   payload	- ADV payload of solicitation PDU.
+ * @param[in]   len		- length of payload
+ * @return      1: is payload of solicitation PDU; 0: not.
+ * @note        
+ */
+int mesh_soli_pdu_handle(u8 *payload, u8 len)
+{
+#if (MD_SERVER_EN)
+	service_uuid_t *p_service = NULL;
+
+	#if VENDOR_IOS_SOLI_PDU_EN
+	if(is_ios_soli_pdu(payload)){
+		ios_soli_pdu_pkt_t *pa = (ios_soli_pdu_pkt_t *)payload;
+		int len_trim = len - OFFSETOF(ios_soli_pdu_pkt_t, service_len);
+		if(len_trim > 0){
+			p_service = get_service_uuid(SIG_MESH_PROXY_SOLI_VAL, &pa->service_len, len_trim); // ios
+		}
+	}else
+	#endif
+	{
+		p_service = get_service_uuid(SIG_MESH_PROXY_SOLI_VAL, payload, len); // Android
+	}
+	
+	if(p_service){ // have checked (mesh_on_demand_is_valid_st_to_rx_solicitation()) in adv filter function.
+		soli_srv_dat_t *p_soli_dat = (soli_srv_dat_t *)p_service->data;
+		if(SOLI_WITH_RPL_TYPE==p_soli_dat->id_type){
+			mesh_cmd_nw_t *p_nw = (mesh_cmd_nw_t *)p_soli_dat->id_para;
+			int len_dec_nw = p_service->len - 4 - (OFFSETOF(mesh_cmd_nw_t, data) - 2);//2 is sizeof(dst addr)				
+			int err = mesh_sec_msg_dec_nw((u8 *)p_nw, len_dec_nw, p_nw->nid, NONCE_TYPE_SOLICITATION, MESH_BEAR_ADV, 0);			
+
+			if(!err && !is_exist_in_soli_rpl((u8 *)p_nw)){
+				mesh_on_demand_private_gatt_proxy_start();
+			}
+		}
+		
+		return 1;
+	}
+#endif	
+
+	return 0;
+}
+#endif	
 
 #if MD_SOLI_PDU_RPL_EN
 soli_rpl_t soli_rpl[SOLI_RPL_MAX];

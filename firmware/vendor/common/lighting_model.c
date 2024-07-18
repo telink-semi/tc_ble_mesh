@@ -23,10 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
@@ -305,9 +301,9 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
 #if MD_LEVEL_EN
     foreach(m,LIGHT_CNT){
         if(m == light_idx){
-            foreach(i,ELE_CNT_EVERY_LIGHT){
+            foreach(i,LEVEL_STATE_CNT_EVERY_LIGHT){
                 if(pub_list->st[i]){
-                    int level_md_idx = m * ELE_CNT_EVERY_LIGHT + i;
+                    int level_md_idx = m * LEVEL_STATE_CNT_EVERY_LIGHT + i;
             	    model_pub_check_set(pub_list->st[i], (u8 *)(&(model_sig_g_onoff_level.level_srv[level_md_idx])), SIG_MD_G_LEVEL_S == p_res->id);
                 }
             }
@@ -398,7 +394,7 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
 			set_trans.delay = p_set->delay;
 			p_set_trans = &set_trans;
 		}
-	}else{
+	}else{ // level set / level move
 		mesh_cmd_g_level_set_t *p_set = (mesh_cmd_g_level_set_t *)par;
 		if(is_move_flag && (0 == p_set->level)){
 			// stop move set changing the Generic Level state // refer to behavior of "3.3.2.2.4 Receiving Generic Move Set / Generic Move Set Unacknowledged messages"
@@ -421,7 +417,7 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
 			    }
 			}
 		}else if(is_move_flag){
-			return 0; // no action when no transition time filed. // refer to spec of "move set" behavior and "3.2Generic messages" -> 3.2.2.6Generic Move Set.
+			// return 0; // support no transition time filed. // refer to spec of "move set" behavior and "3.2Generic messages" -> 3.2.2.6Generic Move Set.
 		}
 	}
 
@@ -461,7 +457,12 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
     set_trans.present_val = present_level;
     set_trans.level_move = level_adjust;
     if(!retransaction || delta_offset){
-		if(p_set_trans && ((present_level != set_trans.target_val) || force)){ // force only for G_LEVEL_SET_NOACK
+    	// if no set_LC_lightness_flag, LC will not be triggered from "fade on" to "run" state, because of no transition procedure.
+		if(p_set_trans && ((present_level != set_trans.target_val) || force
+							#if (MD_LIGHT_CONTROL_EN)
+							|| set_LC_lightness_flag
+							#endif
+			)){ // force only for G_LEVEL_SET_NOACK
 			light_g_level_set_idx_with_trans((u8 *)p_set_trans, idx, st_trans_type, pub_list->hsl_set_cmd_flag);
 			// no need publish at start time now.
             get_light_pub_list(st_trans_type, present_level, set_trans.target_val, 1, pub_list);

@@ -19,6 +19,9 @@
 
 #if 1
 #include "ll_app_mesh.h"
+#if (__TLSR_RISCV_EN__)
+#include "stack/ble/controller/ble_controller.h"
+#endif
 #if LLSYNC_ENABLE
 
 typedef struct{

@@ -131,6 +131,5 @@ int mesh_tx_sec_private_beacon_proc(u8 blt_sts);
 u8  is_unprovision_beacon_with_uri(event_adv_report_t *report);
 int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val);
 
-
 #endif 
 

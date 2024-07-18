@@ -85,6 +85,8 @@ static u8 my_PnPCharacter = CHAR_PROP_READ;
 
 const u8	my_PnPtrs [] = {0x02, 0x8a, 0x24, 0x66, 0x82, 0x01, 0x00};
 
+u8 my_fwRevisionCharacter = CHAR_PROP_READ;
+
 //////////////////////// Battery /////////////////////////////////////////////////
 const u16 my_batServiceUUID       			= SERVICE_UUID_BATTERY;
 //static u8 my_batProp 						= CHAR_PROP_READ | CHAR_PROP_NOTIFY;
@@ -772,7 +774,7 @@ int app_att_audioOtsRead(void *p)
 {
 	my_dump_str_data(APP_LOG_EN, "ots att_read_enter:", NULL, 0); // p, sizeof(rf_packet_att_read_t));
 	rf_packet_att_read_t *p_r = (rf_packet_att_read_t *)p; // include dma len for BLE mesh library, not include dma len for new ble generic sdk.
-	if(blc_audio_otpAttRead(BLS_CONN_HANDLE, &p_r->type) == BLC_AUDIO_SUCCESS)
+	if(blc_audio_otpAttRead(BLS_HANDLE_MIN, &p_r->type) == BLC_AUDIO_SUCCESS)
 	{
 		return true;
 	}
@@ -786,7 +788,7 @@ int app_att_audioOtsWrite(void *p)
 {
 	my_dump_str_data(APP_LOG_EN, "ots att_write_enter:", NULL, 0); // p, sizeof(rf_packet_att_write_t));
 	rf_packet_att_write_t *p_w = (rf_packet_att_write_t *)p; // include dma len for BLE mesh library, not include dma len for new ble generic sdk.
-	return blc_audio_otpAttWrite(BLS_CONN_HANDLE, &p_w->type);
+	return blc_audio_otpAttWrite(BLS_HANDLE_MIN, &p_w->type);
 }
 #endif
 

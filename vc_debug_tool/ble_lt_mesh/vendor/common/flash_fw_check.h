@@ -26,14 +26,15 @@
 #define _FLASH_FW_CHECK_H_
 
 
-#include "proj/common/types.h"
-
-/****
- * param--crc_init_value: crc initial value. if set 0.
- * return: 1--crc check fail; 0--crc check ok
+/**
+ * @brief		This function is used to check the firmware is ok or not
+ * @param[in]	crc_init_value - the initial value of CRC
+ * @return		0 - CRC is check success
+ * 				1 - CRC is check fail
  */
 bool flash_fw_check( u32 crc_init_value );
 
 
+void blt_firmware_completeness_check(void);
 
 #endif

@@ -25,6 +25,7 @@
 #pragma once
 
 #include "tl_common.h"
+#include "nlc/nlc_sensor.h"
 /****************************************************
 Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 *****************************************************/
@@ -109,9 +110,14 @@ enum{
 
 #define TRIGGER_TYPE_DEFAULT			TRIGGER_TYPE_FORMAT
 #define FAST_CADENCE_PERIOD_DIV			2
-#define TRIGGER_DELTA_DOWN_DEFAULT		0
-#define TRIGGER_DELTA_UP_DEFAULT		0
-#define MIN_INTERVAL_DEFAULT			4
+#if ZSIR1000_AMBIENT_LIGHT_SENSED_EN
+#define TRIGGER_DELTA_DOWN_DEFAULT		(25) // unit: lux. max lux is 255 now. and threshold is 100(LC_AMBIENT_LIGHT_THRESHOLD) now.
+#define TRIGGER_DELTA_UP_DEFAULT		(25) // unit: lux. max lux is 255 now.
+#else
+#define TRIGGER_DELTA_DOWN_DEFAULT		0 // check with ">"
+#define TRIGGER_DELTA_UP_DEFAULT		0 // check with ">"
+#endif
+#define CADENCE_MIN_INTERVAL_DEFAULT	10 // unit: (2^min_interval) ms // for period of fast publish.
 #define FAST_CADENCE_LOW_DEFAULT		0
 #define FAST_CADENCE_HIGH_DEFAULT		1
 
@@ -154,7 +160,7 @@ typedef struct{
 typedef struct{
 	u32 delta_down;
 	u32 delta_up;
-	u8 min_interval;
+	u8 min_interval; // unit: (2^min_interval) ms
 	u32 cadence_low;
 	u32 cadence_high;
 }cadence_unit_t; // for save setting.
@@ -315,33 +321,6 @@ typedef struct{
 	u16 prop_id;
 	u16 raw_val_X;
 }sensor_col_get_t;
-
-//sensor sampling function
-enum{
-	UNSPECIFIED,
-	INST,
-	ARITHMETIC,
-	RMS,
-	MAX,
-	MIN,
-	ACCUMULATED,
-	CNT,
-};
-
-enum{
-	RFU_T,
-	BOOLEAN_T,
-	BIT2_T,
-	NIBBLE_T,
-	UINT8_T,
-	UINT12_T,
-	UINT16_T,
-	UINT24_T,
-	UINT32_T,
-	UINT48_T,
-	UINT64_T,
-	UINT128_T,
-};
 
 enum{
 	PROHIBITED_PROP_ID = 0,

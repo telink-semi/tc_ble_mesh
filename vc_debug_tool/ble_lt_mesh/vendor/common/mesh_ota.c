@@ -23,15 +23,10 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "mesh_ota.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 
@@ -62,7 +57,7 @@ STATIC_ASSERT(MESH_OTA_BLOB_SIZE_MAX > MESH_OTA_BLOCK_SIZE_MAX);	// SR/BT/BV02-C
 void get_fw_id()
 {
 #if !WIN32
-    #if FW_START_BY_BOOTLOADER_EN
+    #if FW_START_BY_LEGACY_BOOTLOADER_EN
     u32 fw_adr = DUAL_MODE_FW_ADDR_SIGMESH;
     #else
     u32 fw_adr = ota_program_offset ? 0 : 0x40000;
@@ -179,7 +174,6 @@ const u8  blob_id_new[8] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
 
 #define GROUP_VAL_FW_INFO_GET_ALL       (0xFFFF)	// because 0 means use unicast address
 
-#define NEW_FW_MAX_SIZE     (FLASH_ADR_AREA_FIRMWARE_END) // = (192*1024)
 u32 new_fw_size = 0;
 
 #if GATEWAY_ENABLE
@@ -466,7 +460,16 @@ int read_ota_file2buffer()
 #if DISTRIBUTOR_UPDATE_CLIENT_EN
     #if GATEWAY_ENABLE
         fw_ota_data_tx = (u8*)(ota_program_offset);//reflect to the flash part 
+        #if ENCODE_OTA_BIN_EN
+        u8 fw_data[16];
+		mesh_ota_read_data(0x10, sizeof(fw_data), fw_data);
+        u8 key[16];
+        memcpy(key, key_encode_bin, sizeof(key));
+		aes_decrypt(key, fw_data, fw_data);
+		memcpy(&new_fw_size, fw_data + 8, sizeof(new_fw_size));
+        #else
         new_fw_size = get_fw_len();
+        #endif
     #else
         new_fw_size = new_fw_read(fw_ota_data_tx, sizeof(fw_ota_data_tx));
     #endif
@@ -757,16 +760,28 @@ int mesh_cmd_sig_fw_distribut_start_sig(u8 *par, int par_len, mesh_cb_fun_par_t 
 
 int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	//u8 st = DISTRIBUT_ST_INTERNAL_ERROR;
+	u8 st = DISTRIBUT_ST_INTERNAL_ERROR;
+	u8 ak_arr_idx = APP_KEY_MAX; // invalid key index as default.
+	
 	#if DISTRIBUTOR_START_TLK_EN
 	if(is_par_distribute_start_tlk(par, par_len)){
 		fw_distribut_srv_proc.suspend_flag = 0;
-	    return mesh_cmd_sig_fw_distribut_start_tlk(par, par_len, cb_par);
+	    st = mesh_cmd_sig_fw_distribut_start_tlk(par, par_len, cb_par);
 	}else
 	#endif
 	{
-	    return mesh_cmd_sig_fw_distribut_start_sig(par, par_len, cb_par);
+	    st = mesh_cmd_sig_fw_distribut_start_sig(par, par_len, cb_par);
+		
+		fw_distribut_start_t *p_start = (fw_distribut_start_t *)par;
+		ak_arr_idx = get_ak_arr_idx((u8)fw_distribut_srv_proc.netkey_sel_enc, p_start->par.distrib_app_key_idx);
 	}
+
+	fw_distribut_srv_proc.netkey_sel_enc = mesh_key.netkey_sel_dec;
+	if(APP_KEY_MAX == ak_arr_idx){
+		fw_distribut_srv_proc.appkey_sel_enc = mesh_key.appkey_sel_dec;
+	}
+	
+	return st;
 }
 
 int mesh_cmd_sig_fw_distribut_apply(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -867,7 +882,7 @@ int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb
     	if(PTS_TEST_OTA_EN || BLOB_CHUNK_TRANSFER == mesh_tx_seg_par.match_type.mat.op){
         	memset(&mesh_tx_seg_par, 0, sizeof(mesh_tx_seg_par));    // init	// discard current tx segment. make sure distribution cancel can run.
 		}else{
-			LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0,"tx segment busy, can not tx response with segment", 0);
+			LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0,"tx segment busy, can not tx response with segment");
 			return 0;
 		}
     }
@@ -940,7 +955,7 @@ int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 			 * but FD/BV-37, 38 need init after 1st cancel, and were to get success with idle phase at 2nd cancel.
 			*/
 			//fw_distribut_srv_proc.distribut_update_phase_keep_flag = 1; // can't set for BV37,38,41
-			// LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0,"xxxxxx need keep flag ??? ", 0);
+			// LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0,"xxxxxx need keep flag ??? ");
 		}
 		
 		if((0 == fw_distribut_srv_proc.distribut_update_phase_keep_flag))
@@ -1071,7 +1086,7 @@ int mesh_cmd_sig_fw_distribut_receiver_get(u8 *par, int par_len, mesh_cb_fun_par
                     		p_node->update_phase = p_list->verify_fail_flag ? RETRIEVED_UPDATA_PHASE_APPLY_FAILED : RETRIEVED_UPDATA_PHASE_APPLY_SUCCESS;
                     		#if PTS_TEST_OTA_EN
 							fw_distribut_srv_proc.distribut_update_phase = DISTRIBUT_PHASE_COMPLETED;
-							LOG_MSG_LIB (TL_LOG_NODE_BASIC, 0, 0, "dist phase to completed", 0);
+							LOG_MSG_LIB (TL_LOG_NODE_BASIC, 0, 0, "dist phase to completed");
 							#endif
                     	}
                     }
@@ -1176,11 +1191,11 @@ int access_cmd_fw_update_get(u16 adr_dst)
 int access_cmd_fw_update_control(u16 adr_dst, u16 op, u8 rsp_max)
 {
     if(FW_UPDATE_APPLY == op){
-        LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_fw_update_apply ",0);
+        LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_fw_update_apply ");
     }else if(FW_UPDATE_CANCEL == op){
-        LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_fw_update_cancel ",0);
+        LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_fw_update_cancel ");
     }else{
-        LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"error control op code",0);
+        LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"error control op code");
         return -1;
     }
 
@@ -1298,8 +1313,12 @@ int is_busy_upload_receiver_change()
 			return 0;
 		}
 	}
-	
+
+	#if 1
+	return (distributor_st >= MASTER_OTA_ST_DISTRIBUT_START); // should be able to delete all receivers before distribution start, because App may need to do that when OTA fail at upload state at last mesh OTA flow.
+	#else
 	return ((fw_distribut_srv_proc.rx_upload_start_flag && (UPLOAD_PHASE_TRANSFER_SUCCESS != fw_distribut_srv_proc.upload_phase)) || (distributor_st >= MASTER_OTA_ST_DISTRIBUT_START));
+	#endif
 }
 
 int mesh_cmd_sig_fw_distribut_capabilities_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -1987,7 +2006,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                 LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "fw distribution status error:%d ", p->st);
             }
         }else{                      // distribute stop
-            LOG_MSG_INFO(TL_LOG_CMD_NAME, 0, 0, "mesh OTA completed or get info ok!", 0);
+            LOG_MSG_INFO(TL_LOG_CMD_NAME, 0, 0, "mesh OTA completed or get info ok!");
         }
         op_handle_ok = 1;
     }else if(FW_DISTRIBUT_RECEIVERS_LIST == op){
@@ -2001,7 +2020,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                     skip_flag = 1;
                     LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "fw update metada check error:%d ", p->st);
                     if(UPDATE_ST_METADATA_CHECK_FAIL == p->st){
-						LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "PID or VID of new firmware error, please check firmware!", 0);
+						LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "PID or VID of new firmware error, please check firmware!");
                     }
                 }
                 next_st = 1;
@@ -2041,9 +2060,9 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 				}
 				APP_report_mesh_ota_apply_status(rsp->src, p);
 				if(UPDATE_ST_SUCCESS == p->st && is_apply_phase_success(p->update_phase)){
-                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply success!!!",0);
+                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply success!!!");
 				}else{
-                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!",0);
+                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!");
                 }
             }
             
@@ -2092,18 +2111,18 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                         	distr_proc->list[distr_proc->node_num].no_missing_flag = 1;
                         }else if(BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS == p->format){
                             set_bit_by_cnt(distr_proc->miss_mask, sizeof(distr_proc->miss_mask), distribut_get_fw_chunk_cnt()); // all need send
-                            LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS", 0);
+                            LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS");
                         }else if(BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS == p->format){
                             for(int i = 0; i < (miss_chunk_len); ++i){
                                 distr_proc->miss_mask[i] |= p->miss_chunk[i];
                             }
-                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ", 0);
+                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ");
                         }else if(BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK == p->format){
-                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "ENCODE MISS CHUNK ", 0);
+                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "ENCODE MISS CHUNK ");
                             decode_miss_chunk(p->miss_chunk, miss_chunk_len, distr_proc->miss_mask, sizeof(distr_proc->miss_mask));
                         }
                     }else{
-                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG", 0);
+                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG");
                     }
                 }
                 next_st = 1;
@@ -2120,7 +2139,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 			#if MESH_OTA_TEST_SOME_CASE_EN
         	if(0 == distr_proc->test_missing_partial_report){
         		distr_proc->test_missing_partial_report++;
-				LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "----OTA,missing partial report test: %2d----", 0);
+				LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "----OTA,missing partial report test: ----");
         		return 1;
         	}
 			#endif
@@ -2234,9 +2253,9 @@ void mesh_ota_missing_chunk_handle()
 	if(0 == is_buf_zero(distr_proc->miss_mask, sizeof(distr_proc->miss_mask))){
 		distr_proc->chunk_num = 0;
 		if(MASTER_OTA_ST_BLOB_PARTIAL_BLOCK_REPORT == distr_proc->st_distr){
-			LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "chunk transfer for partial report",0);
+			LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "chunk transfer for partial report");
 		}else{
-			LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_blob_chunk_transfer retry",0);
+			LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "access_cmd_blob_chunk_transfer retry");
 		}
 		mesh_ota_master_next_st_set(MASTER_OTA_ST_BLOB_CHUNK_START);
 	}else{
@@ -2265,7 +2284,7 @@ int is_all_receivers_invalid_and_set2distribut_cancel()
 	int err = 0;
 	if(is_distributor_all_receivers_invalid()){
 		fw_distribut_srv_proc.distribut_update_phase = DISTRIBUT_PHASE_FAILED;
-		LOG_MSG_ERR(TL_LOG_CMD_NAME, 0, 0, "all receivers failed!", 0);
+		LOG_MSG_ERR(TL_LOG_CMD_NAME, 0, 0, "all receivers failed!");
 		mesh_ota_master_next_st_set(MASTER_OTA_ST_DISTRIBUT_CANCEL);
 		err = 1;
 	}
@@ -2414,8 +2433,8 @@ void mesh_ota_master_proc()
 		{
 			int no_group_flag = is_unicast_adr(fw_distribut_srv_proc.adr_group);
 			if(no_group_flag){
-				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "no need to set subscription",0);
-				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "only one updating node and it is GATT connected, so use unicast address to send chunks",0);
+				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "no need to set subscription");
+				LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "only one updating node and it is GATT connected, so use unicast address to send chunks");
 			}
 			
 		    if((distr_proc->node_num < distr_proc->node_cnt) && (!is_rx_upload_start_before()) && !no_group_flag){
@@ -2563,7 +2582,7 @@ void mesh_ota_master_proc()
 					if(block_num_current == 0){
 						u8 crc_buf[16];
 						flash_read_page(ota_program_offset,sizeof(crc_buf),crc_buf);
-						crc_buf[8]= get_fw_ota_value();
+						crc_buf[BOOT_MARK_ADDR not 8]= get_fw_ota_value(); // TODO: can not use 8, but BOOT_MARK_ADDR for B91 and kite
 						crc = soft_crc32_telink(crc_buf ,sizeof(crc_buf), 0);
 						crc = soft_crc32_ota_flash(sizeof(crc_buf),size-16,crc,0);
 					}else
@@ -2590,7 +2609,7 @@ void mesh_ota_master_proc()
                 	int rx_ok = 1;
                 	#if DEBUG_SHOW_VC_SELF_EN
                 	if(is_only_VC_self_OTA()){
-	                	fw_ota_data_rx[8] = fw_update_srv_proc.reboot_flag_backup;
+	                	fw_ota_data_rx[BOOT_MARK_ADDR] = fw_update_srv_proc.reboot_flag_backup;
 	                	rx_ok = (0 == memcmp(fw_ota_data_tx, fw_ota_data_rx, fw_distribut_srv_proc.blob_size));
                 	}
                 	#endif
@@ -2668,7 +2687,7 @@ void mesh_ota_master_proc()
 							#endif
 							
 							if(g_blob_info_status.chunk_size_max == 8){
-								if(p_cmd->chunk_num == 1){
+								if(p_cmd->chunk_num == (BOOT_MARK_ADDR/8)){
 	    							p_cmd->data[0] = flag_backup;
 	    						}
 							}else if(g_blob_info_status.chunk_size_max < 8){
@@ -2676,7 +2695,13 @@ void mesh_ota_master_proc()
 							}else{
 								if(p_cmd->chunk_num == 0){
 									// have make sure sizeof(p_cmd->data) > 8
-									p_cmd->data[8] = flag_backup;
+									// Just make sure that the boot mark flag store in flash is invalid, regardless of whether it is B85 or B91 firmware.
+									// so use BOOT_MARK_ADDR instead of a variable which depend on firmware type.
+									if(sizeof(p_cmd->data) > BOOT_MARK_ADDR){ // has assert chunk_size >= 0x24 before when not eual to 8.
+										p_cmd->data[BOOT_MARK_ADDR] = flag_backup;
+									}else{
+										// should not happen here.
+									}
 								}
 							}
 						}else{
@@ -2965,17 +2990,20 @@ const u8 BLOB_ID_VC_INITIATOR[8] = {0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68};
 #endif
 
 STATIC_ASSERT(MESH_OTA_CHUNK_SIZE >= 8); // if not, need to fix mesh_ota_save_data_()
+#if (MESH_OTA_CHUNK_SIZE <= 0x24) // BOOT_MARK_ADDR is 0x20 for B91
+STATIC_ASSERT((MESH_OTA_CHUNK_SIZE == 8) && (BOOT_MARK_ADDR % 8 == 0)); // BOOT_MARK_ADDR is 8 for B85/B87
+#endif
 
 void mesh_ota_save_data(u32 adr, u32 len, u8 * data){
 	if(8 == fw_update_srv_proc.block_start.chunk_size){
-		if (adr == 8){
+		if (adr == BOOT_MARK_ADDR){
 		    fw_update_srv_proc.reboot_flag_backup = data[0];
 			data[0] = 0xff;					//FW flag invalid
 		}
 	}else{
-		if (adr == 0){
-		    fw_update_srv_proc.reboot_flag_backup = data[8];
-			data[8] = 0xff;					//FW flag invalid
+		if (adr == 0){ // assert chunk_size >= 0x24 before several lines
+		    fw_update_srv_proc.reboot_flag_backup = data[BOOT_MARK_ADDR];
+			data[BOOT_MARK_ADDR] = 0xff;					//FW flag invalid
 		}
 	}
 
@@ -3004,7 +3032,7 @@ u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
         flash_read_page(addr, len_read, buf);
         #endif
         if(0 == addr){
-            buf[8] = fw_update_srv_proc.reboot_flag_backup;
+            buf[BOOT_MARK_ADDR] = fw_update_srv_proc.reboot_flag_backup;
             fw_update_srv_proc.bin_crc_type = get_ota_check_type();
             if(FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type){
                 fw_update_srv_proc.crc_total = 0xffffffff;  // crc init
@@ -3065,8 +3093,21 @@ int is_valid_telink_fw_flag()
 {
     u8 fw_flag_telink[4] = {0x4B,0x4E,0x4C,0x54};
     u8 fw_flag[4] = {0};
-    mesh_ota_read_data(8, sizeof(fw_flag), fw_flag);
-    fw_flag[0] = fw_update_srv_proc.reboot_flag_backup;
+
+	u32 addr_boot_mark_new_fw = BOOT_MARK_ADDR;
+    if(fw_update_srv_proc.reboot_flag_backup != 0x4B){ // BOOT_MARK_VALUE
+    	#if (BOOT_MARK_ADDR == BOOT_MARK_ADDR_B85M)
+    	addr_boot_mark_new_fw = BOOT_MARK_ADDR_B91M;
+    	#elif (BOOT_MARK_ADDR == BOOT_MARK_ADDR_B91M)
+    	addr_boot_mark_new_fw = BOOT_MARK_ADDR_B85M;
+    	#endif
+    }
+    
+    mesh_ota_read_data(addr_boot_mark_new_fw, sizeof(fw_flag), fw_flag);
+	if(fw_update_srv_proc.reboot_flag_backup == 0x4B){ // if firmware type different, no need copy reboot flag
+    	fw_flag[0] = fw_update_srv_proc.reboot_flag_backup;
+	}
+	
 	if(!memcmp(fw_flag,fw_flag_telink, 4) && is_valid_mesh_ota_len(fw_update_srv_proc.blob_size)){
 		return 1;
 	}
@@ -3263,7 +3304,7 @@ void mesh_ota_proc()
         fw_update_srv_proc.blob_trans_start_tick = 0;
         if(BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK == fw_update_srv_proc.blob_trans_phase){
             set_blob_trans_phase_suspend();
-            LOG_MSG_ERR(TL_LOG_COMMON,0, 0 ,"blob transfer timeout--",0);
+            LOG_MSG_ERR(TL_LOG_COMMON,0, 0 ,"blob transfer timeout--");
         }
     }
     #endif
@@ -3279,7 +3320,7 @@ void mesh_ota_proc()
 		}
 		#endif
 		distribut_srv_proc_init(0); // include clear fw_distribut_srv_proc.tick_dist_canceling_
-		LOG_MSG_LIB (TL_LOG_NODE_BASIC, 0, 0, "dist phase canceling is timeout and to be completed", 0);
+		LOG_MSG_LIB (TL_LOG_NODE_BASIC, 0, 0, "dist phase canceling is timeout and to be completed");
 	}
 	#endif
 #else
@@ -3304,7 +3345,7 @@ void mesh_ota_proc()
 					){
 						if(fw_update_srv_proc.report_retry_cnt <= (PULL_MODE_REPORT_RETRY_MAX - 1)){
 							set_blob_trans_phase_suspend();
-							//LOG_MSG_ERR(TL_LOG_COMMON,0, 0 ,"blob block pull mode timeout--",0);
+							//LOG_MSG_ERR(TL_LOG_COMMON,0, 0 ,"blob block pull mode timeout--");
 						}
 					}
 					
@@ -3316,7 +3357,7 @@ void mesh_ota_proc()
 							u16 last_chunk_utf8 = 0;
 							int err = -1;
 							#if FEATURE_LOWPOWER_EN
-							if(is_friend_ship_link_ok_lpn()||(blt_state == BLS_LINK_STATE_CONN))
+							if(is_friend_ship_link_ok_lpn()||(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN))
 							#endif
 							{
 								err = mesh_ota_send_partial_report(fw_update_srv_proc.report_partital_dst_adr, &last_chunk_utf8);
@@ -3551,6 +3592,11 @@ int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
     u8 *par_err = 0;
     u8 metadata_len = par_len - OFFSETOF(fw_update_start_t,metadata);
     int force_flag = (UPDATE_PHASE_VERIFYING_FAIL == fw_update_srv_proc.update_phase);
+
+#if MESH_FLASH_PROTECTION_EN
+	mesh_flash_unlock();
+#endif
+    
 #if (DISTRIBUTOR_UPDATE_SERVER_EN && DISTRIBUTOR_NO_UPDATA_START_2_SELF && (0 == DEBUG_SHOW_VC_SELF_EN))
 	if(fw_distribut_srv_proc.st_distr != 0)
 	{
@@ -3607,7 +3653,14 @@ int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
             fw_update_srv_proc.busy = 1;
             st = UPDATE_ST_SUCCESS;
 			#if (MESH_DLE_MODE && !WIN32)
-            LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0 ,"DLE RemoteMaxRx: %d, DLE RemoteMaxTx: %d",bltData.connRemoteMaxRxOctets, bltData.connRemoteMaxTxOctets);
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+			u16 maxRxOct = aclConn_param.maxRxOct;
+			u16 maxTxOct = aclConn_param.maxTxOct_slave;
+				#else
+			u16 maxRxOct = bltData.connRemoteMaxRxOctets;
+			u16 maxTxOct = bltData.connRemoteMaxTxOctets;
+				#endif
+            LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0 , "DLE RemoteMaxRx: %d, DLE RemoteMaxTx: %d", maxRxOct, maxTxOct);
 			#endif
 	    }else{
     	    st = UPDATE_ST_METADATA_CHECK_FAIL;
@@ -3641,7 +3694,7 @@ int mesh_cmd_sig_fw_update_apply(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
              || is_valid_mesh_ota_calibrate_val()){
 				#if WIN32
 				    #if (DISTRIBUTOR_UPDATE_SERVER_EN && VC_APP_ENABLE)
-                fw_ota_data_rx[8] = fw_update_srv_proc.reboot_flag_backup;
+                fw_ota_data_rx[BOOT_MARK_ADDR] = fw_update_srv_proc.reboot_flag_backup;
                 new_fw_write_file(fw_ota_data_rx, fw_update_srv_proc.blob_size);
                     #endif
 				#else
@@ -3920,7 +3973,9 @@ int mesh_cmd_sig_blob_transfer_handle(u8 *par, int par_len, mesh_cb_fun_par_t *c
 						#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 						check_and_set_1p95v_to_zbit_flash();
 						#endif
-                        
+                        #if APP_FLASH_PROTECTION_ENABLE
+						app_flash_protection_ota_begin();
+						#endif
                         st = BLOB_TRANS_ST_SUCCESS;
                     }
                     }
@@ -4189,7 +4244,7 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
             #if 0 // no need, just discard message.
             // MMDL/SR/BT/BV-31-C BLOB Chunk Transfer-Invalid Parameters: discard all that have been received
             set_bit_by_cnt(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask), updater_get_fw_chunk_cnt());
-            LOG_MSG_ERR(TL_LOG_NODE_BASIC,0, 0,"invalid chunk number:",0);
+            LOG_MSG_ERR(TL_LOG_NODE_BASIC,0, 0,"invalid chunk number:");
             #endif
         }else if(p_chunk->chunk_num <= sizeof(fw_update_srv_proc.miss_mask)*8){
             #if 1 // VC_DISTRIBUTOR_UPDATE_CLIENT_EN
@@ -4248,7 +4303,7 @@ int block_crc32_check_current(u32 check_val)
 {
     u32 adr = updater_get_fw_data_position(0);
     u32 crc_type1_blk = (FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type) ? fw_update_srv_proc.crc_total : 0;
-    u32 crc32_cal = 0;
+    __UNUSED u32 crc32_cal = 0;
     crc32_cal = soft_crc32_ota_flash(adr, fw_update_srv_proc.bk_size_current, 0,&crc_type1_blk);
     #if BLOCK_CRC32_CHECKSUM_EN
     if(check_val == crc32_cal)
@@ -4347,7 +4402,7 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			#endif
             is_mesh_ota_all_missing(fw_update_srv_proc.miss_mask, chunk_cnt_total)){
                 rsp.format = BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS;
-                LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"all miss:",0);
+                LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"all miss:");
             }else
             #endif
             {

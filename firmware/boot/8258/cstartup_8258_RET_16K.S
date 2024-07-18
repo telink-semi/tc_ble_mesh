@@ -46,11 +46,6 @@
 	.equ IRQ_MODE, 		0x12	@ Interrupt Request mode
 	.equ SVC_MODE, 		0x13	@ Supervisor mode 
 
-	#ifdef __PROJECT_MESH_GW_NODE_HK__
-	.equ IRQ_STK_SIZE,	0x400
-	#else
-	.equ IRQ_STK_SIZE,	__IRQ_STACK_SIZE__
-	#endif
 	.equ __LOAD_RAM, 	__LOAD_RAM_SIZE__
 	.equ __RAM_START_ADDR, 	(0x840000) 
 	.equ __RAM_SIZE_MAX, 	(RAM_SIZE_MAX)
@@ -414,7 +409,7 @@ END:	tj	END
 DAT0:
 	.word	0x12			    @IRQ    @0
 	.word	0x13			    @SVC    @4
-	.word	(irq_stk + IRQ_STK_SIZE)
+	.word	(irq_stk + __IRQ_STACK_SIZE__)
 	.word	(__RAM_START_ADDR + __RAM_SIZE_MAX)		    @12  stack end
 	.word	(_start_bss_)               @16
 	.word	(_end_bss_)                 @20
@@ -465,11 +460,15 @@ FLL_D:
 	.word	(_start_data_ + 32)
 #else
 	#if __MCU_STACK_INIT_EN
-	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX - 3*1024)    @just clear 3k to decrease time. @(_end_bss_)
+		#if 0 // for debug mode
+	.word   _no_retention_bss_end_    						@start address. initial all stack.
+		#else
+	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX - 3*1024)    @start address. just clear 3k to decrease time. @(_end_bss_)
+		#endif
 	#else
-	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX - 4)
+	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX - 4)			@start address. 
 	#endif
-	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX)
+	.word   (__RAM_START_ADDR + __RAM_SIZE_MAX)				@end address. 
 #endif
 	.word   (_rstored_)                 @24 // not use with FLL_D, just extern.
 	@.word	(_ram_use_size_div_16_)         // not use with FLL_D, just extern.
@@ -515,7 +514,7 @@ ASMEND:
 
 	.section .bss
 	.align 4
-	.lcomm irq_stk, IRQ_STK_SIZE
+	@.lcomm irq_stk, __IRQ_STACK_SIZE__ @ define in mesh_common.c
 	.end
 
 #endif

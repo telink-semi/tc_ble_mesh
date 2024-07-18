@@ -78,7 +78,7 @@ void mesh_iv_update_enter_search_mode()
 {
     mesh_iv_idx_init(iv_idx_st.iv_cur, 0, 0);
     iv_idx_st.searching_flag = 1;
-    LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index searching:",0);
+    LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index searching:");
 }
 
 #if TESTCASE_FLAG_ENABLE
@@ -101,7 +101,7 @@ void mesh_iv_update_enter_update2normal() // enter normal with step2, not normal
 	iv_idx_st.update_proc_flag = IV_UPDATE_STEP2;
 	mesh_ivi_event_cb(iv_idx_st.searching_flag);
 	mesh_node_identity_refresh();
-    LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step2: ",0);
+    LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step2: ");
 	mesh_iv_update_report_between_gatt();
 }
 
@@ -127,7 +127,7 @@ void mesh_iv_update_report_between_gatt()
 #if WIN32
     // if(connect_flag) // no need
 #else
-	if(blt_state == BLS_LINK_STATE_CONN)
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)
 #endif
 	{
 		mesh_tx_sec_private_beacon_proc(1);
@@ -155,7 +155,7 @@ int mesh_iv_update_step_change()
 			iv_idx_st.update_proc_flag = 0;
 			mesh_ivi_event_cb(iv_idx_st.searching_flag);
 			err = 0;
-            LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter Normal:",0);
+            LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter Normal:");
 		}
 	}
 	
@@ -185,21 +185,26 @@ void iv_update_set_with_update_flag_true(u32 iv_idx, u32 search_mode)
     mesh_iv_update_set_start_flag(0);
 	mesh_ivi_event_cb(iv_idx_st.searching_flag);
     if(search_mode){
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step1 by search: ",0);
+        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step1 by search: ");
     }else{
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step1 by provision: ",0);
+        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index enter step1 by provision: ");
     }
 }
 
 int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx)
 {
-	#if __PROJECT_MESH_SWITCH__
+	#if (__PROJECT_MESH_SWITCH__ || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN)
 	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());
 	extern int soft_timer_rcv_beacon_timeout();
 	soft_timer_rcv_beacon_timeout();
 	blt_soft_timer_delete(&soft_timer_rcv_beacon_timeout);
+		#if __PROJECT_MESH_SWITCH__
 	switch_iv_update_time_refresh(); 
+		#else
+	gateway_iv_update_time_refresh(); 
+		#endif
 	#endif
+
 	return 0;
 }
 
@@ -218,7 +223,7 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
 	#if GATEWAY_ENABLE
 	if(is_iv_index_invalid()){
 		mesh_iv_idx_init(iv_idx, 1, 1);
-		LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"Gateway recover IV index",0);	
+		LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"Gateway recover IV index");	
 	}
 	#endif
 	
@@ -252,7 +257,7 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
                 mesh_iv_idx_init(iv_idx, 1, 1);
                 iv_idx_st.searching_flag = 0;
 				mesh_iv_update_report_between_gatt();
-				LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index discover new iv:",0);
+				LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index discover new iv:");
             }
         }else if(iv_idx >= iv_idx_st.iv_cur){
             if(IV_UPDATE_NORMAL == iv_idx_st.update_proc_flag){
@@ -273,19 +278,6 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
         }else{
             // no need else case, because have returned before.
         }
-
-        #if FEATURE_LOWPOWER_EN
-        if(is_lpn_support_and_en && (0 == iv_idx_st.rx_beacon_ok_after_searching)){
-            #ifndef WIN32
-			if(BLS_LINK_STATE_CONN != blt_state)
-			#endif
-			{
-            	suspend_enter(200, 0);		// delay for FN send beacon ok.
-                mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
-            }
-        }
-        iv_idx_st.rx_beacon_ok_after_searching = 1;	// will be cleared when enter search mode.
-        #endif
     }
 
     // no else, because need to handle in both normal mode or searching mode.
@@ -305,7 +297,7 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
 				mesh_net_key_t * p_nk = is_mesh_net_key_exist(NET_KEY_PRIMARY);
 				if(p_nk){
 					if(NET_KEY_PRIMARY != mesh_key.net_key[mesh_key.netkey_sel_dec][0].index){
-						LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"ignore subnet beacon which iv update flag ==1",0);
+						LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"ignore subnet beacon which iv update flag ==1");
 						return -1;	// ignore (iv update flag ==1) from subnet, IVU_BI04
 					}
 				}
@@ -320,7 +312,7 @@ int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *
 					    #if 0 // for which case ??? confirm later
                         int searching_trigger_update = (0 == memcmp(iv_idx_st.tx, iv_idx_st.cur, 4)); // should never true
                         if(searching_trigger_update){   // why ?? 
-                            LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"into step2, and reset sno ",0);
+                            LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"into step2, and reset sno ");
     						mesh_iv_update_enter_update2normal();    // enter step2 // attention: will reset sno
 						}
 						#elif (IV_UPDATE_SKIP_96HOUR_EN)
@@ -413,6 +405,9 @@ void mesh_iv_update_set_start_flag(int keep_search_flag)
 void mesh_iv_update_start_check()
 {
 #if IV_UPDATE_DISABLE
+	if(is_sno_exhausted()){
+		mesh_iv_idx_init(iv_idx_st.iv_cur, 1, 1);
+	}
     return ;
 #endif
 
@@ -462,13 +457,19 @@ void mesh_iv_update_start_poll()
     beacon_iv_update_pkt = 0;    // reset
 }
 
-void mesh_iv_update_st_poll_s()
+void mesh_iv_update_st_poll_s(u32 elapsed_time_s)
 {
-    iv_idx_st.keep_time_s++;
+    iv_idx_st.keep_time_s += elapsed_time_s;
     
 	if(iv_idx_st.update_proc_flag && is_enough_time_keep_state()){ // only for trigger role
 	    mesh_iv_update_step_change();
 	}
+
+#if __PROJECT_MESH_SWITCH__
+	switch_trigger_iv_search_mode(0);
+#elif GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
+	gateway_trigger_iv_search_mode(0);
+#endif
 }
 
 

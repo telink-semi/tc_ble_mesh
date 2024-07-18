@@ -22,23 +22,31 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#ifndef __FLASH_COMPATIBLE_H__
-#define __FLASH_COMPATIBLE_H__
+#ifndef __FLASH_TYPE_H__
+#define __FLASH_TYPE_H__
 
 #include "../flash.h"
-#include "flash_mid11325e.h"	// ZB25WD10A
+#if 1 // 8258
 #include "flash_mid13325e.h"	// ZB25WD40B
 #include "flash_mid14325e.h"	// ZB25WD80B
 #include "flash_mid1060c8.h"	// GD25LD05C
-#include "flash_mid1160c8.h"	// GD25LD10C
 #include "flash_mid1360c8.h"	// GD25LD40C
 #include "flash_mid1460c8.h"	// GD25LD80C
 #include "flash_mid011460c8.h"	// GD25LE80C / GD25LQ80C
 #include "flash_mid134051.h"	// MD25D40D
 #include "flash_mid136085.h"	// P25Q40L
 #include "flash_mid1360eb.h"	// TH25D40UA / TH25D40LA
+#endif
+#if 1 // 8278
+#include "flash_mid1160c8.h"	// GD25LD10C
+#include "flash_mid1360c8.h"	// GD25LD40C/GD25LD40E
+#include "flash_mid1460c8.h"	// GD25LD80C/GD25LD80E
+#include "flash_mid11325e.h"	// ZB25WD10A
+#include "flash_mid13325e.h"	// ZB25WD40B
+#include "flash_mid14325e.h"	// ZB25WD80B
+#include "flash_mid146085.h"    // P25Q80U
+#endif
 
-#if FLASH_LOCK_EN
 /**
  * @brief		This function reads the status of flash.
  * @param[in] 	cmd	- the cmd of read status.
@@ -125,6 +133,6 @@ void flash_write_otp(unsigned long addr, unsigned long len, unsigned char *buf);
  */
 void flash_erase_otp(unsigned long addr);
 
-#endif
+
 #endif
 

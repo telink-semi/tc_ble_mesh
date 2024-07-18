@@ -34,7 +34,6 @@
 
 #define PB_GATT_ENABLE 		1
 #define PROV_CASE_ENABLE	0
-extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
 #if PTS_TEST_EN
 #define PROVISION_NORMAL_TIMEOUT_MS		(60*1000)
@@ -210,6 +209,7 @@ typedef enum{
 	MSG_PROXY_CONFIG,
 	MSG_PROVISION_PDU,
 	MSG_RX_TEST_PDU,
+	MSG_ONLINE_ST_PDU,
 	MSG_COMPOSITE_WAIT = 0xfe,
 }PROXY_MSG_TYPE_ENUM;
 
@@ -506,13 +506,13 @@ typedef  enum{
 
 typedef struct{
 	u8  net_work_key[16];
-	u16  key_index;
+	u16  key_index;			// little endian
 	union{
 		mesh_ctl_fri_update_flag_t prov_flags;
 		u8  flags;
 	};
-	u8  iv_index[4]; // big endian
-	u16  unicast_address;
+	u8  iv_index[4]; 		// big endian
+	u16  unicast_address;	// little endian
 }provison_net_info_str;
 
 typedef struct{
@@ -569,6 +569,7 @@ typedef struct{
 	u8 rec_rsp_len;
 	u8 cert_ack_hold;
 	u8 privacy_para;
+	u8 prov_oob_len;
 }prov_para_proc_t;
 extern _align_4_ prov_para_proc_t prov_para;
 
@@ -588,8 +589,8 @@ typedef struct{
 	provison_net_info_str pro_net_info;
 	u8  unused_oob[16];
 	u16 unicast_adr_last;
-	u8  oob_len;
-}pro_para_mag;
+	//u8  oob_len; // must move to prov_para.
+}pro_para_mag; // need to save to flash, do not change size.
 extern u8 prov_link_cls_code;
 extern u8 dev_auth[32];
 
@@ -702,7 +703,7 @@ enum{
 	FAST_PROV_RESET_NETWORK,
 	FAST_PROV_GET_ADDR,
 	FAST_PROV_GET_ADDR_RETRY,
-	FAST_PROV_SET_ADDR,
+	FAST_PROV_SET_ADDR,		// must before FAST_PROV_NET_INFO, because we need to make sure all unprovision node with the same default address can be get by App when get mac state.
 	FAST_PROV_NET_INFO,
 	FAST_PROV_CONFIRM,
 	FAST_PROV_CONFIRM_OK,
@@ -804,8 +805,6 @@ extern _align_4_ mesh_cmd_ut_rx_seg_union_t mesh_cmd_ut_rx_seg_union;
 #else
 #define PROXY_GATT_MAX_LEN          PROVISION_GATT_MAX_LEN
 #endif
-extern u8 proxy_para_buf[PROXY_GATT_MAX_LEN]; 
-extern u8 proxy_para_len;
 extern u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
 extern u8 para_len ;
 
@@ -867,17 +866,15 @@ extern u8 mesh_send_provison_data(u8 pdu_type,u8 bearCode,u8 *para,u8 para_len )
 extern int mesh_provison_process(u8 ini_role,u8 *p_rcv);
 extern void mesh_adv_provision_retry();
 
-extern void dispatch_pb_gatt(u8 *p ,u8 len );
+extern void dispatch_pb_gatt(u16 connHandle, u8 *p , u16 len );
 extern u8 get_provision_state();
 extern u8 is_provision_success();
 extern u8 is_provision_working();
 
 extern u8 tc_set_fifo(u8 cmd,u8 *pfifo,u8 cmd_len);
-extern int notify_pkts(u8 *p,u16 len,u16 handle,u8 proxy_type);
+extern int notify_pkts(u16 conn_handle, u8 *p, u16 len, u16 att_handle, u8 proxy_type);
 
 extern u8 mesh_provision_cmd_process();
-extern u8 pkt_pb_gatt_data(rf_packet_att_data_t *p, u8 l2cap_type,u8 *p_rcv,u8 *p_rcv_len);
-extern void mesh_proxy_sar_timeout_terminate();
 extern void provision_mag_cfg_s_store();
 #if !WIN32
 void get_private_key(u8 *p_private_key);
@@ -910,14 +907,6 @@ extern u8 adv_provision_state_dispatch(pro_PB_ADV * p_adv);
 extern u8 wait_and_check_complete_state();
 void VC_cmd_clear_all_node_info(u16 adr);
 
-// proxy sar function part 
-void mesh_proxy_sar_para_init();
-void mesh_proxy_sar_start();
-void mesh_proxy_sar_continue();
-void mesh_proxy_sar_end();
-void mesh_proxy_sar_complete();
-void mesh_proxy_sar_err_terminate();
-void mesh_proxy_sar_timeout_terminate();
 void mesh_loop_check_link_close_flag();
 
 void mesh_proxy_master_terminate_cmd();
@@ -970,7 +959,7 @@ void mesh_prov_proc_loop();
 void set_prov_timeout_tick(u32 tick);
 void send_rcv_retry_clr();
 u8 send_multi_type_data(u8 type,u8 *p_para);
-int gatt_prov_notify_pkts(u8 *p,u16 len,u16 handle,u8 proxy_type);
+int gatt_prov_notify_pkts(u16 conn_handle, u8 *p, u16 len, u16 att_handle, u8 proxy_type);
 void mesh_adv_prov_confirm_cmd(mesh_pro_data_t *p_send_str,u8 *p_confirm);
 void mesh_adv_prov_link_close();
 void mesh_adv_prov_link_open(u8 *p_uuid);
