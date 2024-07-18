@@ -175,12 +175,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
     }
 
     private void onOtaComplete() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                btn_start_ota.setEnabled(true);
-            }
-        });
+        runOnUiThread(() -> btn_start_ota.setEnabled(true));
     }
 
     @Override
