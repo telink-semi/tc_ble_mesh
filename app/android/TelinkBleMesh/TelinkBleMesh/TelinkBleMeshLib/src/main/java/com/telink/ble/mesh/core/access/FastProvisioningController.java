@@ -367,7 +367,8 @@ public class FastProvisioningController {
                 clear();
                 onStateUpdate(success ? STATE_SUCCESS : STATE_FAIL, "fast provision complete", null);
             }
-        }, PROVISIONER_DELAY + configuration.getResetDelay());
+        }, PROVISIONER_DELAY);
+        // PROVISIONER_DELAY + configuration.getResetDelay()
     }
 
     private void sendCompleteMessage() {
