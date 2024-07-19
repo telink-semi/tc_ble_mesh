@@ -84,11 +84,11 @@
             [weakSelf showTips:[NSString stringWithFormat:@"Add fail! The address 0x%04X already exists.", address]];
             return;
         }
-        [weakSelf showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Add address 0x%04X?", address] sure:^(UIAlertAction *action) {
+        [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Add address 0x%04X?", address] sure:^(UIAlertAction *action) {
             [weakSelf.filterModel.addressList addObject:@(address)];
             [weakSelf saveFilterLocation];
             [weakSelf refreshSourceAndUI];
-        }];
+        } cancel:nil];
     }]];
     [self presentViewController:inputAlertController animated:YES completion:nil];
 }
@@ -121,14 +121,14 @@
                 [weakSelf showTips:[NSString stringWithFormat:@"0x%04X is location address of iPhone, this address can not delete!", address.intValue]];
                 return;
             }
-            [weakSelf showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete address: 0x%04X?", address.intValue] sure:^(UIAlertAction *action) {
+            [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete address: 0x%04X?", address.intValue] sure:^(UIAlertAction *action) {
                 [weakSelf.filterModel.addressList removeObject:address];
                 NSDictionary *dict = [weakSelf.filterModel getDictionaryOfSigProxyFilterModel];
                 NSData *filterData = [LibTools getJSONDataWithDictionary:dict];
                 [[NSUserDefaults standardUserDefaults] setValue:filterData forKey:kFilter];
                 [[NSUserDefaults standardUserDefaults] synchronize];
                 [weakSelf refreshSourceAndUI];
-            }];
+            } cancel:nil];
         }];
         return cell;
     }

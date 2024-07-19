@@ -24,8 +24,12 @@
 #import <UIKit/UIKit.h>
 
 typedef void(^ButtonBlock)(UIButton * button);
+#define kDefaultShowWaveValue   YES
 
 @interface UIButton (extension)
+
+/* 设置显示水波纹效果，默认值为kDefaultShowWaveValue，打开状态。如果需要修改默认值，这需要修改宏kDefaultShowWaveValue的值即可 */
+@property (nonatomic, assign) BOOL isShowWave;
 
 /**
  *  使用block回调点击事件,默认的touchUpInside
@@ -33,6 +37,7 @@ typedef void(^ButtonBlock)(UIButton * button);
  *  @param block block返回值
  */
 - (void)addAction:(ButtonBlock)block;
+
 /**
  *    使用block回调点击事件
  *

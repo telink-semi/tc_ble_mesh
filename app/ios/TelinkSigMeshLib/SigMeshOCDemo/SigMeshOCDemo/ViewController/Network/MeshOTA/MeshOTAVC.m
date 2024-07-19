@@ -143,11 +143,14 @@
 }
 
 - (void)refreshDistributorUI {
+    //进入MeshOTA，如果直连节点支持作为distributor，distributor默认选中直连节点；如果直连节点不支持作为distributor，distributor默认选中手机。
     SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
     SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
     if (modelId == nil) {
         [self.connectedDeviceButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
         [self clickPhone:self.phoneButton];
+    } else {
+        [self clickConnectedDevice:self.connectedDeviceButton];
     }
 }
 
@@ -434,7 +437,7 @@
     [self.allItemVIDDict removeAllObjects];
     //2.firmwareUpdateInformationGet，该消息在modelID：kSigModel_FirmwareUpdateServer_ID里面。
     UInt16 modelIdentifier = kSigModel_FirmwareUpdateServer_ID;
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSArray *curNodes = [NSArray arrayWithArray:self.selectItemArray];
     NSInteger responseMax = 0;
     NSMutableArray *LPNArray = [NSMutableArray array];
     for (SigNodeModel *model in curNodes) {
