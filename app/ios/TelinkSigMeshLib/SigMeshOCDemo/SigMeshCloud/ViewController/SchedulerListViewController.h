@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     SchedulerListViewController.h 
+ * @file     SchedulerListViewController.h
  *
  * @brief    for TLSR chips
  *
