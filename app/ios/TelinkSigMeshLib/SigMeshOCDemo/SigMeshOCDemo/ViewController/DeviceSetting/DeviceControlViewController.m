@@ -152,10 +152,9 @@ typedef enum : NSUInteger {
     BOOL hasCTLGet = [self.model getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0;
     //modelID 0x1300:Light Lightness Get
     BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)].count > 0;
-
+    __weak typeof(self) weakSelf = self;
     if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet && self.model.state != DeviceStateOutOfLine) {
         //get light and temperature
-        __weak typeof(self) weakSelf = self;
         [DemoCommand getCTLWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightCTLStatus * _Nonnull responseMessage) {
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -165,13 +164,20 @@ typedef enum : NSUInteger {
         }];
     }else if (self.model.lightnessAddresses.count > 0 && hasLightnessGet && self.model.state != DeviceStateOutOfLine) {
         //get light
-        __weak typeof(self) weakSelf = self;
         [DemoCommand getLumWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
             if (isResponseAll) {
                 [weakSelf performSelectorOnMainThread:@selector(getHSL) withObject:nil waitUntilDone:YES];
             }
+        }];
+    } else if (self.model.onoffAddresses.count > 0 && self.model.isLPN) {
+        //get OnOff of LPN
+        [SDKLibCommand genericOnOffGetWithDestination:self.model.onoffAddresses.firstObject.intValue retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+            weakSelf.onoffStateSource = [NSMutableArray arrayWithObject:@(responseMessage.isOn)];
+            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            
         }];
     }
 }

@@ -538,6 +538,7 @@ class BlobTransfer {
                 if (!isSegment) {
                     // if not segmented message, send next
                     sendChunks();
+//                    delayHandler.postDelayed(chunkSendingTask, 100); // for test
                 }
                 // else , waiting for segment block ack complete
             } else {
@@ -668,7 +669,7 @@ class BlobTransfer {
             if (transferMode == TransferMode.PULL) {
                 result = 10;
             } else {
-                result = 100;
+                result = 10; // update from 100, for resend chunk faster
             }
         } else if (this.transferMode == TransferMode.PULL) {
             result = 120;

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceSelectAdapter.java
+ * @file ShareInfoAdapter.java
  *
  * @brief for TLSR chips
  *

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file TelinkHttpClient.java
+ * @file HttpRequestMethod.java
  *
  * @brief for TLSR chips
  *

@@ -172,10 +172,29 @@
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
     if (model != self.network.curAppkeyModel) {
         __weak typeof(self) weakSelf = self;
-        [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure change current appKey to index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
+        [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure change current appKey to index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
+            SigNodeModel *node = [SigDataSource.share curLocationNodeModel];
+            bool needReConnectMesh = YES;
+            if (node && node.appKeys.count > 0) {
+                NSArray *array = [NSArray arrayWithArray:node.appKeys];
+                for (SigNodeKeyModel *key in array) {
+                    if (key.index == model.index) {
+                        needReConnectMesh = NO;
+                        break;
+                    }
+                }
+            }
+            if (needReConnectMesh) {
+                [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
+                    TelinkLogInfo(@"change appkey: stop mesh=%d", successful);
+                    [SDKLibCommand startMeshConnectWithComplete:^(BOOL successful) {
+                        TelinkLogInfo(@"change appkey: start mesh=%d", successful);
+                    }];
+                }];
+            }
             SigDataSource.share.curAppkeyModel = model;
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-        }];
+        } cancel:nil];
     }
 }
 #endif

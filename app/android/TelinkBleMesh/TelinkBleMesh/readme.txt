@@ -3,6 +3,20 @@ version record:
 versionName - version code - date
 
 
+V4.1.0.1 - 7 - 20240719
+
+### Bug Fixes
+
+- feat: add support for scene configuration in multiple elements
+- feat: add support for NLC and sensor
+- feat: add support for device sort by name and address
+- feat: add support for setting direct forwarding in batches
+- feat: add support for on-demand gatt proxy and solicitation pdu
+- perf: optimized the fast provision function and related event reporting
+- fix: fix mesh OTA error that caused by the receiver index  error
+
+----------------
+
 V4.1.0.0 - 7 - 20231108
 
 - Add support for multi-network, users can create, delete, switch networks. The network data store format is changed from serialize to objectBox

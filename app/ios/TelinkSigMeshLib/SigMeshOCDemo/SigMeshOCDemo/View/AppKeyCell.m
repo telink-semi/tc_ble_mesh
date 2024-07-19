@@ -39,11 +39,11 @@
 
 - (void)setModel:(SigAppkeyModel *)model {
     _model = model;
-    _nameLabel.text = [NSString stringWithFormat:@"%@%@", [_model.key isEqualToString:SigDataSource.share.curAppkeyModel.key] ? @"[Current] " : @"", model.name];
+    _nameLabel.text = [NSString stringWithFormat:@"%@%@", _model.index == SigDataSource.share.curAppkeyModel.index ? @"[Current] " : @"", model.name];
     _indexLabel.text = [NSString stringWithFormat:@"0x%03lX", (long)model.index];
     _keyLabel.text = model.key;
     _boundNetKeyLabel.text = [NSString stringWithFormat:@"0x%03lX", (long)model.boundNetKey];
-    [self setUIWithSelected:[_model.key isEqualToString:SigDataSource.share.curAppkeyModel.key] bgView:_bgView];
+    [self setUIWithSelected:_model.index == SigDataSource.share.curAppkeyModel.index bgView:_bgView];
 }
 
 @end

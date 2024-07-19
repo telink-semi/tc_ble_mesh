@@ -183,9 +183,9 @@
                 return;
             }
             __weak typeof(self) weakSelf = self;
-            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
                 [weakSelf deleteNetKeyOfDevice:model];
-            }];
+            } cancel:nil];
         }
     }
 }

@@ -268,19 +268,19 @@
 - (void)handleMeshDictionaryFromShareImport:(NSDictionary *)dict {
     __weak typeof(self) weakSelf = self;
     //提示是否导入Mesh
-    [self showAlertTitle:kDefaultAlertTitle message:@"Mesh JSON receive complete, import data?" sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Mesh JSON receive complete, import data?" sure:^(UIAlertAction *action) {
         [weakSelf addOrUpdateMeshDictionaryToMeshList:dict];
         NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
         if (importCompleteAction.intValue == ImportSwitchMode_manual) {
             //弹框提示用户选择是否切换Mesh
-            [weakSelf showAlertTitle:kDefaultAlertTitle message:@"Share import success, switch to the new mesh?" sure:^(UIAlertAction *action) {
+            [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Share import success, switch to the new mesh?" sure:^(UIAlertAction *action) {
                 [weakSelf switchMeshActionWithMeshDictionary:dict];
-            }];
+            } cancel:nil];
         } else {
             //自动切换Mesh
             [weakSelf switchMeshActionWithMeshDictionary:dict];
         }
-    }];
+    } cancel:nil];
 }
 
 /// 切换到其中一份Mesh数据

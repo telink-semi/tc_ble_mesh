@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file SettingFragment.java
+ * @file ShareLinkListFragment.java
  *
  * @brief for TLSR chips
  *

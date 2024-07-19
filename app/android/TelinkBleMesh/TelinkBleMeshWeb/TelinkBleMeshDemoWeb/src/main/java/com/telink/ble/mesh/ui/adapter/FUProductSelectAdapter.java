@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file FUDeviceSelectAdapter.java
+ * @file FUProductSelectAdapter.java
  *
  * @brief for TLSR chips
  *

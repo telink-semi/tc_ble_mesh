@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceSelectActivity.java
+ * @file DeviceBatchSettingActivity.java
  *
  * @brief for TLSR chips
  *

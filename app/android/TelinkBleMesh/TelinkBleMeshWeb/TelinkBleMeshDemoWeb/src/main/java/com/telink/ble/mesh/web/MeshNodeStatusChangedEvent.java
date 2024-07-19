@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file NodeStatusChangedEvent.java
+ * @file MeshNodeStatusChangedEvent.java
  *
  * @brief for TLSR chips
  *

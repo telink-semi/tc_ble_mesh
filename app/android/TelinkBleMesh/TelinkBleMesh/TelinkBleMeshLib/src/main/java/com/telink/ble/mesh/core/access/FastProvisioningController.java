@@ -367,7 +367,8 @@ public class FastProvisioningController {
                 clear();
                 onStateUpdate(success ? STATE_SUCCESS : STATE_FAIL, "fast provision complete", null);
             }
-        }, PROVISIONER_DELAY + configuration.getResetDelay());
+        }, PROVISIONER_DELAY);
+        // PROVISIONER_DELAY + configuration.getResetDelay()
     }
 
     private void sendCompleteMessage() {
@@ -424,7 +425,6 @@ public class FastProvisioningController {
         switch (opcode) {
             case VD_MESH_ADDR_GET_STS:
                 if (state == STATE_GET_ADDR) {
-
                     MeshAddressStatusMessage statusMessage = (MeshAddressStatusMessage) message.getStatusMessage();
                     int originAddress = message.getSrc();
 //                    int pid = statusMessage.getPid() & 0x0FFF;

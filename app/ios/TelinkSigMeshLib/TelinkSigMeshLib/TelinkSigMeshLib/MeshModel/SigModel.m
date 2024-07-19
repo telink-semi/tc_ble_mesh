@@ -520,7 +520,7 @@
 /// @param transitionTime transitionTime value of SchedulerModel Object.
 - (void)setTransitionTime:(UInt64)transitionTime {
     UInt64 tem = 0xFF;
-    _schedulerData = (_schedulerData & (~tem<<56)) | ((transitionTime & tem) << 56);
+    _schedulerData = (_schedulerData & (~(tem<<56))) | ((transitionTime & tem) << 56);
 }
 
 @end

@@ -113,21 +113,21 @@
         __weak typeof(self) weakSelf = self;
         if (self.backNetKeyModel) {
             SigNetkeyModel *model = self.netkeyArray[indexPath.row];
-            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure add this netKey to node. index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure add this netKey to node. index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
                 if (weakSelf.backNetKeyModel) {
                     weakSelf.backNetKeyModel(model);
                 }
                 [weakSelf.navigationController popViewControllerAnimated:YES];
-            }];
+            } cancel:nil];
         }
         if (self.backAppKeyModel) {
             SigAppkeyModel *model = self.appkeyArray[indexPath.row];
-            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure add this appKey to node. index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure add this appKey to node. index:0x%04lX key:%@",(long)model.index,model.key] sure:^(UIAlertAction *action) {
                 if (weakSelf.backAppKeyModel) {
                     weakSelf.backAppKeyModel(model);
                 }
                 [weakSelf.navigationController popViewControllerAnimated:YES];
-            }];
+            } cancel:nil];
         }
     }
 }

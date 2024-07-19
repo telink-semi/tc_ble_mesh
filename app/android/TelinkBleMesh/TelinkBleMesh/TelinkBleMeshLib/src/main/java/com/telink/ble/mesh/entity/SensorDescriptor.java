@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ModelPublication.java
+ * @file SensorDescriptor.java
  *
  * @brief for TLSR chips
  *

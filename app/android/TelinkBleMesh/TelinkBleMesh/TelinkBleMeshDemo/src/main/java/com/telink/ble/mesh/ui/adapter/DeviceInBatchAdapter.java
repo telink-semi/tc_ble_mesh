@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceProvisionListAdapter.java
+ * @file DeviceInBatchAdapter.java
  *
  * @brief for TLSR chips
  *

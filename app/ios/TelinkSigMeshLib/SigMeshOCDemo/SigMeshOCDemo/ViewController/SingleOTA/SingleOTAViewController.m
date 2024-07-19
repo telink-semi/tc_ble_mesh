@@ -58,9 +58,9 @@
     UInt16 pid = [OTAFileSource.share getPidWithOTAData:self.localData];
     if (pid != [LibTools uint16From16String:self.model.pid]) {
         __weak typeof(self) weakSelf = self;
-        [self showAlertTitle:kDefaultAlertTitle message:@"The PID of node is different from the PID of Bin file, still OTA this node?" sure:^(UIAlertAction *action) {
+        [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"The PID of node is different from the PID of Bin file, still OTA this node?" sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
-        }];
+        } cancel:nil];
     } else {
         [self otaAction];
     }

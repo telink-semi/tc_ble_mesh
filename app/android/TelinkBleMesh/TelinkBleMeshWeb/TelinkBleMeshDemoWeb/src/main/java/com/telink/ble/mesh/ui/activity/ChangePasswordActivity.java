@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ShareActivity.java
+ * @file ChangePasswordActivity.java
  *
  * @brief for TLSR chips
  *

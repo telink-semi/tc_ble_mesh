@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file LcPropertyListAdapter.java
+ * @file SensorItemAdapter.java
  *
  * @brief for TLSR chips
  *

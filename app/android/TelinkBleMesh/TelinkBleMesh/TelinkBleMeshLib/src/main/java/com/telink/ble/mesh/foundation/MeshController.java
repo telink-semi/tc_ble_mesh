@@ -339,6 +339,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         mContext.registerReceiver(mBluetoothReceiver, filter);
     }
 
+    /**
+     * clear network busy state and cache
+     */
+    void clearNetworkCache() {
+        if (mNetworkingController != null) {
+            mNetworkingController.clear();
+        }
+    }
+
 
     /**
      * Used to listen for changes in the Bluetooth state of the device.
@@ -603,6 +612,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         log("---idle--- " + disconnect);
         mDelayHandler.removeCallbacksAndMessages(null);
         validateActionMode(Mode.IDLE);
+        clearNetworkCache();
         if (disconnect) {
             mGattConnection.disconnect();
         }
@@ -1075,6 +1085,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 isLogin = false;
                 setupMeshNetwork(this.meshConfiguration);
             }
+//            clearNetworkCache();
             actionMode = targetMode;
             return true;
         }
@@ -1692,6 +1703,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         || actionMode == Mode.MODE_BIND || actionMode == Mode.GATT_OTA
                         || actionMode == Mode.GATT_CONNECTION
                         || actionMode == Mode.FAST_PROVISION) {
+                    if (actionMode == Mode.GATT_OTA) {
+                        if (isGattOtaDisconnectWaiting) {
+                            onOtaSuccess();
+                            return;
+                        }
+                    }
+
                     if (isActionStarted) {
                         onConnectionInterrupt();
                     } else {
@@ -1725,6 +1743,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
     };
 
+
+    /**
+     * gatt will be disconnected by remote device (or timeout because of timeout)
+     * wating for gatt disconnected callback
+     */
+    private boolean isGattOtaDisconnectWaiting = false;
+
     /**
      * This method is called when the OTA (Over-the-Air) update is complete.
      * It resets the action and sets the device to idle mode.
@@ -1735,11 +1760,38 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * @param desc    - a String description of the OTA update result
      */
     private void onOtaComplete(boolean success, String desc) {
+        if (success) {
+            if (!mGattConnection.isConnected()) {
+                // if not connected, post ota success event right now
+                onOtaSuccess();
+                return;
+            }
+            // waiting for gatt disconnected callback
+            log("ota complete -> waiting for gatt disconnect cb");
+            isGattOtaDisconnectWaiting = true;
+            mDelayHandler.postDelayed(GATT_OTA_SUCCESS_TASK, 5 * 1000); // To prevent the event not being triggered because the gatt not disconnected
+        } else {
+            resetAction();
+            this.idle(false);
+            String evenType = GattOtaEvent.EVENT_TYPE_OTA_FAIL;
+            onOtaEvent(evenType, 0, desc);
+        }
+    }
+
+    private Runnable GATT_OTA_SUCCESS_TASK = new Runnable() {
+        @Override
+        public void run() {
+            onOtaSuccess();
+        }
+    };
+
+    private void onOtaSuccess() {
+        mDelayHandler.removeCallbacks(GATT_OTA_SUCCESS_TASK);
+        isGattOtaDisconnectWaiting = true;
         resetAction();
         this.idle(false);
-        String evenType = success ?
-                GattOtaEvent.EVENT_TYPE_OTA_SUCCESS : GattOtaEvent.EVENT_TYPE_OTA_FAIL;
-        onOtaEvent(evenType, 0, desc);
+        String evenType = GattOtaEvent.EVENT_TYPE_OTA_SUCCESS;
+        onOtaEvent(evenType, 0, "OTA Success");
     }
 
     /**

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file NetworkLayerPDU.java
+ * @file SolicitationPDU.java
  *
  * @brief for TLSR chips
  *

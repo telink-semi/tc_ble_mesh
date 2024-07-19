@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AppKeyInfoAdapter.java
+ * @file ShareInfoApplyAdapter.java
  *
  * @brief for TLSR chips
  *

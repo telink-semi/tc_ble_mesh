@@ -306,7 +306,9 @@ public class MeshStorageService {
         }
 
         for (NodeInfo node : mesh.excludedNodes) {
-            meshStorage.nodes.add(convertDeviceInfoToNode(node, mesh.getDefaultAppKeyIndex()));
+            MeshStorage.Node nd = convertDeviceInfoToNode(node, mesh.getDefaultAppKeyIndex());
+            nd.excluded = true;
+            meshStorage.nodes.add(nd);
         }
 
         for (NodeInfo node : mesh.provisionerNodes) {
