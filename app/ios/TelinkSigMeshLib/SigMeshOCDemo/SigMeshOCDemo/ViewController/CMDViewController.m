@@ -65,11 +65,11 @@
     //init @"Generic On" IniCommandModel
     IniCommandModel *command6 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[LibTools nsstringToHex:@"0100"]];
     command6.tidPosition = 2;
-    command6.responseOpcode = (UInt16)CFSwapInt16HostToBig(SigOpCode_genericOnOffStatus);
+    command6.responseOpcode = SigOpCode_genericOnOffStatus;
     //init @"Generic Off" IniCommandModel
     IniCommandModel *command7 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[LibTools nsstringToHex:@"0000"]];
     command7.tidPosition = 2;
-    command7.responseOpcode = (UInt16)CFSwapInt16HostToBig(SigOpCode_genericOnOffStatus);
+    command7.responseOpcode = SigOpCode_genericOnOffStatus;
 
     //init @"Opcode Aggregator(Lightness Default Get + Lightness Range Get)" IniCommandModel
     UInt16 address = 2;
@@ -81,7 +81,7 @@
     NSArray *items1 = @[model1,model2];
     SigOpcodesAggregatorSequence *message1 = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:address items:items1];
     IniCommandModel *command8 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:address opcode:CFSwapInt16HostToBig(SigOpCode_OpcodesAggregatorSequence) commandData:message1.parameters];
-    command8.responseOpcode = (UInt16)CFSwapInt16HostToBig(SigOpCode_OpcodesAggregatorStatus);
+    command8.responseOpcode = SigOpCode_OpcodesAggregatorStatus;
 
     //init @"Opcode Aggregator(TTL Get + Friend Get + Relay Get)" IniCommandModel
     SigOpcodesAggregatorItemModel *model3 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigDefaultTtlGet alloc] init]];
@@ -91,7 +91,7 @@
     SigOpcodesAggregatorSequence *message2 = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:SigDataSource.share.curNodes.firstObject.address items:items2];
     IniCommandModel *command9 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:address opcode:CFSwapInt16HostToBig(SigOpCode_OpcodesAggregatorSequence) commandData:message2.parameters];
     command9.isEncryptByDeviceKey = YES;
-    command9.responseOpcode = (UInt16)CFSwapInt16HostToBig(SigOpCode_OpcodesAggregatorStatus);
+    command9.responseOpcode = SigOpCode_OpcodesAggregatorStatus;
 
     //init @"[Custom]" IniCommandModel
     IniCommandModel *command10 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0 commandData:[NSData data]];
@@ -443,7 +443,7 @@
             self.currentCommand.vendorId = [LibTools uint16From16String:[responseOpcodeString substringToIndex:4]];
         } else {
             //sig opcode
-            self.currentCommand.responseOpcode = [LibTools uint16From16String:responseOpcodeString];
+            self.currentCommand.responseOpcode = [LibTools uint16FromBytes:[LibTools nsstringToHex:responseOpcodeString]];
         }
     }
     

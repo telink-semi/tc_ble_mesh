@@ -438,19 +438,16 @@
     if ([message isKindOfClass:[SigBLOBPartialBlockReport class]]) {
         TelinkLogVerbose(@"MeshOTAManager Receive:%@,source=%d,destination=%d",[LibTools convertDataToHexStr:message.parameters],source,destination);
         self.BLOBPartialBlockReport = (SigBLOBPartialBlockReport *)message;
-        if (self.isMeshOTAing && self.transferModeOfUpdateNodes == SigTransferModeState_pullBLOBTransferMode) {
+        if (self.isMeshOTAing && self.transferModeOfUpdateNodes == SigTransferModeState_pullBLOBTransferMode && self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart && self.firmwareUpdateProgress <= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet) {
             if (self.BLOBPartialBlockReport.encodedMissingChunks) {
 //                TelinkLogError(@"=====chunk，接收到地址%d需要发送的chunk=%@",source,self.BLOBPartialBlockReport.encodedMissingChunks);
                 self.losePacketsDict[@(source)] = self.BLOBPartialBlockReport.encodedMissingChunks;
                 [self stopLPNReachablleTimer];
                 [self handleLPNReportAction];
-            } else {
-                if (self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart && self.firmwareUpdateProgress <= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet) {
-                    if (self.chunkIndex != 0) {//原因：有时候，发送start时就返回一个空的BLOBPartialBlockReport，导致APP走到查询流程。
-                        //当前block发送完成，检查是否漏包，不漏则blockIndex加一进行下一个block的发送。
-                        [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
-                    }
-                }
+            } else if (self.chunkIndex != 0) {
+                //原因：有时候，发送start时就返回一个空的BLOBPartialBlockReport，导致APP走到查询流程。
+                    //当前block发送完成，检查是否漏包，不漏则blockIndex加一进行下一个block的发送。
+                [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
             }
         }
     }
@@ -471,6 +468,7 @@
         return;
     }
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
+    TelinkLogInfo(@"\n\n==========firmware update:step%d.2\n\n",self.firmwareUpdateProgress);
 
     UInt16 destination = [self.losePacketsDict.allKeys.firstObject intValue];
     for (NSNumber *missingChunkIndex in self.losePacketsDict[@(destination)]) {
@@ -756,33 +754,6 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) object:nil];
     });
-    if (SigBearer.share.isOpen) {
-        __weak typeof(self) weakSelf = self;
-        __block BOOL isSuccess = NO;
-        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-        [operationQueue addOperationWithBlock:^{
-            //这个block语句块在子线程中执行
-            weakSelf.semaphore = dispatch_semaphore_create(0);
-            weakSelf.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:weakSelf.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-                TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle) {
-                    isSuccess = YES;
-                }
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
-            }];
-            //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
-            dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
-            [SigDataSource.share setAllDevicesOutline];
-            if (completeBlock) {
-                completeBlock(isSuccess);
-            }
-        }];
-    } else {
-        [ConnectTools.share stopConnectToolsWithComplete:nil];
-        [SigDataSource.share setAllDevicesOutline];
-    }
 }
 
 - (void)connectMeshOTAByFirmwareUpdateProgress {
@@ -892,6 +863,19 @@
                 dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
             }
         }
+        //下一版本再讨论完善这个Cancel流程
+//        __block BOOL needCancelDistribution = NO;
+//        weakSelf.semaphore = dispatch_semaphore_create(0);
+//        weakSelf.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:SigDataSource.share.unicastAddressOfConnected retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//            TelinkLogDebug(@"firmwareDistributionGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            if (responseMessage.distributionPhase != SigDistributionPhaseState_idle) {
+//                needCancelDistribution = YES;
+//            }
+//        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//            dispatch_semaphore_signal(weakSelf.semaphore);
+//        }];
+//        dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
         BOOL reBoot = NO;
         for (NSNumber *nodeAddress in cancelArray) {
             UInt16 address = nodeAddress.intValue;
@@ -909,6 +893,20 @@
             //Most provide 3 seconds to firmwareUpdateCancel(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
         }
+        //下一版本再讨论完善这个Cancel流程
+//        if (needCancelDistribution) {
+//            reBoot = YES;
+//            weakSelf.semaphore = dispatch_semaphore_create(0);
+//            TelinkLogInfo(@"firmwareDistributionCancel=0x%x",SigDataSource.share.unicastAddressOfConnected);
+//            weakSelf.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:SigDataSource.share.unicastAddressOfConnected retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//                TelinkLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//                dispatch_semaphore_signal(weakSelf.semaphore);
+//            }];
+//            dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
+//        }
+//        if (cancelArray.count || needCancelDistribution) {
         if (cancelArray.count) {
             if (reBoot) {
                 //设备端需要10秒钟的时间进行重启，重启后在断开连接处进行重连操作。
@@ -3571,6 +3569,22 @@
 
 #pragma mark - firmware update fail
 - (void)firmwareUpdateFailAction {
+    if (SigBearer.share.isOpen) {
+        __weak typeof(self) weakSelf = self;
+        self.semaphore = dispatch_semaphore_create(0);
+        self.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:weakSelf.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+            TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            dispatch_semaphore_signal(weakSelf.semaphore);
+        }];
+        dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+        [SigDataSource.share setAllDevicesOutline];
+    } else {
+        [ConnectTools.share stopConnectToolsWithComplete:nil];
+        [SigDataSource.share setAllDevicesOutline];
+    }
     if (self.errorBlock) {
         if (!self.failError) {
             self.failError = [NSError errorWithDomain:@"firmware update fail" code:-1 userInfo:nil];

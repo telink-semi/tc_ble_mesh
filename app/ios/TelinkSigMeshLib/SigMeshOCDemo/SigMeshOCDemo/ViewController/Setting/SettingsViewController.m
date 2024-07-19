@@ -25,6 +25,7 @@
 #import "SettingsItemCell.h"
 #import "ShareTipsVC.h"
 #import "UIButton+extension.h"
+#import "UIViewController+Message.h"
 
 /// 1.Default Bound
 #define kDefaultBound   @"Enable Private Mode(Default Bound)"
@@ -201,7 +202,7 @@
 
 - (IBAction)clickResetSettingButton:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
-    [self showAlertTitle:kDefaultAlertTitle message:@"Reset all settings to default values?" sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Reset all settings to default values?" sure:^(UIAlertAction *action) {
 #ifndef kIsTelinkCloudSigMeshLib
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:KeyBindType_Normal] forKey:kKeyBindType];
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInt:ImportSwitchMode_manual] forKey:kImportCompleteAction];
@@ -216,7 +217,7 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
         [weakSelf refreshSourceAndUI];
         [weakSelf showTips:@"Reset all settings success!"];
-    }];    
+    } cancel:nil];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

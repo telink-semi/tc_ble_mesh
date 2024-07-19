@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 
 #import "ReKeyBindViewController.h"
+#import "UIViewController+Message.h"
 
 @interface ReKeyBindViewController()
 @property (nonatomic, assign) BOOL hasClickKickOut;
@@ -130,9 +131,9 @@
         }
     }];
     __weak typeof(self) weakSelf = self;
-    [self showAlertTitle:kDefaultAlertTitle message:Tip_ReKeyBindDeviceFail sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:Tip_ReKeyBindDeviceFail sure:^(UIAlertAction *action) {
         [weakSelf keyBind:weakSelf.keyBindButton];
-    }];
+    } cancel:nil];
 }
 
 - (void)kickoutAction{

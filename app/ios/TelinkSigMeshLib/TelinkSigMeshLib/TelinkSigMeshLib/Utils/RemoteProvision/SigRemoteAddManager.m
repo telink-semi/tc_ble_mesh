@@ -211,12 +211,15 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 //        }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf provisionFail];
-            TelinkLogDebug(@"sentProvisionConfirmationPdu error = %@",error.domain);
-        }
+        //可能出现没有SigRemoteProvisioningLinkStatus返回却返回了SigRemoteProvisioningLinkReport的情况，所以这里不可报失败。
+//        if (error) {
+//            [weakSelf provisionFail];
+//            TelinkLogDebug(@"sentProvisionConfirmationPdu error = %@",error.domain);
+//        }
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(linkOpenTimeout) object:nil];
+        [self performSelector:@selector(linkOpenTimeout) withObject:nil afterDelay:kLinkOpenTimeout];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(remoteProvisionTimeout) object:nil];
         [self performSelector:@selector(remoteProvisionTimeout) withObject:nil afterDelay:kRemoteProgressTimeout];
     });
@@ -235,6 +238,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     self.unicastAddress = provisionAddress;
     [self remoteProvisionWithNReportNodeAddress:reportNodeAddress reportNodeUUID:reportNodeUUID networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData capabilitiesResponse:nil provisionSuccess:provisionSuccess fail:fail];
+}
+
+- (void)linkOpenTimeout {
+    [self provisionFail];
 }
 
 - (void)remoteProvisionTimeout {
@@ -290,7 +297,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                 TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                [NSThread sleepForTimeInterval:0.2];
+                [NSThread sleepForTimeInterval:0.3];
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to send remoteProvisioningScan every node.
@@ -792,6 +799,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             SigRemoteProvisioningLinkReport *linkReport = (SigRemoteProvisioningLinkReport *)message;
             if (linkReport.status == SigRemoteProvisioningStatus_success) {
                 // means link open success
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(linkOpenTimeout) object:nil];
+                });
                 __weak typeof(self) weakSelf = self;
                 [self getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                     [weakSelf getCapabilitiesResultWithResponse:response];

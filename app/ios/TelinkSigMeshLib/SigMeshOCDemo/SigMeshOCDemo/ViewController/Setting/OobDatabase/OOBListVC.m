@@ -140,11 +140,11 @@
 
 - (void)clickDeleteAll {
     __weak typeof(self) weakSelf = self;
-    [self showAlertTitle:kDefaultAlertTitle message:@"Wipe all oob info?" sure:^(UIAlertAction *action) {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Wipe all oob info?" sure:^(UIAlertAction *action) {
         [SigDataSource.share deleteAllSigOOBModel];
         weakSelf.sourceArray = [NSMutableArray array];
         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    }];
+    } cancel:nil];
 }
 
 #pragma  mark LongPressGesture
@@ -155,11 +155,11 @@
             SigOOBModel *model = self.sourceArray[indexPath.row];
             TelinkLogDebug(@"%@",indexPath);
             __weak typeof(self) weakSelf = self;
-            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Delete OOB data, UUID:%@ ?",model.UUIDString] sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Delete OOB data, UUID:%@ ?",model.UUIDString] sure:^(UIAlertAction *action) {
                 [SigDataSource.share deleteSigOOBModel:model];
                 [weakSelf.sourceArray removeObject:model];
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-            }];
+            } cancel:nil];
         }
     }
 }

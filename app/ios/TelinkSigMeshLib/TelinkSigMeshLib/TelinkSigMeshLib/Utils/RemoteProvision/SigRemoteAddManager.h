@@ -25,13 +25,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*总超时kRemoteProgressTimeout为60秒，每个小步骤都重试kRemoteProgressRetryCount即0xFF次，除非直连灯断开连接，否则remote provision最大耗时为60秒。*/
+/*总超时kRemoteProgressTimeout为120秒，每个小步骤都重试kRemoteProgressRetryCount即0xFF次，除非直连灯断开连接，否则remote provision最大耗时为120秒。*/
 #define kRemoteProgressRetryCount   (0xFF)
-#define kRemoteProgressTimeout   (60)
+#define kRemoteProgressTimeout   (120)
 #define kScannedItemsLimit   (2)
 #define kScanCapabilitiesTimeout   (5)
 #define kSendOneNodeScanTimeout   (3)
 #define kScannedItemsTimeout   (5)
+#define kLinkOpenTimeout   (10)
 
 @class SigProvisioningData,SigProvisioningCapabilitiesPdu,SigAuthenticationModel;
 typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanRemoteModel);

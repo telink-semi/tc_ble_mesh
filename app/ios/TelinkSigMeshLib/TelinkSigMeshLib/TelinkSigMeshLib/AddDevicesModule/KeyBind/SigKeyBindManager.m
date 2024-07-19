@@ -140,12 +140,12 @@
         [SigDataSource.share saveLocationData];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         if (weakSelf.isKeybinding) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
+            });
             if (!isResponseAll || error) {
                 [weakSelf keyBindFailActionWithErrorString:error.domain];
             } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
-                });
                 if (weakSelf.type == KeyBindType_Normal) {
                     BOOL hasOpCodes = NO;
                     SigPage0 *page0 = (SigPage0 *)weakSelf.page;
@@ -381,7 +381,8 @@
         }
     }
     //publish time model
-    if (hasTimeServerModel == YES && timeServerModelElementAddress > 0 && SigMeshLib.share.dataSource.needPublishTimeModel) {
+    //优化：LPN设备为低功耗设备，不需要向外广播timeStatus，且低功耗设备的time也不准确，不推荐LPN向外广播timeStatus。
+    if (hasTimeServerModel == YES && timeServerModelElementAddress > 0 && SigMeshLib.share.dataSource.needPublishTimeModel && page0.features.lowPowerFeature != SigNodeFeaturesState_enabled) {
         TelinkLogInfo(@"SDK need publish time");
         //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数），0表示不relay。
         SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:0];
@@ -428,7 +429,7 @@
                 }
                 dispatch_semaphore_signal(semaphore);
             }];
-            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 60.0));
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             if (errorStr.length > 0) {
                 break;
             }
