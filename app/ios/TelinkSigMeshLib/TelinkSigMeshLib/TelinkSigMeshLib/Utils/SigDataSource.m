@@ -777,7 +777,9 @@
     for (SigNodeModel *node in array) {
         if (node.address >= rangeModel.lowIntAddress && node.lastUnicastAddress <= rangeModel.heightIntAddress) {
             if ((node.lastUnicastAddress + elementCount) <= rangeModel.heightIntAddress) {
-                maxUnicastAddress = node.lastUnicastAddress + 1;
+                if (maxUnicastAddress < node.lastUnicastAddress + 1) {
+                    maxUnicastAddress = node.lastUnicastAddress + 1;
+                }
             } else {
                 // The allocatedUnicastRange of provision has been exhausted, need add a new allocatedUnicastRange.
                 // if can not allocated a new UnicastRange, return 0.

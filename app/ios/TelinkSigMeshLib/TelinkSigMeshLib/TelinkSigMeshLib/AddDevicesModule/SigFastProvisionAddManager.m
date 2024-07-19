@@ -218,12 +218,11 @@
                     if (weakSelf.scanResponseBlock) {
                         weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
                     }
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(checkScanMacAddressList) object:nil];
-                        [weakSelf performSelector:@selector(checkScanMacAddressList) withObject:nil afterDelay:2.0+0.2];
-                    });
                 }
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(checkScanMacAddressList) object:nil];
+                    [weakSelf performSelector:@selector(checkScanMacAddressList) withObject:nil afterDelay:2.0+0.2];
+                });
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -250,6 +249,7 @@
     self.fastProvisionStatus = SigFastProvisionStatus_setAddress;
     SigFastProvisionModel *model = self.scanMacAddressList.firstObject;
     __weak typeof(self) weakSelf = self;
+    __block BOOL isSuccess = NO;
     [self fastProvisionSetAddressWithProvisionAddress:self.provisionAddress macAddressData:model.macAddress toDestination:kMeshAddress_allNodes successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressSetStatus) {
@@ -265,6 +265,7 @@
                     weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
                     [weakSelf.scanMacAddressList removeObjectAtIndex:0];
                     [weakSelf performSelector:@selector(setSingleAddressFinish) withObject:nil afterDelay:0.01];
+                    isSuccess = YES;
                 } else {
                     TelinkLogInfo(@"set address response error!");
                 }
@@ -276,6 +277,15 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (isSuccess == NO) {
+            TelinkLogInfo(@"set address no response! Change this device to success state.");
+            model.address = weakSelf.provisionAddress;
+            [weakSelf.setAddressList addObject:model];
+            DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:model.productId];
+            weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
+            [weakSelf.scanMacAddressList removeObjectAtIndex:0];
+            [weakSelf performSelector:@selector(setSingleAddressFinish) withObject:nil afterDelay:0.01];
+        }
     }];
 }
 
