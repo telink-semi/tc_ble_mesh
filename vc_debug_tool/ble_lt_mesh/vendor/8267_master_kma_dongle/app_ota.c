@@ -325,7 +325,7 @@ void proc_ota (void)
 	}
 	else if (host_ota_start == 5)
 	{
-		if( clock_time_exceed(otaStart_cmd_tick, 50000) ){
+		if( clock_time_exceed(otaStart_cmd_tick, 600000) ){
 			host_ota_start = 6;
 		}
 	}
