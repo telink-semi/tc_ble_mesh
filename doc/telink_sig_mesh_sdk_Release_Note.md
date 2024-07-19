@@ -1,3 +1,110 @@
+## V4.1.0.1
+
+### Version
+
+* SDK Version: tc_ble_mesh_V4.1.0.1
+* Chip Version: TLSR825X / TLSR827X
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: ff1ec89856f303f2676a3b18aeea66e9e25cdfe5
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* (Firmware)delete __clzsi2() in mesh library which already exists in library of soft-fp.a to avoid reporting redefine error in some cases when compile sdk.
+* (Firmware)fix the issue that receiver node may miss some segment messages when multiple nodes simultaneously send segment messages which destination address is group address.
+
+### Known issues
+
+* N/A
+
+### Features
+
+* (Firmware) add flash protection function. set APP_FLASH_PROTECTION_ENABLE to 1 to enable. enabled by default.
+  - need to click "Unlock" button in the Telink BDT tool first to unprotect flash, then to burn firmware or erase flash during the development and debugging phase.
+* (Firmware)add extend ADV filter callback function mesh_blc_aux_adv_filter().
+* (Firmware/Android/iOS)add examples of gpio and ZSIR sensor types for NLC(Network Lighting Control) occupancy sensor. set NLC_SENSOR_Type_SEL to NLCP_TYPE_OCS, and set NLC_SENSOR_SEL to SENSOR_ZSIR1000 or SENSOR_OCS_GPIO.
+* (Firmware/Android/iOS)add ZSIR sensor example for NLC(Network Lighting Control) Ambient Light Sensor. set NLC_SENSOR_Type_SEL to NLCP_TYPE_ALS and set NLC_SENSOR_SEL to SENSOR_ZSIR1000.
+* (Android/iOS)support configuring a node with multiple scene models inside.
+* (Android/iOS)support naming nodes, and sorting nodes by name or node address.
+* (Android/iOS)support batch selection and configuration of direct forwarding parameters for multiple nodes.
+* (Android/iOS)support functions of On-Demand Private GATT Proxy and Solicitation PDU RPL Configuration.
+
+### Performance Improvements
+
+* (Firmware)optimize the gateway project to reduce firmware size by 6.5 kBytes and RAM by 2.0 kBytes.
+* (Firmware/Android/iOS)optimize NLC (Network Lighting Control) related code.
+
+### BREAKING CHANGES
+
+* if you are using V4.1.0.0 SDK, and using a gateway project or setting MESH_USER_DEFINE_MODE to MESH_SPIRIT_ENABLE, please make sure to upgrade to V4.1.0.1 SDK, otherwise the node's provisioned state will be abnormally changed from provision state to unprovision state when the firmware before V4.1.0.0 upgrade to V4.1.0.0 or V4.1.0.0 upgrade to a newer version.
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Flash
+
+* TLSR825X: GD25LD40C, GD25LD40E, GD25LD80C, GD25LD80E, ZB25WD40B, ZB25WD80B
+* TLSR827X: GD25LD40C, GD25LD40E, GD25LD80C, GD25LD80E, ZB25WD40B, ZB25WD80B, P25Q80U
+
+### CodeSize
+
+* Flash and RAM (default target):
+  - 8258_mesh:_________Flash 124.8 KB, RAM (27.7 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 118.3 KB, RAM (21.6 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 124.3 KB, RAM (30.4 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 113.4 KB, RAM (24.9 KB + 3K stack),
+  
+  - 8278_mesh:_________Flash 122.7 KB, RAM (27.1 KB + 3K stack),
+  - 8278_mesh_LPN:____Flash 116.3 KB, RAM (23.2 KB + 3K stack),
+  - 8278_mesh_gw:_____Flash 122.3 KB, RAM (31.0 KB + 3K stack),
+  - 8278_mesh_switch:__Flash 110.0 KB, RAM (25.0 KB + 3K stack),
+
+
+### Version
+
+* SDK Version: tc_ble_mesh_V4.1.0.1
+* Chip Version: TLSR825X / TLSR827X
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: ff1ec89856f303f2676a3b18aeea66e9e25cdfe5
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* (Firmware)删除mesh库文件中的__clzsi2()函数，避免有些情况下会报重定义，因为在浮点库soft-fp.a里面也有定义。
+* (Firmware)修复多个节点同时发送目的地址非单播的segment长包消息时，接收端有概率不能接收到全部的分包消息的问题。
+
+### Known issues
+
+* N/A
+
+### Features
+
+* (Firmware)增加flash 保护功能，设置 APP_FLASH_PROTECTION_ENABLE 等于 1来使能该功能，默认打开。
+  - 在开发和调试阶段，用户应先点击Telink BDT工具中的“Unlock”命令来解锁flash，然后再执行烧录固件或者擦除Flash。
+* (Firmware)添加扩展广播包过滤回调函数mesh_blc_aux_adv_filter()。
+* (Firmware/Android/iOS)为 NLC occupancy sensor添加 gpio 类型和 ZSIR sensor 类型的sample。修改 NLC_SENSOR_TYPE_SEL 为 NLCP_TYPE_OCS，以及 NLC_SENSOR_SEL 修改为 SENSOR_ZSIR1000 或者 SENSOR_OCS_GPIO 即可。
+* (Firmware/Android/iOS)添加 ZSIR sensor 示例给NLC的光线感应sensor产品。修改 NLC_SENSOR_TYPE_SEL 为 NLCP_TYPE_ALS，以及 NLC_SENSOR_SEL 修改 为 SENSOR_ZSIR1000即可。
+* (Android/iOS)支持配置节点内有多个场景model的设备。
+* (Android/iOS)支持给节点命名以及通过名称或者地址排序来显示设备。
+* (Android/iOS)支持批量配置多个节点的direct forwarding的参数。
+* (Android/iOS)支持 On-Demand Private GATT Proxy 和 Solicitation PDU RPL Configuration 功能。
+
+### Performance Improvements
+
+* (Firmware)优化gateway工程，减少 固件大小 6.5 kBytes，RAM 2.0 kBytes。
+* (Firmware/Android/iOS)优化 NLC(Network Lighting Control) 相关的代码。
+
+### BREAKING CHANGES
+
+* (Firmware)如果正在使用 V4.1.0.0，并且使用了 gateway 工程 或者 MESH_USER_DEFINE_MODE 设置为 MESH_SPIRIT_ENABLE , 请务必更新到 V4.1.0.1，否则会出现旧版本升级到 V4.1.0.0(或者 V4.1.0.0 升级到更新版本) 后，节点的的已组网状态会被异常地变为未组网状态。
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V4.1.0.0
 
 ### Dependency Updates
