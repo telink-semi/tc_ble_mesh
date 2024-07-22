@@ -3,7 +3,7 @@ version record:
 versionName - version code - date
 
 
-V4.1.0.1 - 7 - 20240719
+V4.1.0.2 - 9 - 20240722 (4.1.0.1 is used for B91)
 
 ### Bug Fixes
 
