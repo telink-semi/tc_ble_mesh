@@ -280,9 +280,26 @@ public class FirmwareUpdateConfiguration {
      */
     public String getBriefDesc(ExtendBearerMode extendBearerMode) {
         //
-        return "Mesh OTA Params: " + " proxyAddress=" + proxyAddress +
+        /*return "Mesh OTA Params: " + " proxyAddress=" + proxyAddress +
                 ", distributorType=" + distributorType +
-                ", extendBearerMode=" + extendBearerMode;
+                ", extendBearerMode=" + extendBearerMode;*/
+
+        return "FU Params{" +
+                "updatingDevices=" + updatingDevices.size() +
+                ", firmwareData=" + (firmwareData == null ? 0 : firmwareData.length) +
+                ", metadata=" + Arrays.toString(metadata) +
+                ", appKeyIndex=" + appKeyIndex +
+                ", groupAddress=" + String.format("%04x", groupAddress) +
+                ", blobId=" + String.format("%16x", blobId) +
+                ", firmwareId=" + Arrays.toString(firmwareId) +
+                ", firmwareIndex=" + firmwareIndex +
+                ", distributorType=" + distributorType +
+                ", updatePolicy=" + updatePolicy +
+                ", isContinue=" + isContinue +
+                ", distributorAddress=" + String.format("%04x", distributorAddress) +
+                ", proxyAddress=" + String.format("%04x", proxyAddress) +
+                ", extendBearerMode=" + extendBearerMode +
+                '}';
 
 
     }

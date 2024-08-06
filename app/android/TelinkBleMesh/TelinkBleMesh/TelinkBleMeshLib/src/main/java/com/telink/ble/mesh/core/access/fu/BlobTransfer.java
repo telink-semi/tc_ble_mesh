@@ -358,13 +358,13 @@ class BlobTransfer {
         boolean blockSendComplete = false;
         switch (mixFormat) {
             case BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING:
-                log("no chunks missing");
+                log("get blob block complete -> no chunks missing", MeshLogger.LEVEL_WARN);
                 blockSendComplete = true;
                 break;
 
             case BlobBlockStatusMessage.FORMAT_ALL_CHUNKS_MISSING:
                 // resend all chunks
-                log("all chunks missing");
+                log("get blob block complete -> all chunks missing", MeshLogger.LEVEL_WARN);
                 step = STEP_BLOB_CHUNK_SENDING;
                 firmwareParser.resetBlock();
                 nextAction();
@@ -372,10 +372,12 @@ class BlobTransfer {
             case BlobBlockStatusMessage.FORMAT_SOME_CHUNKS_MISSING:
             case BlobBlockStatusMessage.FORMAT_ENCODED_MISSING_CHUNKS:
                 if (missingChunks.size() == 0) {
+                    log("get blob block complete -> missing chunks size 0", MeshLogger.LEVEL_WARN);
                     blockSendComplete = true;
                 } else {
                     // resend missing chunks
-                    log("resend missing chunks");
+                    log("get blob block complete -> resend missing chunks , size=" + missingChunks.size());
+                    printMissingChunkNumber();
                     missingChunkIndex = 0;
                     sendMissingChunks();
                 }
@@ -387,6 +389,14 @@ class BlobTransfer {
             pullMaxChunkNumber = 0;
             nextAction();
         }
+    }
+
+    private void printMissingChunkNumber() {
+        StringBuilder str = new StringBuilder("missing chunk number(hex) : ");
+        for (int chunkNumber : missingChunks) {
+            str.append(String.format("%04X  ", chunkNumber));
+        }
+        log(str.toString(), MeshLogger.LEVEL_WARN);
     }
 
     private void removeFailedDevices() {
@@ -409,9 +419,9 @@ class BlobTransfer {
             nextAction();
             return;
         }*/
-        if (meshMessage.getOpcode() == Opcode.BLOB_BLOCK_GET.value){
+        if (meshMessage.getOpcode() == Opcode.BLOB_BLOCK_GET.value) {
             meshMessage.setRetryCnt(30);
-        }else{
+        } else {
             meshMessage.setRetryCnt(10); // ble stack may cache the packets and the mesh message may not receive response , so set retry count larger to wait for longer time
         }
         log("mesh message prepared: " + meshMessage.getClass().getSimpleName()
@@ -448,7 +458,7 @@ class BlobTransfer {
      * no device success
      */
     private void onTransferComplete(boolean success, String desc) {
-        log("blob transfer complete: " + " -- " + desc);
+        log("blob transfer complete: " + " -- " + desc, MeshLogger.LEVEL_WARN);
         clear();
         if (transferCallback != null) {
             transferCallback.onTransferComplete(success, desc);
@@ -554,9 +564,9 @@ class BlobTransfer {
 
     private int getSegmentLen() {
         int segLen;
-        if (GattConnection.mtu < NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG){
+        if (GattConnection.mtu < NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG) {
             segLen = NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
-        }else if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
+        } else if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
             segLen = NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
         } else {
             segLen = extendBearerMode == ExtendBearerMode.NONE ? NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT : NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
