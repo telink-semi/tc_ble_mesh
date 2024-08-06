@@ -40,6 +40,9 @@ public class IconGenerator {
      * @return resId
      */
     public static int getIcon(NodeInfo device) {
+        if (device == null) {
+            return R.drawable.ic_question;
+        }
         return getIcon(device, device.getOnlineState());
     }
 

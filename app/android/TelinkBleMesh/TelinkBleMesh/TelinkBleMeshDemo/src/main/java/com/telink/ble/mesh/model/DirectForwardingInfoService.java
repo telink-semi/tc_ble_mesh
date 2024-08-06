@@ -37,7 +37,7 @@ import java.util.List;
 
 public class DirectForwardingInfoService implements Serializable {
 
-    private static final String DF_CACHE = "tlk_df";
+    private static final String DF_CACHE = "tlk_df_";
     private static DirectForwardingInfoService instance = new DirectForwardingInfoService();
 
     public static DirectForwardingInfoService getInstance() {
@@ -46,13 +46,20 @@ public class DirectForwardingInfoService implements Serializable {
 
     List<DirectForwardingInfo> directForwardingInfoList;
 
-    public void load(Context context) {
-        Object obj = FileSystem.readAsObject(context, DF_CACHE);
+    long meshId;
+
+    public void load(Context context, long meshId) {
+        this.meshId = meshId;
+        Object obj = FileSystem.readAsObject(context, getCache());
         if (obj != null) {
             directForwardingInfoList = (List<DirectForwardingInfo>) obj;
         } else {
             directForwardingInfoList = new ArrayList<>();
         }
+    }
+
+    public String getCache() {
+        return DF_CACHE + meshId;
     }
 
     public List<DirectForwardingInfo> get() {
@@ -74,7 +81,7 @@ public class DirectForwardingInfoService implements Serializable {
     }
 
     public void save() {
-        FileSystem.writeAsObject(TelinkMeshApplication.getInstance(), DF_CACHE, this.directForwardingInfoList);
+        FileSystem.writeAsObject(TelinkMeshApplication.getInstance(), getCache(), this.directForwardingInfoList);
     }
 
     public boolean exists(int origin, int target) {
@@ -82,13 +89,12 @@ public class DirectForwardingInfoService implements Serializable {
             return false;
         }
         for (DirectForwardingInfo info : directForwardingInfoList) {
-            if (info.originAdr == origin && info.target == target){
-                return  true;
+            if (info.originAdr == origin && info.target == target) {
+                return true;
             }
         }
         return false;
     }
-
 
 
 }
