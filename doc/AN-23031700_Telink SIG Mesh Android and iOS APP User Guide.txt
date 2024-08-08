@@ -1,0 +1,11 @@
+Note of file path change：
+
+the "AN-23031700-E1_Telink SIG Mesh Android and iOS APP User Guide" has been moved to the section "33 Android and iOS APP User Guide" in "AN-17120401-E7_Telink SIG Mesh SDK Developer Handbook.pdf".
+
+"AN-23031700-C1_Telink SIG Mesh Android and iOS APP User Guide" download link: https://wiki.telink-semi.cn/doc/an/AN-17120400-E_Telink%20SIG%20Mesh%20SDK%20Developer%20Handbook.pdf
+
+文件路径变更说明：
+
+"AN-23031700-C1_Telink SIG Mesh Android and iOS APP User Guide" 里面的内容，已经移动到 "AN-17120401-C7_Telink SIG Mesh SDK Developer Handbook.pdf" 里面的这个章节“33 Android and iOS APP 使⽤说明”。
+
+"AN-17120401-C7_Telink SIG Mesh SDK Developer Handbook.pdf" 的下载地址是：https://wiki.telink-semi.cn/doc/an/AN-17120401-C_Telink%20SIG%20Mesh%20SDK%20Developer%20Handbook.pdf
