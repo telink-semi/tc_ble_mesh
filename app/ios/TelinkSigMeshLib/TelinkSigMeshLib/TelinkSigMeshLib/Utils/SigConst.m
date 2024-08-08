@@ -25,7 +25,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.1";
+NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.2";
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
 NSString * const AccessError_invalidSource = @"Local Provisioner does not have Unicast Address specified.";
