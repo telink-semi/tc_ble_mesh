@@ -283,7 +283,7 @@ class BlobTransfer {
                             } else {
                                 log("all blocks sent complete at: block -- " + firmwareParser.currentBlockIndex());
 //                            step = STEP_UPDATE_GET;
-                                onTransferComplete(true, "blob transfer complete");
+                                onTransferComplete(true, "success");
                                 return;
                             }
                         }
@@ -376,8 +376,8 @@ class BlobTransfer {
                     blockSendComplete = true;
                 } else {
                     // resend missing chunks
-                    log("get blob block complete -> resend missing chunks , size=" + missingChunks.size());
-                    printMissingChunkNumber();
+                    log("get blob block complete -> resend missing chunks , size=" + missingChunks.size(), MeshLogger.LEVEL_WARN);
+                    printMissingChunkNumber("mixed missing chunks : ", missingChunks);
                     missingChunkIndex = 0;
                     sendMissingChunks();
                 }
@@ -391,9 +391,9 @@ class BlobTransfer {
         }
     }
 
-    private void printMissingChunkNumber() {
-        StringBuilder str = new StringBuilder("missing chunk number(hex) : ");
-        for (int chunkNumber : missingChunks) {
+    private void printMissingChunkNumber(String preDesc, List<Integer> chunks) {
+        StringBuilder str = new StringBuilder(preDesc);
+        for (int chunkNumber : chunks) {
             str.append(String.format("%04X  ", chunkNumber));
         }
         log(str.toString(), MeshLogger.LEVEL_WARN);
@@ -509,7 +509,7 @@ class BlobTransfer {
         }
 
         if (targetDevices.get(nodeIndex).address != src) {
-            log("unexpected notification src", MeshLogger.LEVEL_WARN);
+            log("blob transfer unexpected notification src", MeshLogger.LEVEL_WARN);
             return;
         }
 
@@ -598,7 +598,7 @@ class BlobTransfer {
 
 
     private void checkMissingChunks() {
-        log("check missing chunks");
+        log("check missing chunks (get blob block)", MeshLogger.LEVEL_WARN);
         missingChunks.clear();
         mixFormat = -1;
         step = STEP_GET_BLOB_BLOCK;
@@ -783,19 +783,21 @@ class BlobTransfer {
 
                 switch (format) {
                     case BlobBlockStatusMessage.FORMAT_ALL_CHUNKS_MISSING:
-                        log(String.format("all chunks missing: %04X", srcAddress));
+                        log(String.format("all chunks missing: %04X", srcAddress), MeshLogger.LEVEL_WARN);
                         break;
 
                     case BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING:
-                        log(String.format("no chunks missing: %04X", srcAddress));
+                        log(String.format("no chunks missing: %04X", srcAddress), MeshLogger.LEVEL_WARN);
                         break;
 
                     case BlobBlockStatusMessage.FORMAT_SOME_CHUNKS_MISSING:
                         mixMissingChunks(blobBlockStatusMessage.getMissingChunks());
+                        printMissingChunkNumber(String.format("missing chunks(some) at %04X : ", srcAddress), blobBlockStatusMessage.getMissingChunks());
                         break;
 
                     case BlobBlockStatusMessage.FORMAT_ENCODED_MISSING_CHUNKS:
                         mixMissingChunks(blobBlockStatusMessage.getEncodedMissingChunks());
+                        printMissingChunkNumber(String.format("missing chunks(encoded) at %04X : ", srcAddress), blobBlockStatusMessage.getEncodedMissingChunks());
                         break;
                 }
             }

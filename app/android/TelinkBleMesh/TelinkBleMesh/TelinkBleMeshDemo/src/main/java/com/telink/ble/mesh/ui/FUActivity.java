@@ -758,7 +758,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onStateUpdated(FUState state, String extraInfo) {
-        String info = state.desc + (extraInfo == null ? "" : (" - " + extraInfo));
+        String info = state.desc + (extraInfo == null ? "" : (" (" + extraInfo + ")"));
         dismissConfirmDialog();
         delayHandler.removeCallbacks(RECONNECT_TASK);
         appendLog(info);
