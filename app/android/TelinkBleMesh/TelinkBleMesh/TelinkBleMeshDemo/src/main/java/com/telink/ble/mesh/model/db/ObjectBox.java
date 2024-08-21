@@ -40,6 +40,9 @@ public class ObjectBox {
     private static BoxStore boxStore;
 
     public static boolean init(Context context) {
+        if (boxStore != null) {
+            return true;
+        }
         BoxStoreBuilder storeBuilder = MyObjectBox.builder()
                 .validateOnOpen(ValidateOnOpenMode.WithLeaves)  // Additional DB page validation
                 .validateOnOpenPageLimit(20)
