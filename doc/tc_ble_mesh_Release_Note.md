@@ -36,7 +36,11 @@
 
 ### BREAKING CHANGES
 
-* if you are using V4.1.0.0 SDK, and using a gateway project or setting MESH_USER_DEFINE_MODE to MESH_SPIRIT_ENABLE, please make sure to upgrade to V4.1.0.1 SDK, otherwise the node's provisioned state will be abnormally changed from provision state to unprovision state when the firmware before V4.1.0.0 upgrade to V4.1.0.0 or V4.1.0.0 upgrade to a newer version.
+* (Firmware)if you are using V4.1.0.0 SDK, and using a gateway project or setting MESH_USER_DEFINE_MODE to MESH_SPIRIT_ENABLE, please make sure to upgrade to V4.1.0.1 SDK, otherwise the node's provisioned state will be abnormally changed from provision state to unprovision state when the firmware before V4.1.0.0 upgrade to V4.1.0.0 or V4.1.0.0 upgrade to a newer version.
+
+* (Firmware)due to enable flash protection and the fact that the minimum protection size for several flash is 256k(can be found by searching lock_block_e on the SDK), it is necessary to move sectors with frequent write operations to after 0x70000, including FLASH_ADR_RESET_CNT，FLASH_ADR_MISC and FLASH_ADR_SW_LEVEL . After modifying the address, when the new firmware OTA to nodes which sdk version is V4.1.0.0 or earlier, the MCU needs to automatically migrate the three sectors. The migration code please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN. For 512k flash, it is enabled by default. If the customer has previously modified a 512k flash map, these macro need to be defined: FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION and FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION. If there are assert errors when compile sdk, please contact us. If the flash map has not been modified, there will be no assert error.If it is a new product development, there is no need to consider compatibity with previous versions, then FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN can be disabled to save firmware size.
+
+* (Firmware)due to enable flash protection and the fact that the minimum protection size for several flash is 256k(can be found by searching lock_block_e on the SDK), so it is necessary to move sectors that perform write operations frequently to after 0xC0000. So the current SDK redefines the flash map. If a customer has used a 1M flash map in a previous product, in order to ensure compatibility after OTA upgrade, you can choose to keep the original map. However, in this case, for flash with a minimum protection size of 768k, the flash protection function will not be enabled. Or you can also contact us.
 
 ### Notes
 
@@ -80,7 +84,7 @@
 
 ### Features
 
-* (Firmware)增加flash 保护功能，设置 APP_FLASH_PROTECTION_ENABLE 等于 1来使能该功能，默认打开。
+* (Firmware)增加flash 保护功能，设置 APP_FLASH_PROTECTION_ENABLE 等于 1来使能该功能，默认使能。
   - 在开发和调试阶段，用户应先点击Telink BDT工具中的“Unlock”命令来解锁flash，然后再执行烧录固件或者擦除Flash。
 * (Firmware)添加扩展广播包过滤回调函数mesh_blc_aux_adv_filter()。
 * (Firmware/Android/iOS)为 NLC occupancy sensor添加 gpio 类型和 ZSIR sensor 类型的sample。修改 NLC_SENSOR_TYPE_SEL 为 NLCP_TYPE_OCS，以及 NLC_SENSOR_SEL 修改为 SENSOR_ZSIR1000 或者 SENSOR_OCS_GPIO 即可。
@@ -98,6 +102,8 @@
 ### BREAKING CHANGES
 
 * (Firmware)如果正在使用 V4.1.0.0，并且使用了 gateway 工程 或者 MESH_USER_DEFINE_MODE 设置为 MESH_SPIRIT_ENABLE , 请务必更新到 V4.1.0.1，否则会出现旧版本升级到 V4.1.0.0(或者 V4.1.0.0 升级到更新版本) 后，节点的的已组网状态会被异常地变为未组网状态。
+* (Firmware)由于使能了flash 保护，并且有几个flash的最小保护区间是256k(可在sdk中搜索 lock_block_e 查询得到)，所以需要把执行写操作相对频繁的扇区修改到0x70000之后，包括FLASH_ADR_RESET_CNT，FLASH_ADR_MISC和FLASH_ADR_SW_LEVEL。修改地址之后，当新的固件OTA到V4.1.0.0及之前的节点时，MCU需要识别并自动迁移刚才提到的3个地址，对应的宏开关是 FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，对于512k flash，默认使能。如果客户之前有修改过 512k 的flash map，则需要定义这几个宏定义：FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION和FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION，定义后，编译时，如果有断言错误，请联系我们。如果没修改过 flash map，则不会出现断言错误。如果是新产品开发，不需要兼容以前的版本，这可以关闭FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，以节省固件大小。
+* (Firmware)由于使能了flash 保护，对于 1M flash map，有几个flash的最小保护区间是768k(可在sdk搜索 lock_block_e 查询得到)，所以需要把执行写操作相对频繁的扇区修改到0xC0000之后。所以本次版本重新定义了flash map，如有客户在之前的产品中有使用了 1M flash map，为了保证OTA升级后的兼容性，客户可以选择保留原来的map，不过这种情况下 对于最小保护区间是768k 的flash，则不启用flash保护功能。也可以联系我们。
 
 ### Notes
 
