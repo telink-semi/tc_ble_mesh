@@ -178,6 +178,8 @@
 		912A58072B35660700531DA4 /* ShareNetKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 912A58042B35660700531DA4 /* ShareNetKeyCell.m */; };
 		912A58082B35660700531DA4 /* ShareNetKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 912A58052B35660700531DA4 /* ShareNetKeyCell.xib */; };
 		912A58092B35660700531DA4 /* ShareNetKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 912A58052B35660700531DA4 /* ShareNetKeyCell.xib */; };
+		912C6EC12C783874003D4748 /* UIView+Toast.m in Sources */ = {isa = PBXBuildFile; fileRef = 912C6EC02C783874003D4748 /* UIView+Toast.m */; };
+		912C6EC22C783874003D4748 /* UIView+Toast.m in Sources */ = {isa = PBXBuildFile; fileRef = 912C6EC02C783874003D4748 /* UIView+Toast.m */; };
 		912FE2A52A5D35FE00679FA4 /* CDTPExportVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */; };
 		9130614F2BC29FA5003D2972 /* DeviceSelectVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9130614E2BC29FA5003D2972 /* DeviceSelectVC.xib */; };
 		913061502BC29FA5003D2972 /* DeviceSelectVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 9130614D2BC29FA5003D2972 /* DeviceSelectVC.m */; };
@@ -796,6 +798,8 @@
 		912A58032B35660700531DA4 /* ShareNetKeyCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShareNetKeyCell.h; sourceTree = "<group>"; };
 		912A58042B35660700531DA4 /* ShareNetKeyCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShareNetKeyCell.m; sourceTree = "<group>"; };
 		912A58052B35660700531DA4 /* ShareNetKeyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ShareNetKeyCell.xib; sourceTree = "<group>"; };
+		912C6EBB2C783874003D4748 /* UIView+Toast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Toast.h"; sourceTree = "<group>"; };
+		912C6EC02C783874003D4748 /* UIView+Toast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Toast.m"; sourceTree = "<group>"; };
 		912FE2A32A5D35FE00679FA4 /* CDTPExportVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPExportVC.h; sourceTree = "<group>"; };
 		912FE2A42A5D35FE00679FA4 /* CDTPExportVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDTPExportVC.m; sourceTree = "<group>"; };
 		9130614C2BC29FA5003D2972 /* DeviceSelectVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceSelectVC.h; sourceTree = "<group>"; };
@@ -1151,6 +1155,8 @@
 				25589A6A2721403D00F4F880 /* UIStoryboard+extension.m */,
 				919E99FD2B28416F00948BEA /* UIView+Frame.h */,
 				919E99FE2B28416F00948BEA /* UIView+Frame.m */,
+				912C6EBB2C783874003D4748 /* UIView+Toast.h */,
+				912C6EC02C783874003D4748 /* UIView+Toast.m */,
 				25589A592721403D00F4F880 /* QRCode */,
 				25589A602721403D00F4F880 /* ZIP */,
 			);
@@ -2447,6 +2453,7 @@
 				917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */,
 				25FE6CCA27EC024C009F7626 /* ChooseEntryVC.m in Sources */,
 				25589C022721403F00F4F880 /* UIButton+extension.m in Sources */,
+				912C6EC12C783874003D4748 /* UIView+Toast.m in Sources */,
 				25589C302721403F00F4F880 /* SettingViewController.m in Sources */,
 				91075BB82B0E04EB00F933EA /* TableNodeCell.m in Sources */,
 				915709E42B5507DE00C9D502 /* LightControlCell.m in Sources */,
@@ -2622,6 +2629,7 @@
 				915709E52B5507DE00C9D502 /* LightControlCell.m in Sources */,
 				91BF47452B27FFA300254CB6 /* HSLViewController.m in Sources */,
 				91BF47462B27FFA300254CB6 /* PrivateBeaconCell.m in Sources */,
+				912C6EC22C783874003D4748 /* UIView+Toast.m in Sources */,
 				91BF47482B27FFA300254CB6 /* DeviceConfigCell.m in Sources */,
 				91DC48022B452727009B07DA /* SelectDeviceCell.m in Sources */,
 				91BF474A2B27FFA300254CB6 /* TableCell.m in Sources */,
