@@ -62,6 +62,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.NetworkFragment;
@@ -85,13 +86,24 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initBottomNav();
-        addEventListeners();
-        startMeshService();
-        resetNodeState();
+        initDb();
+    }
 
-        FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
-        CertCacheService.getInstance().load(this); // load cert cache
+
+    private void initDb() {
+        if (!ObjectBox.init(this)) {
+            MeshLogger.d("init db error");
+            showConfirmDialog("db init error, may be caused by version degradation, you can install latest apk or clear data and retry?", (dialog, which) -> {
+                ObjectBox.deleteAll(getApplicationContext());
+                if (!ObjectBox.init(this)) {
+                    MeshLogger.d("init db error - repeat");
+                } else {
+                    startMeshService();
+                }
+            });
+        } else {
+            startMeshService();
+        }
     }
 
     private void addEventListeners() {
@@ -124,6 +136,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
      * init and setup mesh network
      */
     private void startMeshService() {
+        initBottomNav();
+        addEventListeners();
+        TelinkMeshApplication.getInstance().initMeshInfo();
         // init
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
 
@@ -139,6 +154,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         /// set DLE enable
         MeshService.getInstance().resetExtendBearerMode(SharedPreferenceHelper.getExtendBearerMode(this));
+
+        resetNodeState();
+        FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
+        CertCacheService.getInstance().load(this); // load cert cache
     }
 
     // set all devices to offline
@@ -172,6 +191,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private void autoConnect() {
         MeshLogger.log("main auto connect");
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        if (meshInfo == null) {
+            return;
+        }
         if (meshInfo.nodes.size() == 0) {
             MeshService.getInstance().idle(true);
         } else {

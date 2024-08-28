@@ -73,7 +73,9 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
         findViewById(R.id.btn_add).setOnClickListener(this);
         RecyclerView rv_df = findViewById(R.id.rv_df);
         rv_df.setLayoutManager(new LinearLayoutManager(this));
-        DirectForwardingInfoService.getInstance().load(this);
+
+        meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        DirectForwardingInfoService.getInstance().load(this, meshInfo.id);
         infoList = DirectForwardingInfoService.getInstance().get();
         listAdapter = new DirectForwardingListAdapter(this, infoList);
         listAdapter.setOnItemLongClickListener(position -> {
@@ -82,7 +84,6 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
         });
         rv_df.setAdapter(listAdapter);
 
-        meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
 //        TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(ForwardingTableStatusMessage.class.getName(), this);
     }

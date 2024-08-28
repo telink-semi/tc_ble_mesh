@@ -370,7 +370,7 @@ class FUInitiator implements BlobTransferCallback {
             }
 
             if (updatingDevices.get(deviceIndex).meshAddress != src) {
-                log("unexpected notification src");
+                log("initiator unexpected notification src");
                 return;
             }
         }

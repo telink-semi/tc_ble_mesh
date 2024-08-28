@@ -440,7 +440,7 @@
 }
 
 /// Get scheduler status
-+ (BOOL)getSchedulerStatusWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)getSchedulerStatusWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TelinkLogInfo(@"send request for get Scheduler Status, but busy now.");
         if (resultCallback) {

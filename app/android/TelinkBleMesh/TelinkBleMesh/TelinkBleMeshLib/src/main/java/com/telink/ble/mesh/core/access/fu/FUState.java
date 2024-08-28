@@ -75,7 +75,7 @@ public enum FUState {
             "update fail"),
 
     TRANSFER_START(12,
-            "blob transfer started"),
+            "blob transferring..."),
     ;
 
     public final int value;

@@ -82,9 +82,6 @@ public class TelinkMeshApplication extends MeshApplication {
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         AppCrashHandler.init(this);
         closePErrorDialog();
-        ObjectBox.init(this);
-        checkMeshInfo();
-        loadSortType();
     }
 
     /**
@@ -94,7 +91,7 @@ public class TelinkMeshApplication extends MeshApplication {
      * 3. if not exist, create a new mesh network
      * 4. setup the mesh network
      */
-    private void checkMeshInfo() {
+    public void initMeshInfo() {
         MeshInfoService.getInstance().init(ObjectBox.get());
         MeshInfo meshInfo = null;
         long id = SharedPreferenceHelper.getSelectedMeshId(this);
@@ -107,6 +104,8 @@ public class TelinkMeshApplication extends MeshApplication {
         }
         MeshInfoService.getInstance().addMeshInfo(meshInfo);
         SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
+
+        loadSortType();
     }
 
     private void closePErrorDialog() {

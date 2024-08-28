@@ -43,7 +43,7 @@
 #import "ShowTipsView.h"
 #import "UIStoryboard+extension.h"
 #import "DemoTool.h"
-
+#import "UIView+Toast.h"
 #import "DemoCommand.h"
 
 #endif /* PrefixHeader_pch */
