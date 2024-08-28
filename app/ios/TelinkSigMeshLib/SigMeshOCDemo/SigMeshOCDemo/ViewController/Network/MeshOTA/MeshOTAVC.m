@@ -233,6 +233,7 @@
     MeshOTAManager.share.otaData = data;
 #endif
 
+    [self setReplenishPacketBlock];
     MeshOTAManager.share.needCheckVersionAfterApply = YES;
     [MeshOTAManager.share continueFirmwareUpdateWithDeviceAddresses:addresses advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
         [weakSelf showAdvDistributionProgressHandle:responseMessage];
@@ -242,6 +243,15 @@
         [weakSelf showerrorHandle:error];
     }];
     [self configReconnectUI];
+}
+
+- (void)setReplenishPacketBlock {
+    __weak typeof(self) weakSelf = self;
+    [MeshOTAManager.share setReplenishPacketCallback:^(NSInteger totalPacketCount, NSInteger currentPacketIndex, NSInteger allBlockCount, NSInteger currentBlockIndex, NSInteger chunksCountOfCurrentBlock, NSInteger currentChunkIndex, UInt16 destinationAddress) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"Replenishing the packet···(%ld/%ld)\nallBlockCount:%ld\ncurrentBlockIndex:%ld\nchunksCountOfCurrentBlock:%ld\ncurrentChunkIndex:%ld\ndestinationAddress:0x%04X", totalPacketCount, currentPacketIndex, allBlockCount, currentBlockIndex, chunksCountOfCurrentBlock, currentChunkIndex, destinationAddress]];
+        });
+    }];
 }
 
 - (void)configReconnectUI {
@@ -712,6 +722,7 @@
 #endif
     [[NSUserDefaults standardUserDefaults] synchronize];
 
+    [self setReplenishPacketBlock];
     [MeshOTAManager.share setFirmwareUpdateFirmwareMetadataCheckSuccessHandle:^(NSDictionary *dict) {
         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
     }];

@@ -68,7 +68,7 @@
 @property (nonatomic, assign) UInt8 allBlockCount;//记录block总个数
 @property (nonatomic, assign) UInt8 blockIndex;//记录当前block的index
 @property (nonatomic, strong) NSData *currentBlockData;//记录当前block的data
-@property (nonatomic, assign) NSInteger chunksCountofCurrentBlock;//记录当前block的chunk总个数
+@property (nonatomic, assign) NSInteger chunksCountOfCurrentBlock;//记录当前block的chunk总个数
 @property (nonatomic, assign) NSInteger chunkIndex;//记录当前chunk的index
 @property (nonatomic, assign) NSInteger successActionInCurrentProgress;//记录当前阶段成功的设备个数
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSArray *>*losePacketsDict;//step10阶段传输失败的包。
@@ -474,22 +474,19 @@
     for (NSNumber *missingChunkIndex in self.losePacketsDict[@(destination)]) {
         self.chunkIndex = missingChunkIndex.intValue;
         NSData *chunkData = nil;
-        if (self.chunkIndex == self.chunksCountofCurrentBlock - 1) {
+        if (self.chunkIndex == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * self.chunkIndex, self.currentBlockData.length - self.chunkSize * self.chunkIndex)];
         } else {
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * self.chunkIndex, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
         self.semaphore = dispatch_semaphore_create(0);
-        TelinkLogVerbose(@"send chunk index=%d,self.chunksCountofCurrentBlock=%d",self.chunkIndex,self.chunksCountofCurrentBlock);
-
-        //v3.3.0开始新增优化逻辑：当只有一个节点且为直连节点时，不再通过组地址进行OTA数据发送，只对直连节点进行OTA数据发送即可。
-//        TelinkLogError(@"=====chunk，开始给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
+        TelinkLogVerbose(@"send chunk index=%d,self.chunksCountOfCurrentBlock=%d",self.chunkIndex,self.chunksCountOfCurrentBlock);
 
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:NO retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -1766,10 +1763,10 @@
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
-    self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+    self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
 
-    for (int i = (int)self.chunkIndex; i < self.chunksCountofCurrentBlock; i ++) {
+    for (int i = (int)self.chunkIndex; i < self.chunksCountOfCurrentBlock; i ++) {
         if (![self isMeshOTAing]) {
             return;
         }
@@ -1778,7 +1775,7 @@
         }
         self.chunkIndex = i;
         NSData *chunkData = nil;
-        if (i == self.chunksCountofCurrentBlock - 1) {
+        if (i == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.currentBlockData.length - self.chunkSize * i)];
         } else {
@@ -1786,7 +1783,7 @@
         }
         __weak typeof(self) weakSelf = self;
         if (!self.phoneIsDistributor) {
-            TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+            TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         }
         [self showMeshOTAProgressWithCurrentChunkData:chunkData otaData:self.otaData progressBlock:self.gattDistributionProgressBlock];
         BOOL sendBySegmentPdu = NO;
@@ -1860,12 +1857,12 @@
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loseChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
-                if (chunkIndex == self.chunksCountofCurrentBlock - 1) {
+                if (chunkIndex == self.chunksCountOfCurrentBlock - 1) {
                     //end chunk of current block
                     chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * chunkIndex, self.currentBlockData.length - self.chunkSize * chunkIndex)];
                 } else {
@@ -1873,7 +1870,7 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountOfCurrentBlock,self.chunkIndex);
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -1951,7 +1948,7 @@
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
                     TelinkLogInfo(@"%@",errorString);
                     NSMutableArray *chunkIndexes = [NSMutableArray array];
-                    for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
+                    for (int i=0; i<weakSelf.chunksCountOfCurrentBlock; i++) {
                         [chunkIndexes addObject:@(i)];
                     }
                     weakSelf.losePacketsDict[@(source)] = chunkIndexes;
@@ -1988,8 +1985,8 @@
             NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                NSArray *loseChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loseChunkIndexes) {
                     if (![newLoseChunkIndexes containsObject:chunkIndex]) {
                         [newLoseChunkIndexes addObject:chunkIndex];
                     }
@@ -2527,7 +2524,7 @@
                 [self distributorToUpdatingNodesBLOBBlockStartFailAction];
             }
         } else {
-            self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+            self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
             [weakSelf handleLPNReportAction];
         }
     } else {
@@ -2556,7 +2553,7 @@
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
-    self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+    self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
 
     //v3.3.3开始新增优化逻辑：APP作为distributor，升级节点有且只有一个节点，且为直连节点时，使用直连节点地址；其它情况为组播地址。
@@ -2581,7 +2578,7 @@
         }
     }
 
-    for (int i = (int)self.chunkIndex; i < self.chunksCountofCurrentBlock; i ++) {
+    for (int i = (int)self.chunkIndex; i < self.chunksCountOfCurrentBlock; i ++) {
         if (![self isMeshOTAing]) {
             return;
         }
@@ -2590,14 +2587,14 @@
         }
         self.chunkIndex = i;
         NSData *chunkData = nil;
-        if (i == self.chunksCountofCurrentBlock - 1) {
+        if (i == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.currentBlockData.length - self.chunkSize * i)];
         } else {
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
@@ -2701,14 +2698,21 @@
     self.successActionInCurrentProgress = 0;
     if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
+        NSInteger allPacketCount = 0;
+        NSInteger curPacketIndex = 0;
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            allPacketCount += loseChunkIndexes.count;
+        }
+        for (NSNumber *addressNumber in losePacketsDictAllKeys) {
+            UInt16 destination = (UInt16)addressNumber.intValue;
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loseChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
-                if (chunkIndex == self.chunksCountofCurrentBlock - 1) {
+                if (chunkIndex == self.chunksCountOfCurrentBlock - 1) {
                     //end chunk of current block
                     chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * chunkIndex, self.currentBlockData.length - self.chunkSize * chunkIndex)];
                 } else {
@@ -2716,8 +2720,12 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountOfCurrentBlock,self.chunkIndex);
 
+                // Replenish Packet, callback some parameter for UI
+                if (self.replenishPacketCallback) {
+                    self.replenishPacketCallback(allPacketCount, curPacketIndex + [loseChunkIndexes indexOfObject:chunkIndexNumber], self.allBlockCount, self.blockIndex, self.chunksCountOfCurrentBlock, self.chunkIndex, destination);
+                }
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -2764,6 +2772,7 @@
                 //Most provide 24*60*60 seconds for BLOBChunkTransfer(Distributor->updating node(s)) in every chunk.
                 dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 24*60*60.0));
             }
+            curPacketIndex += loseChunkIndexes.count;
         }
     }
     if (hasFail) {
@@ -2829,7 +2838,7 @@
                             [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]];
                             TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]);
                             NSMutableArray *chunkIndexes = [NSMutableArray array];
-                            for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
+                            for (int i=0; i<weakSelf.chunksCountOfCurrentBlock; i++) {
                                 [chunkIndexes addObject:@(i)];
                             }
                             weakSelf.losePacketsDict[@(source)] = chunkIndexes;
@@ -2871,8 +2880,8 @@
             NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                NSArray *loseChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loseChunkIndexes) {
                     if (![newLoseChunkIndexes containsObject:chunkIndex]) {
                         [newLoseChunkIndexes addObject:chunkIndex];
                     }
