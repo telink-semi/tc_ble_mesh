@@ -43,13 +43,7 @@ extern u8					blt_state;
 #endif
 #endif
 
-
 void blt_set_bluetooth_version (u8 v);
-
-void enable_mesh_provision_buf();
-void disable_mesh_provision_buf();
-void enable_mesh_kr_cfg_filter();
-void disable_mesh_kr_cfg_filter();
 void ota_fw_check_over_write (void);
 
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))

@@ -71,7 +71,7 @@
 
 #define TR_T_user0				30
 
-#define TR_24_TIMERS_ADDR		0	// this ID cant be used because timer id == 0 is reserved for indicating id not added
+#define TR_24_TIMERS_ADDR		0	// this ID can not be used because timer id == 0 is reserved for indicating id not added
 #define TR_24_TIMER0_ADDR		1
 #define TR_24_TIMER1_ADDR		2
 #define TR_24_TIMER2_ADDR		3

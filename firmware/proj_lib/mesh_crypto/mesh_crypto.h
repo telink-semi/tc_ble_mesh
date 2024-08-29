@@ -25,7 +25,6 @@
 #ifndef BLE_MESH_CRYPTO_H
 #define BLE_MESH_CRYPTO_H
 
-#include "proj_lib/ble/ll/ll.h"
 //#include <memory.h>
 
 int test_mesh_sec_func ();
@@ -118,10 +117,11 @@ int mesh_sec_prov_session_key_hmac(unsigned char sk[16], unsigned char* sn, unsi
 #define NONCE_TYPE_PROXY        0x03
 #define NONCE_TYPE_SOLICITATION	0x04
 
-enum{
+enum rx_errno_e{
     ERR_NO_NW_DEC_ERR               = 1,    // must 1 for decryption error
     ERR_NO_NW_DEC_ADR_INVALID       = 2,
     ERR_NO_NW_DEC_CACHE_OLD         = 3,
+    // ERR_NO_NW_DEC_WRONG_KEY         = 4,
 };
 
 

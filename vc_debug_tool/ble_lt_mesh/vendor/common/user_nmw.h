@@ -25,7 +25,6 @@
 #ifndef __USER_NMW_H
 #define __USER_NMW_H
 #include "tl_common.h"
-#include "proj_lib/ble/ll/ll.h"
 
 #define MAX_DEVICE_CACHE_NUM	16
 #define NMW_OTA_SEG_WAIT_MS		(240*10)

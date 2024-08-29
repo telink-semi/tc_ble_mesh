@@ -86,7 +86,7 @@ void sleep_ms(u32 ms)
 
 u8 src_buf[MAX_CONFIG_SIZE];
 
-void flash_write_page(u32 addr, u32 len, u8 *buf) // sync with flash driver which can not use "const"  for buffer.
+void flash_write_page(unsigned long addr, unsigned long len, unsigned char* buf) // sync with flash driver which can not use "const"  for buffer.
 {
 	errno_t err_fp;
 	FILE *fp;
@@ -110,7 +110,7 @@ void flash_write_page(u32 addr, u32 len, u8 *buf) // sync with flash driver whic
 	}
 }
 
-void flash_read_page(u32 addr, u32 len, u8 *buf)
+void flash_read_page(unsigned long addr, unsigned long len, unsigned char* buf)
 {
 	 errno_t err_fp;
 	 FILE *fp;
@@ -136,7 +136,7 @@ void flash_erase_sector_VC(u32 addr, u32 size)
 	flash_write_page(addr, size, write_buf);
 }
 
-void flash_erase_sector(u32 addr)
+void flash_erase_sector(unsigned long addr)
 {
     flash_erase_sector_VC(addr, MAX_SECTOR_SIZE);
 }

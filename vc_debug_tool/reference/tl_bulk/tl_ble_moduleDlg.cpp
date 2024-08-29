@@ -358,8 +358,10 @@ void CTl_ble_moduleDlg::load_ini_init()
 
 void CTl_ble_moduleDlg::select_ini_auto()
 {
+	int count = ((CComboBox*)GetDlgItem(IDC_INIFILE))->GetCount();
 	if(Dongle_is_gateway_or_not()){
-		((CComboBox *) GetDlgItem (IDC_INIFILE))->SetCurSel (1);
+		int file_idx = count < 2 ? 0 : 1;
+		((CComboBox *) GetDlgItem (IDC_INIFILE))->SetCurSel (file_idx);
 	}else{
 		((CComboBox *) GetDlgItem (IDC_INIFILE))->SetCurSel (0);
 	}
@@ -788,17 +790,17 @@ int ini_get_and_writeback_tx_cmd_sno(u8 *p_mesh_uuid)
 			sno = 1; // can not use 0 to send command.
 		}
 
-		if(import_json_reboot_flag){
+		//if(import_json_reboot_flag){ //  also need to recover sno after reset gateway dongle by BDT erase.
 			LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "input JSON with same mesh uuid complete, and writeback_tx_cmd_sno to dongle: 0x%06x(%d)", sno, sno);
 			gateway_set_sno(sno + mesh_sno_get_save_delta());
-		}
+		//}
 	}else{
 		clr_ini_provioner_tx_cmd_sno();
 	}
 
 	if (0 == found) {
 		set_ini_provioner_mesh_uuid(json_database.mesh_uuid); // update uuid
-		LOG_MSG_INFO(TL_LOG_COMMON, json_database.mesh_uuid, 16, "update mesh uuid to ini", 0);
+		LOG_MSG_INFO(TL_LOG_COMMON, json_database.mesh_uuid, 16, "update mesh uuid to ini");
 	}
 
 	return found;
@@ -811,7 +813,7 @@ void CTl_ble_moduleDlg::CTl_ble_module_Init()
 	char buff[128];
 
 	GetPrivateProfileString ("SET", "prnid", "ffff", buff, 1024, m_InitFile);
-	sscanf_s (buff, "%x", &dongle_ble_moudle_id);
+	sscanf_s (buff, "%x", &dongle_ble_moudle_id); // get id from INI file and set to dongle_ble_moudle_id
 	m_hDev = NULL;
 
 	GetPrivateProfileString ("SET", "i2c_id", "6e", buff, 1024, m_InitFile);
@@ -1255,7 +1257,7 @@ void gateway_send_unicast_adr_grp(u16* adr_list,int node_cnt)
 
 void error_report_no_update_node()
 {
-	LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, ERROR_STRING_DISTRIBUTE_START_ALL,0);
+	LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, ERROR_STRING_DISTRIBUTE_START_ALL);
 	AfxMessageBox(ERROR_STRING_DISTRIBUTE_START_ALL);
 }
 
@@ -1271,7 +1273,7 @@ int vc_distribute_all_proc(mesh_bulk_ini_vc_t *p_vc_ini,int n)
     			u32 update_node_cnt;
     			update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
     			if(ble_module_id_is_gateway()){
-                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "GATEWAY can not support initiator start now!",0);
+                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "GATEWAY can not support initiator start now!");
     				return 0;	// TODO
     			}else if(update_node_cnt > 0){
 					u8 *p_list = (u8 *)p_vc_ini + len_null;
@@ -1302,7 +1304,7 @@ int vc_distribute_all_proc(mesh_bulk_ini_vc_t *p_vc_ini,int n)
     	    if(ble_module_id_is_kmadongle()){
     	        if(p_vc_ini->cmd.adr_dst != ele_adr_primary){
         	        p_vc_ini->cmd.adr_dst = ele_adr_primary;
-                    LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "auto change destination address",0);
+                    LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "auto change destination address");
                 }
     	    }
     	    
@@ -1333,6 +1335,38 @@ int vc_distribute_all_proc(mesh_bulk_ini_vc_t *p_vc_ini,int n)
 	return n;
 }
 
+void CTl_ble_moduleDlg::restart_VC_tool()
+{
+	WaitForSingleObject (NULLEVENT2, 4000);//wait 4s until it finish factory reset ,and then restart the vc tools.
+	// Create New Process.reboot
+	 char buf[1024];
+	::GetModuleFileName(NULL,buf,sizeof(buf));
+	CString strPath = buf;
+	ShowWindow(SW_HIDE);
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	
+	si.dwFlags = STARTF_USESHOWWINDOW;	// 指定wShowWindow成员有效
+	si.wShowWindow = TRUE;				// 此成员设为TRUE的话则显示新建进程的主窗口，
+	CreateProcess(strPath, "Restart", NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
+	//OnOK();//退出当前执行对话框程序
+	TerminateProcess(GetCurrentProcess(), 0);
+
+}
+
+int CTl_ble_moduleDlg::gateway_dongle_reset_proc(LPCTSTR cmd)
+{
+	char* str = "E9 FF 02";
+	if (!strcmp(cmd, str))
+	{
+		restart_VC_tool();
+	}
+	return 1;
+}
+
 int CTl_ble_moduleDlg::ExecCmd(LPCTSTR cmd, int log_type) 
 {
 	BYTE	buff[1024];
@@ -1361,7 +1395,9 @@ int CTl_ble_moduleDlg::ExecCmd(LPCTSTR cmd, int log_type)
 			WriteFile_handle(buff, n, 0, 0);
 		}
 	}
-
+	
+	gateway_dongle_reset_proc(cmd);
+	
 	return 1;
 }
 
@@ -1570,25 +1606,25 @@ void prov_print_gateway_log(u8 dir,u8 type,u8 *p_cmd,u16 len)
         LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, " =============  GATEWAY  <<<<<<<<<<<<<<<<<< IUT===================  ");
     }
     if(type == PRO_INVITE){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov invite cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov invite cmd");
     }else if (type == PRO_CAPABLI){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov capa cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov capa cmd");
     }else if (type == PRO_START){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov start cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov start cmd");
     }else if (type == PRO_PUB_KEY){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov pubkey cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov pubkey cmd");
     }else if (type == PRO_INPUT_COM){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov input cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov input cmd");
     }else if (type == PRO_CONFIRM){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov confirm cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov confirm cmd");
     }else if (type == PRO_RANDOM){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov random cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov random cmd");
     }else if (type == PRO_DATA){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov data cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov data cmd");
     }else if (type == PRO_COMPLETE){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov complete cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov complete cmd");
     }else if (type == PRO_FAIL){
-        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov fail cmd", 0);
+        LOG_MSG_INFO (TL_LOG_COMMON, p_cmd, len, "prov fail cmd");
     }else{};
     return ;
 }
@@ -1720,7 +1756,7 @@ int win32_mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 	int err = 0;
     mesh_cmd_bear_t *bc_bear = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
     mesh_beacon_t *p_bc = &bc_bear->beacon;
-	LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "rcv private beacon", 0);
+	LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "rcv private beacon");
     mesh_beacon_privacy_t backup_rc;
     memcpy(&backup_rc, p_bc->data, sizeof(backup_rc)); // backup to make sure it can not be over written.
     mesh_beacon_privacy_t *p_sec_privacy = &backup_rc;
@@ -1728,7 +1764,7 @@ int win32_mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
     err = mesh_privacy_beacon_dec((u8 *)p_sec_privacy,&key_flag,ivi_idx);
 	//LOG_MSG_INFO(TL_LOG_NODE_SDK,ivi_idx, 4,"rcv private beacon %02x\r\n",key_flag);
     if(err){
-		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "check private beacon fail", 0);
+		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "check private beacon fail");
 		return 100;
 	}
 	// decrypt suc
@@ -1797,7 +1833,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 		u8 ret_type;
 
         if(MESH_TX_CMD_RUN_STATUS == pu[0]){
-            LOG_MSG_INFO (TL_LOG_COMMON, pu, n, "mesh bulk cmd error: ", 0);
+            LOG_MSG_INFO (TL_LOG_COMMON, pu, n, "mesh bulk cmd error: ");
             clr_mesh_ota_master_wait_ack(); // OTA tx command failed
             return 0;
         }
@@ -1972,7 +2008,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				
 				if(import_json_reboot_flag){
 					set_ini_import_json_flag(0); // clear
-					LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "clear import JSON flag", 0);
+					LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "clear import JSON flag");
 				}
 			}else if (type == HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION) {
 			    u8 option_val = pu[2];
@@ -1981,7 +2017,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
                     m_ExtendAdvOption = option_val;
 					m_combo_extend_adv_option.SetCurSel(option_val); // revert UI
 					SaveExtendAdvOption(option_val);
-                    LOG_MSG_ERR(TL_LOG_GATEWAY,0, 0,"set Extend Adv option failed \r\n", 0);
+                    LOG_MSG_ERR(TL_LOG_GATEWAY,0, 0,"set Extend Adv option failed \r\n");
                 }
 			}else if (type == HCI_GATEWAY_CMD_SEND_SRC_CMD){
                 gateway_upload_mesh_src_t *p_cmd = (gateway_upload_mesh_src_t *)(pu+2);
@@ -2043,7 +2079,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 			}
 			else if(type == HCI_GATEWAY_CMD_SEND_GATT_OTA_STS){
 				if(pu[2] == BLE_SUCCESS){
-					LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load suc", 0);
+					LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load suc");
 				}
 				else{
 					LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"gateway firmware load fail:%d", pu[2]);
@@ -2078,7 +2114,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						check_pkt_is_unprovision_beacon(proxy_buf);
 					}else if(SECURE_BEACON == p_bear_rx->beacon.type){
 						if (0 == win32_mesh_rc_data_beacon_sec(&(p_bear_rx->len), 0)) { // iv update success
-							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
+							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ");
 							
 							if (ble_module_id_is_gateway()) {
 								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
@@ -2096,7 +2132,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 					}else if(PRIVACY_BEACON == p_bear_rx->beacon.type){
 						#if MD_PRIVACY_BEA
 						if (0 == win32_mesh_rc_data_beacon_privacy(&(p_bear_rx->len), 0)) { // iv update success
-							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ", 0);
+							LOG_MSG_INFO(TL_LOG_COMMON, json_database.ivi_idx, 4, "update ivi index part ");
 							if (ble_module_id_is_gateway()) {
 								init_json(FILE_MESH_DATA_BASE, 0);//gateway_json_init();// in this condition we have not receice the gateway rsp data .
 							}else if (ble_module_id_is_kmadongle()) {
@@ -2146,10 +2182,10 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
     					LOG_MSG_INFO(TL_LOG_WIN32,0,0,"GATT addr 0x%04x, filter list status, ListSize is: %d", connect_addr_gatt, list_size);
     					//LOG_MSG_INFO (TL_LOG_CMD_RSP, 0, 0, "VC RX PROXY_CONFIG in connect mode: %s", buff);
 					}else if(p_proxy_str->opcode == DIRECTED_PROXY_CAPA_STATUS){
-						LOG_MSG_INFO(TL_LOG_WIN32,p_proxy_str->para,2,"DIRECTED_PROXY_CAPABILITIES_STATUS:", 0);
+						LOG_MSG_INFO(TL_LOG_WIN32,p_proxy_str->para,2,"DIRECTED_PROXY_CAPABILITIES_STATUS:");
 						directed_proxy_capa_sts *p_capa_sts = (directed_proxy_capa_sts *)p_proxy_str->para;
 						if(p_capa_sts->directed_proxy && p_capa_sts->use_directed != m_use_directed){
-							mesh_directed_proxy_control_set(m_use_directed, ele_adr_primary, g_ele_cnt);
+							mesh_directed_proxy_control_set(BLS_CONN_HANDLE, m_use_directed, ele_adr_primary, g_ele_cnt);
 						}
 					}
 				}	
@@ -2206,7 +2242,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 			        if(pu[1] > (sizeof(online_st_report_t)-sizeof(p_st_report->node))){
     			        if(0 == online_st_gatt_dec((u8 *)p_st_report, pu[1])){
             			    update_online_st_pkt((u8 *)p_st_report, pu[1]-ONLINE_ST_MIC_LEN_GATT);
-            				// LOG_MSG_INFO (TL_LOG_COMMON, pu+2, pu[1], "online status data:", 0);
+            				// LOG_MSG_INFO (TL_LOG_COMMON, pu+2, pu[1], "online status data:");
         				}
     				}
 				}
@@ -2215,7 +2251,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				u8  fwRevision_value[FW_REVISION_VALUE_LEN] = { 0 };
 				memcpy(fwRevision_value, pu + 2, pu[1]);
 				LOG_MSG_INFO(TL_LOG_COMMON, fwRevision_value,
-					sizeof(fwRevision_value), "slave fw version is ", 0);
+					sizeof(fwRevision_value), "slave fw version is ");
 				u8 auth_en;
 				auth_en = fwRevision_value[FW_REVISION_VALUE_LEN - 2];
 			}
@@ -2986,7 +3022,7 @@ void gateway_VC_provision_start()
 {
 	u8 buff[3]={0xe9,0xff};
 	buff[2]= HCI_GATEWAY_CMD_START;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_START", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_START");
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -2994,7 +3030,7 @@ void gateway_VC_provision_stop()
 {
 	u8 buff[3]={0xe9,0xff};
 	buff[2]= HCI_GATEWAY_CMD_STOP;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_STOP", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_STOP");
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -3002,7 +3038,7 @@ void gateway_VC_factory_reset()
 {
     u8 buff[3]={0xe9,0xff};
     buff[2]= HCI_GATEWAY_CMD_RESET;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_RESET", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_RESET");
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -3029,11 +3065,11 @@ unsigned char Dongle_is_gateway_or_not()
 {
     HANDLE	m_hdongle = NULL;
         // clear the handle of the devices 
-    m_hdongle = GetPrintDeviceHandle(ID_GATEWAY_VC);
-    if(m_hdongle!=NULL || connect_serial_port){// suppose serial port must be the gateway
-        return 1;
-    }else{
+    m_hdongle = GetPrintDeviceHandle(ID_KMA_DONGLE);	// default mode is gateway, becasue UART gateway can not get handle here.
+    if(m_hdongle!=NULL){// suppose serial port must be the gateway
         return 0;
+    }else{
+        return 1;
     }    
 }
 
@@ -3058,7 +3094,7 @@ void gateway_vc_set_adv_filter(unsigned char  *p_mac)
 	u8 buff[9]={0xe9,0xff,0,0,0,0,0,0,0};
 	buff[2]=HCI_GATEWAY_CMD_SET_ADV_FILTER;
 	memcpy(buff+3,p_mac,6);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_ADV_FILTER", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_ADV_FILTER");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3072,7 +3108,7 @@ void gateway_set_provisioner_para(unsigned char *p_net_info)
 	memcpy(buff+3,p_net_info,25);
 
 	gateway_provision_set_sno_en = 1;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_PRO_PARA ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_PRO_PARA ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3087,7 +3123,7 @@ void gateway_start_fast_provision(u16 pid, u16 start_addr)
 	buff[4]=pid>>8;
 	buff[5]=(u8)start_addr;
 	buff[6]=start_addr>>8;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_FAST_PROV_START ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_FAST_PROV_START ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3099,7 +3135,7 @@ void gateway_set_prov_devkey(u16 unicast,u8 *p_devkey)
 	buff[2]=HCI_GATEWAY_CMD_SET_DEV_KEY;
 	memcpy(buff+3,(u8 *)&unicast,2);
 	memcpy(buff+5,p_devkey,16);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_DEV_KEY ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_DEV_KEY ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3111,7 +3147,7 @@ void gateway_set_node_provision_para(unsigned char *p_net_info)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SET_NODE_PARA;
 	memcpy(buff+3,p_net_info,25);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_NODE_PARA ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_NODE_PARA ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3123,7 +3159,7 @@ void gateway_get_dev_uuid_mac()
 	buff[0]=0xe9;
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_GET_UUID_MAC;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_UUID_MAC ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_UUID_MAC ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3138,7 +3174,7 @@ void gateway_get_sno()
 	buff[0]=0xe9;
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_GET_SNO;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_SNO ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_SNO ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3154,7 +3190,7 @@ void gateway_set_sno(u32 sno)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SET_SNO;
 	memcpy(buff + 3, &sno, 3);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_SNO to dongle", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_SNO to dongle");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3166,7 +3202,7 @@ void gateway_set_extend_seg_mode(u8 mode)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION;
 	buff[3]=mode;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION ");
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -3178,7 +3214,7 @@ void gateway_send_cmd_to_del_node_info(u16 uni)
 	buff[2]=HCI_GATEWAY_CMD_DEL_VC_NODE_INFO;
 	buff[3]=uni&0xff;
 	buff[4]=(uni>>8)&0xff;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_DEL_VC_NODE_INFO ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_DEL_VC_NODE_INFO ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3193,7 +3229,7 @@ void gateway_set_start_keybind(unsigned char fastbind, unsigned char *p_appid,un
 	p_keybind->fastbind = fastbind;
 	memcpy(p_keybind->key_idx,p_appid,2);
 	memcpy(p_keybind->key,p_key,16);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_START_KEYBIND ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_START_KEYBIND ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3204,7 +3240,7 @@ void gateway_get_provision_self_sts()
 	buff[0]=0xe9;
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_GET_PRO_SELF_STS;
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_PRO_SELF_STS  ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_GET_PRO_SELF_STS  ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3218,7 +3254,7 @@ void gateway_send_link_open(u16 adr,u8 *p_uuid)
 	buff[3]=adr&0xff;
 	buff[4]=adr>>8;
 	memcpy(buff+5,p_uuid,16);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "gateway_send_link_open", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "gateway_send_link_open");
 	WriteFile_host_handle(buff, sizeof(buff));
 }
 
@@ -3229,7 +3265,7 @@ void gateway_send_rp_start(u8*p_net_info)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_RP_START;
 	memcpy(buff+3,p_net_info,25);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_RP_START ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_RP_START ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
@@ -3241,14 +3277,19 @@ void gateway_update_netkey_by_json(u8 *p_netkey)
 	buff[1]=0xff;
 	buff[2]=HCI_GATEWAY_CMD_SEND_NET_KEY;
 	memcpy(buff+3,p_netkey,16);
-	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SEND_NET_KEY ", 0);
+	LOG_MSG_INFO (TL_LOG_GATEWAY, buff, sizeof(buff), "HCI_GATEWAY_CMD_SEND_NET_KEY ");
 	WriteFile_host_handle(buff, sizeof(buff));
 	return ;
 }
 
-int is_B91_gw_usb_id(char * interfacename, unsigned int dev_RAM)	// for B91 chip which can not access RAM directely.
+int is_B91_gw_usb_id(char* interfacename, unsigned int dev_RAM, unsigned int id_target)	// for B91 chip which can not access RAM directely.
 {
 	int match_flag = 0;
+
+	if (ID_GATEWAY_VC != id_target) {
+		return 0;
+	}
+
 	if((dev_RAM == 0x0818/*EVK*/) || (dev_RAM == ID_KMA_DONGLE) || (dev_RAM == ID_NODE) || (dev_RAM == ID_GATEWAY_VC)){
 		return 0;
 	}
@@ -3367,6 +3408,10 @@ void CTl_ble_moduleDlg::OnBnClickedUartConn()
 			connect_serial_port = false;
             GetDlgItem(IDC_UART_CONN)->SetWindowText(_T("Connect"));
 		}
+	}
+
+	if(connect_serial_port){
+		OnSelchangeInifile(); // to call get gateway_get_dev_uuid_mac_
 	}
 	
 }
@@ -3573,19 +3618,19 @@ u8 unicast_is_in_range_or_not(u16 unicast,u8 *p_uuid)
 	}
 }
 
+extern u8 fw_ota_data_tx[NEW_FW_MAX_SIZE];
 void CTl_ble_moduleDlg::OnBnClickedGatewayOta()
 {
 	// TODO: 在此添加控件通知处理程序代码
-    u8 firmware_buf[FLASH_ADR_AREA_FIRMWARE_END];
     u32 firmware_len;
 	if(0 != ota_file_check()){
 		return ;
 	}
 
-    firmware_len = new_fw_read(firmware_buf, sizeof(firmware_buf));
+    firmware_len = new_fw_read(fw_ota_data_tx, sizeof(fw_ota_data_tx));
     if(firmware_len){
     	gateway_send_ota_type(GATEWAY_OTA_SLEF);
-    	download_gateway_firmware(firmware_buf,firmware_len);
+    	download_gateway_firmware(fw_ota_data_tx,firmware_len);
 	}
 }
 
@@ -3593,16 +3638,15 @@ void CTl_ble_moduleDlg::OnBnClickedGatewayOta()
 void CTl_ble_moduleDlg::OnBnClickedMeshOta()
 {
 	// TODO: 在此添加控件通知处理程序代码
-    u8 firmware_buf[FLASH_ADR_AREA_FIRMWARE_END];
     u32 firmware_len;
 	if(0 != ota_file_check()){
 		return ;
 	}
 
-    firmware_len = new_fw_read(firmware_buf, sizeof(firmware_buf));
+    firmware_len = new_fw_read(fw_ota_data_tx, sizeof(fw_ota_data_tx));
     if(firmware_len){
     	gateway_send_ota_type(GATEWAY_OTA_MESH);
-    	download_gateway_firmware(firmware_buf,firmware_len);
+    	download_gateway_firmware(fw_ota_data_tx,firmware_len);
 	}
 }
 
@@ -3624,24 +3668,8 @@ void CTl_ble_moduleDlg::OnBnClickedGatewatReset()
 		memset(p_net->net_work_key,0,sizeof(p_net->net_work_key));
 		p_net->unicast_address = 1;
 		gateway_provision_sts =0;
-		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait the gateway finish shining,and the gateway will reset",0);
-		WaitForSingleObject (NULLEVENT2, 4000);//wait 4s until it finish factory reset ,and then restart the vc tools.
-		// Create New Process.reboot
-		 char buf[1024];
-	    ::GetModuleFileName(NULL,buf,sizeof(buf));
-	    CString strPath = buf;
-	    ShowWindow(SW_HIDE);
-	    STARTUPINFO si;
-	    PROCESS_INFORMATION pi;
-	    ZeroMemory(&si, sizeof(si));
-	    si.cb = sizeof(si);
-	    ZeroMemory(&pi, sizeof(pi));
-
-	    si.dwFlags = STARTF_USESHOWWINDOW;  // 指定wShowWindow成员有效
-	    si.wShowWindow = TRUE;              // 此成员设为TRUE的话则显示新建进程的主窗口，
-	    CreateProcess(strPath, "Restart", NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
-		//OnOK();//退出当前执行对话框程序
-		TerminateProcess(GetCurrentProcess(), 0);
+		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait the gateway finish shining,and the gateway will reset");
+		restart_VC_tool();
 
 	}else{
 		AfxMessageBox(_T("only the gateway will have this problem !"));
@@ -3758,7 +3786,7 @@ void CTl_ble_moduleDlg::OnBnClickedRpScan()
 		update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
 		//loop to send the scan start .
 		if(update_node_cnt == 0){
-			LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!",0);
+			LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!");
             return ;
 		}
 
@@ -3773,7 +3801,7 @@ void CTl_ble_moduleDlg::OnBnClickedRpScan()
 				ProcessMessages();
 			}
 		}else{
-			LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "Remote scan parameter err!!!", 0);
+			LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "Remote scan parameter err!!!");
 		}
 	}else{
         if(ble_module_id_is_gateway()){
@@ -4098,7 +4126,7 @@ int mesh_model_onoff_retrieve_win32(model_g_onoff_level_t *p_onoff)
         mesh_common_model_retrieve_win(&(p_light->com),p_node,SIG_MD_G_ONOFF_S,i);
     }
     #if MD_LEVEL_EN
-    for(int j=0;j<LIGHT_CNT * ELE_CNT_EVERY_LIGHT;j++){
+    for(int j=0;j<LIGHT_CNT * LEVEL_STATE_CNT_EVERY_LIGHT;j++){
         model_g_light_s_t *p_level = &(p_onoff->level_srv[j]);
         mesh_common_model_retrieve_win(&(p_level->com),p_node,SIG_MD_G_LEVEL_S,j);
     }
@@ -4601,7 +4629,7 @@ void gw_json_update(int node_idx)
 		ele_adr_primary = net_info.unicast_address;
 		VC_node_dev_key_save(ele_adr_primary, mesh_key.dev_key,g_ele_cnt);
 		VC_node_cps_save(gp_page0, ele_adr_primary, SIZE_OF_PAGE0_LOCAL);
-		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "provision the gateway first ",0);
+		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "provision the gateway first ");
 		if(!node_found_flag){
 			mesh_json_set_node_info(ele_adr_primary, gw_mac);
 			json_set_appkey_bind_self_proc(vc_uuid, netidx);
@@ -4609,7 +4637,7 @@ void gw_json_update(int node_idx)
 		gateway_set_start_keybind(1,(u8*)(&vc_dlg_appkey.apk_idx),vc_dlg_appkey.app_key);
 		write_json_file_doc(FILE_MESH_DATA_BASE);
 		// then we will need to update all the information into the gateway part 
-		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "update the vc node info into the gateway ",0);
+		LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "update the vc node info into the gateway ");
 		if(node_found_flag){
 			// use the provisioner's  uuid to get max unicast adr in the provisioner range .
 			set_ini_unicast_max(json_get_next_unicast_adr_val(vc_uuid));
@@ -4625,7 +4653,7 @@ UINT ThreadGatewayJsonUpdate (void* pParams)
 	// clear all the json file , and do init part for the gateway part 
     gateway_VC_factory_reset();
 	// wait until the gateway finish the reset .
-	LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait until it finish reset",0);
+	LOG_MSG_INFO (TL_LOG_COMMON, 0, 0, "wait until it finish reset");
 	WaitForSingleObject (NULLEVENT2, 5000);
 
 	gw_json_update(gw_node_idx);  // gateway will send HCI_GATEWAY_CMD_SEND_IVI if it update the iv index from the network.
@@ -4712,7 +4740,7 @@ void CTl_ble_moduleDlg::OnBnClickedUseDirected()
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
 	#if MD_DF_CFG_CLIENT_EN
-	mesh_directed_proxy_control_set(m_use_directed, ele_adr_primary, g_ele_cnt);
+	mesh_directed_proxy_control_set(BLS_CONN_HANDLE, m_use_directed, ele_adr_primary, g_ele_cnt);
 	#endif
 }
 
@@ -4787,7 +4815,7 @@ void CTl_ble_moduleDlg::OnBnClickedextendscan()
 		update_node_cnt = m_pMeshDlg->get_all_online_node(adr_list, MESH_OTA_UPDATE_NODE_MAX);
 		//loop to send the scan start .
 		if(update_node_cnt == 0){
-			LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!",0);
+			LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "No update node, please get online status before!!!");
             return ;
 		}
 		for(u32 i=0;i<update_node_cnt;i++){

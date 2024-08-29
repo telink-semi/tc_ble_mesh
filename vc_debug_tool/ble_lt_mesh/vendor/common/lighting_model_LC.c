@@ -23,10 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
@@ -41,6 +37,17 @@
 model_light_lc_t       model_sig_light_lc;
 u32 mesh_md_light_lc_addr = FLASH_ADR_MD_LIGHT_LC;
 u16 prop_publish_id_sel = LC_PROP_ID_LightnessOn;
+u32 g_ambient_light_value = 0; // unit: lux
+
+u16 LC_get_lc_model_element_addr(int light_idx)
+{
+    u16 addr_offset = 0;
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+    addr_offset = ELE_CNT_EVERY_LIGHT - 1; // locate at last element
+#endif
+
+    return (ele_adr_primary + light_idx * ELE_CNT_EVERY_LIGHT + addr_offset);
+}
 
 #if MD_SERVER_EN
 #if !TESTCASE_FLAG_ENABLE
@@ -82,6 +89,7 @@ const lc_prop_info_t lc_prop_info[] = {
 typedef struct{
     u32 tick_ms; 		// tick for light control state
     u32 tick_ms_sensor;	// tick for sensor event.
+    u32 time_since_sensed;	// the Time Since Motion Sensed
     u8 occupancy_on;
     u8 st;
 }lc_property_proc_t;
@@ -125,6 +133,13 @@ int is_light_lc_onoff(u16 op)
     return (set_LC_lightness_flag || (LIGHT_LC_ONOFF_SET == op)||(LIGHT_LC_ONOFF_SET_NOACK == op));
 }
 
+static inline void lc_light_onoff_save()
+{
+#if LIGHT_CONTROL_SAVE_LC_ONOFF_EN
+	light_par_save(0);
+#endif
+}
+
 /*
 	lighting model command callback function ----------------
 */	
@@ -149,7 +164,7 @@ int mesh_lc_mode_st_publish(u8 idx)
 void scene_get_lc_par(scene_data_t *p_scene, int light_idx)
 {
     p_scene->lc_mode = model_sig_light_lc.mode[light_idx];
-    p_scene->lc_onoff = model_sig_light_lc.lc_onoff_target[light_idx];
+    p_scene->lc_onoff = light_res_sw_save[light_idx].lc_onoff_target;
     p_scene->lc_om = model_sig_light_lc.om[light_idx];
     memcpy(&p_scene->lc_propty, &model_sig_light_lc.propty[light_idx], sizeof(p_scene->lc_propty));
 }
@@ -165,14 +180,15 @@ void scene_load_lc_par(scene_data_t *p_scene, int light_idx)
 	static u32 test_llc_BV10_cnt;
 	test_llc_BV10_cnt++;
     if(6 == test_llc_BV10_cnt){ // auto standby state
-    	model_sig_light_lc.lc_onoff_target[light_idx] = 0;
+    	light_res_sw_save[light_idx].lc_onoff_target = 0;
     }else
 #endif
     {
-    	model_sig_light_lc.lc_onoff_target[light_idx] = p_scene->lc_onoff;
+    	light_res_sw_save[light_idx].lc_onoff_target = p_scene->lc_onoff;
     }
     model_sig_light_lc.om[light_idx] = p_scene->lc_om;
 	mesh_model_store(1, SIG_MD_LIGHT_LC_S);
+	lc_light_onoff_save();
 
 #if 1
     light_lc_property_t *p_prop = &model_sig_light_lc.propty[light_idx];
@@ -282,6 +298,25 @@ int mesh_cmd_sig_lc_om_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     return err;
 }
 
+STATIC_ASSERT(sizeof(lc_prop_head_t) <= 4+4); // (LEN_LC_PROP_MAX <= (4 + 2)); // because lc_prop_val_get use u32 to return value.
+/**
+ * @brief       This function get value of LC property 
+ * @param[in]   instance_idx- light index or instance index
+ * @param[in]   id_get		- id of LC property
+ * @return      value
+ * @note        
+ */
+u32 lc_property_val_get(u8 instance_idx, u16 id_get)
+{
+	u32 value = 0;
+	const lc_prop_info_t * p_info = get_lc_prop_info(id_get);
+	if(p_info && (p_info->len <= LEN_LC_PROP_MAX)){
+	    memcpy(&value, get_lc_val(p_info, instance_idx), min(p_info->len, sizeof(value)));
+	}
+
+	return value;
+}
+
 int mesh_tx_cmd_lc_prop_st(u8 idx, u16 id_get, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
 	lc_prop_head_t rsp_prop = {0};
@@ -388,9 +423,21 @@ u32 get_lc_prop_time_ms(int light_idx, int LC_state)
  * @return      
  * @note        
  */
-static inline u32 get_OccupancyDelay_time_ms(int light_idx)
+static inline u32 get_OccupancyDelay_time_ms(int light_idx) // or use lc_property_val_get() to get.
 {
 	lc_prop_u24_t *p_val = &model_sig_light_lc.propty[light_idx].TimeOccupancyDelay;
+	return p_val->val;
+}
+
+/**
+ * @brief       This function get OccupancyDelay_time
+ * @param[in]   light_idx	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @return      
+ * @note        
+ */
+static inline u32 get_LuxLevelOn_value(int light_idx) // or use lc_property_val_get() to get.
+{
+	lc_prop_luxlevel_t *p_val = &model_sig_light_lc.propty[light_idx].LuxLevelOn;
 	return p_val->val;
 }
 
@@ -429,9 +476,9 @@ void LC_property_proc_st_set(int light_idx, u8 st) // such as LC_STATE_OFF
         g_lc_prop_proc[light_idx].st = st;
         
         if(LC_STATE_STANDBY == st || LC_STATE_FADE_STANDBY_AUTO == st || LC_STATE_FADE_STANDBY_MANUAL == st){ // refer to round 8 of MMDL/SR/LLC/BV-11-C Light LC Server Power-Up Behavior
-        	if(model_sig_light_lc.lc_onoff_target[light_idx] != G_OFF){
-				model_sig_light_lc.lc_onoff_target[light_idx] = G_OFF;
-				mesh_model_store(1, SIG_MD_LIGHT_LC_S);
+        	if(light_res_sw_save[light_idx].lc_onoff_target != G_OFF){
+				light_res_sw_save[light_idx].lc_onoff_target = G_OFF;
+				lc_light_onoff_save();
 			}
         }
     //}
@@ -441,7 +488,7 @@ void LC_proc_init(int light_idx)
 {
 	// LC proc initial
 	if(light_idx < LIGHT_CNT){
-		model_sig_light_lc.lc_onoff_target[light_idx] = G_OFF; // both mode on or off need to set lc_onoff to OFF state when change lc mode.
+		light_res_sw_save[light_idx].lc_onoff_target = G_OFF; // both mode on or off need to set lc_onoff to OFF state when change lc mode.
 		memset(&g_lc_prop_proc[light_idx], 0, sizeof(g_lc_prop_proc[light_idx]));
 	}
 }
@@ -471,7 +518,7 @@ void LC_property_st_and_tick_set(int light_idx, u8 st)
         LC_property_proc_st_set(light_idx, st); // g_lc_prop_proc[light_idx].st = st;
         g_lc_prop_proc[light_idx].tick_ms = clock_time_ms();
         u16 lightness_present = get_lightness_present(light_idx);
-        LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"set LC_property_st:%s, time:%d ms, current lightness:0x%04x, current lc onoff:%d", LC_STATE_STRING[st], get_lc_prop_time_ms(light_idx, st), lightness_present, model_sig_light_lc.lc_onoff_target[light_idx]);
+        LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"set LC_property_st:%s, time:%d ms, current lightness:0x%04x, current lc onoff:%d", LC_STATE_STRING[st], get_lc_prop_time_ms(light_idx, st), lightness_present, light_res_sw_save[light_idx].lc_onoff_target);
     }
 }
 
@@ -482,10 +529,11 @@ void LC_property_st_and_tick_set(int light_idx, u8 st)
  * @return      none
  * @note        
  */
-void LC_occupancy_value_and_tick_set(int light_idx, u8 occupancy_on)
+void LC_occupancy_value_and_tick_set(int light_idx, u8 occupancy_on, u32 time_since_sense)
 {
     if(light_idx < ARRAY_SIZE(g_lc_prop_proc)){
         g_lc_prop_proc[light_idx].tick_ms_sensor = clock_time_ms() | 1;
+        g_lc_prop_proc[light_idx].time_since_sensed = time_since_sense;
         g_lc_prop_proc[light_idx].occupancy_on = occupancy_on;
         LOG_LIGHT_LC_DEBUG(0,0,"set occupancy on:%d", occupancy_on);
     }
@@ -500,7 +548,7 @@ void LC_occupancy_value_and_tick_set(int light_idx, u8 occupancy_on)
 static inline void LC_occupancy_on_clear(int light_idx)
 {
     if(light_idx < ARRAY_SIZE(g_lc_prop_proc)){
-        g_lc_prop_proc[light_idx].tick_ms_sensor = g_lc_prop_proc[light_idx].occupancy_on = 0;
+        g_lc_prop_proc[light_idx].tick_ms_sensor = g_lc_prop_proc[light_idx].occupancy_on = g_lc_prop_proc[light_idx].time_since_sensed = 0;
     }
 }
 
@@ -519,10 +567,10 @@ void mesh_lc_onoff_st_rsp_par_fill(mesh_cmd_lc_onoff_st_t *rsp, u8 light_idx)
         u16 lightness_present = get_lightness_present(light_idx);
     	rsp->present_onoff = !((model_sig_light_lc.propty[light_idx].LightnessStandby == lightness_present)
     	                        || (0 == lightness_present));
-    	rsp->target_onoff = model_sig_light_lc.lc_onoff_target[light_idx];//(model_sig_light_lc.LightnessStandby != get_lightness_target(light_idx));
+    	rsp->target_onoff = light_res_sw_save[light_idx].lc_onoff_target;//(model_sig_light_lc.LightnessStandby != get_lightness_target(light_idx));
     	rsp->remain_t = level_st.remain_t;
 	}else{
-    	rsp->present_onoff = model_sig_light_lc.lc_onoff_target[light_idx];
+    	rsp->present_onoff = light_res_sw_save[light_idx].lc_onoff_target;
     	//rsp->target_onoff = ;
     	rsp->remain_t = 0;
 	}
@@ -555,7 +603,16 @@ int mesh_tx_cmd_lc_onoff_st(u8 light_idx, u16 ele_adr, u16 dst_adr, u8 *uuid, mo
 int mesh_lc_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
     model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-    return mesh_tx_cmd_lc_onoff_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp);
+    u16 op_rsp = cb_par->op_rsp;
+    u8 light_idx = cb_par->model_idx;
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	if(G_ONOFF_SET == cb_par->op || G_ONOFF_GET == cb_par->op){
+		op_rsp = G_ONOFF_STATUS;
+		light_idx = get_light_idx_from_onoff_md_idx(cb_par->model_idx);
+	}
+#endif
+
+    return mesh_tx_cmd_lc_onoff_st(light_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0, op_rsp);
 }
 
 int mesh_lc_onoff_st_publish(u8 light_idx)
@@ -624,7 +681,7 @@ static inline u8 LC_onoff_get_next_state(bool4 light_onoff, u8 lc_st_current)
 			lc_st_next = LC_STATE_FADE_ON;
 			#if 0
 			if((LC_STATE_OFF == p_proc->st) && (G_ON == light_g_onoff_present_get(light_idx))){
-				LOG_MSG_ERR(TL_LOG_NODE_BASIC,0,0,"current is ON state by manual, so no trigger!!", 0);
+				LOG_MSG_ERR(TL_LOG_NODE_BASIC,0,0,"current is ON state by manual, so no trigger!!");
 			}else
 			#endif
 			{
@@ -660,6 +717,9 @@ int mesh_cmd_sig_lc_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     int err = 0;
     mesh_cmd_lc_onoff_set_t *p_set = (mesh_cmd_lc_onoff_set_t *)par;
     int light_idx = cb_par->model_idx;
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	light_idx = get_light_idx_from_onoff_md_idx(cb_par->model_idx);
+#endif
     transition_par_t *p_trs_par = 0;
     if(par_len >= sizeof(mesh_cmd_lc_onoff_set_t)){  // existed transit_t and delay.
         p_trs_par = (transition_par_t *)&p_set->transit_t;
@@ -678,8 +738,8 @@ int mesh_cmd_sig_lc_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if((light_idx < ARRAY_SIZE(g_lc_prop_proc)) && (LC_MODE_ON == model_sig_light_lc.mode[light_idx])
        && (!cb_par->retransaction)){
         lc_property_proc_t *p_proc = &g_lc_prop_proc[light_idx];
-		model_sig_light_lc.lc_onoff_target[light_idx] = p_set->onoff;
-		mesh_model_store(1, SIG_MD_LIGHT_LC_S);
+		light_res_sw_save[light_idx].lc_onoff_target = p_set->onoff;
+		lc_light_onoff_save();
 
 		u8 lc_st_next = LC_onoff_get_next_state(p_set->onoff, p_proc->st);
         if(lc_st_next < LC_STATE_MAX){
@@ -697,10 +757,11 @@ int mesh_cmd_sig_lc_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 static inline int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     sensor_mpid_B_t *p_st_B = (sensor_mpid_B_t *)par;
-	LOG_LIGHT_LC_DEBUG(0, 0, "lc rx sensor status:", 0);
+	LOG_LIGHT_LC_DEBUG(0, 0, "lc rx sensor status:");
     
 	int action_flag = 0;
 	u8 occupancy_on = 0;
+	u32 time_since_sense = 0;
 	
     if(SENSOR_DATA_FORMAT_A == p_st_B->format){
         //sensor_mpid_A_t *p_st_A = (sensor_mpid_A_t *)par;
@@ -709,11 +770,16 @@ static inline int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
     	u8 len_val = (FORMAT_B_VALUE_LEN_ZERO_FLAG == p_st_B->length) ? 0 : p_st_B->length + 1;
 		LOG_LIGHT_LC_DEBUG(p_st_B->raw_value, len_val, "    property id: 0x%x, len: %d, raw value: ", p_st_B->prop_id, len_val);
         if(PROP_ID_OCCUPANCY_MOTION_SENSED == p_st_B->prop_id){
-        	if(1 == len_val){
+    		if(1 == len_val){
 				action_flag = 1;
-	            u8 percent = p_st_B->raw_value[0];
-	            occupancy_on = !!percent;
-            }
+            	u8 percent = p_st_B->raw_value[0];
+				u32 luxOn_val = get_LuxLevelOn_value(cb_par->model_idx);
+				if(g_ambient_light_value < luxOn_val){ // LC will not trigger to "run on" state when lux >= threshold.
+            		occupancy_on = !!percent;
+				}else{
+					occupancy_on = 0;
+				}
+        	}
         }else if(PROP_ID_PEOPLE_COUNT == p_st_B->prop_id){
         	if(2 == len_val){
 				action_flag = 1;
@@ -729,8 +795,12 @@ static inline int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
         }else if(PROP_ID_TIME_SINCE_MOTION_SENSED == p_st_B->prop_id){
 			if(3 == len_val){
 				action_flag = 1;
-				u32 time_cnt = get_u16_not_aligned(p_st_B->raw_value);
-				occupancy_on = (time_cnt < get_OccupancyDelay_time_ms(cb_par->model_idx));
+				time_since_sense = get_u24_not_aligned(p_st_B->raw_value);
+				occupancy_on = 1;
+			}
+		}else if(PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL == p_st_B->prop_id){
+			if(3 == len_val){
+				g_ambient_light_value = get_u24_not_aligned(p_st_B->raw_value);	// just record value.
 			}
 		}
     }
@@ -738,10 +808,10 @@ static inline int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 	if(action_flag){
 		if(occupancy_on){
 			// Occupancy On event
-			LC_occupancy_value_and_tick_set(cb_par->model_idx, occupancy_on);
+			LC_occupancy_value_and_tick_set(cb_par->model_idx, occupancy_on, time_since_sense);
 		}else{
 			// Occupancy Off event
-			// TODO: nothing ?
+			// do nothing, refer to "Figure 6.8: Light LC State Machine - Part 2" of model spec.
 		}
 	}
 	
@@ -857,7 +927,7 @@ void LC_property_proc()
 			static volatile u32 test_once_flag = 1;
 			if(test_once_flag && clock_time_exceed(0, 1000*1000)){
 				test_once_flag = 0;
-				if(model_sig_light_lc.lc_onoff_target[light_idx]){
+				if(light_res_sw_save[light_idx].lc_onoff_target){
 					transition_par_t transition_par;
 					memset(&transition_par, 0, sizeof(transition_par));
 					access_cmd_onoff(ele_adr_primary, 0, 0, 0, &transition_par); // set level to 0, to trigger transition of "fade on".
@@ -867,11 +937,19 @@ void LC_property_proc()
 			#endif
 
 			if(p_proc->tick_ms_sensor){
-				if(clock_time_exceed_ms(p_proc->tick_ms_sensor, get_OccupancyDelay_time_ms(light_idx))){
-					LOG_LIGHT_LC_DEBUG(0, 0, "light control occupancy delay time expired", 0);
-					u16 adr_dst = ele_adr_primary + light_idx * ELE_CNT_EVERY_LIGHT;
+				u32 time_delay = get_OccupancyDelay_time_ms(light_idx);
+				if(p_proc->time_since_sensed){
+					if(time_delay > p_proc->time_since_sensed){
+						time_delay = time_delay - p_proc->time_since_sensed;
+					}else{
+						time_delay = 0;
+					}
+				}
+				
+				if(clock_time_exceed_ms(p_proc->tick_ms_sensor, time_delay)){
+					LOG_LIGHT_LC_DEBUG(0, 0, "light control occupancy delay time expired");
 					//p_proc->st = LC_STATE_STANDBY; // just make sure not stay at occupancy delay state any more.
-					access_cmd_lc_onoff(adr_dst, 0, p_proc->occupancy_on, 0, 0); // will change to next LC state.
+					access_cmd_lc_onoff(ele_adr_primary, 0, p_proc->occupancy_on, 0, 0); // will change to next LC state.
 					
 					LC_occupancy_on_clear(light_idx); // initial
 				}
@@ -1002,6 +1080,10 @@ int access_cmd_lc_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_p
 	if(trs_par){
 		par_len = sizeof(mesh_cmd_g_onoff_set_t);
 		memcpy(&par.transit_t, trs_par, 2);
+	}
+
+	if(ele_adr_primary == adr_dst){
+		adr_dst = LC_get_lc_model_element_addr(0);
 	}
 
 	return SendOpParaDebug(adr_dst, rsp_max, ack ? LIGHT_LC_ONOFF_SET : LIGHT_LC_ONOFF_SET_NOACK, 

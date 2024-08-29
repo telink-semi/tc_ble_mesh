@@ -33,7 +33,8 @@ extern "C" {
 //////////////////board sel/////////////////////////////////////
 #define PCBA_8258_SW_C1T140A5_V1_1      1	// switch key board
 #define PCBA_8258_DONGLE_48PIN          2
-#define PCBA_8258_C1T140A3_V1_1         3   // 32pin dongle
+#define PCBA_8258_C1T139A30_V1_2        3
+#define PCBA_8258_C1T140A3_V1_1         4   // 32pin dongle
 
 #ifndef PCBA_8258_SEL // user can define in user_app_config.h
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
@@ -67,6 +68,8 @@ extern "C" {
 #endif
 #endif
 
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -97,6 +100,8 @@ extern "C" {
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
 	#elif (PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
 #define DEBUG_INFO_TX_PIN           		GPIO_PB6
+	#elif (PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
+#define DEBUG_INFO_TX_PIN           		GPIO_PD0	
 	#else // PCBA_8258_SW_C1T140A5_V1_1
 #define DEBUG_INFO_TX_PIN           		GPIO_PC3
 	#endif
@@ -180,6 +185,8 @@ extern "C" {
 #define GPIO_LED	GPIO_PA3
 #elif (PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
 #define GPIO_LED	GPIO_PD4
+#elif (PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
+#define GPIO_LED 	GPIO_PD5
 #else // PCBA_8258_SW_C1T140A5_V1_1
 #define GPIO_LED	GPIO_PD4
 #endif
@@ -206,9 +213,6 @@ extern "C" {
 /////////////////// watchdog  //////////////////////////////
 #define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000  //ms
-
-
-#define	REGA_TID			0x3A
 
 //----------------------- keyboard --------------------------------
 #define UI_KEYBOARD_ENABLE				1
@@ -243,9 +247,11 @@ extern "C" {
 // keymap
 #define KEY_RESET				1
 #define KEY_CMD					2
+#define KEY_SW1					KEY_RESET
+#define KEY_SW2					KEY_CMD
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
 			
 // scan pin as gpio
@@ -266,9 +272,11 @@ extern "C" {
 // keymap
 #define KEY_RESET				1
 #define KEY_CMD					2
+#define KEY_SW1					KEY_RESET
+#define KEY_SW2					KEY_CMD
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD7} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD7} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD7, GPIO_PA1}
 			
 // scan pin as gpio
@@ -284,14 +292,13 @@ extern "C" {
 #define PA1_INPUT_ENABLE		1
 	#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
 // keymap
-#define KEY_SW1					1
-#define KEY_SW2					2
-#define KEY_SW3					3
-#define KEY_SW4					4
+#define KEY_SW1					RC_KEY_A_ON
+#define KEY_SW2					RC_KEY_A_OFF
+// long press RC_KEY_A_ON + RC_KEY_1_OFF to enter gatt adv mode. long press RC_KEY_A_ON + RC_KEY_4_OFF to reset.
 #define	KB_MAP_NORMAL			{\
-								{KEY_SW1,	KEY_SW2},	 \
-								{KEY_SW3,	KEY_SW4},	 }
-			
+								{RC_KEY_A_ON,	RC_KEY_A_OFF},	 	/*SW2, SW3*/ \
+								{RC_KEY_1_OFF,	RC_KEY_4_OFF},}		/*SW4, SW5*/
+
 #define KB_DRIVE_PINS 		 	{GPIO_PB4, GPIO_PB5}
 #define KB_SCAN_PINS   			{GPIO_PB2, GPIO_PB3}
 			
@@ -325,9 +332,11 @@ extern "C" {
 // keymap
 #define KEY_RESET				1
 #define KEY_CMD					2
+#define KEY_SW1					KEY_RESET
+#define KEY_SW2					KEY_CMD
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD2} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
 			
 // scan pin as gpio
@@ -343,6 +352,8 @@ extern "C" {
 #define PD1_INPUT_ENABLE		1
 	#else
 // keymap
+#define KEY_SW1					RC_KEY_A_ON
+#define KEY_SW2					RC_KEY_A_OFF
 #define	KB_MAP_NORMAL			{\
 								{RC_KEY_UP, 		RC_KEY_R,			RC_KEY_4_ON}, \
 								{RC_KEY_L,			RC_KEY_DN,			RC_KEY_4_OFF}, \

@@ -55,6 +55,7 @@
 #include "drivers/8278/s7816.h"
 #include "drivers/8278/qdec.h"
 #include "drivers/8278/lpc.h"
+#include "drivers/8258/flash/flash_type.h"
 
 
 //#include "drivers/8278/rf_pa.h" // remove by weixiong in mesh

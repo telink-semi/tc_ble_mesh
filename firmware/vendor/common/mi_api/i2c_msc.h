@@ -26,7 +26,7 @@
 
 #ifndef I2C_MSC_H
 #define I2C_MSC_H
-#include "proj/mcu/gpio.h"
+#include "drivers.h"
 
 
 /**

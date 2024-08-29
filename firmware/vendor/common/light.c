@@ -22,10 +22,9 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "vendor/common/lighting_model.h"
 #include "vendor/common/lighting_model_HSL.h"
 #include "vendor/common/lighting_model_xyL.h"
@@ -38,9 +37,6 @@
 #endif
 #if WIN32
 #include <stdlib.h>
-#else
-#include "proj/mcu/watchdog_i.h"
-#include "proj_lib/pm.h"
 #endif
 
 
@@ -72,11 +68,14 @@ u8 ct_flag = 0; // always HSL
 #define RES_HW_PWM_W    {PWM_W, PWMID_W, PWM_INV_W, PWM_FUNC_W}
 #endif
 
+#if MD_SERVER_EN
 #if LIGHT_RES_HW_USER_EN
 // user define
 #else
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
 const light_res_hw_t light_res_hw[LIGHT_CNT][4] = {
+	// "RES_HW_PWM_W" may report compile warining "comparison between 'enum <anonymous>' and 'enum <anonymous>'" if it is not a PWM pin. 
+	// warning means the two enum are not the same.
 	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G, RES_HW_PWM_B, RES_HW_PWM_W}, // vc can't use "[0]="
 };
 #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL || LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
@@ -112,7 +111,7 @@ const light_res_hw_t light_res_hw[LIGHT_CNT][1] = {
 #endif
 #endif
 
-const u32 GPIO_LED_INDEX = (GPIO_LED == PWM_R) ? 0 : ((GPIO_LED == PWM_G) ? 1 : ((GPIO_LED == PWM_B) ? 2 : ((GPIO_LED == PWM_W) ? 3 : 0)));
+const u32 GPIO_LED_INDEX = (((u32)GPIO_LED == (u32)PWM_R) ? 0 : (((u32)GPIO_LED == (u32)PWM_G) ? 1 : (((u32)GPIO_LED == (u32)PWM_B) ? 2 : (((u32)GPIO_LED == (u32)PWM_W) ? 3 : 0))));
 
 #define LIGHT_ADJUST_INTERVAL       (20)   // unit :ms;     min:20ms; max 100ms
 
@@ -160,8 +159,6 @@ void set_ct_mode(u8 mode)
 	    mesh_misc_store();
 	}
 }
-
-#if MD_SERVER_EN
 
 /**
  * @brief  Save Generic OnOff States for next power-on.
@@ -370,14 +367,14 @@ void light_res_sw_load()
 				#if 0 // PTS_TEST_MMDL_SR_LLC_BV_11_C
 				u8 onpowerup = ONPOWER_UP_VAL(i);
 				u8 lc_mode = ((ONPOWER_UP_OFF == onpowerup)||(ONPOWER_UP_DEFAULT == onpowerup)) ? LC_MODE_OFF : model_sig_light_lc.mode[i];
-				u8 lc_onoff = model_sig_light_lc.lc_onoff_target[i];
-				LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"**** init **** lc mode:%d, level:%d, onpower par:%d, lc onoff:%d ****", lc_mode, level_poweron, ONPOWER_UP_VAL(i), lc_onoff);
+				u8 lc_onoff = light_res_sw_save[i].lc_onoff_target;
+				LOG_LIGHT_LC_DEBUG(0,0,"**** init **** lc mode:%d, level:%d, onpower par:%d, lc onoff:%d ****", lc_mode, level_poweron, ONPOWER_UP_VAL(i), lc_onoff);
 				lc_mode_set_par(i, lc_mode);
 					#if 1
 				if(LC_MODE_ON == lc_mode){
 					if(lc_onoff){
 						#if 1 // TODO: why can not send lc onoff command ? 
-						model_sig_light_lc.lc_onoff_target[i] = lc_onoff; 
+						light_res_sw_save[i].lc_onoff_target = lc_onoff; 
 						#else
 						access_cmd_lc_onoff(ele_adr_primary, 0, lc_onoff, 0, 0); // why no tick set to g_lc_prop_proc_ ? now send message at "test_once_flag" of LC_property_proc_.
 						#endif
@@ -385,7 +382,20 @@ void light_res_sw_load()
 				}
 					#endif
 				#else
-				lc_mode_set_par(i, model_sig_light_lc.mode[i]);
+				__UNUSED int lc_onoff_backup = light_res_sw_save[i].lc_onoff_target = 1;
+				LOG_LIGHT_LC_DEBUG(0,0,"**** init **** lc mode:%d, level:%d, onpower par:%d, lc onoff:%d ****", model_sig_light_lc.mode[i], level_poweron, ONPOWER_UP_VAL(i), light_res_sw_save[i].lc_onoff_target);
+				if(LC_MODE_ON == model_sig_light_lc.mode[i]){
+					lc_mode_set_par(i, model_sig_light_lc.mode[i]);
+					#if LIGHT_CONTROL_SAVE_LC_ONOFF_EN
+					if(lc_onoff_backup){ // light_res_sw_save[i].lc_onoff_target has been cleared when lc mode set to standby.
+						access_cmd_lc_onoff(ele_adr_primary, 0, G_ON, 0, 0);
+					}
+					#else
+					lc_onoff_backup = lc_onoff_backup; // just for compile warning
+					#endif
+				}else{
+					// normal mode without light control.
+				}
 				#endif
 			}
 			#endif
@@ -403,11 +413,11 @@ void light_res_sw_load()
  */
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx)
 {
-    mesh_cmd_g_onoff_set_t cmd_onoff = {0, 0, 0, 0};
+    mesh_cmd_g_onoff_set_t cmd_onoff = {0};
     cmd_onoff.onoff = !!onoff;
     cmd_onoff.transit_t = transit_t;
     st_pub_list_t pub_list = {{0}};
-	//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"yyyyyyyy 666", 0);
+	//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"yyyyyyyy 666");
 #if (MD_LIGHT_CONTROL_EN)
 	set_LC_lightness_flag = 1; // to not clear LC flow.
 #endif
@@ -426,8 +436,13 @@ u8 edch_is_exist()
 {
 #if PROV_AUTH_LEAK_RECREATE_KEY_EN
 #else
-	u32 *p_edch = (u32 *) FLASH_ADR_EDCH_PARA;
-	if(*p_edch == 0xffffffff){
+	u32 edch_4bypte;
+	#if __TLSR_RISCV_EN__
+	flash_read_page (FLASH_ADR_EDCH_PARA, sizeof(edch_4bypte), (u8 *)&edch_4bypte);
+	#else
+	edch_4bypte = *(u32 *) FLASH_ADR_EDCH_PARA;
+	#endif
+	if(edch_4bypte == 0xffffffff){
 		return 0;
 	}	
 #endif
@@ -458,14 +473,25 @@ void light_pwm_init()
     	foreach_arr(k,light_res_hw[0]){
 			u16 level_def = 0;	// PWM_MAX_TICK;	 //
 			const light_res_hw_t *p_hw = &light_res_hw[i][k];
+		#if __TLSR_RISCV_EN__
+     		//gpio_output_en(p_hw->gpio);
+     		//gpio_input_dis(p_hw->gpio);
+			pwm_set_clk((unsigned char) (sys_clk.pclk*1000*1000/PWM_PCLK_SPEED-1));
+			pwm_set_tcmp(p_hw->id,(p_hw->invert ? (PWM_MAX_TICK - level_def) : level_def));
+	 		pwm_set_tmax(p_hw->id,PWM_MAX_TICK);
+			pwm_start_id(p_hw->id);
+	        gpio_function_en(p_hw->gpio);
+			pwm_set_pin(p_hw->gpio);
+		#else
 	        pwm_set(p_hw->id, PWM_MAX_TICK, p_hw->invert ? (PWM_MAX_TICK - level_def) : level_def);
 	        // light_dim_refresh(i);
-	        pwm_start(p_hw->id);
+	        pwm_start_id(p_hw->id);
 	        #if((MCU_CORE_TYPE==MCU_CORE_8258) || (MCU_CORE_TYPE==MCU_CORE_8278))
 	        gpio_set_func(p_hw->gpio, p_hw->func);
 	        #else
 	        gpio_set_func(p_hw->gpio, AS_PWM);
 	        #endif
+		#endif	
         }
         
         int onoff_present = light_g_onoff_present_get(i);
@@ -487,10 +513,6 @@ void light_pwm_init()
     clr_keep_onoff_state_after_ota();
 #endif
 }
-#else
-void light_pwm_init(){}
-void set_keep_onoff_state_after_ota(){}
-#endif
 
 static u32 tick_light_save;
 
@@ -558,7 +580,16 @@ void pwm_set_lum (int id, u16 y, int pol)
 #else
     u32 level = ((u32)y * PWM_MAX_TICK) / (255*256);
 
+	#if __TLSR_RISCV_EN__
+	if(pol){
+		pwm_set_tcmp(id,PWM_MAX_TICK - level);
+	}else{
+		pwm_set_tcmp(id,level);
+	}
+	pwm_set_tmax(id,PWM_MAX_TICK);
+	#else
 	pwm_set_cmp (id, pol ? PWM_MAX_TICK - level : level);
+	#endif
 #endif
 }
 
@@ -615,6 +646,7 @@ u16 get_pwm_smooth(u16 lightness, u32 step)
 	return pwm_val;
 }
 
+#if MD_SERVER_EN
 /**
  * @brief  Control lights on hardware.
  * @param  idx: 1st index of light_res_hw array, also means index 
@@ -627,13 +659,14 @@ void light_dim_set_hw(int idx, int idx2, u16 val)
 {
     if((idx < ARRAY_SIZE(light_res_hw)) && (idx2 < ARRAY_SIZE(light_res_hw[0]))){
 		const light_res_hw_t *p_hw = &light_res_hw[idx][idx2];
-		#if FEATURE_LOWPOWER_EN
+		#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
 		led_onoff_gpio(p_hw->gpio, 0 != val);
 		#else
         pwm_set_lum(p_hw->id, val, p_hw->invert);
         #endif
     }
 }
+#endif
 
 #if (LIGHT_TYPE_HSL_EN)
 typedef struct{
@@ -696,7 +729,6 @@ void HslToRgb(HSL_set hsl, RGB_set *rgb)
 }
 #endif 
 
-#if MD_SERVER_EN
 u16 g_op_access_layer_rx = 0;	// 0 means invalid op, not APPKEY_ADD.
 
 /**
@@ -721,7 +753,6 @@ void light_res_sw_g_level_last_set(int idx, int st_trans_type)
 	}
 	light_par_save(0);
 }
-#endif
 
 /**
  * @brief  Set Generic Level parameters(Global variables) for light.
@@ -762,6 +793,7 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
 	p_trans->delay_ms = 0;
 }
 
+// --------------------------------
 /**
  * @brief       This function Control lights on hardware.
  * @param[in]   idx	- index of Light Count.
@@ -795,8 +827,9 @@ void light_dim_refresh_mi_ct(int idx)
 }
 
 // --------------------------------
+#if MD_SERVER_EN
 /**
- * @brief  Refresh the light status through the global variables 
+ * @brief  Refresh the light status once the current lightness, CT and HSL, etc is changed, include during transition process.
  *   that have been set.
  * @param  idx: index of Light Count.
  * @retval None
@@ -833,7 +866,7 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 		#if 0 // to get color temperature value from level which store in flash.
 	    u16 color_temperature = light_ctl_temp_prensent_get(idx); // range from CTL_TEMP_MIN(800) to CTL_TEMP_MAX(20000) by default.
 	    u8 ct_100 = temp_to_temp100_hw(color_temperature);		  // transform to range from 0 to 100;
-		static u8 debug_ct_100; debug_ct_100 = ct_100;
+		//__UNUSED static u8 debug_ct_100; debug_ct_100 = ct_100;
 		#endif
     }
 
@@ -876,6 +909,7 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
     #endif
 #endif
 }
+#endif
 
 /**
  * @brief      This function get light publish list
@@ -1236,106 +1270,6 @@ u16 light_ctl_temp_target_get(int light_idx)
 #endif
 
 /**
- * @brief       This function lum to level
- * @param[in]   lum	- lum
- * @return      level
- * @note        
- */
-s16 lum2level(u8 lum)
-{
-	if(lum > 100){
-		lum  = 100;
-	}
-	return (-32768 + division_round(65535*lum,100));
-}
-
-/**
- * @brief       This function level to luminance which range 0 ~ 100.
- * @param[in]   level	- level value
- * @return      lum
- * @note        
- */
-u8 level2lum(s16 level)
-{
-	u16 lightness = level + 32768;
-	u32 fix_1p2 = 0;
-	if(lightness){	// fix decimals
-		#define LEVEL_UNIT_1P2	(65535/100/2)
-		if(lightness < LEVEL_UNIT_1P2 + 2){     // +2 to fix accuracy missing
-			lightness = LEVEL_UNIT_1P2 * 2;		// make sure lum is not zero when light on.
-		}
-		fix_1p2 = LEVEL_UNIT_1P2;
-	}
-	return (((lightness + fix_1p2)*100)/65535);
-}
-
-/**
- * @brief       This function get lightess from luminance which range 0 ~ 100.
- * @param[in]   lum	- lum value
- * @return      lightess
- * @note        
- */
-u16 lum2_lightness(u8 lum)
-{
-	return (get_lightness_from_level(lum2level(lum)));
-}
-
-/**
- * @brief       This function get lum from lightess
- * @param[in]   lightness	- lightess value
- * @return      lum
- * @note        
- */
-u8 lightness2_lum(u16 lightness)
-{
-	return (level2lum(get_level_from_lightness(lightness)));
-}
-
-/**
- * @brief       This function temp(0-100) to temp(CTL_TEMP_MIN - CTL_TEMP_MAX)
- * @param[in]   temp100	- temp100 value
- * @return      color temperature
- * @note        
- */
-u16 temp100_to_temp(u8 temp100)
-{
-	if(temp100 > 100){
-		temp100  = 100;
-	}
-	return (CTL_TEMP_MIN + ((CTL_TEMP_MAX - CTL_TEMP_MIN)*temp100)/100);
-}
-
-/**
- * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
- * @param[in]   temp- color temperature value
- * @return      temperature100
- * @note        
- */
-u8 temp_to_temp100_hw(u16 temp) // use for driver pwm, 0--100 is absolute value, not related to temp range
-{
-	if(temp < CTL_TEMP_MIN){
-		temp = CTL_TEMP_MIN;
-	}
-	
-	if(temp > CTL_TEMP_MAX){
-		temp = CTL_TEMP_MAX;
-	}
-	u32 fix_1p2 = (CTL_TEMP_MAX - CTL_TEMP_MIN)/100/2;	// fix decimals
-	return (((temp - CTL_TEMP_MIN + fix_1p2)*100)/(CTL_TEMP_MAX - CTL_TEMP_MIN));   // temp100 can be zero.
-}
-
-/**
- * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
- * @param[in]   temp- temperature
- * @return      color temperature value(0-100)
- * @note        
- */
-u8 temp_to_temp100(u16 temp)
-{
-	return temp_to_temp100_hw(temp);   // confirm later, related with temp range
-}
-
-/**
  * @brief       This function get light luminance
  * @param[in]   idx			- light index if "LIGHT CNT > 1", or it is always 0.
  * @param[in]   target_flag	- is get target flag
@@ -1363,7 +1297,7 @@ u8 light_ct_lum_get(int idx, int target_flag)
 #endif
 
 //------set function
-#if 1
+#if MD_SERVER_EN
 /**
  * @brief       This function set light level
  * @param[in]   idx				- light index if "LIGHT CNT > 1", or it is always 0.
@@ -1380,7 +1314,6 @@ int light_onoff_idx(int idx, int on, int init_time_flag){
     }
     return 0;
 }
-#endif
 
 /**
  * @brief  Set Generic Level for light by index.
@@ -1402,7 +1335,6 @@ int light_g_level_set_idx(int idx, s16 level, int init_time_flag, int st_trans_t
     return 0;
 }
 
-#if MD_SERVER_EN
 /**
  * @brief       This function set level with transition time.
  * @param[in]   set_trans		- transition time parameters
@@ -1436,20 +1368,29 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
                 if(is_level_move_set_op(p_set->op)){
                     // have been make sure (target_val != present_val) and (level_move != 0) before.
 				    p_trans->step_1p32768 = ((p_set->level_move * 32768) /(s32)(p_trans->remain_t_ms)) * LIGHT_ADJUST_INTERVAL;
+                    #if 1 // save 512byte code
                     u32 abs_step = abs(p_set->level_move);
                     u32 abs_delta = abs(p_set->target_val - p_set->present_val);
                     u32 mod = abs_delta % abs_step;
-                    u32 remain_t_ms_org = p_trans->remain_t_ms; // max value is (RES_10MIN * 64)
+                    u32 remain_t_ms_org = p_trans->remain_t_ms; // max value is (RES_10MIN * 64) = 38400000ms = 249F000
                     u32 val = 0;
                     u32 multi_value = 1;
-                    if(remain_t_ms_org >= (65536 * 2)){
-                    	multi_value = 1024;
+                    if(remain_t_ms_org >= (65536 * 2)){ // mod < 32768, so (remain_t_ms_org * u32) will not overflow.
+                    	multi_value = 8; // usually not use unit of RES_10MIN.
                     	remain_t_ms_org /= multi_value;
                     }
 
                     val = (remain_t_ms_org * mod) / abs_step;
-                    p_trans->remain_t_ms = ((remain_t_ms_org * abs_delta) / abs_step) * multi_value + val;
+                    p_trans->remain_t_ms = ((remain_t_ms_org * (abs_delta / abs_step))  + val) * multi_value;
 					//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"move time, result: %d, remain_t_ms_org: %d, delta: %d, step: %d, val: %d", p_trans->remain_t_ms, remain_t_ms_org, abs_delta, abs_step, val);
+                    #else
+                    u64 abs_step = abs(p_set->level_move);
+                    u64 abs_delta = abs(p_set->target_val - p_set->present_val);
+                    u64 remain_t_ms_u64 = p_trans->remain_t_ms; // max value is (RES_10MIN * 64) = 38400000ms = 249F000
+                    remain_t_ms_u64 = ((remain_t_ms_u64 * abs_delta) / abs_step);
+                    p_trans->remain_t_ms = (u32)remain_t_ms_u64;
+					//LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"move time, result: %d, delta: %d, step: %d", p_trans->remain_t_ms, abs_delta, abs_step);
+					#endif
                 }else{
 					s32 delta = (p_trans->target - p_trans->present);
 					#if LIGHT_TYPE_HSL_EN
@@ -1496,7 +1437,6 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
 		}
     }
 }
-#endif
 
 /**
  * @brief       This function set all light onoff
@@ -1509,6 +1449,7 @@ void light_onoff_all(u8 on){
         light_onoff_idx(i, on, 1);
     }
 }
+#endif
 
 #if CMD_LINEAR_EN
 /**
@@ -1568,21 +1509,6 @@ int is_linear_flag(int idx)
 }
 #endif
 
-/**
- * @brief       This function set light level
- * @param[in]   id	- light index if "LIGHT CNT > 1", or it is always 0.
- * @param[in]   en	- on or off
- * @return      none
- * @note        
- */
-void app_led_en (int id, int en)
-{
-    if(id < LIGHT_CNT){
-        light_onoff_idx(id, en, 1);
-    }
-}
-
-#if MD_SERVER_EN
 // transition and delay proc
 /**
  * @brief       This function get next step light level
@@ -1720,7 +1646,7 @@ int light_transition_proc()
 				
                 #if MD_LIGHT_CONTROL_EN
                 if(ST_TRANS_LIGHTNESS == trans_type){
-					// LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"wwwww light transition complete", 0);
+					// LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"wwwww light transition complete");
                     LC_light_transition_complete_handle(i);
                 }
                 #endif
@@ -1754,7 +1680,6 @@ void light_transition_proc_stop(int light_idx, int st_trans_type) // only used f
 		memset(&light_res_sw[light_idx].trans[st_trans_type], 0, sizeof(light_res_sw[light_idx].trans[st_trans_type]));
 	}
 }
-#endif
 
 
 // LED function
@@ -1769,7 +1694,130 @@ void light_dim_refresh_all()
         light_dim_refresh(i);
     }
 }
+#else
+void light_pwm_init(){}
+void set_keep_onoff_state_after_ota(){}
+#endif
 
+/**
+ * @brief       This function lum to level
+ * @param[in]   lum	- lum
+ * @return      level
+ * @note        
+ */
+s16 lum2level(u8 lum)
+{
+	if(lum > 100){
+		lum  = 100;
+	}
+	return (-32768 + division_round(65535*lum,100));
+}
+
+/**
+ * @brief       This function level to luminance which range 0 ~ 100.
+ * @param[in]   level	- level value
+ * @return      lum
+ * @note        
+ */
+u8 level2lum(s16 level)
+{
+	u16 lightness = level + 32768;
+	u32 fix_1p2 = 0;
+	if(lightness){	// fix decimals
+		#define LEVEL_UNIT_1P2	(65535/100/2)
+		if(lightness < LEVEL_UNIT_1P2 + 2){     // +2 to fix accuracy missing
+			lightness = LEVEL_UNIT_1P2 * 2;		// make sure lum is not zero when light on.
+		}
+		fix_1p2 = LEVEL_UNIT_1P2;
+	}
+	return (((lightness + fix_1p2)*100)/65535);
+}
+
+/**
+ * @brief       This function get lightess from luminance which range 0 ~ 100.
+ * @param[in]   lum	- lum value
+ * @return      lightess
+ * @note        
+ */
+u16 lum2_lightness(u8 lum)
+{
+	return (get_lightness_from_level(lum2level(lum)));
+}
+
+/**
+ * @brief       This function get lum from lightess
+ * @param[in]   lightness	- lightess value
+ * @return      lum
+ * @note        
+ */
+u8 lightness2_lum(u16 lightness)
+{
+	return (level2lum(get_level_from_lightness(lightness)));
+}
+
+/**
+ * @brief       This function temp(0-100) to temp(CTL_TEMP_MIN - CTL_TEMP_MAX)
+ * @param[in]   temp100	- temp100 value
+ * @return      color temperature
+ * @note        
+ */
+u16 temp100_to_temp(u8 temp100)
+{
+	if(temp100 > 100){
+		temp100  = 100;
+	}
+	return (CTL_TEMP_MIN + ((CTL_TEMP_MAX - CTL_TEMP_MIN)*temp100)/100);
+}
+
+/**
+ * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
+ * @param[in]   temp- color temperature value
+ * @return      temperature100
+ * @note        
+ */
+u8 temp_to_temp100_hw(u16 temp) // use for driver pwm, 0--100 is absolute value, not related to temp range
+{
+	if(temp < CTL_TEMP_MIN){
+		temp = CTL_TEMP_MIN;
+	}
+	
+	if(temp > CTL_TEMP_MAX){
+		temp = CTL_TEMP_MAX;
+	}
+	u32 fix_1p2 = (CTL_TEMP_MAX - CTL_TEMP_MIN)/100/2;	// fix decimals
+	return (((temp - CTL_TEMP_MIN + fix_1p2)*100)/(CTL_TEMP_MAX - CTL_TEMP_MIN));   // temp100 can be zero.
+}
+
+/**
+ * @brief       This function temp(CTL_TEMP_MIN - CTL_TEMP_MAX) to temperature100(0-100)
+ * @param[in]   temp- temperature
+ * @return      color temperature value(0-100)
+ * @note        
+ */
+u8 temp_to_temp100(u16 temp)
+{
+	return temp_to_temp100_hw(temp);   // confirm later, related with temp range
+}
+
+
+
+/**
+ * @brief       This function set light level
+ * @param[in]   id	- light index if "LIGHT CNT > 1", or it is always 0.
+ * @param[in]   en	- on or off
+ * @return      none
+ * @note        
+ */
+void app_led_en (int id, int en)
+{
+#if MD_SERVER_EN
+    if(id < LIGHT_CNT){
+        light_onoff_idx(id, en, 1);
+    }
+#else
+	led_onoff_gpio(GPIO_LED, en); // TODO
+#endif
+}
 
 typedef void (*fp_proc_led)(void);
 fp_proc_led 				p_vendor_proc_led 				= 0;
@@ -1829,7 +1877,7 @@ void led_onoff_gpio(u32 gpio, u8 on){
 #endif
 }
 
-#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || ((SMART_PROVISION_ENABLE || FAST_PROVISION_ENABLE) && !MD_SERVER_EN))
+#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || (0 == MD_SERVER_EN))
 /**
  * @brief       This function is led indicator event polling function
  * @return      none
@@ -1877,7 +1925,7 @@ void proc_led()
 				if (led_no - 1 == led_count)
 				{
 					led_count = led_no = 0;
-					#if (!__PROJECT_MESH_SWITCH__)
+					#if (!__PROJECT_MESH_SWITCH__ && (MD_SERVER_EN))
 					light_dim_refresh_all(); // should not report online status again
 					#endif
 					return ;
@@ -1982,7 +2030,7 @@ void proc_led(void)
 #endif 
 
 /**
- * @brief       This function is callback function of light event.
+ * @brief       This function is callback function to define LED indication event, such as how to do LED indication when provision success.
  * @param[in]   status	- rx Flashing event
  * @return      none
  * @note        
@@ -2053,6 +2101,10 @@ _USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 	}else if(status == LGT_CMD_DUAL_MODE_MESH){
 		cfg_led_event(DUAL_MODE_WITH_TLK_MESH_EN ? LED_EVENT_FLASH_2HZ_2T : LED_EVENT_FLASH_2HZ_1T);
 #endif
+#if PAIR_PROVISION_ENABLE
+	}else if(status == PROV_START_LED_CMD){
+		cfg_led_event(LED_EVENT_FLASH_4HZ_3T);
+#endif
 	}
 }
 
@@ -2102,6 +2154,14 @@ _USER_CAN_REDEFINE_ void show_ota_result(int result)
 		light_ev_with_sleep(30, 100*1000);	//5Hz shine for  6 second
 		//write_reg8(0x8000,result); ;while(1);  //debug which err lead to OTA fail
 	}
+	
+#if __TLSR_RISCV_EN__ && FW_START_BY_BOOTLOADER_EN // not set start up flag, will check firmware signature in bootloader.
+    if(OTA_SUCCESS == result){
+        start_reboot();
+    }
+#else
+	// TODO: for B85m mesh, start up flag has been set start up flag before enter this func.
+#endif
 }
 
 /**
@@ -2111,7 +2171,7 @@ _USER_CAN_REDEFINE_ void show_ota_result(int result)
  */
 _USER_CAN_REDEFINE_ void show_factory_reset()
 {
-	light_ev_with_sleep(8, 500*1000);	//1Hz shine for  8 second
+	light_ev_with_sleep(6, 500*1000);	//1Hz shine for  6 second
 }
 #endif
 

@@ -22,8 +22,9 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh_access_layer.h"
-
+#include "mesh_ota.h"
 
 #if GATEWAY_ENABLE
 access_layer_dst_addr	p_access_layer_dst_addr_cb;
@@ -94,7 +95,7 @@ int mesh_tx_reliable_rc_rsp_handle(mesh_rc_rsp_t *p_rsp)
 
 void	rf_link_slave_read_status_update ()
 {
-#if GATEWAY_ENABLE
+#if (GATEWAY_ENABLE && (HCI_ACCESS != HCI_USE_NONE))
     if(my_fifo_data_cnt_get(&hci_tx_fifo) > 0)
     {
         return;
@@ -116,6 +117,41 @@ void	rf_link_slave_read_status_update ()
 			return;
 		}
 	}
+}
+
+int mesh_rsp_handle_cb(mesh_rc_rsp_t *p_rsp)
+{
+	u32 size_op =0 ;
+	u16 op = 0;
+	size_op = size_op;  // just for cleaning compile warning, will be optimized.
+	op = op;            // just for cleaning compile warning, will be optimized.
+#if (!WIN32 && DEBUG_CFG_CMD_GROUP_AK_EN)
+	op = rf_link_get_op_by_ac(p_rsp->data);
+	size_op = SIZE_OF_OP(op);
+	if(op == VD_MESH_TRANS_TIME_STS && p_rsp->src != ele_adr_primary){
+		u8 *p_rcv_buf = &(p_rsp->data[p_rsp->len - 4]);
+		u32 rcv_tick = clock_time();
+		memcpy(p_rcv_buf,&rcv_tick,4);
+		memcpy(p_rcv_buf+4,&comm_send_tick,4);
+		p_rsp->len +=8;
+		comm_send_flag = 1; //allow to send the next cmd again .
+	}
+#endif
+
+#if GATEWAY_ENABLE
+    gateway_model_cmd_rsp((u8 *)&(p_rsp->src),p_rsp->len);
+
+	#if MD_MESH_OTA_EN // VC_DISTRIBUTOR_UPDATE_CLIENT_EN
+	op = rf_link_get_op_by_ac(p_rsp->data);
+	size_op = SIZE_OF_OP(op);
+    //u8 *par = p_rsp->data + size_op;
+    //u16 par_len = GET_PAR_LEN_FROM_RSP(p_rsp->len, size_op);
+	if(mesh_ota_master_rx(p_rsp, op, size_op)){
+	    return 1;
+	}
+	#endif
+#endif 
+	return 1;
 }
 
 int mesh_rsp_handle(mesh_rc_rsp_t *p_rsp)
@@ -243,7 +279,7 @@ int is_support_op(mesh_op_resource_t *op_res, u16 op, u16 adr_dst, u8 tx_flag)
         if(!IS_VENDOR_OP(op))
         #endif
         {
-            LOG_MSG_INFO(TL_LOG_COMMON,0,0,"not support op, if TX: send with unreliable flow, or RX: discard!", 0);
+            LOG_MSG_INFO(TL_LOG_COMMON,0,0,"not support op, if TX: send with unreliable flow, or RX: discard!");
         }
     }
     return support_flag;
@@ -278,21 +314,21 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
 	    log_len = sizeof(ut_log.data);
 	}
 	memcpy(ut_log.data, ac, log_len);
-    LOG_MSG_INFO(TL_LOG_NODE_SDK_NW_UT,(u8 *)&ut_log,log_len,"UT PDU:",0);
+    LOG_MSG_INFO(TL_LOG_NODE_SDK_NW_UT,(u8 *)&ut_log,log_len,"UT PDU:");
     #endif
     
     int get_op_st = rf_link_get_op_para(ac, len_ac, &op, &params, &par_len);
     if(GET_OP_FAILED == get_op_st){
 		LAYER_PARA_DEBUG(A_debug_access_layer_opcode_ret);
-		LOG_MSG_ERR(TL_LOG_MESH,ac, len_ac ,"access_layer_opcode err:",0);
+		LOG_MSG_ERR(TL_LOG_MESH,ac, len_ac ,"access_layer_opcode err:");
         return OP_AGG_WRONG_OP;
     }else if(GET_OP_SUCCESS_EXTEND == get_op_st){
-        LOG_MSG_LIB(TL_LOG_NODE_BASIC, ac, OP_TYPE_VENDOR,"RX remove extend op",0);
+        LOG_MSG_LIB(TL_LOG_NODE_BASIC, ac, OP_TYPE_VENDOR,"RX remove extend op");
     }
 
     #if (WIN32 && (!DEBUG_SHOW_VC_SELF_EN))
     if(is_cmd_skip_for_vc_self(adr_src, op)){
-        // LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"is vc self adr",0); // don't print as normal.
+        // LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"is vc self adr"); // don't print as normal.
     	return 0;
     }
     #endif
@@ -314,8 +350,8 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
 	memcpy(ts_B_11_ac[(ts_B_11++)%ARRAY_SIZE(ts_B_11_ac)], ac, len_log);
 	#endif
 
-    int is_support_flag = 0;
-    int is_status_cmd = 0;
+	__UNUSED int is_support_flag = 0;
+	__UNUSED int is_status_cmd = 0;
 
     #if (VC_SUPPORT_ANY_VENDOR_CMD_EN && !GATEWAY_ENABLE)
     if(IS_VENDOR_OP(op)){
@@ -354,6 +390,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
             foreach(i,op_res.model_cnt){
                 model_common_t *p_model = (model_common_t *)op_res.model[i];
 				
+				#if !PRIVATE_SELF_PROVISION_EN
                 if(is_use_device_key(op_res.id, op_res.sig)){	// cfg model
                 	#if (DEBUG_CFG_CMD_GROUP_AK_EN || DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2)
                     if(DEBUG_CFG_CMD_GROUP_USE_AK(adr_dst)){
@@ -365,14 +402,14 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
                 	        if(!is_client_tx_extend_model(op_res.id))
                 	        #endif
                 	        {
-                                LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"should not use app key to decryption config model",0);
+                                LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"should not use app key to decryption config model");
                     		    return OP_AGG_WRONG_KEY;	// may be attacked.
                 	        }
                 	    }else if(!is_activated_factory_test_mode() && (mesh_key.devkey_self_dec != DEC_BOTH_TWO_DEV_KEY)){
                 	        /*(!(((SIG_MD_CFG_SERVER == op_res.id) && (1 == mesh_key.devkey_self_dec))
                 	                            &&((SIG_MD_CFG_CLIENT == op_res.id) && (0 == mesh_key.devkey_self_dec))))*/
                 	        if(op_res.id == mesh_key.devkey_self_dec){	// model id is for RX node
-                                LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"use wrong device key",0);
+                                LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"use wrong device key");
                 		        return OP_AGG_WRONG_KEY;	// may be attacked.
                 		    }
                 		}
@@ -400,6 +437,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
 		                }
                 	}
                 }
+				#endif
 
 				#if GATEWAY_ENABLE
 				u8 is_valid_addr = 0;
@@ -480,7 +518,7 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
         }else
         #endif
         {
-            LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"mesh_rc_data_layer_access: not support op or model is not enable! src:0x%x dst:0x%x op:0x%x(%s)", p_nw->src, p_nw->dst, op, get_op_string(op,0));
+            LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"mesh_rc_data_layer_access: not support op or model is not enable! src:0x%x dst:0x%x op:0x%x(%s)", p_nw->src, p_nw->dst, op, get_op_string(op,0));
         }
     }
     }
@@ -592,3 +630,42 @@ void mesh_tid_timeout_check(){
     }
 }
 
+#if MESH_RX_TEST
+int mesh_upper_transport_layer_cb(mesh_cmd_bear_t *p_bear)
+{
+	mesh_cmd_nw_t *p_nw = &p_bear->nw;
+	if(p_nw->ctl){
+		if((CMD_CTL_TTC_CMD == p_bear->lt_ctl_unseg.opcode) || (CMD_CTL_TTC_CMD_NACK == p_bear->lt_ctl_unseg.opcode)){
+			cmd_ctl_ttc_t *p_ttc = p_bear->lt_unseg.seg ? (cmd_ctl_ttc_t *)mesh_cmd_ut_rx_seg : (cmd_ctl_ttc_t *)p_bear->lt_ctl_unseg.data;
+			//int par_len = p_bear->lt_unseg.seg ? mesh_rx_seg_par.len_ut_total : (mesh_bear_len_get(p_bear) - OFFSETOF(mesh_cmd_bear_t, ut_unseg) - (p_nw->ctl ? SZMIC_NW64 : SZMIC_NW32));
+			adv_report_extend_t * pa = get_adv_report_extend(&p_bear->len);
+			u32 cmd_delay_100us = (((clock_time() - pa->timeStamp) / sys_tick_per_us) / 100 + p_ttc->ttc_100us + 2 + 2); // 2+2: compensatory time of appkey encryption and decryption
+			u16 cmd_delay_ms = cmd_delay_100us / 10;// (((clock_time() - pa->timeStamp) / sys_tick_per_us) / 100 + p_ttc->ttc_100us + 4) / 10;
+			mesh_rcv_cmd.cmd_index= p_ttc->sno_cmd;
+			mesh_rcv_cmd.rcv_cnt++;
+			//mesh_rcv_cmd.ack_par_len = p_set->rsp_len;
+			//mesh_rcv_cmd.rcv_time[p_ttc->sno_cmd % RX_TEST_CACHE_CNT] = cmd_delay_ms;
+			memcpy(mesh_rcv_cmd.cmd_ttc + p_ttc->sno_cmd % RX_TEST_CACHE_CNT, p_ttc, sizeof(cmd_ctl_ttc_t));
+			// calculate cmd delay time
+			if(cmd_delay_ms < mesh_rcv_cmd.min_time){
+				mesh_rcv_cmd.min_time = cmd_delay_ms;	
+			}
+
+			if(cmd_delay_ms > mesh_rcv_cmd.max_time){
+				mesh_rcv_cmd.max_time = cmd_delay_ms;
+			}
+
+			mesh_rcv_cmd.total_time += cmd_delay_ms;
+			mesh_rcv_cmd.avr_time = mesh_rcv_cmd.total_time / mesh_rcv_cmd.rcv_cnt;
+			//LOG_USER_MSG_INFO(0, 0, "delay ms:%d idx:%d", cmd_delay_ms, p_ttc->transmit_index);
+			access_cmd_onoff(ele_adr_primary, 0, p_ttc->onoff, 0, 0);
+		}
+		else if(CMD_CTL_TTC_CMD_STATUS == p_bear->lt_ctl_unseg.opcode){
+
+		}
+	}
+	
+	return 0;
+}
+
+#endif

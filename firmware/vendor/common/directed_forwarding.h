@@ -149,10 +149,10 @@ enum{
 	ECHO_INVL_NOT_CHANGE=0xff,
 };
 
-#define GET_PATH_LIFETIME_MS(lifetime)     ((DF_TEST_MODE_EN ? 2*60:((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
+#define GET_PATH_LIFETIME_MS(lifetime)     (((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
 					                 (lifetime==PATH_LIFETIME_2HOURS) ? 2*60*60 : (  \
 					                 (lifetime==PATH_LIFETIME_24HOURS) ? 24*60*60 : 10*24*60*60 \
-					                 ))))*1000)
+					                 )))*1000)
 
 #define GET_PATH_DSC_INTERVAL_MS(dsc_interval)	 		(dsc_interval?PATH_DISCOVERY_INTERVAL_30S:PATH_DISCOVERY_INTERVAL_5S)
 
@@ -208,7 +208,8 @@ typedef struct{
 	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
 	mesh_transmit_t transmit;
 	mesh_transmit_t relay_transmit;
-	rssi_threshold_t rssi_threshold;
+	s8 pts_rssi_threshold; // only use in PTS test mode.
+	s8 rssi_margin;
 	directed_paths_t directed_paths;
 	discovery_timing_t discovery_timing;
 	mesh_transmit_t	control_transmit;
@@ -556,21 +557,21 @@ typedef struct{
 #endif
 
 extern int path_monitoring_test_mode;
-void mesh_df_led_event(u8 nid);
+void mesh_df_led_event(u8 nid, u8 is_ctl_op);
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);
 int is_directed_proxy_en(u16 netkey_offset);
 int is_directed_friend_en(u16 netkey_offset);
 int is_directed_forwarding_op(u16 op);
 int is_path_target(u16 origin, u16 destination);
-u8 get_directed_proxy_dependent_ele_cnt(u16 netkey_offset, u16 addr);
+u8 get_directed_proxy_dependent_ele_cnt(int conn_idx, u16 netkey_offset, u16 addr);
 u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr);
-int is_proxy_use_directed(u16 netkey_offset);
-void directed_proxy_dependent_node_delete();
+int is_proxy_use_directed(int conn_idx, u16 netkey_offset);
+void directed_proxy_dependent_node_delete(int conn_idx);
 void mesh_directed_forwarding_bind_state_update();
 void mesh_directed_forwarding_default_val_init();
-int mesh_directed_proxy_capa_report(int netkey_offset);
-int mesh_directed_proxy_capa_report_upon_connection();
+int mesh_directed_proxy_capa_report(u16 conn_handle, int netkey_offset);
+int mesh_directed_proxy_capa_report_upon_connection(u16 conn_handle);
 path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination);
 int mesh_df_path_monitoring(path_entry_com_t *p_entry);
 int directed_forwarding_initial_start(u16 netkey_index, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt);
@@ -578,6 +579,7 @@ int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 
 void mesh_directed_forwarding_proc(u8 *p_bear, u8 *par, int par_len, int src_type);
 int is_address_in_dependent_origin(path_entry_com_t *p_fwd_entry, u16 addr);
 int is_address_in_dependent_target(path_entry_com_t *p_fwd_entry, u16 addr);
+int is_addr_in_entry(u16 src_addr, u16 destination, path_entry_com_t *p_fwd_entry);
 int forwarding_tbl_dependent_add(u16 range_start, u8 range_length, path_addr_t *p_dependent_list);
 int directed_forwarding_solication_start(u16 netkey_offset, mesh_ctl_path_request_solication_t *p_addr_list, u8 list_num);
 

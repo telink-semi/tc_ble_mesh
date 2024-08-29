@@ -522,6 +522,7 @@ u32 kb_scan_key (int numlock_status, int read_key) {
 #endif
 
 #if(KB_LINE_MODE)
+	gpio_read_all (gpio);
 	scan_pin_need = (1 << ARRAY_SIZE(scan_pins)) - 1;
 #else
 	scan_pin_need = kb_key_pressed (gpio);

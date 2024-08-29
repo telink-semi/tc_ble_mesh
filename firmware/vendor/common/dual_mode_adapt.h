@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "vendor/common/user_config.h"
 
 #define FW_RAMCODE_SIZE_MAX         (0x4000)    // no limit for bootloader.
 
@@ -49,7 +49,7 @@ enum{
 	RF_MODE_PVT_MESH,
 };
 
-#if (0 == FW_START_BY_BOOTLOADER_EN)
+#if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
 enum{
     DUAL_MODE_SAVE_ENABLE       = 0x5A,    // dual mode state should be define both 73000 and 76080
     DUAL_MODE_SAVE_DISABLE      = 0x00,

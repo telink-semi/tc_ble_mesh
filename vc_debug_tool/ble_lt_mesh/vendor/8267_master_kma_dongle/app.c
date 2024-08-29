@@ -60,8 +60,8 @@ asm(".global     __FW_RAMCODE_SIZE_MAX");
 asm(".equ __MCU_RUN_SRAM_EN,         0");
 asm(".global     __MCU_RUN_SRAM_EN");
 
-asm(".equ __FW_START_BY_BOOTLOADER_EN,  0");
-asm(".global     __FW_START_BY_BOOTLOADER_EN");
+asm(".equ __FW_START_BY_LEGACY_BOOTLOADER_EN,  0");
+asm(".global     __FW_START_BY_LEGACY_BOOTLOADER_EN");
 
 #if (HCI_ACCESS==HCI_USE_UART || HCI_ACCESS==HCI_USE_USB)
 	

@@ -22,15 +22,14 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "tl_common.h"
 #if WIN32 
 #include "../../../reference/tl_bulk/lib_file/app_config.h"
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #endif
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "app_beacon.h"
 #include "vendor/common/app_provison.h"
-#include "proj/common/types.h"
 #include "app_privacy_beacon.h"
 #include "directed_forwarding.h"
 #include "blt_soft_timer.h"
@@ -50,6 +49,12 @@ int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val)
 	mesh_adv_fifo_relay.num = mesh_adv_fifo_relay.num;	// will be optimized, just for sure that relay buffer is existed.
 	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)bear;
 	p_bear->trans_par_val = trans_par_val;
+	
+   		#if AUDIO_MESH_EN
+	if(is_audio_mesh_tx_working()){	
+		p_bear->trans_par_val = 0; // only sent once to save time.
+	}
+   		#endif
 	int err = my_fifo_push_relay(p_bear, mesh_bear_len_get(p_bear), 0);
 	#else
 	int err = mesh_bear_tx2mesh(bear, trans_par_val);
@@ -67,22 +72,6 @@ int mesh_beacon_send_proc()
 {
 	int err = -1;
 #if !WIN32
-	if(blt_state == BLS_LINK_STATE_CONN){
-		if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
-			if(is_provision_success()&& beacon_send.conn_beacon_flag){
-				err = mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner
-				if(0 == err){				 
-					beacon_send.conn_beacon_flag =0;
-					#if (MD_DF_CFG_SERVER_EN && !WIN32)
-					mesh_directed_proxy_capa_report_upon_connection(); // report after security network beacon.
-					#endif
-				}				
-			}
-		}
-		return err;
-	}else{
-		reset_all_ccc(); 
-	}
 	// dispatch when connected whether it need to send the unprovisioned beacon 
 	if(beacon_send.en && clock_time_exceed(beacon_send.tick ,beacon_send.inter)&&!is_provision_success()){
 		beacon_send.tick = clock_time();
@@ -253,7 +242,15 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	}else{}
 	if(blt_sts){
 	    #if (!WIN32)
-		err = notify_pkts((u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){				
+				err = notify_pkts(conn_dev_list[i].conn_handle, (u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
+			}
+		}
+		#else	
+		err = notify_pkts(BLS_CONN_HANDLE, (u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
+		#endif
 		#endif
 	}else{
 		err = mesh_tx_cmd_add_packet((u8 *)(&beaconData));
@@ -302,10 +299,18 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     	#if WIN32
 		err = prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
-		err = mesh_proxy_adv2gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){				
+				err = mesh_proxy_adv2gatt(conn_dev_list[i].conn_handle, PROXY_CONFIG_FILTER_DST_ADR, (u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);
+			}
+		}
+			#else
+		err = mesh_proxy_adv2gatt(BLS_CONN_HANDLE, PROXY_CONFIG_FILTER_DST_ADR, (u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);	
+			#endif		
 		#endif
 		if(0 == err){	
-			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:",0);
+			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:");
 		}
 	}else{
 		// static u32 iv_idx_st_A1;iv_idx_st_A1++;

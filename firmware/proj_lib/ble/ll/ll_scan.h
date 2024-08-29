@@ -74,6 +74,7 @@ st_ll_scan_t  blts;
 u32		blts_scan_interval;
 #endif
 extern 			rf_packet_scan_req_t	pkt_scan_req;
+extern         	rf_packet_scan_rsp_t	pkt_scan_rsp;
 
 
 typedef int (*ll_procScanPkt_callback_t)(u8 *, u8 *, u32);

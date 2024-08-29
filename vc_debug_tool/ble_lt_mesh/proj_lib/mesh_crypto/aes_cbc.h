@@ -22,8 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#ifndef _AES_H_
-#define _AES_H_
+#pragma once
 
 #ifndef CBC
   #define CBC 1
@@ -67,7 +66,7 @@ typedef struct
 #endif
 }AES_ctx;
 
-extern AES_ctx ctx;
+//extern AES_ctx ctx;
 
 void AES_init_ctx(AES_ctx* ctx, const uint8_t* key);
 
@@ -99,4 +98,3 @@ void AES_CTR_xcrypt_buffer(AES_ctx* ctx, uint8_t* buf, uint32_t length);
 #endif
 
 
-#endif

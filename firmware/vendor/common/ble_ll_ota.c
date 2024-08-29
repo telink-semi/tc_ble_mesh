@@ -22,6 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#if (0 == __TLSR_RISCV_EN__)
 #include "tl_common.h"
 #include "proj_lib/ble/ble_common.h"
 #include "proj_lib/ble/trace.h"
@@ -59,10 +60,10 @@ _attribute_data_retention_ ota_service_t blcOta;
 	u32		ota_program_offset = 0x40000;
 	u32 	ota_firmware_size_k = FW_SIZE_MAX_K;
 #elif(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
-    #if (FLASH_1M_ENABLE && PINGPONG_OTA_DISABLE)
-	_attribute_data_retention_	int		ota_program_bootAddr = FLASH_ADR_UPDATE_NEW_FW; // it will be used in cpu_wakeup init, and set value for ota_program_offset_
+    #if (FLASH_1M_ENABLE && PINGPONG_OTA_DISABLE) // FLASH_PLUS_ENABLE
+	_attribute_data_retention_	u32		ota_program_bootAddr = FLASH_ADR_UPDATE_NEW_FW; // it will be used in cpu_wakeup init, and set value for ota_program_offset_
     #else
-	_attribute_data_retention_	int		ota_program_bootAddr = 0x40000;
+	_attribute_data_retention_	u32		ota_program_bootAddr = 0x40000;
     #endif
     
 	_attribute_data_retention_	u32		ota_program_offset = 0;
@@ -172,22 +173,19 @@ _attribute_ram_code_ void start_reboot(void)
 	while (1);
 }
 
+STATIC_ASSERT(BOOT_MARK_ADDR == 8); // for B85m.
 
 int ota_set_flag()
 {
-    u32 fw_flag_telink = START_UP_FLAG;
-    u32 flag_new = 0;
-	flash_read_page(ota_program_offset + 8, sizeof(flag_new), (u8 *)&flag_new);
-	flag_new &= 0xffffff4b;
-    if(flag_new != fw_flag_telink){
-        return -1; // invalid flag
+    if(0 == is_valid_startup_flag(ota_program_offset + BOOT_MARK_ADDR, 0)){
+        return -1; // invalid flag for the new firmware
     }
 
 #if(__TL_LIB_8267__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8267) || \
 	__TL_LIB_8269__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8269))
 	u32 flag = 0x4b;
 	flash_write_page(ota_program_offset + 8, 1, (u8 *)&flag);		//Set FW flag
-	#if (PINGPONG_OTA_DISABLE || FW_START_BY_BOOTLOADER_EN)
+	#if (PINGPONG_OTA_DISABLE || FW_START_BY_LEGACY_BOOTLOADER_EN)
 	// not set invalid, because it may need to recover to old version when signature failed
 	#else
 	flag = 0;
@@ -196,7 +194,7 @@ int ota_set_flag()
 #elif(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) //8258
 	u32 flag = 0x4b;
 	flash_write_page(ota_program_offset + 8, 1, (u8 *)&flag);		//Set FW flag
-	#if (PINGPONG_OTA_DISABLE || FW_START_BY_BOOTLOADER_EN)
+	#if (PINGPONG_OTA_DISABLE || FW_START_BY_LEGACY_BOOTLOADER_EN)
 	// not set invalid, because it may need to recover to old version when signature failed
 	#else
 	flag = 0;
@@ -222,12 +220,15 @@ void ota_save_data(u32 adr, u8 * data, u16 len){
 
 	flash_write_page(ota_program_offset + adr, len, data);
 }
+
+#if GATEWAY_ENABLE
 u8 ota_reboot_flag = 1;// initial it will reboot 
 void set_ota_reboot_flag(u8 flag)
 {
 	ota_reboot_flag = flag;
 	return ;
 }
+#endif
 
 int otaWrite(void * p)
 {
@@ -264,7 +265,10 @@ int otaWrite(void * p)
 	}
 	else if(ota_adr == CMD_OTA_START){
 		ota_adr_index = -1;
-		if(ota_reboot_flag){
+		#if GATEWAY_ENABLE
+		if(ota_reboot_flag)
+		#endif
+		{
 			blcOta.ota_start_flag = 1;   //set flag
 			blt_ota_start_tick = clock_time()|1;  //mark time
 			if(otaStartCb){
@@ -275,6 +279,9 @@ int otaWrite(void * p)
 		//log_event(TR_T_ota_start);
 		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
+		#endif
+		#if APP_FLASH_PROTECTION_ENABLE
+		// app_flash_protection_ota_begin(); // has been done in entry_ota_mode_
 		#endif
 	}
 	else if(ota_adr == CMD_OTA_END){
@@ -328,7 +335,14 @@ int otaWrite(void * p)
                         err_flg = OTA_FW_CHECK_ERR;
                     #if 1 // GATT policy, depend on user
                     }else if(0 == ota_is_valid_pid_vid((fw_id_t *)(req->dat+4), 1)){
-                        err_flg = OTA_FW_CHECK_ERR;
+                    	#if GATEWAY_ENABLE
+                        if(0 == ota_reboot_flag){
+							// means gateway is receiving firmware for other nodes, rather than gateway self.
+                    	}else
+						#endif
+						{
+                        	err_flg = OTA_FW_CHECK_ERR;
+                    	}
                     #endif
                     }else{
     				    #if ENCODE_OTA_BIN_EN
@@ -406,68 +420,84 @@ int otaRead(void * p)
 	return 0;
 }
 
+#define OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BAKUP_AREA		1
+
 /*
- * @retval: 1: there is legacy ota data need to be clear
+ * @retval: 1: there is legacy ota data need to be clear. 0: no legacy data.
 */
 int bls_ota_clearNewFwDataArea(int check_only)
 {
+#if (OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BAKUP_AREA)
+		blt_ota_software_check_flash_load_error(); // if any errors are found, will reboot inside
+#endif
+
 		int legacy_flag = 0;
-#if 1
+#if (APP_FLASH_PROTECTION_ENABLE)
+		u8	flash_clear_trigger = 0;
+#endif
+		
+#if 1 //new, safer method
+		//When the OTA is successfully restarted to erase the old firmware,
+		//the 0 and 2k addresses of each sector in the old firmware area are polled, a
+		//nd the sector is erased if the 4-byte data read out is not 0xFFFFFFFF.
+		//A special situation, the address of the last sector 0 in the old firmware area is just 0xFFFFFFFF,
+		//and the end of the firmware is less than 2k,
+		//so the last sector is not erased after OTA succeeds,
+		//which may cause the next OTA to read and write flash data in this area inconsistent and fail.
 		u32 tmp1 = 0;
 		u32 tmp2 = 0;
+		u32 tmp3 = 0;
+		u32 tmp4 = 0;
+		u32 erase_consecutive_cnt = 0;
 		int cur_flash_setor;
 		for(u32 i = 0; i < (ota_firmware_size_k>>2); ++i)
 		{
 			cur_flash_setor = ota_program_offset + i*0x1000;
-			flash_read_page(cur_flash_setor, 		4, (u8 *)&tmp1);
-			flash_read_page(cur_flash_setor + 2048, 4, (u8 *)&tmp2);
-
-			if(tmp1 != ONES_32 || tmp2 != ONES_32)
+	
+			int cur_erase_trigger = 0;
+			if(erase_consecutive_cnt){
+				cur_erase_trigger = 1;
+				erase_consecutive_cnt --;
+			}
+	
+			flash_read_page(cur_flash_setor,		4, (u8 *)&tmp1);
+			flash_read_page(cur_flash_setor + 1024, 4, (u8 *)&tmp2);
+			flash_read_page(cur_flash_setor + 2048, 4, (u8 *)&tmp3);
+			flash_read_page(cur_flash_setor + 4000, 4, (u8 *)&tmp4);
+	
+			if(tmp1 != ONES_32 || tmp2 != ONES_32 || tmp3 != ONES_32 || tmp4 != ONES_32)
 			{
 				legacy_flag = 1;
 				if(check_only){
 					break;
 				}
+				
+				cur_erase_trigger = 1;
+				erase_consecutive_cnt = 2;
+			}
+	
+			if(cur_erase_trigger){
+				#if (APP_FLASH_PROTECTION_ENABLE)
+					if(!flash_clear_trigger && flash_prot_op_cb){
+						flash_clear_trigger = 1;
+						flash_prot_op_cb(FLASH_OP_EVT_STACK_OTA_CLEAR_OLD_FW_BEGIN, ota_program_offset, ota_program_offset + ota_firmware_size_k * 1024);
+					}
+				#endif
 				#if(MODULE_WATCHDOG_ENABLE)
 				wd_clear();	// prevent flash_erase_sector_ without clear.
 				#endif
 				flash_erase_sector(cur_flash_setor);
 			}
 		}
-		return legacy_flag;
-#else
-		u32 tmp1 = 0;
-		u32 tmp2 = 0;
-		u32 tmp3 = 0;
-		flash_read_page(ota_program_offset, 4, (u8 *)&tmp1);
-		flash_read_page(ota_program_offset + 4092, 4, (u8 *)&tmp2);
-		if(tmp1 != ONES_32 || tmp2 != ONES_32)
-		{
-			for(u32 i = (ota_firmware_size_k - 1)>>2; i>=0; --i)  //erase from end to head
-			{
-				flash_read_page(ota_program_offset + i*0x1000, 4, (u8 *)&tmp1);
-				if(tmp1 == ONES_32){
-					flash_read_page(ota_program_offset + i*0x1000 + 16, 4, (u8 *)&tmp2);
-					if(tmp2 == ONES_32){
-						flash_read_page(ota_program_offset + i*0x1000 + 4092, 4, (u8 *)&tmp3);
-					}
-				}
-
-				if(tmp1 != ONES_32 || tmp2 != ONES_32 || tmp3 != ONES_32)
-				{
-					legacy_flag = 1;
-					if(check_only){
-						break;
-					}
-					#if(MODULE_WATCHDOG_ENABLE)
-					wd_clear();	// prevent flash_erase_sector_ without clear.
-					#endif
-					flash_erase_sector(ota_program_offset+i*0x1000);
-				}
-			}
-		}
-		return legacy_flag;
 #endif
+		
+#if (APP_FLASH_PROTECTION_ENABLE)
+		if(flash_clear_trigger){
+			flash_prot_op_cb(FLASH_OP_EVT_STACK_OTA_CLEAR_OLD_FW_END, 0, 0);
+		}
+#endif
+
+		return legacy_flag;
 }
 
 
@@ -526,6 +556,10 @@ void rf_link_slave_ota_finish_led_and_reboot(u8 st)
     }
 	
 	set_keep_onoff_state_after_ota();
+	
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_ota_end(st);/* do it before led indication*/
+#endif
 
 	if(otaResIndicateCb){
 		otaResIndicateCb(st);   // should be better at last.
@@ -566,184 +600,4 @@ void blt_slave_ota_finish_handle()
         }
     }
 }
-
-#if(AIS_ENABLE)
-#define MAIN_VERSION		0
-#define SUB_VERSION			0
-#define MODIFY_VERSION		0
-
-const ais_fw_info_t  ais_fw_info = { 
-	.device_type = (u8)MESH_PID_SEL, // device type
-    .fw_version = (MAIN_VERSION<<16) | (SUB_VERSION<<8) | MODIFY_VERSION, 
-};
-
-int ais_ota_version_get()
-{
-	ais_msg_t ais_version;
-	memset(&ais_version, 0x00, sizeof(ais_version));
-	ais_version.msg_type = AIS_FW_VERSION_RSP;
-	ais_version.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_fw_info);
-	memcpy(ais_version.data, &ais_fw_info, sizeof(ais_fw_info));
-	if(ais_gatt_auth.auth_ok){
-		ais_version.enc_flag = 1;
-		AES128_pkcs7_padding(ais_version.data, sizeof(ais_fw_info), ais_version.data);
-		aes_cbc_encrypt(ais_version.data, sizeof(ais_fw_info), &ctx, ais_gatt_auth.ble_key, iv);
-	}
-	return bls_att_pushNotifyData(AIS_NOTIFY_HANDLE, (u8 *)&ais_version, OFFSETOF(ais_msg_t,data)+(ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_fw_info)));
-}
-
-int ais_ota_req(u8 *p)
-{
-	ais_msg_t ais_msg_rsp;
-	//ais_ota_req_t *ota_req_p = (ais_ota_req_t *)p;
-	memset(&ais_msg_rsp, 0x00, sizeof(ais_msg_rsp));		
-
-	ais_msg_rsp.msg_type = AIS_OTA_RSP;
-	ais_msg_rsp.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_rsp_t);
-	ais_msg_rsp.ais_ota_rsp.one_round_pkts = 0;//must set to 0 now.
-#if 0 // set 0 always allow ota.
-	if((ota_req_p->device_type == ais_fw_info.device_type) && (ota_req_p->fw_version > ais_fw_info.fw_version)&&(ota_req_p->ota_flag == 0))
 #endif
-	{
-		ais_msg_rsp.ais_ota_rsp.allow_ota = ais_gatt_auth.auth_ok;
-
-		ota_adr_index = -1;
-		blcOta.ota_start_flag = ais_gatt_auth.auth_ok;   //set flag
-		blt_ota_start_tick = clock_time()|1;  //mark time
-		if(otaStartCb && ais_gatt_auth.auth_ok){
-			otaStartCb();
-		}
-	}
-	
-	if(ais_gatt_auth.auth_ok){	
-#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
-		check_and_set_1p95v_to_zbit_flash();
-#endif
-		ais_msg_rsp.enc_flag = 1;
-		AES128_pkcs7_padding(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), ais_msg_rsp.data);
-		aes_cbc_encrypt(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), &ctx, ais_gatt_auth.ble_key, iv);
-	}
-	
-	return bls_att_pushNotifyData(AIS_NOTIFY_HANDLE, (u8 *)&ais_msg_rsp, OFFSETOF(ais_msg_t,data)+(ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_rsp_t)));
-}
-
-int ais_ota_result(u8 result)
-{
-	ais_msg_t ais_msg_result;
-	memset(&ais_msg_result, 0x00, sizeof(ais_msg_result));		
-
-	ais_msg_result.msg_type = AIS_OTA_RESULT;
-	ais_msg_result.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:1;
-	ais_msg_result.ota_result = (OTA_SUCCESS==result) ? 1:0;
-
-	if(ais_gatt_auth.auth_ok){
-		ais_msg_result.enc_flag = 1;
-		AES128_pkcs7_padding(ais_msg_result.data, 1, ais_msg_result.data);
-		aes_cbc_encrypt(ais_msg_result.data, 1, &ctx, ais_gatt_auth.ble_key, iv);
-	}
-	return bls_att_pushNotifyData(AIS_NOTIFY_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t,data)+(ais_gatt_auth.auth_ok?AES_BLOCKLEN:1));
-}
-
-int ais_ota_rc_report(u8 frame_desc, u32 trans_size)
-{
-	ais_msg_t ais_msg_result;
-	memset(&ais_msg_result, 0x00, sizeof(ais_msg_result));		
-
-	ais_msg_result.msg_type = AIS_OTA_RECEIVED;
-	ais_msg_result.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_receive_t);
-	ais_msg_result.ais_ota_rcv.seg_index = frame_desc;
-	ais_msg_result.ais_ota_rcv.trans_size_last = trans_size;
-	if(ais_gatt_auth.auth_ok){
-		ais_msg_result.enc_flag = 1;
-		AES128_pkcs7_padding(ais_msg_result.data, sizeof(ais_ota_receive_t), ais_msg_result.data);
-		aes_cbc_encrypt(ais_msg_result.data, sizeof(ais_ota_receive_t), &ctx, ais_gatt_auth.ble_key, iv);
-	}
-	return bls_att_pushNotifyData(AIS_NOTIFY_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t,data)+(ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_receive_t)));
-}
-
-
-const u8 company[4] = {'K', 'N', 'L', 'T'};
-int ais_otaWrite(void * p)
-{
-	rf_packet_att_data_t *req = (rf_packet_att_data_t*)p;
-	static u8 err_flg = OTA_SUCCESS;
-	static u32 fw_rcv_total_size = 0;
-	ais_msg_t *msg_p = (ais_msg_t *)req->dat;
-	if(ais_gatt_auth.auth_ok && (msg_p->msg_type != AIS_OTA_DATA)){
-		u16 len = ((req->l2cap-3)+AES_BLOCKLEN-1)/AES_BLOCKLEN*AES_BLOCKLEN;
-		aes_cbc_decrypt(msg_p->data, (len>AIS_MAX_DATA_SIZE)?0:len, &ctx, ais_gatt_auth.ble_key, iv);
-	}
-	
-	if(msg_p->msg_type == AIS_FW_VERSION_GET){
-		ais_ota_version_get();
-	}
-	else if(msg_p->msg_type == AIS_OTA_REQ){
-		ais_ota_req(msg_p->data);
-	}
-
-	if(!blcOta.ota_start_flag){
-		return 0;
-	}
-	
-	if(msg_p->msg_type == AIS_OTA_END){
-		if(FW_CHECK_AGTHM1 == get_ota_check_type()){
-			if(is_valid_ota_check_type1()){
-				err_flg = OTA_SUCCESS;
-			}
-			else{
-				err_flg = OTA_DATA_CRC_ERR;
-			}
-		}
-		 	
-		blt_ota_finished_flag_set(err_flg);
-
-		ais_ota_result(err_flg);
-	}
-	else if(msg_p->msg_type == AIS_OTA_DATA){
-		u16 cur_index =  ota_adr_index+1;
-		if((msg_p->frame_seq == (cur_index%(msg_p->frame_total+1)))){
-			blt_ota_start_tick = clock_time()|1;  //mark time			
-			u16 data_len = msg_p->length;
-			
-			if(cur_index == 0){
-				if(memcmp(req->dat+12, company, sizeof(company))){
-					err_flg = OTA_FIRMWARE_MARK_ERR;
-				}
-			}
-			//log_data(TR_24_ota_adr,ota_adr);
-			if((cur_index*data_len)>=(ota_firmware_size_k<<10)){
-				err_flg = OTA_FW_SIZE_ERR;
-			}else{
-				ota_save_data (fw_rcv_total_size, req->dat + 4, data_len);
-
-				flash_read_page(ota_program_offset + fw_rcv_total_size, data_len, mesh_cmd_ut_rx_seg);
-
-				if(!memcmp(mesh_cmd_ut_rx_seg,req->dat + 4, data_len)){  //OK
-					ota_adr_index++;
-					fw_rcv_total_size += data_len;				
-					if((!ais_gatt_auth.auth_ok) || (msg_p->frame_total == msg_p->frame_seq)){
-						ais_ota_rc_report(msg_p->frame_desc, fw_rcv_total_size);
-					}
-				}
-				else{ //flash write err
-					err_flg = OTA_WRITE_FLASH_ERR;
-				}
-			}
-				
-		}
-		else if(msg_p->frame_seq == (cur_index%(msg_p->frame_total+1))){  //maybe repeated OTA data, we neglect it, do not consider it ERR
-			ais_ota_rc_report((msg_p->frame_desc & 0xf0)|(ota_adr_index % (msg_p->frame_total+1)), fw_rcv_total_size);
-		}
-		else{  //adr index err, missing at least one OTA data
-			ais_ota_rc_report((msg_p->frame_desc & 0xf0)|(ota_adr_index % (msg_p->frame_total+1)), fw_rcv_total_size);
-		}
-	}
-
-	if(err_flg){
-		blt_ota_finished_flag_set(err_flg);
-	}
-
-	return 0;
-}
-#endif
-

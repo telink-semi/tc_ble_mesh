@@ -40,22 +40,44 @@
 #define LED_INDICATE_VAL    (rgb_lumen_map[100])
 #define LED_INDICATE_LUM_VAL LED_INDICATE_VAL
 
-#if(CLOCK_SYS_CLOCK_HZ == 48000000)
-#define PWM_CLK_DIV_LIGHT   (1)
-#else
-#define PWM_CLK_DIV_LIGHT   (0)
+#ifndef PWM_FREQ
+#define PWM_FREQ	        (600)   // unit: Hz // PWM frequnce can be more than 1MHz if necessary.
 #endif
 
-#ifndef PWM_FREQ
-#define PWM_FREQ	        (600)   // unit: Hz
-#endif
+#if __TLSR_RISCV_EN__
+#define PWM_MAX_TICK        (PWM_PCLK_SPEED / PWM_FREQ)
+#else
+	#if(CLOCK_SYS_CLOCK_HZ == 48000000)
+#define PWM_CLK_DIV_LIGHT   (1)
+	#else
+#define PWM_CLK_DIV_LIGHT   (0)
+	#endif
 #define PWM_MAX_TICK        ((CLOCK_SYS_CLOCK_HZ / (PWM_CLK_DIV_LIGHT + 1)) / PWM_FREQ)
+#endif
 //#define PMW_MAX_TICK		PWM_MAX_TICK
+
+#if __TLSR_RISCV_EN__
+static inline void pwm_start_id(pwm_id_e id)
+{
+	unsigned short bit = (PWM0_ID == id) ? BIT(8) : BIT(id);
+	pwm_start(bit);
+}
+
+static inline void pwm_stop_id(pwm_id_e id)
+{
+	unsigned short bit = (PWM0_ID == id) ? BIT(8) : BIT(id);
+	pwm_stop(bit);
+}
+#else
+#define pwm_start_id(id)	pwm_start(id)
+#define pwm_stop_id(id)		pwm_stop(id)
+#endif
 
 #define LED_MASK							0x07
 #define	config_led_event(on,off,n,sel)		(on | (off<<8) | (n<<16) | (sel<<24))
 
 #define	LED_EVENT_FLASH_4HZ_10S				config_led_event(2,2,40,LED_MASK)
+#define	LED_EVENT_FLASH_4HZ_15S				config_led_event(2,2,60,LED_MASK)
 #define	LED_EVENT_FLASH_STOP				config_led_event(1,1,1,LED_MASK)
 #define	LED_EVENT_FLASH_2HZ_2S				config_led_event(4,4,4,LED_MASK)
 #define	LED_EVENT_FLASH_1HZ_1S				config_led_event(8,8,1,LED_MASK)
@@ -233,6 +255,10 @@ typedef struct{
 
 typedef struct{
 	sw_level_save_t level[ST_TRANS_MAX];
+#if (MD_LIGHT_CONTROL_EN && MD_SERVER_EN)
+	u8 lc_onoff_target;
+	u8 rsv_lc[3];
+#endif
 	// may add member here later
 }light_res_sw_save_t;	// need save
 
@@ -250,6 +276,10 @@ extern _align_4_ light_res_sw_trans_t light_res_sw[LIGHT_CNT];
 #define get_level_current_type(idx) 		//(light_res_sw[idx].level_current_type)
 #define get_light_idx_from_level_md_idx(model_idx)  (model_idx / ELE_CNT_EVERY_LIGHT)
 #define get_trans_type_from_level_md_idx(model_idx) (model_idx % ELE_CNT_EVERY_LIGHT)
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+#define get_light_idx_from_onoff_md_idx(model_idx)  (model_idx / 2)
+#define is_lc_model_from_onoff_md_idx(model_idx) 	(model_idx % 2)
+#endif
 //----------------
 static inline u32 division_round(u32 val, u32 dividend)
 {
@@ -382,10 +412,10 @@ u8 light_remain_time_get(st_transition_t *p_trans);
 #define PROV_START_LED_CMD				0xc0
 #define PROV_END_LED_CMD				0xc1
 
-#define	LGT_CMD_SET_MESH_INFO           0xc5
-#define	LGT_CMD_SET_DEV_ADDR            0xc6
-#define	LGT_CMD_SET_SUBSCRIPTION        0xc7
-#define	LGT_CMD_FRIEND_SHIP_OK          0xc8
+#define	LGT_CMD_SET_MESH_INFO           0xc5 // light event for get provision information OK, include mesh key, unicast address, etc. but not include key bind.
+#define	LGT_CMD_SET_DEV_ADDR            0xc6 // 
+#define	LGT_CMD_SET_SUBSCRIPTION        0xc7 // light event for set subscription address
+#define	LGT_CMD_FRIEND_SHIP_OK          0xc8 // light event for friend ship establish ok.
 #define	LGT_CMD_DUAL_MODE_MESH        	0xc9
 
 #define LGT_CMD_SWITCH_POWERON 			0xd0

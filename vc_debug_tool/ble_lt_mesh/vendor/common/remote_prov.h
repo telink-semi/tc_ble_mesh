@@ -32,6 +32,7 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 
+#if MD_REMOTE_PROV
 #define MESH_SR_BV_10_C				0
 #define MESH_SR_BV_11_C				0
 #define MESH_SR_BV_RESEND_DISABLE	0
@@ -517,7 +518,7 @@ extern u8 rp_dev_uuid[16];
 void gw_rp_timeout_proc();
 
 void gw_rp_scan_start();
-
+#endif
 
 #endif
 

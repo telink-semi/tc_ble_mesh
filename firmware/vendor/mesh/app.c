@@ -51,9 +51,11 @@
 #include "../common/subnet_bridge.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
+#include "app_ui.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 #include "../common/remote_prov.h"
+#include "../common/mesh_access_layer.h"
 #if MI_API_ENABLE
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #include "vendor/common/mi_api/libs/mijia_profiles/mi_service_server.h"
@@ -71,6 +73,10 @@
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif
 
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)
+#include "vendor/common/sensors_model.h"
+#endif
+
 #define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
 #define BLT_TX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_TX_FIFO_SIZE : 40)
 #if GATT_LPN_EN
@@ -85,7 +91,7 @@ MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 16);  // some phones may not support D
 	#if DU_LPN_EN
 #define BLT_TX_FIFO_CNT			32// low down the rentention cost part .
 	#else
-#define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 128) // set to >= 64 in extend mode, because there is no blt_notify_fifo_, and DLE length set to 40 but not 251, and some phones may not support DLE.
+#define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 64) // set to >= 64 in extend mode(64 is enough in many cases), because there is no blt_notify_fifo_, and DLE length set to 40 but not 251, and some phones may not support DLE.
 	#endif
 MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, BLT_TX_FIFO_CNT);  // some phones may not support DLE, so use the same count with no DLE.
 #endif
@@ -201,6 +207,15 @@ int app_event_handler (u32 h, u8 *p, int n)
 				#endif
 			mesh_cmd_extend_loop_cb(pa);
 			#endif
+
+			if((LL_TYPE_ADV_IND != (pa->event_type & 0x0F)) || VENDOR_IOS_SOLI_PDU_EN){
+				#if MD_ON_DEMAND_PROXY_EN
+				if(mesh_soli_pdu_handle(pa->data, pa->len)){
+					return 0;
+				}
+				#endif
+			}
+			
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
 				#if DU_ULTRA_PROV_EN
 				app_event_handler_ultra_prov(pa->data);
@@ -260,7 +275,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 				//memcpy (peer_mac, pc->mac, 6);
 			}
 			#if DU_LPN_EN
-	        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);	
+	        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc");	
 				#if !LPN_CONTROL_EN
 			blc_ll_setScanEnable (0, 0);
 			mi_mesh_state_set(0);
@@ -273,12 +288,12 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
-			proxy_cfg_list_init_upon_connection();
+			proxy_cfg_list_init_upon_connection(BLS_CONN_HANDLE);
 			#if 0 // FEATURE_FRIEND_EN
 			fn_update_RecWin(get_RecWin_connected());
 			#endif
 			#if !DU_ENABLE
-			mesh_service_change_report();
+			mesh_service_change_report(BLS_CONN_HANDLE);
 			#endif
 			#if LPN_CONTROL_EN
 			bls_l2cap_requestConnParamUpdate (48, 56, 10, 500);
@@ -302,10 +317,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 		mi_mesh_switch_sys_mode(16000000);
 		#endif
 		#if DU_ENABLE
-		clock_init(SYS_CLK_16M_Crystal);
 		blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
 		if(p_ota->ota_suc){
-			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,when ble is disconnct!",0);
+			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,when ble is disconnct!");
 			du_ota_suc_reboot();			
 		}
 		#endif
@@ -335,7 +349,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb(pd->reason);
+		mesh_ble_disconnect_cb(p);
 		#if 0 // FEATURE_FRIEND_EN
         fn_update_RecWin(FRI_REC_WIN_MS);   // restore
         #endif
@@ -347,161 +361,6 @@ int app_event_handler (u32 h, u8 *p, int n)
 	}
 
 	return 0;
-}
-
-#if (UI_KEYBOARD_ENABLE)
-static int	long_pressed;
-static u8   key_released =1;
-
-/**
- * @brief       This function servers to quickly scan keyboard after wakeup and hold this data to the cache.
- * @param[in]   none 
- * @return      none
- * @note        
- */
-void deep_wakeup_proc(void)
-{
-#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
-	if(kb_scan_key (KB_NUMLOCK_STATUS_POWERON, 1)){
-		deepback_key_state = DEEPBACK_KEY_CACHE;
-		memcpy(&kb_event_cache,&kb_event,sizeof(kb_event));
-	}
-#endif
-
-	return;
-}
-
-/**
- * @brief       This function servers to process keyboard event from deep_wakeup_proc().
- * @param[io]   *det_key - detect key flag. 0: no key detect, use deepback cache if exist. other: key had been detected.
- * @return      none
- * @note        
- */
-void deepback_pre_proc(int *det_key)
-{
-#if (DEEPBACK_FAST_KEYSCAN_ENABLE)
-	if(!(*det_key) && deepback_key_state == DEEPBACK_KEY_CACHE){
-		memcpy(&kb_event,&kb_event_cache,sizeof(kb_event));
-		*det_key = 1;
-		deepback_key_state = DEEPBACK_KEY_IDLE;
-	}
-#endif
-
-	return;
-}
-
-/**
- * @brief       This function servers to process keyboard event.
- * @param[in]   none
- * @return      none
- * @note        
- */
-void mesh_proc_keyboard (void)
-{
-	static u32		tick_key_pressed;
-	static u8		kb_last[2];
-	extern kb_data_t	kb_event;
-	kb_event.keycode[0] = 0;
-	kb_event.keycode[1] = 0;
-	int det_key = kb_scan_key (0, 1);
-#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
-	if(deepback_key_state != DEEPBACK_KEY_IDLE){
-		deepback_pre_proc(&det_key);
-	}
-#endif	
-	///////////////////////////////////////////////////////////////////////////////////////
-	//			key change:pressed or released
-	///////////////////////////////////////////////////////////////////////////////////////
-	if (det_key) 	{
-		/////////////////////////// key pressed  /////////////////////////////////////////
-		key_released = 0;
-		
-		if (kb_event.cnt == 2)   //two key press, do  not process
-		{
-		}
-		else if(kb_event.cnt == 1)
-		{			
-			#if 0
-			if(KEY_SW1 == key0){
-				access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
-				foreach(i,NET_KEY_MAX){
-							mesh_key.net_key[i][0].node_identity =1;
-				}
-			}
-			else if(KEY_SW2 == key0){
-				static u8 onoff;
-				access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
-				onoff = !onoff;
-			}
-			#endif
-
-			#if (DF_TEST_MODE_EN)
-			static u8 onoff;	
-			if(KEY_SW2 == kb_event.keycode[0]){ // dispatch just when you press the button 
-				foreach(i, MAX_FIXED_PATH){
-					path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[0].path[i];
-					if(is_ele_in_node(ele_adr_primary, p_fwd_entry->path_origin, p_fwd_entry->path_origin_snd_ele_cnt+1)){
-						access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
-						onoff = !onoff;
-						break;
-					}
-				}
-			}
-			#endif
-
-			#if IV_UPDATE_TEST_EN
-			mesh_iv_update_test_initiate(kb_event.keycode[0]);
-			#endif
-		}
-		///////////////////////////   key released  ///////////////////////////////////////
-		else {
-			key_released = 1;
-			long_pressed = 0;
-		}
-
-		tick_key_pressed = clock_time ();
-		kb_last[0] = kb_event.keycode[0];
-		kb_last[1] = kb_event.keycode[1];
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//				no key change event
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if (kb_last[0])
-	{
-		//	long pressed
-		if (!long_pressed && clock_time_exceed(tick_key_pressed, 3*1000*1000))
-		{
-			long_pressed = 1;
-			#if GATT_LPN_EN
-			if(kb_last[0] == KEY_SW1){
-				cfg_cmd_reset_node(ele_adr_primary);
-			}
-			#endif
-		}
-
-	}else{
-		key_released = 1;
-		long_pressed = 0;
-	}
-
-	return;
-}
-#endif
-
-void proc_ui()
-{
-#if (UI_KEYBOARD_ENABLE)
-	static u32 tick_scan, scan_io_interval_us = 8000;
-	if (!clock_time_exceed (tick_scan, scan_io_interval_us))
-	{
-		return;
-	}
-	tick_scan = clock_time();
-
-	mesh_proc_keyboard();
-#endif
-
-	return;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -542,7 +401,7 @@ void test_simu_io_user_define_proc()
 }
 #endif
 
-#if (GATT_LPN_EN)
+#if (BLE_REMOTE_PM_ENABLE)
 int soft_timer_send_mesh_adv()
 {
 	int ret = -1;	
@@ -557,7 +416,7 @@ void soft_timer_mesh_adv_proc()
 {
 	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
 		if(!is_soft_timer_exist(&soft_timer_send_mesh_adv)){
-			blt_soft_timer_update(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
+			blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
 		}
 	}
 }
@@ -569,7 +428,7 @@ void main_loop ()
 
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
-	#if GATT_LPN_EN
+	#if BLE_REMOTE_PM_ENABLE
 	soft_timer_mesh_adv_proc();
 	#endif
 	blt_soft_timer_process(MAINLOOP_ENTRY);
@@ -726,7 +585,7 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 #if BLE_REMOTE_SECURITY_ENABLE
 		case GAP_EVT_SMP_PARING_BEAGIN:
 		{
-			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "Pairing begin", 0);		
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "Pairing begin");		
 		}
 		break;
 
@@ -735,10 +594,10 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 			gap_smp_paringSuccessEvt_t* p = (gap_smp_paringSuccessEvt_t*)para;
 			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "Pairing success:bond flg %s", p->bonding ?"true":"false");
 			if(p->bonding_result){
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "save smp key succ", 0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "save smp key succ");
 			}
 			else{
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "save smp key failed", 0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "save smp key failed");
 			}
 		}
 		break;
@@ -753,7 +612,7 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 		case GAP_EVT_SMP_CONN_ENCRYPTION_DONE:
 		{
 			gap_smp_connEncDoneEvt_t* p = (gap_smp_connEncDoneEvt_t*)para;
-			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "Connection encryption done", 0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "Connection encryption done");
 			
 			if(p->re_connect == SMP_STANDARD_PAIR){  //first paring
 
@@ -773,13 +632,13 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 
 		case GAP_EVT_SMP_TK_REQUEST_PASSKEY:
 		{
-			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "TK Request passkey", 0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "TK Request passkey");
 		}
 		break;
 
 		case GAP_EVT_SMP_TK_REQUEST_OOB:
 		{
-			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "TK Request OOB", 0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "TK Request OOB");
 		}
 		break;
 
@@ -816,6 +675,11 @@ void user_init()
 		user_sha256_data_proc();
 	#endif
 	mesh_global_var_init();
+	
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_operation(FLASH_OP_EVT_APP_INITIALIZATION, 0, 0);
+	blc_appRegisterStackFlashOperationCallback(app_flash_protection_operation); //register flash operation callback for stack
+#endif
     #if (DUAL_MODE_WITH_TLK_MESH_EN)
 	dual_mode_en_init();    // must before proc_telink_mesh_to_sig_mesh_, because "dual_mode_state" is used in it.
     #endif
@@ -907,6 +771,11 @@ void user_init()
 	blc_pm_setDeepsleepRetentionThreshold(50, 30);
 	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
 	bls_pm_registerFuncBeforeSuspend(app_func_before_suspend);
+
+	#if UI_KEYBOARD_ENABLE
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &mesh_set_sleep_wakeup);
+	bls_app_registerEventCallback (BLT_EV_FLAG_GPIO_EARLY_WAKEUP, &mesh_proc_keyboard);
+	#endif
 #else
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
 #endif
@@ -961,6 +830,10 @@ void user_init()
 	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 	#endif
 	rf_pa_init();
+	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)
+	nlc_sensor_init();
+	#endif
+	
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
@@ -976,7 +849,7 @@ void user_init()
 	mesh_init_all();
 
 	// OTA init
-	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
+	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_LEGACY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
 	if(DUAL_MODE_NOT_SUPPORT == dual_mode_state)
 	#endif	
 	{
@@ -1051,6 +924,11 @@ void user_init()
 #if MESH_MONITOR_EN
 	monitor_mode_en = is_provision_success();
 #endif
+
+#if MESH_RX_TEST	
+ 	mesh_register_upper_transport_layer_callback(mesh_upper_transport_layer_cb);
+#endif
+
     CB_USER_INIT();
 
 
@@ -1087,10 +965,6 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	du_ui_proc_init_deep();
 	#endif
 //    light_pwm_init();   // cost about 1.5ms
-
-#if UI_KEYBOARD_ENABLE
-	deep_wakeup_proc();// fast detect key when powerup
-#endif
 
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();

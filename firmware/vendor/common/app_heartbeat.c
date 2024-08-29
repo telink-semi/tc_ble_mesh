@@ -357,7 +357,7 @@ void heartbeat_cmd_send_conf()
 #endif
 	
 	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, model_sig_cfg_s.hb_pub.dst_adr,0);
-	LOG_MSG_INFO(TL_LOG_MESH, 0, 0,"send heartbeat ",0);
+	LOG_MSG_INFO(TL_LOG_MESH, 0, 0,"send heartbeat ");
 	return ;
 }
 

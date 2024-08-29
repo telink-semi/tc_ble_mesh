@@ -41,7 +41,7 @@ extern "C" {
 #define NLCP_TYPE_OCS 				2 // OCSNLCP: Occupancy Sensor Network Lighting Profile
 #define NLCP_TYPE_ENM				3 // ENMNLCP: Energy Monitor Network Lighting Profile
 
-#define NLC_SENSOR_TYPE_SEL			NLCP_TYPE_ALS
+#define NLC_SENSOR_TYPE_SEL			NLCP_TYPE_OCS
 // ------------------------- NLC config --------------
 #define NLC_PROFILE_EN				1
 #if NLC_PROFILE_EN
@@ -63,14 +63,14 @@ extern "C" {
 
 #define LIGHT_TYPE_HSL_EN           0
 
-#if ((LIGHT_TYPE_CT_EN) || (LIGHT_TYPE_HSL_EN))
+#if ((LIGHT_TYPE_SEL == LIGHT_TYPE_DIM) || (LIGHT_TYPE_CT_EN) || (LIGHT_TYPE_HSL_EN))
 #define MD_LIGHT_CONTROL_EN			0
 #else
 #define MD_LIGHT_CONTROL_EN			0	// must 0
 #endif
 
 #define MD_LIGHTNESS_EN             0
-#define MD_LEVEL_EN                 1   // must 1
+#define MD_LEVEL_EN                 0
 
 #define CMD_LINEAR_EN               1
 
@@ -104,7 +104,7 @@ extern "C" {
 #define DISTRIBUTOR_START_TLK_EN        1   // only used in internal to be compatible with old version INI. 
 #endif
 
-#define MD_ONOFF_EN                 1   // must 1
+#define MD_ONOFF_EN                 1
 #define MD_PRIVACY_BEA				0
 #define PRIVATE_PROXY_FUN_EN		0
 
@@ -123,12 +123,14 @@ extern "C" {
 #define MD_SBR_CFG_SERVER_EN		0   // subnet bridge server model.
 #define MD_SBR_CFG_CLIENT_EN		0
 #define MD_SAR_EN					0
-#define MD_ON_DEMAND_PROXY_EN		0
+#define MD_ON_DEMAND_PROXY_EN		(0 && PRIVATE_PROXY_FUN_EN)
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 #define	MD_OP_AGG_EN				0
 #define MD_LARGE_CPS_EN				0
-#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
-#define MD_SERVER_EN                1   // SIG and vendor models
-#define MD_CLIENT_EN                0   // just SIG models
+#define MD_CMR_EN					(0 && FEATURE_RELAY_EN)  // controlled mesh relay models
+
+#define MD_SERVER_EN                1   // SIG and vendor models, and exclude sensor model.
+#define MD_CLIENT_EN                0   // just SIG models, and exclude sensor model.
 #define MD_CLIENT_VENDOR_EN         0
 #define MD_VENDOR_2ND_EN            0
 #define MD_SENSOR_SERVER_EN			1	// MD_SERVER_EN

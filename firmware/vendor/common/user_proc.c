@@ -32,7 +32,9 @@
 #include "proj_lib/mesh_crypto/aes_att.h"
 #include "proj_lib/mesh_crypto/mesh_md5.h"
 #include "vendor/common/certify_base/certify_base_crypto.h"
-
+#if PAIR_PROVISION_ENABLE
+#include "pair_provision.h"
+#endif
 
 #if(AIS_ENABLE)
 extern const u16 du_pri_service_uuid_16 ;
@@ -163,13 +165,16 @@ void user_power_on_proc()
 {
     #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE)&&!MI_API_ENABLE)
     foreach(i,LIGHT_CNT){
-        u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
+        __UNUSED u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
+        adr_src = adr_src; // will be optimized, just for compile warning.
 		mesh_key.netkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
 		mesh_key.appkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
         #if MD_LIGHTNESS_EN
         mesh_tx_cmd_lightness_st(i, adr_src, 0xffff, LIGHTNESS_STATUS, 0, 0);
         #elif MD_LEVEL_EN
         mesh_tx_cmd_g_level_st(i, adr_src, 0xffff, 0, 0); // not support lightness as default
+        #elif MD_SENSOR_EN
+        // tx nothing
         #elif MD_ONOFF_EN
         mesh_tx_cmd_g_onoff_st(i, adr_src, 0xffff, 0, 0, G_ONOFF_STATUS);   // will send every onoff status
         #endif
@@ -344,7 +349,10 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
 	uuid_create_md5_from_name((uuid_mesh_t *)uuid, NameSpace_DNS, name_string, 15);
 
     //special proc to set the mac address into the uuid part 
-    #if (!WIN32 && MD_REMOTE_PROV)
+    #if PAIR_PROVISION_ENABLE
+    char head_flag[] = PAIR_PROV_UUID_FLAG;
+    memcpy(uuid,head_flag, sizeof(head_flag));
+    #elif (!WIN32 && MD_REMOTE_PROV)
 	uuid_mesh_t * p_uuid = (uuid_mesh_t * )uuid;
     memcpy(p_uuid->node,mac,6);	// just for showing mac on UI of VC remote scanning.
     #endif

@@ -45,24 +45,28 @@ rf_pa_callback_t  blc_rf_pa_cb = NULL;
 #if(PA_ENABLE && USE_SOFTWARE_PA)
 _attribute_ram_code_ void app_rf_pa_handler(int type)
 {
+	u32 r = irq_disable();	// add irq disable should be better due to called in both main loop and irq.
+	
 	if(type == PA_TYPE_TX_ON){
-	    gpio_set_output_en(PA_RXEN_PIN, 1);
+	    //gpio_set_output_en(PA_RXEN_PIN, 1); // not necessary
 	    gpio_write(PA_RXEN_PIN, 0);
-	    gpio_set_output_en(PA_TXEN_PIN, 1);
+	    //gpio_set_output_en(PA_TXEN_PIN, 1); // not necessary
 	    gpio_write(PA_TXEN_PIN, 1);
 	}
 	else if(type == PA_TYPE_RX_ON){
-	    gpio_set_output_en(PA_TXEN_PIN, 1);
+	    //gpio_set_output_en(PA_TXEN_PIN, 1); // not necessary
 	    gpio_write(PA_TXEN_PIN, 0);
-	    gpio_set_output_en(PA_RXEN_PIN, 1);
+	    //gpio_set_output_en(PA_RXEN_PIN, 1); // not necessary
 	    gpio_write(PA_RXEN_PIN, 1);
 	}
 	else{
-	    gpio_set_output_en(PA_RXEN_PIN, 1);
+	    //gpio_set_output_en(PA_RXEN_PIN, 1); // not necessary
 	    gpio_write(PA_RXEN_PIN, 0);
-	    gpio_set_output_en(PA_TXEN_PIN, 1);
+	    //gpio_set_output_en(PA_TXEN_PIN, 1); // not necessary
 	    gpio_write(PA_TXEN_PIN, 0);
 	}
+
+	irq_restore(r);
 }
 #endif
 

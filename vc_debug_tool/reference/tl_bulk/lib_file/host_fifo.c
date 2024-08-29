@@ -58,14 +58,14 @@ void mesh_rc_monitor_cb(u8 *p_payload)
 	
 	if(p_bear->lt_unseg.seg){
 		len_log -= SZMIC_NW32;
-		LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:Segment pkt: \r\n",0);
+		LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:Segment pkt: \r\n");
 	}else{
 		if(p_bear->nw.ctl){
 			len_log -= SZMIC_NW64;
-			LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:Control pkt: \r\n",0);
+			LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:Control pkt: \r\n");
 		}else{
 			len_log -= (SZMIC_TRNS_UNSEG + SZMIC_NW32);
-			LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:unSegment pkt: \r\n",0);
+			LOG_MSG_INFO(TL_LOG_MESH,p_payload,len_log,"mesh_rc_monitor_cb:unSegment pkt: \r\n");
 		}
 	}
 }
@@ -85,7 +85,7 @@ void write_dongle_cmd_fifo_poll()
 		if(fifo){
 			#if VC_APP_ENABLE 
 			WriteFile_host_handle(fifo->data,fifo->len);
-			LOG_MSG_INFO(TL_LOG_MESH,fifo->data,(u8)fifo->len,"write_dongle_cmd_fifo_poll: ble cmd to dongle:\r\n",0);
+			LOG_MSG_INFO(TL_LOG_MESH,fifo->data,(u8)fifo->len,"write_dongle_cmd_fifo_poll: ble cmd to dongle:\r\n");
 			#else
 			// should not happen for IOS / ANDROID
 			#endif 
@@ -140,7 +140,7 @@ void write_cmd_fifo_poll()	// VC send RF command to mesh dongle
 			if(MESH_ADV_TYPE_BEACON == p_br_send->type){
 				prov_write_data_trans(&p_br_send->len, len_br, MSG_MESH_BEACON);
 			}else{
-				LOG_MSG_INFO(TL_LOG_MESH,0, 0,"write_cmd_fifo_poll:push the cmd into the ble fifo ",0);					
+				LOG_MSG_INFO(TL_LOG_MESH,0, 0,"write_cmd_fifo_poll:push the cmd into the ble fifo ");					
 				prov_write_data_trans((u8 *)&p_br_send->nw, len_nw, MSG_NETWORK_PDU);
 			}
 			//log_len = len_nw;	// not output log now
@@ -222,9 +222,9 @@ _attribute_no_inline_ void hci_tx_fifo_poll()	// VC receive ADV or other pkt fro
 			extern unsigned char connect_flag_debug_mesh;
 			connect_flag_debug_mesh = fifo->data[1];
 			if(connect_flag_debug_mesh){
-				LOG_MSG_INFO(TL_LOG_MESH,0,0,"hci_tx_fifo_poll:BLE connected",0);
+				LOG_MSG_INFO(TL_LOG_MESH,0,0,"hci_tx_fifo_poll:BLE connected");
 			}else{
-				LOG_MSG_INFO(TL_LOG_MESH,0,0,"hci_tx_fifo_poll:BLE disconnected",0);
+				LOG_MSG_INFO(TL_LOG_MESH,0,0,"hci_tx_fifo_poll:BLE disconnected");
 			}
 		}
 		else if(MESH_ADV_ONE_PKT_COMPLETED == report_type){
@@ -250,7 +250,7 @@ int IsSendOpBusy(int reliable, u16 adr_dst)
 	        && (!fw_distribut_srv_proc.st_distr) // need to send other control command while OTA.
 	        #endif
 	    )|| is_busy_tx_seg(adr_dst)){
-	    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "tx cmd busy!........................",0);
+	    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "tx cmd busy!........................");
 		return 1;
 	}
 	return 0;
@@ -282,14 +282,14 @@ int SendOpByINI(u8 *ini_buf, u32 len)
     if(ble_module_id_is_gateway()){
         ini_buf[0] =  HCI_CMD_GATEWAY_CMD & 0xFF;
         ini_buf[1] = (HCI_CMD_GATEWAY_CMD >> 8) & 0xFF;
-		LOG_MSG_INFO (TL_LOG_COMMON, ini_buf, len, "VC send to gateway is", 0);
+		LOG_MSG_INFO (TL_LOG_COMMON, ini_buf, len, "VC send to gateway is");
         WriteFile_host_handle(ini_buf ,len);
     }else{
         extern void SendOpPara_vc(u8 *cmd, int len);
         SendOpPara_vc(ini_buf, len);
     }
 #else
-    LOG_MSG_DBG (TL_LOG_COMMON, ini_buf, len, " -- Tx cmd use INI format -- : \r\n",0);
+    LOG_MSG_DBG (TL_LOG_COMMON, ini_buf, len, " -- Tx cmd use INI format -- : \r\n");
     int err2 = my_fifo_push(&hci_rx_fifo, ini_buf, len, 0, 0);
     if(err2){
         err = TX_ERRNO_TX_FIFO_FULL;
@@ -314,7 +314,7 @@ int SendOpParaDebug_VC(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len)
 	cmd->op = op & 0xff;
     if(OP_TYPE_SIG2 == GET_OP_TYPE(op)){
         if(len + 2 > MESH_CMD_ACCESS_LEN_MAX){
-            LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "length error!........................",0);
+            LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "length error!........................");
             return TX_ERRNO_PAR_LEN_OVER_FLOW;
         }
         cmd->par[0] = op >> 8;
@@ -322,7 +322,7 @@ int SendOpParaDebug_VC(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len)
 	    len += 1;
 	}else{
         if(len + 1 > MESH_CMD_ACCESS_LEN_MAX){
-            LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "length error!........................",0);
+            LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "length error!........................");
             return TX_ERRNO_PAR_LEN_OVER_FLOW;
         }
 	    memcpy(cmd->par, par, len);

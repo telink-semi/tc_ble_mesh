@@ -22,11 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h" 
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
@@ -303,6 +299,10 @@ int mesh_time_set(time_status_t *p_set)
 
 u32 get_local_TAI()
 {
+	if((0 == g_TAI_sec)){ //  && (get_time_zone_offset_min(mesh_time.time.zone_offset) < 0)
+		return 0; // invalid time, if offset with time zone, it will be a 2136/02/06.
+	}
+
     return (g_TAI_sec + get_time_zone_offset_min(mesh_time.time.zone_offset)*60);
 }
 

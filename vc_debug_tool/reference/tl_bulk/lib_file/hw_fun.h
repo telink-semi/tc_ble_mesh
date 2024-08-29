@@ -47,9 +47,9 @@ extern unsigned int  clock_time_exceed(unsigned int ref, unsigned int span_us);
 extern void sleep_us (unsigned int us);
 void sleep_ms(unsigned int ms);
 
-extern void flash_write_page(unsigned int addr, unsigned int len, unsigned char *buf);
-extern void flash_read_page(unsigned int addr, unsigned int len, unsigned char *buf);
-extern void flash_erase_sector(unsigned int addr);
+void flash_write_page(unsigned long addr, unsigned long len, unsigned char* buf);
+void flash_read_page(unsigned long addr, unsigned long len, unsigned char* buf);
+void flash_erase_sector(unsigned long addr);
 void flash_erase_sector_VC(u32 addr, u32 size);
 extern void flash_erase_512K();
 

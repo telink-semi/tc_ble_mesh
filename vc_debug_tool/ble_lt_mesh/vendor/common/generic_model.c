@@ -23,10 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "app_health.h"
@@ -50,6 +46,9 @@
 #include "subnet_bridge.h"
 #include "op_agg_model.h"
 #include "solicitation_rpl_cfg_model.h"
+#if MD_CMR_EN
+#include "controlled_mesh_relay.h"
+#endif
 /** @addtogroup Mesh_Common
   * @{
   */
@@ -62,7 +61,7 @@
 
 #if MESH_RX_TEST
 mesh_rcv_t mesh_rcv_cmd;
-mesh_rcv_t mesh_rcv_ack;
+//mesh_rcv_t mesh_rcv_ack;
 u16 mesh_rsp_rec_addr;
 #endif
 
@@ -126,11 +125,6 @@ void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
 	rsp->present_onoff = get_onoff_from_level(level_st.present_level);
 	rsp->target_onoff = get_onoff_from_level(level_st.target_level);
 	rsp->remain_t = level_st.remain_t;
-#if MESH_RX_TEST
-	for(int i=0;i<sizeof(rsp->data);i++) {
-		rsp->data[i] = i;
-	}
-#endif
 }
 
 #if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
@@ -161,13 +155,6 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	if(0 == rsp.remain_t){
 		len -= 2;
 	}
-#if MESH_RX_TEST
-	u8 par[8];
-	memcpy(par, &rsp, sizeof(mesh_cmd_g_onoff_st_t));
-	memcpy(par+3, &mesh_rcv_cmd.send_tick, 4);
-	par[7] = mesh_rcv_cmd.send_index;
-	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, mesh_rcv_cmd.ack_par_len, ele_adr, dst_adr, uuid, pub_md);
-#endif
 
 #if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
 	u8 rsp_data[sizeof(rsp)+210] = {0};
@@ -203,7 +190,7 @@ int mesh_g_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
 
 /**
  * @brief  Publish Generic OnOff Status.
- * @param  idx: index of Light Count.
+ * @param  idx: model index.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
@@ -217,6 +204,15 @@ int mesh_g_onoff_st_publish(u8 idx)
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
 	
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	int lc_model_element_flag = is_lc_model_from_onoff_md_idx(idx);
+	if(lc_model_element_flag){
+		u8 light_idx = get_light_idx_from_onoff_md_idx(idx);
+		int mesh_tx_cmd_lc_onoff_st(u8 light_idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp);
+		return mesh_tx_cmd_lc_onoff_st(light_idx, ele_adr, pub_adr, uuid, p_com_md, G_ONOFF_STATUS);
+	}
+#endif
+
     return mesh_tx_cmd_g_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md, G_ONOFF_STATUS);
 }
 
@@ -231,9 +227,21 @@ int mesh_g_onoff_st_publish(u8 idx)
  */
 int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	#if DEBUG_CFG_CMD_GROUP_AK_EN
+#if DEBUG_CFG_CMD_GROUP_AK_EN
 	memset(&nw_notify_record, 0x00, sizeof(nw_notify_record));
-	#endif
+#endif
+
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	int lc_model_element_flag = is_lc_model_from_onoff_md_idx(cb_par->model_idx);
+	if(lc_model_element_flag){
+		if(is_fixed_group(cb_par->adr_dst)){
+			return 0; // LC model not response to message with ADR_ALL_NODES now.
+		}else{
+			return mesh_cmd_sig_lc_onoff_get(par, par_len, cb_par);
+		}
+	}
+#endif
+
     return mesh_g_onoff_st_rsp(cb_par);
 }
 
@@ -275,7 +283,7 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
         if(!err){
 		    set_on_power_up_onoff(idx, st_trans_type, p_set->onoff);
 		    #if 0 // PTS_TEST_MMDL_SR_LLC_BV_08_C
-			model_sig_light_lc.lc_onoff_target[idx] = p_set->onoff; // need to place another generic onoff model at the third element which only include LC models.
+			light_res_sw_save[idx].lc_onoff_target = p_set->onoff; // need to place another generic onoff model at the third element which only include LC models.
 		    #endif
 		}
 	}
@@ -301,23 +309,31 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 
     mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
-#if MESH_RX_TEST
-	mesh_rcv_cmd.ack_par_len = 9;
-	if(par_len>sizeof(mesh_cmd_g_onoff_set_t)){
-		memcpy(&mesh_rcv_cmd.send_tick, par+4, 4);
-		mesh_rcv_cmd.send_index= par[8];
-		mesh_rcv_cmd.rcv_cnt++;
-		mesh_rcv_cmd.ack_par_len = par[3];
-		mesh_rcv_cmd.rcv_time[par[8]%TEST_CNT] = (clock_time() - mesh_rcv_cmd.send_tick)/32/1000;
-	}
-#endif
 
-#if 0 // we will not have more than one onoff model in a light(LIGHT_CNT), so inactive these code.
-	#if (ELE_CNT_EVERY_LIGHT > 1)) //
-	if(0 == is_multiply_ele_action_needed(cb_par)){
-		return 0;
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	int lc_model_element_flag = is_lc_model_from_onoff_md_idx(cb_par->model_idx);
+	if(lc_model_element_flag){
+		int flag_group_and_lc_onoff_sub_only = 0;
+		if(!is_unicast_adr(cb_par->adr_dst) && !is_fixed_group(cb_par->adr_dst)){
+			flag_group_and_lc_onoff_sub_only = 1;
+			model_g_light_s_t * p_model_lightness_onoff = (model_g_light_s_t *)(cb_par->model - sizeof(model_sig_g_onoff_level.onoff_srv[0]));
+			if(is_group_adr(cb_par->adr_dst)){
+				flag_group_and_lc_onoff_sub_only = !is_existed_sub_addr_and_not_virtual(&p_model_lightness_onoff->com, cb_par->adr_dst);
+			}
+		}
+		
+		if(is_unicast_adr(cb_par->adr_dst) || flag_group_and_lc_onoff_sub_only){ //  || !is_fixed_group(cb_par->adr_dst)
+			return mesh_cmd_sig_lc_onoff_set(par, par_len, cb_par);
+		}else{
+		 	// because lc model extend onoff and lightness, and app usually subscript a same group address for both lightness and lc model.
+		 	// so can not use group address as destination now. TODO.
+		 	if(is_group_adr(cb_par->adr_dst)){
+		 		LOG_LIGHT_LC_DEBUG(0, 0, "LC no action for group address when lightness onoff has action: 0x%04x", cb_par->adr_dst);
+		 	}
+		 	
+			return 0;
+		}
 	}
-	#endif
 #endif
 
 #if LPN_CONTROL_EN // just for test 
@@ -381,30 +397,15 @@ int mesh_tx_cmd_g_level_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 		return 0;
 	}
 	mesh_rcv_t *p_result;
-	if(BLS_LINK_STATE_CONN == blt_state){
+
+	if(is_app_addr(dst_adr) || (ele_adr == dst_adr)){ // gatt connecting node or gateway self.
 		p_result = &mesh_rcv_ack;
 	}
 	else{
 		p_result = &mesh_rcv_cmd;
 	}
-	len = OFFSETOF(mesh_rcv_t,max_time);
-#if MESH_DELAY_TEST_EN
-	u32 total_time = 0;
-	len = sizeof(mesh_rcv_t);
-	p_result->max_time= p_result->min_time = total_time = p_result->rcv_time[0];
-	u8 valid_cnt = (p_result->rcv_cnt>TEST_CNT)? TEST_CNT:p_result->rcv_cnt;
-	for(u8 i=1; i<valid_cnt; i++){
-		if(p_result->rcv_time[i] > p_result->max_time){
-			p_result->max_time= p_result->rcv_time[i];
-		}
-		if(p_result->rcv_time[i] < p_result->min_time){
-			p_result->min_time= p_result->rcv_time[i];
-		}
-		total_time += p_result->rcv_time[i];
-	}
-	p_result->avr_time = total_time/valid_cnt;
-#endif
-	return mesh_tx_cmd_rsp(G_LEVEL_STATUS, (u8 *)p_result, len, ele_adr, dst_adr, uuid, pub_md);
+
+	return mesh_tx_cmd_rsp(G_LEVEL_STATUS, (u8 *)p_result,  OFFSETOF(mesh_rcv_t, ack_par_len), ele_adr, dst_adr, uuid, pub_md);
 #endif
     return mesh_tx_cmd_rsp(G_LEVEL_STATUS, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
@@ -468,7 +469,9 @@ int mesh_cmd_sig_g_level_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 #if MESH_RX_TEST
 	memset(&mesh_rcv_cmd, 0x00, sizeof(mesh_rcv_cmd));
-	memset(&mesh_rcv_ack, 0x00, sizeof(mesh_rcv_ack));
+//	memset(&mesh_rcv_ack, 0x00, sizeof(mesh_rcv_ack));
+	mesh_rcv_cmd.min_time = U16_MAX;
+//	mesh_rcv_ack.min_time = U16_MAX;
 #endif
     int err = 0;
     int light_idx = get_light_idx_from_level_md_idx(cb_par->model_idx);
@@ -990,7 +993,7 @@ int mesh_cmd_sig_g_global_local_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 #endif
 #endif
 
-//----generic onoff   // use for MESH_RX_TEST also when was in server model.
+//----generic onoff
 
 /**
  * @brief       This function will be called when receive the opcode of "Generic OnOff Status"
@@ -1006,18 +1009,31 @@ int mesh_cmd_sig_g_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if(cb_par->model){  // model may be Null for status message
         //model_client_common_t *p_model = (model_client_common_t *)(cb_par->model);
     }
-#if MESH_RX_TEST
-	u32 tick;
-	memcpy(&tick, par+3, 4);
-
+#if 0// old MESH_RX_TEST
+	mesh_cmd_g_onoff_st_t *p_onoff_st = (mesh_cmd_g_onoff_st_t *)par;
+	u16 ack_delay = (clock_time() - p_onoff_st->cmd_tick) / sys_tick_per_us / 1000;
+	
+	// calculate response delay time
 	if(mesh_rsp_rec_addr != 0xffff){
 		if(cb_par->adr_src == mesh_rsp_rec_addr){
 			mesh_rcv_ack.rcv_cnt++;
-			mesh_rcv_ack.rcv_time[par[7]%TEST_CNT] = (clock_time() - tick)/32/1000;
+			
+			mesh_rcv_ack.rcv_time[p_onoff_st->cmd_index % RX_TEST_CACHE_CNT] = ack_delay;
+
+			if(ack_delay < mesh_rcv_ack.min_time){
+				mesh_rcv_ack.min_time = ack_delay;	
+			}
+
+			if(ack_delay > mesh_rcv_ack.max_time){
+				mesh_rcv_ack.max_time = ack_delay;
+			}
+
+			mesh_rcv_ack.total_time += ack_delay;
+			mesh_rcv_ack.avr_time = mesh_rcv_ack.total_time / mesh_rcv_ack.rcv_cnt;
 		}
 	}
 	else{
-		mesh_rcv_ack.rcv_time[mesh_rcv_ack.rcv_cnt%TEST_CNT] = (clock_time() - tick)/32/1000;
+		mesh_rcv_ack.rcv_time[mesh_rcv_ack.rcv_cnt % RX_TEST_CACHE_CNT] = ack_delay;
 		mesh_rcv_ack.rcv_cnt++;
 	}
 #endif
@@ -1393,6 +1409,19 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	CMD_NO_STR(SOLI_PDU_RPL_ITEM_CLEAR,0,SIG_MD_SOLI_PDU_RPL_CFG_C,SIG_MD_SOLI_PDU_RPL_CFG_S,mesh_cmd_sig_cfg_soli_rpl_clear,SOLI_PDU_RPL_ITEM_STATUS),
 	CMD_NO_STR(SOLI_PDU_RPL_ITEM_CLEAR_NACK,0,SIG_MD_SOLI_PDU_RPL_CFG_C,SIG_MD_SOLI_PDU_RPL_CFG_S,mesh_cmd_sig_cfg_soli_rpl_clear,STATUS_NONE),
     CMD_NO_STR(SOLI_PDU_RPL_ITEM_STATUS,1,SIG_MD_SOLI_PDU_RPL_CFG_S, SIG_MD_SOLI_PDU_RPL_CFG_C,mesh_cmd_sig_cfg_soli_rpl_status,STATUS_NONE),
+#endif
+#if MD_CMR_EN
+	CMD_NO_STR(CFG_CMR_GET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_get, CFG_CMR_STATUS),
+    CMD_NO_STR(CFG_CMRY_SET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_set, CFG_CMR_STATUS),
+	CMD_NO_STR(SIG_MD_CMR_S, 1, SIG_MD_CMR_S, SIG_MD_CMR_C, mesh_cmd_sig_cfg_cmr_status, STATUS_NONE),	
+	CMD_NO_STR(CMR_STS_INVL_CTRL_GET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_interval_control_get, CMR_STS_INVL_CTRL_STATUS),
+    CMD_NO_STR(CMR_STS_INVL_CTRL_SET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_interval_control_set, CFG_CMR_STATUS),
+	CMD_NO_STR(CMR_STS_INVL_CTRL_STATUS, 1, SIG_MD_CMR_S, SIG_MD_CMR_C, mesh_cmd_sig_cfg_cmr_interval_control_status, STATUS_NONE),
+	CMD_NO_STR(CMR_STS_RSSI_THRES_GET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_rssi_threshold_get, CMR_STS_RSSI_THRES_STATUS),
+	CMD_NO_STR(CMR_STS_RSSI_THRES_SET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_rssi_threshold_set, CMR_STS_RSSI_THRES_STATUS),
+	CMD_NO_STR(CMR_STS_RSSI_THRES_STATUS, 1, SIG_MD_CMR_S, SIG_MD_CMR_C, mesh_cmd_sig_cfg_cmr_rssi_threshold_status, STATUS_NONE),
+	CMD_NO_STR(NB_RELAY_TBL_GET, 0, SIG_MD_CMR_C, SIG_MD_CMR_S, mesh_cmd_sig_cfg_cmr_table_get, NB_RELAY_TBL_LIST),
+	CMD_NO_STR(NB_RELAY_TBL_LIST, 1, SIG_MD_CMR_S, SIG_MD_CMR_C, mesh_cmd_sig_cfg_cmr_table_list, STATUS_NONE),
 #endif
 
 #if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
@@ -2067,7 +2096,7 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     {SIG_MD_FW_UPDATE_C,    GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_update_clnt, 0)},
     {SIG_MD_BLOB_TRANSFER_C, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.blob_trans_clnt, 0)},
     #endif
-    #if MD_SERVER_EN
+    #if 1    // MD_SERVER_EN // switch and gateway also need OTA
     {SIG_MD_FW_UPDATE_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_update_srv, 0)},
     {SIG_MD_BLOB_TRANSFER_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.blob_trans_srv, 0)},
     #endif
@@ -2077,7 +2106,7 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     #if MD_SERVER_EN
     {SIG_MD_REMOTE_PROV_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
-    #if MD_CLIENT_EN
+    #if MD_CFG_CLIENT_EN
     {SIG_MD_REMOTE_PROV_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
@@ -2086,7 +2115,7 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     #if MD_SERVER_EN
     {SIG_MD_PRIVATE_BEACON_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
-    #if MD_CLIENT_EN
+    #if MD_CFG_CLIENT_EN
     {SIG_MD_PRIVATE_BEACON_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
@@ -2260,6 +2289,15 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     #endif
     #if MD_CLIENT_EN
     {SIG_MD_G_PROP_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.clnt, 0)},
+    #endif
+#endif
+
+#if MD_CMR_EN
+    #if MD_SERVER_EN
+		{SIG_MD_CMR_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_cmr, 0)},
+    #endif
+    #if MD_CFG_CLIENT_EN
+		{SIG_MD_CMR_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 };
@@ -2498,10 +2536,10 @@ void mesh_model_cb_pub_st_register()
     }
     
 #if MD_LIGHT_CONTROL_EN
-	#if 0 // PTS_TEST_MMDL_SR_LLC_BV_11_C
+	#if (LIGHT_CONTROL_SAVE_LC_ONOFF_EN || 0) // PTS_TEST_MMDL_SR_LLC_BV_11_C
 	#else
-	foreach_arr(i,model_sig_light_lc.lc_onoff_target){
-        model_sig_light_lc.lc_onoff_target[i] = 0;    // init, not use data in flash. but BV11 Light LC Server Power-Up Behavior need to recover.
+	foreach_arr(i,light_res_sw_save){
+        light_res_sw_save[i].lc_onoff_target = 0;    // init, not use data in flash. but BV11 Light LC Server Power-Up Behavior need to recover.
 	}
 	#endif
 #endif

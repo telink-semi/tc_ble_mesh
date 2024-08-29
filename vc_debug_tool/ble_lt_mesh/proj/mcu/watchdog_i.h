@@ -22,6 +22,8 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#pragma once
+
 #include "proj/mcu/config.h"
 #include "register.h"
 

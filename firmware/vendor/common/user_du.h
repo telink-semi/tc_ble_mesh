@@ -25,7 +25,11 @@
 #ifndef __USER_DU_H
 #define __USER_DU_H
 #include "tl_common.h"
+#if __TLSR_RISCV_EN__
+#include "stack/ble/ble.h"
+#else
 #include "proj_lib/ble/ll/ll.h"
+#endif
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 
@@ -151,8 +155,13 @@ typedef struct{
 }du_ota_str;
 extern du_ota_str *p_ota;
 void test_du_sha256_cal();
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int	du_ctl_Write (u16 conn_handle, void *p);
+int du_fw_proc(u16 conn_handle, void *p);
+#else
 int	du_ctl_Write (void *p);
 int du_fw_proc(void *p);
+#endif
 u8 du_adv_proc(rf_packet_adv_t * p);
 int du_vd_event_set(u8*p_buf,u8 len,u16 dst);
 //int du_vd_temp_event_send(u16 op,u16 val,u16 dst);

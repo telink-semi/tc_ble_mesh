@@ -25,4 +25,5 @@
 #pragma once
 
 #include "tl_common.h"
+void deep_wakeup_proc(void);
 

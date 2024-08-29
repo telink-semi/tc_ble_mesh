@@ -31,6 +31,9 @@
 #include "common/static_assert.h"
 #include "common/assert.h"
 #include "vendor/common/user_config.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/dual_mode_adapt.h"
+#include "vendor/common/flash_prot.h"
 #include "common/compatibility.h"
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "drivers/8258/analog.h"
@@ -63,6 +66,7 @@
 #include "mcu/random.h"
 #endif
 #include "mcu/irq_i.h"
+#include "mcu/watchdog_i.h"
 #include "common/breakpoint.h"
 #include "common/log.h"
 #if !WIN32
@@ -75,8 +79,14 @@
 #include <string.h>
 #else
 #include "common/printf.h"
-#include "common/tstring.h"
+#include "proj/drivers/keyboard.h"
 #endif
+#include "common/tstring.h"
+
+#if (!__TLSR_RISCV_EN__)
+#define	BOOT_MARK_ADDR					0x00008  //Kite/vulture: 0x08
+#endif
+#define	FW_SIZE_ADDR					0x00018
 
 #define DEBUG_STOP()	{reg_tmr_ctrl = 0; reg_gpio_pb_ie = 0xff; while(1);}	// disable watchdog;  DP/DM en
 #define DEBUG_SWS_EN()	{reg_tmr_ctrl = 0; reg_gpio_pb_ie = 0xff;}	// disable watchdog;  DP/DM en

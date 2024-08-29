@@ -70,4 +70,5 @@ public:
 	CString m_csAddrGet;
 	int m_clear_result;
 	afx_msg void OnBnClickedButtonClear();
+	int m_rsp_cnt;
 };

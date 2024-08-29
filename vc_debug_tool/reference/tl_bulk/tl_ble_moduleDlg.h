@@ -96,6 +96,8 @@ public:
 	void 	kma_dongle_init_log();
 	int		LoadIniFile ();
 	void	DoCmd(LPCTSTR cmd, LPSTR cmdline, LPCTSTR curdir, int nownd);
+	void    restart_VC_tool();
+	int     gateway_dongle_reset_proc(LPCTSTR cmd);
 	int		ExecCmd(LPCTSTR cmd, int log_type);
 	void	ExecStrCmd(char * cmd);
 	void	ExecOpPara(unsigned char * p, int n);

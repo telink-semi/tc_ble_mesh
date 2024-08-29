@@ -109,9 +109,17 @@
 #define VD_MESH_PROV_CONFIRM			0xCB
 #define VD_MESH_PROV_CONFIRM_STS		0xCC
 #define VD_MESH_PROV_COMPLETE			0xCD
+	#elif PAIR_PROVISION_ENABLE
+#define VD_PAIR_PROV_RESET_ALL_NODES	0xC5 // kick out all nodes
+#define VD_PAIR_PROV_DISTRIBUTE_DATA	0xC6 // distribute key and address, etc.
+#define VD_PAIR_PROV_CONFIRM			0xC7
     #endif
 
-#define VD_OP_RESERVE_FOR_TELINK_START  0xCE
+	#if AUDIO_MESH_EN
+#define VD_ASYNC_AUDIO_DATA				0xCE
+	#endif
+
+#define VD_OP_RESERVE_FOR_TELINK_START  0xCF
 #define VD_OP_RESERVE_FOR_TELINK_END    0xDF
 
 //------0xE0 ~ 0xFF for customer
@@ -120,6 +128,12 @@
 #define VD_LPN_SENSOR_STATUS            0xE1    // user can use this op code for other function
     #endif
 
+	#if VENDOR_OP_USER_DEMO_EN
+#define VD_MESH_USER_DEMO_SET           0xE0
+#define VD_MESH_USER_DEMO_GET           0xE1
+#define VD_MESH_USER_DEMO_SET_NOACK     0xE2
+#define VD_MESH_USER_DEMO_STATUS        0xE3
+	#endif
 //------ end
 #endif
 
@@ -142,9 +156,15 @@ enum{/*vendor generic group, op code include C1-C4*/
     VD_GROUP_G_OFF                      = 0,    // compatible with legacy version, so use 2 sub op for onoff.
     VD_GROUP_G_ON                       = 1,    // compatible with legacy version, so use 2 sub op for onoff.
     VD_GROUP_G_LPN_GATT_OTA_MODE        = 2,
+	#if 1 // __TLSR_RISCV_EN__
+    VD_GROUP_G_MIC_TX_REQ				= 3,	// for AUDIO_MESH_EN
+	#endif
     VD_G_TELINK_END     = 0x7F,
     /* user use sub op from 0x80 to 0xff*/
     VD_GROUP_G_USER_START               = 0x80,
+    #if VENDOR_SUB_OP_USER_DEMO_EN
+	VD_GROUP_G_SUB_OP_USER_DEMO         = 0x80,
+	#endif
     //VD_G_MAX    = 0x100,
 };
 
@@ -189,6 +209,28 @@ enum{
     SEARCH_VD_GROUP_G_FUNC_TYPE_TX_ST,
     SEARCH_VD_GROUP_G_FUNC_TYPE_RX_STATUS,
 };
+
+#if VENDOR_SUB_OP_USER_DEMO_EN
+typedef struct{
+	u8 sub_op;
+	u8 sno;
+}vd_group_sub_op_demo_user_set_t;
+
+typedef struct{
+	u8 sub_op;
+	u8 sno;
+}vd_group_sub_op_demo_user_st_t;
+#endif
+
+#if VENDOR_OP_USER_DEMO_EN
+typedef struct{
+	u8 sno;
+}vd_user_demo_set_t;
+
+typedef struct{
+	u8 sno;
+}vd_user_demo_st_t;
+#endif
 
 /**
  * @brief  cb_vd_group_g_sub_set
@@ -327,14 +369,16 @@ typedef struct{
     u8 ac_par[ATTR_PAR_MAX_LEN];  
 }mesh_tx_indication_t;
 
+extern mesh_tx_indication_t mesh_indication_retry;
+#endif
+
+#if SPIRIT_PRIVATE_LPN_EN
 typedef struct{
     u32 last_tick;
 	u32 run_time_us;
-	u32 sleep_time_us;
 	u8  appWakeup_flg;
 }mesh_sleep_pre_t;
 
-extern mesh_tx_indication_t mesh_indication_retry;
 extern mesh_sleep_pre_t	mesh_sleep_time;
 
 #endif
@@ -345,6 +389,10 @@ void mesh_tx_indication_proc();
 
 int vd_cmd_key_report(u16 adr_dst, u8 key_code);
 int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack);
+int vd_cmd_tx_sub_op_demo_user_set(u16 adr_dst, u8 rsp_max, u8 sub_op, u8 sno, int ack);
+int vd_cmd_tx_sub_op_demo_user_get(u16 adr_dst, u8 rsp_max, u8 sub_op);
+int vd_cmd_tx_user_demo_set(u16 adr_dst, u8 rsp_max, u8 sno, int ack);
+int vd_cmd_tx_user_demo_get(u16 adr_dst, u8 rsp_max);
 int vd_light_onoff_st_publish(u8 light_idx);
 int access_cmd_attr_indication(u16 op, u16 adr_dst, u16 attr_type, u8 *attr_par, u8 par_len);
 void APP_set_vd_id_mesh_cmd_vd_func(u16 vd_id);

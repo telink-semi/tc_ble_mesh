@@ -27,6 +27,8 @@
 
 #include <stdint.h>
 #include "../user_config.h"
+
+#if CERTIFY_BASE_ENABLE
 #define URI_ENABLE 0
 
 #ifndef NULL
@@ -77,12 +79,63 @@ typedef enum{
 	RECORD_RFU,
 }RECORD_REQ_STS;
 
+
+#define PEM_CERT_S          "-----BEGIN CERTIFICATE-----"
+#define PEM_CERT_E          "-----END CERTIFICATE-----"
+#define PEM_EC_S            "-----BEGIN EC PARAMETERS-----"
+#define PEM_EC_E            "-----END EC PARAMETERS-----"
+#define PEM_PRIVATE_KEY_S 	"-----BEGIN EC PRIVATE KEY-----"
+#define PEM_PRIVATE_KEY_E	"-----END EC PRIVATE KEY-----"
+
+typedef struct{
+	int len;
+	u8  key[0x20];
+}cert_pri_t;
+
+typedef struct{
+	int len;
+	u8  key[0x41];
+	u8  rfu[3];
+}cert_pub_t;
+
+typedef struct{
+	int len;
+	u8 key[20];
+}cert_idkey_t;
+
+typedef struct{
+	int len;
+	u8 key[0x40];
+}cert_sign_t;
+
+typedef struct{
+	int val;
+	cert_pri_t pri;
+	cert_pub_t pub;
+}private_cert_str_t;
+
+
+typedef struct{
+	cert_pub_t pub;
+	cert_idkey_t subj;
+	cert_idkey_t author;
+	cert_sign_t sign;
+}dev_cert_tbs_part_t;
+
+
+typedef struct{
+	u16 id;	
+	u16 len;
+	const  char *p_item;
+}cert_item_t;
+
+
 int  cert_base_func_init();
 void cert_set_uuid(u8 *p_uuid);
 void cert_base_set_key(u8 *pk,u8 *sk);
 void get_cert_id_list(u8 *p_list,u32 *p_len);
 const char * get_cert_content_by_id(u16 id,u32* p_len);
-void cert_id_get(u16 *p_id,u32 *p_cnt);
+u32 cert_id_get(u16 *p_id);
 
 void prov_clear_all_rec();
 void prov_set_rec_id(u16 *p_rec,u8 len);
@@ -96,6 +149,5 @@ void record_mag_set(u16 rec_id,u16 max_size,u16 offset);
 void record_mag_get(u16 *p_rec_id,u16 *p_max_size,u16 *p_offset);
 void record_mag_get_max_size(u16 *p_max_size);
 void cert_base_oob_set();
-
-
+#endif
 #endif

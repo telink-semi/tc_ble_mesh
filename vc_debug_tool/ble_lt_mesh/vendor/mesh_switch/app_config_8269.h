@@ -146,9 +146,6 @@ extern "C" {
 #define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000  //ms
 
-
-#define	REGA_TID			0x34
-
 #define	KB_MAP_NORMAL	{\
 		{RC_KEY_1_OFF,		RC_KEY_2_OFF,	  	RC_KEY_1_ON}, \
 		{RC_KEY_3_ON,		RC_KEY_3_OFF,		RC_KEY_2_ON}, \

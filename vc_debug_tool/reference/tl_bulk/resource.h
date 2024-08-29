@@ -167,6 +167,7 @@
 #define IDC_PUB_ADDR7                   1083
 #define IDC_PROXY_VAL                   1083
 #define IDC_COMM_COMBO                  1083
+#define IDC_RSP_CNT                     1083
 #define IDC_GET_PUB8                    1084
 #define IDC_GET_LEVEL                   1084
 #define IDC_BUTTON4                     1084

@@ -473,6 +473,24 @@ extern st_ll_ext_t  bltExtPara;
 
 
 /********************* Macro & Enumeration variables for Stack, user can not use!!!!  **********************/
+//Extended Header BIT
+#define 		EXTHD_BIT_ADVA         							BIT(0)
+#define 		EXTHD_BIT_TARGETA      							BIT(1)
+#define			EXTHD_BIT_CTE_INFO         						BIT(2)
+#define 		EXTHD_BIT_ADI		    						BIT(3)
+#define 		EXTHD_BIT_AUX_PTR      							BIT(4)
+#define 		EXTHD_BIT_SYNC_INFO	    						BIT(5)
+#define 		EXTHD_BIT_TX_POWER	     						BIT(6)
+
+//Extended Header Length
+#define			EXTHD_LEN_6_ADVA								6
+#define			EXTHD_LEN_6_TARGETA								6
+#define			EXTHD_LEN_1_CTE									1
+#define			EXTHD_LEN_2_ADI									2
+#define			EXTHD_LEN_3_AUX_PTR								3
+#define			EXTHD_LEN_18_SYNC_INFO							18
+#define			EXTHD_LEN_1_TX_POWER							1
+
 #define BLE_LL_EXT_ADV_ADVA_BIT         						BIT(0)
 #define BLE_LL_EXT_ADV_TARGETA_BIT      						BIT(1)
 #define BLE_LL_EXT_ADV_RFU_BIT          						BIT(2)

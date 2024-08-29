@@ -140,7 +140,7 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 
     irq_enable();
 	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-	LOG_USER_MSG_INFO(0, 0,"[mesh] Start from SIG Mesh", 0);
+	LOG_USER_MSG_INFO(0, 0,"[mesh] Start from SIG Mesh");
 	#endif
 
 	while (1) {

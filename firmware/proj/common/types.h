@@ -50,6 +50,11 @@ typedef unsigned short          uint16_t;
 typedef unsigned long           uint32_t;
 #endif
 
+typedef unsigned char		 	uint08;
+typedef unsigned short		 	uint16;
+typedef unsigned int		 	uint32;
+typedef unsigned long long	 	uint64;
+
 #ifndef NULL
 #define NULL 	0
 #endif

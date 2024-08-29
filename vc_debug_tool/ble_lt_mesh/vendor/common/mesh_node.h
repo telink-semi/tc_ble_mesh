@@ -211,6 +211,8 @@ enum{
 #define SIG_MD_LARGE_CPS_C				0x0013
 #define SIG_MD_SOLI_PDU_RPL_CFG_S		0x0014
 #define SIG_MD_SOLI_PDU_RPL_CFG_C		0x0015
+#define SIG_MD_CMR_S					0x0016 // CMR draft
+#define SIG_MD_CMR_C					0x0017 // CMR draft
 
 
 #define SIG_MD_G_ONOFF_S                0x1000
@@ -281,16 +283,76 @@ enum{
 //--------------------------------------- config model
 #define NO_TX_RSP2SELF_EN               (!MD_CLIENT_EN)   // to save 
 
-#if(0 == TESTCASE_FLAG_ENABLE)
-	#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
-#define SUB_LIST_MAX                    (2)
-	#else
-#define SUB_LIST_MAX                    (8) 
-	#endif
-#else	
-#define SUB_LIST_MAX                    (8)
+#if __TLSR_RISCV_EN__
+#define VIRTUAL_ADDR_STAND_ALONE_SIZE_EN	1
+#else
+#define VIRTUAL_ADDR_STAND_ALONE_SIZE_EN	0	// for kite to be compatible
+// TODO later: if want to change from legacy mode to virtual address stand alone size mode, need to translate data from old format to new one.
 #endif
+
+#if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
+	#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
+#define	SUB_LIST_SAVE_BUFF_SIZE		(2*18)	// be equal to kite sdk
+#define SUB_LIST_MAX				8		// not include virtual address
+#define VIRTUAL_ADDR_ENABLE			0
+#define SUB_LIST_SAVE_RSV_SIZE		(12)
+	#elif (/*__TLSR_RISCV_EN__ && */(FEATURE_LOWPOWER_EN || __PROJECT_MESH_SWITCH__))
+#define	SUB_LIST_SAVE_BUFF_SIZE		(44)	// be less to save RAM
+#define SUB_LIST_MAX				8		// not include virtual address
+#define VIRTUAL_ADDR_ENABLE			0
+#define SUB_LIST_SAVE_RSV_SIZE		(20)
+	#else
+#define	SUB_LIST_SAVE_BUFF_SIZE		(8*18)	// be equal to kite sdk
+#define SUB_LIST_MAX				32		// not include virtual address
+#define VIRTUAL_ADDR_ENABLE			1
+#define VIRTUAL_ADDR_CNT_MAX		2		// be less to save RAM
+#define SUB_LIST_SAVE_RSV_SIZE		(36)
+	#endif
+
+#if VIRTUAL_ADDR_ENABLE
+typedef struct{
+	u16 addr;
+	u8 uuid[16];
+}virtual_addr_t;
+#endif
+
+#define MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE	(0x7f00) // use an unvalid group id to be compatible with legacy mode.
+
+typedef struct{
+	u16 mode; // legacy mode or virtual address stand alone mode.
+	u8 rsv1[6];
+	u16 sub_addr[SUB_LIST_MAX];
+	#if SUB_LIST_SAVE_RSV_SIZE
+	u8 rsv[SUB_LIST_SAVE_RSV_SIZE];	// reserve for virtual address or subscription address.
+	#endif
+	#if VIRTUAL_ADDR_ENABLE
+	virtual_addr_t vir_addr[VIRTUAL_ADDR_CNT_MAX];
+	#endif
+}sub_list_save_buf_t;
+
+STATIC_ASSERT(sizeof(sub_list_save_buf_t) == SUB_LIST_SAVE_BUFF_SIZE);
+#else
+	#if(0 == TESTCASE_FLAG_ENABLE)
+		#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
+#define SUB_LIST_MAX                    (2)
+        #elif (__PROJECT_MESH_SWITCH__)
+            #if BLE_MULTIPLE_CONNECTION_ENABLE  // if user want is developing a new product, it can also be enable for 825x switch project to save 2k RAM.
+#define SUB_LIST_MAX                    (2)     // to reduce retention RAM usage
+#define VIRTUAL_ADDR_ENABLE				(0)     // disable virtual address to save ram about 2k byte for demo SDK switch project
+            #else
+#define SUB_LIST_MAX                    (8)     // keep 8 for compatibility
+            #endif
+		#else
+#define SUB_LIST_MAX                    (8) 
+		#endif
+	#else	
+#define SUB_LIST_MAX                    (8)
+	#endif
+
+	#ifndef VIRTUAL_ADDR_ENABLE
 #define VIRTUAL_ADDR_ENABLE				(SUB_LIST_MAX<=8)// disable virtual address to save ram
+    #endif
+#endif
 #define FIX_SIZE(sig_model)             (sig_model?2:0)
 
 // net key
@@ -644,9 +706,6 @@ typedef struct{
 	u8 present_onoff;
 	u8 target_onoff;
 	u8 remain_t;
-#if MESH_RX_TEST
-	u8 data[20];
-#endif
 }mesh_cmd_g_onoff_st_t;
 
 typedef struct{
@@ -737,11 +796,13 @@ typedef struct{
 #ifndef LIGHT_CNT
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
 	#if __PROJECT_MESH_SWITCH__
-		#if UI_BUTTON_MODE_ENABLE
+		#if KB_LINE_MODE
 #define LIGHT_CNT                       (1)     // means instance count
 		#else
 #define LIGHT_CNT						(4) 	// means instance count
 		#endif
+	#elif (__PROJECT_SPIRIT_LPN__)
+#define LIGHT_CNT                       (1)
 	#else
 #define LIGHT_CNT                       (3)     // means instance count
 	#endif
@@ -914,7 +975,7 @@ typedef struct{
     u8 tx[ELE_CNT];
 }mesh_tid_t;
 
-#if (WIN32 || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2)) // (TLV_ENABLE) // can not change BIND_KEY_MAX, due to "model_common_t *" in library.
+#if (WIN32 || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2) || __TLSR_RISCV_EN__) // (TLV_ENABLE) // can not change BIND_KEY_MAX, due to "model_common_t *" in library.
 #define BIND_KEY_MAX		(APP_KEY_MAX * NET_KEY_MAX)
 #else
 #define BIND_KEY_MAX		(APP_KEY_MAX)   // confirm later, because of compatibility of flash save
@@ -934,6 +995,7 @@ typedef struct{
     u8 no_sub   :1; // means not support subscription function; must before pub and sub par
     u8 pub_trans_flag :1; // transition process was ongoing flag.
     u8 pub_2nd_state  :1; // eg: lightness and lightness linear.
+    u8 rsv_bit  :4; // reserved for future
     u8 rsv2;
     bind_key_t bind_key[BIND_KEY_MAX];
 	u8 pub_uuid[16];
@@ -942,9 +1004,13 @@ typedef struct{
 	u16 pub_adr;    // pub_adr and pub_par must existed if sub_list existed //  offset:32
 	mesh_model_pub_par_t pub_par;
 	u8 directed_pub_policy;
+#if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
+	sub_list_save_buf_t sub_buf;
+#else
 	u16 sub_list[SUB_LIST_MAX];     // pub_adr, pub_par, sub_list must follow com if existed
-#if VIRTUAL_ADDR_ENABLE
+	#if VIRTUAL_ADDR_ENABLE
 	u8 sub_uuid[SUB_LIST_MAX][16];
+	#endif
 #endif
 }model_common_t;
 
@@ -1046,13 +1112,19 @@ typedef struct{
 #if MD_CLIENT_VENDOR_EN
 	model_client_common_t clnt[1];		        // client // if want to change clnt[1] to clnt[LIGHT_CNT], need to add ARRAY_SIZE(md_id_vendor_second) to CPS_DATA_ELE_SECOND.
 #endif
+#if VENDOR_SUB_OP_USER_DEMO_EN
+	u8 sno_sub_op_user_demo;
+#endif
+#if VENDOR_OP_USER_DEMO_EN
+	u8 sno_vd_user_demo;
+#endif
 }model_vd_light_t;
 
 typedef struct{
 #if MD_SERVER_EN
-	model_g_light_s_t onoff_srv[LIGHT_CNT];			// server
+	model_g_light_s_t onoff_srv[LIGHT_CNT * (1 + (0 != LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN))];	// server
     #if MD_LEVEL_EN
-	model_g_light_s_t level_srv[LIGHT_CNT * ELE_CNT_EVERY_LIGHT];   // server, same with ELE CNT, the sequence refer to ST_TRANS_LIGHTNESS -- ST_TRANS_MAX 
+	model_g_light_s_t level_srv[LIGHT_CNT * LEVEL_STATE_CNT_EVERY_LIGHT];   // server, same with ELE CNT, the sequence refer to ST_TRANS_LIGHTNESS -- ST_TRANS_MAX 
     #endif
 #endif
 #if MD_CLIENT_EN
@@ -1182,7 +1254,7 @@ typedef struct{
 #define LEN_LC_PROP_REGULATOR       (4+2)
 #define LEN_LC_PROP_ACCURACY        (1+2)
 
-#define LEN_LC_PROP_MAX		(sizeof(lc_prop_head_t)-OFFSETOF(lc_prop_head_t,id))
+#define LEN_LC_PROP_MAX		(sizeof(lc_prop_head_t)-OFFSETOF(lc_prop_head_t,id)) // include sizeof(len) and sizeof(value)
 
 typedef struct{
 	lc_prop_luxlevel_t LuxLevelOn;       // confirm 2 or 3 byte later
@@ -1217,7 +1289,7 @@ typedef struct{
 	light_lc_property_t propty[LIGHT_CNT];
 	u8 mode[LIGHT_CNT];
 	u8 om[LIGHT_CNT]; // Occupancy Mode
-	u8 lc_onoff_target[LIGHT_CNT];
+	u8 rsv0[LIGHT_CNT]; // lc_onoff_target when <= V4.1.0.0
 	u8 rsv[LIGHT_CNT][4];
 #endif
 }model_light_lc_t;
@@ -1413,8 +1485,10 @@ typedef struct{
     u8 bk[16];		// beacon key
     u8 prik[16];    // privacy beacon key 
 	u8 ident_hash[8];// identity hash 
-	u8 priv_net_hash[8];
-	u8 priv_ident_hash[8];
+#if 1//MD_PRIVACY_BEA
+	u8 priv_net_hash[8];	// private network ID hash
+	u8 priv_ident_hash[8];	// private node identity hash
+#endif
     u8 nw_id[8];    // network_id,    store in big endianness
     u8 nid_m;		// master: map to encryption key
     u8 nid_d;		// directed: map to encryption key
@@ -1422,10 +1496,18 @@ typedef struct{
     u8 valid;
     u8 key_phase;
     u8 node_identity;
+#if 1//MD_PRIVACY_BEA
     u8 priv_identity;
+#else
+	u8 rfu1[1];		// reserved for future used
+#endif
 	mesh_app_key_t app_key[APP_KEY_MAX];
 	u32 start_identity_s;
+#if 1//MD_PRIVACY_BEA
 	u32 priv_identity_s;
+#else
+	u8 rfu2[4];		// reserved for future used
+#endif
     u8 rfu3[8];		// for 16 align
 }mesh_net_key_t;
 
@@ -1436,7 +1518,7 @@ typedef struct{
 	mesh_net_key_t net_key[NET_KEY_MAX][2];	// one is normal, another is key refresh
 	u8 netkey_sel_dec;	// slecte network key index in array. valid netkey_idx in mesh_sec_msg_dec_apl() 
 	u8 sec_type_sel;// security material: MASTER DIRECTED or DRIENDSHIP
-	u8 appkey_sel_dec;	// slecte app key index in array.
+	u8 appkey_sel_dec;	// slecte app key index in array. // 0xff or -1 means use device key to decryption or no any app key can decryption this message.
 	u8 devkey_self_dec;	// 0: use device key of TX node, 1: use device key of self (RX node).
 	u8 new_netkey_dec;
 }mesh_key_t;
@@ -1511,7 +1593,7 @@ typedef struct{
     u8 update_trigger_by_save;
     u8 update_proc_flag;
 #if FEATURE_LOWPOWER_EN
-    u8 rx_beacon_ok_after_searching; // have received beacon after entering recovery mode.
+//    u8 rx_beacon_ok_after_searching; // have received beacon after entering recovery mode.
 #endif
 }mesh_iv_idx_st_t;
 
@@ -1573,11 +1655,18 @@ static inline void mesh_model_on_demand_save()
 
 // common save
 #define FLASH_CHECK_SIZE_MAX	(64)
-#define SIZE_SAVE_FLAG		(4)
+#define SIZE_SAVE_FLAG		    (4)
+
+#if 0
+#define FLASH_MAP_VER_0         0
+#define FLASH_MAP_VER_1         1 // move FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, and FLASH_ADR_SW_LEVEL after 0x70000. please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#endif
 
 typedef struct{
 	u8 flag;
-	u8 crc_en:1;
+	u8 crc_en:  1;
+//	u8 map_ver: 2;  // no need, just use crc_en to check is enough.
+	u8 rfu:     7;  // reserved for future use
 	u16 crc;
 }mesh_save_head_t;
 
@@ -1609,6 +1698,14 @@ static inline u32 GET_PAR_LEN_BY_TRANS(int len, int trans_flag){
 }
 
 extern u32 del_node_tick;
+
+typedef struct{
+	u16 conn_handle;	
+	u8 att_handle;
+	u8 proxy_type;
+	u8 data[1];
+}mesh_notify_head_t;
+
 //--------------- declaration
 int mesh_is_proxy_ready();
 int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_par_val);
@@ -1659,7 +1756,7 @@ void mesh_flash_retrieve();
 int mesh_key_retrieve();
 
 void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size);
-int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size);
+int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size, u32 *p_out_current_addr);
 int mesh_common_retrieve(u32 adr_base);
 int mesh_common_store(u32 adr_base);
 int mesh_model_retrieve(bool4 sig_model, u32 md_id);
@@ -1693,6 +1790,11 @@ u8 VC_search_and_bind_model();
 
 u8 * mesh_cfg_cmd_dev_key_get(const u16 adr);
 mesh_app_key_t * mesh_app_key_search_by_index(u16 netkey_idx, u16 appkey_idx);
+
+static inline u16 get_netkey_index(u16 nk_array_idx){
+	return mesh_key.net_key[nk_array_idx][0].index;
+}
+
 u8 get_nk_arr_idx(u16 netkey_idx);
 u8 get_ak_arr_idx(u8 nk_array_idx, u16 appkey_idx);
 u8 get_ak_arr_idx_first_valid(u8 nk_array_idx);
@@ -1720,7 +1822,7 @@ u32 get_random_delay_pub_tick_ms(u32 interval_ms);
 void mesh_pub_period_proc();
 int is_tx_status_cmd2self(u16 op, u16 adr_dst);
 u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, bool4 sig_model);
-void mesh_service_change_report();
+void mesh_service_change_report(u16 conn_handle);
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
@@ -1760,6 +1862,7 @@ void power_on_io_proc(u8 i);
 unsigned char ble_module_id_is_kmadongle();
 void mesh_blc_ll_initExtendedAdv();
 u8 mesh_blc_ll_setExtAdvParamAndEnable();
+int mesh_blc_aux_adv_filter(u8 *raw_pkt);
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 void mesh_ivi_event_cb(u8 search_flag);
 void mesh_netkey_cb(u8 idx,u16 op);
@@ -1767,7 +1870,7 @@ void send_and_wait_completed_reset_node_status();
 void mesh_node_identity_refresh();
 int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth);
 void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
-#if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
+#if (!WIN32 && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
 void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
 #endif
 int gateway_upload_ividx(misc_save_gw2vc_t *p_misc);
@@ -1775,7 +1878,6 @@ u32 mesh_sno_get_save_delta();
 
 extern u16 ele_adr_primary;
 extern u8 g_ele_cnt;
-extern u8 g_bind_key_max;
 extern u8 key_bind_all_ele_en;
 extern u16 connect_addr_gatt;
 extern u32 prov_app_key_setup_tick;
@@ -1814,13 +1916,12 @@ extern _align_4_ model_mesh_ota_t        	model_mesh_ota;
 extern _align_4_ model_vd_light_t       	model_vd_light;
 extern _align_4_ mesh_key_t mesh_key; 
 extern _align_4_ friend_key_t mesh_fri_key_lpn[NET_KEY_MAX][2];
-extern _align_4_ friend_key_t mesh_fri_key_fn[MAX_LPN_NUM][2];
+extern _align_4_ friend_key_t mesh_fri_key_fn[][2];
 extern _align_4_ directed_key_t directed_key[NET_KEY_MAX][2];
 extern s8 rssi_pkt; // have been -110
 
 extern u8 pts_test_en;
 extern const u16 my_fwRevisionUUID;
-extern u8 my_fwRevisionCharacter;
 #define FW_REVISION_VALUE_LEN       (16)
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
 extern u8 g_gw_extend_adv_option;
@@ -1832,24 +1933,62 @@ typedef struct{
 	u16 minor 			:4;
 }sw_version_big_endian_t;
 
-#define TEST_CNT 100
+#if (MESH_RX_TEST || WIN32)
+#define RX_TEST_BASE_TIME_SHIFT  	8 
+
 typedef struct{
-	u8 rcv_cnt;
-	u8 ack_par_len;
-	u8 send_index;
+	u32 bear_type : 8;
+	u32 tick_base : 24;		// store (clock_time()>>RX_TEST_BASE_TIME_SHIFT)
+}bear_ttc_head_t;
+
+
+#define MAX_RELAY_INFO_TEST			9 		// TTL_DEFAULT is 10, and launch node is record in transmit_index, and the last one no need to record, so it is "TTL_DEFAULT - 1"
+typedef struct{
+	//u8 tid;			// TODO
+	u16 sno_cmd; 		// sequence number of test command, because we send maybe 1000 message at one time, and RX node want to know which message is missed.
+	u16 ttc_100us; 		// time to cost, unit 100us
+	union{
+		struct{
+			u32 transmit_index	:3; // for the tx node
+			u32 relay_transmit_index	:MAX_RELAY_INFO_TEST * 3; // 
+			u32 rsv_bit			:1;
+			u32 onoff			:1;
+		};
+		u32 bit_field;
+	};
+	//u8 relay_src_addr[MAX_RELAY_INFO_TEST]; // TODO
+	//ttl_rx;		// record in TTL of network PDU.
+}cmd_ctl_ttc_t;
+
+#define SET_RELAY_TRANSMIT_INDEX(bit_field_val, ttl_rx, index) 	do{int start_bit = (TTL_DEFAULT - ttl_rx  + 1) * 3; if(start_bit >= 3 && start_bit <= (MAX_RELAY_INFO_TEST - 1)*3){ BM_SET_MASK_VAL(bit_field_val, (0x07 << start_bit), ((index & 0x07) << start_bit));}}while(0)
+
+#define RX_TEST_CACHE_CNT 1000
+typedef struct{
 	u16 max_time;
 	u16 min_time;
 	u16 avr_time;
-	u16 rcv_time[TEST_CNT];
-	u32 send_tick;
+	u16 rcv_cnt;
+#if WIN32 
+	u16 src_addr;
+#else
+	u16 ack_par_len;
+	u16 cmd_index;
+	cmd_ctl_ttc_t cmd_ttc[RX_TEST_CACHE_CNT];
+//	u16 rcv_time[RX_TEST_CACHE_CNT];
+	u32 total_time;
+#endif
 } mesh_rcv_t;
+
+extern mesh_rcv_t mesh_rcv_cmd;
+extern u16 mesh_rsp_rec_addr;
+#endif
 
 #define EXTEND_PROVISION_FLAG_OP		(0xFFFF)	// use a special op to represent provision data, no valid op is equal to this.
 #define PUBLISH_CHECK_INIT_DELAY		(40*1000) // period pub need delay
 
 enum{
     EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
-    EXTEND_ADV_OPTION_OTA_ONLY  = 1,    // only mesh OTA command use extend adv
+    EXTEND_ADV_OPTION_OTA_ONLY  = 1,    // only mesh OTA command use extend adv(and some remote provison command if "EXTENDED_ADV_PROV_ENABLE" is 1.)
     EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
     EXTEND_ADV_OPTION_MAX,
 };
@@ -1869,4 +2008,7 @@ int is_mesh_ota_distribute_100_flag();
 #define set_ota_gatt_connected_flag_lpn		set_mesh_ota_distribute_100_flag
 #define clr_ota_gatt_connected_flag_lpn		clr_mesh_ota_distribute_100_flag
 #define is_ota_gatt_connected_flag_lpn		is_mesh_ota_distribute_100_flag
+
+int is_valid_startup_flag(u32 flag_addr, int check_all_flag);
+void blt_ota_software_check_flash_load_error(void);
 

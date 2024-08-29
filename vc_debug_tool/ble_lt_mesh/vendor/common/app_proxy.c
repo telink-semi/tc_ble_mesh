@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/app_provison.h"
 #include "app_beacon.h"
@@ -34,11 +34,210 @@
 #if DU_ENABLE
 #include "user_du.h"
 #endif
-proxy_config_mag_str proxy_mag;
-mesh_proxy_protocol_sar_t  proxy_sar;
-u8 proxy_filter_initial_mode = FILTER_WHITE_LIST;
 
-//------------------------------att cb-----------------------------
+u16 app_adr[ACL_PERIPHR_MAX_NUM];
+proxy_config_mag_str proxy_mag[ACL_PERIPHR_MAX_NUM];
+mesh_proxy_protocol_sar_t  proxy_sar[ACL_PERIPHR_MAX_NUM];
+u8 proxy_filter_initial_mode = FILTER_WHITE_LIST;
+u8 proxy_para_buf[ACL_PERIPHR_MAX_NUM][PROXY_GATT_MAX_LEN]; 
+
+//------------------------------proxy reassembly-----------------------------
+u8 *mesh_get_proxy_sar_buf(u8 idx)
+{
+	return (u8 *)proxy_para_buf[idx];
+}
+
+// add the sar part logical 
+void mesh_proxy_sar_para_init(u8 idx)
+{
+	memset(&proxy_sar[idx], 0x00, sizeof(proxy_sar[idx]));
+}
+
+void mesh_proxy_sar_start(u8 idx)
+{	
+	if(0 == proxy_sar[idx].sar_tick){
+		proxy_sar[idx].sar_tick = clock_time()|1;
+	}else{
+		#if DEBUG_PROXY_SAR_ENABLE
+		static u32 A_debug_start_err = 0;
+		A_debug_start_err++;
+		LOG_MSG_INFO(TL_LOG_PROXY,0, 0 ,"mesh_proxy_sar_start:debug printf sar start err");
+		#endif 
+		proxy_sar[idx].err_flag = 1;
+	}	
+}
+
+void mesh_proxy_sar_continue(u8 idx)
+{
+	if(proxy_sar[idx].sar_tick){
+		proxy_sar[idx].sar_tick = clock_time()|1;
+	}else{
+		#if DEBUG_PROXY_SAR_ENABLE
+		static u32 A_debug_start_continu = 0;
+		A_debug_start_continu++;
+		LOG_MSG_INFO(TL_LOG_PROXY,0, 0 ,"mesh_proxy_sar_continue:debug printf sar continue err");
+		#endif 
+		proxy_sar[idx].err_flag = 1;
+	}	
+}
+
+void mesh_proxy_sar_end(u8 idx)
+{
+	if(proxy_sar[idx].sar_tick){
+		proxy_sar[idx].sar_tick = 0;
+	}else{
+		#if DEBUG_PROXY_SAR_ENABLE
+		static u32 A_debug_start_end = 0;
+		A_debug_start_end++;
+		LOG_MSG_INFO(TL_LOG_PROXY,0, 0 ,"mesh_proxy_sar_end:debug printf sar end err");
+		#endif 
+		proxy_sar[idx].err_flag = 1;
+	}	
+}
+
+void mesh_proxy_sar_complete(u8 idx)
+{
+	// reset the status 
+	if(0 == proxy_sar[idx].sar_tick){
+		//proxy_sar.sar_tick = 0;
+	}else{
+	#if DEBUG_PROXY_SAR_ENABLE
+		static u32 A_debug_start_complete = 0;
+		A_debug_start_complete++;
+		LOG_MSG_INFO(TL_LOG_PROXY,0, 0 ,"mesh_proxy_sar_complete:debug printf sar complete err");
+	#endif 
+		proxy_sar[idx].err_flag = 1;
+	}
+}
+
+void mesh_proxy_sar_err_terminate(u8 idx)
+{
+	if(proxy_sar[idx].err_flag){
+	    LOG_MSG_ERR(TL_LOG_PROXY,0, 0 ,"TL_LOG_PROXY:sar complete err");
+		//reset para part 
+		mesh_proxy_sar_para_init(idx);
+		// send terminate ind cmd to the master part 
+		#if WIN32 
+		// the upper tester should reliaze the function 
+		//mesh_proxy_master_terminate_cmd(); 
+		#else
+		#if DEBUG_PROXY_SAR_ENABLE
+		irq_disable();
+		while(1);
+		#endif 
+		//bls_ll_terminateConnection(0x13); 
+		#endif 
+	}	
+}
+
+void mesh_proxy_sar_timeout_terminate()
+{
+	foreach(idx, ACL_PERIPHR_MAX_NUM){
+		if(proxy_sar[idx].sar_tick&&clock_time_exceed(proxy_sar[idx].sar_tick,PROXY_PDU_TIMEOUT_TICK)){
+			mesh_proxy_sar_para_init(idx);
+			LOG_MSG_ERR(TL_LOG_PROXY,0, 0 ,"TL_LOG_PROXY:sar timeout terminate");
+			#if WIN32 
+			mesh_proxy_master_terminate_cmd();
+			#else
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+			blc_ll_disconnect(proxy_sar[idx].conn_handle, HCI_ERR_REMOTE_USER_TERM_CONN);
+				#else
+			bls_ll_terminateConnection(0x13);
+				#endif
+			#endif
+		}
+	}
+}
+
+/**
+ * @brief       This function server to reassemble Proxy PDU.
+ * @param[in]   p			- pointer of rf packet.
+ * @param[in]   l2cap_type	- proxy message type
+ * @param[in]   p_rcv		- buffer for reassemble Proxy PDU.
+ * @param[io]   p_rcv_len	- last reassembled length, the offset of buffer to cache current packet.  
+ * @return      0: failure. 1: success.
+ * @note        
+ */
+int pkt_pb_gatt_data(int idx, rf_packet_att_data_t *p, u8 l2cap_type)
+{
+	int ret = 0;
+	u8 *p_rcv = 0;
+
+	//package the data str 
+	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)mesh_get_proxy_sar_buf(idx);
+	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(p->dat);
+	if((l2cap_type == L2CAP_PROVISON_TYPE) && (p_gatt->msgType == MSG_PROVISION_PDU)){
+		p_rcv = (u8 *)p_bear;
+	}else if(((l2cap_type == L2CAP_PROXY_TYPE) && (p_gatt->msgType == MSG_PROXY_CONFIG)) || ((l2cap_type == L2CAP_NETWORK_TYPE) && (p_gatt->msgType == MSG_NETWORK_PDU))){
+		p_rcv = (u8 *)&p_bear->nw;
+	}else if((l2cap_type == L2CAP_BEACON_TYPE) && (p_gatt->msgType == MSG_MESH_BEACON)){
+		p_rcv = (u8 *)&p_bear->beacon;
+	}
+
+	if(0 == p_rcv){
+		return ret;
+	}
+
+	#if DEBUG_PROXY_SAR_ENABLE
+	static u8 A_proxy_sar_debug[256];
+	static u8 proxy_idx =0;
+	A_proxy_sar_debug[proxy_idx++]= p_gatt->sar;
+	if(proxy_idx ==255){
+		memset(A_proxy_sar_debug,0,sizeof(A_proxy_sar_debug));
+	}
+	#endif 
+	#if DEBUG_PROXY_SAR_ENABLE
+	/*
+	static u8 A_debug_record_last_lost[32][16];
+	static u8 A_debug_record_last_idx =0;
+	memcpy((u8*)A_debug_record_last_lost+A_debug_record_last_idx*16,p_gatt->data,(p->l2cap-4)>16?16:4);
+	A_debug_record_last_idx++;
+	if(A_debug_record_last_idx == 16){
+		A_debug_record_last_idx = 0;
+	}
+	*/
+	#endif 
+
+    u16 len_payload = p->l2cap-4;
+	
+	if(p_gatt->sar == SAR_START){
+		proxy_sar[idx].sar_len = 0;
+		mesh_proxy_sar_start(idx);
+	}else if(p_gatt->sar == SAR_CONTINUE){
+		mesh_proxy_sar_continue(idx);
+	}else if(p_gatt->sar == SAR_END){
+		mesh_proxy_sar_end(idx);
+		ret = 1;
+	}else{
+		proxy_sar[idx].sar_len = 0;
+		mesh_proxy_sar_complete(idx);
+		ret = 1;
+	} 
+
+	if((proxy_sar[idx].sar_len + len_payload + OFFSETOF(mesh_cmd_bear_t, nw)) > PROXY_GATT_MAX_LEN){    // over folw.
+	    static u8 para_pro_overflow_cnt;para_pro_overflow_cnt++;
+		mesh_proxy_sar_para_init(idx);
+	
+	    return 0;
+	}
+	
+	memcpy(p_rcv + proxy_sar[idx].sar_len, p_gatt->data, len_payload);
+	proxy_sar[idx].sar_len += len_payload;
+	#if DEBUG_PROXY_SAR_ENABLE
+	if(proxy_sar[idx].err_flag){
+		static u8 A_debug_record_last_lost1[32];
+		memcpy(A_debug_record_last_lost1,p_gatt->data,len_payload);
+		LOG_MSG_ERR(TL_LOG_PROXY,p_gatt->data, len_payload ,"TL_LOG_PROXY:sar complete err");
+	}
+	#endif 
+	
+	mesh_proxy_sar_err_terminate(idx);
+	
+	return ret;
+	// after package the data and the para 
+}
+
+//------------------------------att callback function-----------------------------
 #if !ATT_REPLACE_PROXY_SERVICE_EN
 u8 proxy_Out_ccc[2]={0x00,0x00};
 u8 proxy_In_ccc[2]=	{0x01,0x00};
@@ -50,14 +249,23 @@ u8  provision_Out_ccc[2]={0x00,0x00};
 void reset_all_ccc()
 {
 	// wait for the whole dispatch 	
-	memset(provision_Out_ccc,0,sizeof(provision_Out_ccc));
-	#ifndef WIN32 
-	memset(proxy_Out_ccc,0,sizeof(proxy_Out_ccc));
-	#endif 
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	if(0 == blc_ll_getCurrentSlaveRoleNumber())
+	#endif
+	{
+		memset(provision_Out_ccc,0,sizeof(provision_Out_ccc));
+		#ifndef WIN32 
+		memset(proxy_Out_ccc,0,sizeof(proxy_Out_ccc));
+		#endif 
+	}
 	return ;
 }
 
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int pb_gatt_provision_out_ccc_cb(u16 connHandle, void *p)
+#else
 int pb_gatt_provision_out_ccc_cb(void *p)
+#endif
 {
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	provision_Out_ccc[0] = pw->dat[0];
@@ -71,11 +279,26 @@ int pb_gatt_provision_out_ccc_cb(void *p)
  * @return      unused.
  * @note        
  */
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int	pb_gatt_Write(u16 connHandle, void *p)
+#else
 int	pb_gatt_Write (void *p)
+#endif
 {
+	int idx = 0;
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	idx = get_periphr_idx_by_conn_handle(connHandle);
+	if(idx == INVALID_CONN_IDX){
+		return 0;
+	}
+	#else
+	u16 connHandle = BLS_CONN_HANDLE;
+	#endif
+	
 	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
 		return 0;
 	}
+	
 	#if ATT_REPLACE_PROXY_SERVICE_EN
 	extern int proxy_gatt_Write(void *p);
 	u8 service_uuid[] = SIG_MESH_PROXY_SERVICE;
@@ -83,18 +306,25 @@ int	pb_gatt_Write (void *p)
 		return proxy_gatt_Write(p);
 	}
 	#endif
+	
 	#if FEATURE_PROV_EN
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	// package the data 
-	if(!pkt_pb_gatt_data(pw,L2CAP_PROVISON_TYPE,proxy_para_buf,&proxy_para_len)){
+	if(!pkt_pb_gatt_data(idx, pw, L2CAP_PROVISON_TYPE)){
 		return 0;
 	}
-	dispatch_pb_gatt(proxy_para_buf ,proxy_para_len);
+	
+	dispatch_pb_gatt(connHandle, mesh_get_proxy_sar_buf(idx), proxy_sar[idx].sar_len);
 	#endif 
+	
 	return 1;
 }
 
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int proxy_out_ccc_cb(u16 connHandle, void *p)
+#else
 int proxy_out_ccc_cb(void *p)
+#endif
 {
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	proxy_Out_ccc[0] = pw->dat[0];
@@ -102,39 +332,72 @@ int proxy_out_ccc_cb(void *p)
 	beacon_send.conn_beacon_flag =1;
 	beacon_send.tick = clock_time();
 
+	if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
+		if(is_provision_success()){
+			mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner		 
+			beacon_send.conn_beacon_flag =0;						
+		}
+					
+		#if (MD_DF_CFG_SERVER_EN && !WIN32)
+			#if !BLE_MULTIPLE_CONNECTION_ENABLE
+		u16 connHandle = BLS_CONN_HANDLE;
+			#endif
+		mesh_directed_proxy_capa_report_upon_connection(connHandle); // report after security network beacon.
+		#endif
+	}
+	
 	return 1;	
 }
 
 /**
- * @brief       This function server to process Proxy PDU from proxy service.
+ * @brief       This function server to process Proxy PDU of proxy service from GATT master, such as cell phone.
  * @param[in]   p	- pointer of rf packet.
  * @return      unused.
  * @note        
  */
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int proxy_gatt_Write(u16 connHandle, void *p)
+#else
 int proxy_gatt_Write(void *p)
+#endif
 {
+	int idx = 0;
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	idx = get_periphr_idx_by_conn_handle(connHandle);
+	if(idx == INVALID_CONN_IDX){
+		return 0;
+	}
+	#endif
+	
 	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
 		return 0;
 	}
+	
 	#if FEATURE_PROXY_EN
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(pw->dat);
-	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)proxy_para_buf;
+	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)mesh_get_proxy_sar_buf(idx);
+	
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	bear_conn_handle_t *p_bear_handle = (bear_conn_handle_t *)&p_bear->tx_head;
+	p_bear_handle->par_type = BEAR_TX_PAR_TYPE_CONN_HANDLE;
+	p_bear_handle->conn_handle = connHandle;
+	#endif
 	
 	if(p_gatt->msgType == MSG_PROXY_CONFIG ){
-		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
+		if(!pkt_pb_gatt_data(idx, pw, L2CAP_PROXY_TYPE)){
 			return 0;
 		}
-		p_bear->trans_par_val=TRANSMIT_DEF_PAR;
-		p_bear->len=proxy_para_len+1;
-		p_bear->type=MESH_ADV_TYPE_MESSAGE;
+		p_bear->trans_par_val = TRANSMIT_DEF_PAR;
+		p_bear->len = proxy_sar[idx].sar_len + 1;
+		p_bear->type = MESH_ADV_TYPE_MESSAGE;
 		// different dispatch 
 		//send the data by the SIG MESH layer 
 		if(0 == mesh_rc_data_cfg_gatt((u8 *)p_bear)){
-		    proxy_config_dispatch((u8 *)&p_bear->nw,proxy_para_len);
+		    proxy_config_dispatch(p_bear, proxy_sar[idx].sar_len);
 		}
 	}else if (p_gatt->msgType == MSG_MESH_BEACON){
-		if(!pkt_pb_gatt_data(pw,L2CAP_BEACON_TYPE,(u8 *)&p_bear->beacon,&proxy_para_len)){
+		if(!pkt_pb_gatt_data(idx, pw, L2CAP_BEACON_TYPE)){
 			return 0;
 		}
 		if(SECURE_BEACON == p_bear->beacon.type){
@@ -157,32 +420,25 @@ int proxy_gatt_Write(void *p)
 			// no handle for other beacon now
 		}
 	}else if(p_gatt->msgType == MSG_NETWORK_PDU){
-		if(!pkt_pb_gatt_data(pw,L2CAP_NETWORK_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
+		if(!pkt_pb_gatt_data(idx, pw, L2CAP_NETWORK_TYPE)){
 			return 0;
 		}
 		// and then how to use the data ,make a demo to turn on or turn off the light 
 		p_bear->trans_par_val = TRANSMIT_DEF_PAR;
-		p_bear->len=proxy_para_len+1;
-		p_bear->type=MESH_ADV_TYPE_MESSAGE;
+		p_bear->len = proxy_sar[idx].sar_len + 1;
+		p_bear->type = MESH_ADV_TYPE_MESSAGE;
 		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
 	}
 #if MESH_RX_TEST
-	else if((p_gatt->msgType == MSG_RX_TEST_PDU)&&(p_gatt->data[0] == 0xA3) && (p_gatt->data[1] == 0xFF)){
-		u8 par[10];
-		memset(par,0x00,sizeof(par));
-		u16 adr_dst = p_gatt->data[2] + (p_gatt->data[3]<<8);
-		u8 rsp_max = p_gatt->data[4];	
-		par[0] = p_gatt->data[6]&0x01;//on_off	
+	else if((p_gatt->msgType == MSG_RX_TEST_PDU)&&(p_gatt->data[0] == (u8)HCI_CMD_BULK_CMD2DEBUG) && (p_gatt->data[1] == (HCI_CMD_BULK_CMD2DEBUG >> 8))){
+		u16 adr_dst = p_gatt->data[2] + (p_gatt->data[3] << 8);
 		u8 ack = p_gatt->data[5];
-		u32 send_tick = clock_time();
-		memcpy(par+4, &send_tick, 4);
-		par[8] = p_gatt->data[6];// cur count
-		par[3] = p_gatt->data[8];//access_len_ack	
-		u32 par_len = p_gatt->data[7];
-		extern u16 mesh_rsp_rec_addr;
-		mesh_rsp_rec_addr = p_gatt->data[9] + (p_gatt->data[10]<<8);
-		SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
-						   (u8 *)&par, par_len);
+		cmd_ctl_ttc_t ctl_ttc;
+		memset(&ctl_ttc, 0x00, sizeof(cmd_ctl_ttc_t));
+		ctl_ttc.sno_cmd = p_gatt->data[6] + (p_gatt->data[7] << 8);
+		ctl_ttc.onoff = ctl_ttc.sno_cmd & 0x01;
+		
+		mesh_tx_cmd_layer_upper_ctl_primary(ack ? CMD_CTL_TTC_CMD : CMD_CTL_TTC_CMD_NACK, (u8 *)&ctl_ttc, sizeof(ctl_ttc), adr_dst);		
 	}
 #endif
 	else{
@@ -199,46 +455,89 @@ void set_proxy_initial_mode(u8 special_mode)
 	}else{
 		proxy_filter_initial_mode =FILTER_WHITE_LIST;
 	}
-	mesh_proxy_sar_para_init();
+
 	return;
 }
 	
 
-void proxy_cfg_list_init_upon_connection()
+void proxy_cfg_list_init_upon_connection(u16 conn_handle)
 {
-	memset(&proxy_mag, 0x00, sizeof(proxy_mag));
-	proxy_mag.filter_type = proxy_filter_initial_mode;
+	int idx = 0;
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(idx == INVALID_CONN_IDX){
+		return;
+	}
+	#endif
+	
+	memset(&proxy_mag[idx], 0x00, sizeof(proxy_mag[idx]));
+	proxy_mag[idx].filter_type = proxy_filter_initial_mode;
 	#if DU_ENABLE
-	proxy_proc_filter_mesh_cmd(VD_DU_GROUP_DST);
+	proxy_proc_filter_mesh_cmd(idx, VD_DU_GROUP_DST);
 	#endif
 	prov_para.privacy_para = mesh_get_proxy_privacy_para();
 	
 	return ;
 }
 
-int find_data_in_list(u16 dst)
+/**
+ * @brief       This function server to check whether the address is gatt master's unicast address or not.
+ * @param[in]   addr- unicast address
+ * @return      0: addr is not master's address. other: addr is master's address.
+ * @note        
+ */
+int is_app_addr(u16 addr)
 {
-	int idx = -1;
+	foreach(i, ACL_PERIPHR_MAX_NUM){
+		if(addr == app_adr[i]){
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+int find_data_in_list(int idx, u16 adr)
+{
+	int ret = -1;
 	foreach(i,MAX_LIST_LEN){
-		if(dst == proxy_mag.addr_list[i]){
-			idx = i;
+		if(adr == proxy_mag[idx].addr_list[i]){
+			ret = i;
 			break;
 		}
 	}
-	return idx;
+	
+	return ret;
 }
 
-int is_addr_in_proxy_list(u16 dst)
+int is_addr_in_proxy_list(int idx, u16 addr)
 {
-	return (-1 != find_data_in_list(dst));
+	return (-1 != find_data_in_list(idx, addr));
 }
 
-int is_valid_adv_with_proxy_filter(u16 src)
+int is_valid_addr_in_proxy_list(int idx, u16 addr)
+{
+	return (FILTER_WHITE_LIST == proxy_mag[idx].filter_type) ? is_addr_in_proxy_list(idx, addr) : !is_addr_in_proxy_list(idx, addr);
+}
+
+/**
+ * @brief       This function server to check whether destination of network PDU is in proxy whitelist, the network PDU will report to corresponding connection handle in mesh_nw_pdu_report_to_gatt().
+ * @param[in]   dst_addr- destination of the network PDU.
+ * @return      1: address is in whitelist. 0: address isn't in whitelist.
+ * @note        
+ */
+int is_valid_adv_with_proxy_filter(u16 dst_addr)
 {
 	int valid = 1;
-	if(src == PROXY_CONFIG_FILTER_DST_ADR){
+	if(dst_addr == PROXY_CONFIG_FILTER_DST_ADR){
 	}else{
-		valid = (FILTER_WHITE_LIST == proxy_mag.filter_type) ? is_addr_in_proxy_list(src):!is_addr_in_proxy_list(src);
+		foreach(idx, ACL_PERIPHR_MAX_NUM){
+			valid = is_valid_addr_in_proxy_list(idx, dst_addr);
+			if(valid){
+				break;
+			}
+		}
+		
 		if(!valid){
 			static u16 filter_error_cnt;	filter_error_cnt++;
 		}
@@ -250,19 +549,21 @@ int is_valid_adv_with_proxy_filter(u16 src)
 #if MD_DF_CFG_SERVER_EN
 int is_proxy_client_addr(u16 addr)
 {
-	if((DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type) || (PROXY_CLIENT == proxy_mag.proxy_client_type)){
-		if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
-			foreach(netkey_offset, NET_KEY_MAX){			
-				if(addr == proxy_mag.directed_server[netkey_offset].client_addr){
-					return 1;
+	foreach(idx, ACL_PERIPHR_MAX_NUM){
+		if((DIRECTED_PROXY_CLIENT == proxy_mag[idx].proxy_client_type) || (PROXY_CLIENT == proxy_mag[idx].proxy_client_type)){
+			if(DIRECTED_PROXY_CLIENT == proxy_mag[idx].proxy_client_type){
+				foreach(netkey_offset, NET_KEY_MAX){			
+					if(addr == proxy_mag[idx].directed_server[netkey_offset].client_addr){
+						return 1;
+					}
 				}
 			}
-		}
-			
-		if(FILTER_WHITE_LIST == proxy_mag.filter_type){
-			foreach(i, MAX_LIST_LEN){
-				if(addr == proxy_mag.addr_list[i]){
-					return 1;
+				
+			if(FILTER_WHITE_LIST == proxy_mag[idx].filter_type){
+				foreach(i, MAX_LIST_LEN){
+					if(addr == proxy_mag[idx].addr_list[i]){
+						return 1;
+					}
 				}
 			}
 		}	
@@ -270,13 +571,36 @@ int is_proxy_client_addr(u16 addr)
 
 	return 0;
 }
+
+/**
+ * @brief       This function server to get addr's corresponding acl index and netkey offset
+ * @param[in]   addr			- unicast address
+ * @param[out]  netkey_offset	- network offset
+ * @return      acl index
+ * @note        
+ */
+int get_directed_proxy_client_idx(u16 addr, u8 *netkey_offset)
+{
+	foreach(acl_idx, ACL_PERIPHR_MAX_NUM){
+		if(DIRECTED_PROXY_CLIENT == proxy_mag[acl_idx].proxy_client_type){
+			for(u8 key_idx = 0; key_idx < NET_KEY_MAX; key_idx++){			
+				if(addr == proxy_mag[acl_idx].directed_server[key_idx].client_addr){
+					*netkey_offset = key_idx;
+					return acl_idx;
+				}
+			}
+		}
+	}
+
+	return -1;
+}
 #endif
 
-int get_list_cnt()
+int get_list_cnt(int idx)
 {
 	int cnt=0;
 	foreach(i,MAX_LIST_LEN){
-		if(0 == proxy_mag.addr_list[i]){
+		if(0 == proxy_mag[idx].addr_list[i]){
 			break;
 		}
 		cnt++;
@@ -284,16 +608,15 @@ int get_list_cnt()
 	return cnt;
 }
 
-int add_data_to_list(u16 src)
+int add_data_to_list(int idx, u16 addr)
 {
-    if(is_addr_in_proxy_list(src)){
+    if(is_addr_in_proxy_list(idx, addr)){
         return 0;
     }
 
-	u8 idx;
-	for(idx =0;idx<MAX_LIST_LEN;idx++){
-		if(0 == proxy_mag.addr_list[idx]){
-			proxy_mag.addr_list[idx] = src;
+	foreach(i, MAX_LIST_LEN){
+		if(0 == proxy_mag[idx].addr_list[i]){
+			proxy_mag[idx].addr_list[i] = addr;			
 			return 0;
 		}
 	}
@@ -301,30 +624,37 @@ int add_data_to_list(u16 src)
 	return -1;
 }
 
-int delete_data_from_list(u16 src)
+int delete_data_from_list(int idx, u16 src)
 {
-	int idx = find_data_in_list(src);
-	if((-1 == idx) || (get_list_cnt()>=MAX_LIST_LEN)){
+	int offset = find_data_in_list(idx, src);
+	if(-1 == offset){
         return -1;
 	}
 
-	proxy_mag.addr_list[idx] = 0;
-	memcpy(&proxy_mag.addr_list[idx], &proxy_mag.addr_list[idx+1], 2*(MAX_LIST_LEN-(idx+1)));
+	proxy_mag[idx].addr_list[offset] = 0;
+	memcpy(&proxy_mag[idx].addr_list[offset], &proxy_mag[idx].addr_list[offset+1], 2*(MAX_LIST_LEN-(offset+1)));
 	return 0;
 }
 
-int send_filter_sts(mesh_cmd_nw_t *p_nw)
+int send_filter_sts(int idx, mesh_cmd_nw_t *p_nw)
 {
 	int err = -1;
 	mesh_filter_sts_str mesh_filter_sts;
 	memset(&mesh_filter_sts,0,sizeof(mesh_filter_sts_str));
 	u8 filter_sts = PROXY_FILTER_STATUS; 
-	mesh_filter_sts.fil_type = proxy_mag.filter_type;
-	mesh_filter_sts.list_size = get_list_cnt();
+	mesh_filter_sts.fil_type = proxy_mag[idx].filter_type;
+	mesh_filter_sts.list_size = get_list_cnt(idx);
 	// swap the list size part 
 	endianness_swap_u16((u8 *)(&mesh_filter_sts.list_size));
+
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	u16 conn_handle = get_periphr_conn_handle_by_idx(idx);
+	#else
+	u16 conn_handle = BLS_CONN_HANDLE;
+	#endif
+	
 #if 1
-	err = mesh_tx_cmd_layer_cfg_primary(filter_sts,(u8 *)(&mesh_filter_sts),sizeof(mesh_filter_sts),PROXY_CONFIG_FILTER_DST_ADR);
+	err = mesh_tx_cmd_layer_proxy_cfg_primary(conn_handle, filter_sts, (u8 *)(&mesh_filter_sts), sizeof(mesh_filter_sts), PROXY_CONFIG_FILTER_DST_ADR);
 #else
 #endif 
 
@@ -344,40 +674,59 @@ void set_pair_login_ok(u8 val)
 }
 #endif
 
-u8 proxy_proc_filter_mesh_cmd(u16 src)
+u8 proxy_proc_filter_mesh_cmd(int idx, u16 src)
 {
-    if(proxy_mag.filter_type == FILTER_WHITE_LIST){
-        return add_data_to_list(src);
-    }else if (proxy_mag.filter_type == FILTER_BLACK_LIST){
-        return delete_data_from_list(src);
-    }else{
+	if(idx < ACL_PERIPHR_MAX_NUM){
+	    if(proxy_mag[idx].filter_type == FILTER_WHITE_LIST){
+	        add_data_to_list(idx, src);
+	    }else if (proxy_mag[idx].filter_type == FILTER_BLACK_LIST){
+	        delete_data_from_list(idx, src);
+	    }else{
 
-    }
+	    }
+
+		if(is_unicast_adr(src)){
+			app_adr[idx] = src;
+		}
+	}
+
     return 0;
 }
 
 /**
  * @brief       This function server to process the configuration message.
- * @param[in]   p	- pointer of configuration message.
+ * @param[in]   p	- pointer of command bear which including configuration message.
  * @param[in]   len	- length of configuration message.
  * @return      1: done.
  * @note        
  */
-u8 proxy_config_dispatch(u8 *p,u8 len )
+u8 proxy_config_dispatch(mesh_cmd_bear_t *p_bear, u8 len)
 {
-	mesh_cmd_nw_t *p_nw = (mesh_cmd_nw_t *)(p);
+	mesh_cmd_nw_t *p_nw = &p_bear->nw;
 	proxy_config_pdu_sr *p_str = (proxy_config_pdu_sr *)(p_nw->data);
 	u8 *p_addr = p_str->para;
 	u8 para_len;
 	u16 proxy_unicast=0;
 	u8 i=0;
+	
+	int idx = 0;
+	__UNUSED bear_conn_handle_t *p_bear_handle = (bear_conn_handle_t *)&p_bear->tx_head;
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	if(BEAR_TX_PAR_TYPE_CONN_HANDLE == p_bear_handle->par_type){
+		idx = get_periphr_idx_by_conn_handle(p_bear_handle->conn_handle);
+		if(idx == INVALID_CONN_IDX){
+			return 1;
+		}
+	}
+	#endif
+	
 	// if not set ,use the white list 
 	SET_TC_FIFO(TSCRIPT_PROXY_SERVICE, (u8 *)p_str, len-17);
-	if(p_nw->src && (app_adr != p_nw->src)){
+	if(p_nw->src){
 		#if (!PTS_TEST_EN && (NLCP_BLC_EN == 0) && (SWITCH_ALWAYS_MODE_GATT_EN == 0)) // BLCMP/BLC/PERF/BV-01-I, When sending packets, the return value of is_pkt_notify_only() must be 0
 		// not record to app_adr, because this address is not added to filter list.
 		// in this case, PTS send filter set, then only send network message through ADV, then message response to PTS will not be sent through both ADV and GATT, so PTS will fail to receive response.
-		app_adr = p_nw->src;
+		proxy_proc_filter_mesh_cmd(idx, p_nw->src);	
 		#endif
 	}
 	
@@ -387,16 +736,16 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"set filter type %d ",p_str->para[0]);
 			#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
 			if(FILTER_BLACK_LIST ==  p_str->para[0]){
-				directed_proxy_dependent_node_delete();
-				proxy_mag.proxy_client_type = BLACK_LIST_CLIENT;
+				directed_proxy_dependent_node_delete(idx);
+				proxy_mag[idx].proxy_client_type = BLACK_LIST_CLIENT;
 				for(int i=0; i<NET_KEY_MAX; i++){
-					proxy_mag.directed_server[i].use_directed = 0;
+					proxy_mag[idx].directed_server[i].use_directed = 0;
 				}
 			}
 			#endif
-			proxy_mag.filter_type = p_str->para[0];
-			memset(proxy_mag.addr_list, 0, sizeof(proxy_mag.addr_list));
-			send_filter_sts(p_nw);
+			proxy_mag[idx].filter_type = p_str->para[0];
+			memset(proxy_mag[idx].addr_list, 0, sizeof(proxy_mag[idx].addr_list));
+			send_filter_sts(idx, p_nw);
 			pair_login_ok = 1;
 		
 			break;
@@ -404,46 +753,46 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			// we suppose the num is 2
 			// 18 means nid(1)ttl(1) sno(3) src(2) dst(2) opcode(1) encpryt(8)
 			para_len = len-18;
-			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"add filter adr part ",0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"add filter adr part ");
 			for(i=0;i<para_len/2;i++){
 				// swap the endianness part 
 				endianness_swap_u16(p_addr+2*i);
 				// suppose the data is little endianness 
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
-				add_data_to_list(proxy_unicast);
+				add_data_to_list(idx, proxy_unicast);
 				#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
-				if(FILTER_WHITE_LIST == proxy_mag.filter_type){
+				if(FILTER_WHITE_LIST == proxy_mag[idx].filter_type){
 					directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&proxy_unicast, 1);
 				}
 				#endif
 			}
-			send_filter_sts(p_nw);
+			send_filter_sts(idx, p_nw);
 			pair_login_ok = 1;
 			break;
 		case PROXY_FILTER_RM_ADR:
 			//we suppose the num is 2
 			para_len =len-18;
-			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"remove filter adr part ",0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"remove filter adr part ");
 			for(i=0;i<para_len/2;i++){
 				endianness_swap_u16(p_addr+2*i);
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
-				delete_data_from_list(proxy_unicast);
+				delete_data_from_list(idx, proxy_unicast);
 			}
-			send_filter_sts(p_nw);
+			send_filter_sts(idx, p_nw);
 			break;
 		#if (MD_DF_CFG_SERVER_EN && !WIN32)
 		case DIRECTED_PROXY_CONTROL:{
 				directed_proxy_ctl_t *p_directed_ctl = (directed_proxy_ctl_t *)p_str->para;
 				endianness_swap_u16((u8 *)&p_directed_ctl->addr_range);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_directed_ctl, sizeof(directed_proxy_ctl_t),"directed proxy control ",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_directed_ctl, sizeof(directed_proxy_ctl_t),"directed proxy control ");
 				int key_offset = get_mesh_net_key_offset(mesh_key.netkey_sel_dec);
-				direct_proxy_server_t *p_direct_proxy = &proxy_mag.directed_server[key_offset];
-				if(!((BLACK_LIST_CLIENT == proxy_mag.proxy_client_type) || (PROXY_CLIENT == proxy_mag.proxy_client_type)) && (p_directed_ctl->use_directed < USE_DIRECTED_PROHIBITED)){
+				direct_proxy_server_t *p_direct_proxy = &proxy_mag[idx].directed_server[key_offset];
+				if(!((BLACK_LIST_CLIENT == proxy_mag[idx].proxy_client_type) || (PROXY_CLIENT == proxy_mag[idx].proxy_client_type)) && (p_directed_ctl->use_directed < USE_DIRECTED_PROHIBITED)){
 					if(is_directed_proxy_en(key_offset)){
-						if(UNSET_CLIENT == proxy_mag.proxy_client_type){					
-							proxy_mag.proxy_client_type = DIRECTED_PROXY_CLIENT;
+						if(UNSET_CLIENT == proxy_mag[idx].proxy_client_type){					
+							proxy_mag[idx].proxy_client_type = DIRECTED_PROXY_CLIENT;
 							for(int i=0; i<NET_KEY_MAX; i++){
-								proxy_mag.directed_server[i].use_directed = 0;
+								proxy_mag[idx].directed_server[i].use_directed = 0;
 							}						
 						}
 						
@@ -456,11 +805,11 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 						}
 						else{
 							#if !FEATURE_LOWPOWER_EN
-							directed_proxy_dependent_node_delete();
+							directed_proxy_dependent_node_delete(idx);
 							#endif
 						}
 					}
-					mesh_directed_proxy_capa_report(key_offset);
+					mesh_directed_proxy_capa_report(p_bear_handle->conn_handle, key_offset);
 				}										
 			}
 			break;
@@ -469,20 +818,17 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			break;
 	}
 	
-	/*if(p_str->opcode & 0x3f){
-		LOG_USER_MSG_INFO(0,0,"p_nw->src:%x",p_nw->src);
-		proxy_proc_filter_mesh_cmd(p_nw->src);	
-	}*/
-
 	#if MD_DF_CFG_SERVER_EN
-	if(UNSET_CLIENT == proxy_mag.proxy_client_type){
-		proxy_mag.proxy_client_type = PROXY_CLIENT; 
+	if(UNSET_CLIENT == proxy_mag[idx].proxy_client_type){
+		proxy_mag[idx].proxy_client_type = PROXY_CLIENT; 
 	}
 	#endif
 	return 1;
 
 }
-extern u8 aes_ecb_encryption(u8 *key, u8 mStrLen, u8 *mStr, u8 *result);
+
+void tn_aes_128(u8 *key, u8 *plaintext, u8 *result);
+extern u8 aes_ecb_encryption(u8 *key, u8 mStrLen, u8 *mStr, u8 *result); // is the same as tn_aes_128, but no len. so use tn_aes_128 instead to decrease code size.
 #if WIN32
 void aes_win32(char *p, int plen, char *key);
 #endif
@@ -499,12 +845,13 @@ int proxy_adv_calc_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u
 	memcpy(hash,adv_para+8,8);
 	#else
 	u8 adv_hash[16];
-	aes_ecb_encryption(node_key,sizeof(adv_para),adv_para,adv_hash);
+	tn_aes_128(node_key, adv_para, adv_hash);
 	memcpy(hash,adv_hash+8,8);
 	#endif 
 	return 1;
 }
 
+#if MD_PRIVACY_BEA
 int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 hash[8])
 {
 	u8 adv_para[16];
@@ -515,7 +862,7 @@ int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 h
 	memcpy(hash,adv_para+8,8);
 	#else
 	u8 adv_hash[16];
-	aes_ecb_encryption(idk,sizeof(adv_para),adv_para,adv_hash);
+	tn_aes_128(idk,adv_para,adv_hash);
 	memcpy(hash,adv_hash+8,8);
 	#endif
 	return 1;
@@ -534,19 +881,21 @@ int proxy_adv_calc_with_private_node_identity(u8 random[8],u8 node_key[16],u16 e
 	memcpy(hash,adv_para+8,8);
 	#else
 	u8 adv_hash[16];
-	aes_ecb_encryption(node_key,sizeof(adv_para),adv_para,adv_hash);
+	tn_aes_128(node_key,adv_para,adv_hash);
 	memcpy(hash,adv_hash+8,8);
 	#endif
 	return 1;
 
 }
+#endif
 
 void calculate_proxy_adv_hash(mesh_net_key_t *p_netkey )
 {
 	proxy_adv_calc_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_netkey->ident_hash);	
+#if MD_PRIVACY_BEA
 	proxy_adv_calc_with_private_net_id(prov_para.random,p_netkey->nw_id,p_netkey->idk,p_netkey->priv_net_hash);
 	proxy_adv_calc_with_private_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_netkey->priv_ident_hash);
-	return;
+#endif
 }
 
 void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
@@ -560,64 +909,88 @@ void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
 	p_proxy->uuid_data[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 
 }
+
 #if MD_PRIVACY_BEA
-	#if 0
-u8 mesh_enable_private_identity_type(u8 en)
-{
-	for(int i=0;i<NET_KEY_MAX;i++){
-		mesh_net_key_t *p_net = &mesh_key.net_key[i][0];
-		if(p_net->valid){
-			u8 key_phase = p_net->key_phase;
-			if(KEY_REFRESH_PHASE2 == key_phase){
-				p_net += 1;		// use new key
-			}
-			if(en){
-				p_net->node_identity = NODE_IDENTITY_SUB_NET_STOP;
-				p_net->priv_identity = PRIVATE_NODE_IDENTITY_ENABLE;
-			}else{
-				p_net->node_identity = NODE_IDENTITY_SUB_NET_STOP;
-				p_net->priv_identity = PRIVATE_NODE_IDENTITY_DISABLE;
-			}
-		}	
-	}
-}
-u32 A_debug_private_sts =0;
+/********************************************************
+1. private gatt proxy  bind with gatt proxy  
+	4.2.45.1 Binding with GATT Proxy
+	If the value of the GATT Proxy state of the node is Not Supported (see Table 4.27), then the value of the 
+	Private GATT Proxy state shall be Not Supported and shall not be changed.
+	If the value of the GATT Proxy state of the node is Enabled (see Table 4.27), then the value of the Private 
+	GATT Proxy state shall be Disabled. Therefore, to change the Private GATT Proxy state to Enabled, the 
+	GATT Proxy state must be set to Disabled.
+		GATT Proxy state		Private GATT Proxy state
+		not_supported			not_supported
+		 Enabled				diabled
+		 disabled				enabled
+		 disabled		        disabled
+		 enabled                enabled(not support)
 
-void mesh_private_identity_proc()
-{
-	if(A_debug_private_sts == 1){
-		mesh_enable_private_identity_type(1);
-		A_debug_private_sts =0;
-	}else if (A_debug_private_sts == 2){
-		mesh_enable_private_identity_type(0);
-		A_debug_private_sts =0;
-	}
-}
-	#endif
+2. private Node Identity  Binding with Node Identity 
+	4.2.46.1 Binding with Node Identity
+	If the value of the Node Identity state of the node is Not Supported (see Table 4.28), then the value of the 
+	Private Node Identity state shall be Not Supported and shall not be changed.
+	If the value of the Node Identity state of the node for any subnet is Enabled (see Table 4.28), then the 
+	value of the Private Node Identity state shall be Disabled for each known subnet. Therefore, to change 
+	the Private Node Identity state to Enabled, the Node Identity state must be set to Disabled for all subnets
+		Node Identity 		    private Node Identity
+		not_supported			not_supported
+		 Enabled				diabled
+		 disabled				enabled
+		 disabled		        disabled
+		 enabled                enabled(not support)
+	so the relation ship with both have the logic of the tables 
+3. 7.2.2.2.1 Advertising:
 
+GATT Proxy state 	Private GATT Proxy 						state Advertising
+	0x00 			Does Not Exist 							No Proxy Advertising
+	0x00 			Disable (0x00) 							No Proxy Advertising
+	0x00 			Enable (0x01) 							Private Network Identity
+	0x01 			Does Not Exist or Disable (0x00) 		Network ID
+	0x02 			Does Not Exist or Not Supported (0x02) 	No Proxy Advertising
+
+Node Identity state Private Node 							Identity state Advertising
+	0x00 			Does Not Exist 							No Identity Advertising
+	0x00 			Disable (0x00) 							No Identity Advertising
+	0x00 			Enable (0x01) 							Private Node Identity
+	0x01 			Does Not Exist or Disable (0x00) 		Node Identity
+	0x02 			Does Not Exist or Not Supported (0x02) 	No Identity Advertising
+
+********************************************************/
 
 u8 mesh_get_identity_type(mesh_net_key_t *p_netkey)
 {
-#if MD_SERVER_EN
+ 	// for both MD_SERVER_EN and MD_CLIENT_EN
 	u8 gatt_proxy_sts = model_sig_cfg_s.gatt_proxy;
 	u8 priv_proxy_sts = g_mesh_model_misc_save.privacy_bc.proxy_sts;
-	u8 node_identi =NETWORK_ID_TYPE;
+	u8 node_identi = NODE_NO_PROXY_ADVERTISING;
 	// node identity have higher prior
 	if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_STOP && p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
 		node_identi = PRIVATE_NODE_IDENTITY_TYPE;
-	}else if ( p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN &&
+	}else if (p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN &&
 			(p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_NOT_SUPPORT || p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_DISABLE)){
 		node_identi = NODE_IDENTITY_TYPE;
+	}else if ( 	p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN && p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
+		/*************************************************************************** 
+		if the node_identity enable ,then the priv_identity will be disabled ,
+		or if priv_identity enable ,node_identity will be disabled,
+		they can not enable at the same time .
+		****************************************************************************/
 	}else if(gatt_proxy_sts == GATT_PROXY_SUPPORT_DISABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
 		node_identi = PRIVATE_NETWORK_ID_TYPE;
 	}else if ( gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE &&
 			   (priv_proxy_sts == PRIVATE_PROXY_DISABLE ||priv_proxy_sts == PRIVATE_PROXY_NOT_SUPPORT)){
 		node_identi = NETWORK_ID_TYPE;
+	}else if (	gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
+		/*************************************************************************** 
+		if the gatt_proxy_sts enable ,then the priv_proxy_sts will be disabled ,
+		or if priv_proxy_sts enable ,gatt_proxy_sts will be disabled,
+		they can not enable at the same time .
+		****************************************************************************/
+	}else{
+		// will not have proxy advertise 
 	}
 	return node_identi;
-#else
-	return 1;
-#endif
 }
 
 #endif
@@ -656,26 +1029,32 @@ u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 	u8 node_identity_type =0;
 	#if MD_PRIVACY_BEA
 	node_identity_type = mesh_get_identity_type(p_netkey);
-	#if MD_ON_DEMAND_PROXY_EN
-	if(mesh_on_demand_proxy_time){			
-		if(clock_time_exceed(mesh_on_demand_proxy_time, g_mesh_model_misc_save.on_demand_proxy*1000*1000)){
-			mesh_on_demand_proxy_time = 0;
-		}
-		else{
-			node_identity_type = PRIVATE_NETWORK_ID_TYPE;
+		#if MD_ON_DEMAND_PROXY_EN
+	if(mesh_on_demand_proxy_time){
+		if(node_identity_type < NODE_NO_PROXY_ADVERTISING){
+			mesh_on_demand_private_gatt_proxy_stop();
+		}else{
+			if(clock_time_exceed(mesh_on_demand_proxy_time, g_mesh_model_misc_save.on_demand_proxy*1000*1000)){
+				mesh_on_demand_private_gatt_proxy_stop();
+			}else{
+				node_identity_type = PRIVATE_NETWORK_ID_TYPE;
+			}
 		}
 	}
-	#endif
-	if(node_identity_type == NODE_IDENTITY_PROHIBIT){// in some condition it will not allow to send proxy adv
-		return 0;
-	}
+		#endif
 	#else
-	if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN){
-		node_identity_type = NODE_IDENTITY_TYPE;
+	u8 gatt_proxy_sts = model_sig_cfg_s.gatt_proxy;
+	if(gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE){
+		if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN){
+			node_identity_type = NODE_IDENTITY_TYPE;
+		}else{
+			node_identity_type = NETWORK_ID_TYPE;
+		}
 	}else{
-		node_identity_type = NETWORK_ID_TYPE;
+		node_identity_type = NODE_NO_PROXY_ADVERTISING;
 	}
 	#endif
+	
 	// set the base para for the proxy adv 
 	proxy_adv_node_identity * p_proxy = (proxy_adv_node_identity *)p;
 	set_proxy_adv_header(p_proxy);
@@ -697,7 +1076,9 @@ u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SRV_VAL>>8)&0xff;
 		memcpy(p_proxy->random,pRandom,8);
 		memcpy(p_proxy->hash,p_netkey->ident_hash,8);
-	}else if (node_identity_type == PRIVATE_NETWORK_ID_TYPE){
+	}
+	#if MD_PRIVACY_BEA
+	else if (node_identity_type == PRIVATE_NETWORK_ID_TYPE){
 		// calculate the demo part of the proxy adv 'hash
 		p_proxy->serv_len = 0x14;
 		p_proxy->serv_type = 0x16;
@@ -714,6 +1095,11 @@ u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 		memcpy(p_proxy->random,pRandom,8);
 		memcpy(p_proxy->hash,p_netkey->priv_ident_hash,8);
 	}
+	#endif
+	else{// if(node_identity_type >= NODE_NO_PROXY_ADVERTISING){// in some condition it will not allow to send proxy adv
+		return 0;
+	}
+	
 	*p_len = p_proxy->serv_len + 8;
 	return 1;
 }
