@@ -36,11 +36,11 @@ public class TelinkHttpClient {
     private static TelinkHttpClient mHttpclient = new TelinkHttpClient();
 
     //    public final static String URL_BASE = "http://192.168.18.59:8080/";
-    public final static String URL_BASE = "http://47.115.40.63:8080/";
+//    public static String URL_BASE = "http://47.115.40.63:8080/";
 
-    public final static String URL_UPLOAD = URL_BASE + "upload";
+    public final static String URL_UPLOAD = "upload";
 
-    public final static String URL_DOWNLOAD = URL_BASE + "download";
+    public final static String URL_DOWNLOAD = "download";
 
     private final OkHttpClient client;
 
@@ -56,19 +56,20 @@ public class TelinkHttpClient {
         return mHttpclient;
     }
 
-    public Call upload(String meshJson, long timeoutSeconds, Callback callback) {
-
+    public Call upload(String baseUrl, String meshJson, long timeoutSeconds, Callback callback) {
+        String url = baseUrl + URL_UPLOAD;
         FormBody formBody = new FormBody.Builder()
                 .add("data", meshJson)
                 .add("timeout", timeoutSeconds + "")
                 .build();
-        return sentRequest(URL_UPLOAD, formBody, "upload", callback);
+        return sentRequest(url, formBody, "upload", callback);
     }
 
-    public Call download(String uuid, Callback callback) {
+    public Call download(String baseUrl, String uuid, Callback callback) {
+        String url = baseUrl + URL_DOWNLOAD;
         FormBody formBody = new FormBody.Builder()
                 .add("uuid", uuid).build();
-        return sentRequest(URL_DOWNLOAD, formBody, "download", callback);
+        return sentRequest(url, formBody, "download", callback);
     }
 
     public Call sentRequest(String url, FormBody formBody, Object tag, Callback callback) {

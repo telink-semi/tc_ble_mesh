@@ -27,14 +27,13 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.WindowMetrics;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.gson.Gson;
-import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
@@ -172,7 +171,8 @@ public class QRCodeShareActivity extends BaseActivity {
         showWaitingDialog("uploading...");
         String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo, meshNetKeyList);
         MeshLogger.d("upload json string: " + jsonStr);
-        TelinkHttpClient.getInstance().upload(jsonStr, QRCODE_TIMEOUT, uploadCallback);
+        String baseUrl = SharedPreferenceHelper.getBaseUrl(this);
+        TelinkHttpClient.getInstance().upload(baseUrl, jsonStr, QRCODE_TIMEOUT, uploadCallback);
     }
 
 

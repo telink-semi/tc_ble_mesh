@@ -399,6 +399,77 @@
 
             </androidx.cardview.widget.CardView>
 
+            <!--      base url      -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Base URL(for cloud sharing)"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_tip_url"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_tip"
+                            android:tint="@color/grey" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!--<ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_name"
+                            android:tint="@color/gray" />-->
+
+                        <TextView
+                            android:id="@+id/tv_url"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="url" />
+
+                        <ImageView
+                            android:id="@+id/iv_edit_url"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_edit"
+                            android:tint="@color/colorPrimary" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
             <!-- online status -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -436,6 +507,7 @@
 
             </androidx.cardview.widget.CardView>
 
+
             <Button
                 android:id="@+id/btn_reset_settings"
                 android:layout_width="match_parent"
@@ -443,6 +515,7 @@
                 android:layout_marginTop="8dp"
                 android:text="Reset Settings"
                 android:theme="@style/WarnButton" />
+
 
         </LinearLayout>
 

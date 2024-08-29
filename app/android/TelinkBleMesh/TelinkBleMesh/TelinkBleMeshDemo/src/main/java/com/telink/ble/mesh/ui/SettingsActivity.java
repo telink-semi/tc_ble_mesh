@@ -24,12 +24,18 @@ package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+
+import com.google.android.material.textfield.TextInputEditText;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.networking.ExtendBearerMode;
@@ -45,7 +51,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
     private Switch switch_log, switch_private, switch_no_oob, switch_level;
     private RadioGroup rg_pv_mode, rg_extend_bearer, rg_share_action;
-    private TextView tv_online_status;
+    private TextView tv_online_status, tv_url;
     private final String[] EXTEND_TYPES = new String[]{
             "No Extend",
             "Extend GATT Only",
@@ -113,6 +119,11 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         tv_online_status = findViewById(R.id.tv_online_status);
         tv_online_status.setText(AppSettings.ONLINE_STATUS_ENABLE ? R.string.online_status_enabled : R.string.online_status_disabled);
 
+
+        findViewById(R.id.iv_tip_url).setOnClickListener(this);
+        findViewById(R.id.iv_edit_url).setOnClickListener(this);
+        tv_url = findViewById(R.id.tv_url);
+
         loadSettings();
     }
 
@@ -126,6 +137,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         ((RadioButton) rg_extend_bearer.findViewById(getExBrModeResId())).setChecked(true);
 
         ((RadioButton) rg_share_action.findViewById(getShareActionResId())).setChecked(true);
+
+        tv_url.setText(SharedPreferenceHelper.getBaseUrl(this));
 
     }
 
@@ -298,6 +311,39 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 });
                 break;
 
+            case R.id.iv_tip_url:
+                startActivity(
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.base_url_tip)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_SUB_TITLE, "Base URL")
+                );
+                break;
+
+            case R.id.iv_edit_url:
+                showUrlInputDialog();
+                break;
+
         }
+    }
+
+    private void showUrlInputDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_single_input, null);
+        final TextInputEditText et_input = view.findViewById(R.id.et_single_input);
+        et_input.setText(SharedPreferenceHelper.getBaseUrl(this));
+        et_input.setHint("please input url");
+        builder.setTitle("Update Base URL");
+        builder.setView(view).setPositiveButton("Confirm", (dialog, which) -> {
+            dialog.dismiss();
+            String url = et_input.getText().toString().trim();
+            if (TextUtils.isEmpty(url)) {
+                toastMsg("input empty");
+                return;
+            }
+            SharedPreferenceHelper.setBaseUrl(this, url);
+            tv_url.setText(url);
+            toastMsg("save base url success ");
+        }).setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 }

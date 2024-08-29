@@ -70,6 +70,9 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_SHARE_IMPORT_COMPLETE_ACTION = "com.telink.bluetooth.light.KEY_SHARE_IMPORT_COMPLETE_ACTION";
 
+    private static final String KEY_BASE_URL = "com.telink.bluetooth.light.KEY_BASE_URL";
+
+    public static final String DEFAULT_BASE_URL = "http://47.115.40.63:8080/";
 
     public static final boolean DEFAULT_LOG_ENABLE = true;
 
@@ -249,5 +252,22 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putInt(KEY_NODE_SORT_TYPE, sortType.ordinal()).apply();
     }
+
+
+    public static String getBaseUrl(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
+    }
+
+    public static void setBaseUrl(Context context, String baseUrl) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString(KEY_BASE_URL, baseUrl).apply();
+    }
+
+    public static void resetBaseUrl(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString(KEY_BASE_URL, DEFAULT_BASE_URL).apply();
+    }
+
 
 }
