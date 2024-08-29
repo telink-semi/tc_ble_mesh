@@ -123,6 +123,7 @@ public class SharedPreferenceHelper {
                 .putString(KEY_EXTEND_BEARER_MODE, ExtendBearerMode.NONE.name())
                 .putBoolean(KEY_NO_OOB, DEFAULT_AUTO_USE_NO_OOB_ENABLE)
                 .putInt(KEY_SHARE_IMPORT_COMPLETE_ACTION, IMPORT_COMPLETE_ACTION_DEFAULT)
+                .putString(KEY_BASE_URL, DEFAULT_BASE_URL)
                 .apply();
     }
 
