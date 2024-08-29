@@ -121,7 +121,7 @@ int OTS_send_date2gateway(u8 *data, u16 len)
 	memcpy(ots_send_data.data, data, len);
 
 	int send_len = OFFSETOF(cdtp_gw_ots_send_data_t, data) + len;
- 	LOG_MSG_INFO (TL_LOG_GATEWAY, (u8 *)&ots_send_data, send_len, "OTS send date to gateway: ", 0);
+ 	LOG_MSG_INFO (TL_LOG_GATEWAY, (u8 *)&ots_send_data, send_len, "OTS send date to gateway: ");
 	WriteFile_host_handle((u8 *)&ots_send_data, send_len);
 	
 	return err;
@@ -190,7 +190,7 @@ void CDTP_inputdb_trigger()
 {
 	LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0, "CDTP inputdb trigger, and waiting for crc from app in %d seconds", cdtp_trigger_time_s);
 	#if 0 // no need factory reset first.
-	//LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0, "step 1: factory reset and delete JSON ...", 0);
+	//LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0, "step 1: factory reset and delete JSON ...");
 	//gateway_VC_factory_reset_and_del_JSON();
 	#endif
 	cdtp_tick_inputdb = clock_time() | 1;
@@ -204,14 +204,14 @@ void CDTP_inputdb_check_and_proc()
 		if(CDTP_rw_handle.cal_crc_get_flag){
 			if(CDTP_rw_handle.cal_crc_rx == CDTP_rw_handle.cal_crc_tx){
 				err = 0;
-				LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0, "step 2: enable new json ...", 0);
+				LOG_MSG_INFO(TL_LOG_GATEWAY, 0, 0, "step 2: enable new json ...");
 				CdtpInputDbFromJSON(CDTP_UNCOMPRESS_FILE_NAME); // CdtpInputDb("output_json.json"); // 
 				// should not run here, because has reboot EXE before.
 			}else{
-				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "failed to enable new json file due to checking checksum error", 0);
+				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "failed to enable new json file due to checking checksum error");
 			}
 		}else{
-			LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "failed to enable new json file due to no checksum to check", 0);
+			LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "failed to enable new json file due to no checksum to check");
 		}
 
 		if(err){
@@ -236,10 +236,10 @@ u32 CDTP_get_buff_of_json()
 	int err = -1; // TODO: import zlib. // compress(CDTP_object_data, &len_compress, CDTP_object_uncompress_data, len_read);
 	if( 0 == err){
 		CDTP_object_ready = 1;
-		LOG_MSG_INFO(TL_LOG_GATEWAY,0, 0,"CDTP get buffer of json success", 0); 
+		LOG_MSG_INFO(TL_LOG_GATEWAY,0, 0,"CDTP get buffer of json success"); 
 	}else{
 		len_compress = 0;
-		LOG_MSG_ERR(TL_LOG_GATEWAY,0, 0,"CDTP fail to get buffer of json", 0);	
+		LOG_MSG_ERR(TL_LOG_GATEWAY,0, 0,"CDTP fail to get buffer of json");	
 	}
 
 	return (u32)len_compress;
@@ -283,7 +283,7 @@ int OTS_coc_datacb(u8 *pData, u16 dataLen)
 	cdtp_read_write_handle_t *p_cdtp = &CDTP_rw_handle;
 	LOG_MSG_INFO(TL_LOG_GATEWAY, pData, dataLen,"OTS write DATA CALLBACK, len: %d", dataLen);
 	if(0 == p_cdtp->write_len){
-		LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0,"no receive OTS_OACP_OPCODE_WRITE before", 0);
+		LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0,"no receive OTS_OACP_OPCODE_WRITE before");
 		return -1;
 	}
 	
@@ -312,10 +312,10 @@ int OTS_coc_datacb(u8 *pData, u16 dataLen)
 					OTS_send_checksum2gateway(crc);
 					CDTP_inputdb_trigger();
 				}else {
-					LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "not gateway mode", 0);
+					LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "not gateway mode");
 				}
 			}else{
-				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "uncompress failed", 0);
+				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0, "uncompress failed");
 			}
 		}
 	}
@@ -354,7 +354,7 @@ void CDTP_send_data()
 					OTS_send_checksum2gateway(crc);
 				}
 			}else{
-				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0,"Send Data error", 0);	
+				LOG_MSG_ERR(TL_LOG_GATEWAY, 0, 0,"Send Data error");	
 			}
 		}
 	}
@@ -366,7 +366,7 @@ void CDTP_ots_rx_handle(u8 *rx_buff, int buff_len)
 	cdtp_gw_ots_rx_rsp_t *p_rx = (cdtp_gw_ots_rx_rsp_t *)rx_buff;
 	if((buff_len < OFFSETOF(cdtp_gw_ots_rx_rsp_t, data))
 	|| (buff_len != p_rx->len + OFFSETOF(cdtp_gw_ots_rx_rsp_t, data))){
-		LOG_MSG_ERR(TL_LOG_COMMON, rx_buff, buff_len,"OTS rx len check error, buff", 0);
+		LOG_MSG_ERR(TL_LOG_COMMON, rx_buff, buff_len,"OTS rx len check error, buff");
 		return ;
 	}
 	

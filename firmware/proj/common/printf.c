@@ -307,7 +307,7 @@ int floatToString(char * outstr, int len_max, float value)
 	}
 	
 	for(unsigned int i = 0; i < (45 - DEFAULT_VALID_NUMBER); ++i){	// max 45 valid number
-		if(value_temp > 1000000){ // only keep 7 valid number is enough
+		if(value_temp >= 1000000){ // only keep 7 valid number is enough // must use ">=" and not "=". if not, input 1.0 will print 0.0
 			break;
 		}
 		value_temp *= 10;
@@ -394,15 +394,18 @@ _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 				continue;
 			}
 			
-			#if FLOAT_PRINT_EN
 			if (*format == 'f') {
+				#if FLOAT_PRINT_EN
 				char str[48];// = {0}; // max 45 valid number
 				floatToString(str, sizeof(str), va_arg( args, double ));
 				str[sizeof(str) - 1] = 0;	// make sure end of string
 				pc += prints(out, str, 0, 0); // max length of string is sizeof(str).
 				continue;
+				#else
+				char str[] = "- - please enable FLOAT_PRINT_EN to support %f ! - -"; // = {0}; // max 45 valid number
+				pc += prints(out, str, 0, 0); // max length of string is sizeof(str).
+				#endif
 			}
-			#endif
 			
 			if (*format == 'x') {
 				pc += printi(out, va_arg( args, int ), 16, 0, width, pad, 'a');

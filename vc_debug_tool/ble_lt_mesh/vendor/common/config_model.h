@@ -56,7 +56,53 @@ typedef struct{
 	u8 data[1];
 }models_meta_status_head_t;
 
+// refer to https://www.bluetooth.com/specifications/assigned-numbers
+// --- mesh_metadata_ids:
+#define METADATA_ID_HEALTH_TESTS_INFORMATION		0x0000
+#define METADATA_ID_SENSOR_PROPERTIES				0x0001
+#define METADATA_ID_LIGHT_PURPOSE					0x0002
+#define METADATA_ID_LIGHT_LIGHTNESS_RANGE			0x0003
+#define METADATA_ID_LIGHT_CTL_TEMPERATURE_RANGE		0x0004
+#define METADATA_ID_LIGHT_HSL_HUE_RANGE				0x0005
+#define METADATA_ID_LIGHT_HSL_SATURATION_RANGE		0x0006
+#define METADATA_ID_CLOCK_ACCURACY					0x0007
+#define METADATA_ID_TIMEKEEPING_RESERVE				0x0008
+
+// --- mmdl_light_purposes:
+#define LIGHT_PURPOSE_UPLIGHT						0x0000
+#define LIGHT_PURPOSE_UPLIGHT_LEFT					0x0001
+#define LIGHT_PURPOSE_UPLIGHT_CENTER				0x0002
+#define LIGHT_PURPOSE_UPLIGHT_RIGHT					0x0003
+#define LIGHT_PURPOSE_DOWNLIGHT						0x0004
+#define LIGHT_PURPOSE_DOWNLIGHT_LEFT				0x0005
+#define LIGHT_PURPOSE_DOWNLIGHT_CENTER				0x0006
+#define LIGHT_PURPOSE_DOWNLIGHT_RIGHT				0x0007
+#define LIGHT_PURPOSE_INSIDE						0x0008
+#define LIGHT_PURPOSE_OUTSIDE						0x0009
+#define LIGHT_PURPOSE_BACKLIGHT						0x000A
+#define LIGHT_PURPOSE_FLOODLIGHT					0x000B
+#define LIGHT_PURPOSE_TASKLIGHT						0x000C
+#define LIGHT_PURPOSE_TASKLIGHT_LEFT				0x000D
+#define LIGHT_PURPOSE_TASKLIGHT_CENTER				0x000E
+#define LIGHT_PURPOSE_TASKLIGHT_RIGHT				0x000F
+#define LIGHT_PURPOSE_WARMING_LIGHT					0x0010
+#define LIGHT_PURPOSE_EMERGENCY_LIGHT				0x0011
+#define LIGHT_PURPOSE_NIGHT_LIGHT					0x0012
+#define LIGHT_PURPOSE_INDICATOR_LIGHT				0x0013
+#define LIGHT_PURPOSE_UNDERCABINET_LIGHT			0x0014
+#define LIGHT_PURPOSE_ACCENT_LIGHT					0x0015
+#define LIGHT_PURPOSE_STRIP_LIGHT					0x0016
+#define LIGHT_PURPOSE_TROFFER_LIGHT					0x0017
+#define LIGHT_PURPOSE_HIGH_BAY_LIGHT				0x0018
+#define LIGHT_PURPOSE_WALL_PACK_LIGHT				0x0019
+
+
+#if MD_ON_DEMAND_PROXY_EN
 extern u32 mesh_on_demand_proxy_time;
+void mesh_on_demand_private_gatt_proxy_start();
+void mesh_on_demand_private_gatt_proxy_stop();
+int mesh_on_demand_is_valid_st_to_rx_solicitation();
+#endif
 
 int is_publish_allow();
 u8 mesh_get_network_transmit();
@@ -73,8 +119,11 @@ int mesh_sec_prov_confirmation_fun(unsigned char *cfm, unsigned char *input, int
 void mesh_sec_prov_salt_fun(unsigned char prov_salt[16],unsigned char *input,unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
 int mesh_sec_prov_session_key_fun(unsigned char sk[16], unsigned char *sn, unsigned char *input, int n, unsigned char ecdh[32],
 									unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
+int mesh_get_on_demand_private_proxy();
 u8 mesh_get_private_proxy();
 u8 mesh_get_private_node_identity();
+int is_existed_sub_addr_and_not_virtual(model_common_t *p_model, u16 group_addr);
+
 
 int mesh_cmd_sig_cfg_sar_transmitter_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_sar_transmitter_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

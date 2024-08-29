@@ -36,6 +36,9 @@ extern "C" {
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
+
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -152,9 +155,6 @@ extern "C" {
 /////////////////// watchdog  //////////////////////////////
 #define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000  //ms
-
-
-#define	REGA_TID			0x3A
 
 //----------------------- keyboard --------------------------------
 #define UI_KEYBOARD_ENABLE				1

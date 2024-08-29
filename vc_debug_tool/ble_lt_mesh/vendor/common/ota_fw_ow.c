@@ -23,14 +23,11 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj/mcu/watchdog_i.h"
-#include "drivers/8258/flash.h"
+#include "drivers.h"
 #include "vendor/common/user_config.h"
-#include "proj_lib/rf_drv.h"
-#include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
 
-#if (FLASH_1M_ENABLE && PINGPONG_OTA_DISABLE && (0 == FW_START_BY_BOOTLOADER_EN))
+#if (FLASH_PLUS_ENABLE && PINGPONG_OTA_DISABLE && (0 == FW_START_BY_LEGACY_BOOTLOADER_EN))
 static inline void ota_reboot(void){
 #if 0
     static volatile u32 reboot_0key;
@@ -46,12 +43,16 @@ static inline void ota_reboot(void){
 _attribute_ram_code_ void ota_fw_check_over_write (void)    //must run in ramcode
 {
 	#if SWITCH_FW_ENABLE
+	u8 flash_boot_flag ;
+	flash_read_page(FLASH_ADR_BOOT_FLAG,1,&flash_boot_flag);
 	u32 flash_adr_new_fw = (*(u8 *)FLASH_ADR_BOOT_FLAG == 0xa5)?FLASH_ADR_LIGHT_TELINK_MESH:FLASH_ADR_UPDATE_NEW_FW;
 	#else
 	u32 flash_adr_new_fw = FLASH_ADR_UPDATE_NEW_FW;
 	#endif
-    u32 adr_flag = flash_adr_new_fw + 8;
-    if(0x544c4e4b != *(u32 *)adr_flag){
+    u32 adr_flag = flash_adr_new_fw + BOOT_MARK_ADDR;
+	u32 adr_flag_data;
+	flash_read_page(adr_flag,sizeof(adr_flag_data),(u8*)&adr_flag_data);
+    if(0x544c4e4b != adr_flag_data){
         return ;
     }
 
@@ -110,7 +111,9 @@ _attribute_ram_code_ void ota_fw_check_over_write (void)    //must run in ramcod
     buff[0] = 0;
     flash_write_page (adr_flag, 1, buff);   //clear OTA flag
     #if SWITCH_FW_ENABLE
-	if(*(u8 *)FLASH_ADR_BOOT_FLAG != 0xff){
+	u8 flash_adr_boot_flag;
+	flash_read_page(FLASH_ADR_BOOT_FLAG,1,&flash_adr_boot_flag);
+	if(flash_adr_boot_flag != 0xff){
     	flash_erase_sector(FLASH_ADR_BOOT_FLAG);//clear boot flag
 	}
     #endif

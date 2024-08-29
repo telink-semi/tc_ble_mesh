@@ -48,6 +48,7 @@
 #include "../common//vendor_model.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
+#include "app_ui.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 
@@ -144,8 +145,8 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
-			proxy_cfg_list_init_upon_connection();
-			mesh_service_change_report();
+			proxy_cfg_list_init_upon_connection(BLS_HANDLE_MIN);
+			mesh_service_change_report(BLS_HANDLE_MIN);
 		}
 
 	//------------ connection update complete -------------------------------
@@ -181,7 +182,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb(pd->reason);
+		mesh_ble_disconnect_cb(p);
 	}
 
 	if (send_to_hci)
@@ -190,57 +191,6 @@ int app_event_handler (u32 h, u8 *p, int n)
 	}
 
 	return 0;
-}
-
-void proc_ui()
-{
-	static u32 tick, scan_io_interval_us = 40000;
-	if (!clock_time_exceed (tick, scan_io_interval_us))
-	{
-		return;
-	}
-	tick = clock_time();
-
-	#if 0
-	static u8 st_sw1_last,st_sw2_last;	
-	u8 st_sw1 = !gpio_read(SW1_GPIO);
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	
-	if(!(st_sw1_last)&&st_sw1){
-	    scan_io_interval_us = 100*1000; // fix dithering
-	    access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
-		foreach(i,NET_KEY_MAX){
-					mesh_key.net_key[i][0].node_identity =1;
-		}
-	}
-	st_sw1_last = st_sw1;
-	
-	if(!(st_sw2_last)&&st_sw2){
-	    scan_io_interval_us = 100*1000; // fix dithering
-	    access_cmd_onoff(0xffff, 0, G_OFF, CMD_NO_ACK, 0);
-	}
-	st_sw2_last = st_sw2;
-
-	
-	#endif
-
-	#if 0
-	static u8 st_sw2_last;	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	
-	if(!(st_sw2_last)&&st_sw2){ // dispatch just when you press the button 
-		//trigger the unprivison data packet 
-		static u8 beacon_data_num;
-		beacon_data_num =1;
-		mesh_provision_para_reset();
-		while(beacon_data_num--){
-			unprov_beacon_send(MESH_UNPROVISION_BEACON_WITH_URI,0);
-		}
-		provision_mag.initial_pro_roles = MESH_INI_ROLE_NODE;
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw2_last = st_sw2;
-	#endif
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -301,10 +251,12 @@ void proc_suspend_low_power()
 		}
 	}
 	
-	if(blt_state == BLS_LINK_STATE_CONN){ 
-	}else if (blt_state == BLS_LINK_STATE_ADV){
-		if((!mesh_sleep_time.appWakeup_flg) && clock_time_exceed(mesh_sleep_time.last_tick, mesh_sleep_time.run_time_us)){
-			mesh_sleep_time.appWakeup_flg = 0;
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){ 
+	}else if (blc_ll_getCurrentState() == BLS_LINK_STATE_ADV){
+		if(clock_time_exceed(mesh_sleep_time.last_tick, mesh_sleep_time.run_time_us)){
+			if(blc_ll_getCurrentState() == BLS_LINK_STATE_ADV){
+				set_blt_busy(0); 	// device will exit sleep immediately while wakeup level is valid, clear busy state in adv mode to enter sleep again quickly.
+			}
 			#if BLE_REMOTE_PM_ENABLE
 			if(!is_provision_working() ){
 				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
@@ -325,16 +277,15 @@ void main_loop ()
 #endif	
 	////////////////////////////////////// BLE entry /////////////////////////////////
 	blt_sdk_main_loop ();
-	if(mesh_sleep_time.appWakeup_flg && !mesh_tx_seg_par.busy){
-		return;//save running time in early wakeup.
+
+	if((blc_ll_getCurrentState() == BLS_LINK_STATE_ADV) && (blts.scan_en & BLS_FLAG_SCAN_ENABLE)){
+		extern void bls_phy_scan_mode (int set_chn);
+		bls_phy_scan_mode (0); // switch scan channel
 	}
-	else{
-		if(blt_state == BLS_LINK_STATE_ADV){
-			extern void bls_phy_scan_mode (int set_chn);
-			bls_phy_scan_mode (0); // switch scan channel
-		}
-	}
+
+#if (SPIRIT_VENDOR_EN)
 	mesh_tx_indication_proc();	
+#endif
 	#if 0 // for indication test
 	static u8 A_send_indication=0;
 	if(A_send_indication){
@@ -386,27 +337,6 @@ void main_loop ()
 	proc_suspend_low_power();
 }
 
-void spirit_lpn_wakeup_init(u8 e, u8 *p, int n)
-{
-	mesh_sleep_time.appWakeup_flg = bltPm.appWakeup_flg;
-	if(!mesh_sleep_time.appWakeup_flg){
-		mesh_sleep_time.last_tick = clock_time()|1;
-		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-	}
-}
-
-
-void spirit_lpn_suspend_enter(u8 e, u8 *p, int n){
-	bls_pm_setWakeupSource(PM_WAKEUP_PAD);
-}
-
-void spirit_lpn_ui_init(){
-	cpu_set_gpio_wakeup(SW1_GPIO, 0, 1);// SW1 switch gatt_mode
-	cpu_set_gpio_wakeup(SW2_GPIO, 0, 1);
-
-	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  //gpio pad wakeup suspend/deepsleep
-}
-
 void user_init()
 {
     #if (BATT_CHECK_ENABLE)
@@ -427,6 +357,11 @@ void user_init()
 		}
 	#endif
 	mesh_global_var_init();
+
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_operation(FLASH_OP_EVT_APP_INITIALIZATION, 0, 0);
+	blc_appRegisterStackFlashOperationCallback(app_flash_protection_operation); //register flash operation callback for stack
+#endif
 	proc_telink_mesh_to_sig_mesh();		// must at first
 	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .
 
@@ -473,6 +408,11 @@ void user_init()
 	#endif
 	blc_pm_setDeepsleepRetentionThreshold(50, 30);
 	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
+
+	#if UI_KEYBOARD_ENABLE
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &mesh_set_sleep_wakeup);
+	bls_app_registerEventCallback (BLT_EV_FLAG_GPIO_EARLY_WAKEUP, &mesh_proc_keyboard);
+	#endif
 #else
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
 #endif
@@ -518,8 +458,6 @@ void user_init()
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
-	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_EXIT, &spirit_lpn_wakeup_init);
-	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &spirit_lpn_suspend_enter);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
 	bls_set_advertise_prepare (app_advertise_prepare_handler);
@@ -568,10 +506,12 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 {
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
-	spirit_lpn_wakeup_init(0, 0, 0); //bltPm.appWakeup_flg is clear in blc_ll_recoverDeepRetention
 	rf_set_power_level_index (MY_RF_POWER_INDEX);
 	
 	blc_ll_recoverDeepRetention();
+	// should enable IRQ here, because it may use irq here, for example BLE connect.
+	irq_enable();
+
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 #endif
@@ -579,6 +519,7 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	adc_drv_init();
 #endif
 
+	spirit_lpn_wakeup_init(0, 0, 0);
 	spirit_lpn_ui_init();
 }
 #endif

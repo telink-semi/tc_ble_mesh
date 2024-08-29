@@ -24,10 +24,11 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "config_model.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
+#if __TLSR_RISCV_EN__
+#include "stack/ble/ble.h"
+#else
 #include "proj_lib/ble/ll/ll.h"
+#endif
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "vendor/common/user_config.h"
@@ -41,11 +42,6 @@ model_sig_cfg_s_t 		model_sig_cfg_s;  // configuration server model
 #if MD_CFG_CLIENT_EN
 model_client_common_t   model_sig_cfg_c;
 #endif
-
-#if MD_ON_DEMAND_PROXY_EN
-u32 mesh_on_demand_proxy_time = 0; // max 256s, clock_time() is enough
-#endif
-
 
 void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cfg) // len_ut = len_ac for control message.
 {
@@ -219,7 +215,11 @@ u8 mesh_get_network_transmit()
 
 u8 mesh_get_relay_retransmit()
 {
+#if AUDIO_MESH_MULTY_NODES_TX_EN
+	return audio_mesh_get_tx_retransmit_cnt();
+#else
 	return model_sig_cfg_s.relay_retransmit.val;
+#endif
 }
 
 u8 mesh_get_ttl()
@@ -249,6 +249,7 @@ u8 mesh_get_relay()
 
 int is_adr_in_sub_list(model_common_t *p_model, u16 adr)
 {
+#if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
 	if(p_model){
 		foreach(i,SUB_LIST_MAX){
 	        if(adr == p_model->sub_list[i]){
@@ -256,10 +257,32 @@ int is_adr_in_sub_list(model_common_t *p_model, u16 adr)
 	        }
 	    }
 	}
-	
+#else
+	foreach(i,SUB_LIST_MAX){
+        if(adr == p_model->sub_buf.sub_addr[i]){
+            return 1;
+        }
+    }
+    
+    #if VIRTUAL_ADDR_ENABLE
+    foreach(i,VIRTUAL_ADDR_CNT_MAX){
+        if(adr == p_model->sub_buf.vir_addr[i].addr){
+            return 1;
+        }
+    }
+    #endif
+#endif	
 	return 0;
 }
 
+/**
+ * @brief       This function check if current node subscribed the address.
+ * @param[in/out] p_model: if it is NULL, it is used to output the first model resource which subscribe the address.
+ *                         if not, it is input parameter to check if this model subscribed the address.
+ * @param[in]   adr		- subscription address or group address
+ * @return      1: ture. 0: false.
+ * @note        
+ */
 int is_subscription_adr(model_common_t *p_model, u16 adr)
 {
 	if(p_model){
@@ -400,7 +423,7 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 				#endif
 				#if !GATT_LPN_EN
 				// send terminate cmd 
-				if(blt_state == BLS_LINK_STATE_CONN){
+				if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 					#if !TESTCASE_FLAG_ENABLE
 					/*****************************************
 					If the Proxy feature is disabled and the GATT server is advertising with Node Identity (see Section 
@@ -472,13 +495,137 @@ int mesh_cmd_sig_cfg_nw_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 {
 	#if 1	// can not set now
     memcpy(&model_sig_cfg_s.nw_transmit, par, sizeof(mesh_transmit_t));
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+	model_sig_cfg_s.relay_retransmit = model_sig_cfg_s.nw_transmit;
+#endif
 	mesh_model_store_cfg_s();
 	#endif
     return mesh_cmd_sig_cfg_nw_transmit_get(par, par_len, cb_par);
 }
 
-#define SUB_ADR_DEF_VAL			(0xffff)
 #define IS_VALID_SUB_ADR(adr)	(adr && (adr != 0xffff))
+
+#if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
+enum{
+	SUB_ADD_ST_ERR 				= 0,	// must 0 // usually means full.
+	SUB_ADD_ST_OK_NEW 			= 1,
+	SUB_ADD_ST_ALREADY_EXISTED 	= 2,
+};
+
+static inline int is_existed_sub_adr_normal(model_common_t *p_model, u32 sub_index, u16 sub_adr)
+{
+	return (sub_adr == p_model->sub_buf.sub_addr[sub_index]);
+}
+
+static inline void mesh_sub_par_set_normal(model_common_t *p_model, u32 sub_index, u16 sub_adr)
+{
+	p_model->sub_buf.sub_addr[sub_index] = sub_adr;
+	//p_model->sub_buf.mode = MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE; // has been set before
+}
+
+#if VIRTUAL_ADDR_ENABLE
+static inline int is_existed_sub_adr_virtual(model_common_t *p_model, u32 sub_index, u16 sub_adr, u8 *uuid)
+{
+	return (0 == memcmp(p_model->sub_buf.vir_addr[sub_index].uuid, uuid, sizeof(p_model->sub_buf.vir_addr[sub_index].uuid)));
+}
+
+static inline void mesh_sub_par_set_virtual(model_common_t *p_model, u32 sub_index, u16 sub_adr, u8 *uuid)
+{
+	p_model->sub_buf.vir_addr[sub_index].addr = sub_adr;
+	memcpy(p_model->sub_buf.vir_addr[sub_index].uuid, uuid, sizeof(p_model->sub_buf.vir_addr[sub_index].uuid));
+	//p_model->sub_buf.mode = MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE; // has been set before
+}
+#endif
+
+int subscription_add_handle(u16 op, u16 sub_adr, u8 *uuid, model_common_t *p_model)
+{
+	int add_ok = SUB_ADD_ST_ERR;
+	if(CFG_MODEL_SUB_ADD == op){
+		foreach(i,SUB_LIST_MAX){
+			if(is_existed_sub_adr_normal(p_model, i, sub_adr)){
+				return SUB_ADD_ST_ALREADY_EXISTED;
+			}
+		}
+		
+		// no need to init empty subscription list to 0xffff, due to 0xaf --> 0xa5.
+		#if FEATURE_LOWPOWER_EN
+		foreach(i,SUB_LIST_MAX_LPN)
+		#else
+		foreach(i,SUB_LIST_MAX)
+		#endif
+		{
+			u16 sub = p_model->sub_buf.sub_addr[i];
+			if((0 == sub)||(0xffff == sub)){
+				mesh_sub_par_set_normal(p_model, i, sub_adr);
+				return SUB_ADD_ST_OK_NEW;
+			}
+		}
+	}else if(CFG_MODEL_SUB_VIRTUAL_ADR_ADD == op){
+	#if VIRTUAL_ADDR_ENABLE
+		foreach(i,VIRTUAL_ADDR_CNT_MAX){
+			if(is_existed_sub_adr_virtual(p_model, i, sub_adr, uuid)){
+				return SUB_ADD_ST_ALREADY_EXISTED;
+			}
+		}
+		
+		foreach(i,VIRTUAL_ADDR_CNT_MAX)
+		{
+			u16 sub = p_model->sub_buf.vir_addr[i].addr;
+			if((0 == sub)||(0xffff == sub)){
+				mesh_sub_par_set_virtual(p_model, i, sub_adr, uuid);
+				return SUB_ADD_ST_OK_NEW;
+			}
+		}
+	#endif
+	}
+
+	return add_ok;
+}
+
+void subscription_del_handle(u16 op, u16 sub_adr, u8 *uuid, model_common_t *p_model)
+{
+	if(CFG_MODEL_SUB_DEL == op){
+		foreach(i,SUB_LIST_MAX){
+			if(is_existed_sub_adr_normal(p_model, i, sub_adr)){
+				mesh_sub_par_set_normal(p_model, i, 0);
+				// no break, to check all.
+			}
+		}
+	}else if(CFG_MODEL_SUB_VIRTUAL_ADR_DEL == op){
+	#if VIRTUAL_ADDR_ENABLE
+		foreach(i,VIRTUAL_ADDR_CNT_MAX){
+			if(is_existed_sub_adr_virtual(p_model, i, sub_adr, uuid)){
+				memset(&p_model->sub_buf.vir_addr[i], 0, sizeof(p_model->sub_buf.vir_addr[i]));
+				// no break, to check all.
+			}
+		}
+	#endif
+	}
+}
+
+u8 subscription_ow_del_all_handle(u16 op, u16 sub_adr, u8 *uuid, model_common_t *p_model)
+{
+	u8 st = ST_SUCCESS;
+	memset(p_model->sub_buf.sub_addr, 0, sizeof(p_model->sub_buf.sub_addr)); // can not clear all sub_buf
+#if VIRTUAL_ADDR_ENABLE
+	memset(p_model->sub_buf.vir_addr, 0, sizeof(p_model->sub_buf.vir_addr));
+#endif
+
+	if(CFG_MODEL_SUB_OVER_WRITE == op){
+		mesh_sub_par_set_normal(p_model, 0, sub_adr);
+	}else if(CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE == op){
+		#if VIRTUAL_ADDR_ENABLE
+		if(uuid){
+			mesh_sub_par_set_virtual(p_model, 0, sub_adr, uuid);
+		}
+		#else
+		st = ST_INSUFFICIENT_RES;
+		#endif
+	}
+	return st;
+}
+#else
+#define SUB_ADR_DEF_VAL			(0xffff)
 
 enum{
 	SUB_SAVE_ERR = 0,
@@ -522,6 +669,39 @@ int is_existed_sub_adr(model_common_t *p_model, u32 sub_index, u16 sub_adr, u8 *
 		#endif
 		));
 }
+#endif
+
+/**
+ * @brief       This function get if the address is group address, and exist in the model.
+ * @param[in]   p_model		- pointer of model.
+ * @param[in]   group_addr	- group address
+ * @return      1: yes.  2: no.
+ * @note        
+ */
+int is_existed_sub_addr_and_not_virtual(model_common_t *p_model, u16 group_addr)
+{
+	int ok_flag = 0;
+
+	if(is_group_adr(group_addr)){
+		#if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
+		foreach_arr(i, p_model->sub_buf.sub_addr){
+			if(group_addr == p_model->sub_buf.sub_addr[i]){
+				ok_flag = 1;
+				break;
+			}
+		}
+		#else
+		foreach_arr(i, p_model->sub_list){
+			if(group_addr == p_model->sub_list[i]){
+				ok_flag = 1;
+				break;
+			}
+		}
+		#endif
+	}
+
+	return ok_flag;
+}
 
 u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t *p_model, u32 model_id, bool4 sig_model)
 {
@@ -533,6 +713,7 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
     u8 st = ST_UNSPEC_ERR;
     if((CFG_MODEL_SUB_ADD == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_ADD == op)){
         int add_ok = 0;
+        #if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
         foreach(i,SUB_LIST_MAX){
         	if(is_existed_sub_adr(p_model, i, sub_adr, uuid)){
 				add_ok = 1;
@@ -585,6 +766,15 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
 				#endif		
 			}
         }
+        #else
+        add_ok = subscription_add_handle(op, sub_adr, uuid, p_model);
+        if(add_ok){
+        	//p_model->sub_buf.mode = MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE; // has been set before
+	        if(SUB_ADD_ST_ALREADY_EXISTED == add_ok){
+	        	save_flash = 0;
+	        }
+        }
+        #endif
         
         st = add_ok ? ST_SUCCESS : ST_INSUFFICIENT_RES;
         
@@ -594,14 +784,19 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
 		}
 		#endif
     }else if((CFG_MODEL_SUB_DEL == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_DEL == op)){
+		#if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
         foreach(i,SUB_LIST_MAX){
             if(is_existed_sub_adr(p_model, i, sub_adr, uuid)){
                 mesh_sub_par_del(p_model, i);
             }
         }
+        #else
+        subscription_del_handle(op, sub_adr, uuid, p_model);
+        #endif
         st = ST_SUCCESS;
     }else if(((CFG_MODEL_SUB_OVER_WRITE == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE == op))
     	   ||(CFG_MODEL_SUB_DEL_ALL == op)){
+    #if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
         memset(p_model->sub_list, SUB_ADR_DEF_VAL, sizeof(p_model->sub_list));
 		#if VIRTUAL_ADDR_ENABLE
         memset(p_model->sub_uuid, SUB_ADR_DEF_VAL, sizeof(p_model->sub_uuid));
@@ -615,7 +810,9 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
 			}
 			#endif
         }
-       
+    #else
+        st = subscription_ow_del_all_handle(op, sub_adr, uuid, p_model);
+    #endif
     }
 
 	if(ST_SUCCESS == st){
@@ -644,12 +841,36 @@ int mesh_rsp_err_st_sub_list(u8 st, u16 ele_adr, u32 model_id, bool4 sig_model, 
 int mesh_sub_list_get(u8 *p_list, model_common_t *p_model)
 {    
     int cnt = 0;
+#if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
     u16 list[SUB_LIST_MAX];
     foreach(i, SUB_LIST_MAX){
-        if(p_model->sub_list[i] && (0xffff != p_model->sub_list[i])){
-            list[cnt++] = p_model->sub_list[i];
+    	u16 sub_addr = p_model->sub_list[i];
+        if(IS_VALID_SUB_ADR(sub_addr)){
+            list[cnt++] = sub_addr;
         }
     }
+#else
+	#if VIRTUAL_ADDR_ENABLE
+    u16 list[SUB_LIST_MAX + VIRTUAL_ADDR_CNT_MAX];
+    #else
+    u16 list[SUB_LIST_MAX];
+    #endif
+    foreach(i, SUB_LIST_MAX){
+    	u16 sub_addr = p_model->sub_buf.sub_addr[i];
+        if(IS_VALID_SUB_ADR(sub_addr)){
+            list[cnt++] = sub_addr;
+        }
+    }
+    
+	#if VIRTUAL_ADDR_ENABLE
+    foreach(i, VIRTUAL_ADDR_CNT_MAX){
+    	u16 sub_addr = p_model->sub_buf.vir_addr[i].addr;
+        if(IS_VALID_SUB_ADR(sub_addr)){
+            list[cnt++] = sub_addr;
+        }
+    }
+    #endif
+#endif
     memcpy(p_list, list, cnt * 2);
 
     return cnt;
@@ -687,6 +908,7 @@ int mesh_sec_msg_dec_virtual_ll(u16 ele_adr, u32 model_id, bool4 sig_model,
 	model_common_t *p_model;
 	p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, model_id, sig_model, &model_idx, 0);
 	if(p_model){
+		#if (0 == VIRTUAL_ADDR_STAND_ALONE_SIZE_EN)
 		foreach_arr(i,p_model->sub_list){
 			if(p_model->sub_list[i] == adr_dst){
 				if(!mesh_sec_msg_dec_ll(key, nonce, dat, n, p_model->sub_uuid[i], 16, mic_length)){
@@ -696,6 +918,17 @@ int mesh_sec_msg_dec_virtual_ll(u16 ele_adr, u32 model_id, bool4 sig_model,
 				}
 			}
 		}
+		#else
+		foreach_arr(i,p_model->sub_buf.vir_addr){
+			if(p_model->sub_buf.vir_addr[i].addr == adr_dst){
+				if(!mesh_sec_msg_dec_ll(key, nonce, dat, n, p_model->sub_buf.vir_addr[i].uuid, 16, mic_length)){
+					return 0;
+				}else{
+					memcpy(dat, dat_org, n);	// recover data
+				}
+			}
+		}
+		#endif
 	}
 	return -1;
 }
@@ -784,7 +1017,9 @@ int mesh_cmd_sig_cfg_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par_t *
 				}
 				if(p_netkey_exist->node_identity != p_set->identity){
 					p_netkey_exist->node_identity = p_set->identity;
+					#if MD_PRIVACY_BEA
 					mesh_private_identity_change_by_proxy_service(p_netkey_exist);
+					#endif
 					mesh_key_save();
 				}
 				st = ST_SUCCESS;
@@ -877,6 +1112,14 @@ int mesh_cmd_sig_cfg_netkey_list(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 }
 
 // ----------------APP KEY
+/**
+ * @brief       This function will be called when receive the opcode of "Config AppKey Add"
+ * @param[in]   par		- parameter of this message
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success; others: error code of tx_errno_e
+ * @note        
+ */
 int mesh_cmd_sig_cfg_appkey_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)par;
@@ -943,7 +1186,7 @@ int mesh_cmd_sig_cfg_model_app_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	    if(p_model){
 			memset(list.appkey_idx_enc, 0, sizeof(list.appkey_idx_enc));
 			u8 *p_idx = (u8 *)(list.appkey_idx_enc) - FIX_SIZE(sig_model);
-			foreach(i,g_bind_key_max){
+			foreach(i, BIND_KEY_MAX){
 				if(p_model->bind_key[i].bind_ok){
 					if(cnt & 1){
 						SET_KEY_INDEX_H(p_idx+((cnt/2)*3), p_model->bind_key[i].idx);
@@ -1003,7 +1246,7 @@ int is_exist_mesh_appkey_idx(u16 appkey_idx)
 
 bind_key_t * is_exist_bind_key(model_common_t *p_model, u16 appkey_idx)
 {
-	foreach(i,g_bind_key_max){
+	foreach(i, BIND_KEY_MAX){
 		if(p_model->bind_key[i].bind_ok && (p_model->bind_key[i].idx == appkey_idx)){
 			return (&(p_model->bind_key[i]));
 		}
@@ -1013,7 +1256,7 @@ bind_key_t * is_exist_bind_key(model_common_t *p_model, u16 appkey_idx)
 
 bind_key_t * find_bind_key_empty(model_common_t *p_model)
 {
-	foreach(i,g_bind_key_max){
+	foreach(i, BIND_KEY_MAX){
 		if(!p_model->bind_key[i].bind_ok){
 			return (&(p_model->bind_key[i]));
 		}
@@ -1024,7 +1267,7 @@ bind_key_t * find_bind_key_empty(model_common_t *p_model)
 u32 get_bind_key_cnt(model_common_t *p_model)
 {
 	u32 cnt = 0;
-	foreach(i,g_bind_key_max){
+	foreach(i, BIND_KEY_MAX){
 		if(p_model->bind_key[i].bind_ok){
 			cnt++;
 		}
@@ -1317,6 +1560,7 @@ int is_publish_allow()
 
 void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model)
 {
+#if (MD_SERVER_EN || (GATEWAY_ENABLE == 0)) // no need period publish for gateway client.
 	model_common_t *p_model;
 	u8 model_idx = 0;
 	p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr,model_id,sig_model,&model_idx, 0);
@@ -1324,6 +1568,7 @@ void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model)
 		
 		if(p_model->pub_adr){
 		    int pub_flag = 0;
+		    #if MD_SERVER_EN
 		    if(!light_pub_model_priority || ((u8 *)p_model == light_pub_model_priority)){
     		    if(p_model->pub_trans_flag && (ST_PUB_TRANS_ALL_OK == light_pub_trans_step)){
                     light_pub_model_priority = 0;
@@ -1332,6 +1577,8 @@ void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model)
 					#endif
     		    }
 		    }
+		    #endif
+		    
 			// normal publish 
 		    if(p_model->pub_par.period.steps && p_model->cb_pub_st){
     			u32 pub_interval_ms = get_mesh_pub_interval_ms(model_id, sig_model, &p_model->pub_par.period);
@@ -1368,8 +1615,10 @@ void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model)
 			}
 		}
 	}
+#endif
 }
 
+#if MD_SERVER_EN
 int mesh_is_existed_share_model(mesh_model_id_t *md_out, u32 model_id, bool4 sig_model)
 {
 	if(sig_model){
@@ -1392,6 +1641,7 @@ int mesh_is_existed_share_model(mesh_model_id_t *md_out, u32 model_id, bool4 sig
 	
 	return 0;
 }
+#endif
 
 u8 mesh_pub_par_check(model_common_t *p_model, mesh_cfg_model_pub_set_t *p_pub_set){
 	u8 st = ST_SUCCESS;
@@ -1716,6 +1966,20 @@ int mesh_cmd_sig_vendor_model_sub_list(u8 *par, int par_len, mesh_cb_fun_par_t *
     return err;
 }
 
+/**
+ * @brief       This function get the state of on-demand proxy function.
+ * @return      1: enable. 0: disable
+ * @note        
+ */
+int mesh_get_on_demand_private_proxy() // can not be inline, because it is used in library.
+{
+#if MD_ON_DEMAND_PROXY_EN
+	return (g_mesh_model_misc_save.on_demand_proxy ? 1 : 0);
+#else
+	return 0;
+#endif
+}
+
 u8 mesh_get_private_proxy()
 {
 #if MD_PRIVACY_BEA
@@ -1731,16 +1995,16 @@ u8 mesh_get_private_proxy()
 
 u8 mesh_get_private_node_identity()
 {
-#if PRIVATE_PROXY_FUN_EN
+#if (PRIVATE_PROXY_FUN_EN && MD_PRIVACY_BEA)
 	mesh_net_key_t *p_in = &mesh_key.net_key[0][0];
 	if(p_in->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
 		return 1;
 	}else{
 		return 0;
 	}
-#else
-	return 0;
 #endif
+
+	return 0;
 }
 
 

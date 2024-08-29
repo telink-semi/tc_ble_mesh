@@ -22,11 +22,10 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "app_beacon.h"
 #include "vendor/common/app_provison.h"
-#include "proj/common/types.h"
 #include "app_privacy_beacon.h"
 
 #if MD_PRIVACY_BEA
@@ -79,6 +78,7 @@ void mesh_update_node_identity_val()
 		if(KEY_REFRESH_PHASE2 == key_phase){
 			p_netkey_base += 1;		// use new key
 		}
+		
 		calculate_proxy_adv_hash(p_netkey_base);
 	}
 }
@@ -114,7 +114,16 @@ int mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	#endif
 	mesh_sec_pri_beacon(pri_key_flag,pri_ivi,prov_para.priv_random,p_netkey->prik,bc_bear.beacon.data);
 	if(blt_sts){
-		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
+		__UNUSED u8 conn_handle = BLS_HANDLE_MIN;
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
+			if(blc_ll_isAclConnEstablished(conn_handle)){
+		#endif
+				err = notify_pkts(conn_handle, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+			}
+		}
+		#endif
 	}else{
     	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_PAR_SECURITY_BEACON);
 	}
@@ -152,7 +161,7 @@ int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 	int err = 0;
     mesh_cmd_bear_t *bc_bear = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
     mesh_beacon_t *p_bc = &bc_bear->beacon;
-	LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "rcv private beacon", 0);
+	LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "rcv private beacon");
     if(is_lpn_support_and_en && is_in_mesh_friend_st_lpn()){
         return 0;    // LPN should not receive beacon msg when in friend state.
     }
@@ -173,7 +182,7 @@ int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 	LOG_MSG_LIB(TL_LOG_NODE_SDK,ivi_idx, 4,"rcv private beacon %02x\r\n",key_flag);
 	#endif
     if(err){
-		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "check private beacon fail", 0);
+		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0, "check private beacon fail");
 		return 100;
 	}// decrypt error 
 	LOG_MSG_INFO(TL_LOG_COMMON, ivi_idx, sizeof(ivi_idx), "check suc,key flag is %x", key_flag);

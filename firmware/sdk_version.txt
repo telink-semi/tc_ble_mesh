@@ -1,1 +1,6 @@
-Telink BLE SDK_VERSION = 0.2
+Telink BLE SDK_VERSION = tc_ble_mesh
+
+sdk version please refer to 
+..\doc\telink_sig_mesh_sdk_Release_Note.md
+or 
+..\firmware\proj\common\sdk_version.h

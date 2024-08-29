@@ -55,37 +55,59 @@ int my_fifo_push_hci_rx_fifo (u8 *p, u16 n, u8 *head, u8 head_len)
 	return 0;
 }
 
-int smart_gateway_provision_data_set()
+void smart_get_rand(u8 *out, int len)
 {
-	u8 head[] = GATEWAY_NET_KEY_HEAD;
-	u8 netkey[] = SMART_NETKEY;
-	provison_net_info_str net_info;
-	memcpy(net_info.net_work_key, netkey, 16);
-	net_info.key_index = SMART_NETKEY_INDEX;
-	net_info.flags = 0;
-	u8 iv[4] = SMART_IV_INDEX;
-	memcpy(net_info.iv_index, iv, 4);
-	net_info.unicast_address = GATEWAY_UNICAST_ADR;
-	return my_fifo_push_hci_rx_fifo((u8 *)&net_info, sizeof(net_info), head, sizeof(head));
+	for(int i = 0; i < len / sizeof(u32); i++){
+		u32 tmp_rand = rand();
+		memcpy(out + sizeof(u32) * i, &tmp_rand, sizeof(u32));
+	}
+
+	return;
 }
 
-int smart_provision_gateway_devkey_set()
+int smart_gateway_provision_data_set()
 {
-	u8 head[] = GATEWAY_DEV_KEY_HEAD;
-	mesh_gw_set_devkey_str dev_key;
-	dev_key.unicast = GATEWAY_UNICAST_ADR;
-	memcpy(dev_key.dev_key, prov_para.device_uuid, 16);
-	return my_fifo_push_hci_rx_fifo((u8 *)&dev_key, sizeof(dev_key), head, sizeof(head));
+	if(!is_provision_success()){
+		u8 device_key[16];
+		provison_net_info_str net_info;
+		u8 app_key[16];
+		// device key
+		memcpy(device_key, prov_para.device_uuid, 16);
+		// provision data
+		smart_get_rand(net_info.net_work_key, sizeof(net_info.net_work_key));
+		net_info.key_index = SMART_NETKEY_INDEX;
+		net_info.flags = 0;
+		u8 iv[4] = SMART_IV_INDEX;
+		memcpy(net_info.iv_index, iv, 4);
+		net_info.unicast_address = GATEWAY_UNICAST_ADR;
+		// appkey
+		smart_get_rand(app_key, sizeof(app_key));
+
+		return mesh_provision_and_bind_self(&net_info, device_key, SMART_APPKEY_INDEX, app_key);
+	}
+
+	return 0;
 }
 
 int smart_provision_appkey_add()
 {
 	u8 head[] = GATEWAY_APPKEY_ADD_HEAD;
-	u8 appkey[] = SMART_APPKEY;
-	mesh_netkey_set_t appkey_add;
-	appkey_add.idx = SMART_APPKEY_INDEX;
-	memcpy(appkey_add.key, appkey, 16);
-	return my_fifo_push_hci_rx_fifo((u8 *)&appkey_add, sizeof(appkey_add), head, sizeof(head));
+	u8 appkey[16];
+
+	u8 nk_array_idx = get_nk_arr_idx_first_valid();
+    u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
+
+	if(APP_KEY_MAX != ak_array_idx){
+		memcpy(appkey, &mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx], sizeof(appkey));
+	
+		mesh_netkey_set_t appkey_add;
+		appkey_add.idx = SMART_APPKEY_INDEX;
+		memcpy(appkey_add.key, appkey, 16);
+		
+		return my_fifo_push_hci_rx_fifo((u8 *)&appkey_add, sizeof(appkey_add), head, sizeof(head));
+	}
+
+	return 0;	
 }
 
 #if SMART_PROVISION_ENABLE
@@ -130,11 +152,19 @@ void mesh_smart_provision_start()
 	if(!is_smart_provision_running()){
 		mesh_smart_provision_st_set(SMART_CONFIG_SCAN_START);
 	}
+#if BLE_REMOTE_PM_ENABLE
+	app_enable_scan_all_device (); // enable scan	
+	bls_pm_setSuspendMask (SUSPEND_DISABLE); 
+#endif
 }
 
 void mesh_smart_provision_stop()
 {
 	mesh_smart_provision_st_set(SMART_CONFIG_IDLE);
+#if BLE_REMOTE_PM_ENABLE
+	blc_ll_setScanEnable (0, 0);// disable scan to save power
+	ENABLE_SUSPEND_MASK;
+#endif 
 }
 
 int smart_provision_scan_start()
@@ -278,7 +308,6 @@ void mesh_smart_provision_proc()
 			mesh_smart_scan_tick_refresh();
 			if(!is_provision_success()){ // should set gateway's network info first
 				smart_gateway_provision_data_set();
-				smart_provision_gateway_devkey_set();
 			}
 			smart_provision_scan_start();
 			mesh_smart_provision_st_set(SMART_CONFIG_SCANNING);

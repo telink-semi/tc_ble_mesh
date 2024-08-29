@@ -119,6 +119,16 @@ void generateRandomNum(int len, unsigned char *data)
 #endif
 
 // general swap/endianness utils
+void swapN (unsigned char *p, int n)
+{
+	int i, c;
+	for (i=0; i<n/2; i++)
+	{
+		c = p[i];
+		p[i] = p[n - 1 - i];
+		p[n - 1 - i] = c;
+	}
+}
 
 void swapX(const u8 *src, u8 *dst, int len)
 {

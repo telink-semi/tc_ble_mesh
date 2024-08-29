@@ -216,7 +216,7 @@ ble_qiot_ret_status_t llsync_mesh_timer_start(ble_timer_t timer_id, uint32_t per
 		}
 	}else{
 		if(llsync_is_valid_timer_id(p_timer)){
-			int success = blt_soft_timer_update(p_timer->handle, period * 1000);
+			int success = blt_soft_timer_add(p_timer->handle, period * 1000);
 			st = success ? LLSYNC_MESH_RS_OK : LLSYNC_MESH_RS_ERR;
 			if(success){
 				ble_qiot_log_i("mesh_timer start id index: %d", llsync_get_timer_id_index(p_timer));

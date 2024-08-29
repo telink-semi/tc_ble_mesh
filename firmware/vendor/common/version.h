@@ -29,13 +29,32 @@
 //#define   BUILD_VERSION  	"Revision: 45:49M"
 //#define   BUILD_TIME  		"2012-07-24-21:37:43"
 
-#include "../../proj/mcu/config.h"
+#include "../../config.h"
 #include "mesh_config.h"
 
-#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x
-#define SW_VERSION_MAJOR		(1)		// 
+#if __TLSR_RISCV_EN__ // for B91m chips
+	#if MESH_IRONMAN_AP2T31F80_EN
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(0)		// second minor
+#define SW_VERSION_2ND_MINOR	(0)		// second minor or fix version
+	#elif BLE_MULTIPLE_CONNECTION_ENABLE
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(2)		// "2" means multi connection, "1" means single connection.
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor or fix version
+	#else
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor or fix version
+	#endif
+#else // for B85m chips
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection. 
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(1)		// second minor or fix version
+#endif
 
 // big endian
 #define FW_VERSION_TELINK_RELEASE   ((SW_VERSION_SPEC << 4) + (SW_VERSION_MAJOR << 0) + \
@@ -123,7 +142,7 @@ user can be allowed to redefined PID and VID if needed.
 #elif (__PROJECT_MESH_GW_NODE_HK__)   // light
 #define MESH_PID_SEL		(PID_GW_NODE_HK)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_BOOTLOADER__)   // light
+#elif (__PROJECT_BOOTLOADER__ || __PROJECT_ACL_PER_DEMO__)   // light
 #define MESH_PID_SEL		(PID_LIGHT)						// 
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #else
@@ -152,16 +171,23 @@ user can be allowed to redefined PID and VID if needed.
 #define MCU_STACK_INIT_EN               (1)
 #endif
 
+#if (__TLSR_RISCV_EN__)
+// TODO
+#else
 // must set ram size according to the chip type
 #ifndef RAM_SIZE_MAX
 #define RAM_SIZE_MAX            		(64*1024)
 #endif
 
 #ifndef __IRQ_STACK_SIZE__
-	#if EXTENDED_ADV_ENABLE
-#define __IRQ_STACK_SIZE__            	(0x280)	// cost about 0x1D0 for demo SDK. // because call irq_mesh_sec_msg_check_cache in irq state.
+	#ifdef __PROJECT_MESH_GW_NODE_HK__
+#define __IRQ_STACK_SIZE__            	(0x400)
 	#else
+		#if EXTENDED_ADV_ENABLE
+#define __IRQ_STACK_SIZE__            	(0x280)	// cost about 0x1D0 for demo SDK. // because call irq_mesh_sec_msg_check_cache in irq state.
+		#else
 #define __IRQ_STACK_SIZE__            	(0x180)
+		#endif
 	#endif
 #endif
-
+#endif

@@ -24,7 +24,9 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
+#include "drivers.h"
 #include "nlc_sensor.h"
+#include "mesh_nlc.h"
 
 /**
  *	include: ALSMP(Ambient Light Sensor Mesh Profile),ENMMP(Energy Monitor Mesh Profile),
@@ -40,5 +42,41 @@ void mesh_scan_rsp_add_local_name(u8 *p_name, u32 len_max)
 	memcpy(p_name, NLC_SENSOR_LOCAL_NAME, min(len_max, NLC_LOCAL_NAME_LEN - 1));
 }
 
+#if ((NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS) || (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS))
+
+/**
+ * @brief       This function sensor init
+ * @param[in]   void- none
+ * @return      none
+ * @note        none
+ */
+void nlc_sensor_init(void)
+{
+	#if (NLC_SENSOR_SEL == SENSOR_ZSIR1000)
+	sensor_init_zsir1000();
+	#elif (NLC_SENSOR_SEL == SENSOR_OCS_GPIO)
+	sensor_init_ocs_gpio();
+	#endif
+}
+
+/**
+ * @brief       This function get seneor value
+ * @param[in]   void- none
+ * @return      none
+ * @note        none
+ */
+	#if (NLC_SENSOR_SEL != SENSOR_NONE)
+u32 nlc_sensor_get(void)
+{
+#if (NLC_SENSOR_SEL == SENSOR_ZSIR1000)
+	return sensor_get_zsir1000();
+#elif (NLC_SENSOR_SEL == SENSOR_OCS_GPIO)
+	return sensor_get_ocs_gpio();
+#endif
+
+	return 0;
+}
+	#endif
+#endif
 #endif
 

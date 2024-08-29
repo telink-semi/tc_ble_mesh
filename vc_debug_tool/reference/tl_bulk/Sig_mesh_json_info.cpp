@@ -166,7 +166,7 @@ int json_add_node_info(provison_net_info_str *p_pro ,u8 *p_uuid,u8* p_mac,u8 *p_
 	// need to find an empty node info 
 	    node_idx = json_find_first_empty_node_idx();
 	    if(node_idx<0){
-			LOG_MSG_INFO(TL_LOG_WIN32,0,0,"find empty node info ",0);
+			LOG_MSG_INFO(TL_LOG_WIN32,0,0,"find empty node info ");
             return -1;
 	    }
 	}
@@ -293,7 +293,7 @@ int json_add_net_info_doc(u8 *p_guid,u8 *p_mac)
 	// set the node info data 
     if(ble_module_id_is_gateway()){
         json_add_node_info(net_info,p_guid,p_mac,gw_dev_key);
-		LOG_MSG_INFO(TL_LOG_WIN32,0,0,"json_add_net_info_doc",0);
+		LOG_MSG_INFO(TL_LOG_WIN32,0,0,"json_add_net_info_doc");
     }else{
         json_add_node_info(net_info,p_guid,p_mac,gatt_dev_key);
     }

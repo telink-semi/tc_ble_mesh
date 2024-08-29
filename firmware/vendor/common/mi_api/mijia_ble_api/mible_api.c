@@ -20,6 +20,7 @@
 #define MIBLE_MAX_USERS 4
 #endif
 
+#if MI_API_ENABLE
 /* GAP, GATTS, GATTC event callback function */
 static uint8_t m_gap_users, m_gattc_users, m_gatts_users, m_arch_users;
 static mible_gap_callback_t m_gap_cb_table[MIBLE_MAX_USERS];
@@ -1127,4 +1128,4 @@ __WEAK int mible_log_hexdump(void* array_base, uint16_t array_size)
 	my_printf_uart_hexdump(array_base, array_size);
 	return MI_SUCCESS;
 }
-
+#endif

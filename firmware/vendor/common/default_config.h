@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 
-#include "proj/mcu/config.h"
+#include "config.h"
 
 //////////// product  Information  //////////////////////////////
 #ifndef ID_VENDOR
@@ -42,11 +42,74 @@ extern "C" {
 #ifndef STRING_VENDOR
 #define STRING_VENDOR		L"Telink"
 #endif
+
+#ifndef ACL_PERIPHR_MAX_NUM
+#define ACL_PERIPHR_MAX_NUM	1
+#endif
+
+#if (__TLSR_RISCV_EN__)
+#ifndef STRING_PRODUCT
+#define STRING_PRODUCT		L"BLE 5.3"
+#endif
+
+#ifndef STRING_SERIAL
+#define STRING_SERIAL		L"TLSR95XX"
+#endif
+
+#ifndef PM_DEEPSLEEP_RETENTION_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE				0
+#endif
+
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+	#define	BLC_PM_EN								1
+	#define	BLC_PM_DEEP_RETENTION_MODE_EN			1
+#endif
+
+#ifndef	BLC_PM_EN
+#define	BLC_PM_EN									0
+#endif
+
+#ifndef	BLC_PM_DEEP_RETENTION_MODE_EN
+#define	BLC_PM_DEEP_RETENTION_MODE_EN				0
+#endif
+
+#ifndef APP_HW_FIRMWARE_ENCRYPTION_ENABLE
+#define APP_HW_FIRMWARE_ENCRYPTION_ENABLE			0 	//firmware Encryption
+#endif
+
+#ifndef APP_HW_SECURE_BOOT_ENABLE
+#define APP_HW_SECURE_BOOT_ENABLE					0 	//secure boot: firmware signature verification
+#endif
+
+
+#ifndef ACL_CENTRAL_SMP_ENABLE
+#define ACL_CENTRAL_SMP_ENABLE						0
+#endif
+
+
+#ifndef BLE_OTA_SERVER_ENABLE
+#define BLE_OTA_SERVER_ENABLE						0
+#endif
+
+
+
+
+#if (APP_HW_FIRMWARE_ENCRYPTION_ENABLE && !HARDWARE_FIRMWARE_ENCRYPTION_SUPPORT_EN)
+	#error "MCU do not support HW FIRMWARE ENCRYPTION"
+#endif
+
+#if (APP_HW_SECURE_BOOT_ENABLE && !HARDWARE_SECURE_BOOT_SUPPORT_EN)
+	#error "MCU do not support HW SECURE BOOT"
+#endif
+
+#else
+
 #ifndef STRING_PRODUCT
 #define STRING_PRODUCT		L"2.4G Wireless Audio"
 #endif
 #ifndef STRING_SERIAL
 #define STRING_SERIAL		L"TLSR8869"
+#endif
 #endif
 
 #define	CHIP_REVISION_A4 	1
@@ -61,9 +124,18 @@ extern "C" {
 #endif
 
 // default setting
-#ifndef FLASH_1M_ENABLE
-#define FLASH_1M_ENABLE	        0
+#if((0 == __TLSR_RISCV_EN__) && FLASH_1M_ENABLE)
+#define FLASH_PLUS_ENABLE		FLASH_1M_ENABLE
 #endif
+#ifndef FLASH_PLUS_ENABLE
+#define FLASH_PLUS_ENABLE	    0	// means 2M flash for B91, 1M flash for B85m
+#endif
+#if(__TLSR_RISCV_EN__)
+#define FLASH_SIZE_MAX_SW		((FLASH_PLUS_ENABLE ? 2048 : 1024) * 1024)
+#else
+#define FLASH_SIZE_MAX_SW		((FLASH_PLUS_ENABLE ? 1024 : 512) * 1024)
+#endif
+
 #ifndef PINGPONG_OTA_DISABLE
 #define PINGPONG_OTA_DISABLE    0
 #endif
@@ -94,12 +166,31 @@ extern "C" {
 #ifndef	APP_LOG_EN
 #define APP_LOG_EN      		0
 #endif
-
+#ifndef	SPEECH_ENABLE
+#define SPEECH_ENABLE      		0
+#endif
+#ifndef	AUDIO_MESH_EN
+#define AUDIO_MESH_EN      		0
+#endif
+#ifndef PAIR_PROVISION_ENABLE
+#define PAIR_PROVISION_ENABLE	0
+#endif
+#ifndef	USE_DP_TO_BURN_FW
+#define USE_DP_TO_BURN_FW      	0
+#endif
 
 #if __PROJECT_MESH_PRO__
 #define MESH_BLE_NOTIFY_FIFO_EN     0
 #else
 #define MESH_BLE_NOTIFY_FIFO_EN     (MESH_DLE_MODE != MESH_DLE_MODE_EXTEND_BEAR)
+#endif
+
+#ifndef LIGHT_CONTROL_MODEL_LOCATE_PRIMARY_ELEMENT
+#define LIGHT_CONTROL_MODEL_LOCATE_PRIMARY_ELEMENT		0
+#endif
+
+#ifndef LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+#define LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN	0
 #endif
 
 //////////// debug  /////////////////////////////////
@@ -638,6 +729,7 @@ extern "C" {
 #define	GPIO_GYRO					0
 #endif
 
+#if (!__TLSR_RISCV_EN__)
 ///////////////////  ADC  /////////////////////////////////
 // music input pin setting
 enum{
@@ -811,6 +903,7 @@ enum{
 #ifndef MIC_AUTO_CLOSE_TIMEOUT
 #define MIC_AUTO_CLOSE_TIMEOUT	(3*1000*1000)	//  shutdown mic after 2s mute 
 #endif
+#endif
 
 ///////////////////  USB   /////////////////////////////////
 #ifndef USB_PRINTER_ENABLE
@@ -941,6 +1034,218 @@ enum{
 #define RF4CE_USER_STRING_LENGTH                    15
 #define RF4CE_SEC_KEY_SEED_LENGTH                   80
 
+#if (__TLSR_RISCV_EN__)
+#if (DEBUG_GPIO_ENABLE)
+	#ifdef GPIO_CHN0
+		#define DBG_CHN0_LOW		gpio_write(GPIO_CHN0, 0)
+		#define DBG_CHN0_HIGH		gpio_write(GPIO_CHN0, 1)
+		#define DBG_CHN0_TOGGLE		gpio_toggle(GPIO_CHN0)
+	#else
+		#define DBG_CHN0_LOW
+		#define DBG_CHN0_HIGH
+		#define DBG_CHN0_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN1
+		#define DBG_CHN1_LOW		gpio_write(GPIO_CHN1, 0)
+		#define DBG_CHN1_HIGH		gpio_write(GPIO_CHN1, 1)
+		#define DBG_CHN1_TOGGLE		gpio_toggle(GPIO_CHN1)
+	#else
+		#define DBG_CHN1_LOW
+		#define DBG_CHN1_HIGH
+		#define DBG_CHN1_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN2
+		#define DBG_CHN2_LOW		gpio_write(GPIO_CHN2, 0)
+		#define DBG_CHN2_HIGH		gpio_write(GPIO_CHN2, 1)
+		#define DBG_CHN2_TOGGLE		gpio_toggle(GPIO_CHN2)
+	#else
+		#define DBG_CHN2_LOW
+		#define DBG_CHN2_HIGH
+		#define DBG_CHN2_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN3
+		#define DBG_CHN3_LOW		gpio_write(GPIO_CHN3, 0)
+		#define DBG_CHN3_HIGH		gpio_write(GPIO_CHN3, 1)
+		#define DBG_CHN3_TOGGLE		gpio_toggle(GPIO_CHN3)
+	#else
+		#define DBG_CHN3_LOW
+		#define DBG_CHN3_HIGH
+		#define DBG_CHN3_TOGGLE
+	#endif
+
+	#ifdef GPIO_CHN4
+		#define DBG_CHN4_LOW		gpio_write(GPIO_CHN4, 0)
+		#define DBG_CHN4_HIGH		gpio_write(GPIO_CHN4, 1)
+		#define DBG_CHN4_TOGGLE		gpio_toggle(GPIO_CHN4)
+	#else
+		#define DBG_CHN4_LOW
+		#define DBG_CHN4_HIGH
+		#define DBG_CHN4_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN5
+		#define DBG_CHN5_LOW		gpio_write(GPIO_CHN5, 0)
+		#define DBG_CHN5_HIGH		gpio_write(GPIO_CHN5, 1)
+		#define DBG_CHN5_TOGGLE		gpio_toggle(GPIO_CHN5)
+	#else
+		#define DBG_CHN5_LOW
+		#define DBG_CHN5_HIGH
+		#define DBG_CHN5_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN6
+		#define DBG_CHN6_LOW		gpio_write(GPIO_CHN6, 0)
+		#define DBG_CHN6_HIGH		gpio_write(GPIO_CHN6, 1)
+		#define DBG_CHN6_TOGGLE		gpio_toggle(GPIO_CHN6)
+	#else
+		#define DBG_CHN6_LOW
+		#define DBG_CHN6_HIGH
+		#define DBG_CHN6_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN7
+		#define DBG_CHN7_LOW		gpio_write(GPIO_CHN7, 0)
+		#define DBG_CHN7_HIGH		gpio_write(GPIO_CHN7, 1)
+		#define DBG_CHN7_TOGGLE		gpio_toggle(GPIO_CHN7)
+	#else
+		#define DBG_CHN7_LOW
+		#define DBG_CHN7_HIGH
+		#define DBG_CHN7_TOGGLE
+	#endif
+
+	#ifdef GPIO_CHN8
+		#define DBG_CHN8_LOW		gpio_write(GPIO_CHN8, 0)
+		#define DBG_CHN8_HIGH		gpio_write(GPIO_CHN8, 1)
+		#define DBG_CHN8_TOGGLE		gpio_toggle(GPIO_CHN8)
+	#else
+		#define DBG_CHN8_LOW
+		#define DBG_CHN8_HIGH
+		#define DBG_CHN8_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN9
+		#define DBG_CHN9_LOW		gpio_write(GPIO_CHN9, 0)
+		#define DBG_CHN9_HIGH		gpio_write(GPIO_CHN9, 1)
+		#define DBG_CHN9_TOGGLE		gpio_toggle(GPIO_CHN9)
+	#else
+		#define DBG_CHN9_LOW
+		#define DBG_CHN9_HIGH
+		#define DBG_CHN9_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN10
+		#define DBG_CHN10_LOW		gpio_write(GPIO_CHN10, 0)
+		#define DBG_CHN10_HIGH		gpio_write(GPIO_CHN10, 1)
+		#define DBG_CHN10_TOGGLE	gpio_toggle(GPIO_CHN10)
+	#else
+		#define DBG_CHN10_LOW
+		#define DBG_CHN10_HIGH
+		#define DBG_CHN10_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN11
+		#define DBG_CHN11_LOW		gpio_write(GPIO_CHN11, 0)
+		#define DBG_CHN11_HIGH		gpio_write(GPIO_CHN11, 1)
+		#define DBG_CHN11_TOGGLE	gpio_toggle(GPIO_CHN11)
+	#else
+		#define DBG_CHN11_LOW
+		#define DBG_CHN11_HIGH
+		#define DBG_CHN11_TOGGLE
+	#endif
+
+	#ifdef GPIO_CHN12
+		#define DBG_CHN12_LOW		gpio_write(GPIO_CHN12, 0)
+		#define DBG_CHN12_HIGH		gpio_write(GPIO_CHN12, 1)
+		#define DBG_CHN12_TOGGLE	gpio_toggle(GPIO_CHN12)
+	#else
+		#define DBG_CHN12_LOW
+		#define DBG_CHN12_HIGH
+		#define DBG_CHN12_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN13
+		#define DBG_CHN13_LOW		gpio_write(GPIO_CHN13, 0)
+		#define DBG_CHN13_HIGH		gpio_write(GPIO_CHN13, 1)
+		#define DBG_CHN13_TOGGLE	gpio_toggle(GPIO_CHN13)
+	#else
+		#define DBG_CHN13_LOW
+		#define DBG_CHN13_HIGH
+		#define DBG_CHN13_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN14
+		#define DBG_CHN14_LOW		gpio_write(GPIO_CHN14, 0)
+		#define DBG_CHN14_HIGH		gpio_write(GPIO_CHN14, 1)
+		#define DBG_CHN14_TOGGLE	gpio_toggle(GPIO_CHN14)
+	#else
+		#define DBG_CHN14_LOW
+		#define DBG_CHN14_HIGH
+		#define DBG_CHN14_TOGGLE
+	#endif
+
+	#ifdef  GPIO_CHN15
+		#define DBG_CHN15_LOW		gpio_write(GPIO_CHN15, 0)
+		#define DBG_CHN15_HIGH		gpio_write(GPIO_CHN15, 1)
+		#define DBG_CHN15_TOGGLE	gpio_toggle(GPIO_CHN15)
+	#else
+		#define DBG_CHN15_LOW
+		#define DBG_CHN15_HIGH
+		#define DBG_CHN15_TOGGLE
+	#endif
+#else
+	#define DBG_CHN0_LOW
+	#define DBG_CHN0_HIGH
+	#define DBG_CHN0_TOGGLE
+	#define DBG_CHN1_LOW
+	#define DBG_CHN1_HIGH
+	#define DBG_CHN1_TOGGLE
+	#define DBG_CHN2_LOW
+	#define DBG_CHN2_HIGH
+	#define DBG_CHN2_TOGGLE
+	#define DBG_CHN3_LOW
+	#define DBG_CHN3_HIGH
+	#define DBG_CHN3_TOGGLE
+	#define DBG_CHN4_LOW
+	#define DBG_CHN4_HIGH
+	#define DBG_CHN4_TOGGLE
+	#define DBG_CHN5_LOW
+	#define DBG_CHN5_HIGH
+	#define DBG_CHN5_TOGGLE
+	#define DBG_CHN6_LOW
+	#define DBG_CHN6_HIGH
+	#define DBG_CHN6_TOGGLE
+	#define DBG_CHN7_LOW
+	#define DBG_CHN7_HIGH
+	#define DBG_CHN7_TOGGLE
+	#define DBG_CHN8_LOW
+	#define DBG_CHN8_HIGH
+	#define DBG_CHN8_TOGGLE
+	#define DBG_CHN9_LOW
+	#define DBG_CHN9_HIGH
+	#define DBG_CHN9_TOGGLE
+	#define DBG_CHN10_LOW
+	#define DBG_CHN10_HIGH
+	#define DBG_CHN10_TOGGLE
+	#define DBG_CHN11_LOW
+	#define DBG_CHN11_HIGH
+	#define DBG_CHN11_TOGGLE
+	#define DBG_CHN12_LOW
+	#define DBG_CHN12_HIGH
+	#define DBG_CHN12_TOGGLE
+	#define DBG_CHN13_LOW
+	#define DBG_CHN13_HIGH
+	#define DBG_CHN13_TOGGLE
+	#define DBG_CHN14_LOW
+	#define DBG_CHN14_HIGH
+	#define DBG_CHN14_TOGGLE
+	#define DBG_CHN15_LOW
+	#define DBG_CHN15_HIGH
+	#define DBG_CHN15_TOGGLE
+#endif
+#endif
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)

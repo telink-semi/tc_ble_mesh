@@ -167,7 +167,7 @@
     #elif GATEWAY_ENABLE
 #define MESH_OTA_UPDATE_NODE_MAX        (MESH_NODE_MAX_NUM)
     #else
-#define MESH_OTA_UPDATE_NODE_MAX        (40)    // to save ram for mesh project
+#define MESH_OTA_UPDATE_NODE_MAX        (min(80, MESH_NODE_MAX_NUM))    // net set to max, because not all the nodes use the same firmware. to save ram for mesh project
     #endif
 #endif
 
@@ -826,6 +826,8 @@ typedef struct{
 	u8 wait_ack_retry_cnt;
 	u8 rsv_wait;	// for align
 #endif
+	u16 netkey_sel_enc;
+	u16 appkey_sel_enc;
 	u16 adr_group;
 	fw_receiver_list_t list[MESH_OTA_UPDATE_NODE_MAX];
 #if WIN32

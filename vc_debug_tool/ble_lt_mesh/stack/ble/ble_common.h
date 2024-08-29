@@ -647,30 +647,6 @@ typedef struct{
 	#endif
 }rf_packet_adv_t;
 
-
-#if EXTENDED_ADV_ENABLE
-typedef struct {
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	rf_adv_head_t  header;
-	u8  rf_len;				//LEN(6)_RFU(2)
-	
-	u8  adv_mode  :2;
-	u8  header_len:6;
-
-	u8 flags;
-
-	u16 data_id: 12;
-	u16 set_id :  4;
-
-	u8 chn_idx         :6;
-	u8 clock_accuracy  :1;
-	u8 offset_units    :1;
-	u16 aux_offset     :13;
-	u16 aux_phy        :3;
-}rf_packet_adv_ext_ind_t;
-#endif
-
 typedef struct{
 	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
 	rf_adv_head_t  header;	//RA(1)_TA(1)_RFU(2)_TYPE(4)
@@ -1420,7 +1396,7 @@ typedef struct {
 //-------------   event --------------------------------
 typedef struct {
 	u8	status;
-	u8	handle;
+	u8	connHandle;
 	u8	hh;
 	u8	reason;
 } event_disconnection_t;			//20-byte

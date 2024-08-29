@@ -26,10 +26,8 @@
 #define _TELINK_SDK_MESH_API_C_
 #include "./mijia_ble_api/mible_api.h"
 #include "tl_common.h"
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "../app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/le_crypto.h"

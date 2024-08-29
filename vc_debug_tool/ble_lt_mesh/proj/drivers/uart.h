@@ -22,6 +22,8 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#pragma once
+
 #include "proj/mcu/config.h"
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "drivers/8258/uart.h"

@@ -23,7 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"  
-#include "proj_lib/ble/service/ble_ll_ota.h"
 
 #if PRINT_DEBUG_INFO
 
@@ -51,12 +50,66 @@ _attribute_no_inline_ void debug_info_tx_pin_init()
 /* Put it into a function independently, to prevent the compiler from 
  * optimizing different pins, resulting in inaccurate baud rates.
  */
+#if (__TLSR_RISCV_EN__)
+_attribute_ram_code_ 
+_attribute_no_inline_ 
+static void uart_do_put_char(u32 pcTxReg, u8 *bit)
+{
+#if ((BAUD_USE == SIMU_BAUD_1M) && !BLE_MULTIPLE_CONNECTION_ENABLE)
+	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
+	// _ASM_NOP_; 
+	#if (CLOCK_SYS_CLOCK_HZ == 16000000)
+	#define UART_IO_ONE_BIT(index)	do{write_reg8(pcTxReg, bit[index]);fence_iorw;}while(0)
+	UART_IO_ONE_BIT(0); // 1us exactly
+	UART_IO_ONE_BIT(1);
+	UART_IO_ONE_BIT(2);
+	UART_IO_ONE_BIT(3);
+	UART_IO_ONE_BIT(4);
+	UART_IO_ONE_BIT(5);
+	UART_IO_ONE_BIT(6);
+	UART_IO_ONE_BIT(7);
+	UART_IO_ONE_BIT(8);
+	UART_IO_ONE_BIT(9);
+	#else	
+	int j;
+	for(j = 0;j<10;j++) 
+	{
+	#if CLOCK_SYS_CLOCK_HZ == 32000000
+		CLOCK_DLY_10_CYC;CLOCK_DLY_1_CYC;//CLOCK_DLY_1_CYC;//CLOCK_DLY_10_CYC;
+	#elif CLOCK_SYS_CLOCK_HZ == 48000000
+		CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;CLOCK_DLY_7_CYC;
+	#elif CLOCK_SYS_CLOCK_HZ == 96000000
+		CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;
+		CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;CLOCK_DLY_8_CYC;
+	#else
+	#error "error CLOCK_SYS_CLOCK_HZ"
+	#endif
+		write_reg8(pcTxReg, bit[j]); 	   //send bit0
+		fence_iorw;
+	}
+	#endif
+#else
+	int j;
+	u32 t1 = 0, t2 = 0;
+	t1 = clock_time();//read_reg32(0x740);
+	for(j = 0;j<10;j++)
+	{
+		t2 = t1;
+		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
+			t1	= clock_time();//read_reg32(0x740);
+		}
+		write_reg8(pcTxReg,bit[j]); 	   //send bit0
+	}
+#endif
+}
+
+#else // for B85m
 _attribute_ram_code_ 
 _attribute_no_inline_ 
 static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 {
 	int j;
-#if BAUD_USE == SIMU_BAUD_1M
+#if ((BAUD_USE == SIMU_BAUD_1M) && (CLOCK_SYS_CLOCK_HZ <= 48000000))
 	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
 	// _ASM_NOP_; 
 	
@@ -76,18 +129,18 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 	}
 #else
 	u32 t1 = 0, t2 = 0;
-	t1 = read_reg32(0x740);
+	t1 = clock_time();//read_reg32(0x740);
 	for(j = 0;j<10;j++)
 	{
 		t2 = t1;
 		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
-			t1	= read_reg32(0x740);
+			t1	= clock_time();//read_reg32(0x740);
 		}
 		write_reg8(pcTxReg,bit[j]); 	   //send bit0
 	}
 #endif
 }
-
+#endif
 
 /**
  * @brief  Send a byte of serial data.
@@ -99,7 +152,11 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 	    debug_info_tx_pin_init();
 		tx_pin_initialed = 1;
 	}
-	volatile u32 pcTxReg = (0x583+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output
+	#if __TLSR_RISCV_EN__
+	volatile u32 pcTxReg = (0x140303+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output: reg_gpio_out
+	#else
+	volatile u32 pcTxReg = (0x583+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output: reg_gpio_out
+	#endif
 	u8 tmp_bit0 = read_reg8(pcTxReg) & (~(DEBUG_INFO_TX_PIN & 0xff));
 	u8 tmp_bit1 = read_reg8(pcTxReg) | (DEBUG_INFO_TX_PIN & 0xff);
 
@@ -145,5 +202,18 @@ _attribute_ram_code_ void uart_simu_send_bytes(u8 *p,int len)
     }
 }
 
+#if __TLSR_RISCV_EN__ // due to no optimize ram code for b85m.
+volatile u32 log_one_byte_test_flag = 1;
+
+_attribute_ram_code_ void uart_put_char_one_byte_test(u8 byte, int enter_flag)
+{
+	if(log_one_byte_test_flag){
+		uart_put_char(byte);
+		if(enter_flag){
+			uart_put_char('\n');
+		}
+	}
+}
+#endif
 
 #endif

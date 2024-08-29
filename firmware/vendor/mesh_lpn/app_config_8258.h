@@ -66,6 +66,8 @@ extern "C" {
 #endif
 #endif
 
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -209,7 +211,7 @@ extern "C" {
 #define KEY_CMD					2 
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 
-#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
 
 // scan pin as gpio
@@ -232,7 +234,7 @@ extern "C" {
 #define KEY_CMD					2
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 
-#define KB_DRIVE_PINS			{GPIO_PD7} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD7} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD7, GPIO_PA1}
 
 // scan pin as gpio
@@ -248,13 +250,13 @@ extern "C" {
 #define PA1_INPUT_ENABLE		1
 	#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
 // keymap
-#define KEY_RESET				1
-#define KEY_CMD					2
-#define KEY_SW3					3
-#define KEY_SW4					4
+#define KEY_RESET				1	// PCB mark SW4	
+#define KEY_CMD					2	// PCB mark SW2	
+#define KEY_SW3					3	// PCB mark SW3	
+#define KEY_SW5					5	// PCB mark SW5	
 #define	KB_MAP_NORMAL			{\
-								{KEY_RESET,	KEY_CMD},	 \
-								{KEY_SW3,	KEY_SW4},	 }
+								{KEY_CMD,	KEY_SW3},	 \
+								{KEY_RESET,	KEY_SW5},	 }
 
 #define KB_DRIVE_PINS 		 	{GPIO_PB4, GPIO_PB5}
 #define KB_SCAN_PINS   			{GPIO_PB2, GPIO_PB3}
@@ -291,7 +293,7 @@ extern "C" {
 #define KEY_CMD					2
 #define KB_MAP_NORMAL			{{KEY_RESET},	{KEY_CMD}}
 
-#define KB_DRIVE_PINS			{GPIO_PD2} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
 
 // scan pin as gpio

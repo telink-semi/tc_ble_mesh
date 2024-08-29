@@ -23,15 +23,9 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj/common/tstring.h"
-#if !WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
 #include "myprintf.h"
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "app_provison.h"
@@ -47,7 +41,7 @@
 #include "directed_forwarding.h"
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "proj/drivers/uart.h"
+#include "drivers.h"
 #endif
 
 
@@ -225,7 +219,7 @@ void print_log_mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, int err,
     if(err){
 		LOG_MSG_ERR(TL_LOG_NODE_SDK,p_mat->par, p_mat->par_len,"tx ctl error,op:0x%x(%s)par:",p_mat->op,get_op_string_ctl((u8)p_mat->op, filter_cfg));
 	}else{
-		LOG_MSG_LIB(TL_LOG_NODE_SDK,p_mat->par, p_mat->par_len,"tx ctl,sno:0x%x op:0x%x(%s),dst:0x%x par:",mesh_adv_tx_cmd_sno-1,p_mat->op,get_op_string_ctl((u8)p_mat->op, filter_cfg),p_mat->adr_dst); // "tx cmd sno" has been increase to next command, so need to decrease.
+		LOG_MSG_LIB(TL_LOG_NODE_SDK,p_mat->par, p_mat->par_len,"tx ctl,sno:0x%x op:0x%x(%s),src:0x%x dst:0x%x par:",mesh_adv_tx_cmd_sno-1,p_mat->op,get_op_string_ctl((u8)p_mat->op, filter_cfg), p_mat->adr_src, p_mat->adr_dst); // "tx cmd sno" has been increase to next command, so need to decrease.
 	}
 }
 

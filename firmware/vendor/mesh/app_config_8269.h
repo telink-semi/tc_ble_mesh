@@ -109,7 +109,6 @@ extern "C" {
 #define BLE_REMOTE_PM_ENABLE			0
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
-#define BLE_SIG_MESH_CERTIFY_ENABLE 	0
 
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
 #define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K

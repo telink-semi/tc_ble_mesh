@@ -76,7 +76,7 @@ extern u32 blt_ota_timeout_us;
 extern u32	ota_program_offset;
 extern u32 	ota_firmware_size_k;
 extern u32	bls_ota_bootFlagAddr;
-extern int 	ota_program_bootAddr ;
+extern u32 	ota_program_bootAddr ;
 
 
 typedef void (*ota_startCb_t)(void);
@@ -122,75 +122,6 @@ enum{
 	OTA_REBOOT_NO_LED,						// no LED indication, for quickly reboot.
 };
 
-typedef struct{
-	u8 device_type;
-	u32 fw_version;
-	u32 fw_size;
-	u16 fw_crc16;
-	u8 ota_flag;
-}ais_ota_req_t;
-
-typedef struct{
-	u8 allow_ota;
-	u32 trans_size_last;
-	u8 one_round_pkts;
-}ais_ota_rsp_t;
-
-typedef struct{
-	u8 seg_index;
-	u32 trans_size_last;
-}ais_ota_receive_t;
-
-#define AIS_MAX_DATA_SIZE	32// please makesure have enough for aes128 padding
-typedef struct{
-	union{
-		u8 header;
-		struct{
-			u8 msg_id:4;
-			u8 enc_flag:1;
-			u8 fw_ver:3;
-		};
-	};
-	u8 msg_type;
-	union{
-		u16 frame_desc;
-		struct{
-			u8 frame_seq:4;
-			u8 frame_total:4;
-			u8 length;
-		};
-	};
-	union{
-		u8 data[AIS_MAX_DATA_SIZE];  
-		u8 device_type;
-		u8 ota_result;
-		ais_ota_req_t ais_ota_req;
-		ais_ota_rsp_t ais_ota_rsp;
-		ais_ota_receive_t ais_ota_rcv;
-	};
-}ais_msg_t;
-
-typedef struct{
-	u8 device_type;
-	u32 fw_version;
-}ais_fw_info_t;
-
-#define AIS_INDICATE_HANDLE	0x32
-#define AIS_NOTIFY_HANDLE	0x36
-
-#define AIS_AUTH_RANDOM			0x10
-#define AIS_AES_CIPHER			0x11
-#define AIS_AUTH_CHECK			0x12
-#define AIS_AUTH_RESULT			0x13
-#define AIS_FW_VERSION_GET		0x20
-#define AIS_FW_VERSION_RSP		0x21
-#define	AIS_OTA_REQ				0x22
-#define	AIS_OTA_RSP				0x23
-#define	AIS_OTA_RECEIVED		0x24
-#define	AIS_OTA_END				0x25
-#define	AIS_OTA_RESULT			0x26
-#define	AIS_OTA_DATA			0x2f
-
 void bls_ota_procTimeout(void);
 
 //user interface
@@ -205,7 +136,6 @@ void rf_link_slave_ota_finish_led_and_reboot(u8 st);
 
 extern int otaWrite(void * p);
 extern int otaRead(void * p);
-int ais_otaWrite(void * p);
 
 extern void start_reboot(void);	// irq_disable() inside
 

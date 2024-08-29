@@ -22,20 +22,14 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-/*
- * blt_soft_timer.c
- *
- *  Created on: 2016-10-28
- *      Author: Administrator
- */
-
-
 #include "tl_common.h"
 #if (BLT_SOFTWARE_TIMER_ENABLE && (MCU_CORE_TYPE != MCU_CORE_8269))
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "stack/ble/ble.h"
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #include "stack/ble_8278/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+#include "stack/ble/ble.h"
 #endif
 #include "blt_soft_timer.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
@@ -45,15 +39,20 @@ STATIC_ASSERT(BLT_TIMER_SAFE_MARGIN_POST >= GET_ADV_INTERVAL_MS(ADV_INTERVAL_MAX
 _attribute_data_retention_	blt_soft_timer_t	blt_timer;
 
 
-//按照定时时间将timer排序，便于process时 依次触发timer
+/**
+ * @brief		This function is used to Sort the timers according
+ * 				to the time of the timed task, so as to trigger the
+ * 				timers in turn
+ * @param[in]	none
+ * @return      none
+ */
 int  blt_soft_timer_sort(void)
 {
 	if(blt_timer.currentNum < 1 || blt_timer.currentNum > MAX_TIMER_NUM){
-		write_reg32(0x40000, 0x11111120); while(1); //debug ERR
 		return 0;
 	}
 	else{
-		// 冒泡排序  BubbleSort
+		//BubbleSort
 		int n = blt_timer.currentNum;
 		u8 temp[sizeof(blt_time_event_t)];
 
@@ -77,11 +76,18 @@ int  blt_soft_timer_sort(void)
 
 
 
-//user add timer
+/**
+ * @brief		This function is used to add new software timer task
+ * @param[in]	func - callback function for software timer task
+ * @param[in]	interval_us - the interval for software timer task
+ * @return      0 - timer task is full, add fail
+ * 				1 - create successfully
+ */
 int blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us)
 {
 //	int i;
 	u32 now = clock_time();
+	blt_soft_timer_delete(func); // must delete the duplicate callback function, because can not use the same function to register two timer due to blt_soft_timer_delete().
 
 	if(blt_timer.currentNum >= MAX_TIMER_NUM){  //timer full
 		return 	0;
@@ -100,11 +106,18 @@ int blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us)
 }
 
 
-//timer 本来就是有序的，删除的时候，采用往前覆盖，所以不会破坏顺序，不需要重新排序
+
+/**
+ * @brief		Timer tasks are originally ordered. When deleting, it will
+ * 				be overwritten forward, so the order will not be destroyed
+ * 				and there is no need to reorder
+ * @param[in]	index - the index for some software timer task
+ * @return      0 - delete fail
+ * 				other - delete successfully
+ */
 int  blt_soft_timer_delete_by_index(u8 index)
 {
 	if(index >= blt_timer.currentNum){
-		write_reg32(0x40000, 0x11111121); while(1); //debug ERR
 		return 0;
 	}
 
@@ -118,7 +131,12 @@ int  blt_soft_timer_delete_by_index(u8 index)
 	return 1;
 }
 
-
+/**
+ * @brief		This function is used to delete timer tasks
+ * @param[in]	func - callback function for software timer task
+ * @return      0 - delete fail
+ * 				1 - delete successfully
+ */
 int 	blt_soft_timer_delete(blt_timer_callback_t func)
 {
 
@@ -127,7 +145,7 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 		if(blt_timer.timer[i].cb == func){
 			blt_soft_timer_delete_by_index(i);
 
-			if(i == 0){  //删除的是最近的timer，需要更新时间
+			if(i == 0){  //The most recent timer is deleted, and the time needs to be updated
 
 				if(blt_timer.currentNum && ((u32)(blt_timer.timer[0].t - clock_time()) < BLT_TIMER_SAFE_MARGIN_POST)){
 					bls_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
@@ -145,12 +163,6 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 	return 0;
 }
 
-int 	blt_soft_timer_update(blt_timer_callback_t func, u32 interval_us)
-{
-	blt_soft_timer_delete(func);
-	return blt_soft_timer_add(func, interval_us);
-}
-
 int is_soft_timer_exist(blt_timer_callback_t func)
 {
 	for(int i=0; i<blt_timer.currentNum; i++){
@@ -166,6 +178,11 @@ u8 blt_soft_timer_cur_num()
 	return blt_timer.currentNum;
 }
 
+/**
+ * @brief		This function is used to manage software timer tasks
+ * @param[in]	type - the type for trigger
+ * @return      none
+ */
 void  	blt_soft_timer_process(int type)
 {
 	if(type == CALLBACK_ENTRY){ //callback trigger
@@ -187,7 +204,7 @@ void  	blt_soft_timer_process(int type)
 		if(blt_is_timer_expired(blt_timer.timer[i].t ,now) ){ //timer trigger
 
 			if(blt_timer.timer[i].cb == NULL){
-				write_reg32(0x40000, 0x11111122); while(1); //debug ERR
+
 			}
 			else{
 				#if LLSYNC_ENABLE
@@ -235,7 +252,11 @@ void  	blt_soft_timer_process(int type)
 
 }
 
-
+/**
+ * @brief		This function is used to register the call back for pm_appWakeupLowPowerCb
+ * @param[in]	none
+ * @return      none
+ */
 void 	blt_soft_timer_init(void)
 {
 	bls_pm_registerAppWakeupLowPowerCb(blt_soft_timer_process);

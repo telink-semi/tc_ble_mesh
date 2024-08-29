@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file	mesh_access_layer.h
+ * @file	mesh_network_layer.h
  *
  * @brief	for TLSR chips
  *

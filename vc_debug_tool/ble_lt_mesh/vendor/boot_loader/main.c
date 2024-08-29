@@ -205,7 +205,7 @@ _attribute_ram_code_ int main(void)
 #if 1 //jump to selected firmware
     irq_disable();  // must, can't enter irq, because cstartup have been changed.
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-	LOG_USER_MSG_INFO(0, 0,"[boot] Start from Bootloader", 0);
+	LOG_USER_MSG_INFO(0, 0,"[boot] Start from Bootloader");
 #endif
 
 	u32 mesh_type = *(u32 *) FLASH_ADR_MESH_TYPE_FLAG;

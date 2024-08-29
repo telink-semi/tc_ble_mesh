@@ -289,24 +289,24 @@ u8 gatt_pkt_pb_gatt_data(u8 *p,u8 direct,u8 len,u8* proxy_buf,u16* p_proxy_len)
 		idx_num =0;
 		memcpy(proxy_buf,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
-		mesh_proxy_sar_start();
+		mesh_proxy_sar_start(0);
 		return MSG_COMPOSITE_WAIT;
 	}else if(p_gatt->sar == SAR_CONTINUE){
 		memcpy(proxy_buf+idx_num,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
-		mesh_proxy_sar_continue();
+		mesh_proxy_sar_continue(0);
 		return MSG_COMPOSITE_WAIT;
 	}else if(p_gatt->sar == SAR_END){
 		memcpy(proxy_buf+idx_num,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
-		mesh_proxy_sar_end();
+		mesh_proxy_sar_end(0);
 	}else if(p_gatt->sar == SAR_COMPLETE){
 		idx_num =0;
 		memcpy(proxy_buf+idx_num,p_gatt->data,l2cap_len-4);
 		idx_num +=(l2cap_len-4);
-		mesh_proxy_sar_complete();
+		mesh_proxy_sar_complete(0);
 	}else{}
-	mesh_proxy_sar_err_terminate();
+	mesh_proxy_sar_err_terminate(0);
 	*p_proxy_len = idx_num ;
 	return p_gatt->msgType;
 	// after package the data and the para 
@@ -349,7 +349,7 @@ void gatt_prov_send_invite()
 {
  	mesh_pro_data_t *p_str = (mesh_pro_data_t *)(gatt_para_pro);
 	gatt_set_pro_invite(p_str,0);
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_str,sizeof(pro_trans_invite),"SEND:provisioner send invite cmd \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_str,sizeof(pro_trans_invite),"SEND:provisioner send invite cmd \r\n");
 	gatt_pro_input[0]=0;
 	gatt_para_len = sizeof(pro_trans_invite);
 }
@@ -427,7 +427,7 @@ int gatt_get_node_ele_cnt(u16 unicast)
 
 void gatt_prov_rcv_pro_fail(mesh_pro_data_t *p_rcv)
 {
-    LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)&(p_rcv->invite),sizeof(pro_trans_invite),"RCV:rcv provision fail cmd \r\n",0);
+    LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)&(p_rcv->invite),sizeof(pro_trans_invite),"RCV:rcv provision fail cmd \r\n");
 	mesh_proxy_master_terminate_cmd();
 	provision_end_callback(PROV_FAIL_CMD_ERR);
 }
@@ -441,7 +441,7 @@ void gatt_prov_rcv_capa(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 	swap_mesh_pro_capa(p_rcv);// swap the endianness for the capa data 
 	memcpy(&prov_oob.capa , &p_rcv->capa,sizeof(p_rcv->capa));
 	get_pubkey_oob_info_by_capa(&prov_oob);
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.capa,sizeof(prov_oob.capa),"RCV:the provision capa data is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.capa,sizeof(prov_oob.capa),"RCV:the provision capa data is \r\n");
 }    
 
 void gatt_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
@@ -450,7 +450,7 @@ void gatt_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 	set_start_para_by_capa(&prov_oob);
 	if(mesh_prov_oob_auth_data(&prov_oob)){
 		if(MESH_STATIC_OOB == prov_oob.prov_key){
-			LOG_MSG_INFO(TL_LOG_GATT_PROVISION, 0, 0,"can't find static oob, try with no oob!\r\n",0);
+			LOG_MSG_INFO(TL_LOG_GATT_PROVISION, 0, 0,"can't find static oob, try with no oob!\r\n");
 			prov_oob.prov_key = MESH_NO_OOB;
 			set_start_para_by_capa(&prov_oob);
 		}
@@ -467,7 +467,7 @@ void gatt_prov_send_start(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 	set_pro_start_simple(p_send,&(prov_oob.start));
 	memcpy(gatt_pro_input+12,&(p_send->start.algorithms),5);
 	gatt_para_len = sizeof(pro_trans_start);
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.start,sizeof(prov_oob.start),"SEND:the provision start is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&prov_oob.start,sizeof(prov_oob.start),"SEND:the provision start is \r\n");
 
 }
 
@@ -476,7 +476,7 @@ void gatt_prov_send_pubkey(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
     // send the pub_key pkt 
 	gatt_set_pro_pub_key(p_send,gatt_pro_ppk,gatt_pro_ppk+32);
 	gatt_para_len = sizeof(pro_trans_pubkey);
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:provisioner send pubkey is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:provisioner send pubkey is \r\n");
 	
 }
 
@@ -484,7 +484,7 @@ void gatt_prov_rcv_pubkey(mesh_pro_data_t *p_rcv)
 {
 	memcpy(gatt_pro_input+0x11,gatt_pro_ppk,sizeof(gatt_pro_ppk));
 	memcpy(gatt_pro_input+0x11+64,p_rcv->pubkey.pubKeyX,64);
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->pubkey.pubKeyX,64,"RCV:the pubkey of the device is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->pubkey.pubKeyX,64,"RCV:the pubkey of the device is \r\n");
 	tn_p256_dhkey_fast(gatt_pro_edch, gatt_pro_psk,gatt_pro_input+0x11+0x40 ,gatt_pro_input+0x11+0x60);    
 }
 
@@ -494,7 +494,7 @@ void gatt_prov_send_confirm(mesh_pro_data_t *p_send)
 								145, gatt_pro_edch, gatt_pro_random, gatt_pro_auth);
 	gatt_set_pro_confirm(p_send,gatt_pro_confirm,get_prov_confirm_value_len());
 	gatt_para_len =get_prov_confirm_len();
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's confirm is \r\n",0);    
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's confirm is \r\n");    
 }
 
 void gatt_prov_rcv_confirm(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
@@ -506,7 +506,7 @@ void gatt_prov_rcv_confirm(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 	}
 	#endif
 	// store the dev comfrim part 
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_confirm->confirm,get_prov_confirm_value_len(),"RCV:the device's confirm is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_confirm->confirm,get_prov_confirm_value_len(),"RCV:the device's confirm is \r\n");
 	memcpy(gatt_dev_confirm,p_confirm->confirm,get_prov_confirm_value_len());    
 }
 
@@ -514,23 +514,23 @@ void gatt_prov_send_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     gatt_set_pro_random(p_send,gatt_pro_random,get_prov_random_len()-1);
 	gatt_para_len = get_prov_random_len();
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's random is \r\n",0);    
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_para_pro+1,(u8)gatt_para_len-1,"SEND:the provisioner's random is \r\n");    
 }
 
 void gatt_prov_rcv_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
 	memcpy(gatt_dev_random,p_rcv->random.random,get_prov_random_value_len());
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->random.random,get_prov_random_value_len(),"RCV:the device's random is \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->random.random,get_prov_random_value_len(),"RCV:the device's random is \r\n");
 	// calculate the dev confirm part ,and compare the confirm 
 	
 	u8 gatt_dev_confirm_tmp[32];
 	mesh_sec_prov_confirmation_sec (gatt_dev_confirm_tmp, gatt_pro_input, 
 							145, gatt_pro_edch, gatt_dev_random, gatt_pro_auth);
 	if(prov_confirm_check_right_or_not(gatt_dev_confirm,gatt_dev_confirm_tmp)){
-		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_confirm_tmp,16,"provision confirm fail\r\n",0);
+		LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_confirm_tmp,16,"provision confirm fail\r\n");
 		mesh_proxy_master_terminate_cmd();
 	}
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device confirm check is success",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"the device confirm check is success");
 	//calculate the dev_key part 
 	u8 prov_salt[16];
 	mesh_sec_prov_salt_fun(prov_salt,gatt_pro_input,gatt_pro_random,gatt_dev_random,is_prov_oob_hmac_sha256());
@@ -542,10 +542,10 @@ void gatt_prov_rcv_random(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 void gatt_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 {
     gatt_provision_net_info_callback();
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_pro_dat,25,"SEND:the provisioner's device info is  \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_pro_dat,25,"SEND:the provisioner's device info is  \r\n");
 	u16 unicast_address =gatt_pro_dat[23]+(gatt_pro_dat[24]<<8);
 	#if (IS_VC_PROJECT_MASTER)
-	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt_prov_send_pro_data set provision data",0);
+	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"gatt_prov_send_pro_data set provision data");
 		#if MD_REMOTE_PROV
 		if(mesh_prov_dkri_is_valid()){
 			mesh_prov_set_adr_dev_candi(unicast_address,gatt_dev_key);
@@ -556,7 +556,7 @@ void gatt_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 		VC_node_dev_key_save(unicast_address, gatt_dev_key,gatt_node_ele);
 		#endif
 	#endif 
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_key,16,"the node's dev key: \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,gatt_dev_key,16,"the node's dev key: \r\n");
 	mesh_sec_prov_session_key_fun (gatt_pro_session_key, gatt_pro_session_nonce_tmp, gatt_pro_input, 145, gatt_pro_edch, gatt_pro_random, gatt_dev_random,is_prov_oob_hmac_sha256());
 	memcpy(gatt_pro_session_nonce,gatt_pro_session_nonce_tmp+3,13); 
     u8 gatt_pro_dat_tmp[40];
@@ -568,7 +568,7 @@ void gatt_prov_send_pro_data(mesh_pro_data_t *p_rcv,mesh_pro_data_t *p_send)
 
 void gatt_prov_rcv_pro_complete()
 {
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"RCV:rcv the provision completet cmd,provision success",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"RCV:rcv the provision completet cmd,provision success");
 }
 
 void gatt_prov_send_record_get(pro_trans_record_get *p_rec_get)
@@ -576,7 +576,7 @@ void gatt_prov_send_record_get(pro_trans_record_get *p_rec_get)
 	
 	set_pro_record_get(p_rec_get);
 	gatt_para_len = sizeof(pro_trans_record_get); 
-	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_rec_get,gatt_para_len,"prov send record cmd is  \r\n",0);
+	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_rec_get,gatt_para_len,"prov send record cmd is  \r\n");
 }
 
 void gatt_prov_rcv_record_list(pro_trans_record_list *p_rec_list,u8 len)
@@ -600,7 +600,7 @@ void gatt_prov_send_record_request(pro_trans_record_request *p_rec_req)
 	set_pro_record_request(p_rec_req,rec_id,offset,max_size);
 	gatt_para_len = sizeof(pro_trans_record_request); 
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)p_rec_req,sizeof(pro_trans_record_request),
-							"send record request cmd is ",0);
+							"send record request cmd is ");
 }
 
 int gatt_prov_rcv_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 rec_data_len)
@@ -649,7 +649,7 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 			if(p_rcv->invite.header.type == PRO_REC_LIST){
 				// get the record id part 
 				LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8*)&(p_rcv->rec_list),
-									len,"pro rcv rec list is \r\n",0);
+									len,"pro rcv rec list is \r\n");
 				gatt_prov_rcv_record_list(&(p_rcv->rec_list),len);
 				// send the record req cmd part
 				gatt_prov_send_record_request(&(p_send->rec_req));
@@ -661,7 +661,7 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 			if(p_rcv->invite.header.type == PRO_REC_RSP){
 				// until receive all the record rsp ,then jump to the  invite send part 
 				LOG_MSG_INFO(TL_LOG_GATT_PROVISION,(u8 *)&(p_rcv->rec_rsp),
-									len,"pro rcv rec rsp is \r\n",0);
+									len,"pro rcv rec rsp is \r\n");
 				u8 rec_data_len = len - 8;
 				int ret = gatt_prov_rcv_record_rsp(&(p_rcv->rec_rsp),rec_data_len);
 				if(ret == 0){
@@ -674,7 +674,7 @@ void gatt_rcv_pro_pkt_dispatch(u8 *p ,u8 len )
 					gatt_prov_send_record_request(&(p_send->rec_req));
 					prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 				}else if (ret == 2){
-					LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"provision confirm fail\r\n",0);
+					LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"provision confirm fail\r\n");
 		    		mesh_proxy_master_terminate_cmd();
 				}
 			}break;
