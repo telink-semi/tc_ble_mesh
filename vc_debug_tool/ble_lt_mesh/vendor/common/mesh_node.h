@@ -335,13 +335,23 @@ STATIC_ASSERT(sizeof(sub_list_save_buf_t) == SUB_LIST_SAVE_BUFF_SIZE);
 	#if(0 == TESTCASE_FLAG_ENABLE)
 		#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
 #define SUB_LIST_MAX                    (2)
+        #elif (__PROJECT_MESH_SWITCH__)
+            #if BLE_MULTIPLE_CONNECTION_ENABLE  // if user want is developing a new product, it can also be enable for 825x switch project to save 2k RAM.
+#define SUB_LIST_MAX                    (2)     // to reduce retention RAM usage
+#define VIRTUAL_ADDR_ENABLE				(0)     // disable virtual address to save ram about 2k byte for demo SDK switch project
+            #else
+#define SUB_LIST_MAX                    (8)     // keep 8 for compatibility
+            #endif
 		#else
 #define SUB_LIST_MAX                    (8) 
 		#endif
 	#else	
 #define SUB_LIST_MAX                    (8)
 	#endif
+
+	#ifndef VIRTUAL_ADDR_ENABLE
 #define VIRTUAL_ADDR_ENABLE				(SUB_LIST_MAX<=8)// disable virtual address to save ram
+    #endif
 #endif
 #define FIX_SIZE(sig_model)             (sig_model?2:0)
 
@@ -985,6 +995,7 @@ typedef struct{
     u8 no_sub   :1; // means not support subscription function; must before pub and sub par
     u8 pub_trans_flag :1; // transition process was ongoing flag.
     u8 pub_2nd_state  :1; // eg: lightness and lightness linear.
+    u8 rsv_bit  :4; // reserved for future
     u8 rsv2;
     bind_key_t bind_key[BIND_KEY_MAX];
 	u8 pub_uuid[16];
@@ -1644,11 +1655,18 @@ static inline void mesh_model_on_demand_save()
 
 // common save
 #define FLASH_CHECK_SIZE_MAX	(64)
-#define SIZE_SAVE_FLAG		(4)
+#define SIZE_SAVE_FLAG		    (4)
+
+#if 0
+#define FLASH_MAP_VER_0         0
+#define FLASH_MAP_VER_1         1 // move FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, and FLASH_ADR_SW_LEVEL after 0x70000. please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#endif
 
 typedef struct{
 	u8 flag;
-	u8 crc_en:1;
+	u8 crc_en:  1;
+//	u8 map_ver: 2;  // no need, just use crc_en to check is enough.
+	u8 rfu:     7;  // reserved for future use
 	u16 crc;
 }mesh_save_head_t;
 
@@ -1738,7 +1756,7 @@ void mesh_flash_retrieve();
 int mesh_key_retrieve();
 
 void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size);
-int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size);
+int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size, u32 *p_out_current_addr);
 int mesh_common_retrieve(u32 adr_base);
 int mesh_common_store(u32 adr_base);
 int mesh_model_retrieve(bool4 sig_model, u32 md_id);

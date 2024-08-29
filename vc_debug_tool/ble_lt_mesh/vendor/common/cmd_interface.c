@@ -981,7 +981,13 @@ int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8* dat,u8 len )
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,dat,len ,"filter send cmd is %d",opcode);
 	#endif
 	
-	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, opcode, dat, len, PROXY_CONFIG_FILTER_DST_ADR);
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	u16 conn_handle = get_periphr_conn_handle_by_idx(0);
+	#else
+	u16 conn_handle = BLS_CONN_HANDLE;
+	#endif
+	
+	return mesh_tx_cmd_layer_proxy_cfg_primary(conn_handle, opcode, dat, len, PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 /**

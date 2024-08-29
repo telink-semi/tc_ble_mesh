@@ -633,7 +633,8 @@ int cb_vd_mesh_set_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			memset(&fast_prov.net_info.pro_data, 0x00, sizeof(provison_net_info_str));
 			fast_prov.net_info.pro_data.unicast_address = addr;
 		}
-		fast_prov.get_mac_en = 0;		
+		fast_prov.get_mac_en = 0;
+        fast_prov.provisioner_addr = cb_par->adr_src;
 	}
 
 	return err;
@@ -641,24 +642,29 @@ int cb_vd_mesh_set_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int cb_vd_mesh_set_provision_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	if(fast_prov.not_need_prov){
+	if(fast_prov.not_need_prov || (fast_prov.provisioner_addr != cb_par->adr_src)){
 		return -1;
 	}
-	mesh_fast_prov_rcv_op(cb_par->op);
-//par: provision data + app_key add
-	memcpy(&fast_prov.net_info.pro_data, par, OFFSETOF(provison_net_info_str, unicast_address));	// unicast address had been set in cb_vd_mesh_set_addr().
-	memcpy(&fast_prov.net_info.appkey_set,par+sizeof(provison_net_info_str),sizeof(mesh_appkey_set_t));
 
+    if(mesh_fast_prov_sts_get() == FAST_PROV_SET_ADDR){
+        mesh_fast_prov_rcv_op(cb_par->op);
+        //par: provision data + app_key add
+        memcpy(&fast_prov.net_info.pro_data, par, OFFSETOF(provison_net_info_str, unicast_address));	// unicast address had been set in cb_vd_mesh_set_addr().
+        memcpy(&fast_prov.net_info.appkey_set,par+sizeof(provison_net_info_str),sizeof(mesh_appkey_set_t));
+    }
+    
 	return 0;
 }
 
 int cb_vd_mesh_provision_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = -1;
-	if(fast_prov.not_need_prov){
+	if(fast_prov.not_need_prov || (fast_prov.provisioner_addr != cb_par->adr_src)){
 		return err;
 	}
+    
 	mesh_fast_prov_rcv_op(cb_par->op);
+    
 	if(fast_prov.cur_sts == FAST_PROV_SET_ADDR){
 		err = mesh_tx_cmd_rsp(cb_par->op_rsp, 0, 0, ele_adr_primary, cb_par->adr_src, 0, 0);
 	}
@@ -668,6 +674,10 @@ int cb_vd_mesh_provision_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 
 int cb_vd_mesh_provision_complete(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+    if(fast_prov.provisioner_addr != cb_par->adr_src){
+        return -1;
+    }
+    
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
 

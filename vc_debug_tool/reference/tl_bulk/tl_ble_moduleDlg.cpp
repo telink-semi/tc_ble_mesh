@@ -2185,7 +2185,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 						LOG_MSG_INFO(TL_LOG_WIN32,p_proxy_str->para,2,"DIRECTED_PROXY_CAPABILITIES_STATUS:");
 						directed_proxy_capa_sts *p_capa_sts = (directed_proxy_capa_sts *)p_proxy_str->para;
 						if(p_capa_sts->directed_proxy && p_capa_sts->use_directed != m_use_directed){
-							mesh_directed_proxy_control_set(m_use_directed, ele_adr_primary, g_ele_cnt);
+							mesh_directed_proxy_control_set(BLS_CONN_HANDLE, m_use_directed, ele_adr_primary, g_ele_cnt);
 						}
 					}
 				}	
@@ -4740,7 +4740,7 @@ void CTl_ble_moduleDlg::OnBnClickedUseDirected()
 	// TODO: 在此添加控件通知处理程序代码
 	UpdateData(TRUE);
 	#if MD_DF_CFG_CLIENT_EN
-	mesh_directed_proxy_control_set(m_use_directed, ele_adr_primary, g_ele_cnt);
+	mesh_directed_proxy_control_set(BLS_CONN_HANDLE, m_use_directed, ele_adr_primary, g_ele_cnt);
 	#endif
 }
 

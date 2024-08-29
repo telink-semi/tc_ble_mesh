@@ -306,7 +306,7 @@ void flash_erase_sector(unsigned long addr)
 	flash_mspi_write_ram(FLASH_SECT_ERASE_CMD, addr, 1, NULL, 0);
 #if (APP_FLASH_PROTECTION_ENABLE)
 	if(backup_lock_addr){
-		flash_lock(backup_lock_addr, 1);
+		flash_lock(backup_lock_addr, FLASH_PROTECTION_CEILING_EN);
 	}
 #endif
 }
@@ -381,7 +381,7 @@ void flash_write_page(unsigned long addr, unsigned long len, unsigned char *buf)
 	
 #if (APP_FLASH_PROTECTION_ENABLE)
 	if(backup_lock_addr){
-		flash_lock(backup_lock_addr, 1);
+		flash_lock(backup_lock_addr, FLASH_PROTECTION_CEILING_EN);
 	}
 #endif
 }

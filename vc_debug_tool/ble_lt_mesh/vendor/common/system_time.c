@@ -52,7 +52,7 @@
 #endif
 
 #ifndef MESH_LONG_SLEEP_WAKEUP_EN
-#define MESH_LONG_SLEEP_WAKEUP_EN	0
+#define MESH_LONG_SLEEP_WAKEUP_EN	0   // for switch project, no need to enable and just use API of cpu_long_sleep_wakeup_() is ok.
 #endif
 
 #if WIN32 // just for compile
@@ -84,7 +84,7 @@ u32 system_time_tick;
 #define LOG_RTC_DEBUG(pbuf, len, format, ...)		//LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
 
 #if (__PROJECT_MESH_SWITCH__ || RTC_USE_32K_RC_ENABLE)
-STATIC_ASSERT(MESH_LONG_SLEEP_WAKEUP_EN == 0); // because switch has enable long sleep mode
+STATIC_ASSERT(MESH_LONG_SLEEP_WAKEUP_EN == 0); // no need to enable MESH_LONG_SLEEP_WAKEUP_EN and just use API of cpu_long_sleep_wakeup_() is ok. // because switch has enable long sleep mode
 #endif
 
 #if RTC_USE_32K_RC_ENABLE

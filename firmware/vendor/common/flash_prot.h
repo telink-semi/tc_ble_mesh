@@ -25,18 +25,25 @@
 #define VENDOR_COMMON_FLASH_PROT_H_
 
 #define LOG_FLASH_PROT_EN					((0 /*|| DEBUG_LOG_SETTING_DEVELOP_MODE_EN*/) && (APP_FLASH_PROTECTION_ENABLE))
-	#if LOG_FLASH_PROT_EN
+#if LOG_FLASH_PROT_EN
 #define LOG_FLASH_PROT_DEBUG(pbuf,len,format,...)		LOG_MSG_LIB(TL_LOG_NODE_BASIC,pbuf,len,format,##__VA_ARGS__)
-	#else
+#else
 #define LOG_FLASH_PROT_DEBUG(pbuf,len,format,...)		//
-	#endif
+#endif
+
+/*
+ * FLASH_PROTECTION_CEILING_EN
+ * 1 means allow to protect the larger protection area of flash when not found.
+ * 0 means always to protect the smaller protection area of flash when not found.
+ */
+#define FLASH_PROTECTION_CEILING_EN			0 // due to write flash status register cycle limited, should not enable.
 
 /**
  * @brief	Application Flash protection enable control. Default disable, use can enable it in app_conifg.h.
  * 			User must enable Flash protection on mass production application !!!
  */
 #ifndef APP_FLASH_PROTECTION_ENABLE
-#define APP_FLASH_PROTECTION_ENABLE					0   //enable or disable
+#define APP_FLASH_PROTECTION_ENABLE			0   //enable or disable
 #endif
 
 
@@ -44,7 +51,7 @@
  * @brief	Application Flash protection log enable or not. Default disable, use can enable it in app_conifg.h.
  */
 #ifndef APP_FLASH_PROT_LOG_EN
-#define APP_FLASH_PROT_LOG_EN						0
+#define APP_FLASH_PROT_LOG_EN				0
 #endif
 
 

@@ -146,8 +146,8 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
-			proxy_cfg_list_init_upon_connection(BLS_HANDLE_MIN);
-			mesh_service_change_report(BLS_HANDLE_MIN);
+			proxy_cfg_list_init_upon_connection(BLS_CONN_HANDLE);
+			mesh_service_change_report(BLS_CONN_HANDLE);
 		}
 
 	//------------ connection update complete -------------------------------

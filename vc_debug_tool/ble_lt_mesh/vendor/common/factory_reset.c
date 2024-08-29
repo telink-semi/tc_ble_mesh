@@ -435,7 +435,7 @@ int factory_reset_cnt_check ()
  * @return      0
  * @note        
  */
-int factory_reset() // 1M flash
+int factory_reset() // 1M flash for b85m, 2M flash for B91m
 {
 	u32 r = irq_disable ();
 #if (APP_FLASH_PROTECTION_ENABLE)
@@ -448,6 +448,17 @@ int factory_reset() // 1M flash
 		    flash_erase_sector(adr);
 		}
 	}
+
+#ifdef FLASH_ADR_AREA_2_START
+    #if (FLASH_ADR_AREA_2_END > FLASH_ADR_AREA_2_START)
+	for(int i = 0; i < (FLASH_ADR_AREA_2_END - FLASH_ADR_AREA_2_START) / 4096; ++i){
+	    u32 adr = FLASH_ADR_AREA_2_START + i*0x1000;
+	    if(adr != FLASH_ADR_RESET_CNT){
+		    flash_erase_sector(adr);
+		}
+	}
+	#endif
+#endif
 
 	if((FLASH_ADR_MESH_TYPE_FLAG < FLASH_ADR_AREA_1_START) || (FLASH_ADR_MESH_TYPE_FLAG >= FLASH_ADR_AREA_1_END)){
         flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
@@ -468,26 +479,7 @@ int factory_reset() // 1M flash
 #endif
 	// no area2
 
-	#if HOMEKIT_EN
-        #if 1
-	extern flash_adr_layout_def flash_adr_layout;
- 	flash_erase_sector((u32)flash_adr_layout.flash_adr_hash_id);
-
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_device_id);
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_srp_key);
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_id_info);
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_id_info + 0x1000);
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_global_state);
-    flash_erase_sector((u32)flash_adr_layout.flash_adr_char_value);
-//R10 clear broadcast event param.
-    extern void blt_clean_broadcast_param(void);
-	blt_clean_broadcast_param();
-        #else
-	for(int i = 0; i < (FLASH_ADR_HOMEKIT_AREA_END - FLASH_ADR_HOMEKIT_AREA_START) / 4096; ++i){
-	    flash_erase_sector(FLASH_ADR_HOMEKIT_AREA_START + i*0x1000);
-	}
-        #endif
-    #elif (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
+	#if (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
     for(int i = 0; i < (FLASH_ADR_USER_MESH_END - FLASH_ADR_USER_MESH_START) / 4096; ++i){
         flash_erase_sector(FLASH_ADR_USER_MESH_START + i*0x1000);
     }
@@ -506,7 +498,7 @@ int factory_reset() // 1M flash
     irq_restore(r);
 	return 0;
 }
-#else
+#else //  512k flash for b85m, 1M flash for B91m
 
 /**
  * @brief       This function is factory reset API to clear all settings for 512k bytes flash map.

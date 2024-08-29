@@ -287,9 +287,12 @@ int	pb_gatt_Write (void *p)
 {
 	int idx = 0;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	idx = get_slave_idx_by_conn_handle(connHandle);
+	idx = get_periphr_idx_by_conn_handle(connHandle);
+	if(idx == INVALID_CONN_IDX){
+		return 0;
+	}
 	#else
-	u16 connHandle = BLS_HANDLE_MIN;
+	u16 connHandle = BLS_CONN_HANDLE;
 	#endif
 	
 	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
@@ -337,7 +340,7 @@ int proxy_out_ccc_cb(void *p)
 					
 		#if (MD_DF_CFG_SERVER_EN && !WIN32)
 			#if !BLE_MULTIPLE_CONNECTION_ENABLE
-		u16 connHandle = BLS_HANDLE_MIN;
+		u16 connHandle = BLS_CONN_HANDLE;
 			#endif
 		mesh_directed_proxy_capa_report_upon_connection(connHandle); // report after security network beacon.
 		#endif
@@ -360,7 +363,10 @@ int proxy_gatt_Write(void *p)
 {
 	int idx = 0;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	idx = get_slave_idx_by_conn_handle(connHandle);
+	idx = get_periphr_idx_by_conn_handle(connHandle);
+	if(idx == INVALID_CONN_IDX){
+		return 0;
+	}
 	#endif
 	
 	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
@@ -458,7 +464,10 @@ void proxy_cfg_list_init_upon_connection(u16 conn_handle)
 {
 	int idx = 0;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	idx = get_slave_idx_by_conn_handle(conn_handle);
+	idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(idx == INVALID_CONN_IDX){
+		return;
+	}
 	#endif
 	
 	memset(&proxy_mag[idx], 0x00, sizeof(proxy_mag[idx]));
@@ -638,9 +647,10 @@ int send_filter_sts(int idx, mesh_cmd_nw_t *p_nw)
 	// swap the list size part 
 	endianness_swap_u16((u8 *)(&mesh_filter_sts.list_size));
 
-	u16 conn_handle = BLS_HANDLE_MIN;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_handle = get_slave_conn_handle_by_idx(idx);
+	u16 conn_handle = get_periphr_conn_handle_by_idx(idx);
+	#else
+	u16 conn_handle = BLS_CONN_HANDLE;
 	#endif
 	
 #if 1
@@ -703,7 +713,10 @@ u8 proxy_config_dispatch(mesh_cmd_bear_t *p_bear, u8 len)
 	__UNUSED bear_conn_handle_t *p_bear_handle = (bear_conn_handle_t *)&p_bear->tx_head;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
 	if(BEAR_TX_PAR_TYPE_CONN_HANDLE == p_bear_handle->par_type){
-		idx = get_slave_idx_by_conn_handle(p_bear_handle->conn_handle);
+		idx = get_periphr_idx_by_conn_handle(p_bear_handle->conn_handle);
+		if(idx == INVALID_CONN_IDX){
+			return 1;
+		}
 	}
 	#endif
 	

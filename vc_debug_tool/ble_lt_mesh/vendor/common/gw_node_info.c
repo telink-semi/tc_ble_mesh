@@ -340,7 +340,7 @@ static u32 mesh_vc_node_addr = FLASH_ADR_VC_NODE_INFO;
 void VC_node_info_retrieve()
 {
 #if WIN32
-    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info));
+    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info), NULL);
 #else    
 	restore_node_info_table();
 #endif

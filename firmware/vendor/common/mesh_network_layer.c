@@ -26,6 +26,10 @@
 #include "directed_forwarding.h"
 #include "subnet_bridge.h"
 
+#ifndef PROXY_TX_OTHER_NODES_EN
+#define PROXY_TX_OTHER_NODES_EN     0 // node send message with source address is not own address(for example, proxy to send packets for Enocean).
+#endif
+
 //--------------------network layer callback------------------------------//
 #if !WIN32
 int mesh_rc_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_retrans)
@@ -36,7 +40,10 @@ int mesh_rc_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_re
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
 		bear_conn_handle_t *p_bear_handle = (bear_conn_handle_t *)&p_bear->tx_head;
 		if(BEAR_TX_PAR_TYPE_CONN_HANDLE == p_bear_handle->par_type){
-			conn_idx = get_slave_idx_by_conn_handle(p_bear_handle->conn_handle);
+			conn_idx = get_periphr_idx_by_conn_handle(p_bear_handle->conn_handle);
+			if(conn_idx == INVALID_CONN_IDX){
+				return -1;
+			}
 		}
 		#endif
 		
@@ -158,7 +165,7 @@ int mesh_rc_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_re
 		#if (FEATURE_PROXY_EN)
 		if(p_nw_retrans->print_proxy2adv_error){
 			// please check App setting of extend ADV mode
-			LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"can not proxy to ADV due to len overflow"); // for remind checking exent ADV setting on App.
+			LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"can not proxy to ADV due to len overflow"); // please checke Extend Bearer(extend ADV) setting on App, if enable, then nodes also need to enable Extend ADV.
 		}
 		#endif
 	}else{
@@ -239,6 +246,16 @@ u16 mesh_tx_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_match_type_t *p_match
 #if MESH_TX_RX_SELF_EN
 	mesh_set_iv_idx_rx(p_bear->nw.ivi); 
 	is_exist_in_cache((u8 *)&p_bear->nw, 0, 1); // update RPL to prevent receiving it again.
+#elif PROXY_TX_OTHER_NODES_EN
+    if(!is_own_ele(p_bear->nw.src)){
+        if(is_exist_in_cache((u8 *)&p_bear->nw, 0, 0)){
+            p_match_type->local = 0; // receive from relay already, no need to process by local again.
+        }
+        else{
+            mesh_set_iv_idx_rx(p_bear->nw.ivi); 
+            is_exist_in_cache((u8 *)&p_bear->nw, 0, 1); // update RPL to prevent receiving it again.
+        }
+    }
 #endif
 
 #if FEATURE_LOWPOWER_EN
@@ -492,5 +509,5 @@ u16 get_mesh_current_cache_num() // Note, there may be several elements in a nod
             num++;
         }
    }
-    return num;
+   return num;
 }

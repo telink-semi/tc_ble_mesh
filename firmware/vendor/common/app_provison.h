@@ -729,7 +729,8 @@ typedef struct{
 
 typedef struct{
 	u16 pid;
-	u16 prov_addr;
+    u16 provisioner_addr;   // cache the app/gateway's unicast address in VD_MESH_ADDR_SET.
+	u16 prov_addr;          // unicast address to be assigned to the node.
 	u8 get_mac_en;
 	u8 not_need_prov;
 	u16 rcv_op;

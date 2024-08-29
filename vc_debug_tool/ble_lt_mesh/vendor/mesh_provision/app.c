@@ -153,8 +153,8 @@ int app_event_handler (u32 h, u8 *p, int n)
 			app_coc_ble_connect_cb(p);
 			#endif
 			
-			proxy_cfg_list_init_upon_connection(BLS_HANDLE_MIN);
-			mesh_service_change_report(BLS_HANDLE_MIN);
+			proxy_cfg_list_init_upon_connection(BLS_CONN_HANDLE);
+			mesh_service_change_report(BLS_CONN_HANDLE);
 		}
 
 	//------------ connection update complete -------------------------------

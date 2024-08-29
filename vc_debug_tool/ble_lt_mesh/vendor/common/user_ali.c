@@ -308,7 +308,7 @@ void ais_gatt_auth_init()
 	ais_gatt_auth.auth_ok = 0;
 }
 
-int ais_auth_cipher(ais_msg_t *p_ais_msg)
+int ais_auth_cipher(u16 connHandle, ais_msg_t *p_ais_msg)
 {
 	ais_msg_t ais_msg_result;
 	memset(&ais_msg_result, 0x00, sizeof(ais_msg_result));		
@@ -317,7 +317,7 @@ int ais_auth_cipher(ais_msg_t *p_ais_msg)
 	ais_msg_result.frame_seq = ais_msg_result.frame_total = 0;
 	ais_msg_result.length = 0x10;
 	memcpy(ais_msg_result.data, p_ais_msg->data, 16);
-	return blc_gatt_pushHandleValueIndicate(BLS_HANDLE_MIN, AIS_INDICATE_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t, data)+16);
+	return blc_gatt_pushHandleValueIndicate(connHandle, AIS_INDICATE_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t, data)+16);
 }
 
 AES_ctx ais_aes_ctx;
@@ -328,6 +328,10 @@ int ais_write_pipe(u16 conn_handle, void *p)
 int ais_write_pipe(void *p)
 #endif
 {
+	#if !BLE_MULTIPLE_CONNECTION_ENABLE
+	u16 conn_handle = BLS_CONN_HANDLE;
+	#endif
+		
 	rf_packet_att_data_t *req = (rf_packet_att_data_t*)p;
 	ais_msg_t *ais_p = (ais_msg_t *)req->dat;
 
@@ -349,7 +353,7 @@ int ais_write_pipe(void *p)
 		memcpy(ais_gatt_auth.ble_key, sha256_out, 16);
 
 		aes_cbc_encrypt(ais_p->data, 16, &ais_aes_ctx, ais_gatt_auth.ble_key, iv);
-		ais_auth_cipher(ais_p);
+		ais_auth_cipher(conn_handle, ais_p);
 	}
 	else if(AIS_AUTH_CHECK == ais_p->msg_type){
 		ais_p->msg_type = AIS_AUTH_RESULT;
@@ -361,7 +365,8 @@ int ais_write_pipe(void *p)
 			ais_p->data[0] = 0;	  // 0 means success
 			ais_gatt_auth.auth_ok = 1;
 		}
-		return blc_gatt_pushHandleValueIndicate(BLS_HANDLE_MIN, AIS_INDICATE_HANDLE, (u8 *)req->dat, OFFSETOF(ais_msg_t, data)+1);
+		
+		return blc_gatt_pushHandleValueIndicate(conn_handle, AIS_INDICATE_HANDLE, (u8 *)req->dat, OFFSETOF(ais_msg_t, data)+1);
 	}
 	return 0;
 }

@@ -190,6 +190,25 @@ typedef struct {
 #define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    ((CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH)||(CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_1M_FLASH))
 #endif
 
+
+#if (!(WIN32 || __TLSR_RISCV_EN__ || FLASH_PLUS_ENABLE || TLV_ENABLE))
+	#if (APP_FLASH_PROTECTION_ENABLE && (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH))
+/* for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000(such as FLASH_LOCK_LOW_448K_MID1360C8),
+ * include FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, and FLASH_ADR_SW_LEVEL.
+ */
+#define FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN		    1 // If it is a new product development, there is no need to consider compatibity with previous versions, then FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN can be disabled to save firmware size.
+
+#define FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_ASSERT_EN  1 // must enable to do checking.
+	#endif
+#endif
+
+#ifndef FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#define FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN		    0 // other case must be 0
+#endif
+#ifndef FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_ASSERT_EN
+#define FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_ASSERT_EN  0 // other case must be 0
+#endif
+
 /////////////////// Flash  Address Config ////////////////////////////
 #define	FLASH_SECTOR_SIZE       (4096)
 
@@ -212,17 +231,13 @@ typedef struct {
 #define			FLASH_ADR_MD_LIGHTNESS		0x35000	// share with power level
 #define			FLASH_ADR_MD_LIGHT_CTL		0x36000
 #define			FLASH_ADR_MD_LIGHT_LC		0x37000
-#define			FLASH_ADR_SW_LEVEL			0x38000
+#define 		FLASH_ADR_MD_MESH_OTA		0x38000 // V4.1.0.0 or earlier version is sw_level
 #define 		FLASH_ADR_MD_SENSOR		    0x39000
 #define 		FLASH_ADR_PROVISION_CFG_S	0x3a000 // this sector can be deleted for non gateway project later.
 #define			FLASH_ADR_MD_LIGHT_HSL		0x3b000 // cps before V23
 #define			FLASH_ADR_FRIEND_SHIP		0x3c000 // backup both FLASH_ADR_MISC and FLASH_ADR_VC_NODE_INFO(gateway) temporarily
-#define			FLASH_ADR_MISC				0x3d000
-	#if TLV_ENABLE
-#define			FLASH_ADR_RESET_CNT			0x35000
-	#else
-#define			FLASH_ADR_RESET_CNT			0x3e000
-	#endif
+#define			FLASH_ADR_MD_VD_LIGHT		0x3d000 // V4.1.0.0 or earlier version is misc with sno and iv
+#define			FLASH_ADR_MD_MISC_PAR		0x3e000 // V4.1.0.0 or earlier version is factory reset cnt
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
 #define			FLASH_ADR_MD_DF_SBR			0x41000 
@@ -253,13 +268,18 @@ typedef struct {
 
 /* Flash adr 0x40000 ~ 0x6ffff  is firmware(OTA) area*/
 #define			FLASH_ADR_AREA_2_START		0x70000
-#define			FLASH_ADR_MD_VD_LIGHT		FLASH_ADR_AREA_2_START
+#define			FLASH_ADR_MISC				FLASH_ADR_AREA_2_START // V4.1.0.0 or earlier version is vendor model
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0x71000
 #define			FLASH_ADR_MD_SCENE			0x72000
 
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x73000	// don't change, must same with telink mesh SDK
-#define			FLASH_ADR_MD_MESH_OTA		0x74000
-#define 		FLASH_ADR_MD_MISC_PAR		0x75000	// Note: before is remote provision. 
+#define			FLASH_ADR_SW_LEVEL			0x74000 // V4.1.0.0 or earlier version is mesh ota model
+	#if TLV_ENABLE
+//#define			FLASH_ADR_RESET_CNT			0x35000 // TODO
+	#else
+#define			FLASH_ADR_RESET_CNT			0x75000	// V4.1.0.0 or earlier version is parameter of misc model
+	#endif
+
 #define			FLASH_ADR_AREA_2_END		0x76000
 
 
@@ -315,6 +335,20 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_PAR_USER_MAX		0x80000
 #endif
 
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN // flash map legacy value of V4.1.0.0 or earlier versions(FW_VERSION_TELINK_RELEASE)
+#define FLASH_ADR_MISC_LEGACY_VERSION				(0x3d000) // exchange with vendor model
+#define FLASH_ADR_SW_LEVEL_LEGACY_VERSION			(0x38000) // exchange with mesh ota model
+#define FLASH_ADR_RESET_CNT_LEGACY_VERSION			(0x3e000) // exchange with parameter of misc model
+#define FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION		(0x70000) // exchange with misc sno/iv model
+
+// exchange flash sector address between ADDR_x_A and ADDR_x_B
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A            (FLASH_ADR_MISC)        // must be FLASH_ADR_MISC
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B            (FLASH_ADR_MD_VD_LIGHT) // must be FLASH_ADR_MD_VD_LIGHT
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_2_A            (FLASH_ADR_SW_LEVEL)
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_2_B            (FLASH_ADR_MD_MESH_OTA)
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_3_A            (FLASH_ADR_RESET_CNT)
+#define FLASH_MAP_AUTO_EXCHANGE_ADDR_3_B            (FLASH_ADR_MD_MISC_PAR)
+#endif
 
 #else // 1M flash // (FLASH_PLUS_ENABLE == 1)
 #if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_SIG_PVT_DUAL_ENABLE))
@@ -358,11 +392,13 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
     #if PINGPONG_OTA_DISABLE
 #define 		FLASH_ADR_AREA_FIRMWARE_END	0x5A000 // 360K
 #define         FLASH_ADR_UPDATE_NEW_FW     FLASH_ADR_AREA_FIRMWARE_END
+/* Firmware Run area 0x00000 ~ 0x59fff, Firmware OTA receive area 0x5a000 ~ 0xb3fff*/
     #else
 #define 		FLASH_ADR_AREA_FIRMWARE_END	0x3F000 // 252K
+/* Firmware Run area A: 0x00000 ~ 0x3efff, Firmware Run area A: 0x40000 ~ 0x7efff*/
     #endif
-/* Flash adr 0x00000 ~ 0x3efff  is firmware area*/
-#define			FLASH_ADR_AREA_1_START		0xB4000 // = FLASH_ADR_AREA_FIRMWARE_END * 2, use same address whether disable pingpong or not.
+/* Flash adr 0x00000 ~ 0xb3fff  is firmware area*/
+#define			FLASH_ADR_AREA_1_START		0xB4000 // should be greater than or equal to FLASH_ADR_AREA_FIRMWARE_END * 2, because use same address whether disable pingpong or not.
 #define			FLASH_ADR_MESH_KEY			FLASH_ADR_AREA_1_START
 #define			FLASH_ADR_MD_CFG_S			0xB5000
 #define			FLASH_ADR_MD_HEALTH			0xB6000
@@ -371,101 +407,70 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_LIGHTNESS		0xB9000	// share with power level
 #define			FLASH_ADR_MD_LIGHT_CTL		0xBA000
 #define			FLASH_ADR_MD_LIGHT_LC		0xBB000
-#define			FLASH_ADR_SW_LEVEL			0xBC000
+#define	FLASH_ADR_SW_LEVEL_1M_LEGACY    0xBC000     // can not be used, because it is FLASH_ADR_SW_LEVEL_ at version V4.1.0.0 or earlier.
 #define   		FLASH_ADR_MD_SENSOR			0xBD000
 #define 		FLASH_ADR_PROVISION_CFG_S	0xBE000
 #define			FLASH_ADR_MD_LIGHT_HSL		0xBF000 // cps before V23
+#define FLASH_ADR_PROTECT_END	        0xC0000     // must, for flash protection default area, not parameter address definition.
 #define			FLASH_ADR_FRIEND_SHIP		0xC0000
 #define			FLASH_ADR_MISC				0xC1000
 #define			FLASH_ADR_RESET_CNT			0xC2000
-// 				                                            0xC3000 // reserve now
+#define			FLASH_ADR_MD_DF_SBR			0xC3000 // this sector did not be used at version V4.1.0.0 or earlier.
 #define			FLASH_ADR_MD_PROPERTY		0xC4000 // just test
 #define			FLASH_ADR_MD_VD_LIGHT		0xC5000
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0xC6000
 #define			FLASH_ADR_MD_SCENE			0xC7000
-// 				                                            0xC8000 // reserve now
+// 				                            0xC8000 // reserved for scene id list which may over 4k. 
 #define			FLASH_ADR_MD_MESH_OTA		0xC9000
 //#define                                   0xCA000 // reserve, before is remote provision. 
+#define			FLASH_ADR_AREA_1_END		0xCB000 // need to change if add parameters before. not set to 0xF0000 to save time when factory reset.
+
+#define         FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN      1
+
+#if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__) // erase independently when factory reset
 #define 		FLASH_ADR_VC_NODE_INFO		0xCB000	//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0xCC000	// not included
-#define			FLASH_ADR_AREA_1_END		0xCC000
-// FLASH_ADR_AREA_1_END to start of user is reserve for telink
+#define 		FLASH_ADR_VC_NODE_INFO_END	0xCD000	// not included
+//#define 		reserve for VC NODE INFO	0xCE000	// when more nodes
+//#define 		reserve for VC NODE INFO	0xCF000	// when more nodes
+//#define 		reserve for VC NODE INFO	0xD0000	// when more nodes
+//#define 		reserve for VC NODE INFO	0xD1000	// when more nodes
+#else // for not gateway
+// reserved for future use. if use, need to modify factory reset function.
+#endif
+
+
+// from FLASH_ADR_AREA_1_END to FLASH_ADR_USER_MESH_START(0xD2000) is reserved for telink
+
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
 #define			FLASH_ADR_USER_MESH_START	0xD2000
-#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
-#define 		FLASH_ADR_MI_RECORD		    0xD2000
-#define 		FLASH_ADR_MI_RECORD_TMP	    0xD3000
-#define 		FLASH_ADR_MI_RECORD_MAX	    0xD4000
-//#define         MI_BLE_MESH_CER_ADR 	    0xFC000
-    #if (ALI_MD_TIME_EN)
-#define 		FLASH_ADR_VD_TIME_INFO	    FLASH_ADR_MI_RECORD_MAX  // 0xD4000
-    #endif
-#define			FLASH_ADR_USER_MESH_END	    0xD5000
-#else
 
-#if BLE_REMOTE_SECURITY_ENABLE
-#define 		FLASH_ADR_SMP_PARA_START	0xD3000 // 0xD4000 will be use also, smp para use 2 sequential sectors.
+#if BLE_REMOTE_SECURITY_ENABLE                      // erase independently when factory reset
+#define 		FLASH_ADR_SMP_PARA_START	0xD3000 // 0xD4000 will be used also, because smp para use 2 sequential sectors.
 #define 		FLASH_ADR_SMP_PARA_2		0xD4000 // 
 #endif
-#define			FLASH_ADR_USER_MESH_END	    0xD8000
-#endif
-/*SIG mesh END*/
 
-#if HOMEKIT_EN
-////////////////////homekit address//////////////////////
-#define			FLASH_ADR_HOMEKIT_AREA_START	0xD8000
-#define 		FLASH_ADR_CHAR_VALUE        	FLASH_ADR_HOMEKIT_AREA_START
-#define 		FLASH_ADR_SW_UUID				0xD9000
-#define 		FLASH_ADR_SW_TOKEN				0xDA000
-#define 		FLASH_ADR_DEVICE_ID         	0xDB000
-#define 		FLASH_ADR_HASH_ID           	0xDC000
-#define 		FLASH_ADR_SETUPCODE         	0xDD000
-#define 		FLASH_ADR_SETUPCODE_WRITE_CNT	0xDE004
-#define 		FLASH_ADR_SETUPCODE_READ_CNT	0xDF008
-#define 		FLASH_ADR_SETUP_ID				0xE0000
-#define 		FLASH_ADR_SERIAL_NUMBER     	0xE1000
-#define 		FLASH_ADR_ACCESSORY_LTSK		0xE2000
-#define 		FLASH_ADR_SRP_KEY           	0xE3000
-#define 		FLASH_ADR_SRP_KEY_CRC_DATA		    (FLASH_ADR_SRP_KEY + 0xE00)
-#define 		FLASH_ADR_ID_INFO           	0xE4000
-#define 		FLASH_ADR_ID_INFO_2           	0xE5000 // FLASH_ADR_ID_INFO takes 8K
-#define 		FLASH_ADR_FACTORY_RESET_CNT 	0xE6000
-#define 		FLASH_ADR_GLOBAL_STATE      	0xE7000
-#define 		FLASH_ADR_FW_UPDATE_CNT     	0xE8000
-#define 		FLASH_ADR_ADV_ENCRYPTION_KEY    0xE9000
-#define 		FLASH_ADR_NEW_ID            	0xEA000
-#define 		FLASH_ADR_BROADCAST_GSN     	0xEB000
-#define 		FLASH_ADR_SRP_KEY2           	0xEC000
-#define 		FLASH_ADR_SRP_KEY2_CRC_DATA			(FLASH_ADR_SRP_KEY2 + 0xE00)
-#define 		FLASH_ADR_SALTCHAR				0xED000
-#define			FLASH_ADR_HOMEKIT_AREA_END		0xEF000
-// FLASH_ADR_HOMEKIT_AREA_END to start of user is reserve for telink
-/*******homekit vendor define here, from FLASH_ADR_USER_HOMEKIT_END ~ FLASH_ADR_USER_HOMEKIT_START, vendor define from behined to head should be better, .*/
-#define			FLASH_ADR_USER_HOMEKIT_START	0xF4000
-// TODO
-#define			FLASH_ADR_USER_HOMEKIT_END	    0xFA000
-/*homekit END*/
-#endif /*end of HOMEKIT_EN*/
+// add here for user parameters
+
+#define			FLASH_ADR_USER_MESH_END	    0xE0000 // not include
+/*user define END*/
+
+// from FLASH_ADR_USER_MESH_END(0xE0000) to FLASH_ADR_USER_MESH_START(0xF0000) is reserved for telink
+// reserved for later FLASH_ADR_MISC_		0xE0000 // 
+// reserved for later FLASH_ADR_RESET_CNT_	0xE1000 // 
+
+#define			FLASH_ADR_AREA_2_START		0xF0000
+
+#define			FLASH_ADR_SW_LEVEL			FLASH_ADR_AREA_2_START
+#define			FLASH_ADR_MD_MISC_PAR		0xF1000 // 
+
+#define			FLASH_ADR_AREA_2_END		0xF2000 // not include
 
 /**
-0xFA000--0xFBFFF is reserve for telink
+FLASH_ADR_AREA_2_END -- 0xFCFFF is reserved for telink
 **/
-#if (MI_API_ENABLE)
-#define         MI_BLE_MESH_CER_ADR 	        0xFB000
-#endif
-
-#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define DU_STORE_ADR	0xFC000
-#define DU_OTA_REBOOT_ADR	0xFD000
-
-#endif
-
-#if(AIS_ENABLE)
-#define 		FLASH_ADR_THREE_PARA_ADR		0xFC000
-#define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
-#endif
-
-// 0xFD000: FLASH_ADR_MESH_TYPE_FLAG; 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
+// for FLASH_ADR_MESH_TYPE_FLAG             0xFD000 // defined at place before "CFG_ADR_MAC"
+// for CUST_CAP_INFO_ADDR                   0xFE000
+// for CFG_ADR_MAC(with FLASH_ADR_EDCH_PARA)0xFF000
 
 #else//SWITCH_FW_ENABLE == 1
 #define 		FLASH_ADR_AREA_FIRMWARE_END		0x40000 // 256K

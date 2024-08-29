@@ -325,7 +325,10 @@ void proc_ota (void)
 	}
 	else if (host_ota_start == 5)
 	{
-		if( clock_time_exceed(otaStart_cmd_tick, 600000) ){
+		// need delay because flash unprotection which need about 6ms irq disable when receive OTA start.
+		// so we need to add some delay to make sure unprotect complete before OTA data, if not it will miss packets then OTA fail.
+		// the delay time need to greater than 500ms which is the GATT interval of GATT LPN.
+		if( clock_time_exceed(otaStart_cmd_tick, 600 * 1000) ){
 			host_ota_start = 6;
 		}
 	}

@@ -242,15 +242,14 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	}else{}
 	if(blt_sts){
 	    #if (!WIN32)
-		u16 conn_handle = BLS_HANDLE_MIN;
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		for(conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-			if(blc_ll_isAclConnEstablished(conn_handle)){
-		#endif
-				err = notify_pkts(conn_handle, (u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
-		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){				
+				err = notify_pkts(conn_dev_list[i].conn_handle, (u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
 			}
 		}
+		#else	
+		err = notify_pkts(BLS_CONN_HANDLE, (u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
 		#endif
 		#endif
 	}else{
@@ -300,16 +299,15 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     	#if WIN32
 		err = prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
-		__UNUSED u8 conn_handle = BLS_HANDLE_MIN;
-		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-			if(blc_ll_isAclConnEstablished(conn_handle)){
-		#endif
-				err = mesh_proxy_adv2gatt(conn_handle, PROXY_CONFIG_FILTER_DST_ADR, (u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);
-		#if BLE_MULTIPLE_CONNECTION_ENABLE
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){				
+				err = mesh_proxy_adv2gatt(conn_dev_list[i].conn_handle, PROXY_CONFIG_FILTER_DST_ADR, (u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);
 			}
 		}
-		#endif
+			#else
+		err = mesh_proxy_adv2gatt(BLS_CONN_HANDLE, PROXY_CONFIG_FILTER_DST_ADR, (u8 *)&bc_bear, MESH_ADV_TYPE_BEACON);	
+			#endif		
 		#endif
 		if(0 == err){	
 			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:");

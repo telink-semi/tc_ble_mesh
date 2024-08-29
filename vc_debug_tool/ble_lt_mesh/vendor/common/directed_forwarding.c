@@ -135,17 +135,17 @@ void mesh_directed_forwarding_bind_state_update()
 		}
 
 		if(DIRECTED_PROXY_DISABLE == p_control->directed_proxy){
-			u8 conn_idx = 0;
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-				if(blc_ll_isAclConnEstablished(conn_handle)){
-					conn_idx = get_slave_idx_by_conn_handle(conn_handle);
-			#endif
-					directed_proxy_dependent_node_delete(conn_idx);
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
+			foreach(i, ACL_PERIPHR_MAX_NUM){
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+				u16 conn_handle = get_periphr_conn_handle_by_idx(i);
+				if(INVALID_CONN_IDX == conn_handle){
+					continue;
 				}
-			}
-			#endif			
+				#endif
+
+				directed_proxy_dependent_node_delete(i);
+
+			}		
 		}
 		#endif
 	}
@@ -378,7 +378,10 @@ int mesh_directed_proxy_capa_report(u16 conn_handle, int netkey_offset)
 
 	int conn_idx = 0;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	conn_idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(conn_idx == INVALID_CONN_IDX){
+		return ret;
+	}
 	#endif
 	
 	proxy_capa.directed_proxy = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
@@ -393,7 +396,10 @@ int mesh_directed_proxy_capa_report_upon_connection(u16 conn_handle)
 	int conn_idx = 0;
 	
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	conn_idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(conn_idx == INVALID_CONN_IDX){
+		return ret;
+	}
 	#endif
 	
 	proxy_mag[conn_idx].proxy_client_type = UNSET_CLIENT;
@@ -1206,11 +1212,20 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 
 		foreach(i, ACL_PERIPHR_MAX_NUM){
 			if((UNSET_CLIENT == proxy_mag[i].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[i].proxy_client_type)){
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+				u16 conn_handle = get_periphr_conn_handle_by_idx(i);
+				if(INVALID_CONN_IDX == conn_handle){
+					continue;
+				}
+				#else
+				u16 conn_handle = BLS_CONN_HANDLE;
+				#endif
+				
 				if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){// directed proxy enable to disable
-					need_capa_report[i] = BLS_HANDLE_MIN + i;
+					need_capa_report[i] = conn_handle;
 				}	
 				else if(((DIRECTED_PROXY_DISABLE==p_control->directed_proxy) && (DIRECTED_PROXY_ENABLE == p_set->directed_control.directed_proxy))){ //directed proxy disable to enable
-					need_capa_report[i] = BLS_HANDLE_MIN + i;
+					need_capa_report[i] = conn_handle;
 				}
 			}
 		}
@@ -3176,7 +3191,7 @@ int cfg_cmd_send_directed_control_set(u16 adr_dst, directed_control_set_t *direc
  	return SendOpParaDebug(adr_dst, 1, DIRECTED_CONTROL_SET, (u8 *)directed_control, sizeof(directed_control_set_t));
 }
 
-int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len)
+int mesh_directed_proxy_control_set(u16 conn_handle, u8 use_directed, u16 range_start, u8 range_len)
 {
 	directed_proxy_ctl_t proxy_ctl;
 	memset(&proxy_ctl, 0x00, sizeof(proxy_ctl));
@@ -3192,7 +3207,7 @@ int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_l
 	#if WIN32
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set");
 	#endif
-	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
+	return mesh_tx_cmd_layer_proxy_cfg_primary(conn_handle, DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx)

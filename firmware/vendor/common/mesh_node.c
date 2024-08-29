@@ -2222,9 +2222,10 @@ void net_key_del2(mesh_net_key_t *p_key)
 	if(key_offset < NET_KEY_MAX){
 		foreach(idx, ACL_PERIPHR_MAX_NUM){
 			memset(&proxy_mag[idx].directed_server[key_offset], 0x00, sizeof(proxy_mag[idx].directed_server[key_offset]));
-			u16 conn_handle =  BLS_HANDLE_MIN;
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			conn_handle = get_slave_conn_handle_by_idx(idx);
+			#if !BLE_MULTIPLE_CONNECTION_ENABLE
+			u16 conn_handle =  BLS_CONN_HANDLE;
+			#else
+			conn_handle = get_periphr_conn_handle_by_idx(idx);
 			#endif
 			
 			mesh_directed_proxy_capa_report(conn_handle, key_offset);
@@ -2349,12 +2350,17 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 #if (MD_DF_CFG_SERVER_EN && !WIN32)
 	if(get_net_key_cnt()>1){
 		int key_offset = get_mesh_net_key_offset(key_idx);
-		u16 conn_handle =  BLS_HANDLE_MIN;
 	
 		foreach(conn_idx, ACL_PERIPHR_MAX_NUM){
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			conn_handle = get_slave_conn_handle_by_idx(conn_idx);
+			#if !BLE_MULTIPLE_CONNECTION_ENABLE
+			u16 conn_handle =  BLS_CONN_HANDLE;
+			#else
+			u16 conn_handle = get_periphr_conn_handle_by_idx(conn_idx);
+			if(INVALID_CONN_IDX == conn_handle){
+				continue;
+			}
 			#endif
+			
 			if((UNSET_CLIENT == proxy_mag[conn_idx].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type)){
 				mesh_directed_proxy_capa_report(conn_handle, key_offset);		
 			}
@@ -2643,7 +2649,7 @@ int gatt_seg_ack_delay_ms(u16 dst_addr)
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
 		foreach(idx, ACL_PERIPHR_MAX_NUM){
 			if(dst_addr == app_adr[idx]){
-				delay_ms = blc_ll_getAclConnectionInterval(get_slave_conn_handle_by_idx(idx)) * 1250 / 1000;
+				delay_ms = blc_ll_getAclConnectionInterval(get_periphr_conn_handle_by_idx(idx)) * 1250 / 1000;
 			}
 		}
 		#elif WIN32
@@ -3711,7 +3717,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 	}
 	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);	
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
@@ -3723,7 +3729,7 @@ int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst)
     }
 	u8 immutable_flag = ((MASTER==mesh_key.sec_type_sel) || (FRIENDSHIP==mesh_key.sec_type_sel))?1:0;
 	material_tx_cmd_t mat;
-	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
@@ -3931,12 +3937,37 @@ void APP_set_vd_id_mesh_save_map(u16 vd_id)
 }
 #endif
 
-/*
-	void mesh_par_retrieve():
-	input parameters:
-	out: just parameters, no save flag
-*/
-int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size){
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#define FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR					        (FLASH_ADR_MISC)// must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag.
+#endif
+
+#if (FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN || FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN)
+    #if (DEBUG_LOG_SETTING_DEVELOP_MODE_EN)                         // TODO: disable print debug log by default.
+#define LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(pbuf, len, format, ...)   LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
+#define LOG_MESH_PAR_SAVE_DEBUG(pbuf, len, format, ...)             //LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
+    #endif
+#endif
+
+#ifndef LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG
+#define LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(pbuf, len, format, ...)   //
+#endif
+
+#ifndef LOG_MESH_PAR_SAVE_DEBUG
+#define LOG_MESH_PAR_SAVE_DEBUG(pbuf, len, format, ...)             //
+#endif
+
+/**
+ * @brief       This function retrieve parameters in flash.
+ * @param[out]  out		- output data without save flag
+ * @param[out]  p_adr	- output the next writing address
+ * @param[in]   adr_base- the first address of this flash sector
+ * @param[in]   size	- output data size exclude save flag
+ * @param[out]  p_out_current_addr	- output the address of current valid parameter.
+ * @return      return error code, 0 mean success to retrieve parameters. not 0 means not found parameters.
+ * @note        
+ */
+int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size, u32 *p_out_current_addr)
+{
 #if WIN32 
     return mesh_par_retrieve_store_win32(out, p_adr, adr_base, size,MESH_PARA_RETRIEVE_VAL);
 #else
@@ -3949,32 +3980,63 @@ int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size){
 	#else
 	int err = -1;
 	*p_adr = adr_base + FLASH_SECTOR_SIZE-(FLASH_SECTOR_SIZE%(size+SIZE_SAVE_FLAG));
+    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "par_retrieve the end flag addr: 0x%x, base addr: 0x%x, size without flag: %d", *p_adr, adr_base, size);
 	for(int adr_read = *p_adr - (size+SIZE_SAVE_FLAG); adr_read >= adr_base; adr_read -= (size + SIZE_SAVE_FLAG)){// from back to forward, crc16 of 4k byte cost 40ms in 16M clock
 		mesh_save_head_t head;
     	flash_read_page(adr_read, SIZE_SAVE_FLAG, (u8 *)&head);
+        //LOG_MESH_PAR_SAVE_DEBUG(&head, 4, "adr_read:0x%x, p_adr:0x%x, head: ", adr_read, *p_adr);
 		if(U32_MAX == *(u32 *)&head){ // checking 4 byte should be better
 			*p_adr = adr_read;
+            // LOG_MESH_PAR_SAVE_DEBUG(0, 0, "flag is NULL");
 		}else if(SAVE_FLAG == head.flag){
-			if(head.crc_en && (FLASH_ADR_MISC == adr_base)){ // only add crc for misc sector now.
+            LOG_MESH_PAR_SAVE_DEBUG(0, 0, "valid A5 flag, addr: 0x%x", adr_read);
+		    //LOG_MSG_LIB(TL_LOG_NODE_BASIC, &head, 4, "xxxx adr_read:0x%x, p_adr:0x%x, head: ", adr_read, *p_adr)
+			if(head.crc_en && ((FLASH_ADR_MISC == adr_base) // only add crc for misc sector now.
+			                    #if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN // because need to check crc in flash_map_auto_exchange_sectors_action_()
+			                    || (FLASH_ADR_MD_VD_LIGHT == adr_base) || (FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == adr_base)
+			                    || (FLASH_ADR_SW_LEVEL == adr_base)
+			                    || (MD_MESH_OTA_EN && (FLASH_ADR_MD_MESH_OTA == adr_base))
+			                    || (MESH_MODEL_MISC_SAVE_EN && (FLASH_ADR_MD_MISC_PAR == adr_base))
+			                    #endif
+			                    #if FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+                                || (FLASH_ADR_SW_LEVEL == adr_base)
+			                    #endif
+			)){
 				u8 temp[min(size, FLASH_SECTOR_SIZE)];
 				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, temp); 	
 				if(crc16(temp, size) == head.crc){
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "crc valid");
 					memcpy(out, temp, size); // copy to "out" only after checking OK in case no valid data, especially there is only one record.
 					err = 0;
 					//LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "crc ok address base:0x%x,address:0x%x,next pos:0x%x",adr_base,adr_read,*p_adr);
+				}else{
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "crc fail");
 				}
 			}else{
+			    if(head.crc_en){
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "with crc, but not check");
+			    }else{
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "no crc");
+                }
+                
 				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, out); 	
 				err = 0;
 			}
 
 			if(0 == err){
+			    if(p_out_current_addr){
+			        *p_out_current_addr = adr_read;
+			    }
+			    
 				break;
 			}
 		}else{ // include (SAVE_FLAG_PRE == head.flag)
+            LOG_MESH_PAR_SAVE_DEBUG(&head, 4, "continue, other flag: ");
 			continue;
 		}
 	}
+
+    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "next time record addr: 0x%x", *p_adr);
 	return err;
 	#endif
 #endif
@@ -4085,6 +4147,9 @@ void mesh_par_write_with_check(u32 addr, u32 size, const u8 *in)
 	head.flag = SAVE_FLAG_PRE;
 	head.crc_en = 1;
 	head.crc = crc16(in, size);
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+	//head.map_ver = FLASH_MAP_VER_1;
+#endif
 	flash_write_with_check(addr, SIZE_SAVE_FLAG, (u8 *)&head);
 	flash_write_with_check(addr + SIZE_SAVE_FLAG, size, in);
 	head.flag = SAVE_FLAG;
@@ -4173,7 +4238,7 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size)
 
 int mesh_common_retrieve_by_index(u8 index){
 	const mesh_save_map_t *p_map = &mesh_save_map[index];
-	int err = mesh_par_retrieve(p_map->p_save_par, p_map->p_adr, p_map->adr_base, p_map->size_save_par);
+	int err = mesh_par_retrieve(p_map->p_save_par, p_map->p_adr, p_map->adr_base, p_map->size_save_par, NULL);
     
     mesh_common_retrieve_cb(err, p_map->adr_base);
 	return err;
@@ -4278,9 +4343,9 @@ void mesh_common_reset_all()
 	mesh_global_var_init();
 	mesh_set_ele_adr_ll(ele_adr_primary, 0, 0);
 	#if MD_SERVER_EN
-	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrieve light_res_sw_save
+	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save), NULL);//retrieve light_res_sw_save
 	#endif
-	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrieve oob
+	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag), NULL);//retrieve oob
 	#if MD_SERVER_EN
 	mesh_model_cb_pub_st_register();	
 	#endif
@@ -4341,10 +4406,10 @@ void mesh_misc_store(){
 int mesh_misc_retrieve(){
     misc_save_t misc_save;
 	
-	int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+	int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t), NULL);
 	if(err){
 		u32 back_sector = FLASH_ADR_FRIEND_SHIP;
-		err = mesh_par_retrieve((u8 *)&misc_save, &back_sector, FLASH_ADR_FRIEND_SHIP, sizeof(misc_save_t));
+		err = mesh_par_retrieve((u8 *)&misc_save, &back_sector, FLASH_ADR_FRIEND_SHIP, sizeof(misc_save_t), NULL);
 	}
 	
     if(!err){
@@ -4376,6 +4441,316 @@ u32 mesh_sno_get_save_delta()
 }
 #endif
 
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_ASSERT_EN
+/**
+ * should not cancel this assert for flash protection with flash mid 1360c8, etc.
+ * for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000.
+ * if you did not modify flash map before, need to update flash map FLASH_ADR_RESET_CNT, FLASH_ADR_MISC and FLASH_ADR_SW_LEVEL by following new SDK.
+ * if you did modify flash map before, please contact us.
+ * please contact us if assert error happen here when compile.
+ */
+STATIC_ASSERT(FLASH_ADR_RESET_CNT >= 0x70000 && FLASH_ADR_MISC >= 0x70000 && FLASH_ADR_SW_LEVEL >= 0x70000);
+#endif
+
+#if (FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN || FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN)
+int flash_map_is_ota_ok_event_just_happen()
+{
+    // u32 fw_flag_telink = START_UP_FLAG ; // 4 byte at BOOT_MARK_ADDR has been cleared to 0.
+    u32 val_addr_0 = 0;
+    flash_read_page(ota_program_offset, sizeof(val_addr_0), (u8 *)&val_addr_0); // must the first byte, because it is also FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS which sector was erased.
+    if((ONES_32 == val_addr_0)           // bls_ota_clearNewFwDataArea(0) is called after mesh_init_all_() -> mesh_flash_retrieve_()
+    //|| (!is_state_after_ota())    // no need
+    ){
+        // only check auto_exchange flash map after OTA event, cost time of checking is more than read misc, so check after that.
+        #if 0
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "TODO: to disable this mode: no OTA event, but continue for test mode");
+        #else
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "no OTA event, so no auto exchange flash map");
+        return 0; // if burn firmware with BDT, but not OTA, there will be reading parameters error when old firmware's sdk version is lower or equal than V4.1.0.0. and it is extpected.
+        #endif
+    }
+
+    return 1;
+}
+#endif
+
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#define FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS     (ota_program_offset)
+#define FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL         (0xA55AA55A)
+
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == FLASH_ADR_MISC);		    // must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag. and it is assume that data at FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR is sno MISC data in flash_map_auto_exchange_some_sectors_proc_2.
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A == FLASH_ADR_MISC);		        // must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag.
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B == FLASH_ADR_MD_VD_LIGHT);		// because flash_map_auto_exchange_is_vendor_model() assume that data at FLASH_ADR_MISC was vendor model data.
+
+/**
+ * should not cancel this assert. please contact us if assert error happen here when compile.
+ * because when assert error hanpen, it is usually caused by changed flash map before.
+ * so we need to modify FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION.
+ */
+STATIC_ASSERT((FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION)); // because flash_map_auto_exchange_is_vendor_model() assume that data at FLASH_ADR_MISC was vendor model data. 
+
+
+static void flash_map_auto_exchange_sectors_backup(u32 flash_addr_src, u32 flash_addr_dst)
+{
+    flash_erase_sector(flash_addr_dst);
+    if(FLASH_ADR_RESET_CNT == flash_addr_dst){
+        // no need to restore, only erase action is enough.
+    }else{
+        u8 data[256];
+        foreach(i, FLASH_SECTOR_SIZE / sizeof(data)){
+            u32 offset = i * sizeof(data);
+            flash_read_page(flash_addr_src + offset, sizeof(data), data);
+            flash_write_page(flash_addr_dst + offset, sizeof(data), data);
+        }
+    }
+}
+
+int flash_map_auto_exchange_sectors_is_backup_ok()
+{
+    u32 flag = 0;
+    flash_read_page(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS, sizeof(flag), (u8 *)&flag);
+    return (FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL == flag);
+}
+
+static int flash_map_auto_exchange_sectors_action()
+{
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map start...");
+
+#if (OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BAKUP_AREA)
+    blt_ota_software_check_flash_load_error(); // if any errors are found, will reboot inside
+#endif
+
+    u32 address_backup[][2] = { // exchange between the two address
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_2_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_2_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_3_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_3_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_2_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_2_A},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_3_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_3_A},
+				              };
+
+    if(0 == flash_map_auto_exchange_sectors_is_backup_ok()){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is false");
+        foreach_arr(i, address_backup){
+            u32 addr_src = address_backup[i][1];
+            u32 addr_dst = ota_program_offset + (i + 1) * 0x1000;
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "backup src addr is: 0x%x, dst addr is: 0x%x", addr_src, addr_dst);
+            flash_map_auto_exchange_sectors_backup(addr_src, addr_dst); // the sector address of ota_program_offset is used to record flag FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS.
+        }
+
+        // set flag of start restore, in case power off during restore process, and continue to restore after power up again.
+        flash_erase_sector(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS);
+        u32 flag = FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL;
+        flash_write_page(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS, sizeof(flag), (u8 *)&flag);
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is ture");
+    }
+
+    // recover
+    foreach_arr(i, address_backup){
+        u32 addr_src = ota_program_offset + (i + 1) * 0x1000;
+        u32 addr_dst = address_backup[i][0];
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "restore src addr is: 0x%x, dst addr is: 0x%x", addr_src, addr_dst);
+        flash_map_auto_exchange_sectors_backup(addr_src, addr_dst); // the sector address of ota_program_offset is used to record flag FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS.
+    }
+
+    // clear all backup data include flag
+    for(unsigned int i = 0; i < 1 + ARRAY_SIZE(address_backup); ++i){
+        u32 addr_clear = ota_program_offset + i * 0x1000;
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "clear backup addr is: 0x%x", addr_clear);
+        flash_erase_sector(addr_clear); // clear flag first should be better
+    }
+
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map success!!");
+
+    return 1;
+}
+
+static inline int is_mesh_save_record_flag(u32 flag)
+{
+    mesh_save_head_t *p_head = (mesh_save_head_t *)flag;
+    return (U32_MAX == flag || SAVE_FLAG_PRE == p_head->flag || SAVE_FLAG == p_head->flag);
+}
+
+/**
+ * @brief       This function check if parameters is vendor_model at this flash sector of sdk version equal or less than V4.1.0.0.
+ * @return      1: yes. 2: no.
+ * @note        
+ */
+static bool4 flash_map_auto_exchange_is_vendor_model()
+{
+    model_vd_light_t vd_md_temp;// = {0};
+    u32 mesh_vd_md_next_write = 0;
+    u32 mesh_vd_md_current_read = 0;
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "try to find vendor model at addr: 0x%x", FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR);
+    int err_vd = mesh_par_retrieve((u8 *)&vd_md_temp, &mesh_vd_md_next_write, FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(vd_md_temp), &mesh_vd_md_current_read); // try to read as vendor model.
+    if(0 == err_vd){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&vd_md_temp, sizeof(vd_md_temp), "maybe have found vendor model, addr_current: 0x%x, data: ", mesh_vd_md_current_read);
+        mesh_common_retrieve(FLASH_ADR_MD_CFG_S); // must read node address from FLASH_ADR_MD_CFG_S.
+
+        model_common_t *p_model = (model_common_t *)&vd_md_temp;
+        u32 next_head_val;
+        u32 addr_next_head = mesh_vd_md_current_read + sizeof(vd_md_temp) + SIZE_SAVE_FLAG;
+        //memcpy(&save_head_next, ((u8 *)p_model) + addr_next_head, sizeof(save_head_next)); // next flag of misc_save
+        flash_read_page(addr_next_head, sizeof(next_head_val), (u8 *)&next_head_val); // the close next head to current head.
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "vendor model next head addr: 0x%x, val: 0x%08x, next write addr: 0x%x", addr_next_head, next_head_val, mesh_vd_md_next_write);
+
+        if(is_mesh_save_record_flag(next_head_val)
+        && (p_model->ele_adr == model_sig_cfg_s.com.ele_adr)
+        && ((p_model->bind_key[0].rsv == 0)) // &&  (vd_md_temp.bind_key[0].bind_ok == 1) // some case may no key bind
+        && (p_model->no_pub == 0 && p_model->no_sub == 0 && p_model->rsv_bit == 0)){
+            // found vendor model
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found vendor model, element addr: 0x%04x", p_model->ele_adr);
+            return 1; // found vendor model, need to exchange flash map
+        }
+        
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "invalid vendor model");
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found vendor model");
+    }
+
+    return 0;
+}
+
+/**
+ * @brief       This function for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000.
+ * @return      0: no exchange action. 1: there is exchange action.
+ * @note        
+ */
+int flash_map_auto_exchange_some_sectors_proc_2()
+{
+	if(FLASH_ADR_MISC_LEGACY_VERSION < 0x70000 || FLASH_ADR_SW_LEVEL_LEGACY_VERSION < 0x70000 || FLASH_ADR_RESET_CNT_LEGACY_VERSION < 0x70000){
+#if 1 // check OTA event should be better to fast return, event though crc is used.
+        if(0 == flash_map_is_ota_ok_event_just_happen()){
+            return 0;
+        }
+#endif
+
+        if(flash_map_auto_exchange_sectors_is_backup_ok()){
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found interrupt flag of exchanging sectors");
+            return flash_map_auto_exchange_sectors_action();
+        }
+
+        misc_save_t misc_save;
+        u32 mesh_misc_addr_next_write = 0;
+        u32 mesh_misc_addr_current_read = 0;
+        int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr_next_write, FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(misc_save_t), &mesh_misc_addr_current_read);
+		if(err){
+		    u32 flag_at_first_addr = 0;
+			flash_read_page(FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(flag_at_first_addr), (u8 *)&flag_at_first_addr);
+			LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found misc par sector, first addr: 0x%x, flag val:  0x%08x", FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, flag_at_first_addr);
+			if(U32_MAX == flag_at_first_addr){
+				// the old map is vendor model, so it would not be U32_MAX. // not consider it is not used as par sector before.
+				// if it is U32_MAX, it may be state after factory reset
+			}else{
+			    // maybe any other model with old A5 flag deleted.
+			    if(flash_map_auto_exchange_is_vendor_model()){
+                    return flash_map_auto_exchange_sectors_action(); // found vendor model, need to exchange flash map
+                }
+			}
+			
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found both misc par and vendor model");
+		}else{
+            mesh_save_head_t save_head_current;
+            flash_read_page(mesh_misc_addr_current_read, sizeof(save_head_current), (u8 *)&save_head_current); // next flag of misc_save
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "maybe have found misc par sector, addr current: 0x%x, head val: 0x%08x", mesh_misc_addr_current_read, save_head_current);
+
+            if(save_head_current.crc_en){ //  || FLASH_MAP_VER_1 == save_head_current.map_ver // no need, just use crc_en to check is enough.
+                LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector with crc en");
+            }else{
+                /* no need to check next head, because crc_en should be enable for misc par sector if sdk version has the feature of FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN.
+                   So there is a high possibility that it is a flash sector vendor model. 
+                   so just confirm if it is a vendor model, and no need to determine if it is a misc par sector.*/
+                #if 0 // no need to check next head
+                u32 save_head_next;
+                u32 addr_next_head = mesh_misc_addr_current_read + sizeof(misc_save_t) + SIZE_SAVE_FLAG;
+                flash_read_page(addr_next_head, sizeof(save_head_next), (u8 *)&save_head_next); // next flag of misc_save
+                LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "maybe have found misc par sector, addr_current: 0x%x, addr_next_head: 0x%x, head val: 0x%08x", mesh_misc_addr_current_read, addr_next_head, save_head_next);
+                if(U32_MAX == save_head_next){
+                    // found misc parameter of FLASH_ADR_MISC, no need to exchange
+                    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector due to next head is NULL: ");
+                }else 
+                #endif
+                {
+                    // need to check if it is vendor model, because crc_en may be read as 0 when flash reading by mistake on powerup.
+                    if(flash_map_auto_exchange_is_vendor_model()){       // must check vendor model, if not, it may misidentified as needing to exchange again after swap misc data to this flash sector and before writing sno misc data with crc.
+                        // found vendor model
+                        return flash_map_auto_exchange_sectors_action(); // found vendor model, need to exchange flash map
+                    }else{
+                        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector due to no vendor model par found: ");
+                    }
+                }
+            }
+		}
+	}
+
+	return 0; // found parameter, no need to exchange flash map
+}
+
+static inline int flash_map_auto_exchange_some_sectors_proc()
+{
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "------ flash map auto exchange flow start......");
+    int ret = flash_map_auto_exchange_some_sectors_proc_2();
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "------ flash map auto exchange flow complete!------");
+
+#if 0
+    while(1)
+    {
+        wd_clear();
+        static volatile u32 flash_map_debug;flash_map_debug++;
+    }
+#endif
+
+    return ret;
+}
+#endif
+
+
+#if (APP_FLASH_PROTECTION_ENABLE && FLASH_PLUS_ENABLE && (!(WIN32 || __TLSR_RISCV_EN__ || TLV_ENABLE)))
+/**
+ * should not cancel this assert for flash protection with flash mid 1460c8, etc.
+ * for flash protection function, automatically move some sectors that require frequent write operations to after 0xc0000.
+ * if you did not modify flash map before, need to update flash map FLASH_ADR_SW_LEVEL by following the current SDK.
+ * please contact us if assert error happen here when compile.
+ */
+STATIC_ASSERT(FLASH_ADR_RESET_CNT >= 0xc0000 && FLASH_ADR_MISC >= 0xc0000 && FLASH_ADR_SW_LEVEL >= 0xc0000);
+#endif
+
+#if FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#error should not enable both at the same time
+#endif
+
+void flash_map_auto_move_sw_level_sector_proc()
+{
+    if(0 == flash_map_is_ota_ok_event_just_happen()){
+        return;
+    }
+    
+    light_res_sw_save_t sw_save_temp;// = {0};
+    u32 sw_level_next_write = 0;
+    u32 sw_addr_new = FLASH_ADR_SW_LEVEL;
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "try new addr: 0x%x", sw_addr_new);
+    int err_new = mesh_par_retrieve((u8 *)&sw_save_temp, &sw_level_next_write, sw_addr_new, sizeof(sw_save_temp), NULL); // try to get light level.
+    if(0 == err_new){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&sw_save_temp, sizeof(sw_save_temp), "found sw level, no need to exchange");
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found at new addr, try legacy addr: 0x%x", FLASH_ADR_SW_LEVEL_1M_LEGACY);
+        int err_legacy = mesh_par_retrieve((u8 *)&sw_save_temp, &sw_level_next_write, FLASH_ADR_SW_LEVEL_1M_LEGACY, sizeof(sw_save_temp), NULL); // try to get light level.
+        if(0 == err_legacy){
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&sw_save_temp, sizeof(sw_save_temp), "found sw level, need to exchange: ");
+            flash_erase_sector(sw_addr_new);
+            sw_level_next_write = FLASH_ADR_SW_LEVEL; // store to the first slot
+            mesh_par_store((u8 *)&sw_save_temp, &sw_level_next_write, sw_addr_new, sizeof(sw_save_temp));
+            flash_erase_sector(FLASH_ADR_SW_LEVEL_1M_LEGACY);
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange ok");
+        }else{
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "both not found, no need to exchange");
+        }
+    }
+}
+#endif
+
 /**
  * @brief       This function is a debug function to trigger iv update entering to step 1.
  * @return      none
@@ -4399,7 +4774,7 @@ void iv_index_set_sno_test()
 void iv_index_read_print_test()
 {
     misc_save_t misc_save;
-    int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+    int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t), NULL);
     if(err){
         LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"IV index Read flash error:");
     }else{
@@ -4604,7 +4979,7 @@ void mesh_key_save()
 
 int mesh_key_retrieve(){
     mesh_key_save_t key_save = {{0}};
-    int err = mesh_par_retrieve((u8 *)&key_save, &mesh_key_addr, FLASH_ADR_MESH_KEY, sizeof(key_save));
+    int err = mesh_par_retrieve((u8 *)&key_save, &mesh_key_addr, FLASH_ADR_MESH_KEY, sizeof(key_save), NULL);
     
     #if KEY_SAVE_ENCODE_ENABLE
     if((0 == err) && KEY_SAVE_ENCODE_FLAG == key_save.encode_flag){
@@ -4706,6 +5081,12 @@ void mesh_flash_retrieve()
     if(0 == ele_adr_primary){
         ele_adr_primary = 1;
     }
+#endif
+
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+    flash_map_auto_exchange_some_sectors_proc(); // be called must before reading mesh parameters from flash and before calling bls_ota_clearNewFwDataArea_
+#elif FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+    flash_map_auto_move_sw_level_sector_proc();
 #endif
 
     mesh_common_retrieve_all();		// should be first, because include model_sig_cfg_s
@@ -4818,23 +5199,26 @@ int mesh_nw_pdu_report_to_gatt(u16 conn_handle, u16 dst_addr, u8 *p, u8 len, u8 
 	}
 
 	__UNUSED mesh_notify_head_t notify_head;
-	notify_head.conn_handle = BLS_HANDLE_MIN;
 	notify_head.att_handle = GATT_PROXY_HANDLE;
 	notify_head.proxy_type = proxy_type; 
 	
-#if BLE_MULTIPLE_CONNECTION_ENABLE
-	foreach(idx, ACL_PERIPHR_MAX_NUM){
-		if(is_valid_addr_in_proxy_list(idx, dst_addr)){		
-			notify_head.conn_handle = (PROXY_CONFIG_FILTER_DST_ADR == dst_addr) ? conn_handle : get_slave_conn_handle_by_idx(idx);
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
+	notify_head.conn_handle = BLS_CONN_HANDLE;
+#else
+	for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+		if(conn_dev_list[i].conn_state){
+			if(is_valid_addr_in_proxy_list(i - ACL_CENTRAL_MAX_NUM, dst_addr)){		
+				notify_head.conn_handle = (PROXY_CONFIG_FILTER_DST_ADR == dst_addr) ? conn_handle : conn_dev_list[i].conn_handle;
 #endif		
-			#if (!MESH_BLE_NOTIFY_FIFO_EN)
-			ret = notify_pkts(notify_head.conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
-			#else
-			ret = my_fifo_push(&blt_notify_fifo, p, len, (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
-			#endif
+				#if (!MESH_BLE_NOTIFY_FIFO_EN)
+				ret = notify_pkts(notify_head.conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
+				#else
+				ret = my_fifo_push(&blt_notify_fifo, p, len, (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
+				#endif
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-			if(PROXY_CONFIG_FILTER_DST_ADR == dst_addr){
-				break;
+				if(PROXY_CONFIG_FILTER_DST_ADR == dst_addr){
+					break;
+				}
 			}
 		}
 	}	
@@ -5315,14 +5699,16 @@ void online_st_proc()
 			if (mesh_node_report_status ((u8 *)&report.node, ARRAY_SIZE(report.node)))
 			{
 				if((blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)){
-					__UNUSED mesh_notify_head_t notify_head;
-					notify_head.conn_handle = BLS_HANDLE_MIN;
+					__UNUSED mesh_notify_head_t notify_head;					
 					notify_head.att_handle = ONLINE_ST_ATT_HANDLE_SLAVE;
 					notify_head.proxy_type = MSG_ONLINE_ST_PDU; 
 
-					#if BLE_MULTIPLE_CONNECTION_ENABLE
-					for(notify_head.conn_handle = BLS_HANDLE_MIN; notify_head.conn_handle < BLS_HANDLE_MAX; notify_head.conn_handle++){
-						if(blc_ll_isAclConnEstablished(notify_head.conn_handle)){
+					#if !BLE_MULTIPLE_CONNECTION_ENABLE
+					notify_head.conn_handle = BLS_CONN_HANDLE;
+					#else
+					for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+						if(conn_dev_list[i].conn_state){
+							notify_head.conn_handle = conn_dev_list[i].conn_handle;
 					#endif
 							online_st_gatt_enc((u8 *)&report, sizeof(report));
 					
@@ -6918,6 +7304,8 @@ int is_valid_startup_flag(u32 flag_addr, int check_all_flag)
     return 1;
 }
 
+
+#if (0 == BLE_MULTIPLE_CONNECTION_ENABLE) // multiple connection sdk check in ota_server.c.
 /**
  * @brief       This function check startup flag of current firmware. will reboot if found error.
  * @return      none
@@ -6945,6 +7333,7 @@ void blt_ota_software_check_flash_load_error(void)
 
 	// case of e.g. 0x00000 & 0x20000 both valid boot flag, should not reboot in this case, because it will reboot all the time when run at 0x40000, and burn firmware at 0.
 }
+#endif
 #endif
 
 /**

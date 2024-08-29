@@ -84,6 +84,7 @@ void flash_protection_init(void)
 	if(!blc_flash_mid){
 		blc_flash_mid = flash_read_mid();
 		blc_flash_capacity = ((blc_flash_mid & 0x00ff0000)>>16);
+        LOG_FLASH_PROT_DEBUG(0, 0, "[FLASH] flash id: 0x%x", blc_flash_mid);
 	}
 
 	/* According to the flash mid, execute the corresponding lock flash API. */
@@ -499,50 +500,51 @@ typedef struct{
 	lock_area_t lock_area[4];
 }flash_lock_area_support_t;
 
-const flash_lock_area_support_t FLASH_LOCK_AREA_SUPPORT[] = { // area must be sorted from low to high.
+const flash_lock_area_support_t FLASH_LOCK_AREA_SUPPORT[] = { // area must be sorted from low to high if not zero.
 #if (0 == __TLSR_RISCV_EN__)
 	#if (FLASH_ZB25WD40B_SUPPORT_EN) //512K capacity
 	{MID13325E, {{FLASH_LOCK_LOW_256K_MID13325E, (256/4)}, {FLASH_LOCK_LOW_448K_MID13325E, (448/4)},
-			    {FLASH_LOCK_ALL_512K_MID13325E, (512/4)}}},
+			     {FLASH_LOCK_ALL_512K_MID13325E, (512/4)}}},
 	#endif
 	#if (FLASH_ZB25WD80B_SUPPORT_EN) //1M capacity
 	{MID14325E, {{FLASH_LOCK_LOW_768K_MID14325E, (768/4)}, {FLASH_LOCK_LOW_896K_MID14325E, (896/4)},
-			    {FLASH_LOCK_ALL_1M_MID14325E, 	(1024/4)}}},
+			     {FLASH_LOCK_ALL_1M_MID14325E, 	(1024/4)}}},
 	#endif
 	#if (FLASH_GD25LD40C_SUPPORT_EN || FLASH_GD25LD40E_SUPPORT_EN) //512K capacity
 	{MID1360C8, {{FLASH_LOCK_LOW_256K_MID1360C8, (256/4)}, {FLASH_LOCK_LOW_448K_MID1360C8, (448/4)},
-			    {FLASH_LOCK_ALL_512K_MID1360C8, (512/4)}}},
+			     {FLASH_LOCK_ALL_512K_MID1360C8, (512/4)}}},
 	#endif
 	#if(FLASH_P25Q80U_SUPPORT_EN) //1M capacity
-	{MID146085, {{FLASH_LOCK_LOW_256K_MID146085, (256/4)}, {FLASH_LOCK_LOW_512K_MID146085, (512/4)},
-				{FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
+	{MID146085, {{FLASH_LOCK_LOW_128K_MID146085, (128/4)}, // use 128k for (FLASH_ADR_RESET_CNT 0x23000) of dual mode
+	             {FLASH_LOCK_LOW_512K_MID146085, (512/4)}, // use 512 but not 768(0xC0000), becasue of (FLASH_ADR_AREA_1_START 0xB4000)
+				 {FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
 	#endif
 	#if (FLASH_GD25LD80C_SUPPORT_EN || FLASH_GD25LD80E_SUPPORT_EN) //1M capacity
 	{MID1460C8, {{FLASH_LOCK_LOW_768K_MID1460C8, (768/4)}, {FLASH_LOCK_LOW_896K_MID1460C8, (896/4)},
-				{FLASH_LOCK_ALL_1M_MID1460C8, 	(1024/4)}}},
+				 {FLASH_LOCK_ALL_1M_MID1460C8, 	(1024/4)}}},
 	#endif
 #else // B91 B92
 	#if (FLASH_P25Q80U_SUPPORT_EN) //1M capacity
 	{MID146085, {{FLASH_LOCK_LOW_256K_MID146085, (256/4)}, {FLASH_LOCK_LOW_512K_MID146085, (512/4)},
-			    {FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
+			     {FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
 	#endif
 	#if (FLASH_P25Q16SU_SUPPORT_EN) // 2M capacity
 	{MID156085, {{FLASH_LOCK_LOW_256K_MID156085, (256/4)}, {FLASH_LOCK_LOW_512K_MID156085, (512/4)},
-			    {FLASH_LOCK_LOW_1M_MID156085, (1024/4)}, {FLASH_LOCK_ALL_2M_MID156085, (2048/4)}}},
+			     {FLASH_LOCK_LOW_1M_MID156085, (1024/4)}, {FLASH_LOCK_ALL_2M_MID156085, (2048/4)}}},
 	#endif
 	#if (FLASH_P25Q32SU_SUPPORT_EN) // 4M capacity
 	{MID166085, {{FLASH_LOCK_LOW_256K_MID166085, (256/4)}, {FLASH_LOCK_LOW_512K_MID166085, (512/4)},
-			    {FLASH_LOCK_LOW_1M_MID166085, (1024/4)}, {FLASH_LOCK_ALL_4M_MID166085, (4096/4)}}},
+			     {FLASH_LOCK_LOW_1M_MID166085, (1024/4)}, {FLASH_LOCK_ALL_4M_MID166085, (4096/4)}}},
 	#endif
 	
 	#if 1//(MCU_CORE_TYPE == MCU_CORE_B92) //B92
 	#if (FLASH_P25Q128L_SUPPORT_EN) // 16M capacity
 	{MID186085, {{FLASH_LOCK_LOW_4M_MID186085, (4096/4)}, {FLASH_LOCK_LOW_8M_MID186085, (8192/4)},
-				{FLASH_LOCK_LOW_12M_MID186085, (12228/4)}, {FLASH_LOCK_ALL_16M_MID186085, (16384/4)}}},
+				 {FLASH_LOCK_LOW_12M_MID186085, (12228/4)}, {FLASH_LOCK_ALL_16M_MID186085, (16384/4)}}},
 	#endif
 	#if (FLASH_GD25LQ16E_SUPPORT_EN) // 2M capacity
 	{MID1560c8, {{FLASH_LOCK_LOW_256K_MID1560c8, (256/4)}, {FLASH_LOCK_LOW_512K_MID1560c8, (512/4)},
-				{FLASH_LOCK_LOW_1M_MID1560c8, (1024/4)}, {FLASH_LOCK_ALL_2M_MID1560c8, (2048/4)}}},
+				 {FLASH_LOCK_LOW_1M_MID1560c8, (1024/4)}, {FLASH_LOCK_ALL_2M_MID1560c8, (2048/4)}}},
 	#endif
 	#endif
 #endif
@@ -568,6 +570,7 @@ u16 flash_change_address_to_flash_lock_reg(u32 lock_addr_end_in, int ceiling_fla
 	foreach_arr(i, FLASH_LOCK_AREA_SUPPORT){ // TO get the flash lock area support in initial function should be better ?
 		const flash_lock_area_support_t * p_lock_area_support = &FLASH_LOCK_AREA_SUPPORT[i];
 		if(blc_flash_mid == p_lock_area_support->flash_id){
+			#if (FLASH_PROTECTION_CEILING_EN)
 			if(ceiling_flag){
 				foreach_arr(j, p_lock_area_support->lock_area){
 					const lock_area_t *p_lock_area = &p_lock_area_support->lock_area[j];
@@ -580,7 +583,9 @@ u16 flash_change_address_to_flash_lock_reg(u32 lock_addr_end_in, int ceiling_fla
 						}
 					}
 				}
-			}else{
+			}else
+			#endif
+			{
 				foreach_arr(j, p_lock_area_support->lock_area){
 					const lock_area_t *p_lock_area = &p_lock_area_support->lock_area[ARRAY_SIZE(p_lock_area_support->lock_area) - 1 - j];
 					u32 lock_addr_end_support = p_lock_area->lock_addr_end_4k * 0x1000;
@@ -610,7 +615,7 @@ u16 flash_change_address_to_flash_lock_reg(u32 lock_addr_end_in, int ceiling_fla
 u32 flash_unlock_with_check_current_st(u32 op_addr_begin)
 {
 	if(op_addr_begin >= flash_current_lockAddr_end){
-		LOG_FLASH_PROT_DEBUG(0, 0, "flash API: unchange lock reg! op_addr: 0x%x", op_addr_begin);
+		// LOG_FLASH_PROT_DEBUG(0, 0, "flash API: unchange lock reg! op_addr: 0x%x", op_addr_begin);
 		return 0; // no need to change unlock flash register because the target address in not at locked state.
 	}else{
 		u32 backup_addr = flash_current_lockAddr_end; // may be modified when in flash_lock_ function.
@@ -646,14 +651,19 @@ void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_a
 		flash_protection_init();
 
 		#if 1
-			#if ((0 == FLASH_PLUS_ENABLE) && (0 == __TLSR_RISCV_EN__))
-		u32 lock_addr_end = FLASH_ADR_AREA_2_START;
+		    #if defined(FLASH_ADR_PROTECT_END)
+		u32 lock_addr_end = FLASH_ADR_PROTECT_END;
+			#elif ((0 == FLASH_PLUS_ENABLE) && (0 == __TLSR_RISCV_EN__))
+		u32 lock_addr_end = FLASH_ADR_AREA_2_START; // b85m 512k flash
 			#else
-		u32 lock_addr_end = FLASH_ADR_AREA_1_START;
+		u32 lock_addr_end = FLASH_ADR_AREA_1_START; // for dual mode, FLASH_ADR_RESET_CNT is smaller than FLASH_ADR_AREA_1_START.
 			#endif
-		flash_change_address_to_flash_lock_reg(lock_addr_end, 1, &flash_default_lockAddr_end);
+
+		lock_addr_end = min(lock_addr_end, min3(FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, FLASH_ADR_SW_LEVEL)); // frequent operation sectors
+		
+		flash_change_address_to_flash_lock_reg(lock_addr_end, FLASH_PROTECTION_CEILING_EN, &flash_default_lockAddr_end);
 		LOG_FLASH_PROT_DEBUG(0, 0, "[FLASH][PROT] initialization, lock flash address end input: 0x%x, result: 0x%x", lock_addr_end, flash_default_lockAddr_end);
-		flash_lock(flash_default_lockAddr_end, 1);
+		flash_lock(flash_default_lockAddr_end, FLASH_PROTECTION_CEILING_EN);
 		#else
 		/* just sample code here, protect all flash area for old firmware and OTA new firmware.
 		 * user can change this design if have other consideration */
@@ -712,7 +722,7 @@ void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_a
 		 * OTA clear old firmware end event is triggered by stack, in "blc ota_initOtaServer_module", erasing old firmware data finished.
 		 * In this sample code, we need lock flash again, because we have unlocked it at the begin event of clear old firmware */
 		LOG_FLASH_PROT_DEBUG(0, 0, "[FLASH][PROT] OTA clear old FW end, restore flash locking");
-		flash_lock(flash_default_lockAddr_end, 1);
+		flash_lock(flash_default_lockAddr_end, FLASH_PROTECTION_CEILING_EN);
 	}
 	else if(flash_op_evt == FLASH_OP_EVT_STACK_OTA_WRITE_NEW_FW_BEGIN)
 	{
@@ -730,7 +740,7 @@ void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_a
 		 * OTA write new firmware end event is triggered by stack, after OTA end or an OTA error happens, writing new firmware data finished.
 		 * In this sample code, we need lock flash again, because we have unlocked it at the begin event of write new firmware */
 		LOG_FLASH_PROT_DEBUG(0, 0, "[FLASH][PROT] OTA write new FW end, restore flash locking");
-		flash_lock(flash_default_lockAddr_end, 1);
+		flash_lock(flash_default_lockAddr_end, FLASH_PROTECTION_CEILING_EN);
 	}
 	else if(flash_op_evt == FLASH_OP_EVT_MESH_PAR_MODIFY_MUCH_SECTORS_BEGIN)
 	{
@@ -740,7 +750,7 @@ void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_a
 	else if(flash_op_evt == FLASH_OP_EVT_MESH_PAR_MODIFY_MUCH_SECTORS_END)
 	{
 		LOG_FLASH_PROT_DEBUG(0, 0, "[FLASH][PROT] mesh par write end, restore flash locking: 0x%x", op_addr_begin);
-		flash_lock(op_addr_begin, 1); // must restore original value, especially during OTA.
+		flash_lock(op_addr_begin, FLASH_PROTECTION_CEILING_EN); // must restore original value, especially during OTA.
 	}
 #endif
 	/* add more flash protection operation for your application if needed */

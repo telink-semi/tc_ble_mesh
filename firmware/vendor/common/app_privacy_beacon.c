@@ -114,15 +114,13 @@ int mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	#endif
 	mesh_sec_pri_beacon(pri_key_flag,pri_ivi,prov_para.priv_random,p_netkey->prik,bc_bear.beacon.data);
 	if(blt_sts){
-		__UNUSED u8 conn_handle = BLS_HANDLE_MIN;
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-			if(blc_ll_isAclConnEstablished(conn_handle)){
-		#endif
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){
 				err = notify_pkts(conn_handle, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
-		#if BLE_MULTIPLE_CONNECTION_ENABLE
 			}
-		}
+		#else
+		err = notify_pkts(BLS_CONN_HANDLE, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
     	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_PAR_SECURITY_BEACON);

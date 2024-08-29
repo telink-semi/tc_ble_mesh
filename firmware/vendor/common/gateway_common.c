@@ -680,7 +680,7 @@ u8 gateway_cmd_from_host_ota(u8 *p, u16 len )
 //		irq_restore(irq_en);
 	}
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-	otaWrite(BLS_HANDLE_MIN, (u8 *)&local_ota);
+	otaWrite(MESH_CONN_HANDLE_AUTO, (u8 *)&local_ota);
 #else
 	otaWrite((u8 *)&local_ota);
 #endif

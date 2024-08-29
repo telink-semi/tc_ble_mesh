@@ -285,7 +285,7 @@ void mesh_friend_ship_clear_LPN()
 
 int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int overwrite_flag)
 {
-	if(mesh_lpn_subsc_pending.op && (op != mesh_lpn_subsc_pending.op)){
+	if(!overwrite_flag && mesh_lpn_subsc_pending.op && (op != mesh_lpn_subsc_pending.op)){
 		return -1;
 	}
 
@@ -355,7 +355,7 @@ int mesh_lpn_send_mesh_cmd()
 int mesh_lpn_poll_receive_timeout(void)
 {
 	ENABLE_SUSPEND_MASK;
-	blc_ll_setScanEnable (0, 0);
+	blc_ll_setScanEnable (0, 0);    // disable scan function
 	rf_set_tx_rx_off();// disable tx rx in manual mode immediately, must 	
 	CLEAR_ALL_RFIRQ_STATUS;
 	
@@ -364,8 +364,8 @@ int mesh_lpn_poll_receive_timeout(void)
 
 int mesh_lpn_rcv_delay_wakeup(void)
 {
-	app_enable_scan_all_device ();	
-	mesh_send_adv2scan_mode(0);
+	app_enable_scan_all_device ();  // enable scan function
+	mesh_send_adv2scan_mode(0);     // enable rx immediately
 	bls_pm_setSuspendMask (SUSPEND_DISABLE); // not enter sleep to receive packets	
 	if(is_friend_ship_link_ok_lpn()){
 		
@@ -516,11 +516,13 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
             }
         }else{
         	if(is_friend_ship_link_ok_lpn() && is_mesh_adv_cmd_fifo_empty()  && clock_time_exceed(fri_ship_proc_lpn.poll_tick, get_lpn_poll_interval_ms() * 1000)){ // send poll after mesh message and subscription list add done.
-				if(!mesh_lpn_subsc_pending.op && !subsc_list_retry.tick){
-					mesh_friend_ship_start_poll();
-				}
-				else if(mesh_lpn_subsc_pending.op && !subsc_list_retry.tick){
-					mesh_lpn_sleep_prepare(CMD_ST_POLL_MD);
+				if(!subsc_list_retry.tick){
+					if(mesh_lpn_subsc_pending.op){
+						mesh_lpn_sleep_prepare(CMD_ST_POLL_MD);					
+					}
+					else{
+						mesh_friend_ship_start_poll();
+					}
 				}
 			}
         }
@@ -1231,7 +1233,9 @@ void mesh_lpn_state_proc()
 void mesh_lpn_pm_proc()
 {
 	if((BLS_LINK_STATE_CONN != blc_ll_getCurrentState())){	    
+		#if (!BLE_MULTIPLE_CONNECTION_ENABLE)
 		set_blt_busy(0); 								// trigger pm in blt_sdk_main_loop to save power. (blt_busy will 1 after cpu_sleep_wakeup return STATUS_GPIO_ERR_NO_ENTER_PM while key pressing, and will not enter sleep in this interval.)
+		#endif
 	}
 	
 	if(lpn_provision_ok){ 

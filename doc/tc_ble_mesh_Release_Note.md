@@ -52,15 +52,15 @@
 ### CodeSize
 
 * Flash and RAM (default target):
-  - 8258_mesh:_________Flash 124.8 KB, RAM (27.7 KB + 3K stack),
-  - 8258_mesh_LPN:____Flash 118.3 KB, RAM (21.6 KB + 3K stack),
-  - 8258_mesh_gw:_____Flash 124.3 KB, RAM (30.4 KB + 3K stack),
-  - 8258_mesh_switch:__Flash 113.4 KB, RAM (24.9 KB + 3K stack),
+  - 8258_mesh:_________Flash 125.4 KB, RAM (27.7 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 118.9 KB, RAM (21.7 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 125.0 KB, RAM (30.5 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 114.1 KB, RAM (24.9 KB + 3K stack),
   
-  - 8278_mesh:_________Flash 122.7 KB, RAM (27.1 KB + 3K stack),
-  - 8278_mesh_LPN:____Flash 116.3 KB, RAM (23.2 KB + 3K stack),
-  - 8278_mesh_gw:_____Flash 122.3 KB, RAM (31.0 KB + 3K stack),
-  - 8278_mesh_switch:__Flash 110.0 KB, RAM (25.0 KB + 3K stack),
+  - 8278_mesh:_________Flash 123.4 KB, RAM (27.5 KB + 3K stack),
+  - 8278_mesh_LPN:____Flash 117.0 KB, RAM (23.3 KB + 3K stack),
+  - 8278_mesh_gw:_____Flash 123.0 KB, RAM (31.0 KB + 3K stack),
+  - 8278_mesh_switch:__Flash 110.7 KB, RAM (25.0 KB + 3K stack),
 
 
 ### Version

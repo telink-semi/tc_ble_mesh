@@ -43,8 +43,6 @@ extern u8					blt_state;
 #endif
 #endif
 
-#define 		BLS_HANDLE_MIN					BLS_CONN_HANDLE
-
 void blt_set_bluetooth_version (u8 v);
 void ota_fw_check_over_write (void);
 

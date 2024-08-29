@@ -2190,7 +2190,11 @@ void bls_l2cap_requestConnParamUpdate_Normal()
 {
     if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		bls_l2cap_requestConnParamUpdate (BLS_HANDLE_MIN, 16, 32, 0, 500);
+		for(int i = ACL_CENTRAL_MAX_NUM; i < (ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM); i++) { //peripheral index is from "ACL_CENTRAL_MAX_NUM" to "ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM - 1"
+			if(conn_dev_list[i].conn_state) {
+				bls_l2cap_requestConnParamUpdate(conn_dev_list[i].conn_handle, 16, 32, 0, 500);
+			}
+		}
 		#else
 	    bls_l2cap_requestConnParamUpdate (16, 32, 0, 500);
 		#endif
@@ -2209,13 +2213,14 @@ void bls_l2cap_requestConnParamUpdate_Normal()
  */
 void mesh_ble_connect_cb(u8 e, u8 *p, int n)
 {
-	__UNUSED u16 conn_handle = BLS_HANDLE_MIN;
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-	hci_le_enhancedConnCompleteEvt_t *pConnEvt = (hci_le_enhancedConnCompleteEvt_t *)p;
-	conn_handle = pConnEvt->connHandle;
+	hci_le_connectionCompleteEvt_t *pConnEvt = (hci_le_connectionCompleteEvt_t *)p;
+	__UNUSED u16 conn_handle = pConnEvt->connHandle;
+	dev_char_info_insert_by_conn_event(pConnEvt);
 	bls_l2cap_setMinimalUpdateReqSendingTime_after_connCreate(conn_handle, 3000);
 	bls_l2cap_requestConnParamUpdate (conn_handle, 16, 32, 0, 500);
 #else
+	__UNUSED u16 conn_handle = BLS_CONN_HANDLE;
 	#if __TLSR_RISCV_EN__
 	bls_l2cap_setMinimalUpdateReqSendingTime_after_connCreate(GATT_LPN_EN ? 3000 : 2000);
 	#endif
@@ -2262,7 +2267,10 @@ void mesh_ble_disconnect_cb(u8 *p)
 	u8 conn_idx = 0;
 	__UNUSED event_disconnection_t	*pd = (event_disconnection_t *)p;
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_idx = get_slave_idx_by_conn_handle(pd->connHandle);
+	conn_idx = get_periphr_idx_by_conn_handle(pd->connHandle);
+	if(conn_idx == INVALID_CONN_IDX){
+		return;
+	}
 #endif
 	app_adr[conn_idx] = 0;
 	pair_login_ok = 0;
@@ -2292,6 +2300,10 @@ void mesh_ble_disconnect_cb(u8 *p)
 
 #if MD_ON_DEMAND_PROXY_EN
 	mesh_on_demand_private_gatt_proxy_start();
+#endif
+
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+	dev_char_info_delete_by_connhandle(pd->connHandle);
 #endif
 
 	LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "%s connHandle:0x%x", __func__, pd->connHandle);
@@ -3510,7 +3522,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 {
 	mesh_op_resource_t op_res;
 	memset(p_mat, 0, sizeof(material_tx_cmd_t));
-	p_mat->conn_handle = conn_handle;
+	p_mat->conn_handle = conn_handle; 	// if adr_dst is not 0, connection handle dependent on destination address when push fifo in mesh_nw_pdu_report_to_gatt().
 	p_mat->immutable_flag = immutable_flag;
 	p_mat->op = op;
 	p_mat->p_ac = par;
@@ -3668,7 +3680,7 @@ static inline int mesh_tx_cmd2normal_2(u16 op, u8 *par, u32 par_len, u16 adr_src
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
 
 	u8 immutable_flag = 0;
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, immutable_flag, p_tx_head);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, MESH_CONN_HANDLE_AUTO, immutable_flag, p_tx_head);
 	return mesh_tx_cmd(&mat);
 }
 
@@ -3709,7 +3721,7 @@ int mesh_tx_cmd2normal_specified_key(u16 op, u8 *par, u32 par_len, u16 adr_src, 
 		ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
 	}
 	u8 immutable_flag = 0;
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	return mesh_tx_cmd(&mat);
 }
 
@@ -3726,7 +3738,7 @@ int mesh_tx_cmd2uuid(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, int
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
 	u8 immutable_flag = 1;
 
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, uuid, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, uuid, nk_array_idx, ak_array_idx, 0, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	return mesh_tx_cmd(&mat);
 }
 
@@ -4296,9 +4308,9 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 #define UART_HW_HEAD_LEN    (4 + 2) //4:uart dma_len,  2: uart margin
 
 #if(HCI_LOG_FW_EN)
-_align_4_ u8 uart_hw_tx_buf[160 + UART_HW_HEAD_LEN]; // not for user
+_align_4_ u8 uart_hw_tx_buf[160 + UART_HW_HEAD_LEN]; // not for user application buffer, but can redifine size.
 #else
-_align_4_ u8 uart_hw_tx_buf[HCI_TX_FIFO_SIZE_USABLE + UART_HW_HEAD_LEN]; // not for user;  2: sizeof(fifo.len)
+_align_4_ u8 uart_hw_tx_buf[HCI_TX_FIFO_SIZE_USABLE + UART_HW_HEAD_LEN]; // not for user application buffer;  2: sizeof(fifo.len)
 #endif
 const u16 UART_TX_LEN_MAX = (sizeof(uart_hw_tx_buf) - UART_HW_HEAD_LEN);
 

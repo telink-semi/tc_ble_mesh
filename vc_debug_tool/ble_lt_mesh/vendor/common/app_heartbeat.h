@@ -50,7 +50,7 @@ typedef enum{
 typedef struct{
 	u16 dst;
 	u8 count_log;
-	u8 period_log;
+	u8 period_log; // unit: 2^(n-1) second
 	u8 ttl;
 	u16 features;
 	u16 netkeyindex;

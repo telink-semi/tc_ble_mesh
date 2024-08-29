@@ -288,12 +288,12 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
-			proxy_cfg_list_init_upon_connection(BLS_HANDLE_MIN);
+			proxy_cfg_list_init_upon_connection(BLS_CONN_HANDLE);
 			#if 0 // FEATURE_FRIEND_EN
 			fn_update_RecWin(get_RecWin_connected());
 			#endif
 			#if !DU_ENABLE
-			mesh_service_change_report(BLS_HANDLE_MIN);
+			mesh_service_change_report(BLS_CONN_HANDLE);
 			#endif
 			#if LPN_CONTROL_EN
 			bls_l2cap_requestConnParamUpdate (48, 56, 10, 500);
@@ -579,7 +579,7 @@ int app_host_event_callback (u32 h, u8 *para, int n)
 	{
 #if BLE_GATT_2M_PHY_ENABLE
 		case GAP_EVT_ATT_EXCHANGE_MTU: 
-			blc_ll_setPhy(BLS_HANDLE_MIN, PHY_TRX_PREFER, PHY_PREFER_2M, 	 PHY_PREFER_2M,    CODED_PHY_PREFER_NONE);
+			blc_ll_setPhy(BLS_CONN_HANDLE, PHY_TRX_PREFER, PHY_PREFER_2M, 	 PHY_PREFER_2M,    CODED_PHY_PREFER_NONE);
 			break;
 #endif
 #if BLE_REMOTE_SECURITY_ENABLE

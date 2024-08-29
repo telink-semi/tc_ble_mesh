@@ -702,6 +702,8 @@ typedef struct{
 	u16 conn_handle; // connection handle.
 }bear_conn_handle_t;
 
+#define MESH_CONN_HANDLE_AUTO	0 // auto choose connection handle by check destination address in proxy filter list.
+
 typedef struct{
 	union{
 		u8 *par;        // it is used before mesh_tx_cmd2_access_()

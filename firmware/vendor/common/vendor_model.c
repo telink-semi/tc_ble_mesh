@@ -320,7 +320,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	mesh_match_type_t match_type;
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
 	u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, 1, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, MESH_CONN_HANDLE_AUTO, 1, 0);
     mesh_match_group_mac(&match_type, mat.adr_dst, mat.op, 1, mat.adr_src);
 	
 	memcpy(&mesh_indication_retry.mat, &mat, sizeof(material_tx_cmd_t));
