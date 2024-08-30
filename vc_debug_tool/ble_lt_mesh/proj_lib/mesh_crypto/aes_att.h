@@ -22,13 +22,17 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#ifndef _AES_H_
-#define _AES_H_
+#pragma once
 
 #include "tl_common.h"
-#include "proj/common/types.h"
 
+#if (MCU_CORE_TYPE == MCU_CORE_9518)
+typedef unsigned char           word8;
+typedef unsigned short          word16;
+typedef unsigned long           word32;
 
+//#include "stack/ble/crypt/aes/aes_att.h"
+#else
 static const word8 aes_sw_S[256] = {
  99, 124, 119, 123, 242, 107, 111, 197,  48,   1, 103,  43, 254, 215, 171, 118, 
 202, 130, 201, 125, 250,  89,  71, 240, 173, 212, 162, 175, 156, 164, 114, 192, 

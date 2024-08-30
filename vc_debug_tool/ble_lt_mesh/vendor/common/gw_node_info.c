@@ -1,25 +1,25 @@
 /********************************************************************************************************
- * @file	 gw_node_info.c
+ * @file	gw_node_info.c
  *
- * @brief	 for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author  telink
- * @date	 Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par	 Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
- * 		 All rights reserved.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 		 Licensed under the Apache License, Version 2.0 (the "License");
- * 		 you may not use this file except in compliance with the License.
- * 		 You may obtain a copy of the License at
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 http://www.apache.org/licenses/LICENSE-2.0
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- * 		 Unless required by applicable law or agreed to in writing, software
- * 		 distributed under the License is distributed on an "AS IS" BASIS,
- * 		 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 		 See the License for the specific language governing permissions and
- * 		 limitations under the License.
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
 #include "tl_common.h"
@@ -34,7 +34,11 @@
 
  #if DONGLE_PROVISION_EN
 VC_node_info_t VC_node_info[1];
+	#if PRIVATE_SELF_PROVISION_EN
+gw_node_info_t gw_node_info[1];	
+	#else
 gw_node_info_t gw_node_info[MESH_NODE_MAX_NUM];
+	#endif
 VC_node_cps_t VC_node_cps;
 u32 gw_node_info_addr_save = FLASH_ADR_VC_NODE_INFO;
 #else
@@ -283,6 +287,7 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary)
                 }
             }
         }
+		LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"obj_adr 0x%04x, not found in VC node info", obj_adr);
 	}
 #else
 	int idx = get_gw_node_info_idx(obj_adr, is_must_primary);
@@ -290,10 +295,6 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary)
 		flash_read_page(FLASH_ADR_VC_NODE_INFO + gw_node_info[idx].index*sizeof(VC_node_info_t), sizeof(VC_node_info_t), (u8 *)VC_node_info);
 		return VC_node_info;
 	}
-#endif
-
-#if WIN32
-    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"obj_adr 0x%04x, not found in VC node info", obj_adr);
 #endif
 
     return 0;
@@ -328,7 +329,7 @@ u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, bool4 sig_mod
     if(p_info){
         return get_ele_offset_by_model((mesh_page0_t *)(&p_info->cps.page0_head), p_info->cps.len_cps, p_info->node_adr, obj_adr, model_id, sig_model);
     }
-    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "VC node info NOT_FOUND!........................",0);
+    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "VC node info NOT_FOUND!........................");
     return MODEL_NOT_FOUND;
 }
 #endif
@@ -339,7 +340,7 @@ static u32 mesh_vc_node_addr = FLASH_ADR_VC_NODE_INFO;
 void VC_node_info_retrieve()
 {
 #if WIN32
-    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info));
+    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info), NULL);
 #else    
 	restore_node_info_table();
 #endif

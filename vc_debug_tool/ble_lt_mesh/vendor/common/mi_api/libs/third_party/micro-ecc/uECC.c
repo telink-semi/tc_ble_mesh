@@ -363,7 +363,7 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 }
 #endif /* !asm_sub */
 
-#if (MI_API_ENABLE)&&!asm_mult || (uECC_SQUARE_FUNC && !asm_square) || \
+#if (__TLSR_RISCV_EN__ || MI_API_ENABLE)&&!asm_mult || (uECC_SQUARE_FUNC && !asm_square) || \
     (uECC_SUPPORTS_secp256k1 && (uECC_OPTIMIZATION_LEVEL > 0) && \
         ((uECC_WORD_SIZE == 1) || (uECC_WORD_SIZE == 8)))
 static void muladd(uECC_word_t a,

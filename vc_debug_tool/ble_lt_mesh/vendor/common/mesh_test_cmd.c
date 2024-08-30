@@ -22,12 +22,11 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
-#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #include "mesh_test_cmd.h"
@@ -304,11 +303,11 @@ void mesh_iv_update_test_initiate(u8 key_code)
 			if(mesh_adv_tx_cmd_sno < IV_UPDATE_START_SNO){
 				mesh_adv_tx_cmd_sno = IV_UPDATE_START_SNO;
 			}
-	        LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"SW:trigger to step1 later,current iv is: ",0);
+	        LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"SW:trigger to step1 later,current iv is: ");
 			#else
 			mesh_increase_ivi(iv_idx_st.cur);
 	        mesh_iv_update_set_start_flag(1);   // should be keep search flag when trigger by self after power up.
-	        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"SW:IV index enter step1: ",0);
+	        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"SW:IV index enter step1: ");
 	        #endif
 		}
 		else{

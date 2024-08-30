@@ -23,9 +23,11 @@
  *
  *******************************************************************************************************/
 #include "telink_sdk_mible_api.h"
+#if (!__TLSR_RISCV_EN__)
 #include "proj_lib/ble/ll/ll_whitelist.h"
 #include "proj/common/mempool.h"
 #include "proj/mcu/watchdog_i.h"
+#endif
 #include "vendor/common/blt_soft_timer.h"
 #if DU_ENABLE
 #include "../user_du.h"
@@ -212,7 +214,7 @@ u8 gap_adv_param_valid(mible_gap_adv_param_t *p_param)
 }
 mible_status_t telink_ble_mi_adv_start(mible_gap_adv_param_t *p_param)
 {
-	if(blt_state == BLS_LINK_STATE_CONN){
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 		return MI_ERR_INVALID_STATE;
 	}else if (!gap_adv_param_valid(p_param)){
 		return MI_ERR_INVALID_PARAM;
@@ -279,7 +281,7 @@ mible_status_t telink_ble_mi_gap_adv_data_set(uint8_t const * p_data,
 
 mible_status_t telink_ble_mi_adv_stop()
 {
-	if(blt_state == BLS_LINK_STATE_CONN){
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 		return MI_ERR_INVALID_STATE;
 	}
 	bls_ll_setAdvEnable(0);
@@ -306,7 +308,7 @@ u8 mi_update_conn_params_valid(mible_gap_conn_param_t conn_params)
 // user function ,and will call by the mi part 
 mible_status_t telink_ble_mi_update_conn_params(uint16_t conn_handle,mible_gap_conn_param_t conn_params)
 {
-	if(blt_state != BLS_LINK_STATE_CONN){
+	if(blc_ll_getCurrentState() != BLS_LINK_STATE_CONN){
 		return MI_ERR_INVALID_STATE;
 	}else if(!mi_update_conn_params_valid(conn_params)){
 		return MI_ERR_INVALID_PARAM;
@@ -453,7 +455,7 @@ mible_status_t telink_ble_mi_gatts_notify_or_indicate(uint16_t conn_handle, uint
 	offset =0;//??
 	if(p_value == NULL){
 		return MI_ERR_INVALID_ADDR;
-	}else if (blt_state != BLS_LINK_STATE_CONN){
+	}else if (blc_ll_getCurrentState() != BLS_LINK_STATE_CONN){
 		return MI_ERR_INVALID_STATE;
 	}else if (len ==0){
 		return MI_ERR_INVALID_LENGTH;
@@ -618,6 +620,9 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
     if(MIBLE_DFU_STATE_START == state){
 		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
+		#endif
+		#if APP_FLASH_PROTECTION_ENABLE
+		app_flash_protection_ota_begin();
 		#endif
         MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
 		mi_ota_downing =1;
@@ -1353,7 +1358,7 @@ void mi_mesh_sleep_init()
 {
 	#if LPN_CONTROL_EN
 	// only in the adv mode will update the tick part .
-	if(blt_state != BLS_LINK_STATE_CONN){
+	if(blc_ll_getCurrentState() != BLS_LINK_STATE_CONN){
 		mi_mesh_sleep_time.last_tick = clock_time()|1;
 		mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
 	}
@@ -1433,11 +1438,11 @@ void mi_mesh_lowpower_loop()
 	}else if(mi_mesh_get_state()|| du_ota_reboot_flag){
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		mesh_inter_cmd_proc(mi_mesh_get_state()||du_ota_reboot_flag);
-	}else if (blt_state == BLS_LINK_STATE_CONN){// in the connect mode , not the ota mode .
+	}else if (blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){// in the connect mode , not the ota mode .
 		// only receive the gatt-proxy mesh cmd .
 		// mesh_inter_cmd_proc(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0);
 		bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
-	}else if (blt_state != BLS_LINK_STATE_CONN){
+	}else if (blc_ll_getCurrentState() != BLS_LINK_STATE_CONN){
 		if(save_power_mode){			
 			if( clock_time_exceed(mi_mesh_sleep_time.last_tick,MI_RUN_INTERVAL *1000) &&
 				mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
@@ -1447,7 +1452,7 @@ void mi_mesh_lowpower_loop()
 				// in the power save ,still need to send packet.
 				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
 					if(soft_timer_allow_mesh){
-						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						if(blt_soft_timer_add(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
 						{
 							soft_timer_allow_mesh = 0;
 						}
@@ -1469,7 +1474,7 @@ void mi_mesh_lowpower_loop()
 				mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
 				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
 					if(soft_timer_allow_mesh){
-						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						if(blt_soft_timer_add(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
 						{
 							soft_timer_allow_mesh = 0;
 						}
@@ -1485,10 +1490,10 @@ void mi_mesh_lowpower_loop()
 	#else
 void mi_mesh_lowpower_loop()
 {
-	if(blt_state == BLS_LINK_STATE_CONN || mi_mesh_get_state()||du_ota_reboot_flag){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN || mi_mesh_get_state()||du_ota_reboot_flag){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		if(mi_mesh_get_state()||du_ota_reboot_flag){
-			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1",0);
+			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1");
 			if(soft_timer_allow_mesh){
 				if(blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
 				{
@@ -1499,16 +1504,16 @@ void mi_mesh_lowpower_loop()
 			blt_soft_timer_delete((blt_timer_callback_t)&soft_timer_proc_mesh_cmd);
 			soft_timer_allow_mesh = 1;
 		}
-	}else if (blt_state == BLS_LINK_STATE_ADV){
+	}else if (blc_ll_getCurrentState() == BLS_LINK_STATE_ADV){
 	
 		if( clock_time_exceed(mi_mesh_sleep_time.last_tick,mi_mesh_sleep_time.run_ms *1000) &&
 			mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
 			
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc0",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc0");
 			mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
 			if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
 				if(soft_timer_allow_mesh){
-					if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+					if(blt_soft_timer_add(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
 					{
 						soft_timer_allow_mesh = 0;
 					}

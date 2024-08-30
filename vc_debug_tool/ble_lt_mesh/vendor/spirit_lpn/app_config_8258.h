@@ -41,6 +41,9 @@ extern "C" {
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
+
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -111,7 +114,6 @@ extern "C" {
 #endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
-#define BLE_SIG_MESH_CERTIFY_ENABLE 	0
 #define BLT_SOFTWARE_TIMER_ENABLE		1
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
@@ -138,21 +140,113 @@ extern "C" {
 //
 
 //----------------------- GPIO for UI --------------------------------
-//---------------  Button 
+#ifndef UI_KEYBOARD_ENABLE
+#define UI_KEYBOARD_ENABLE				1
+#endif
+
+#if UI_KEYBOARD_ENABLE
+#define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K // drive pin pull
+#define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K    // scan pin pull
+
+#define	KB_LINE_HIGH_VALID				0   // dirve pin output 0 when keyscan(no drive pin in KB_LINE_MODE=1), scanpin read 0 is valid
+#define DEEPBACK_FAST_KEYSCAN_ENABLE	1   //proc fast scan when deepsleep back triggered by key press, in case key loss
+#define KEYSCAN_IRQ_TRIGGER_MODE		0
+#define LONG_PRESS_KEY_POWER_OPTIMIZE	1   //lower power when pressing key without release
+
+#define	KB_MAP_NUM				KB_MAP_NORMAL
+#define	KB_MAP_FN				KB_MAP_NORMAL
+
 #if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+// key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
+#define KB_LINE_MODE			1 			
+			
+// keymap
+#define KEY_SW1					1
+#define KEY_SW2					2
+#define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
+			
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
+			
+// scan pin as gpio
+#define PD5_FUNC				AS_GPIO
+#define PD6_FUNC				AS_GPIO
+			
+//scan	pin pullup
 #define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD5     PM_PIN_PULLUP_1M	//btn
+			
+//scan pin open input to read gpio level
 #define PD6_INPUT_ENABLE		1
 #define PD5_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PD6
-#define	SW2_GPIO				GPIO_PD5
-#else   // PCBA_8258_DEVELOPMENT_BOARD
-#define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
-#define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
-#define PD2_INPUT_ENABLE		1
-#define PD1_INPUT_ENABLE		1
+#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
+// keymap
+#define KEY_SW1		1			// PCB mark SW4	
+#define KEY_SW2		2
+#define KEY_SW3		3
+#define KEY_SW5		5
+#define	KB_MAP_NORMAL			{\
+								{KEY_SW2,	KEY_SW3},	 \
+								{KEY_SW1,	KEY_SW5},	 }
+
+#define KB_DRIVE_PINS 		 	{GPIO_PB4, GPIO_PB5}
+#define KB_SCAN_PINS   			{GPIO_PB2, GPIO_PB3}
+
+#define	SW1_GPIO				GPIO_PB3
+#define	SW2_GPIO				GPIO_PB2
+
+//drive pin as gpio
+#define	PB4_FUNC				AS_GPIO
+#define	PB5_FUNC				AS_GPIO
+
+//drive pin need 100K pulldown
+#define	PULL_WAKEUP_SRC_PB4		MATRIX_ROW_PULL
+#define	PULL_WAKEUP_SRC_PB5		MATRIX_ROW_PULL
+
+//drive pin open input to read gpio wakeup level
+#define PB4_INPUT_ENABLE		1
+#define PB5_INPUT_ENABLE		1
+
+//scan pin as gpio
+#define	PB2_FUNC				AS_GPIO
+#define	PB3_FUNC				AS_GPIO
+
+//scan  pin need 10K pullup
+#define	PULL_WAKEUP_SRC_PB2		MATRIX_COL_PULL
+#define	PULL_WAKEUP_SRC_PB3		MATRIX_COL_PULL
+
+//scan pin open input to read gpio level
+#define PB2_INPUT_ENABLE		1
+#define PB3_INPUT_ENABLE		1
+#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)    // PCBA_8258_C1T139A30_V1_0
+// key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
+#define KB_LINE_MODE			1 			
+
+// keymap
+#define KEY_SW1		1
+#define KEY_SW2		2
+#define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
+
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
+
 #define	SW1_GPIO				GPIO_PD2
 #define	SW2_GPIO				GPIO_PD1
+
+// scan pin as gpio
+#define PD2_FUNC				AS_GPIO
+#define PD1_FUNC				AS_GPIO
+
+//scan  pin pullup
+#define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
+#define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
+
+//scan pin open input to read gpio level
+#define PD2_INPUT_ENABLE		1
+#define PD1_INPUT_ENABLE		1
+#else
+	#error "Current board do not support keyboard !"
+#endif
 #endif
 
 //---------------  LED / PWM
@@ -208,7 +302,7 @@ extern "C" {
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 
 /////////////////// watchdog  //////////////////////////////
-#define MODULE_WATCHDOG_ENABLE		0
+#define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000  //ms
 
 

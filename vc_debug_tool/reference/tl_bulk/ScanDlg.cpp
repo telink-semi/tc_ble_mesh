@@ -301,7 +301,7 @@ void CScanDlg::AddDevice(unsigned char * p, int n)
 			CString str;
 			str.Format ("%02x %02x %02x %02x %02x %02x %d dBm %d K ", 
 			p_mac[0], p_mac[1], p_mac[2], p_mac[3], p_mac[4], p_mac[5], rssi, dc);
-			LOG_MSG_INFO (TL_LOG_COMMON, p+8, len+1, "the unprovision beacon is ", 0);
+			LOG_MSG_INFO (TL_LOG_COMMON, p+8, len+1, "the unprovision beacon is ");
 			((CListBox *) GetDlgItem (IDC_SCANLIST))->AddString (str);
 			// should add the uuid and the mac into the list too 
 			beacon_data_pk *p_beacon = (beacon_data_pk *)(p+8);

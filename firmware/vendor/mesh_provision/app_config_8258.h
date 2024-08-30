@@ -45,6 +45,9 @@ extern "C" {
 
 #define GATEWAY_ENABLE			1
 //#define	__DEBUG_PRINT__			0
+
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -136,10 +139,18 @@ extern "C" {
 #endif
 
 /////////////////// MODULE /////////////////////////////////
-#define BLE_REMOTE_PM_ENABLE			0
+#define BLE_REMOTE_PM_ENABLE			(0 || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN)
+#if BLE_REMOTE_PM_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
+#else
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0
+#endif
 #define BLE_REMOTE_SECURITY_ENABLE      (0 || MESH_CDTP_ENABLE)   // 1 for smp,  0 no security
 #define BLE_IR_ENABLE					0
+
+#if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
+#define BLT_SOFTWARE_TIMER_ENABLE		1
+#endif
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0
@@ -175,7 +186,7 @@ extern "C" {
 #define KEY_SW2					2
 #define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
 			
 // scan pin as gpio
@@ -198,7 +209,7 @@ extern "C" {
 #define KEY_SW2					2
 #define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD2} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
 			
 // scan pin as gpio
@@ -254,11 +265,13 @@ extern "C" {
 #endif
 
 ////////////USB DP DM///////////////////////////////////////
+#if (HCI_ACCESS==HCI_USE_USB)
 #define PA5_FUNC			AS_USB
 #define PA5_INPUT_ENABLE	1
 
 #define PA6_FUNC			AS_USB
 #define PA6_INPUT_ENABLE	1
+#endif
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
 #define PA7_DATA_OUT			1

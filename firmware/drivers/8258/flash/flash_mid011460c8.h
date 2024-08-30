@@ -1,13 +1,12 @@
 /********************************************************************************************************
  * @file	flash_mid011460c8.h
  *
- * @brief	This is the header file for b85m
+ * @brief	This is the header file for B85
  *
  * @author	Driver Group
- * @date	2020
+ * @date	2018
  *
  * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
- *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -26,12 +25,14 @@
 #define __MID011460C8_H__
 
 /*
- * @brief     MID = 0x1460c8 Flash include GD25LE80C and GD25LQ80C.
+ * @brief     MID = 0x011460c8 Flash include GD25LE80C and GD25LQ80C.
  */
 
 
 /**
- * @brief     define the section of the protected memory area which is read-only and unalterable.
+ * @brief   define the section of the protected memory area which is read-only and unalterable.
+ * @note    when data protection, only enumeration items in mid011460c8_lock_block_e can be selected,
+ *          to ensure that the values returned by the interface flash_get_lock_block_mid011460c8 are in the mid011460c8_lock_block_e.
  */
 typedef enum{
 	FLASH_LOCK_NONE_MID011460C8			=	0x0000,	//000000h-000000h	//0x0020 0x407c...
@@ -72,18 +73,18 @@ typedef enum{
  * @brief     The starting address of the Security Registers.
  */
 typedef enum{
-	FLASH_OTP_0x001000_512K_MID011460C8	=	0x001000,	//001000h-0011FFh
-	FLASH_OTP_0x002000_512K_MID011460C8	=	0x002000,	//002000h-0021FFh
-	FLASH_OTP_0x003000_512K_MID011460C8	=	0x003000,	//003000h-0031FFh
+	FLASH_OTP_0x001000_512B_MID011460C8	=	0x001000,	//001000h-0011FFh
+	FLASH_OTP_0x002000_512B_MID011460C8	=	0x002000,	//002000h-0021FFh
+	FLASH_OTP_0x003000_512B_MID011460C8	=	0x003000,	//003000h-0031FFh
 }mid011460c8_otp_block_e;
 
 /**
  * @brief     the lock area of the Security Registers.
  */
 typedef enum{
-	FLASH_LOCK_OTP_0x001000_512K_MID011460C8	=	0x0800,	//001000h-0011FFh
-	FLASH_LOCK_OTP_0x002000_512K_MID011460C8	=	0x1000,	//002000h-0021FFh
-	FLASH_LOCK_OTP_0x003000_512K_MID011460C8	=	0x2000,	//003000h-0031FFh
+	FLASH_LOCK_OTP_0x001000_512B_MID011460C8	=	0x0800,	//001000h-0011FFh
+	FLASH_LOCK_OTP_0x002000_512B_MID011460C8	=	0x1000,	//002000h-0021FFh
+	FLASH_LOCK_OTP_0x003000_512B_MID011460C8	=	0x2000,	//003000h-0031FFh
 }mid011460c8_lock_otp_e;
 
 /**
@@ -91,7 +92,6 @@ typedef enum{
  */
 typedef enum{
 	FLASH_WRITE_STATUS_BP_MID011460C8	=	0x407c,
-	FLASH_WRITE_STATUS_QE_MID011460C8	=	0x0200,
 	FLASH_WRITE_STATUS_OTP_MID011460C8	=	0x3800,
 }mid011460c8_write_status_bit_e;
 
@@ -158,6 +158,21 @@ void flash_lock_mid011460c8(mid011460c8_lock_block_e data);
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
 void flash_unlock_mid011460c8(void);
+
+/**
+ * @brief 		This function serves to get the protection area of the flash.
+ * @return 		the protection area of the flash.
+ * @note        Attention: Before calling the FLASH function, please check the power supply voltage of the chip.
+ *              Only if the detected voltage is greater than the safe voltage value, the FLASH function can be called.
+ *              Taking into account the factors such as power supply fluctuations, the safe voltage value needs to be greater
+ *              than the minimum chip operating voltage. For the specific value, please make a reasonable setting according
+ *              to the specific application and hardware circuit.
+ *
+ *              Risk description: When the chip power supply voltage is relatively low, due to the unstable power supply,
+ *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
+ *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
+ */
+mid011460c8_lock_block_e flash_get_lock_block_mid011460c8(void);
 
 /**
  * @brief 		This function serves to read data from the Security Registers of the flash.

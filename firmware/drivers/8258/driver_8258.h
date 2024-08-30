@@ -55,5 +55,5 @@
 #include "drivers/8258/s7816.h"
 #include "drivers/8258/qdec.h"
 #include "drivers/8258/lpc.h"
-
+#include "drivers/8258/flash/flash_type.h"
 //#include "drivers/8258/rf_pa.h"

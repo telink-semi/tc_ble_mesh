@@ -102,6 +102,7 @@ SECTIONS
         {
 	    . = (((. + 3) / 4)*4);  /* new section, default 16 byte aligned*/
 	    PROVIDE(_start_bss_ = .);
+	    *(.bss.irq_stk)
         *(.retention_bss)
         *(.retention_bss.*)
         *(.sbss)
@@ -128,6 +129,7 @@ SECTIONS
         {
         . = (((. + 3) / 4)*4);
         PROVIDE(_no_retention_bss_start_ = . );
+	    *(.no_ret_bss.irq_stk)
         *(.no_ret_bss)
         *(.no_ret_bss.*)
         . = (((. + 3) / 4)*4);
@@ -155,6 +157,6 @@ SECTIONS
     ASSERT((_end_bss_ - 0x840000) * __PM_DEEPSLEEP_RETENTION_ENABLE <= 0x8000, "**Retention Area Overflow, Check your data/bss usages**")
     ASSERT((__RAM_START_ADDR == 0x808000)||((_no_retention_bss_end_ - __RAM_START_ADDR) <= (__RAM_SIZE_MAX - 2560)), "**RAM usage may Overflow, Please check**")
     ASSERT((_bin_size_ + 16) * __FLASH_512K_ENABLE <= 0x30000, "**Error:firmware size Overflow!!!**")
-    ASSERT((_ramcode_size_div_16_align_256_ * 16 * __FW_START_BY_BOOTLOADER_EN) <= __FW_RAMCODE_SIZE_MAX, "**Error:ramcode size Overflow!!!**")
+    ASSERT((_ramcode_size_div_16_align_256_ * 16 * __FW_START_BY_LEGACY_BOOTLOADER_EN) <= __FW_RAMCODE_SIZE_MAX, "**Error:ramcode size Overflow!!!**")
     ASSERT((_bin_size_ * __BOOT_LOADER_EN) <= 0x6000, "**Error:firmware size Overflow!!! par is in 0x6000**")
 }

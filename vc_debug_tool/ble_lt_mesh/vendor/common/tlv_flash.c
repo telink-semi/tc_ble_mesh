@@ -26,6 +26,10 @@
 #include "app_provison.h"
 #include "mesh_common.h"
 #if TLV_ENABLE
+	#if APP_FLASH_PROTECTION_ENABLE
+#error TODO flash protection section setting
+	#endif
+
 extern unsigned short crc16(unsigned char *pD, int len);
 STATIC_ASSERT((sizeof(tlv_str_t)+TLV_REC_WHOLE_PACKET_BUF) == (sizeof(tlv_str_max_t)+TLV_REC_MAX_BUF_CNT)); // make sure the two heads are same.
 
@@ -571,20 +575,20 @@ u8 A_debug_test1[sizeof(model_common_t)];
 u8 A_debug_test2[sizeof(model_common_t)];
 void tlv_test_init()
 {
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_init start",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_init start");
 	tlv_init();
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_init end",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_init end");
 	u8 test1[sizeof(model_common_t)];
 	u8 test2[sizeof(model_common_t)];
 	memset(test1,1,sizeof(test1));
 	memset(test2,2,sizeof(test2));
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_write start",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_write start");
 	tlv_rec_write(3,test1,sizeof(test1));
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_write end",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_write end");
 	tlv_rec_write(4,test2,sizeof(test2));
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_read start",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_read start");
 	tlv_rec_read(3,A_debug_test1,sizeof(A_debug_test1));
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_read end",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tlv_read end");
 	tlv_rec_read(4,A_debug_test2,sizeof(A_debug_test2));
 	irq_disable();
 	while(1){

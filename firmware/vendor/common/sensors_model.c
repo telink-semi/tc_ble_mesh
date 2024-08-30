@@ -53,8 +53,16 @@ sensor_data_t sensor_data[SENSOR_NUMS] = {
 };
 
 // Sensor Descriptor
+#if ZSIR1000_AMBIENT_LIGHT_SENSED_EN
+#define SENSOR_SAMPLE_INTERVAL			0x0a // unit: (2^n) ms
+#elif ZSIR1000_MOTION_SENSED_EN
+#define SENSOR_SAMPLE_INTERVAL			0x07
+#else
+#define SENSOR_SAMPLE_INTERVAL			0x05
+#endif
+
 const mesh_cmd_sensor_descript_st_t sensor_descrip[SENSOR_NUMS] = { 
-    {SENSOR_PROP_ID, 0x347, 0x256, 0x02, 0x40, 0x4B},
+    {SENSOR_PROP_ID, 0x347, 0x256, 0x02, SENSOR_SAMPLE_INTERVAL, 0x4B},
 };
 
 // Sensor Setting Map in model_sig_sensor
@@ -114,7 +122,7 @@ void mesh_global_var_init_sensor_descrip()
 		model_sig_sensor.sensor_states[i].cadence.trig_type = TRIGGER_TYPE_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_down = TRIGGER_DELTA_DOWN_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up = TRIGGER_DELTA_UP_DEFAULT;
-        model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = MIN_INTERVAL_DEFAULT;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = CADENCE_MIN_INTERVAL_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = FAST_CADENCE_LOW_DEFAULT;
         model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_high = FAST_CADENCE_HIGH_DEFAULT;
 		for(u8 j=0; j<SENSOR_SETTINGS_NUMS; j++){
@@ -561,20 +569,25 @@ int mesh_sensor_setup_st_publish(u8 idx)
 
 u32 sensor_measure_proc()
 {
-	sensor_cadence_t *p_cadence = &model_sig_sensor.sensor_states[0].cadence;
-	sensor_data_t * p_sensor_data = &sensor_data[0];
-	if(p_cadence->cadence_unit.min_interval <= MAX_MIN_INTERVAL){
-		u32 min_interval = 1<<p_cadence->cadence_unit.min_interval;
-		if(clock_time_exceed_ms(sensor_measure_ms, min_interval)){// 
+	//foreach(i, SENSOR_NUMS){ // TODO
+		sensor_cadence_t *p_cadence = &model_sig_sensor.sensor_states[0].cadence;
+		sensor_data_t * p_sensor_data = &sensor_data[0];
+
+		u32 sample_interval = 1 << sensor_descrip[0].measure_period;
+		if(clock_time_exceed_ms(sensor_measure_ms, sample_interval)){//
 			sensor_measure_ms = clock_time_ms();
 			u8 pub_flag = 0;
 			//update sensor_measure_quantity here
-#if !WIN32 && SENSOR_LIGHTING_CTRL_USER_MODE_EN	// for sensor server to send sensor status.
+		#if !WIN32
+			#if SENSOR_LIGHTING_CTRL_USER_MODE_EN	// for sensor server to send sensor status.
 	        gpio_set_input_en(SENSOR_GPIO_PIN, 1);
 	        gpio_set_output_en(SENSOR_GPIO_PIN, 0);
 	        sleep_us(100);
 	        sensor_measure_quantity = gpio_read(SENSOR_GPIO_PIN) ? 0 : 1;
-#endif
+			#elif (((NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS)|| (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS)) && (NLC_SENSOR_SEL != SENSOR_NONE))
+			sensor_measure_quantity = nlc_sensor_get();
+			#endif
+		#endif
 			u32 measure_val = 0;
 			memcpy(&measure_val, p_sensor_data->p_raw, min2(sizeof(measure_val), p_sensor_data->len_raw));
 			
@@ -589,12 +602,12 @@ u32 sensor_measure_proc()
 				}
 			}
 
-			if(pub_flag){			
+			if(pub_flag){
+				memcpy(p_sensor_data->p_raw, &sensor_measure_quantity, min2(sizeof(measure_val), p_sensor_data->len_raw));		
 				model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, (u8 *)&model_sig_sensor.sensor_srv[0].com, 0);
 			}
-			memcpy(p_sensor_data->p_raw, &sensor_measure_quantity, min2(sizeof(measure_val), p_sensor_data->len_raw));				
 		}
-	}
+	//}
 
 	return 1;
 }

@@ -11,7 +11,7 @@
 ### Bug Fixes
 
 * (Firmware)delete __clzsi2() in mesh library which already exists in library of soft-fp.a to avoid reporting redefine error in some cases when compile sdk.
-* (Firmware)fix the issue that receiver node may miss some segment messages when multiple nodes simultaneously send segment messages which destination address is group address.
+* (Firmware)fix the issue that receiver node may miss some segment messages when multiple nodes simultaneously send segment messages and destination address are all group address.
 
 ### Known issues
 
@@ -28,6 +28,7 @@
 * (Android/iOS)support naming nodes, and sorting nodes by name or node address.
 * (Android/iOS)support batch selection and configuration of direct forwarding parameters for multiple nodes.
 * (Android/iOS)support functions of On-Demand Private GATT Proxy and Solicitation PDU RPL Configuration.
+* (Android/iOS)updated the cloud server IP address for network sharing functionality. And support setting the IP address.
 
 ### Performance Improvements
 
@@ -38,7 +39,12 @@
 
 * (Firmware)if you are using V4.1.0.0 SDK, and using a gateway project or setting MESH_USER_DEFINE_MODE to MESH_SPIRIT_ENABLE, please make sure to upgrade to V4.1.0.1 SDK, otherwise the node's provisioned state will be abnormally changed from provision state to unprovision state when the firmware before V4.1.0.0 upgrade to V4.1.0.0 or V4.1.0.0 upgrade to a newer version.
 
-* (Firmware)due to enable flash protection and the fact that the minimum protection size for several flash is 256k(can be found by searching lock_block_e on the SDK), it is necessary to move sectors with frequent write operations to after 0x70000, including FLASH_ADR_RESET_CNT，FLASH_ADR_MISC and FLASH_ADR_SW_LEVEL . After modifying the address, when the new firmware OTA to nodes which sdk version is V4.1.0.0 or earlier, the MCU needs to automatically migrate the three sectors. The migration code please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN. For 512k flash, it is enabled by default. If the customer has previously modified a 512k flash map, these macro need to be defined: FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION and FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION. If there are assert errors when compile sdk, please contact us. If the flash map has not been modified, there will be no assert error.If it is a new product development, there is no need to consider compatibity with previous versions, then FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN can be disabled to save firmware size.
+* (Firmware)for 512k flash, due to enable flash protection and the fact that the minimum protection size for several flash is 256k(can be found by searching lock_block_e on the SDK), it is necessary to move sectors with frequent write operations to after 0x70000, including FLASH_ADR_RESET_CNT，FLASH_ADR_MISC and FLASH_ADR_SW_LEVEL . After modifying the flash sector address, when the new firmware OTA to nodes which sdk version is V4.1.0.0 or earlier, the MCU will automatically migrate the three sectors. The migration code please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN. For 512k flash, it is enabled by default. If the customer has previously modified a 512k flash map, these macro need to be defined: FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION and FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION. If there are assert errors when compile sdk, please contact us. If the flash map has not been modified, there will be no assert error.If it is a new product development, because it is no need to consider compatibity with previous versions, then FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN can be disabled to save firmware size.
+   * Conclusion:
+   * If upgrading an legacy project to the current version
+    - currently using 512K byte flash and have not changed the SDK flash map. Please ignore the above information.
+    - Currently using 1M byte flash, Please ignore the above information.
+   * If it is a new product development, ignore the above information and you can disabled FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN and  FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN to save firmware size.
 
 ### Notes
 
@@ -52,15 +58,15 @@
 ### CodeSize
 
 * Flash and RAM (default target):
-  - 8258_mesh:_________Flash 124.8 KB, RAM (27.7 KB + 3K stack),
-  - 8258_mesh_LPN:____Flash 118.3 KB, RAM (21.6 KB + 3K stack),
-  - 8258_mesh_gw:_____Flash 124.3 KB, RAM (30.4 KB + 3K stack),
-  - 8258_mesh_switch:__Flash 113.4 KB, RAM (24.9 KB + 3K stack),
+  - 8258_mesh:_________Flash 125.4 KB, RAM (27.7 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 118.9 KB, RAM (21.7 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 125.0 KB, RAM (30.5 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 114.1 KB, RAM (24.9 KB + 3K stack),
   
-  - 8278_mesh:_________Flash 122.7 KB, RAM (27.1 KB + 3K stack),
-  - 8278_mesh_LPN:____Flash 116.3 KB, RAM (23.2 KB + 3K stack),
-  - 8278_mesh_gw:_____Flash 122.3 KB, RAM (31.0 KB + 3K stack),
-  - 8278_mesh_switch:__Flash 110.0 KB, RAM (25.0 KB + 3K stack),
+  - 8278_mesh:_________Flash 123.4 KB, RAM (27.5 KB + 3K stack),
+  - 8278_mesh_LPN:____Flash 117.0 KB, RAM (23.3 KB + 3K stack),
+  - 8278_mesh_gw:_____Flash 123.0 KB, RAM (31.0 KB + 3K stack),
+  - 8278_mesh_switch:__Flash 110.7 KB, RAM (25.0 KB + 3K stack),
 
 
 ### Version
@@ -74,7 +80,7 @@
 ### Bug Fixes
 
 * (Firmware)删除mesh库文件中的__clzsi2()函数，避免有些情况下会报重定义，因为在浮点库soft-fp.a里面也有定义。
-* (Firmware)修复多个节点同时发送目的地址非单播的segment长包消息时，接收端有概率不能接收到全部的分包消息的问题。
+* (Firmware)修复多个节点同时发送，且目的地址是组播的segment长包消息时，接收端有概率不能接收到全部的分包消息的问题。
 
 ### Known issues
 
@@ -91,6 +97,7 @@
 * (Android/iOS)支持给节点命名以及通过名称或者地址排序来显示设备。
 * (Android/iOS)支持批量配置多个节点的direct forwarding的参数。
 * (Android/iOS)支持 On-Demand Private GATT Proxy 和 Solicitation PDU RPL Configuration 功能。
+* (Android/iOS)更新了网络分享功能的云服务器IP地址。并支持修改IP地址。
 
 ### Performance Improvements
 
@@ -101,7 +108,12 @@
 
 * (Firmware)如果正在使用 V4.1.0.0，并且使用了 gateway 工程 或者 MESH_USER_DEFINE_MODE 设置为 MESH_SPIRIT_ENABLE , 请务必更新到 V4.1.0.1，否则会出现旧版本升级到 V4.1.0.0(或者 V4.1.0.0 升级到更新版本) 后，节点的的已组网状态会被异常地变为未组网状态。
 
-* (Firmware)由于使能了flash 保护，并且有几个flash的最小保护区间是256k(可在sdk中搜索 lock_block_e 查询得到)，所以需要把执行写操作相对频繁的扇区修改到0x70000之后，包括FLASH_ADR_RESET_CNT，FLASH_ADR_MISC和FLASH_ADR_SW_LEVEL。修改地址之后，当新的固件OTA到V4.1.0.0及之前的节点时，MCU需要识别并自动迁移刚才提到的3个地址，对应的宏开关是 FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，对于512k flash，默认使能。如果客户之前有修改过 512k 的flash map，则需要定义这几个宏定义：FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION和FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION，定义后，编译时，如果有断言错误，请联系我们。如果没修改过 flash map，则不会出现断言错误。如果是新产品开发，不需要兼容以前的版本，这可以关闭FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，以节省固件大小。
+* (Firmware)对于512k flash，由于使能了flash 保护，并且有几个flash的最小保护区间是256k(可在sdk中搜索 lock_block_e 查询得到)，所以需要把执行写操作相对频繁的扇区修改到0x70000之后，包括FLASH_ADR_RESET_CNT，FLASH_ADR_MISC和FLASH_ADR_SW_LEVEL。修改扇区地址之后，当新的固件OTA到V4.1.0.0及之前的节点时，MCU会识别并自动迁移刚才提到的3个扇区，对应的宏开关是 FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，默认使能。如果客户之前有修改过 512k 的flash map默认定义的地址，则需要新增这几个宏定义：FLASH_ADR_MISC_LEGACY_VERSION，FLASH_ADR_SW_LEVEL_LEGACY_VERSION，FLASH_ADR_RESET_CNT_LEGACY_VERSION和FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION，定义后，编译时，如果有断言错误，请联系我们。如果没修改过 flash map，则编译时不会出现断言错误。如果是新产品开发，不需要兼容以前的版本，则可以关闭FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN，以节省固件大小。
+   * 结论：
+   * 如果是旧项目升级到当前版本
+    - 当前用的是512K flash且没有改过sdk自定义的flash map，忽略上述信息。
+    - 当前用的是1M flash，忽略上述信息。
+   * 如果是新产品开发，忽略上述信息，并可以关闭FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN 和 FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN，以节省固件大小。
 
 ### Notes
 

@@ -831,17 +831,18 @@ int mesh_proxy_filter_remove_adr(u16 adr);
 int cfg_cmd_nk_set(u16 op, u16 node_adr, u16 nk_idx, u8 *key);
 int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8 * dat,u8 len );
 int mesh_proxy_set_filter_init(u16 self_adr);
-/**************************mesh_directed_proxy_control_set**************************
-function :set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified
-			range of unicast addresses 
-para:
-	use_directed: use directed or not   
-	range_start: unicast addresses to use directed
-	range_len:element count of the unicast addresses
-ret: 0  means OK 
-	-1 or other value means err
-****************************************************************************/
-int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len);
+
+/**
+ * @brief       This function server to set wether the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified
+			range of unicast addresses or not. 
+ * @param[io]   conn_handle	- connection handle.
+ * @param[io]   use_directed- 1: use directed. 0: not use directed.
+ * @param[io]   range_start	- unicast addresses to use directed
+ * @param[io]   range_len	- element count of the unicast addresses
+ * @return      0:means OK. other:fail.
+ * @note        
+ */
+int mesh_directed_proxy_control_set(u16 conn_handle, u8 use_directed, u16 range_start, u8 range_len);
 
 /**************************mesh_send_proxy_solicitation_pdu**************************
 function :set the solicitation pdu message, it will be send in function set_adv_solicitation() called by gatt_adv_prepare_handler()

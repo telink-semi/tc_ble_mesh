@@ -28,6 +28,7 @@
 #include <time.h>
 
 
+#if (0 == __TLSR_RISCV_EN__)
 static signed int PutChar(char *pStr, char c)
 {
     *pStr = c;
@@ -633,5 +634,6 @@ unsigned int __popcountsi2(unsigned int u)
     }
     return ret;
 }
+#endif
 #endif
 

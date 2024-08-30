@@ -41,6 +41,9 @@ extern "C" {
 
 #define GATEWAY_ENABLE			1
 //#define	__DEBUG_PRINT__			0
+
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -138,7 +141,7 @@ extern "C" {
 #define KEY_SW2					2
 #define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
 			
 // scan pin as gpio
@@ -161,7 +164,7 @@ extern "C" {
 #define KEY_SW2					2
 #define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
 			
-#define KB_DRIVE_PINS			{GPIO_PD2} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD2} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD2, GPIO_PD1}
 			
 // scan pin as gpio
@@ -209,11 +212,13 @@ extern "C" {
 #define GPIO_LED	PWM_R
 
 ////////////USB DP DM///////////////////////////////////////
+#if (HCI_ACCESS==HCI_USE_USB)
 #define PA5_FUNC			AS_USB
 #define PA5_INPUT_ENABLE	1
 
 #define PA6_FUNC			AS_USB
 #define PA6_INPUT_ENABLE	1
+#endif
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
 #define PA7_DATA_OUT			1

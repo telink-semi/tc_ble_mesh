@@ -23,7 +23,11 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
+#if __TLSR_RISCV_EN__
+#include "stack/ble/ble.h"
+#else
 #include "proj_lib/ble/ll/ll.h"
+#endif
 
 #if(BEACON_ENABLE)
 #if 0

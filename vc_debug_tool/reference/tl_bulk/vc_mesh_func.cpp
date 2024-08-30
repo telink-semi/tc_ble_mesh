@@ -427,7 +427,7 @@ void test_utc_to_tai()
 		CTime time2(2000,1,1,0,0,0); // 946656000
 		u64 nTSeconds2 = time2.GetTime();
 		
-		LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"test start......",0);
+		LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"test start......");
 		mesh_UTC_t test_UTC = {0};
 		//for(u64 i = 0; i < (TAI_SECOND_MAX); i++) 		// 0x100000000
 		for(u64 i = 0; i < (TAI_SECOND_MAX); i += 3600*24)	// 0x100000000

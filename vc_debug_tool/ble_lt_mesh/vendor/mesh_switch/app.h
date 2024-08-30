@@ -38,7 +38,7 @@ extern u32 switch_mode_tick;
 
 void user_init_deepRetn(void);
 void switch_mode_set(int mode);
-void mesh_proc_keyboard ();
+void mesh_proc_keyboard(u8 e, u8 *p, int n);
 void global_reset_new_key_wakeup();
 int mesh_switch_send_mesh_adv();
 

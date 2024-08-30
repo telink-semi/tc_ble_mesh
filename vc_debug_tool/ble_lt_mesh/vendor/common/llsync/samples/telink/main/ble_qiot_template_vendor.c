@@ -145,7 +145,7 @@ static int llsync_mesh_color_temperature_set(const char *data, uint16_t len)
     sg_mesh_property_data.mesh_color_temperature.color_temperature =
         HTONS(sg_mesh_property_data.mesh_color_temperature.color_temperature);
 
-	int ele_addr_offset = ELE_CNT_EVERY_LIGHT > 1 ? 1 : 0;
+	int ele_addr_offset = LEVEL_STATE_CNT_EVERY_LIGHT > 1 ? 1 : 0;
 	access_cmd_set_light_ctl_temp(ele_adr_primary + ele_addr_offset, 0, sg_mesh_property_data.mesh_color_temperature.color_temperature, 0, 0);
 	
     return 0;

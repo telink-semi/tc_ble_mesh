@@ -57,6 +57,8 @@ extern "C" {
 #endif
 #endif
 
+#define APP_FLASH_PROTECTION_ENABLE     1
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -141,7 +143,6 @@ extern "C" {
 #endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
-#define BLE_SIG_MESH_CERTIFY_ENABLE 	0
 #define BLE_GATT_2M_PHY_ENABLE			0 // only GATT, not for ADV
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
@@ -178,7 +179,7 @@ extern "C" {
 #define KEY_SW2		2
 #define KB_MAP_NORMAL			{{KEY_SW1},	{KEY_SW2}}
 
-#define KB_DRIVE_PINS			{GPIO_PD6} 	// just for compile, not driver pin in KB_LINE_MODE=1.
+#define KB_DRIVE_PINS			{GPIO_PD6} 	// make no sense, just for compile, not driver pin in KB_LINE_MODE=1.
 #define KB_SCAN_PINS			{GPIO_PD6, GPIO_PD5}
 
 #define	SW1_GPIO				GPIO_PD6
@@ -197,19 +198,19 @@ extern "C" {
 #define PD5_INPUT_ENABLE		1
 #elif(PCBA_SEL == PCBA_8278_C1T197A30_V1_0)
 // keymap
-#define KEY_SW1		1
+#define KEY_SW1		1			// PCB mark SW4	
 #define KEY_SW2		2
 #define KEY_SW3		3
-#define KEY_SW4		4
+#define KEY_SW5		5
 #define	KB_MAP_NORMAL			{\
-								{KEY_SW1,	KEY_SW2},	 \
-								{KEY_SW3,	KEY_SW4},	 }
+								{KEY_SW2,	KEY_SW3},	 \
+								{KEY_SW1,	KEY_SW5},	 }
 
 #define KB_DRIVE_PINS 		 	{GPIO_PB4, GPIO_PB5}
 #define KB_SCAN_PINS   			{GPIO_PB2, GPIO_PB3}
 
-#define	SW1_GPIO				GPIO_PB2
-#define	SW2_GPIO				GPIO_PB3
+#define	SW1_GPIO				GPIO_PB3
+#define	SW2_GPIO				GPIO_PB2
 
 //drive pin as gpio
 #define	PB4_FUNC				AS_GPIO

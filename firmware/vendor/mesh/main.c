@@ -184,7 +184,7 @@ int main (void) {
 _attribute_ram_code_ int main (void)    //must run in ramcode
 {
 	FLASH_ADDRESS_CONFIG;
-#if (PINGPONG_OTA_DISABLE && (0 == FW_START_BY_BOOTLOADER_EN))
+#if (PINGPONG_OTA_DISABLE && (0 == FW_START_BY_LEGACY_BOOTLOADER_EN))
     ota_fw_check_over_write();  // must at first for main_
 #endif
 
@@ -216,9 +216,9 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 #endif
 	{
 		#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-		LOG_USER_MSG_INFO(0, 0, "[mesh] Start from SIG Mesh", 0);
+		LOG_USER_MSG_INFO(0, 0, "[mesh] Start from SIG Mesh");
 		#else
-		LOG_USER_MSG_INFO(0, 0, "Start user init...", 0);
+		LOG_USER_MSG_INFO(0, 0, "Start user init...");
 		#endif
 		user_init();
 	}

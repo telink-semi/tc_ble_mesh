@@ -38,7 +38,7 @@ typedef U32 		  UINT4;
 typedef int 	      INT4;
 
 typedef U8		*POINTER;
-typedef unsigned long uint32;
+//typedef unsigned long uint32;
 
 /* MD5 context. */
 struct MD5Context {

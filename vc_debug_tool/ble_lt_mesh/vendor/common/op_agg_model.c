@@ -24,10 +24,6 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "config_model.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "op_agg_model.h"

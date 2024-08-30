@@ -108,6 +108,12 @@
 #define __WEAK                          //
 #endif
 
+#if WIN32
+#define __UNUSED
+#else
+#define __UNUSED						__attribute__((unused))		// no compile warning with "set but not used [-Wunused-but-set-variable]"
+#endif
+
 #define _align_type_4_					_align_4_	// must make sure all pointers of the struct are 4 bytes aligned when used
 
 #define _USER_CAN_REDEFINE_             __WEAK // user can re-define function in user_app.c
@@ -117,8 +123,14 @@
 /* 
  * func: get value of MACRO when compile.
  * COMPILE_PRINT_MACRO sample:
-#pragma message(COMPILE_PRINT_MACRO(BLC_PM_DEEP_RETENTION_MODE_EN));
+#pragma message(COMPILE_PRINT_MACRO(BLC_PM_DEEP_RETENTION_MODE_EN))
 */
 
-// #define COMPILE_PRINT_SIZEOF(x) 		char __size_of_x_is[sizeof(x) + 1] = {[sizeof(x)] = ""} // only support in RISC-V compiler now.
+// #define COMPILE_PRINT_SIZEOF(x) 		char __size_of_##x##_is[sizeof(x) + 1] = {[sizeof(x)] = ""} // only support in RISC-V compiler now.
+
+/* COMPILE_PRINT_SIZEOF_ECLIPSE: find variable name as compile_size_var in lst file, and will get the size, such as. 
+   00846e40 <compile_size_var>:
+	 846e40:   00000008 (size of (compile_size_var) is 8)
+*/
+#define COMPILE_PRINT_SIZEOF_ECLIPSE(x)	volatile __attribute__((section(".sdk_version"))) const unsigned int compile_size_var = sizeof(x) // for B85m
 
