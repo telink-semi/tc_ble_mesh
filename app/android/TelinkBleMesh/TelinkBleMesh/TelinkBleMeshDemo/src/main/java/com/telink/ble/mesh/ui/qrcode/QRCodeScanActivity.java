@@ -38,6 +38,7 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
 import com.google.zxing.Result;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -142,7 +143,8 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     private void getCloudMeshJson(String scanText) {
         try {
             UUID uuid = UUID.fromString(scanText);
-            TelinkHttpClient.getInstance().download(uuid.toString(), downloadCallback);
+            String baseUrl = SharedPreferenceHelper.getBaseUrl(this);
+            TelinkHttpClient.getInstance().download(baseUrl, uuid.toString(), downloadCallback);
         } catch (IllegalArgumentException exception) {
             showErrorDialog("Content unrecognized");
         }

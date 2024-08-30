@@ -236,6 +236,8 @@ typedef enum : UInt8 {
 #define kImportCompleteAction   @"kImportCompleteAction"
 /// demo v4.1.0.1新增配置项：node节点的排序方式，默认是短地址升序。
 #define kSortTypeOfNodeList     @"kSortTypeOfNodeList"
+/// demo v4.1.0.2新增配置项：缓存Telink默认使用的服务器IP。
+#define kDefaultBaseURL     @"kDefaultBaseURL"
 //获取导航栏+状态栏的高度
 #define kGetRectNavAndStatusHeight  (self.navigationController.navigationBar.frame.size.height+[[UIApplication sharedApplication] statusBarFrame].size.height)
 

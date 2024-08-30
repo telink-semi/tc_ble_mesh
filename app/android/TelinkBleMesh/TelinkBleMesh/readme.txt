@@ -14,6 +14,7 @@ V4.1.0.2 - 9 - 20240722 (4.1.0.1 is used for B91)
 - feat: add support for on-demand gatt proxy and solicitation pdu
 - perf: optimized the fast provision function and related event reporting
 - fix: fix mesh OTA error that caused by the receiver index  error
+- feat: add support for manually modifying the cloud URL, this feature is located at the: main#setting#settings#Base URL
 
 ----------------
 

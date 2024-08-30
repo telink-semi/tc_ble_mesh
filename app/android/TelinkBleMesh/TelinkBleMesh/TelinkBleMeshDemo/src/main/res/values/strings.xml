@@ -253,6 +253,10 @@
         0x01–0xFF: Duration in seconds of the interval during which advertising with Private Network Identity type is enabled after receiving a Solicitation PDU or after a client disconnect
     </string>
 
+    <string name="base_url_tip">
+        Base URL is used for mesh sharing over cloud
+    </string>
+
 
     <string name="btn_text_sensor_get_all">
         Sensor \nGet All

@@ -252,6 +252,8 @@
 		917BE4C32AD689B10073FC35 /* ShareItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4BD2AD689B10073FC35 /* ShareItemCell.xib */; };
 		917BE4C42AD689B10073FC35 /* ShareButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */; };
 		917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */; };
+		9180A7BA2C803CD300BA8A15 /* SettingsEditItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9180A7B92C803CD300BA8A15 /* SettingsEditItemCell.xib */; };
+		9180A7BB2C803CD300BA8A15 /* SettingsEditItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9180A7B82C803CD300BA8A15 /* SettingsEditItemCell.m */; };
 		919BC72D2B2987360011991B /* CustomCircularButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 919BC72C2B2987360011991B /* CustomCircularButton.m */; };
 		919BC73D2B2987830011991B /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6022B293BDA00BB08B4 /* TelinkSigMeshLib.framework */; };
 		919BC73E2B29887E0011991B /* TelinkCloudSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6042B293BDA00BB08B4 /* TelinkCloudSigMeshLib.framework */; };
@@ -898,6 +900,9 @@
 		917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ShareButtonCell.xib; sourceTree = "<group>"; };
 		917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomShareAlertView.m; sourceTree = "<group>"; };
 		917BE4C62AD68A2A0073FC35 /* CustomShareAlertView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomShareAlertView.h; sourceTree = "<group>"; };
+		9180A7B72C803CD300BA8A15 /* SettingsEditItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsEditItemCell.h; sourceTree = "<group>"; };
+		9180A7B82C803CD300BA8A15 /* SettingsEditItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsEditItemCell.m; sourceTree = "<group>"; };
+		9180A7B92C803CD300BA8A15 /* SettingsEditItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingsEditItemCell.xib; sourceTree = "<group>"; };
 		919BC72B2B2987360011991B /* CustomCircularButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomCircularButton.h; sourceTree = "<group>"; };
 		919BC72C2B2987360011991B /* CustomCircularButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomCircularButton.m; sourceTree = "<group>"; };
 		919BC73F2B298B440011991B /* UpdatePasswordVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UpdatePasswordVC.m; sourceTree = "<group>"; };
@@ -1251,6 +1256,9 @@
 				9152A18C2AD8E9B500186969 /* SettingsItemCell.h */,
 				9152A18D2AD8E9B500186969 /* SettingsItemCell.m */,
 				9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */,
+				9180A7B72C803CD300BA8A15 /* SettingsEditItemCell.h */,
+				9180A7B82C803CD300BA8A15 /* SettingsEditItemCell.m */,
+				9180A7B92C803CD300BA8A15 /* SettingsEditItemCell.xib */,
 				25589AB92721403E00F4F880 /* DeviceGroupListCell.h */,
 				25589A8F2721403E00F4F880 /* DeviceGroupListCell.m */,
 				25589A932721403E00F4F880 /* RemoteElementCell.h */,
@@ -2068,6 +2076,7 @@
 				9105B1712BB1767700EA0DD6 /* ElementActionView.xib in Resources */,
 				917BE4C02AD689B10073FC35 /* CustomShareAlert.xib in Resources */,
 				25589C242721403F00F4F880 /* NetKeyAddVC.xib in Resources */,
+				9180A7BA2C803CD300BA8A15 /* SettingsEditItemCell.xib in Resources */,
 				25589BBD2721403F00F4F880 /* ModelIDCell.xib in Resources */,
 				25589C132721403F00F4F880 /* OOBListVC.xib in Resources */,
 				25589C142721403F00F4F880 /* OOBItemCell.xib in Resources */,
@@ -2488,6 +2497,7 @@
 				25589BE42721403F00F4F880 /* ShowTipsView.m in Sources */,
 				25589C102721403F00F4F880 /* SceneDetailViewController.m in Sources */,
 				25589A14272115D700F4F880 /* AppDelegate.m in Sources */,
+				9180A7BB2C803CD300BA8A15 /* SettingsEditItemCell.m in Sources */,
 				25589C042721403F00F4F880 /* RemoteAddVC.m in Sources */,
 				25589BAF2721403F00F4F880 /* UIStoryboard+extension.m in Sources */,
 				25589BB92721403F00F4F880 /* SceneItemCell.m in Sources */,
