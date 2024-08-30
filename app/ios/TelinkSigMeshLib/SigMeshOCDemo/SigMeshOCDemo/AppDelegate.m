@@ -33,37 +33,38 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    //1.Config App tint
+    //(Optional)1.Config App tint
     [self configAppTint];
-    //2.Config App key bind type
+    //(Optional)2.Config App key bind type
     [self configKeyBindType];
-    //3.Config App add static OOB device by No-OOB enable
+    //(Optional)3.Config App add static OOB device by No-OOB enable
     [self configAddStaticOOBDeviceByNoOOBEnable];
-    //4.Config App extend bearer mode
+    //(Optional)4.Config App extend bearer mode
     [self configAppExtendBearerMode];
-    //5.Config App provision elliptic curve algorithm
+    //(Optional)5.Config App provision elliptic curve algorithm
     [self configAppProvisionEllipticCurveAlgorithm];
-    //6.Config SDK log level
+    //(Optional)6.Config SDK log level
     [self configSDKLogLevel];
-    //7.Config SigDataSource default parameter of SDK
+    //(Optional)7.Config SigDataSource default parameter of SDK
     [self configSigDataSourceDefaultParameter];
-    //8.(必须实现)Start Mesh SDK
+    //(必须实现)8.Start Mesh SDK
     [SDKLibCommand startMeshSDK];
     //9.Import one mesh dictionary from app to SDK
     [self importOneMeshDictionaryFromAppToSDK];
-    //10.Create Telink Bin Folder in iPhone
+    //(Optional)10.Create Telink Bin Folder in iPhone
     [self createTelinkBinFolder];
-    //11.Config Filter
+    //(Optional)11.Config Filter
     [self configFilter];
-    //12.Config Provision Mode
+    //(Optional)12.Config Provision Mode
     [self configProvisionMode];
-    //13.Config Import Complete Action
+    //(Optional)13.Config Import Complete Action
     [self configImportCompleteAction];
-    //14.Config Default Root Certificate Data
+    //(Optional)14.Config Default Root Certificate Data
     [self configDefaultRootCertificateData];
-    //15.Config sortType of nodeList
+    //(Optional)15.Config sortType of nodeList
     [self configSortTypeOfNodeList];
-
+    //(Optional)16.Config IP Of Share Mesh By Cloud
+    [self configBaseURLForCloudSharing];
     return YES;
 }
 
@@ -356,6 +357,18 @@
     DeviceTypeModel *model_8269_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_LPN.value compositionData:nil];
     DeviceTypeModel *model_9518_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_LPN.value compositionData:nil];
     [SigDataSource.share.defaultNodeInfos addObjectsFromArray:@[model_8278_CT, model_8269_CT, model_9518_CT, model_8278_HSL, model_8269_HSL, model_9518_HSL, model_8278_Panel, model_8269_Panel, model_9518_Panel, model_8278_LPN, model_8269_LPN, model_9518_LPN]];
+}
+
+/// v4.1.0.2版本开始，新增云端分享的IP地址修改，默认是Telink的IP。如果Telink进行了服务器迁移或者客户将这套服务器程序重新运行到自己的服务器上，可以通过修改这个IP来快速实现服务器地址切换而不需要重新编译App。
+- (void)configBaseURLForCloudSharing {
+    NSString *baseUrlString = [[NSUserDefaults standardUserDefaults] valueForKey:kDefaultBaseURL];
+    if (baseUrlString == nil) {
+        baseUrlString = TelinkHttpManager.share.baseUrl;
+        [[NSUserDefaults standardUserDefaults] setValue:baseUrlString forKey:kDefaultBaseURL];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    } else {
+        TelinkHttpManager.share.baseUrl = baseUrlString;
+    }
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {

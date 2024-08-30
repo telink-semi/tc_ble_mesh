@@ -62,17 +62,17 @@
     if (![manager fileExistsAtPath:self.logFilePath]) {
         BOOL ret = [manager createFileAtPath:self.logFilePath contents:nil attributes:nil];
         if (ret) {
-            NSLog(@"%@",@"creat success");
+            NSLog(@"create logFile success");
         } else {
-            NSLog(@"%@",@"creat failure");
+            NSLog(@"create logFile failure");
         }
     }
     if (![manager fileExistsAtPath:self.meshJsonFilePath]) {
         BOOL ret = [manager createFileAtPath:self.meshJsonFilePath contents:nil attributes:nil];
         if (ret) {
-            NSLog(@"%@",@"creat TelinkSDKMeshJsonData success");
+            NSLog(@"create TelinkSDKMeshJsonData success");
         } else {
-            NSLog(@"%@",@"creat TelinkSDKMeshJsonData failure");
+            NSLog(@"create TelinkSDKMeshJsonData failure");
         }
     }
 }
@@ -117,7 +117,28 @@
     NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
     NSData *data = [handle readDataToEndOfFile];
     [handle closeFile];
+        
+    //清除无效的0000
+    UInt8 zero[20] = {0};
+    NSData *zeroData = [NSData dataWithBytes:zero length:20];
+    NSMutableData *mData = [NSMutableData dataWithData:data];
+    while (YES) {
+        NSRange range = [mData rangeOfData:zeroData options:NSDataSearchBackwards range:NSMakeRange(0, mData.length)];
+        if (range.location != NSNotFound) {
+            [mData replaceBytesInRange:range withBytes:nil length:0];
+        } else {
+            break;
+        }
+    }
+    if (data.length != mData.length) {
+        handle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
+        [handle truncateFileAtOffset:0];
+        [handle writeData:mData];
+        [handle closeFile];
+    }
+    data = mData;
     NSInteger length = data.length;
+        
     if (length > kTelinkSDKDebugLogDataSize * 2) {
         //log文件大小异常，直接清除所有log，重新生成log文件
         [self clearAllLog];
@@ -125,7 +146,7 @@
     }
     else if (length > kTelinkSDKDebugLogDataSize) {
         NSInteger saveLength = ceil(kTelinkSDKDebugLogDataSize * 0.8);
-        //该写法是解决直接裁剪NSData导致部分字符串被裁剪了一半导致NSData转NSString异常，从而出现log文件很大但log的字符串却很短的bug。
+        //该写法是解决直接裁剪NSData导致部分字符串被裁剪了一部分导致NSData转NSString异常，从而出现log文件很大但log的字符串却很短的bug。
         NSData *saveData = [NSData data];
         do {
             if (saveData.length > 0) {
@@ -135,16 +156,6 @@
             NSString *subStr = [oldStr substringFromIndex:ceil(oldStr.length * 0.2)];
             saveData = [subStr dataUsingEncoding:NSUTF8StringEncoding];
         } while (saveData.length > saveLength);
-        //清除无效的0000
-        UInt8 zero[20] = {0};
-        NSData *zeroData = [NSData dataWithBytes:zero length:20];
-        while (saveData.length >= 20 && [[saveData subdataWithRange:NSMakeRange(0, 20)] isEqualToData:zeroData]) {
-            if (saveData.length == 20) {
-                saveData = [NSData data];
-            } else {
-                saveData = [saveData subdataWithRange:NSMakeRange(20, saveData.length - 20)];
-            }
-        }
         NSData *tem = [@"[replace some log]\n" dataUsingEncoding:NSUTF8StringEncoding];
         NSMutableData *mData = [NSMutableData dataWithData:tem];
         [mData appendData:saveData];
@@ -163,9 +174,9 @@ static NSFileHandle *TelinkLogFileHandle(void) {
         if (![manager fileExistsAtPath:SigLogger.share.logFilePath]) {
             BOOL ret = [manager createFileAtPath:SigLogger.share.logFilePath contents:nil attributes:nil];
             if (ret) {
-                NSLog(@"%@",@"creat success");
+                NSLog(@"create logFile success");
             } else {
-                NSLog(@"%@",@"creat failure");
+                NSLog(@"create logFile failure");
             }
         }
         fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.logFilePath];

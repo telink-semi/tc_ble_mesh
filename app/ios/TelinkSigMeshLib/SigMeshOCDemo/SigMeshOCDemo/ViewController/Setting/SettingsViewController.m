@@ -23,9 +23,11 @@
 
 #import "SettingsViewController.h"
 #import "SettingsItemCell.h"
+#import "SettingsEditItemCell.h"
 #import "ShareTipsVC.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
+#import "NSString+extension.h"
 
 /// 1.Default Bound
 #define kDefaultBound   @"Enable Private Mode(Default Bound)"
@@ -69,6 +71,12 @@
 #define kOnlineStatusTitle  @"Online Status"
 /// Tips message of Online Status
 #define kOnlineStatusMessage  @"Telink private profile for get the status of all nodes, including on、 off and offline status."
+/// 8.Base URL
+#define kBaseURL  @"Base URL(for cloud sharing)"
+/// Tips Title of IP config
+#define kBaseURLTitle  @"Base URL"
+/// Tips message of IP config
+#define kBaseURLMessage  @"Base URL is used for mesh sharing over cloud"
 
 
 @interface SettingsViewController ()<UITableViewDataSource,UITableViewDelegate>
@@ -88,6 +96,7 @@
     self.resetSettingsButton.backgroundColor = UIColor.telinkButtonRed;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingsEditItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingsEditItemCell.class)];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingsItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingsItemCell.class)];
     [self refreshSourceAndUI];
 }
@@ -150,12 +159,16 @@
     [items addObject:@[@"Manual Switch(Default)", @"Auto Switch"]];
     [tipsTitles addObject:kShareImportTitle];
     [tipsMessage addObject:kShareImportMessage];
+    
+    [array addObject:kBaseURL];
+    [items addObject:@[]];
+    [tipsTitles addObject:kBaseURLTitle];
+    [tipsMessage addObject:kBaseURLMessage];
 #endif
     [array addObject:[NSString stringWithFormat:@"%@: %@", kOnlineStatus, [DemoCommand isPrivatelyGetOnlineStatus] == YES ? @"ENABLED" : @"DISABLED"]];
     [items addObject:@[]];
     [tipsTitles addObject:kOnlineStatusTitle];
     [tipsMessage addObject:kOnlineStatusMessage];
-
     _titleSource = array;
     _itemsSource = items;
     _tipsTitleSource = tipsTitles;
@@ -220,99 +233,144 @@
     } cancel:nil];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    SettingsItemCell *cell = (SettingsItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingsItemCell.class) forIndexPath:indexPath];
-    NSString *title = self.titleSource[indexPath.row];
-    [cell configUIWithTitle:title items:self.itemsSource[indexPath.row]];
-    cell.enableSwitch.hidden = NO;
+- (void)clickBaseURLEditButton:(UIButton *)button {
     __weak typeof(self) weakSelf = self;
-    [cell.tipsButton addAction:^(UIButton *button) {
-        [weakSelf pushToTipsVCWithTitle:weakSelf.tipsTitleSource[indexPath.row] message:weakSelf.tipsMessageSource[indexPath.row]];
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Update Base URL" message:@"Please input new Base URL" preferredStyle: UIAlertControllerStyleAlert];
+    [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"New Base URL";
+        textField.text = TelinkHttpManager.share.baseUrl;
     }];
-    if ([title isEqualToString:kDefaultBound]) {
-#ifndef kIsTelinkCloudSigMeshLib
-        // kDefaultBound
-        BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType] boolValue];
-        //set state
-        cell.enableSwitch.on = on;
-        //add action
-        [cell.enableSwitch addTarget:self action:@selector(clickSwitch:) forControlEvents:UIControlEventValueChanged];
-#endif
-    } else if ([title isEqualToString:kProvision_Mode]) {
-        // kProvision_Mode
-        NSNumber *provisionMode = [[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode];
-#ifdef kIsTelinkCloudSigMeshLib
-        //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
-        [cell setSelectIndex:provisionMode.intValue == 0 ? 0 : 1];
-        [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
-            NSNumber *mode = nil;
-            if (selectIndex == 0) {
-                mode = [NSNumber numberWithInteger:ProvisionMode_normalSelectable];
-            } else {
-                mode = [NSNumber numberWithInteger:ProvisionMode_remoteProvision];
-            }
-            [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
-            [[NSUserDefaults standardUserDefaults] synchronize];
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        NSString *baseURL = [[alertVc textFields] objectAtIndex:0].text;
+        baseURL = baseURL.removeAllSpace;
+        TelinkLogDebug(@"New Base URL is %@", baseURL);
+        if (baseURL == nil || baseURL.length == 0) {
+            [weakSelf.navigationController.view makeToast:@"New Base URL can not be empty!"];
+            return;
+        }
+        TelinkHttpManager.share.baseUrl = baseURL;
+        [[NSUserDefaults standardUserDefaults] setValue:baseURL forKey:kDefaultBaseURL];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        [weakSelf.navigationController.view makeToast:@"Update Base URL Success!"];
+        [weakSelf.tableView reloadData];
+    }];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
+    [alertVc addAction:action2];
+    [alertVc addAction:action1];
+    [self presentViewController:alertVc animated:YES completion:nil];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *title = self.titleSource[indexPath.row];
+    __weak typeof(self) weakSelf = self;
+    if ([title isEqualToString:kBaseURL]) {
+        SettingsEditItemCell *cell = (SettingsEditItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingsEditItemCell.class) forIndexPath:indexPath];
+        cell.titleLabel.text = title;
+        cell.detailLabel.text = TelinkHttpManager.share.baseUrl;
+        [cell.tipsButton addAction:^(UIButton *button) {
+            [weakSelf pushToTipsVCWithTitle:weakSelf.tipsTitleSource[indexPath.row] message:weakSelf.tipsMessageSource[indexPath.row]];
         }];
-        //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
-#else
-        [cell setSelectIndex:provisionMode.intValue];
-        [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
-            NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
-            [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
-            [[NSUserDefaults standardUserDefaults] synchronize];
+        [cell.editButton addAction:^(UIButton *button) {
+            [weakSelf clickBaseURLEditButton:button];
         }];
-#endif
-    } else if ([title isEqualToString:kSubscriptionLevel]) {
-        // kSubscriptionLevel
-        BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kSubscribeLevelServiceModelID] boolValue];
-        //set state
-        cell.enableSwitch.on = on;
-        //add action
-        [cell.enableSwitch addTarget:self action:@selector(clickLevelSwitch:) forControlEvents:UIControlEventValueChanged];
-    } else if ([title isEqualToString:kExtend_Bearer_Mode]) {
-        //kExtend_Bearer_Mode
-        NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
-        [cell setSelectIndex:extendBearerMode.intValue];
-        [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
-            if (selectIndex == SigTelinkExtendBearerMode_noExtend) {
-                SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
-            } else {
-                SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
-            }
-            NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
-            [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kExtendBearerMode];
-            [[NSUserDefaults standardUserDefaults] synchronize];
+        return cell;
+    } else {
+        SettingsItemCell *cell = (SettingsItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingsItemCell.class) forIndexPath:indexPath];
+        [cell configUIWithTitle:title items:self.itemsSource[indexPath.row]];
+        cell.enableSwitch.hidden = NO;
+        [cell.tipsButton addAction:^(UIButton *button) {
+            [weakSelf pushToTipsVCWithTitle:weakSelf.tipsTitleSource[indexPath.row] message:weakSelf.tipsMessageSource[indexPath.row]];
         }];
-    } else if ([title isEqualToString:kUseNoOOBAutomatically]) {
-        // kUseNoOOBAutomatically
-        BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable] boolValue];
-        //set state
-        cell.enableSwitch.on = on;
-        //add action
-        [cell.enableSwitch addTarget:self action:@selector(clickAddStaticOOBDeviceByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
-    } else if ([title isEqualToString:kShareImport]) {
-        //kShareImport
-        NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
-        [cell setSelectIndex:importCompleteAction.intValue];
-        [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
-            NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
-            [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kImportCompleteAction];
-            [[NSUserDefaults standardUserDefaults] synchronize];
-        }];
-    } else if ([title hasPrefix:kOnlineStatus]) {
-        // kOnlineStatus
-        cell.enableSwitch.hidden = YES;
+        if ([title isEqualToString:kDefaultBound]) {
+    #ifndef kIsTelinkCloudSigMeshLib
+            // kDefaultBound
+            BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType] boolValue];
+            //set state
+            cell.enableSwitch.on = on;
+            //add action
+            [cell.enableSwitch addTarget:self action:@selector(clickSwitch:) forControlEvents:UIControlEventValueChanged];
+    #endif
+        } else if ([title isEqualToString:kProvision_Mode]) {
+            // kProvision_Mode
+            NSNumber *provisionMode = [[NSUserDefaults standardUserDefaults] valueForKey:kProvisionMode];
+    #ifdef kIsTelinkCloudSigMeshLib
+            //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+            [cell setSelectIndex:provisionMode.intValue == 0 ? 0 : 1];
+            [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
+                NSNumber *mode = nil;
+                if (selectIndex == 0) {
+                    mode = [NSNumber numberWithInteger:ProvisionMode_normalSelectable];
+                } else {
+                    mode = [NSNumber numberWithInteger:ProvisionMode_remoteProvision];
+                }
+                [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+            }];
+            //==========先隐藏未实现的 @"normal(auto)" 和 @"fast provision"==========//
+    #else
+            [cell setSelectIndex:provisionMode.intValue];
+            [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
+                NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
+                [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kProvisionMode];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+            }];
+    #endif
+        } else if ([title isEqualToString:kSubscriptionLevel]) {
+            // kSubscriptionLevel
+            BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kSubscribeLevelServiceModelID] boolValue];
+            //set state
+            cell.enableSwitch.on = on;
+            //add action
+            [cell.enableSwitch addTarget:self action:@selector(clickLevelSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if ([title isEqualToString:kExtend_Bearer_Mode]) {
+            //kExtend_Bearer_Mode
+            NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
+            [cell setSelectIndex:extendBearerMode.intValue];
+            [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
+                if (selectIndex == SigTelinkExtendBearerMode_noExtend) {
+                    SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+                } else {
+                    SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
+                }
+                NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
+                [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kExtendBearerMode];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+            }];
+        } else if ([title isEqualToString:kUseNoOOBAutomatically]) {
+            // kUseNoOOBAutomatically
+            BOOL on = [[[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable] boolValue];
+            //set state
+            cell.enableSwitch.on = on;
+            //add action
+            [cell.enableSwitch addTarget:self action:@selector(clickAddStaticOOBDeviceByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if ([title isEqualToString:kShareImport]) {
+            //kShareImport
+            NSNumber *importCompleteAction = [[NSUserDefaults standardUserDefaults] valueForKey:kImportCompleteAction];
+            [cell setSelectIndex:importCompleteAction.intValue];
+            [cell setBackSelectIndexBlock:^(NSInteger selectIndex) {
+                NSNumber *mode = [NSNumber numberWithInteger:selectIndex];
+                [[NSUserDefaults standardUserDefaults] setValue:mode forKey:kImportCompleteAction];
+                [[NSUserDefaults standardUserDefaults] synchronize];
+            }];
+        } else if ([title hasPrefix:kOnlineStatus]) {
+            // kOnlineStatus
+            cell.enableSwitch.hidden = YES;
+        }
+        return cell;
     }
-    return cell;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return self.titleSource.count;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return [SettingsItemCell getCellHeightWithItems:self.itemsSource[indexPath.row]];
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *title = self.titleSource[indexPath.row];
+    if ([title isEqualToString:kBaseURL]) {
+        return 110;
+    } else {
+        return [SettingsItemCell getCellHeightWithItems:self.itemsSource[indexPath.row]];
+    }
 }
 
 @end

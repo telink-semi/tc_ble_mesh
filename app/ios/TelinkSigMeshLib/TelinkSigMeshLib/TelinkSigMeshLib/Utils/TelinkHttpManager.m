@@ -29,8 +29,7 @@
 #define RequestTypePOST     @"POST"
 #define RequestTypeDelete   @"DELETE"
 
-//#define BaseUrl @"http://192.168.18.59:8080/"
-#define BaseUrl @"http://47.115.40.63:8080/"
+#define BaseUrl @"http://47.115.164.97:8080/"
 
 #define CustomErrorDomain @"cn.telink.httpRequest"
 
@@ -87,12 +86,12 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
             if (statusCode != 200) {
                 NSDictionary *result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
                 if (result.count>0) {
-                    NSError *err = [NSError errorWithDomain:BaseUrl code:[[result objectForKey:@"status"] integerValue] userInfo:@{NSLocalizedDescriptionKey : [result objectForKey:@"message"]}];
+                    NSError *err = [NSError errorWithDomain:TelinkHttpManager.share.baseUrl code:[[result objectForKey:@"status"] integerValue] userInfo:@{NSLocalizedDescriptionKey : [result objectForKey:@"message"]}];
                     if (weakSelf.httpBlock) {
                         weakSelf.httpBlock(weakSelf, nil, err);
                     }
                 }else{
-                    NSError *err = [NSError errorWithDomain:BaseUrl code:99999 userInfo:@{NSLocalizedDescriptionKey : @"服务器异常，请稍后···"}];
+                    NSError *err = [NSError errorWithDomain:TelinkHttpManager.share.baseUrl code:99999 userInfo:@{NSLocalizedDescriptionKey : @"服务器异常，请稍后···"}];
                     if (weakSelf.httpBlock) {
                         weakSelf.httpBlock(weakSelf, nil, err);
                     }
@@ -127,7 +126,7 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     req.httpBlock = block;
     NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
     NSDictionary *content = @{@"data" : [LibTools getJSONStringWithDictionary:jsonDict],@"timeout":@(timeout)};
-    [req requestWithRequestType:RequestTypePOST withUrl:[NSString stringWithFormat:@"%@upload",BaseUrl] withHeader:header withContent:content];
+    [req requestWithRequestType:RequestTypePOST withUrl:[NSString stringWithFormat:@"%@upload",TelinkHttpManager.share.baseUrl] withHeader:header withContent:content];
     return req;
 }
 
@@ -139,7 +138,7 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     req.httpBlock = block;
     NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
     NSDictionary *content = @{@"uuid" : uuid};
-    [req requestWithRequestType:RequestTypePOST withUrl:[NSString stringWithFormat:@"%@download",BaseUrl] withHeader:header withContent:content];
+    [req requestWithRequestType:RequestTypePOST withUrl:[NSString stringWithFormat:@"%@download",TelinkHttpManager.share.baseUrl] withHeader:header withContent:content];
     return req;
 }
 
@@ -190,6 +189,7 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
         /// Initialize the Singleton configure parameters.
         shareManager = [[TelinkHttpManager alloc] init];
         shareManager.telinkHttpRequests = [NSMutableArray array];
+        shareManager.baseUrl = BaseUrl;
     });
     return shareManager;
 }
