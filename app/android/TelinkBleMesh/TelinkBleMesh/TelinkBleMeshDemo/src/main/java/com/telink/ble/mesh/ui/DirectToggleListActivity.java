@@ -104,6 +104,7 @@ public class DirectToggleListActivity extends BaseActivity implements EventListe
         iv_all_visible.setOnClickListener(this);
         ll_all_control = findViewById(R.id.ll_all_control);
         TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE, this);
     }
 
     private void initTitle() {

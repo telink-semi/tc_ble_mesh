@@ -72,7 +72,9 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_BASE_URL = "com.telink.bluetooth.light.KEY_BASE_URL";
 
-    public static final String DEFAULT_BASE_URL = "http://47.115.40.63:8080/";
+    // old : 47.115.40.63
+    // new(20240830) 47.115.164.97
+    public static final String DEFAULT_BASE_URL = "http://47.115.164.97:8080/";
 
     public static final boolean DEFAULT_LOG_ENABLE = true;
 
