@@ -5,7 +5,7 @@
 * SDK Version: tc_ble_mesh_V4.1.0.1
 * Chip Version: TLSR825X / TLSR827X
 * telink_b85m_ble_single_connection_sdk_v3.4.1
-* mesh library commit log: ff1ec89856f303f2676a3b18aeea66e9e25cdfe5
+* mesh library commit log: df928dc56708e0e930684130aae789d12b85d4e3
 * ble  library commit log: the same as mesh library.
 
 ### Bug Fixes
@@ -74,7 +74,7 @@
 * SDK Version: tc_ble_mesh_V4.1.0.1
 * Chip Version: TLSR825X / TLSR827X
 * telink_b85m_ble_single_connection_sdk_v3.4.1
-* mesh library commit log: ff1ec89856f303f2676a3b18aeea66e9e25cdfe5
+* mesh library commit log: df928dc56708e0e930684130aae789d12b85d4e3
 * ble  library commit log: the same as mesh library.
 
 ### Bug Fixes
