@@ -535,20 +535,20 @@ typedef struct{
 const flash_lock_area_support_t FLASH_LOCK_AREA_SUPPORT[] = { // area must be sorted from low to high if not zero.
 #if (0 == __TLSR_RISCV_EN__)
 	#if (FLASH_ZB25WD40B_SUPPORT_EN) //512K capacity
-	{MID13325E, {{FLASH_LOCK_LOW_256K_MID13325E, (256/4)}, {FLASH_LOCK_LOW_448K_MID13325E, (448/4)},
-			     {FLASH_LOCK_ALL_512K_MID13325E, (512/4)}}},
+	{MID13325E, {{FLASH_LOCK_LOW_256K_MID13325E, (256/4)}, {FLASH_LOCK_LOW_384K_MID13325E, (384/4)}, // 384 for FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+                 {FLASH_LOCK_LOW_448K_MID13325E, (448/4)}, {FLASH_LOCK_ALL_512K_MID13325E, (512/4)}}},
 	#endif
 	#if (FLASH_ZB25WD80B_SUPPORT_EN) //1M capacity
 	{MID14325E, {{FLASH_LOCK_LOW_768K_MID14325E, (768/4)}, {FLASH_LOCK_LOW_896K_MID14325E, (896/4)},
 			     {FLASH_LOCK_ALL_1M_MID14325E, 	(1024/4)}}},
 	#endif
     #if FLASH_P25D40SU_SUPPORT_EN // 512K capacity
-    {MID136085, {{FLASH_LOCK_LOW_256K_MID136085, (256/4)}, {FLASH_LOCK_LOW_448K_MID136085, (448/4)},
-			     {FLASH_LOCK_ALL_512K_MID136085, (512/4)}}},
+    {MID136085, {{FLASH_LOCK_LOW_256K_MID136085, (256/4)}, {FLASH_LOCK_LOW_384K_MID136085, (384/4)}, // 384 for FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+			     {FLASH_LOCK_LOW_448K_MID136085, (448/4)}, {FLASH_LOCK_ALL_512K_MID136085, (512/4)}}},
     #endif
 	#if (FLASH_GD25LD40C_SUPPORT_EN || FLASH_GD25LD40E_SUPPORT_EN) //512K capacity
-	{MID1360C8, {{FLASH_LOCK_LOW_256K_MID1360C8, (256/4)}, {FLASH_LOCK_LOW_448K_MID1360C8, (448/4)},
-			     {FLASH_LOCK_ALL_512K_MID1360C8, (512/4)}}},
+	{MID1360C8, {{FLASH_LOCK_LOW_256K_MID1360C8, (256/4)}, {FLASH_LOCK_LOW_384K_MID1360C8, (384/4)}, // 384 for FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+			     {FLASH_LOCK_LOW_448K_MID1360C8, (448/4)}, {FLASH_LOCK_ALL_512K_MID1360C8, (512/4)}}},
 	#endif
 	#if(FLASH_P25Q80U_SUPPORT_EN || FLASH_P25Q80SU_SUPPORT_EN) //1M capacity
 	{MID146085, {{FLASH_LOCK_LOW_128K_MID146085, (128/4)}, // use 128k for (FLASH_ADR_RESET_CNT 0x23000) of dual mode
@@ -797,7 +797,7 @@ void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_a
 	else if(flash_op_evt == FLASH_OP_EVT_MESH_PAR_MODIFY_MUCH_SECTORS_BEGIN)
 	{
 		LOG_FLASH_PROT_DEBUG(0, 0, "\n[FLASH][PROT] mesh par write begin, unlock flash: 0x%x", op_addr_begin);
-		flash_lock(op_addr_begin, 0);
+		flash_unlock_with_check_current_st(op_addr_begin); // if has been unlock state, no need change lock area when write parameters.
 	}
 	else if(flash_op_evt == FLASH_OP_EVT_MESH_PAR_MODIFY_MUCH_SECTORS_END)
 	{

@@ -1,3 +1,44 @@
+# V4.1.1.0_Patch_0001(PR)
+
+### Features
+* **Firmware**
+  - Add bootloader mode without OTA for gateway. The corresponding macro is FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN.
+
+### Bug Fixes
+* N/A
+
+### Refactoring
+* N/A
+
+### Optimization
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Features
+* **Firmware**
+  - 网关添加不带OTA的bootloader模式。功能开关是FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN。
+
+### Bug Fixes
+* N/A
+
+### Refactoring
+* N/A
+
+### Optimization
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
 # V4.1.1.0 (PR)
 
 ### Version

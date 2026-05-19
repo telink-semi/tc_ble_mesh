@@ -198,7 +198,7 @@ typedef struct {
 #endif
 
 
-#if (!(WIN32 || __TLSR_RISCV_EN__ || FLASH_PLUS_ENABLE || TLV_ENABLE))
+#if (!(WIN32 || __TLSR_RISCV_EN__ || FLASH_PLUS_ENABLE || TLV_ENABLE || FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN))
 	#if (APP_FLASH_PROTECTION_ENABLE && (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH))
 /* for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000(such as FLASH_LOCK_LOW_448K_MID1360C8),
  * include FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, and FLASH_ADR_SW_LEVEL.
@@ -226,7 +226,9 @@ typedef struct {
 #define FLASH_ADDRESS_EXTERN						\
 		extern unsigned int flash_adr_misc;	
 
-#if (0 == FLASH_PLUS_ENABLE)
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#include "flash_map_gateway_load_by_bootloader_and_no_ota.h"
+#elif (0 == FLASH_PLUS_ENABLE)
 #define 		FLASH_ADR_AREA_FIRMWARE_END	0x30000
 /* Flash adr 0x00000 ~ 0x2ffff  is firmware area*/
 #define			FLASH_ADR_AREA_1_START		0x30000
@@ -731,6 +733,8 @@ enum{
 
 #if FW_START_BY_BOOTLOADER_EN
 #define FW_SIZE_MAX_K			    (FW_SIZE_MAX_USER_K)
+#elif FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#define FW_SIZE_MAX_K			    ((FLASH_ADR_AREA_FIRMWARE_END - FW_START_BY_BOOTLOADER_ADDR) / 1024)
 #elif (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
 #define FW_SIZE_MAX_K			    (192) // 192  //192K // can set to 256k max for dual mode with 1M flash.
 #elif (MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE)

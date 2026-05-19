@@ -115,11 +115,21 @@ extern "C" {
 #define DLE_LEN_MAX_TX              (40)
 #endif
 
+#define FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN     0
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#define FW_START_BY_BOOTLOADER_ADDR     	    (0x20000)
+#endif
+
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#define BLE_OTA_SERVER_ENABLE			0
+#else
+#define BLE_OTA_SERVER_ENABLE			1
+#endif
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0

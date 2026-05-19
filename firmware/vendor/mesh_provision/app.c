@@ -567,6 +567,7 @@ void user_init()
 	// mesh_mode and layer init
 	mesh_init_all();
 	// OTA init
+#if (BLE_OTA_SERVER_ENABLE)
     #if (UART_PRINT_DEBUG_ENABLE)
         blc_debug_addStackLog(STK_LOG_OTA_FLOW);
     #endif
@@ -576,7 +577,7 @@ void user_init()
     //blc_ota_setOtaDataPacketTimeout(5);   //OTA data packet timeout: default 5 seconds
     bls_ota_registerStartCmdCb(entry_ota_mode);
     bls_ota_registerResultIndicateCb(show_ota_result);
-
+#endif
 	//blc_ll_initScanning_module(tbl_mac);
 	blc_gap_peripheral_init();    //gap initialization
 	

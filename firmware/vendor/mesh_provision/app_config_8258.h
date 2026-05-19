@@ -138,6 +138,11 @@ extern "C" {
 #define DLE_LEN_MAX_TX              (40)
 #endif
 
+#define FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN     0
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#define FW_START_BY_BOOTLOADER_ADDR     	    (0x20000)
+#endif
+
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			(0 || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN)
 #if BLE_REMOTE_PM_ENABLE
@@ -147,6 +152,11 @@ extern "C" {
 #endif
 #define BLE_REMOTE_SECURITY_ENABLE      (0 || MESH_CDTP_ENABLE)   // 1 for smp,  0 no security
 #define BLE_IR_ENABLE					0
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+#define BLE_OTA_SERVER_ENABLE			0
+#else
+#define BLE_OTA_SERVER_ENABLE			1
+#endif
 
 #if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
 #define BLT_SOFTWARE_TIMER_ENABLE		1

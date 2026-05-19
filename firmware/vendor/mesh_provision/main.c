@@ -82,7 +82,9 @@ _attribute_ram_code_
 #endif
 int main (void) // must run in ramcode if enable retention sleep
 {
+#if BLE_OTA_SERVER_ENABLE
     blc_ota_setFirmwareSizeAndBootAddress(FW_SIZE_MAX_K, FLASH_ADR_UPDATE_NEW_FW);
+#endif
 	blc_pm_select_internal_32k_crystal();
 
 #if(MCU_CORE_TYPE == MCU_CORE_825x)

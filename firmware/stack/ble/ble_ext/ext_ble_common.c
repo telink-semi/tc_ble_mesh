@@ -236,8 +236,10 @@ int ota_set_flag(void)
  * @note        
  */
 int is_valid_sector_addr(unsigned long addr, unsigned long len) // BLE_SRC_TELINK_MESH_EN
-{    
-#if (FW_START_BY_LEGACY_BOOTLOADER_EN == 0)
+{
+#if FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN
+    return 1;
+#elif (FW_START_BY_LEGACY_BOOTLOADER_EN == 0)
 	#if ((MCU_CORE_TYPE == MCU_CORE_825x) || (MCU_CORE_TYPE == MCU_CORE_827x) || (MCU_CORE_TYPE == MCU_CORE_TC321X))
         #if (PINGPONG_OTA_DISABLE)
     extern u8 ota_pingpong_disable_copy_fw_flag;

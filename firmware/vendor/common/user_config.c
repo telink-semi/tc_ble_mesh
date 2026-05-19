@@ -49,6 +49,10 @@ __asm__(".global     __FLASH_512K_ENABLE");
 
 #if __PROJECT_BOOTLOADER__
 __asm__(".equ __FW_OFFSET,      0"); // must be 0
+#elif (FW_LOAD_BY_BOOTLOADER_AND_NO_OTA_EN)
+    #if (FW_START_BY_BOOTLOADER_ADDR == 0x20000)
+__asm__(".equ __FW_OFFSET,      0x20000");
+    #endif
 #elif (FW_START_BY_LEGACY_BOOTLOADER_EN)
     #if (DUAL_MODE_FW_ADDR_SIGMESH == 0x80000)
 __asm__(".equ __FW_OFFSET,      0x80000");  // must be equal to DUAL_MODE_FW_ADDR_SIGMESH
