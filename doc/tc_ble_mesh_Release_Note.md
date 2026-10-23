@@ -1,3 +1,46 @@
+# V4.1.1.0_Patch_0002(PR)
+
+### Features
+* **FLASH**
+  * (B87)A new ZG25WD40C/ZG25WD80C Flash driver has been added.
+  * (B85)A new ZG25WD40C/ZG25WD80C Flash driver has been added.
+
+### Bug Fixes
+* N/A
+
+### Refactoring
+* N/A
+
+### Optimization
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Features
+* **FLASH**
+  * (B87)新增ZG25WD40C/ZG25WD480C驱动.
+  * (B85)新增ZG25WD40C/ZG25WD480C驱动.
+
+### Bug Fixes
+* N/A
+
+### Refactoring
+* N/A
+
+### Optimization
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
 # V4.1.1.0_Patch_0001(PR)
 
 ### Features
